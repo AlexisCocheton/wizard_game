@@ -5,7 +5,10 @@ extends Node2D
 ## comportements qui impliquent plusieurs monstres (aura, soin, gobage, division).
 
 signal enemy_killed(definition: EnemyDef)
-signal mage_hit(damage: int)
+## `source` : le monstre responsable, pour que l ecran de defaite puisse dire au
+## joueur ce qui l a tue. Null si le coup vient d un projectile dont le tireur
+## est deja mort.
+signal mage_hit(damage: int, source: EnemyDef)
 
 const ENEMY_SCENE: String = "res://scenes/game/Enemy.tscn"
 
@@ -178,14 +181,17 @@ func _simulate_shots(wd: float) -> void:
 			shots.remove_at(i)
 			# BOUCLIER PUIS PV, comme un contact.
 			SpeedGauge.take_hit(int(s["damage"]))
-			mage_hit.emit(int(s["damage"]))
+			mage_hit.emit(int(s["damage"]), s.get("shooter"))
 
 
 func enemy_shoot(from: Enemy, damage: int) -> void:
 	var pos: Vector2 = from.position + Vector2(0.0, from.radius())
 	var node: Node = Fx.shot_visual(self, pos, from.definition.color if from.definition != null else Color.WHITE)
 	AudioBus.play_sfx(&"arrow")
-	shots.append({"pos": pos, "damage": damage, "node": node})
+	# On retient le TIREUR, pas le noeud : le monstre peut mourir avant que sa
+	# fleche arrive, et l ecran de defaite doit quand meme pouvoir le nommer.
+	shots.append({"pos": pos, "damage": damage, "node": node,
+		"shooter": from.definition})
 
 
 func shot_count() -> int:
@@ -249,7 +255,7 @@ func _on_enemy_reached_mage(e: Enemy) -> void:
 	e.queue_free()
 	# BOUCLIER PUIS PV : toute la regle vit dans SpeedGauge.take_hit().
 	SpeedGauge.take_hit(dmg)
-	mage_hit.emit(dmg)
+	mage_hit.emit(dmg, e.definition)
 
 
 func alive_count() -> int:

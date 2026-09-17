@@ -335,10 +335,15 @@ func _check_end_screens() -> void:
 	await _shot("victoire")
 	vs.queue_free()
 
+	# Le bilan de defaite ne s affiche que s il y a des coups a montrer.
+	RunState.note_damage_taken(ContentDB.enemies.get(&"gnome"))
+	RunState.note_damage_taken(ContentDB.enemies.get(&"gnome"))
+	RunState.note_damage_taken(ContentDB.enemies.get(&"imp_archer"))
 	SceneRouter.payload = {"level_id": &"lvl_01", "waves": 3}
 	var d: PackedScene = load("res://scenes/endgame/DefeatScreen.tscn")
 	var ds: Control = d.instantiate()
 	add_child(ds)
+	await _shot("defaite")
 	ds.queue_free()
 	print("[SMOKE] ecrans de fin construits")
 

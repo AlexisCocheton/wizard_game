@@ -64,6 +64,7 @@ func reset() -> void:
 	draw_count = GameConfig.DRAW_COUNT
 	used_legendary = false
 	took_any_damage = false
+	hits_by_source.clear()
 	speed_dropped = false
 	next_spell_multiplier = 1.0
 	pending_offer.clear()
@@ -300,8 +301,25 @@ func _shuffle_cards(arr: Array[SpellCard]) -> void:
 		arr[j] = tmp
 
 
-func note_damage_taken() -> void:
+## Qui a inflige les coups, pour le bilan de defaite : {nom affichable: nombre}.
+var hits_by_source: Dictionary = {}
+
+
+func note_damage_taken(source: EnemyDef = null) -> void:
 	took_any_damage = true
+	var nom: String = source.display_name if source != null else "Projectile"
+	hits_by_source[nom] = int(hits_by_source.get(nom, 0)) + 1
+
+
+## Le monstre qui a le plus coute de PV sur la partie, "" si aucun coup recu.
+func worst_threat() -> String:
+	var pire: String = ""
+	var n: int = 0
+	for nom in hits_by_source:
+		if int(hits_by_source[nom]) > n:
+			n = int(hits_by_source[nom])
+			pire = String(nom)
+	return pire
 
 
 func note_speed_drop() -> void:

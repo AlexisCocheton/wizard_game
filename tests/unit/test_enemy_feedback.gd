@@ -22,6 +22,7 @@ func run() -> void:
 	_test_ratio_de_vie()
 	_test_mort()
 	_test_immunite_bloque_les_degats()
+	_test_le_bilan_designe_le_coupable()
 
 
 func _test_pv_decroissent() -> void:
@@ -72,3 +73,31 @@ func _test_immunite_bloque_les_degats() -> void:
 	ok(e.take_damage(20.0, [GameEnums.DamageTag.FIRE]),
 		"un autre element passe normalement")
 	e.free()
+
+
+## Le bilan de defaite compte les coups PAR SOURCE : c est la seule facon pour le
+## joueur de savoir ce qui l a tue et d ajuster son deck.
+func _test_le_bilan_designe_le_coupable() -> void:
+	RunState.reset()
+	var gnome := EnemyDef.new()
+	gnome.id = &"t_gnome"
+	gnome.display_name = "Gnome"
+	var archer := EnemyDef.new()
+	archer.id = &"t_archer"
+	archer.display_name = "Lutin archer"
+
+	RunState.note_damage_taken(gnome)
+	RunState.note_damage_taken(archer)
+	RunState.note_damage_taken(archer)
+	eq(int(RunState.hits_by_source.get("Gnome", 0)), 1, "un coup de Gnome")
+	eq(int(RunState.hits_by_source.get("Lutin archer", 0)), 2, "deux coups de Lutin archer")
+	eq(RunState.worst_threat(), "Lutin archer", "la pire menace est celle qui a le plus frappe")
+
+	# Un projectile dont le tireur est mort reste comptabilise, sans nom invente.
+	RunState.note_damage_taken(null)
+	eq(int(RunState.hits_by_source.get("Projectile", 0)), 1, "coup sans source identifiee")
+
+	# Le compteur repart a zero d une partie a l autre, sinon le bilan cumule tout.
+	RunState.reset()
+	ok(RunState.hits_by_source.is_empty(), "le bilan est vide au debut d une partie")
+	eq(RunState.worst_threat(), "", "aucune menace sans coup recu")

@@ -250,8 +250,8 @@ func _on_shield_collapsed() -> void:
 	RunState.note_speed_drop()
 
 
-func _on_mage_hit(_dmg: int) -> void:
-	RunState.note_damage_taken()
+func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
+	RunState.note_damage_taken(source)
 
 
 func _on_wave_cleared(index: int) -> void:
