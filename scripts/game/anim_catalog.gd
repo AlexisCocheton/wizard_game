@@ -26,20 +26,33 @@ const UNITS: Dictionary = {
 	"monk_blue":   {"frame": 192, "occupancy": 0.63, "walk": ["monk_blue_walk", 8], "idle": ["monk_blue_idle", 6], "cast": ["monk_blue_cast", 12]},
 	"blood":       {"frame": 100, "occupancy": 0.31, "walk": ["blood_walk", 10], "idle": ["blood_idle", 6], "hurt": ["blood_hurt", 14, false], "death": ["blood_death", 10, false], "attack": ["blood_attack", 10, false]},
 	"demon":       {"frame": 100, "occupancy": 0.35, "walk": ["demon_walk", 10], "idle": ["demon_idle", 6], "hurt": ["demon_hurt", 14, false], "death": ["demon_death", 10, false], "attack": ["demon_attack", 10, false]},
+	## Feuilles a cases RECTANGULAIRES : "frame" est la largeur, "frame_h" la hauteur.
+	## "count" borne les cases quand la derniere colonne est vide.
+	"golem_blue":   {"frame": 90, "frame_h": 64, "occupancy": 0.66,
+		"walk": ["golem_blue_walk", 10], "idle": ["golem_blue_idle", 6],
+		"hurt": ["golem_blue_hurt", 12, false], "attack": ["golem_blue_attack", 12, false],
+		"death": ["golem_blue_death", 10, false]},
+	"golem_orange": {"frame": 90, "frame_h": 64, "occupancy": 0.66,
+		"walk": ["golem_orange_walk", 10], "idle": ["golem_orange_idle", 6],
+		"hurt": ["golem_orange_hurt", 12, false], "attack": ["golem_orange_attack", 12, false],
+		"death": ["golem_orange_death", 10, false]},
+	"flyer":        {"frame": 64, "occupancy": 0.83,
+		"walk": ["flyer_walk", 12], "idle": ["flyer_idle", 8],
+		"hurt": ["flyer_hurt", 12, false], "attack": ["flyer_attack", 14, false],
+		"death": ["flyer_death", 12, false]},
+	"peacock":      {"frame": 32, "frame_h": 32, "occupancy": 1.00,
+		"walk": ["peacock_walk", 8], "idle": ["peacock_idle", 5]},
 	## Le totem est un batiment : texture fixe.
 	"totem_tower": {"static": "totem_tower", "occupancy": 0.72},
 }
 
 ## Teintes legeres pour distinguer deux familles qui partagent une feuille.
 const MODULATE: Dictionary = {
-	"wisp": Color(0.75, 1.0, 1.0, 0.72),
 	"shade": Color(0.55, 0.55, 0.85, 0.85),
-	"behemoth": Color(0.62, 0.62, 0.68),
 	"chronos": Color(1.0, 0.75, 0.75),
 	"jelly": Color(0.85, 1.0, 0.85),
 	"jelly_mid": Color(0.85, 1.0, 0.85),
 	"jelly_small": Color(0.85, 1.0, 0.85),
-	"rat_swarm": Color(1.0, 0.85, 0.9),
 }
 
 
@@ -68,7 +81,10 @@ static func frame_px(key: StringName) -> int:
 	if u.has("static"):
 		var t: Texture2D = static_texture(key)
 		return int(t.get_height()) if t != null else 256
-	return int(u.get("frame", 192))
+	# L echelle se calcule sur la HAUTEUR de case. Une case large (golem 90x64) est
+	# large pour loger le balayage de l attaque, pas parce que le monstre est large :
+	# prendre la largeur le rendrait enorme en permanence.
+	return int(u.get("frame_h", u.get("frame", 192)))
 
 
 static func occupancy(key: StringName) -> float:
@@ -111,6 +127,10 @@ static func frames(key: StringName) -> SpriteFrames:
 			"fps": float(a[1]),
 			"loop": bool(a[2]) if a.size() > 2 else true,
 		}
+		# Cases rectangulaires (golems 90x64, paon 36x38) : sans cela la decoupe
+		# prend toute la hauteur de la feuille et les cases se chevauchent.
+		if u.has("frame_h"):
+			spec[anim]["frame_h"] = int(u["frame_h"])
 	return SheetLib.frames("unit:" + String(key), spec)
 
 

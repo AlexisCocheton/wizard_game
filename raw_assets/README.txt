@@ -11,3 +11,12 @@ Contenu :
 - godot-pixel-effect-windows : outil externe
 - 400 Sounds Pack, FreeSFX : ~620 wav
 - 28 High Quality 16-bit RPG Music, xDeviruchi : musiques (ogg/mp3/wav)
+
+--- Ajouts du 2026-09-17 (monstres) ---
+FlyingForestEnemies_FREE.zip  : insecte volant (Enemy3), bandes de 64x64.
+Golems_Free_Version.zip       : Golem_1 en bleu et orange, cases de 90x64
+                                (la case est large pour loger le balayage de
+                                l attaque, le monstre ne fait que ~42 px).
+Peacock-*-Sheet.png           : paon, grille 4 colonnes x 3 lignes de 32x32
+                                (une ligne par direction ; on extrait la ligne 0).
+Verifier les licences de ces trois packs avant publication.

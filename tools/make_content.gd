@@ -64,12 +64,12 @@ func _enemies() -> void:
 
 	# --- Puissance 2 ---
 	var swarm := _enemy("rat_swarm", "Nuee de rats", K.SWARM, 2, 4.0, 110.0, 1, S.CIRCLE, Color(0.85, 0.52, 0.62), 13.0)
-	swarm.anim_key = &"pawn_black"
+	swarm.anim_key = &"peacock"
 	swarm.swarm_count = 4
 	_save(swarm, E + "rat_swarm.tres")
 
 	var wisp := _enemy("wisp", "Feu follet", K.EVASIVE, 2, 10.0, 90.0, 2, S.CIRCLE, Color(0.45, 0.90, 0.88), 22.0)
-	wisp.anim_key = &"demon"
+	wisp.anim_key = &"flyer"
 	wisp.dodge_chance = 0.35
 	_save(wisp, E + "wisp.tres")
 
@@ -105,7 +105,7 @@ func _enemies() -> void:
 	_save(horn, E + "hornblower.tres")
 
 	var golem := _enemy("golem", "Golem de pierre", K.TANK, 3, 55.0, 32.0, 4, S.SQUARE, Color(0.50, 0.50, 0.56), 40.0)
-	golem.anim_key = &"warrior_black"
+	golem.anim_key = &"golem_blue"
 	golem.immune_tags = [GameEnums.DamageTag.SLOW]
 	_save(golem, E + "golem.tres")
 
@@ -149,7 +149,7 @@ func _enemies() -> void:
 	_save(glutton, E + "glutton.tres")
 
 	var behemoth := _enemy("behemoth", "Behemoth", K.TANK, 4, 130.0, 26.0, 9, S.SQUARE, Color(0.36, 0.34, 0.40), 52.0)
-	behemoth.anim_key = &"warrior_black"
+	behemoth.anim_key = &"golem_orange"
 	behemoth.contact_damage = 2
 	behemoth.immune_tags = [GameEnums.DamageTag.SLOW]
 	_save(behemoth, E + "behemoth.tres")
