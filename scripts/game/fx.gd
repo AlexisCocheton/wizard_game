@@ -191,8 +191,13 @@ static func zone_visual(parent: Node2D, at: Vector2, radius: float,
 	var root := Node2D.new()
 	root.position = at
 	parent.add_child(root)
-	sprite(root, "protectioncircle", Vector2.ZERO, radius * 2.15, true, Color(col.r, col.g, col.b, 0.8))
-	sprite(root, zone_sheet(col), Vector2.ZERO, clampf(radius * 1.3, 120.0, 240.0), true, Color(1, 1, 1, 0.9))
+	# L anneau est TRACE : la feuille protectioncircle n occupe que 34 px de sa case
+	# et devenait une bouillie une fois etiree au rayon reel (agrandissement x10).
+	var ring := ZoneRing.new()
+	ring.setup(radius, col)
+	root.add_child(ring)
+	# L effet elementaire reste une feuille, a taille contenue pour rester net.
+	sprite(root, zone_sheet(col), Vector2.ZERO, clampf(radius * 1.2, 110.0, 200.0), true, Color(1, 1, 1, 0.9))
 	return root
 
 

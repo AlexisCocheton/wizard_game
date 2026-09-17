@@ -28,6 +28,7 @@ func run() -> void:
 	_test_refus_sans_visee()
 	_test_carte_sans_ciblage()
 	_test_origine_du_rayon_est_le_mage()
+	_test_l_anneau_de_zone_dit_la_verite()
 
 
 ## Une carte a viser doit etre reconnue comme telle par le HUD.
@@ -111,3 +112,24 @@ func _test_origine_du_rayon_est_le_mage() -> void:
 	feq(origine.y, mage.y, "le rayon part de la ligne du mage")
 	ok(origine.distance_to(Vector2.ZERO) > 100.0, "le rayon ne part pas du coin de l ecran")
 	faux_caster.free()
+
+
+## L anneau d une zone dessine EXACTEMENT le rayon qui inflige les degats.
+## Meme regle que le halo d aura : un visuel qui represente une regle est a
+## l echelle de la regle, jamais a un facteur esthetique.
+func _test_l_anneau_de_zone_dit_la_verite() -> void:
+	var ring := ZoneRing.new()
+	ring.setup(180.0, Color.WHITE)
+	feq(ring.radius, 180.0, "l anneau prend le rayon demande")
+
+	var source: String = FileAccess.get_file_as_string("res://scripts/game/fx.gd")
+	var debut: int = source.find("static func zone_visual(")
+	ok(debut >= 0, "Fx.zone_visual existe")
+	var corps: String = source.substr(debut, 700)
+	ok(corps.contains("ring.setup(radius,"),
+		"l anneau recoit le rayon de la zone, sans facteur")
+	# On cherche l APPEL, pas le mot : le commentaire qui explique le changement
+	# cite forcement l ancienne feuille.
+	not_ok(corps.contains("sprite(root, \"protectioncircle\""),
+		"l anneau n est plus la feuille de 34 px etiree x10")
+	ring.free()
