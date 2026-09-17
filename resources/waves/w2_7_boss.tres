@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ilf2d"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_sppjr"]
-[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="3_ilf2d"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_ilf2d"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_sppjr"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_8be87"]
 
@@ -15,23 +15,23 @@ start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_sppjr"]
 script = ExtResource("1_ilf2d")
-enemy = ExtResource("3_ilf2d")
-count = 1
-spawn_delay = 1.0
-start_offset = 5.0
+enemy = ExtResource("4_sppjr")
+count = 4
+spawn_delay = 2.0
+start_offset = 10.0
 
 [sub_resource type="Resource" id="Resource_n7kso"]
 script = ExtResource("1_ilf2d")
-enemy = ExtResource("4_sppjr")
-count = 6
-spawn_delay = 1.0
-start_offset = 8.0
+enemy = ExtResource("4_ilf2d")
+count = 4
+spawn_delay = 2.0
+start_offset = 22.0
 
 [resource]
 script = ExtResource("5_8be87")
 id = &"w2_7_boss"
 duration = 45.0
 entries = Array[ExtResource("1_ilf2d")]([SubResource("Resource_ilf2d"), SubResource("Resource_sppjr"), SubResource("Resource_n7kso")])
-difficulty = 1.4
+difficulty = 1.25
 is_miniboss = false
 is_boss = true

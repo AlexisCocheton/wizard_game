@@ -21,8 +21,9 @@ signal death_started()
 signal died()
 
 var step_index: int = 0
-var max_hp: int = 3
-var hp: int = 3
+## Valeurs de repli avant le premier reset() ; la verite est GameConfig.MAGE_MAX_HP.
+var max_hp: int = GameConfig.MAGE_MAX_HP
+var hp: int = GameConfig.MAGE_MAX_HP
 var is_dying: bool = false
 ## Jauge residuelle qui se vide lentement une fois les PV a zero.
 var death_gauge: float = 1.0

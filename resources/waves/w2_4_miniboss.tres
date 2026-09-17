@@ -16,22 +16,22 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_svcs1"]
 script = ExtResource("1_f6q3c")
 enemy = ExtResource("3_coh84")
-count = 6
-spawn_delay = 1.0
-start_offset = 4.0
+count = 5
+spawn_delay = 1.8
+start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_coh84"]
 script = ExtResource("1_f6q3c")
 enemy = ExtResource("4_le30a")
 count = 1
 spawn_delay = 1.0
-start_offset = 10.0
+start_offset = 16.0
 
 [resource]
 script = ExtResource("5_8h7r5")
 id = &"w2_4_miniboss"
 duration = 32.0
 entries = Array[ExtResource("1_f6q3c")]([SubResource("Resource_f6q3c"), SubResource("Resource_svcs1"), SubResource("Resource_coh84")])
-difficulty = 1.3
+difficulty = 1.2
 is_miniboss = true
 is_boss = false

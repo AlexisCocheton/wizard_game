@@ -136,7 +136,9 @@ func simulate(delta: float) -> void:
 	if not RunState.pending_offer.is_empty():
 		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
-	RunState.tick(delta)
+	# La pioche suit le temps du MONDE : a x4, quatre fois plus de monstres
+	# arrivent, il faut quatre fois plus de cartes pour y repondre.
+	RunState.tick(SpeedGauge.world_delta(delta))
 	caster.tick(delta)
 	battlefield.simulate(delta)
 	spawner.tick(delta)
@@ -198,8 +200,13 @@ func requires_aim(card: SpellCard) -> bool:
 	return card != null and card.targeting != GameEnums.Targeting.NONE
 
 
-func _mage_position() -> Vector2:
+## Publique : CastContext s en sert comme origine des sorts (voir caster_position).
+func mage_position() -> Vector2:
 	return Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)
+
+
+func _mage_position() -> Vector2:
+	return mage_position()
 
 
 func _default_aim() -> Vector2:

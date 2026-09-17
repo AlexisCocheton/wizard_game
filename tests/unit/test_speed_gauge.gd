@@ -77,18 +77,20 @@ func _test_shield_before_hp() -> void:
 	eq(SpeedGauge.hp, hp_before - 1, "le coup suivant, deja a x1, entame les PV")
 
 
+## La sequence est exprimee en PV RESTANTS, pas en nombres en dur : regler
+## MAGE_MAX_HP ne doit pas casser le test de la mecanique.
 func _test_shield_sequence() -> void:
 	SpeedGauge.reset()
+	var pv_max: int = GameConfig.MAGE_MAX_HP
 	SpeedGauge.set_step(3)
 	SpeedGauge.take_hit()  # consomme le bouclier
-	eq(SpeedGauge.hp, 3, "PV intacts apres l'effondrement")
+	eq(SpeedGauge.hp, pv_max, "PV intacts apres l'effondrement")
+	for i in range(1, pv_max):
+		SpeedGauge.take_hit()
+		eq(SpeedGauge.hp, pv_max - i, "coup %d -> %d PV" % [i + 1, pv_max - i])
+		not_ok(SpeedGauge.is_dying, "pas encore mourant a %d PV" % (pv_max - i))
 	SpeedGauge.take_hit()
-	eq(SpeedGauge.hp, 2, "2e coup -> 2 PV")
-	SpeedGauge.take_hit()
-	eq(SpeedGauge.hp, 1, "3e coup -> 1 PV")
-	not_ok(SpeedGauge.is_dying, "pas encore mourant a 1 PV")
-	SpeedGauge.take_hit()
-	eq(SpeedGauge.hp, 0, "4e coup -> 0 PV")
+	eq(SpeedGauge.hp, 0, "dernier coup -> 0 PV")
 	ok(SpeedGauge.is_dying, "0 PV declenche l'agonie")
 
 
@@ -101,7 +103,7 @@ func _test_death_drain() -> void:
 	SpeedGauge.death_started.connect(on_start)
 	SpeedGauge.died.connect(on_died)
 
-	for i in 3:
+	for i in GameConfig.MAGE_MAX_HP:
 		SpeedGauge.take_hit()
 	eq(started[0], 1, "death_started emis une seule fois")
 	eq(ended[0], 0, "died pas encore emis")
@@ -131,7 +133,7 @@ func _test_world_delta() -> void:
 	feq(SpeedGauge.world_delta(1.0), 4.0, "world_delta a x4")
 	# En agonie le monde passe au ralenti, quel que soit le multiplicateur.
 	SpeedGauge.set_step(0)
-	for i in 3:
+	for i in GameConfig.MAGE_MAX_HP:
 		SpeedGauge.take_hit()
 	feq(SpeedGauge.world_delta(1.0), GameConfig.DEATH_SLOWMO, "world_delta au ralenti en agonie")
 

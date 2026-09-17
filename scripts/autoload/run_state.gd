@@ -229,8 +229,13 @@ func roll_rarity() -> GameEnums.Rarity:
 	return GameEnums.Rarity.RARE
 
 
-## Pioche automatique : +draw_count toutes les draw_interval secondes.
-## Utilise le delta BRUT — la pioche ne subit pas le multiplicateur de vitesse.
+## Pioche automatique : +draw_count toutes les draw_interval secondes de TEMPS DU MONDE.
+##
+## L appelant (GameController.simulate) passe le delta deja multiplie par la jauge,
+## comme pour les monstres et l incantation. C est indispensable : a x4 le joueur
+## voit arriver quatre fois plus de monstres et lance quatre fois plus de sorts ;
+## si la pioche restait en temps reel, il finirait les mains vides au pire moment
+## et le multiplicateur serait une punition au lieu d un pari.
 func tick(delta: float) -> void:
 	if _cost_reduction_time > 0.0:
 		_cost_reduction_time -= delta

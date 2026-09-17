@@ -105,9 +105,12 @@ func _test_enrage() -> void:
 	for i in 10:
 		e.take_damage(1.0, [])
 	feq(e.enrage_bonus(), 0.5, "plafonne au cap")
+	# Le test porte sur le RAPPORT, pas sur une distance absolue : GameConfig
+	# .ENEMY_SPEED_SCALE est un reglage d equilibrage qui bouge, la regle non.
 	var y0: float = e.position.y
 	e.advance(1.0)
-	feq(e.position.y - y0, 90.0, "vitesse x1.5 : 60 px/s devient 90")
+	var attendu: float = 60.0 * GameConfig.ENEMY_SPEED_SCALE * 1.5
+	feq(e.position.y - y0, attendu, "enrage a fond : la vitesse est multipliee par 1.5")
 
 
 func _test_aura_protectrice() -> void:

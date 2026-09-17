@@ -17,29 +17,29 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_pux0c"]
 script = ExtResource("1_xw3nt")
 enemy = ExtResource("3_pux0c")
-count = 5
-spawn_delay = 0.8
-start_offset = 1.0
+count = 4
+spawn_delay = 1.6
+start_offset = 3.0
 
 [sub_resource type="Resource" id="Resource_88l8i"]
 script = ExtResource("1_xw3nt")
 enemy = ExtResource("4_27aos")
 count = 1
 spawn_delay = 1.0
-start_offset = 6.0
+start_offset = 11.0
 
 [sub_resource type="Resource" id="Resource_27aos"]
 script = ExtResource("1_xw3nt")
 enemy = ExtResource("4_88l8i")
-count = 6
-spawn_delay = 0.8
-start_offset = 8.0
+count = 5
+spawn_delay = 1.5
+start_offset = 16.0
 
 [resource]
 script = ExtResource("5_27aos")
 id = &"w2_6"
 duration = 30.0
 entries = Array[ExtResource("1_xw3nt")]([SubResource("Resource_dr32n"), SubResource("Resource_pux0c"), SubResource("Resource_88l8i"), SubResource("Resource_27aos")])
-difficulty = 1.8
+difficulty = 1.55
 is_miniboss = false
 is_boss = false

@@ -10,36 +10,36 @@
 [sub_resource type="Resource" id="Resource_ipfb3"]
 script = ExtResource("1_qo0aa")
 enemy = ExtResource("2_ipfb3")
-count = 2
-spawn_delay = 1.8
+count = 1
+spawn_delay = 2.5
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_s4fvt"]
 script = ExtResource("1_qo0aa")
 enemy = ExtResource("3_ipfb3")
-count = 3
-spawn_delay = 1.2
-start_offset = 2.0
+count = 2
+spawn_delay = 2.5
+start_offset = 8.0
 
 [sub_resource type="Resource" id="Resource_ntcod"]
 script = ExtResource("1_qo0aa")
 enemy = ExtResource("4_ntcod")
 count = 1
 spawn_delay = 1.0
-start_offset = 5.0
+start_offset = 15.0
 
 [sub_resource type="Resource" id="Resource_verkj"]
 script = ExtResource("1_qo0aa")
 enemy = ExtResource("5_verkj")
 count = 2
-spawn_delay = 1.5
-start_offset = 7.0
+spawn_delay = 2.0
+start_offset = 20.0
 
 [resource]
 script = ExtResource("4_s4fvt")
 id = &"w2_3"
 duration = 28.0
 entries = Array[ExtResource("1_qo0aa")]([SubResource("Resource_ipfb3"), SubResource("Resource_s4fvt"), SubResource("Resource_ntcod"), SubResource("Resource_verkj")])
-difficulty = 1.5
+difficulty = 1.3
 is_miniboss = false
 is_boss = false

@@ -27,6 +27,7 @@ func run() -> void:
 	_test_position_utilise_le_point()
 	_test_refus_sans_visee()
 	_test_carte_sans_ciblage()
+	_test_origine_du_rayon_est_le_mage()
 
 
 ## Une carte a viser doit etre reconnue comme telle par le HUD.
@@ -95,3 +96,18 @@ func _test_carte_sans_ciblage() -> void:
 	EffectRegistry.cast(card, ctx)
 	ok(bf.cast_haste > 1.0, "un sort sans ciblage agit sans point vise")
 	bf.free()
+
+
+## La fleche percante part DU MAGE. Le GameController est un Node2D pose a
+## l origine de la scene : prendre sa position globale faisait partir le rayon du
+## coin haut-gauche, et la ligne ne touchait plus personne.
+func _test_origine_du_rayon_est_le_mage() -> void:
+	var mage := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)
+	var faux_caster := Node2D.new()   # a l origine, comme le GameController
+	var ctx := CastContext.make(null, _card(GameEnums.Targeting.DIRECTION, "pierce_line"))
+	ctx.caster = faux_caster
+	var origine: Vector2 = ctx.caster_position()
+	feq(origine.x, mage.x, "le rayon part de la colonne du mage")
+	feq(origine.y, mage.y, "le rayon part de la ligne du mage")
+	ok(origine.distance_to(Vector2.ZERO) > 100.0, "le rayon ne part pas du coin de l ecran")
+	faux_caster.free()

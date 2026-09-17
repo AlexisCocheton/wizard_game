@@ -8,13 +8,16 @@ extends RefCounted
 ##
 ## Logique pure, RNG injecte : deterministe et testable a froid.
 
-const BASE_BUDGET: int = 8
-const GROWTH_PER_WAVE: int = 3
+## Mesure au banc : a +3 par vague, la vague 4 du mode infini valait deja la
+## derniere du niveau 1 et la partie s arretait vers la vague 3. Le mode Massacre
+## doit laisser le temps de construire un deck avant de punir.
+const BASE_BUDGET: int = 6
+const GROWTH_PER_WAVE: int = 2
 ## Un mini-boss toutes les 5 vagues, un boss toutes les 10.
 const MINIBOSS_EVERY: int = 5
 const BOSS_EVERY: int = 10
 ## Au-dela, la difficulte (PV/vitesse) monte aussi, pas seulement le nombre.
-const DIFFICULTY_PER_WAVE: float = 0.04
+const DIFFICULTY_PER_WAVE: float = 0.03
 
 
 ## Budget de puissance de la vague n (n commence a 1).

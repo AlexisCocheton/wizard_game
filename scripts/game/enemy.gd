@@ -107,6 +107,9 @@ func _setup_visual() -> void:
 ## doivent etre nettement plus grands pour se lire sur un ecran 1080 de large.
 const VISUAL_FACTOR: float = 1.9
 
+## Part des degats encaissee par un monstre en phase (Ombre).
+const PHASE_DAMAGE_FACTOR: float = 0.4
+
 
 func visual_radius() -> float:
 	return radius() * VISUAL_FACTOR
@@ -151,9 +154,14 @@ func advance(world_delta: float) -> void:
 		if _phase_timer >= definition.phase_interval:
 			_phase_timer = 0.0
 			_hidden = not _hidden
-			visible = not _hidden
+			# Toujours VISIBLE, mais transparente : le joueur doit pouvoir la viser
+			# et comprendre pourquoi elle encaisse moins.
+			modulate.a = 0.35 if _hidden else 1.0
 
-	var speed: float = definition.base_speed * speed_scale * _slow_factor * (1.0 + _enrage_bonus)
+	# ENEMY_SPEED_SCALE : reglage global de la fenetre de reaction du joueur.
+	# Le modifier touche TOUS les monstres d un coup, sans reecrire 22 fichiers.
+	var speed: float = (definition.base_speed * GameConfig.ENEMY_SPEED_SCALE
+		* speed_scale * _slow_factor * (1.0 + _enrage_bonus))
 
 	# A-coups : fonce, puis marque une pause.
 	if definition.burst_move:
@@ -261,8 +269,12 @@ func take_damage(amount: float, tags: Array) -> bool:
 	for t in tags:
 		if definition.is_immune_to(t):
 			return false
+	# L Ombre en phase encaisse MOINS, mais reste touchable. Une invulnerabilite
+	# totale sur un cycle de 2,5 s, plus long que la plupart des incantations,
+	# rendait le monstre impossible a gerer : le joueur lancait dans le vide sans
+	# aucun moyen de savoir quand.
 	if _hidden:
-		return false
+		amount *= PHASE_DAMAGE_FACTOR
 	if definition.dodge_chance > 0.0 and randf() < definition.dodge_chance:
 		return false
 	if _shield_up:

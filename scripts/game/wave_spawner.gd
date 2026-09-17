@@ -66,11 +66,17 @@ func start_next() -> bool:
 		if entry == null or entry.enemy == null:
 			continue
 		var count: int = entry.count * maxi(1, entry.enemy.swarm_count)
+		# Les monstres d une meme entree descendent dans un COULOIR commun plutot
+		# que disperses sur toute la largeur. Mesure au banc : disperses, une zone
+		# n en attrapait jamais plus d un, et les sorts de zone ne servaient a rien.
+		var lane: float = _rng.randf_range(LANE_MARGIN,
+			GameConfig.BATTLEFIELD_WIDTH - LANE_MARGIN)
 		for i in count:
 			_queue.append({
 				"def": entry.enemy,
 				"at": entry.start_offset + i * entry.spawn_delay,
 				"difficulty": w.difficulty,
+				"lane": lane,
 			})
 	_queue.sort_custom(func(a, b): return a["at"] < b["at"])
 	active = true
@@ -85,18 +91,27 @@ func tick(delta: float) -> void:
 	while not _queue.is_empty() and _queue[0]["at"] <= _elapsed:
 		var item: Dictionary = _queue.pop_front()
 		var def: EnemyDef = item["def"]
-		battlefield.spawn_enemy(def, _spawn_x(def), item["difficulty"])
+		battlefield.spawn_enemy(def, _spawn_x(def, item.get("lane", -1.0)), item["difficulty"])
 	# La vague est finie quand la file est vide et le terrain nettoye.
 	if _queue.is_empty() and battlefield.alive_count() == 0:
 		active = false
 		wave_cleared.emit(index)
 
 
-func _spawn_x(def: EnemyDef) -> float:
+## Largeur du couloir d un groupe : assez etroit pour qu une zone en couvre
+## plusieurs, assez large pour qu ils ne se superposent pas exactement.
+const LANE_MARGIN: float = 220.0
+const LANE_SPREAD: float = 130.0
+
+
+func _spawn_x(def: EnemyDef, lane: float = -1.0) -> float:
 	var margin: float = 90.0
 	if def.entry_side:
 		return margin if _rng.randi() % 2 == 0 else GameConfig.BATTLEFIELD_WIDTH - margin
-	return _rng.randf_range(margin, GameConfig.BATTLEFIELD_WIDTH - margin)
+	if lane < 0.0:
+		return _rng.randf_range(margin, GameConfig.BATTLEFIELD_WIDTH - margin)
+	return clampf(lane + _rng.randf_range(-LANE_SPREAD, LANE_SPREAD),
+		margin, GameConfig.BATTLEFIELD_WIDTH - margin)
 
 
 func current_wave() -> WaveDef:

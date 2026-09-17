@@ -34,7 +34,8 @@ func run() -> void:
 
 
 func _test_budget_progressif() -> void:
-	eq(WaveBudget.budget_for(1), 8, "vague 1 : budget 8")
+	# Le budget de depart est un REGLAGE : le test verifie la regle, pas la valeur.
+	eq(WaveBudget.budget_for(1), WaveBudget.BASE_BUDGET, "vague 1 : le budget de base")
 	ok(WaveBudget.budget_for(2) > WaveBudget.budget_for(1), "le budget monte a la vague 2")
 	ok(WaveBudget.budget_for(10) > WaveBudget.budget_for(5), "et continue de monter")
 	ok(WaveBudget.difficulty_for(10) > WaveBudget.difficulty_for(1), "la difficulte monte aussi")

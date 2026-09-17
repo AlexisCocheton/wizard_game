@@ -10,10 +10,15 @@ const AUTO_RISE_INTERVAL: float = 20.0
 const DEATH_SLOWMO: float = 0.25
 ## Fraction de jauge d'agonie perdue par seconde reelle -> 4 s avant la defaite.
 const DEATH_DRAIN_RATE: float = 0.25
-const MAGE_MAX_HP: int = 3
+## Mesure au banc : le joueur intercepte ~2 monstres sur 3. Avec 3 PV il perdait
+## avant la vague 2. A 8 PV il encaisse ses erreurs et apprend, tout en mourant
+## quand meme s il decroche vraiment.
+const MAGE_MAX_HP: int = 8
 
 ## --- Deck / pioche ---
-const DRAW_INTERVAL: float = 8.0
+## Mesure au banc (tools/sim_balance.gd) : a 8 s, le joueur restait sans carte
+## jouable pendant que la vague arrivait. A 5 s il a toujours un choix.
+const DRAW_INTERVAL: float = 5.0
 const DRAW_COUNT: int = 2
 const MAX_HAND_SIZE: int = 8
 ## Secondes avant que la defausse soit remelangee dans la pioche.
@@ -33,6 +38,11 @@ const RARITY_WEIGHTS: Dictionary = {
 	GameEnums.Rarity.EPIC: 0.15,
 	GameEnums.Rarity.LEGENDARY: 0.05,
 }
+
+## Ralentissement global de la descente. Mesure au banc : a vitesse d origine, la
+## fenetre de tir sur un lutin (10 s) etait trop courte pour viser au doigt sur
+## mobile alors que d autres monstres arrivaient en meme temps.
+const ENEMY_SPEED_SCALE: float = 0.62
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.

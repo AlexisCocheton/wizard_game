@@ -22,6 +22,7 @@ func run() -> void:
 	_test_draw_timer()
 	_test_hand_limit()
 	_test_play_card()
+	_test_pioche_suit_la_vitesse()
 
 
 func _test_starter_deck() -> void:
@@ -90,3 +91,31 @@ func _test_play_card() -> void:
 	eq(RunState.discard.size(), 1, "la carte part a la defausse")
 	ok(RunState.used_legendary, "jouer une legendaire est trace pour les objectifs")
 	not_ok(RunState.play_card(legendary), "une carte absente de la main n'est pas jouable")
+
+
+## La pioche suit le TEMPS DU MONDE, comme les monstres et l incantation.
+##
+## Mesure au banc d equilibrage : quand la pioche suivait le temps reel, passer a
+## x4 quadruplait les monstres arrives et le nombre de sorts lances, mais pas les
+## cartes piochees. Le joueur se retrouvait les mains vides exactement quand le
+## jeu devenait le plus dur, et le multiplicateur devenait une punition.
+func _test_pioche_suit_la_vitesse() -> void:
+	RunState.reset()
+	RunState.set_seed(7)
+	RunState.build_starter_deck([_card("spark", 40)])
+	SpeedGauge.reset()
+
+	# A x1 : une echeance apres DRAW_INTERVAL secondes reelles.
+	RunState.tick(SpeedGauge.world_delta(GameConfig.DRAW_INTERVAL))
+	eq(RunState.hand.size(), GameConfig.DRAW_COUNT, "x1 : une pioche par intervalle")
+
+	# A x4 : le meme temps reel doit rapporter quatre fois plus de cartes.
+	RunState.reset()
+	RunState.set_seed(7)
+	RunState.build_starter_deck([_card("spark", 40)])
+	SpeedGauge.set_step(GameConfig.SPEED_STEPS.size() - 1)
+	feq(SpeedGauge.multiplier(), 4.0, "la jauge est bien a x4")
+	RunState.tick(SpeedGauge.world_delta(GameConfig.DRAW_INTERVAL))
+	eq(RunState.hand.size(), GameConfig.DRAW_COUNT * 4,
+		"x4 : quatre pioches dans le meme temps reel")
+	SpeedGauge.reset()

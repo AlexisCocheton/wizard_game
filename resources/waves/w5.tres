@@ -11,29 +11,29 @@
 script = ExtResource("1_ne4id")
 enemy = ExtResource("2_4k3k1")
 count = 2
-spawn_delay = 2.0
+spawn_delay = 2.5
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_fhclr"]
 script = ExtResource("1_ne4id")
 enemy = ExtResource("3_fhclr")
 count = 3
-spawn_delay = 1.5
-start_offset = 3.0
+spawn_delay = 2.0
+start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_ifisb"]
 script = ExtResource("1_ne4id")
 enemy = ExtResource("4_4k3k1")
 count = 2
-spawn_delay = 1.5
-start_offset = 5.0
+spawn_delay = 2.0
+start_offset = 12.0
 
 [sub_resource type="Resource" id="Resource_gujlq"]
 script = ExtResource("1_ne4id")
 enemy = ExtResource("4_ifisb")
 count = 1
 spawn_delay = 1.0
-start_offset = 6.0
+start_offset = 16.0
 
 [resource]
 script = ExtResource("5_gujlq")

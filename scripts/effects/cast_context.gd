@@ -20,8 +20,12 @@ static func make(bf: Object, card_ref: SpellCard = null) -> CastContext:
 	return c
 
 
-## Position d origine du sort. Le mage si connu, sinon la ligne du mage.
+## Position d origine du sort : toujours le mage.
+##
+## Ne PAS utiliser la position globale du `caster` : le GameController est un
+## Node2D pose a l origine de la scene, la fleche percante partait donc du coin
+## haut-gauche et sa ligne ne croisait plus aucun monstre.
 func caster_position() -> Vector2:
-	if caster != null and caster is Node2D:
-		return (caster as Node2D).global_position
+	if caster != null and caster.has_method("mage_position"):
+		return caster.call("mage_position")
 	return Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)

@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ip62r"]
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="2_faykl"]
 [ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="3_ge784"]
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_faykl"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_pgyu4"]
-
-[sub_resource type="Resource" id="Resource_faykl"]
-script = ExtResource("1_ip62r")
-enemy = ExtResource("2_faykl")
-count = 2
-spawn_delay = 1.4
-start_offset = 0.0
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="5_ge784"]
 
 [sub_resource type="Resource" id="Resource_ge784"]
 script = ExtResource("1_ip62r")
-enemy = ExtResource("3_ge784")
+enemy = ExtResource("2_faykl")
 count = 3
-spawn_delay = 1.6
-start_offset = 4.0
+spawn_delay = 2.0
+start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_pgyu4"]
+script = ExtResource("1_ip62r")
+enemy = ExtResource("3_ge784")
+count = 3
+spawn_delay = 2.0
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_q87ot"]
 script = ExtResource("1_ip62r")
 enemy = ExtResource("4_faykl")
 count = 1
 spawn_delay = 1.0
-start_offset = 7.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_dykfr"]
+script = ExtResource("1_ip62r")
+enemy = ExtResource("5_ge784")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
 
 [resource]
 script = ExtResource("4_pgyu4")
 id = &"w3"
 duration = 26.0
-entries = Array[ExtResource("1_ip62r")]([SubResource("Resource_faykl"), SubResource("Resource_ge784"), SubResource("Resource_pgyu4")])
+entries = Array[ExtResource("1_ip62r")]([SubResource("Resource_ge784"), SubResource("Resource_pgyu4"), SubResource("Resource_q87ot"), SubResource("Resource_dykfr")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = false

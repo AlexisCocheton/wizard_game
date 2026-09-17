@@ -197,82 +197,82 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
-		"Inflige 14 degats a une cible.", GameEnums.Rarity.COMMON, 1.6,
+		"Inflige 14 degats a une cible.", GameEnums.Rarity.COMMON, 1.1,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_single", 14.0)], 4)
 	_save(bolt, "res://resources/cards/common/arcane_bolt.tres")
 
 	var pierce := _card("piercing_arrow", "Fleche percante",
 		"Traverse jusqu a 5 ennemis en ligne, 10 degats chacun.",
-		GameEnums.Rarity.COMMON, 2.2, GameEnums.Targeting.DIRECTION,
+		GameEnums.Rarity.COMMON, 1.5, GameEnums.Targeting.DIRECTION,
 		[GameEnums.DamageTag.PHYSICAL],
 		[_spec("pierce_line", 10.0, 0.0, 120.0, {&"max_targets": 5})], 3)
 	_save(pierce, "res://resources/cards/common/piercing_arrow.tres")
 
 	var frost := _card("frost_field", "Champ de givre",
-		"Zone qui ralentit de 50 pourcent pendant 5 s.", GameEnums.Rarity.COMMON, 2.0,
+		"Zone qui ralentit de 50 pourcent pendant 5 s.", GameEnums.Rarity.COMMON, 1.4,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 5.0, 180.0, {&"slow_pct": 50.0})], 3)
 	_save(frost, "res://resources/cards/common/frost_field.tres")
 
 	var ember := _card("ember_pool", "Braises",
-		"Zone infligeant 8 degats par seconde pendant 4 s.", GameEnums.Rarity.COMMON, 2.4,
+		"Zone infligeant 8 degats par seconde pendant 4 s.", GameEnums.Rarity.COMMON, 1.7,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 8.0, 4.0, 160.0)], 2)
 	_save(ember, "res://resources/cards/common/ember_pool.tres")
 
 	var fireball := _card("fireball", "Boule de feu",
-		"Explosion de 26 degats dans une zone visee.", GameEnums.Rarity.COMMON, 2.0,
+		"Explosion de 26 degats dans une zone visee.", GameEnums.Rarity.COMMON, 1.4,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 26.0, 0.6, 170.0)], 2)
 	_save(fireball, "res://resources/cards/common/fireball.tres")
 
 	# --- Rares ---
 	var haste := _card("quickening", "Precipitation",
-		"Accelere l incantation de 60 pourcent pendant 6 s.", GameEnums.Rarity.RARE, 1.2,
+		"Accelere l incantation de 60 pourcent pendant 6 s.", GameEnums.Rarity.RARE, 0.8,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("self_haste", 60.0, 6.0)])
 	_save(haste, "res://resources/cards/rare/quickening.tres")
 
 	var drag := _card("temporal_drag", "Entrave temporelle",
-		"Ralentit tous les ennemis de 40 pourcent pendant 5 s.", GameEnums.Rarity.RARE, 2.0,
+		"Ralentit tous les ennemis de 40 pourcent pendant 5 s.", GameEnums.Rarity.RARE, 1.4,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.SLOW],
 		[_spec("slow_enemy_gauge", 40.0, 5.0)])
 	_save(drag, "res://resources/cards/rare/temporal_drag.tres")
 
 	var cycle := _card("cycle_of_thought", "Cycle de pensee",
-		"Defausse 2 cartes, en pioche 2.", GameEnums.Rarity.RARE, 0.8,
+		"Defausse 2 cartes, en pioche 2.", GameEnums.Rarity.RARE, 0.6,
 		GameEnums.Targeting.NONE, [],
 		[_spec("discard_draw", 0.0, 0.0, 0.0, {&"count": 2})])
 	_save(cycle, "res://resources/cards/rare/cycle_of_thought.tres")
 
 	var wall := _card("stone_wall", "Mur de pierre",
 		"Erige un mur qui force les monstres a le contourner pendant 8 s.",
-		GameEnums.Rarity.RARE, 1.8, GameEnums.Targeting.POSITION, [],
+		GameEnums.Rarity.RARE, 1.3, GameEnums.Targeting.POSITION, [],
 		[_spec("build_wall", 0.0, 8.0, 200.0, {&"thickness": 60.0})])
 	_save(wall, "res://resources/cards/rare/stone_wall.tres")
 
 	# --- Epiques ---
 	var ally := _card("mirror_apprentice", "Apprenti miroir",
-		"Invoque un allie qui frappe pour 12 pendant 8 s.", GameEnums.Rarity.EPIC, 2.6,
+		"Invoque un allie qui frappe pour 12 pendant 8 s.", GameEnums.Rarity.EPIC, 1.8,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.SUMMON],
 		[_spec("summon_ally", 12.0, 8.0)])
 	_save(ally, "res://resources/cards/epic/mirror_apprentice.tres")
 
 	var focus := _card("deep_focus", "Concentration",
 		"Defausse ta main : moins 1 s d incantation par carte, 8 s.",
-		GameEnums.Rarity.EPIC, 1.0, GameEnums.Targeting.NONE, [],
+		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
 		[_spec("discard_hand_for_speed", 0.0, 8.0, 0.0, {&"seconds_per_card": 1.0})])
 	_save(focus, "res://resources/cards/epic/deep_focus.tres")
 
 	var bargain := _card("reckless_bargain", "Pacte imprudent",
 		"Accelere les ennemis de 30 pourcent pendant 5 s, pioche 3 cartes.",
-		GameEnums.Rarity.EPIC, 1.0, GameEnums.Targeting.NONE, [],
+		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
 		[_spec("haste_enemies_boon", 30.0, 5.0, 0.0, {&"draw": 3})])
 	_save(bargain, "res://resources/cards/epic/reckless_bargain.tres")
 
 	var purge := _card("deck_purge", "Epuration",
-		"Retire 2 cartes du deck.", GameEnums.Rarity.EPIC, 1.4,
+		"Retire 2 cartes du deck.", GameEnums.Rarity.EPIC, 1.0,
 		GameEnums.Targeting.NONE, [],
 		[_spec("remove_cards", 0.0, 0.0, 0.0, {&"count": 2})])
 	_save(purge, "res://resources/cards/epic/deck_purge.tres")
@@ -280,7 +280,7 @@ func _cards() -> void:
 	# --- Legendaire ---
 	var rift := _card("time_rift", "Faille temporelle",
 		"Reduit le cout des cartes de 1.5 s pendant 10 s et frappe en ligne.",
-		GameEnums.Rarity.LEGENDARY, 2.8, GameEnums.Targeting.DIRECTION,
+		GameEnums.Rarity.LEGENDARY, 2.0, GameEnums.Targeting.DIRECTION,
 		[GameEnums.DamageTag.ARCANE],
 		[
 			_spec("cost_reduction", 1.5, 10.0),
@@ -290,63 +290,63 @@ func _cards() -> void:
 
 	# --- Variete : cast court/long, petite/grande zone, court/long effet ---
 	var spark := _card("spark", "Etincelle",
-		"8 degats sur une cible. Rapide a lancer.", GameEnums.Rarity.COMMON, 0.8,
+		"8 degats sur une cible. Rapide a lancer.", GameEnums.Rarity.COMMON, 0.6,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_single", 8.0)], 2)
 	_save(spark, "res://resources/cards/common/spark.tres")
 
 	var frost_rain := _card("frost_rain", "Pluie de givre",
-		"Tres grande zone qui ralentit de 30 pourcent pendant 8 s.", GameEnums.Rarity.COMMON, 2.6,
+		"Tres grande zone qui ralentit de 30 pourcent pendant 8 s.", GameEnums.Rarity.COMMON, 1.8,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 8.0, 260.0, {&"slow_pct": 30.0})])
 	_save(frost_rain, "res://resources/cards/common/frost_rain.tres")
 
 	var brazier := _card("brazier", "Brasier",
-		"Zone de feu : 14 degats par seconde pendant 6 s.", GameEnums.Rarity.RARE, 3.0,
+		"Zone de feu : 14 degats par seconde pendant 6 s.", GameEnums.Rarity.RARE, 2.1,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 14.0, 6.0, 140.0)])
 	_save(brazier, "res://resources/cards/rare/brazier.tres")
 
 	var meteor := _card("meteor", "Meteore",
-		"Long a invoquer, mais 60 degats d un coup dans une petite zone.", GameEnums.Rarity.RARE, 4.0,
+		"Long a invoquer, mais 60 degats d un coup dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
 		[_spec("ground_zone", 200.0, 0.3, 120.0)])
 	_save(meteor, "res://resources/cards/rare/meteor.tres")
 
 	var about_face := _card("about_face", "Volte-face",
-		"Tous les monstres font demi-tour pendant 3 s.", GameEnums.Rarity.RARE, 1.5,
+		"Tous les monstres font demi-tour pendant 3 s.", GameEnums.Rarity.RARE, 1.0,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("reverse_enemies", 0.0, 3.0)])
 	_save(about_face, "res://resources/cards/rare/about_face.tres")
 
 	var focalisation := _card("focus", "Focalisation",
-		"Le prochain sort inflige le double de degats.", GameEnums.Rarity.RARE, 1.0,
+		"Le prochain sort inflige le double de degats.", GameEnums.Rarity.RARE, 0.7,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("empower_next", 2.0)])
 	_save(focalisation, "res://resources/cards/rare/focus.tres")
 
 	var deep_freeze := _card("deep_freeze", "Gel profond",
-		"Zone qui ralentit de 85 pourcent pendant 4 s. Presque un arret.", GameEnums.Rarity.EPIC, 2.2,
+		"Zone qui ralentit de 85 pourcent pendant 4 s. Presque un arret.", GameEnums.Rarity.EPIC, 1.5,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 4.0, 170.0, {&"slow_pct": 85.0})])
 	_save(deep_freeze, "res://resources/cards/epic/deep_freeze.tres")
 
 	var weakness := _card("weakness_mark", "Marque de faiblesse",
-		"Zone ou les monstres subissent le double de degats pendant 6 s.", GameEnums.Rarity.EPIC, 1.8,
+		"Zone ou les monstres subissent le double de degats pendant 6 s.", GameEnums.Rarity.EPIC, 1.3,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
 		[_spec("ground_zone", 0.0, 6.0, 200.0, {&"vuln_mult": 2.0})])
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
 
 	var resonance := _card("resonance", "Resonance",
 		"6 degats par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
-		GameEnums.Rarity.EPIC, 2.4, GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
 	_save(resonance, "res://resources/cards/epic/resonance.tres")
 
 	var hourglass := _card("hourglass_shard", "Sablier fendu",
 		"Le temps se fige pour eux et s emballe pour toi : ennemis -60 pourcent, "
 		+ "incantation +100 pourcent, pendant 6 s.",
-		GameEnums.Rarity.LEGENDARY, 3.0, GameEnums.Targeting.NONE,
+		GameEnums.Rarity.LEGENDARY, 2.1, GameEnums.Targeting.NONE,
 		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.SLOW],
 		[
 			_spec("slow_enemy_gauge", 60.0, 6.0),
@@ -382,7 +382,8 @@ func _waves_and_level() -> void:
 	w1.id = &"w1"
 	w1.duration = 22.0
 	w1.difficulty = 1.0
-	w1.entries = [_entry(E + "gnome.tres", 6, 1.2)]
+	# Premiere vague : espacee, pour apprendre a viser sans etre submerge.
+	w1.entries = [_entry(E + "gnome.tres", 5, 2.2)]
 	_save(w1, "res://resources/waves/w1.tres")
 
 	var w2 := WaveDef.new()
@@ -390,9 +391,9 @@ func _waves_and_level() -> void:
 	w2.duration = 25.0
 	w2.difficulty = 1.1
 	w2.entries = [
-		_entry(E + "gnome.tres", 5, 1.0),
-		_entry(E + "sprite.tres", 4, 0.9, 3.0),
-		_entry(E + "hopper.tres", 2, 1.2, 6.0),
+		_entry(E + "gnome.tres", 4, 1.8),
+		_entry(E + "sprite.tres", 3, 1.6, 5.0),
+		_entry(E + "hopper.tres", 2, 2.0, 12.0),
 	]
 	_save(w2, "res://resources/waves/w2.tres")
 
@@ -400,21 +401,25 @@ func _waves_and_level() -> void:
 	w3.id = &"w3"
 	w3.duration = 26.0
 	w3.difficulty = 1.2
+	# Cette vague precede le mini-boss : elle doit preparer le saut, pas le subir.
 	w3.entries = [
-		_entry(E + "rat_swarm.tres", 2, 1.4),
-		_entry(E + "wisp.tres", 3, 1.6, 4.0),
-		_entry(E + "imp_archer.tres", 1, 1.0, 7.0),
+		_entry(E + "rat_swarm.tres", 3, 2.0),
+		_entry(E + "wisp.tres", 3, 2.0, 7.0),
+		_entry(E + "imp_archer.tres", 1, 1.0, 15.0),
+		_entry(E + "hopper.tres", 1, 1.0, 20.0),
 	]
 	_save(w3, "res://resources/waves/w3.tres")
 
 	var w4 := WaveDef.new()
 	w4.id = &"w4_miniboss"
 	w4.duration = 30.0
-	w4.difficulty = 1.0
+	# Le mini-boss EST le saut de difficulte : son escorte reste legere pour que
+	# le joueur puisse se concentrer sur lui.
+	w4.difficulty = 0.85
 	w4.is_miniboss = true
 	w4.entries = [
 		_entry(E + "warden.tres", 1, 1.0),
-		_entry(E + "gnome.tres", 4, 1.5, 5.0),
+		_entry(E + "gnome.tres", 3, 2.5, 10.0),
 	]
 	_save(w4, "res://resources/waves/w4_miniboss.tres")
 
@@ -423,10 +428,10 @@ func _waves_and_level() -> void:
 	w5.duration = 28.0
 	w5.difficulty = 1.35
 	w5.entries = [
-		_entry(E + "golem.tres", 2, 2.0),
-		_entry(E + "shade.tres", 3, 1.5, 3.0),
-		_entry(E + "sand_serpent.tres", 2, 1.5, 5.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 6.0),
+		_entry(E + "golem.tres", 2, 2.5),
+		_entry(E + "shade.tres", 3, 2.0, 6.0),
+		_entry(E + "sand_serpent.tres", 2, 2.0, 12.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 16.0),
 	]
 	_save(w5, "res://resources/waves/w5.tres")
 
@@ -489,83 +494,90 @@ func _waves_and_level() -> void:
 	# --- Niveau 2 : plus dense, plus rapide, le boss escorte ---
 	var v1 := WaveDef.new()
 	v1.id = &"w2_1"
-	v1.duration = 24.0
-	v1.difficulty = 1.3
+	v1.duration = 26.0
+	# Le niveau 2 PROLONGE la courbe du niveau 1, il ne repart pas d un mur : sa
+	# premiere vague se situait au-dessus de la cinquieme du niveau precedent.
+	v1.difficulty = 1.1
 	v1.entries = [
-		_entry(E + "gnome.tres", 5, 0.9),
-		_entry(E + "sprite.tres", 4, 1.0, 4.0),
-		_entry(E + "jelly.tres", 1, 1.0, 8.0),
+		_entry(E + "gnome.tres", 4, 2.0),
+		_entry(E + "sprite.tres", 3, 2.0, 8.0),
+		_entry(E + "jelly_mid.tres", 2, 2.0, 16.0),
 	]
 	_save(v1, "res://resources/waves/w2_1.tres")
 
 	var v2 := WaveDef.new()
 	v2.id = &"w2_2"
 	v2.duration = 26.0
-	v2.difficulty = 1.4
+	v2.difficulty = 1.2
 	v2.entries = [
-		_entry(E + "rat_swarm.tres", 3, 1.2),
-		_entry(E + "wisp.tres", 3, 1.3, 3.0),
-		_entry(E + "berserker.tres", 2, 2.0, 6.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 8.0),
+		_entry(E + "rat_swarm.tres", 3, 2.0),
+		_entry(E + "wisp.tres", 3, 2.0, 7.0),
+		_entry(E + "berserker.tres", 1, 2.5, 14.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 19.0),
 	]
 	_save(v2, "res://resources/waves/w2_2.tres")
 
 	var v3 := WaveDef.new()
 	v3.id = &"w2_3"
 	v3.duration = 28.0
-	v3.difficulty = 1.5
+	# Chevalier du vide (annule le 1er coup) et Ombre (encaisse moins en phase)
+	# demandent chacun plusieurs sorts. Les cumuler dans la meme vague rendait
+	# celle-ci infranchissable : on les repartit.
+	v3.difficulty = 1.3
 	v3.entries = [
-		_entry(E + "void_knight.tres", 2, 1.8),
-		_entry(E + "shade.tres", 3, 1.2, 2.0),
-		_entry(E + "ghoul_priest.tres", 1, 1.0, 5.0),
-		_entry(E + "imp_archer.tres", 2, 1.5, 7.0),
+		_entry(E + "void_knight.tres", 1, 2.5),
+		_entry(E + "shade.tres", 2, 2.5, 8.0),
+		_entry(E + "ghoul_priest.tres", 1, 1.0, 15.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 20.0),
 	]
 	_save(v3, "res://resources/waves/w2_3.tres")
 
 	var v4 := WaveDef.new()
 	v4.id = &"w2_4_miniboss"
 	v4.duration = 32.0
-	v4.difficulty = 1.3
+	v4.difficulty = 1.2
 	v4.is_miniboss = true
 	v4.entries = [
 		_entry(E + "warden.tres", 1, 1.0),
-		_entry(E + "sprite.tres", 6, 1.0, 4.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 10.0),
+		_entry(E + "sprite.tres", 5, 1.8, 6.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 16.0),
 	]
 	_save(v4, "res://resources/waves/w2_4_miniboss.tres")
 
 	var v5 := WaveDef.new()
 	v5.id = &"w2_5"
 	v5.duration = 28.0
-	v5.difficulty = 1.7
+	v5.difficulty = 1.4
 	v5.entries = [
-		_entry(E + "hive.tres", 2, 2.5),
-		_entry(E + "golem.tres", 2, 2.0, 5.0),
-		_entry(E + "sand_serpent.tres", 3, 1.0, 9.0),
+		_entry(E + "hive.tres", 1, 3.0),
+		_entry(E + "golem.tres", 2, 2.5, 7.0),
+		_entry(E + "sand_serpent.tres", 3, 2.0, 15.0),
 	]
 	_save(v5, "res://resources/waves/w2_5.tres")
 
 	var v6 := WaveDef.new()
 	v6.id = &"w2_6"
 	v6.duration = 30.0
-	v6.difficulty = 1.8
+	v6.difficulty = 1.55
 	v6.entries = [
 		_entry(E + "totem_guardian.tres", 1, 1.0),
-		_entry(E + "gnome.tres", 5, 0.8, 1.0),
-		_entry(E + "glutton.tres", 1, 1.0, 6.0),
-		_entry(E + "sprite.tres", 6, 0.8, 8.0),
+		_entry(E + "gnome.tres", 4, 1.6, 3.0),
+		_entry(E + "glutton.tres", 1, 1.0, 11.0),
+		_entry(E + "sprite.tres", 5, 1.5, 16.0),
 	]
 	_save(v6, "res://resources/waves/w2_6.tres")
 
 	var v7 := WaveDef.new()
 	v7.id = &"w2_7_boss"
 	v7.duration = 45.0
-	v7.difficulty = 1.4
+	v7.difficulty = 1.25
 	v7.is_boss = true
+	# Chronos ET Behemoth ensemble, c etait les deux plus gros monstres du jeu dans
+	# la meme vague : l escorte suffit a rendre le boss difficile.
 	v7.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
-		_entry(E + "behemoth.tres", 1, 1.0, 5.0),
-		_entry(E + "hopper.tres", 6, 1.0, 8.0),
+		_entry(E + "hopper.tres", 4, 2.0, 10.0),
+		_entry(E + "sprite.tres", 4, 2.0, 22.0),
 	]
 	_save(v7, "res://resources/waves/w2_7_boss.tres")
 
@@ -583,14 +595,19 @@ func _waves_and_level() -> void:
 		load(E + "hive.tres"), load(E + "totem_guardian.tres"), load(E + "glutton.tres"),
 		load(E + "behemoth.tres"),
 	]
+	# Le niveau 2 envoie le DOUBLE de PV du niveau 1 : son deck doit suivre, sinon
+	# le joueur affronte deux fois plus avec les memes outils. Plus de zones, qui
+	# sont la seule facon de traiter plusieurs monstres par sort.
 	lvl2.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 3],
-		[C + "common/piercing_arrow.tres", 3],
+		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/frost_field.tres", 2],
-		[C + "common/ember_pool.tres", 2],
-		[C + "common/fireball.tres", 3],
+		[C + "common/ember_pool.tres", 3],
+		[C + "common/fireball.tres", 4],
 		[C + "rare/stone_wall.tres", 2],
 		[C + "rare/temporal_drag.tres", 1],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/brazier.tres", 2],
 	])
 	lvl2.objectives = [o1, o2, o3]
 	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
