@@ -66,6 +66,17 @@ Destination : `assets/enemies/<id>.png`, `assets/fx/<effet>.png`, `assets/sfx/<c
 référencée dans un `.tscn` ou un `.gd` (`_check_raw_sheets`). Une correction d'asset qui
 n'est pas tenue par un test ne tient pas.
 
+## Cases rectangulaires, occupation, et le piège du renommage
+
+- `AnimCatalog` accepte `frame` (largeur) **et** `frame_h` (hauteur). L'échelle se calcule
+  sur la **hauteur** : une case large loge le balayage de l'attaque, pas un monstre large.
+- L'**occupation se mesure sur la pose de MARCHE**, l'état permanent — jamais sur l'attaque
+  ou la mort, qui sont ponctuelles et étirées.
+- Après un `mv` entre deux PNG existants, Godot sert l'**ancienne** texture :
+  `rm .godot/imported/<nom>_*.ctex` puis `--import`.
+- `tools/assets/extract_duelyst.py` recompose des bandes depuis les atlas Duelyst
+  (ajouter l'unité dans `WANTED`). Style réservé aux **boss**.
+
 ## Vérifier à l'œil : l'étage `visual`
 
 `bash tools/run_tests.sh visual` lance le smoke en fenêtre réelle et écrit des captures
