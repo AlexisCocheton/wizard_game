@@ -156,11 +156,11 @@ func _enemies() -> void:
 
 	# --- Boss (hors budget) ---
 	var warden := _enemy("warden", "Gardien", K.MINIBOSS, 6, 140.0, 40.0, 12, S.HEXAGON, Color(0.90, 0.40, 0.25), 62.0)
-	warden.anim_key = &"lancer_red"
+	warden.anim_key = &"chaosknight"
 	_save(warden, E + "warden.tres")
 
 	var chronos := _enemy("chronos", "Chronos", K.BOSS, 10, 320.0, 34.0, 30, S.STAR, Color(0.95, 0.20, 0.25), 84.0)
-	chronos.anim_key = &"demon"
+	chronos.anim_key = &"juggernaut"
 	chronos.contact_damage = 2
 	chronos.immune_tags = [GameEnums.DamageTag.SLOW]
 	_save(chronos, E + "chronos.tres")

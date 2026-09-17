@@ -27,3 +27,11 @@ Enemies Pack FIles.zip        : chien, scarabee, dino, slime, vautour. Les feuil
                                 PIEGE : le dossier "Slimer" est l animation de MORT
                                 (la gelee fond puis eclate), "Slimer-Idle" est la
                                 boucle vivante.
+Duelyst-Unit-Animations.unitypackage : 696 unites (51 boss), chacune avec course,
+                                repos, attaque, coup recu et mort. Archive tar.gz
+                                de dossiers <guid>/{asset,pathname} ; chaque unite
+                                est un ATLAS irregulier decrit par un .plist.
+                                Extraire avec tools/assets/extract_duelyst.py
+                                (ajouter l unite voulue dans WANTED).
+                                Style plus fin et sombre que Tiny Swords : reserve
+                                aux boss, dont la silhouette doit trancher.

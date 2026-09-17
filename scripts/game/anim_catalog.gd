@@ -56,13 +56,22 @@ const UNITS: Dictionary = {
 		"death": ["slimer_death", 10, false]},
 	"vulture": {"frame": 39, "frame_h": 39, "occupancy": 0.74,
 		"walk": ["vulture_walk", 8], "idle": ["vulture_idle", 5]},
+	## Duelyst (atlas recomposes par tools/assets/extract_duelyst.py) : reserve aux
+	## boss, dont la silhouette doit ecraser celle des monstres ordinaires.
+	"juggernaut":  {"frame": 120, "frame_h": 120, "occupancy": 0.73,
+		"walk": ["juggernaut_walk", 10], "idle": ["juggernaut_idle", 8],
+		"hurt": ["juggernaut_hurt", 12, false], "attack": ["juggernaut_attack", 18, false],
+		"death": ["juggernaut_death", 14, false]},
+	"chaosknight": {"frame": 140, "frame_h": 140, "occupancy": 0.56,
+		"walk": ["chaosknight_walk", 10], "idle": ["chaosknight_idle", 8],
+		"hurt": ["chaosknight_hurt", 12, false], "attack": ["chaosknight_attack", 18, false],
+		"death": ["chaosknight_death", 14, false]},
 	## Le totem est un batiment : texture fixe.
 	"totem_tower": {"static": "totem_tower", "occupancy": 0.72},
 }
 
 ## Teintes legeres pour distinguer deux familles qui partagent une feuille.
 const MODULATE: Dictionary = {
-	"chronos": Color(1.0, 0.75, 0.75),
 	## Le dino du pack est rose vif : trop tendre pour un devoreur.
 	"glutton": Color(0.55, 0.45, 0.70),
 	## Le "chien" du pack est un petit saurien rose ; la Sauterelle est verte.
