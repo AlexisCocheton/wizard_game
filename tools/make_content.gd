@@ -246,6 +246,13 @@ func _cards() -> void:
 		[_spec("discard_draw", 0.0, 0.0, 0.0, {&"count": 2})])
 	_save(cycle, "res://resources/cards/rare/cycle_of_thought.tres")
 
+	# Le cahier des charges promet une pioche "ameliorable" : voici la carte qui le fait.
+	var flow := _card("mana_flow", "Flux de mana",
+		"Pioche deux fois plus vite pendant 12 s.", GameEnums.Rarity.RARE, 0.8,
+		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
+		[_spec("draw_boost", 2.0, 12.0)])
+	_save(flow, "res://resources/cards/rare/mana_flow.tres")
+
 	var wall := _card("stone_wall", "Mur de pierre",
 		"Erige un mur qui force les monstres a le contourner pendant 8 s.",
 		GameEnums.Rarity.RARE, 1.3, GameEnums.Targeting.POSITION, [],

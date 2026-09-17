@@ -130,6 +130,17 @@ class CostReduction extends EffectHandler:
 		RunState.apply_cost_reduction(spec.magnitude, spec.duration)
 
 
+## Accelere la pioche pour une duree. magnitude = facteur (2 = deux fois plus vite).
+class DrawBoost extends EffectHandler:
+	func get_key() -> StringName:
+		return &"draw_boost"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		RunState.boost_draw(spec.magnitude, spec.duration)
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE)
+
+
 ## Invoque un allie qui combat quelques secondes.
 class SummonAlly extends EffectHandler:
 	func get_key() -> StringName:

@@ -20,6 +20,7 @@ func register_defaults() -> void:
 		EffectHandlers.SlowEnemyGauge.new(),
 		EffectHandlers.SelfHaste.new(),
 		EffectHandlers.CostReduction.new(),
+		EffectHandlers.DrawBoost.new(),
 		EffectHandlers.SummonAlly.new(),
 		EffectHandlers.DiscardDraw.new(),
 		EffectHandlers.HasteEnemiesBoon.new(),

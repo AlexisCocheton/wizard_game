@@ -21,8 +21,9 @@ const MAGE_MAX_HP: int = 8
 const DRAW_INTERVAL: float = 5.0
 const DRAW_COUNT: int = 2
 const MAX_HAND_SIZE: int = 8
-## Secondes avant que la defausse soit remelangee dans la pioche.
-const RESHUFFLE_DELAY: float = 1.0
+## Pas de delai de remelange : la defausse repart dans la pioche des qu elle est
+## vide. Le cahier des charges evoquait une "vitesse de melange", mais un temps
+## mort au moment ou le joueur n a plus de carte le punit deux fois.
 
 ## --- Progression ---
 ## XP requise pour passer du niveau N au niveau N+1.

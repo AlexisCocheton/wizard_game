@@ -28,6 +28,9 @@ var cost_reduction: float = 0.0
 var _cost_reduction_time: float = 0.0
 
 var _draw_timer: float = 0.0
+## Acceleration de pioche active et son reliquat de duree.
+var _draw_boost: float = 1.0
+var _draw_boost_time: float = 0.0
 var draw_interval: float = GameConfig.DRAW_INTERVAL
 var draw_count: int = GameConfig.DRAW_COUNT
 
@@ -60,6 +63,8 @@ func reset() -> void:
 	cost_reduction = 0.0
 	_cost_reduction_time = 0.0
 	_draw_timer = 0.0
+	_draw_boost = 1.0
+	_draw_boost_time = 0.0
 	draw_interval = GameConfig.DRAW_INTERVAL
 	draw_count = GameConfig.DRAW_COUNT
 	used_legendary = false
@@ -242,10 +247,31 @@ func tick(delta: float) -> void:
 		_cost_reduction_time -= delta
 		if _cost_reduction_time <= 0.0:
 			cost_reduction = 0.0
+	if _draw_boost_time > 0.0:
+		_draw_boost_time -= delta
+		if _draw_boost_time <= 0.0:
+			_draw_boost = 1.0
+			draw_interval = GameConfig.DRAW_INTERVAL
 	_draw_timer += delta
 	while _draw_timer >= draw_interval:
 		_draw_timer -= draw_interval
 		draw(draw_count)
+
+
+## Accelere la pioche pendant `duration` secondes. Le cahier des charges promet
+## une pioche "ameliorable" ; RunState l exposait deja mais aucune carte n y touchait.
+##
+## Deux accelerations ne s empilent PAS : on garde la plus forte. Sinon deux copies
+## de la meme carte reduiraient l intervalle a presque zero et rempliraient la main
+## instantanement, ce qui retire tout choix au joueur.
+func boost_draw(factor: float, duration: float) -> void:
+	var f: float = maxf(factor, 1.0)
+	if f >= _draw_boost:
+		_draw_boost = f
+		_draw_boost_time = maxf(_draw_boost_time, duration)
+	else:
+		_draw_boost_time = maxf(_draw_boost_time, duration)
+	draw_interval = GameConfig.DRAW_INTERVAL / _draw_boost
 
 
 func empower_next(multiplier: float) -> void:

@@ -23,6 +23,7 @@ func run() -> void:
 	_test_hand_limit()
 	_test_play_card()
 	_test_pioche_suit_la_vitesse()
+	_test_un_sort_accelere_la_pioche()
 
 
 func _test_starter_deck() -> void:
@@ -119,3 +120,28 @@ func _test_pioche_suit_la_vitesse() -> void:
 	eq(RunState.hand.size(), GameConfig.DRAW_COUNT * 4,
 		"x4 : quatre pioches dans le meme temps reel")
 	SpeedGauge.reset()
+
+
+## Le cahier des charges promet une pioche "ameliorable" : aucune carte ne
+## touchait au rythme de pioche, alors que RunState l exposait deja.
+func _test_un_sort_accelere_la_pioche() -> void:
+	RunState.reset()
+	RunState.set_seed(21)
+	RunState.build_starter_deck([_card("spark", 40)])
+	var base: float = RunState.draw_interval
+
+	RunState.boost_draw(2.0, 10.0)
+	feq(RunState.draw_interval, base * 0.5, "la pioche va deux fois plus vite")
+
+	# L effet expire de lui-meme et la pioche revient a la normale.
+	RunState.tick(9.0)
+	feq(RunState.draw_interval, base * 0.5, "l effet dure encore a 9 s")
+	RunState.tick(2.0)
+	feq(RunState.draw_interval, base, "la pioche est revenue a son rythme apres 10 s")
+
+	# Deux boosts ne s empilent pas en cascade : on garde le meilleur.
+	RunState.boost_draw(2.0, 5.0)
+	RunState.boost_draw(1.5, 5.0)
+	feq(RunState.draw_interval, base * 0.5, "le boost le plus fort l emporte")
+	RunState.reset()
+	feq(RunState.draw_interval, base, "une nouvelle partie repart au rythme normal")
