@@ -5,6 +5,7 @@ signal scene_changed(path: String)
 
 const MAIN_MENU: String = "res://scenes/main_menu/MainMenu.tscn"
 const GAME: String = "res://scenes/game/Game.tscn"
+const LOADING: String = "res://scenes/loading/LoadingScreen.tscn"
 const VICTORY: String = "res://scenes/endgame/VictoryScreen.tscn"
 const DEFEAT: String = "res://scenes/endgame/DefeatScreen.tscn"
 
@@ -24,5 +25,6 @@ func goto(path: String, data: Dictionary = {}) -> void:
 	scene_changed.emit(path)
 
 
+## Passe par l ecran de briefing : le joueur voit ce qui l attend avant de jouer.
 func start_level(level_id: StringName, mode: GameEnums.Mode) -> void:
-	goto(GAME, {"level_id": level_id, "mode": mode})
+	goto(LOADING, {"level_id": level_id, "mode": mode})

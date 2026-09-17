@@ -126,6 +126,7 @@ func _run_all() -> void:
 
 	# 4) Tous les ecrans du menu et de fin de niveau doivent se construire.
 	await _check_menu_screens()
+	await _check_briefing()
 	await _check_end_screens()
 	_check_massacre_deck()
 
@@ -293,6 +294,31 @@ func _check_menu_screens() -> void:
 	menu.select_tab(2)
 	menu.queue_free()
 	print("[SMOKE] menu : 5 onglets construits")
+
+
+## L ecran de briefing se construit pour les deux modes et mene bien a la partie.
+func _check_briefing() -> void:
+	var packed: PackedScene = load("res://scenes/loading/LoadingScreen.tscn")
+	if packed == null:
+		_fail("LoadingScreen.tscn introuvable")
+		return
+	for mode in [GameEnums.Mode.EXPLORATION, GameEnums.Mode.MASSACRE]:
+		SceneRouter.payload = {"level_id": &"lvl_01", "mode": mode}
+		var screen: Control = packed.instantiate()
+		add_child(screen)
+		await get_tree().process_frame
+		# Le briefing doit montrer QUELQUE CHOSE : un ecran vide ne sert a rien.
+		var menaces: VBoxContainer = screen.get_node_or_null("%Waves")
+		if menaces == null or menaces.get_child_count() == 0:
+			_fail("le briefing n affiche aucune menace (mode %d)" % mode)
+		if mode == GameEnums.Mode.EXPLORATION:
+			await _shot("briefing")
+		screen.queue_free()
+		await get_tree().process_frame
+	# La route du menu passe bien par le briefing, pas directement par la partie.
+	if SceneRouter.LOADING == SceneRouter.GAME:
+		_fail("la route de briefing pointe sur la partie")
+	print("[SMOKE] briefing construit pour les deux modes")
 
 
 ## Victoire puis defaite, avec la progression reelle derriere.

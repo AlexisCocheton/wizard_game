@@ -218,6 +218,12 @@ func is_level_cleared(level_id: StringName) -> bool:
 	return bool(rec.get("cleared_exploration", false)) or bool(rec.get("cleared_massacre", false))
 
 
+## Un objectif precis est-il acquis ? (cumule sur toutes les parties du niveau)
+func is_objective_done(level_id: StringName, objective_id: StringName) -> bool:
+	var objs: Dictionary = level_record(level_id).get("objectives", {})
+	return bool(objs.get(String(objective_id), false))
+
+
 func objectives_done_count(level: LevelDef) -> int:
 	if level == null:
 		return 0
