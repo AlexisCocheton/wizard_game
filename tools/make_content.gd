@@ -49,15 +49,15 @@ func _enemies() -> void:
 	_save(gnome, E + "gnome.tres")
 
 	var sprite := _enemy("sprite", "Lutin fileur", K.FAST, 1, 6.0, 150.0, 1, S.TRIANGLE, Color(0.98, 0.82, 0.30), 18.0)
-	sprite.anim_key = &"pawn_yellow"
+	sprite.anim_key = &"beetle"
 	_save(sprite, E + "sprite.tres")
 
 	var jelly_small := _enemy("jelly_small", "Gelee (petite)", K.SPLITTER, 1, 6.0, 85.0, 1, S.CIRCLE, Color(0.55, 0.92, 0.45), 12.0)
-	jelly_small.anim_key = &"blood"
+	jelly_small.anim_key = &"slimer"
 	_save(jelly_small, E + "jelly_small.tres")
 
 	var jelly_mid := _enemy("jelly_mid", "Gelee (moyenne)", K.SPLITTER, 1, 14.0, 65.0, 1, S.CIRCLE, Color(0.50, 0.88, 0.42), 20.0)
-	jelly_mid.anim_key = &"blood"
+	jelly_mid.anim_key = &"slimer"
 	jelly_mid.split_into = jelly_small
 	jelly_mid.split_count = 2
 	_save(jelly_mid, E + "jelly_mid.tres")
@@ -74,7 +74,7 @@ func _enemies() -> void:
 	_save(wisp, E + "wisp.tres")
 
 	var shade := _enemy("shade", "Ombre", K.PHASER, 2, 16.0, 80.0, 3, S.DIAMOND, Color(0.42, 0.40, 0.80), 26.0)
-	shade.anim_key = &"demon"
+	shade.anim_key = &"vulture"
 	shade.phase_interval = 2.5
 	_save(shade, E + "shade.tres")
 
@@ -91,7 +91,7 @@ func _enemies() -> void:
 	_save(serpent, E + "sand_serpent.tres")
 
 	var hopper := _enemy("hopper", "Sauterelle", K.BURSTER, 2, 10.0, 95.0, 2, S.TRIANGLE, Color(0.55, 0.85, 0.30), 20.0)
-	hopper.anim_key = &"pawn_purple"
+	hopper.anim_key = &"dog"
 	hopper.burst_move = true
 	hopper.burst_dash_time = 0.5
 	hopper.burst_pause_time = 0.8
@@ -121,7 +121,7 @@ func _enemies() -> void:
 	_save(knight, E + "void_knight.tres")
 
 	var jelly := _enemy("jelly", "Gelee", K.SPLITTER, 3, 36.0, 50.0, 3, S.CIRCLE, Color(0.45, 0.85, 0.40), 32.0)
-	jelly.anim_key = &"blood"
+	jelly.anim_key = &"slimer"
 	jelly.split_into = jelly_mid
 	jelly.split_count = 2
 	_save(jelly, E + "jelly.tres")
@@ -144,7 +144,7 @@ func _enemies() -> void:
 	_save(totem, E + "totem_guardian.tres")
 
 	var glutton := _enemy("glutton", "Glouton", K.DEVOURER, 4, 70.0, 42.0, 8, S.CIRCLE, Color(0.60, 0.25, 0.60), 38.0)
-	glutton.anim_key = &"blood"
+	glutton.anim_key = &"dino"
 	glutton.devours = true
 	_save(glutton, E + "glutton.tres")
 

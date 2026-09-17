@@ -20,3 +20,10 @@ Golems_Free_Version.zip       : Golem_1 en bleu et orange, cases de 90x64
 Peacock-*-Sheet.png           : paon, grille 4 colonnes x 3 lignes de 32x32
                                 (une ligne par direction ; on extrait la ligne 0).
 Verifier les licences de ces trois packs avant publication.
+Enemies Pack FIles.zip        : chien, scarabee, dino, slime, vautour. Les feuilles
+                                assemblees de spritesheets/ ont des largeurs
+                                irregulieres : composer les bandes depuis
+                                Assets/Sprites/<Creature>/<nom><n>.png.
+                                PIEGE : le dossier "Slimer" est l animation de MORT
+                                (la gelee fond puis eclate), "Slimer-Idle" est la
+                                boucle vivante.

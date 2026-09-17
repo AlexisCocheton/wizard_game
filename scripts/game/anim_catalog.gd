@@ -42,17 +42,33 @@ const UNITS: Dictionary = {
 		"death": ["flyer_death", 12, false]},
 	"peacock":      {"frame": 32, "frame_h": 32, "occupancy": 1.00,
 		"walk": ["peacock_walk", 8], "idle": ["peacock_idle", 5]},
+	## Enemies Pack : petites creatures, bandes composees depuis les images unitaires.
+	"dog":     {"frame": 33, "frame_h": 26, "occupancy": 0.88,
+		"walk": ["dog_walk", 8], "idle": ["dog_idle", 5]},
+	"beetle":  {"frame": 36, "frame_h": 39, "occupancy": 0.87,
+		"walk": ["beetle_walk", 8]},
+	"dino":    {"frame": 32, "frame_h": 26, "occupancy": 0.85,
+		"walk": ["dino_walk", 8], "idle": ["dino_idle", 5]},
+	## Attention : dans ce pack le dossier "Slimer" est l animation de MORT (la gelee
+	## fond puis eclate) et "Slimer-Idle" est la boucle vivante.
+	"slimer":  {"frame": 41, "frame_h": 38, "occupancy": 0.66,
+		"walk": ["slimer_walk", 8], "idle": ["slimer_idle", 5],
+		"death": ["slimer_death", 10, false]},
+	"vulture": {"frame": 39, "frame_h": 39, "occupancy": 0.74,
+		"walk": ["vulture_walk", 8], "idle": ["vulture_idle", 5]},
 	## Le totem est un batiment : texture fixe.
 	"totem_tower": {"static": "totem_tower", "occupancy": 0.72},
 }
 
 ## Teintes legeres pour distinguer deux familles qui partagent une feuille.
 const MODULATE: Dictionary = {
-	"shade": Color(0.55, 0.55, 0.85, 0.85),
 	"chronos": Color(1.0, 0.75, 0.75),
-	"jelly": Color(0.85, 1.0, 0.85),
-	"jelly_mid": Color(0.85, 1.0, 0.85),
-	"jelly_small": Color(0.85, 1.0, 0.85),
+	## Le dino du pack est rose vif : trop tendre pour un devoreur.
+	"glutton": Color(0.55, 0.45, 0.70),
+	## Le "chien" du pack est un petit saurien rose ; la Sauterelle est verte.
+	"hopper": Color(0.62, 0.95, 0.45),
+	## Le vautour est brun : l Ombre doit rester spectrale.
+	"shade": Color(0.42, 0.42, 0.62, 0.80),
 }
 
 
