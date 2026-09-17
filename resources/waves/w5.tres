@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ne4id"]
+[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="2_4k3k1"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_fhclr"]
+[ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="4_4k3k1"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="4_ifisb"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_gujlq"]
+
+[sub_resource type="Resource" id="Resource_4k3k1"]
+script = ExtResource("1_ne4id")
+enemy = ExtResource("2_4k3k1")
+count = 2
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_fhclr"]
+script = ExtResource("1_ne4id")
+enemy = ExtResource("3_fhclr")
+count = 3
+spawn_delay = 1.5
+start_offset = 3.0
+
+[sub_resource type="Resource" id="Resource_ifisb"]
+script = ExtResource("1_ne4id")
+enemy = ExtResource("4_4k3k1")
+count = 2
+spawn_delay = 1.5
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_gujlq"]
+script = ExtResource("1_ne4id")
+enemy = ExtResource("4_ifisb")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[resource]
+script = ExtResource("5_gujlq")
+id = &"w5"
+duration = 28.0
+entries = Array[ExtResource("1_ne4id")]([SubResource("Resource_4k3k1"), SubResource("Resource_fhclr"), SubResource("Resource_ifisb"), SubResource("Resource_gujlq")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false

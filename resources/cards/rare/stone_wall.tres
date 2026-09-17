@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1rujh"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1ifur"]
+
+[sub_resource type="Resource" id="Resource_1rujh"]
+script = ExtResource("1_1rujh")
+key = &"build_wall"
+magnitude = 0.0
+duration = 8.0
+radius = 200.0
+params = {
+&"thickness": 60.0
+}
+
+[resource]
+script = ExtResource("2_1ifur")
+id = &"stone_wall"
+display_name = "Mur de pierre"
+description = "Erige un mur qui force les monstres a le contourner pendant 8 s."
+rarity = 1
+base_cast_time = 1.8
+targeting = 1
+tags = Array[int]([])
+effects = Array[ExtResource("1_1rujh")]([SubResource("Resource_1rujh")])
+copies_in_starter = 0
+exile_after_cast = false

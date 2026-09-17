@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_qo0aa"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_ipfb3"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_ipfb3"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_ntcod"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_s4fvt"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="5_verkj"]
+
+[sub_resource type="Resource" id="Resource_ipfb3"]
+script = ExtResource("1_qo0aa")
+enemy = ExtResource("2_ipfb3")
+count = 2
+spawn_delay = 1.8
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_s4fvt"]
+script = ExtResource("1_qo0aa")
+enemy = ExtResource("3_ipfb3")
+count = 3
+spawn_delay = 1.2
+start_offset = 2.0
+
+[sub_resource type="Resource" id="Resource_ntcod"]
+script = ExtResource("1_qo0aa")
+enemy = ExtResource("4_ntcod")
+count = 1
+spawn_delay = 1.0
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_verkj"]
+script = ExtResource("1_qo0aa")
+enemy = ExtResource("5_verkj")
+count = 2
+spawn_delay = 1.5
+start_offset = 7.0
+
+[resource]
+script = ExtResource("4_s4fvt")
+id = &"w2_3"
+duration = 28.0
+entries = Array[ExtResource("1_qo0aa")]([SubResource("Resource_ipfb3"), SubResource("Resource_s4fvt"), SubResource("Resource_ntcod"), SubResource("Resource_verkj")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

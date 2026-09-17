@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_8tvke"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_kpg6g"]
+
+[sub_resource type="Resource" id="Resource_8tvke"]
+script = ExtResource("1_8tvke")
+key = &"ground_zone"
+magnitude = 14.0
+duration = 6.0
+radius = 140.0
+params = {}
+
+[resource]
+script = ExtResource("2_kpg6g")
+id = &"brazier"
+display_name = "Brasier"
+description = "Zone de feu : 14 degats par seconde pendant 6 s."
+rarity = 1
+base_cast_time = 3.0
+targeting = 1
+tags = Array[int]([1])
+effects = Array[ExtResource("1_8tvke")]([SubResource("Resource_8tvke")])
+copies_in_starter = 0
+exile_after_cast = false

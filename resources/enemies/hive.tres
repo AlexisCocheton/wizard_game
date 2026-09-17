@@ -1,0 +1,76 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_4dt0t"]
+
+[sub_resource type="Resource" id="Resource_4dt0t"]
+script = ExtResource("1_4dt0t")
+id = &"sprite"
+display_name = "Lutin fileur"
+kind = 1
+power = 1
+max_hp = 6.0
+base_speed = 150.0
+base_xp = 1
+contact_damage = 1
+anim_key = &"pawn_yellow"
+sprite_scale = 1.0
+shape = 2
+color = Color(0.98, 0.82, 0.3, 1)
+base_radius = 18.0
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 1
+
+[resource]
+script = ExtResource("1_4dt0t")
+id = &"hive"
+display_name = "Ruche"
+kind = 17
+power = 3
+max_hp = 40.0
+base_speed = 40.0
+base_xp = 4
+contact_damage = 1
+anim_key = &"warrior_yellow"
+sprite_scale = 1.0
+shape = 4
+color = Color(0.95, 0.72, 0.2, 1)
+base_radius = 34.0
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_into = SubResource("Resource_4dt0t")
+split_count = 4
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 1

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_i4yhr"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_ok1ny"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="3_gibdu"]
+
+[sub_resource type="Resource" id="Resource_i4yhr"]
+script = ExtResource("1_i4yhr")
+enemy = ExtResource("2_ok1ny")
+count = 6
+spawn_delay = 1.2
+start_offset = 0.0
+
+[resource]
+script = ExtResource("3_gibdu")
+id = &"w1"
+duration = 22.0
+entries = Array[ExtResource("1_i4yhr")]([SubResource("Resource_i4yhr")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = false

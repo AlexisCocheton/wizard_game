@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_iydxl"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_4o5uu"]
+
+[sub_resource type="Resource" id="Resource_iydxl"]
+script = ExtResource("1_iydxl")
+key = &"pierce_line"
+magnitude = 10.0
+duration = 0.0
+radius = 120.0
+params = {
+&"max_targets": 5
+}
+
+[resource]
+script = ExtResource("2_4o5uu")
+id = &"piercing_arrow"
+display_name = "Fleche percante"
+description = "Traverse jusqu a 5 ennemis en ligne, 10 degats chacun."
+rarity = 0
+base_cast_time = 2.2
+targeting = 2
+tags = Array[int]([0])
+effects = Array[ExtResource("1_iydxl")]([SubResource("Resource_iydxl")])
+copies_in_starter = 3
+exile_after_cast = false

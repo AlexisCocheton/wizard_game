@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_cqlib"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ufl0x"]
+
+[sub_resource type="Resource" id="Resource_cqlib"]
+script = ExtResource("1_cqlib")
+key = &"ground_zone"
+magnitude = 200.0
+duration = 0.3
+radius = 120.0
+params = {}
+
+[resource]
+script = ExtResource("2_ufl0x")
+id = &"meteor"
+display_name = "Meteore"
+description = "Long a invoquer, mais 60 degats d un coup dans une petite zone."
+rarity = 1
+base_cast_time = 4.0
+targeting = 1
+tags = Array[int]([1, 0])
+effects = Array[ExtResource("1_cqlib")]([SubResource("Resource_cqlib")])
+copies_in_starter = 0
+exile_after_cast = false

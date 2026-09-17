@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_t2586"]
+[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_o1ap2"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_t2ef7"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_y0x5k"]
+
+[sub_resource type="Resource" id="Resource_t2586"]
+script = ExtResource("1_t2586")
+enemy = ExtResource("2_o1ap2")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_o1ap2"]
+script = ExtResource("1_t2586")
+enemy = ExtResource("3_t2ef7")
+count = 4
+spawn_delay = 1.5
+start_offset = 5.0
+
+[resource]
+script = ExtResource("4_y0x5k")
+id = &"w4_miniboss"
+duration = 30.0
+entries = Array[ExtResource("1_t2586")]([SubResource("Resource_t2586"), SubResource("Resource_o1ap2")])
+difficulty = 1.0
+is_miniboss = true
+is_boss = false

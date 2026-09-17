@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_h7jce"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_d3ijf"]
+
+[sub_resource type="Resource" id="Resource_h7jce"]
+script = ExtResource("1_h7jce")
+key = &"damage_per_enemy"
+magnitude = 6.0
+duration = 0.0
+radius = 220.0
+params = {}
+
+[resource]
+script = ExtResource("2_d3ijf")
+id = &"resonance"
+display_name = "Resonance"
+description = "6 degats par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe."
+rarity = 2
+base_cast_time = 2.4
+targeting = 1
+tags = Array[int]([3])
+effects = Array[ExtResource("1_h7jce")]([SubResource("Resource_h7jce")])
+copies_in_starter = 0
+exile_after_cast = false

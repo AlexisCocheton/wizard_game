@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_wye0c"]
+
+[resource]
+script = ExtResource("1_wye0c")
+id = &"shade"
+display_name = "Ombre"
+kind = 6
+power = 2
+max_hp = 16.0
+base_speed = 80.0
+base_xp = 3
+contact_damage = 1
+anim_key = &"demon"
+sprite_scale = 1.0
+shape = 3
+color = Color(0.42, 0.4, 0.8, 1)
+base_radius = 26.0
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+phase_interval = 2.5
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 1

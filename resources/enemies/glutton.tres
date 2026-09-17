@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_h37jy"]
+
+[resource]
+script = ExtResource("1_h37jy")
+id = &"glutton"
+display_name = "Glouton"
+kind = 9
+power = 4
+max_hp = 70.0
+base_speed = 42.0
+base_xp = 8
+contact_damage = 1
+anim_key = &"blood"
+sprite_scale = 1.0
+shape = 1
+color = Color(0.6, 0.25, 0.6, 1)
+base_radius = 38.0
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = true
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 1

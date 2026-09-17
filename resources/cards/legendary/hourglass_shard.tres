@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_38gph"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_a06sc"]
+
+[sub_resource type="Resource" id="Resource_38gph"]
+script = ExtResource("1_38gph")
+key = &"slow_enemy_gauge"
+magnitude = 60.0
+duration = 6.0
+radius = 0.0
+params = {}
+
+[sub_resource type="Resource" id="Resource_a06sc"]
+script = ExtResource("1_38gph")
+key = &"self_haste"
+magnitude = 100.0
+duration = 6.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_a06sc")
+id = &"hourglass_shard"
+display_name = "Sablier fendu"
+description = "Le temps se fige pour eux et s emballe pour toi : ennemis -60 pourcent, incantation +100 pourcent, pendant 6 s."
+rarity = 3
+base_cast_time = 3.0
+targeting = 0
+tags = Array[int]([3, 4])
+effects = Array[ExtResource("1_38gph")]([SubResource("Resource_38gph"), SubResource("Resource_a06sc")])
+copies_in_starter = 0
+exile_after_cast = false

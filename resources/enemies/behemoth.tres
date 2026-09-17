@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_r2fbn"]
+
+[resource]
+script = ExtResource("1_r2fbn")
+id = &"behemoth"
+display_name = "Behemoth"
+kind = 2
+power = 4
+max_hp = 130.0
+base_speed = 26.0
+base_xp = 9
+contact_damage = 2
+anim_key = &"warrior_black"
+sprite_scale = 1.0
+shape = 0
+color = Color(0.36, 0.34, 0.4, 1)
+base_radius = 52.0
+immune_tags = Array[int]([4])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 1

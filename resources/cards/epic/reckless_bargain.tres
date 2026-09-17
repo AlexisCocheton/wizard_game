@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_xxukd"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_eiulf"]
+
+[sub_resource type="Resource" id="Resource_xxukd"]
+script = ExtResource("1_xxukd")
+key = &"haste_enemies_boon"
+magnitude = 30.0
+duration = 5.0
+radius = 0.0
+params = {
+&"draw": 3
+}
+
+[resource]
+script = ExtResource("2_eiulf")
+id = &"reckless_bargain"
+display_name = "Pacte imprudent"
+description = "Accelere les ennemis de 30 pourcent pendant 5 s, pioche 3 cartes."
+rarity = 2
+base_cast_time = 1.0
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_xxukd")]([SubResource("Resource_xxukd")])
+copies_in_starter = 0
+exile_after_cast = false
