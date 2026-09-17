@@ -95,6 +95,21 @@ dégénérée à ×4, et un monstre gérable à ×1 peut devenir infranchissable
 - **TOUJOURS** chiffrer un constat
 - **TOUJOURS** auditer à ×1 et ×4
 
+## Mesurer, pas estimer
+
+`Godot --headless --path . tools/sim_balance.tscn` joue chaque niveau **30 fois** et rend
+un taux de victoire. **Toujours mesurer avant et apres** : une seule partie varie du simple
+au double, et une estimation sur le papier (debit de degats, PV cumules) s'est revelee fausse
+— le debit theorique suffisait alors qu'on mourait a la vague 1.
+
+Reperes et leviers : `tools/README_equilibrage.md`. Le levier le plus fort est
+`GameConfig.ENEMY_SPEED_SCALE`, la fenetre de reaction du joueur.
+
+Chercher ce qui tue REELLEMENT (le banc attribue chaque coup a sa source) plutot que
+d'ajuster des PV au jugé : les quatre vraies causes etaient la pioche desynchronisee de la
+vitesse, la dispersion des apparitions, un monstre invulnerable, et un deck qui ne suivait
+pas la courbe.
+
 ## Contexte du projet
 
 - **Jeu** : Wizard Story — battle of the time. Mobile **portrait**, temps réel.
