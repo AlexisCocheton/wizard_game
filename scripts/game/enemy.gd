@@ -127,7 +127,9 @@ func _place_hp_bar() -> void:
 	# Barre a peu pres aussi large que le monstre, mais jamais enorme.
 	var sc: float = clampf(r * 2.0 / 112.0 * 0.6, 0.3, 0.75)
 	_hp_bar.scale = Vector2.ONE * sc
-	_hp_bar.position = Vector2(-56.0 * sc, -r * 0.95 - 51.0 * sc)
+	# Posee juste au-dessus du sprite : un petit monstre ne doit pas porter sa barre
+	# a la hauteur d un gros. L ecart suit le rayon, il n est pas constant.
+	_hp_bar.position = Vector2(-56.0 * sc, -r * 0.78 - 51.0 * sc)
 
 
 func radius() -> float:

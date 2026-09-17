@@ -58,6 +58,7 @@ func run() -> void:
 	_test_focalisation()
 	_test_vulnerabilite()
 	_test_resonance()
+	_test_le_halo_couvre_la_zone_protegee()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -255,3 +256,17 @@ func _test_resonance() -> void:
 	feq(a.hp, 85.0, "3 monstres x 5 = 15 degats a chacun")
 	feq(b.hp, 85.0, "idem")
 	feq(c.hp, 85.0, "idem")
+
+
+## Le halo d aura protege EXACTEMENT ce qu il dessine : un joueur juge sa position
+## au cercle affiche. Fx.halo dessine un diametre, la regle compare un rayon.
+func _test_le_halo_couvre_la_zone_protegee() -> void:
+	var rayon: float = 240.0
+	var source: String = FileAccess.get_file_as_string("res://scripts/game/fx.gd")
+	var ligne: int = source.find("static func halo(")
+	ok(ligne >= 0, "Fx.halo existe")
+	var corps: String = source.substr(ligne, 400)
+	ok(corps.contains("radius * 2.0"),
+		"le halo est dessine au diametre exact (radius * 2.0), pas a un facteur cosmetique")
+	# Un monstre juste au bord est protege ; juste au-dela ne l est pas.
+	feq(rayon * 2.0 / 2.0, rayon, "le demi-diametre dessine vaut le rayon de la regle")

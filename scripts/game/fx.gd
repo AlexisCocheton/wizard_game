@@ -296,5 +296,7 @@ static func heal_effect(parent: Node2D, at: Vector2) -> void:
 
 
 ## Halo persistant (bouclier du premier coup, aura protectrice).
+## Le halo doit couvrir EXACTEMENT la zone protegee : le joueur s en sert pour juger
+## s il est dans la portee. Un facteur cosmetique mentirait sur la regle.
 static func halo(parent: Node2D, radius: float, tint: Color = Color.WHITE) -> Node:
-	return sprite(parent, "protectioncircle", Vector2.ZERO, radius * 2.4, true, tint)
+	return sprite(parent, "protectioncircle", Vector2.ZERO, radius * 2.0, true, tint)

@@ -102,7 +102,7 @@ func _refresh_hand() -> void:
 	if n == 0:
 		return
 	# La main tient dans la largeur : les cartes retrecissent quand elles sont nombreuses.
-	var width: float = clampf((1040.0 - 10.0 * (n - 1)) / n, 118.0, 200.0)
+	var width: float = clampf((1052.0 - 6.0 * (n - 1)) / n, 118.0, 200.0)
 	var compact: bool = width < 150.0
 	var name_size: int = 24 if width >= 160.0 else 16
 	var body_size: int = 17 if width >= 160.0 else 15

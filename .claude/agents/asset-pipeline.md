@@ -46,7 +46,7 @@ Destination : `assets/enemies/<id>.png`, `assets/fx/<effet>.png`, `assets/sfx/<c
 
 ---
 
-## Deux pièges vérifiés sur ces packs (ne pas re-payer)
+## Quatre pièges vérifiés sur ces packs (ne pas re-payer)
 
 1. **Les planches d'UI Tiny Swords sont des grilles 3×3 de morceaux espacés.** Un
    `StyleBoxTexture` 9-tranches sur la planche brute affiche une grille de carrés.
@@ -55,6 +55,16 @@ Destination : `assets/enemies/<id>.png`, `assets/fx/<effet>.png`, `assets/sfx/<c
 2. **Les cases de spritesheet sont loin d'être pleines** (Blood Monster : 31 % de sa case).
    Après tout ajout de feuille, lancer `python tools/assets/measure_occupancy.py` : il
    mesure la bbox opaque et écrit `AnimCatalog.UNITS[*].occupancy` et `Fx.OCC`.
+
+3. **La cellule de bois porte l'ombre de la planche.** Répétée en fond, elle dessine une
+   rayure sombre tous les 64 px. `compose_ui.py` la rogne et vérifie le raccord.
+4. **Le papier porte des plis entre ses 9 morceaux.** Étirés ils font des traits baveux,
+   tuilés une grille. `compose_ui.py` les efface en gardant les décors colorés.
+
+**Et surtout : l'éditeur Godot peut défaire une correction d'asset** en re-sauvant un
+`.tscn` avec `uid://` + l'ancien chemin. L'AUDIT échoue maintenant si une planche brute est
+référencée dans un `.tscn` ou un `.gd` (`_check_raw_sheets`). Une correction d'asset qui
+n'est pas tenue par un test ne tient pas.
 
 ## Vérifier à l'œil : l'étage `visual`
 

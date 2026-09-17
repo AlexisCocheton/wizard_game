@@ -30,6 +30,9 @@ func setup(c: SpellCard, width: float, height: float, name_size: int = 26,
 
 	var title := UiTheme.label(c.display_name, name_size, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Une carte de main fait ~120 px : "Trait arcanique" s y replierait lettre par lettre.
+	# On retrecit la police jusqu a ce que le nom tienne sur deux lignes au plus.
+	title.add_theme_font_size_override(&"font_size", _fit_size(c.display_name, name_size, width - 26.0))
 	box.add_child(title)
 
 	var meta := UiTheme.label("%s  -  %ss" % [GameEnums.rarity_name(c.rarity), _fmt(c.base_cast_time)],
@@ -64,6 +67,20 @@ func setup(c: SpellCard, width: float, height: float, name_size: int = 26,
 		mouse_exited.connect(_on_exit)
 		resized.connect(_on_resized)
 		gui_input.connect(_on_gui_input)
+
+
+## Plus grande taille de police pour laquelle le nom tient en deux lignes dans `width`.
+func _fit_size(text: String, wanted: int, width: float) -> int:
+	var font: Font = get_theme_default_font()
+	if font == null:
+		return wanted
+	var longest: float = 0.0
+	for word in text.split(" ", false):
+		longest = maxf(longest, font.get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, wanted).x)
+	if longest <= width or longest <= 0.0:
+		return wanted
+	# La largeur d un mot est proportionnelle a la taille de police.
+	return clampi(int(floor(float(wanted) * width / longest)), 11, wanted)
 
 
 func _fmt(v: float) -> String:
