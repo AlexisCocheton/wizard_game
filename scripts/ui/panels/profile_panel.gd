@@ -27,7 +27,11 @@ func _row(title: String, value: String, color: Color = UiTheme.TEXT) -> void:
 	var l := UiTheme.label(title, UiTheme.FONT_BODY, UiTheme.TEXT_DIM)
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	h.add_child(l)
-	h.add_child(UiTheme.label(value, UiTheme.FONT_BODY, color, HORIZONTAL_ALIGNMENT_RIGHT))
+	# Pas de retour a la ligne : dans une HBox, la valeur se plierait lettre par lettre.
+	var v := UiTheme.label(value, UiTheme.FONT_BODY, color, HORIZONTAL_ALIGNMENT_RIGHT)
+	v.autowrap_mode = TextServer.AUTOWRAP_OFF
+	v.size_flags_horizontal = Control.SIZE_SHRINK_END
+	h.add_child(v)
 
 
 func refresh() -> void:

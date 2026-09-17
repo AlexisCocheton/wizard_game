@@ -74,10 +74,65 @@ def compose_fill(base_name, fill_name, out_name):
 compose_fill("bar_base", "bar_fill", "bar_fill9")
 compose_fill("smallbar_base", "smallbar_fill", "smallbar_fill9")
 
+# Le papier porte des plis le long des frontieres entre ses 9 morceaux : etires par le
+# 9-tranches, ils deviennent des traits baveux ; tuiles, une grille. On les "repasse" :
+# l interieur devient uni (couleur mediane du papier) et, dans les bords, chaque ligne ou
+# colonne opaque qui s ecarte de cette couleur est remplacee par la couleur unie.
+def heal_paper(name):
+    path = "assets/ui/%s.png" % name
+    im = Image.open(path).convert("RGBA"); a = np.array(im); H, W = a.shape[:2]
+    ml, mt, mr, mb = margins[name]
+    inner = a[mt:H-mb, ml:W-mr, :3].reshape(-1, 3)
+    paper = np.median(inner, axis=0).astype(np.uint8)
+    def off(px): return np.abs(px.astype(int) - paper.astype(int)).sum(axis=-1)
+    # interieur : uni
+    a[mt:H-mb, ml:W-mr, :3] = paper
+    # bords haut/bas : lignes ; bords gauche/droit : colonnes
+    for y in list(range(0, mt)) + list(range(H-mb, H)):
+        seg = a[y, ml:W-mr]
+        if (seg[:, 3] == 255).all() and (off(seg[:, :3]) > 40).any():
+            a[y, ml:W-mr, :3] = paper
+    for x in list(range(0, ml)) + list(range(W-mr, W)):
+        seg = a[mt:H-mb, x]
+        if (seg[:, 3] == 255).all() and (off(seg[:, :3]) > 40).any():
+            a[mt:H-mb, x, :3] = paper
+    # Coins : les plis y survivent (ni ligne ni colonne entiere). Un pixel de pli est une
+    # NUANCE du papier (meme teinte, autre luminosite) ; un decor du pack a sa propre teinte
+    # (les volutes dorees du papier special). On n efface que les nuances.
+    def is_crease(px):
+        d = px.astype(int) - paper.astype(int)
+        return abs(d.max() - d.min()) < 26  # ecart identique sur R, G, B => simple ombre
+    for (ys, xs) in [(range(2, mt), range(2, ml)), (range(2, mt), range(W-mr, W-2)),
+                     (range(H-mb, H-2), range(2, ml)), (range(H-mb, H-2), range(W-mr, W-2))]:
+        for y in ys:
+            for x in xs:
+                if a[y, x, 3] != 255 or off(a[y, x, :3]) <= 40 or not is_crease(a[y, x, :3]):
+                    continue
+                ring = a[y-2:y+3, x-2:x+3]
+                if (ring[:, :, 3] == 255).all():
+                    a[y, x, :3] = paper
+    Image.fromarray(a).save(path)
+    print("  %-20s repasse, papier %s" % (name, tuple(int(c) for c in paper)))
+heal_paper("paper9")
+heal_paper("paper_special9")
+
 # Tuile de bois (cellule centrale) pour les fonds
 wim, wcb, wrb = analyse("assets/ui/wood.png")
-wim.crop((wcb[1][0], wrb[1][0], wcb[1][1]+1, wrb[1][1]+1)).save("assets/ui/wood_tile.png")
-print("  wood_tile", (wcb[1], wrb[1]))
+wtile = wim.crop((wcb[1][0], wrb[1][0], wcb[1][1]+1, wrb[1][1]+1))
+# La cellule centrale porte l ombre de la planche sur ses premieres lignes : repetee,
+# elle dessine une rayure sombre tous les 64 px. On la retire (lignes nettement plus sombres
+# que la mediane) puis on verifie que la tuile se raccorde a elle-meme.
+wa = np.array(wtile.convert("RGB")).mean(axis=2); wmed = float(np.median(wa))
+# une ligne appartient a l ombre des qu un seul de ses pixels est franchement sombre
+wtop = 0
+while wa[wtop].min() < wmed * 0.55: wtop += 1
+wbot = wtile.size[1]
+while wa[wbot - 1].min() < wmed * 0.55: wbot -= 1
+wtile = wtile.crop((0, wtop, wtile.size[0], wbot))
+wa = np.array(wtile.convert("RGB")).mean(axis=2)
+assert wa.min() > wmed * 0.55 and abs(wa[0].mean() - wa[-1].mean()) < wmed * 0.15, "tuile de bois non raccordable"
+wtile.save("assets/ui/wood_tile.png")
+print("  wood_tile", wtile.size, "ombre retiree :", wtop, "lignes")
 
 # --- Injecte la table des marges dans UiTheme ---
 p = 'scripts/ui/ui_theme.gd'

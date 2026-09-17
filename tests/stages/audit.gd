@@ -18,6 +18,7 @@ func run_stage() -> void:
 	_check_levels()
 	_check_objective_keys()
 	_check_assets()
+	_check_raw_sheets()
 	for w in _soft:
 		print("  [AVERTISSEMENT] %s" % w)
 	print("[AUDIT] %d avertissement(s)" % _soft.size())
@@ -87,6 +88,39 @@ func _check_assets() -> void:
 	for k in AudioBus.music_keys():
 		if not ResourceLoader.exists(AudioBus.MUSIC_DIR + String(k) + ".ogg"):
 			fail("musique manquante : %s" % k)
+
+
+## Les planches d UI du pack sont des grilles de morceaux espaces : referencee telle
+## quelle (l editeur peut re-sauver une scene avec l ancien chemin), elle s affiche en
+## damier. Seules les versions recomposees <nom>9.png et wood_tile.png sont autorisees.
+func _check_raw_sheets() -> void:
+	var raw: Array[String] = ["wood"]
+	for key in UiTheme.NINE.keys():
+		raw.append(String(key).trim_suffix("9"))
+	var files: Array[String] = []
+	_scan_text("res://scenes", files)
+	_scan_text("res://scripts", files)
+	for path in files:
+		var text: String = FileAccess.get_file_as_string(path)
+		for name in raw:
+			if text.contains("assets/ui/%s.png\"" % name) or text.contains("tex(\"%s\")" % name):
+				fail("%s : planche brute '%s' referencee (utiliser %s9.png / tex_box)" % [path, name, name])
+
+
+func _scan_text(dir_path: String, out: Array[String]) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while entry != "":
+		var full: String = dir_path.path_join(entry)
+		if dir.current_is_dir():
+			if not entry.begins_with("."):
+				_scan_text(full, out)
+		elif entry.ends_with(".tscn") or entry.ends_with(".gd"):
+			out.append(full)
+		entry = dir.get_next()
 
 
 ## Un objectif dont la cle n est pas evaluable serait impossible a valider.

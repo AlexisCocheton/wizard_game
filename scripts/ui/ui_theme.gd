@@ -136,20 +136,52 @@ static func make() -> Theme:
 	t.set_font_size(&"font_size", &"CheckButton", FONT_BODY)
 	t.set_color(&"font_color", &"CheckButton", TEXT)
 
-	# Barres : base et remplissage du pack.
-	var under: Texture2D = tex("bar_base")
-	if under != null:
-		var sb_bg := StyleBoxTexture.new()
-		sb_bg.texture = under
-		sb_bg.set_texture_margin_all(20)
-		t.set_stylebox(&"background", &"ProgressBar", sb_bg)
-		var sb_fill := StyleBoxTexture.new()
-		sb_fill.texture = tex("bar_fill")
-		sb_fill.set_texture_margin_all(20)
-		sb_fill.set_content_margin_all(0.0)
-		sb_fill.modulate_color = Color(0.95, 0.80, 0.35)
-		t.set_stylebox(&"fill", &"ProgressBar", sb_fill)
+	# Barres : base et remplissage recomposes du pack.
+	t.set_stylebox(&"background", &"ProgressBar", tex_box("bar_base", 0, 0.0))
+	t.set_stylebox(&"fill", &"ProgressBar", tex_box("bar_fill", 0, 0.0, Color(0.95, 0.80, 0.35)))
+
+	# Curseurs : petite barre du pack en rail, remplissage en zone parcourue,
+	# bouton rond rouge reduit en poignee.
+	t.set_stylebox(&"slider", &"HSlider", tex_box("smallbar_base", 0, 10.0))
+	t.set_stylebox(&"grabber_area", &"HSlider", slider_fill(Color.WHITE))
+	t.set_stylebox(&"grabber_area_highlight", &"HSlider", slider_fill(Color(1.15, 1.15, 1.0)))
+	var knob: Texture2D = scaled_tex("btn_round_red9", 52)
+	if knob != null:
+		t.set_icon(&"grabber", &"HSlider", knob)
+		t.set_icon(&"grabber_highlight", &"HSlider", scaled_tex("btn_round_red9", 58))
+		t.set_icon(&"grabber_disabled", &"HSlider", knob)
 	return t
+
+
+## Zone parcourue d un curseur : la bande coloree de la petite barre du pack, etiree
+## sur la hauteur du rail (la feuille de remplissage ne fait que 3 px de haut).
+static func slider_fill(tint: Color) -> StyleBox:
+	var t: Texture2D = tex("smallbar_fill9")
+	if t == null:
+		return flat_box(RED, 4, 0.0)
+	var sb := StyleBoxTexture.new()
+	sb.texture = t
+	sb.region_rect = Rect2(15, 8, 64, 3)
+	sb.content_margin_top = 6.0
+	sb.content_margin_bottom = 6.0
+	sb.modulate_color = tint
+	return sb
+
+
+## Copie reduite d une texture du pack (poignees, petites icones), filtre nearest.
+static func scaled_tex(name: String, height: int) -> Texture2D:
+	var t: Texture2D = tex(name)
+	if t == null:
+		return null
+	var img: Image = t.get_image()
+	if img == null:
+		return t
+	img = img.duplicate()
+	if img.is_compressed():
+		img.decompress()
+	var w: int = maxi(1, int(round(float(img.get_width()) * float(height) / float(img.get_height()))))
+	img.resize(w, height, Image.INTERPOLATE_NEAREST)
+	return ImageTexture.create_from_image(img)
 
 
 ## Bouton d action principal (JOUER) : le gros bouton rouge du pack.

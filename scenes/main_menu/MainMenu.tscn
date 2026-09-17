@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://c0e2o4uwwiec6"]
 
 [ext_resource type="Script" uid="uid://bm4u88wpfxlbh" path="res://scripts/ui/main_menu.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://c7cvbsoixap6k" path="res://assets/ui/wood.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://cdepgwkh31eua" path="res://assets/ui/wood_tile.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://d0kjfpl82n217" path="res://assets/ui/avatar.png" id="3"]
 
 [node name="MainMenu" type="Control"]
