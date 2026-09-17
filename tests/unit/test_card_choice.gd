@@ -11,6 +11,7 @@ func run() -> void:
 	_test_choix_invalide()
 	_test_montee_de_niveau_propose()
 	_test_cadence_massacre()
+	_test_un_boss_vaincu_offre_une_carte()
 
 
 func _test_offre_de_trois() -> void:
@@ -64,3 +65,41 @@ func _test_montee_de_niveau_propose() -> void:
 
 func _test_cadence_massacre() -> void:
 	eq(GameController.WAVES_PER_CHOICE, 2, "un choix toutes les 2 vagues en Massacre")
+
+
+## Le cahier des charges : "Mini-boss a mi-parcours (drop d une carte legendaire)"
+## et "Recompenses de boss : cartes rares ou legendaires". Vaincre un boss ne
+## rapportait rien du tout : la seule source de cartes etait la montee de niveau.
+func _test_un_boss_vaincu_offre_une_carte() -> void:
+	RunState.reset()
+	RunState.set_seed(42)
+
+	# Mini-boss : choix parmi des EPIQUES.
+	var epiques: Array[SpellCard] = RunState.offer_of_rarity(GameEnums.Rarity.EPIC, 3)
+	ok(not epiques.is_empty(), "le mini-boss propose des cartes")
+	for c in epiques:
+		eq(c.rarity, GameEnums.Rarity.EPIC, "le mini-boss propose bien de l epique")
+	eq(RunState.pending_offer.size(), epiques.size(),
+		"l offre est en attente : la partie se met en pause dessus")
+
+	# Le joueur choisit : la carte rejoint la defausse, comme a la montee de niveau.
+	var avant: int = RunState.discard.size()
+	var prise: SpellCard = RunState.pick_offer(0)
+	ok(prise != null, "une carte est bien prise")
+	eq(RunState.discard.size(), avant + 1, "la carte du boss rejoint la defausse")
+	ok(RunState.pending_offer.is_empty(), "l offre est consommee")
+
+	# Boss final : la LEGENDAIRE d abord. Il n en existe que 2 au catalogue, donc
+	# demander 3 choix complete forcement avec la rarete du dessous — mieux qu une
+	# offre incomplete, mais la premiere doit etre legendaire.
+	var legendaires: Array[SpellCard] = RunState.offer_of_rarity(GameEnums.Rarity.LEGENDARY, 3)
+	ok(not legendaires.is_empty(), "le boss final propose des cartes")
+	eq(legendaires[0].rarity, GameEnums.Rarity.LEGENDARY,
+		"le premier choix du boss final est legendaire")
+	var toutes: Array[SpellCard] = ContentDB.cards_of_rarity(GameEnums.Rarity.LEGENDARY)
+	var n_leg: int = 0
+	for c in legendaires:
+		if c.rarity == GameEnums.Rarity.LEGENDARY:
+			n_leg += 1
+	eq(n_leg, mini(3, toutes.size()), "toutes les legendaires disponibles sont proposees")
+	RunState.reset()

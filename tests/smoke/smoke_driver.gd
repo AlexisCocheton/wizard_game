@@ -127,6 +127,7 @@ func _run_all() -> void:
 	# 4) Tous les ecrans du menu et de fin de niveau doivent se construire.
 	await _check_menu_screens()
 	await _check_briefing()
+	await _check_boss_reward()
 	await _check_end_screens()
 	_check_massacre_deck()
 
@@ -294,6 +295,38 @@ func _check_menu_screens() -> void:
 	menu.select_tab(2)
 	menu.queue_free()
 	print("[SMOKE] menu : 5 onglets construits")
+
+
+## Vaincre un mini-boss ou un boss doit proposer une carte : c est la recompense
+## promise par le cahier des charges, et elle ne passait par aucun code.
+func _check_boss_reward() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = false
+	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
+	g.start_level(level, GameEnums.Mode.EXPLORATION)
+
+	# Trouve l index d une vague de boss et simule son nettoyage.
+	var index: int = -1
+	for i in g.spawner.waves.size():
+		var w: WaveDef = g.spawner.waves[i]
+		if w != null and (w.is_boss or w.is_miniboss):
+			index = i
+			break
+	if index < 0:
+		_fail("le niveau 1 ne contient aucune vague de boss")
+	else:
+		RunState.pending_offer.clear()
+		g._on_wave_cleared(index)
+		if RunState.pending_offer.is_empty():
+			_fail("vaincre un boss n offre aucune carte")
+		else:
+			print("[SMOKE] recompense de boss : %d cartes proposees" % RunState.pending_offer.size())
+		RunState.pending_offer.clear()
+	g.queue_free()
+	await get_tree().process_frame
 
 
 ## L ecran de briefing se construit pour les deux modes et mene bien a la partie.

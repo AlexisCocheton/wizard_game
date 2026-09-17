@@ -283,6 +283,31 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 	return chosen
 
 
+## Offre d une rarete IMPOSEE : recompense de boss. A la difference de
+## offer_choices(), la rarete n est pas tiree au sort — le cahier des charges
+## promet de l epique au mini-boss et de la legendaire au boss final.
+## Si la rarete demandee est vide, on descend d un cran plutot que de ne rien
+## donner : un boss vaincu doit toujours rapporter quelque chose.
+func offer_of_rarity(rarity: GameEnums.Rarity, count: int = 3) -> Array[SpellCard]:
+	var chosen: Array[SpellCard] = []
+	var repli: Array = [rarity, GameEnums.Rarity.EPIC, GameEnums.Rarity.RARE,
+		GameEnums.Rarity.COMMON]
+	for r in repli:
+		if chosen.size() >= count:
+			break
+		var pool: Array[SpellCard] = ContentDB.cards_of_rarity(r)
+		_shuffle_cards(pool)
+		for c in pool:
+			if chosen.size() >= count:
+				break
+			if not chosen.has(c):
+				chosen.append(c)
+	pending_offer = chosen.duplicate()
+	if not chosen.is_empty():
+		offer_ready.emit(chosen.duplicate())
+	return chosen
+
+
 func pick_offer(i: int) -> SpellCard:
 	if i < 0 or i >= pending_offer.size():
 		return null

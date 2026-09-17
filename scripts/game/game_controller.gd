@@ -255,10 +255,27 @@ func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
 
 
 func _on_wave_cleared(index: int) -> void:
+	var wave: WaveDef = spawner.waves[index] if index < spawner.waves.size() else null
 	RunState.wave_index = index + 1
 	RunState.wave_changed.emit(RunState.wave_index)
+	# Recompense de boss (cahier des charges) : le mini-boss lache de l epique,
+	# le boss final de la legendaire. Sans cela, vaincre un boss ne rapportait rien
+	# et la seule source de cartes etait la montee de niveau.
+	if wave != null and (wave.is_boss or wave.is_miniboss):
+		_offer_boss_reward(wave.is_boss)
+		return
 	if mode == GameEnums.Mode.MASSACRE and RunState.wave_index % WAVES_PER_CHOICE == 0:
 		_offer_cards()
+
+
+## Le boss final donne de la legendaire, le mini-boss de l epique.
+func _offer_boss_reward(final_boss: bool) -> void:
+	var rarity: GameEnums.Rarity = GameEnums.Rarity.LEGENDARY if final_boss 		else GameEnums.Rarity.EPIC
+	var cards: Array[SpellCard] = RunState.offer_of_rarity(rarity, GameConfig.LEVEL_UP_CHOICES)
+	if cards.is_empty():
+		return
+	AudioBus.play_sfx(&"level_up")
+	cards_offered.emit(cards)
 
 
 func _on_all_cleared() -> void:
