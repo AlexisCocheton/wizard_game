@@ -30,6 +30,13 @@ func register_defaults() -> void:
 		EffectHandlers.ReverseEnemies.new(),
 		EffectHandlers.EmpowerNext.new(),
 		EffectHandlers.DiscardHandForSpeed.new(),
+		EffectHandlers.Knockback.new(),
+		EffectHandlers.VortexPull.new(),
+		EffectHandlers.DispelZone.new(),
+		EffectHandlers.DrawCards.new(),
+		EffectHandlers.RetainNext.new(),
+		EffectHandlers.DoubleCast.new(),
+		EffectHandlers.MeteorStorm.new(),
 	]:
 		register(h)
 
@@ -70,6 +77,11 @@ func dispatch(spec: EffectSpec, ctx: CastContext) -> bool:
 ## Applique toute la pipeline d'effets d'une carte.
 func cast(card: SpellCard, ctx: CastContext) -> void:
 	if card == null:
+		return
+	# Un POUVOIR PASSIF ne passe pas par les handlers : il ne "s execute" pas, il
+	# change une regle pour tout le combat. RunState en tient le registre.
+	if card.is_passive:
+		RunState.activate_passive(card)
 		return
 	ctx.card = card
 	# Focalisation : le multiplicateur est consomme par le sort suivant, quel qu il soit.

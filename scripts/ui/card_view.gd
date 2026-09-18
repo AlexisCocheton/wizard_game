@@ -28,6 +28,16 @@ func setup(c: SpellCard, width: float, height: float, name_size: int = 26,
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(box)
 
+	# Icone : la carte doit se reconnaitre sans etre lue. En pleine vague le joueur
+	# n a pas le temps de lire un nom ecrit sur 120 px de large.
+	var icone: TextureRect = CardIcons.make_rect(c, 52.0 if compact else 64.0)
+	if icone != null:
+		var centre := HBoxContainer.new()
+		centre.alignment = BoxContainer.ALIGNMENT_CENTER
+		centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		centre.add_child(icone)
+		box.add_child(centre)
+
 	var title := UiTheme.label(c.display_name, name_size, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Une carte de main fait ~120 px : "Trait arcanique" s y replierait lettre par lettre.

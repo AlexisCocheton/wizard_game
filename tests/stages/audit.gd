@@ -32,6 +32,10 @@ func _check_duplicates() -> void:
 ## Une cle d'effet sans handler = echec runtime garanti des que la carte est jouee.
 func _check_effect_keys() -> void:
 	for card: SpellCard in ContentDB.cards.values():
+		# Les POUVOIRS PASSIFS n ont pas de handler : ils changent une regle dans
+		# RunState.activate_passive() au lieu de s executer une fois.
+		if card.is_passive:
+			continue
 		for spec in card.effects:
 			if spec == null:
 				fail("carte %s : effet vide" % card.id)

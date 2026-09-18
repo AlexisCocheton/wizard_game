@@ -17,10 +17,14 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_balance.gd",
 	"res://tests/unit/test_speed_percent.gd",
 	"res://tests/unit/test_precast.gd",
+	"res://tests/unit/test_passives.gd",
+	"res://tests/unit/test_card_icons.gd",
 	"res://tests/unit/test_briefing.gd",
 	"res://tests/unit/test_enemy_behaviors.gd",
 	"res://tests/unit/test_card_choice.gd",
 	"res://tests/unit/test_sheet_lib.gd",
+	"res://tests/unit/test_new_spells.gd",
+	"res://tests/unit/test_bestiary.gd",
 ]
 
 var _total_checks: int = 0
