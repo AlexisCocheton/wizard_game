@@ -139,11 +139,20 @@ func simulate(delta: float) -> void:
 	if not RunState.pending_offer.is_empty():
 		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
+	# La mort (ou la victoire) declenche un CHANGEMENT DE SCENE depuis ce tick :
+	# le champ de bataille est alors en cours de liberation. Continuer a le
+	# simuler plantait la partie au boss du niveau 4.
+	if not running:
+		return
 	# La pioche suit le temps du MONDE : a x4, quatre fois plus de monstres
 	# arrivent, il faut quatre fois plus de cartes pour y repondre.
 	RunState.tick(SpeedGauge.world_delta(delta))
 	caster.tick(delta)
 	battlefield.simulate(delta)
+	# Une carte lancee peut tuer le dernier monstre et terminer le niveau : on
+	# reverifie avant de faire apparaitre la vague suivante.
+	if not running:
+		return
 	spawner.tick(delta)
 	if not spawner.active and not spawner.is_finished():
 		spawner.start_next()

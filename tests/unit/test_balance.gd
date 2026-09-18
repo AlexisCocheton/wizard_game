@@ -11,6 +11,7 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	_test_la_courbe_monte_sans_a_coup()
+	_test_la_simulation_s_arrete_a_la_mort()
 	_test_le_niveau_2_prolonge_le_niveau_1()
 	_test_le_joueur_pioche_assez_pour_repondre()
 	_test_le_mode_infini_laisse_le_temps_de_construire()
@@ -92,3 +93,20 @@ func _wave_count(wave: WaveDef) -> float:
 		if entry.enemy != null:
 			n += entry.count
 	return n
+
+
+## La mort ne doit pas laisser la simulation continuer sur des noeuds detruits.
+##
+## Crash signale par le testeur au boss du niveau 4 : SpeedGauge.tick() declenche
+## la defaite, qui change de scene, et les lignes SUIVANTES de simulate()
+## tournaient sur un champ de bataille en cours de liberation
+## ("Invalid access to property or key 'process_frame' on a null instance").
+func _test_la_simulation_s_arrete_a_la_mort() -> void:
+	var source: String = FileAccess.get_file_as_string("res://scripts/game/game_controller.gd")
+	var debut: int = source.find("func simulate(")
+	ok(debut >= 0, "GameController.simulate existe")
+	var corps: String = source.substr(debut, 900)
+	# Apres le tick de la jauge, la fonction doit pouvoir sortir : sinon elle
+	# continue a simuler un monde qui n existe plus.
+	ok(corps.contains("if not running:") or corps.contains("if _ended"),
+		"simulate() sort des que la partie est finie, avant de toucher au terrain")

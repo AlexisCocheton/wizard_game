@@ -39,7 +39,14 @@ const CONTACT_DAMAGE_BOSS: int = 50
 ## --- Deck / pioche ---
 ## Mesure au banc (tools/sim_balance.gd) : a 8 s, le joueur restait sans carte
 ## jouable pendant que la vague arrivait. A 5 s il a toujours un choix.
-const DRAW_INTERVAL: float = 5.0
+## Retour du testeur : "la pioche est un peu trop rapide, on n a pas le temps de
+## lire le texte des cartes". Elle suit le TEMPS DU MONDE : a 300 % de vitesse,
+## 5 s d intervalle devenaient 1,7 s reelles, soit deux cartes nouvelles toutes
+## les deux secondes. A 8 s, meme a pleine vitesse, la main reste lisible.
+## 6,5 s et non 8 : a 8 s le garde-fou de test_balance.gd se declenche, la pioche
+## passant sous le rythme d arrivee des monstres de la vague la plus dense. Le
+## joueur se retrouverait les mains vides, ce qui est pire que de lire vite.
+const DRAW_INTERVAL: float = 6.5
 const DRAW_COUNT: int = 2
 const MAX_HAND_SIZE: int = 8
 ## Pas de delai de remelange : la defausse repart dans la pioche des qu elle est
