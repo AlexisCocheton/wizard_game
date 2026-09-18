@@ -29,6 +29,7 @@ func _defaults() -> Dictionary:
 			"campaign": {"current_node": "lvl_01", "unlocked_levels": ["lvl_01"]},
 			"levels": {},
 			"massacre_deck": [],
+			"discovered_enemies": [],
 		},
 		"settings": {
 			"master_volume": 0.8,
@@ -154,6 +155,39 @@ func discovered_count() -> int:
 
 func unlocked_legendaries() -> Array:
 	return profile().get("unlocked_legendaries", [])
+
+
+# --- Bestiaire ---
+##
+## Un monstre n'entre au bestiaire qu'apres avoir ete RENCONTRE en jeu : la
+## consultation de ses competences est une recompense d'exploration, pas une
+## fiche technique offerte d'emblee. L'appel vient de Battlefield.spawn_enemy().
+
+func discover_enemy(enemy_id: StringName) -> void:
+	if String(enemy_id) == "":
+		return
+	var found: Array = profile().get("discovered_enemies", [])
+	if found.has(String(enemy_id)):
+		return
+	# On n'emet le signal QUE sur une vraie premiere rencontre : spawn_enemy est
+	# appele des dizaines de fois par vague, et profile_changed reconstruit l'UI.
+	found.append(String(enemy_id))
+	profile()["discovered_enemies"] = found
+	profile_changed.emit()
+
+
+func is_enemy_discovered(enemy_id: StringName) -> bool:
+	return profile().get("discovered_enemies", []).has(String(enemy_id))
+
+
+## Copie : l'appelant ne doit jamais pouvoir vider la liste du profil en la
+## triant ou en la modifiant (piege deja rencontre avec offer_choices()).
+func discovered_enemies() -> Array:
+	return profile().get("discovered_enemies", []).duplicate()
+
+
+func discovered_enemies_count() -> int:
+	return profile().get("discovered_enemies", []).size()
 
 
 # --- Deck Massacre ---

@@ -260,10 +260,6 @@ func tick(delta: float) -> void:
 
 ## Accelere la pioche pendant `duration` secondes. Le cahier des charges promet
 ## une pioche "ameliorable" ; RunState l exposait deja mais aucune carte n y touchait.
-##
-## Deux accelerations ne s empilent PAS : on garde la plus forte. Sinon deux copies
-## de la meme carte reduiraient l intervalle a presque zero et rempliraient la main
-## instantanement, ce qui retire tout choix au joueur.
 ## Avancement vers la prochaine pioche, de 0 a 1. Le joueur ne savait pas quand
 ## ses cartes arrivaient : il jouait a l aveugle entre deux pioches.
 func draw_progress() -> float:
@@ -278,6 +274,11 @@ func seconds_to_draw() -> float:
 	return restant / maxf(SpeedGauge.multiplier(), 0.01)
 
 
+## Accelere la pioche pendant `duration` secondes.
+##
+## Deux accelerations ne s empilent PAS : on garde la plus forte. Sinon deux copies
+## de la meme carte reduiraient l intervalle a presque zero et rempliraient la main
+## instantanement, ce qui retire tout choix au joueur.
 func boost_draw(factor: float, duration: float) -> void:
 	var f: float = maxf(factor, 1.0)
 	if f >= _draw_boost:
@@ -302,19 +303,23 @@ func take_next_spell_multiplier() -> float:
 ## complete avec d autres raretes si le pool est trop petit.
 func offer_choices(count: int = 3) -> Array[SpellCard]:
 	var chosen: Array[SpellCard] = []
-	var rarity: GameEnums.Rarity = roll_rarity()
-	var order: Array = [rarity, GameEnums.Rarity.RARE, GameEnums.Rarity.EPIC,
-		GameEnums.Rarity.COMMON, GameEnums.Rarity.LEGENDARY]
-	for r in order:
-		if chosen.size() >= count:
-			break
-		var pool: Array[SpellCard] = ContentDB.cards_of_rarity(r)
-		_shuffle_cards(pool)
-		for c in pool:
-			if chosen.size() >= count:
+	# Chaque carte tire SA PROPRE rarete : les trois choix peuvent donc etre de
+	# raretes differentes. Avec une seule rarete pour toute l offre, les trois
+	# options se ressemblaient et le tirage n avait aucun relief.
+	for i in count:
+		var voulue: GameEnums.Rarity = roll_rarity()
+		# Replis, du plus proche au plus lointain, si la rarete voulue est epuisee.
+		var order: Array = [voulue, GameEnums.Rarity.RARE, GameEnums.Rarity.EPIC,
+			GameEnums.Rarity.COMMON, GameEnums.Rarity.LEGENDARY]
+		for r in order:
+			if chosen.size() > i:
 				break
-			if not chosen.has(c):
-				chosen.append(c)
+			var pool: Array[SpellCard] = ContentDB.cards_of_rarity(r)
+			_shuffle_cards(pool)
+			for c in pool:
+				if not chosen.has(c):
+					chosen.append(c)
+					break
 	# On garde notre propre copie : l appelant peut faire ce qu il veut de la sienne
 	# sans que pick_offer() la vide sous ses pieds.
 	pending_offer = chosen.duplicate()

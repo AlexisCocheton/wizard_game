@@ -238,6 +238,7 @@ func spawn_enemy(def: EnemyDef, x: float, difficulty: float = 1.0,
 		push_error("Scene d ennemi introuvable : %s" % ENEMY_SCENE)
 		return null
 	var e: Enemy = packed.instantiate()
+	SaveData.discover_enemy(def.id)  # rencontre memorisee pour le bestiaire
 	e.setup(def, difficulty)
 	e.nav = nav
 	e.battlefield = self

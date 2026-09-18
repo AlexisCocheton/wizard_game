@@ -12,6 +12,7 @@ func run() -> void:
 	_test_montee_de_niveau_propose()
 	_test_cadence_massacre()
 	_test_un_boss_vaincu_offre_une_carte()
+	_test_les_trois_choix_melangent_les_raretes()
 
 
 func _test_offre_de_trois() -> void:
@@ -102,4 +103,29 @@ func _test_un_boss_vaincu_offre_une_carte() -> void:
 		if c.rarity == GameEnums.Rarity.LEGENDARY:
 			n_leg += 1
 	eq(n_leg, mini(3, toutes.size()), "toutes les legendaires disponibles sont proposees")
+	RunState.reset()
+
+
+## Les trois cartes proposees a la montee de niveau peuvent etre de RARETES
+## DIFFERENTES. Avant, une seule rarete etait tiree pour toute l offre : les trois
+## choix se ressemblaient et le tirage n avait aucun relief.
+func _test_les_trois_choix_melangent_les_raretes() -> void:
+	RunState.reset()
+	var vu_melange: bool = false
+	# Sur 40 tirages, un melange doit apparaitre au moins une fois. Le contraire
+	# signifierait qu une seule rarete est tiree pour toute l offre.
+	for essai in 40:
+		RunState.set_seed(500 + essai)
+		var offre: Array[SpellCard] = RunState.offer_choices(3)
+		if offre.size() < 2:
+			continue
+		var premiere: GameEnums.Rarity = offre[0].rarity
+		for c in offre:
+			if c.rarity != premiere:
+				vu_melange = true
+				break
+		RunState.pending_offer.clear()
+		if vu_melange:
+			break
+	ok(vu_melange, "les trois choix ne sont pas tous de la meme rarete")
 	RunState.reset()
