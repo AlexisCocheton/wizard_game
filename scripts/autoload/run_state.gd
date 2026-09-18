@@ -38,6 +38,10 @@ var _rng := RandomNumberGenerator.new()
 
 ## Focalisation : multiplicateur applique au prochain sort puis remis a 1.
 var next_spell_multiplier: float = 1.0
+## Echo de la main : nombre de cartes qui reviendront en main apres avoir ete lancees.
+var _retain_charges: int = 0
+## Double incantation : reliquat de duree pendant lequel deux sorts chargent ensemble.
+var _double_cast_time: float = 0.0
 ## Cartes proposees au joueur ; la partie est en pause tant qu il n a pas choisi.
 var pending_offer: Array[SpellCard] = []
 
@@ -71,7 +75,13 @@ func reset() -> void:
 	took_any_damage = false
 	hits_by_source.clear()
 	speed_dropped = false
+	active_passives.clear()
+	_passive_cast_cut = 0.0
+	_passive_cast_factor = 1.0
+	_cast_slots = 1
 	next_spell_multiplier = 1.0
+	_retain_charges = 0
+	_double_cast_time = 0.0
 	pending_offer.clear()
 
 
@@ -147,9 +157,13 @@ func draw(count: int = 1) -> int:
 
 
 ## Temps d'incantation reel : reduction de cout puis multiplicateur de vitesse.
+## Temps d incantation reel : reduction de cout ET pouvoirs passifs inclus.
+##
+## Le plancher de 0,1 s n est pas cosmetique : un sort instantane ne laisse rien
+## a lire au joueur et la barre de charge n aurait plus aucun sens.
 func effective_cast_time(card: SpellCard) -> float:
-	var base: float = maxf(0.1, card.base_cast_time - cost_reduction)
-	return SpeedGauge.effective_cast_time(base)
+	var base: float = maxf(0.1, card.base_cast_time - cost_reduction - _passive_cast_cut)
+	return SpeedGauge.effective_cast_time(base) * _passive_cast_factor
 
 
 func play_card(card: SpellCard) -> bool:
@@ -159,6 +173,18 @@ func play_card(card: SpellCard) -> bool:
 	hand.remove_at(idx)
 	if card.rarity == GameEnums.Rarity.LEGENDARY:
 		used_legendary = true
+	# Un passif quitte definitivement le deck : son effet est deja acquis.
+	if card.is_passive:
+		hand_changed.emit()
+		return true
+	# Echo de la main : la carte est bien LANCEE, mais elle revient aussitot en
+	# main au lieu de partir. C est le seul endroit ou une carte quitte la main ;
+	# intercepter ailleurs laisserait des chemins ou l echo serait ignore.
+	if _retain_charges > 0:
+		_retain_charges -= 1
+		hand.append(card)
+		hand_changed.emit()
+		return true
 	if card.exile_after_cast:
 		exiled.append(card)
 	else:
@@ -252,6 +278,8 @@ func tick(delta: float) -> void:
 		if _draw_boost_time <= 0.0:
 			_draw_boost = 1.0
 			draw_interval = GameConfig.DRAW_INTERVAL
+	if _double_cast_time > 0.0:
+		_double_cast_time -= delta
 	_draw_timer += delta
 	while _draw_timer >= draw_interval:
 		_draw_timer -= draw_interval
@@ -287,6 +315,56 @@ func boost_draw(factor: float, duration: float) -> void:
 	else:
 		_draw_boost_time = maxf(_draw_boost_time, duration)
 	draw_interval = GameConfig.DRAW_INTERVAL / _draw_boost
+
+
+## --- Pouvoirs passifs ---
+## Joues une fois, actifs jusqu a la fin du combat. Consultables en pause.
+var active_passives: Array[SpellCard] = []
+## Secondes retirees a chaque incantation, et facteur applique ensuite.
+var _passive_cast_cut: float = 0.0
+var _passive_cast_factor: float = 1.0
+## Nombre de sorts pouvant charger en meme temps.
+var _cast_slots: int = 1
+
+signal passive_activated(card: SpellCard)
+
+
+## Le passif ouvre une seconde place DEFINITIVEMENT, la legendaire "Canalisation
+## jumelle" l ouvre POUR UN TEMPS. Les deux passent par le meme compteur : le
+## Caster n a qu une seule regle a lire, et cumuler les deux ne donne pas 3 places.
+func cast_slots() -> int:
+	return 2 if (_cast_slots > 1 or double_cast_active()) else 1
+
+
+## Applique un pouvoir passif. Les cles vivent ici et non dans EffectRegistry :
+## un passif ne "s execute" pas, il CHANGE UNE REGLE pour tout le combat.
+func activate_passive(card: SpellCard) -> void:
+	if card == null or active_passives.has(card):
+		return
+	active_passives.append(card)
+	for spec in card.effects:
+		if spec == null:
+			continue
+		match spec.key:
+			&"passive_cast_haste":
+				_passive_cast_cut += maxf(spec.magnitude, 0.0)
+			&"passive_double_cast":
+				_cast_slots = 2
+				# Deux sorts a la fois, mais chacun 50 % plus lent : sans ce prix
+				# le passif doublerait purement la puissance du mage.
+				_passive_cast_factor *= 1.5
+			&"passive_wave_ally":
+				pass  # lu par GameController au debut de chaque vague
+	passive_activated.emit(card)
+
+
+## Un passif de cette cle est-il actif ? (lu par GameController)
+func has_passive(key: StringName) -> bool:
+	for c in active_passives:
+		for spec in c.effects:
+			if spec != null and spec.key == key:
+				return true
+	return false
 
 
 func empower_next(multiplier: float) -> void:
@@ -394,3 +472,28 @@ func worst_threat() -> String:
 
 func note_speed_drop() -> void:
 	speed_dropped = true
+
+
+# --- Sorts demandes par le testeur : echo de la main, double incantation ---
+
+## Les `count` prochaines cartes lancees reviennent en main au lieu de partir.
+## Les charges s ADDITIONNENT : deux echos d affilee valent deux cartes gardees.
+## Le multiplicateur de degats, lui, ne s empile pas (voir empower_next) — mais
+## ici cumuler ne cree aucune boucle infinie, seulement un tour de main plus long.
+func retain_next(count: int = 1) -> void:
+	_retain_charges += maxi(count, 1)
+
+
+func retained_casts() -> int:
+	return _retain_charges
+
+
+## Autorise deux incantations simultanees pendant `duration` secondes.
+## Duree en temps REEL comme la reduction de cout : c est un avantage de mage,
+## pas un evenement du monde, et l accelerer a x4 le rendrait presque gratuit.
+func allow_double_cast(duration: float) -> void:
+	_double_cast_time = maxf(_double_cast_time, duration)
+
+
+func double_cast_active() -> bool:
+	return _double_cast_time > 0.0

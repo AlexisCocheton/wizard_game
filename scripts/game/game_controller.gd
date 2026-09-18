@@ -236,6 +236,11 @@ func _on_level_up(_new_level: int) -> void:
 
 
 func _on_wave_started(_index: int, wave: WaveDef) -> void:
+	# Passif "Compagnon fidele" : un allie a chaque nouvelle vague. C est ici, et
+	# pas dans EffectRegistry, parce qu un passif ne s execute pas une fois : il
+	# change une regle pour tout le combat.
+	if RunState.has_passive(&"passive_wave_ally") and battlefield != null:
+		battlefield.spawn_ally(12.0, 10.0)
 	if wave != null and (wave.is_boss or wave.is_miniboss):
 		AudioBus.play_sfx(&"boss")
 		if wave.is_boss:

@@ -19,11 +19,28 @@ var _pending_ctx: CastContext = null
 var _queued: SpellCard = null
 var _queued_ctx: CastContext = null
 
+## Seconde place de chargement, ouverte par le passif "Double incantation".
+var _second: SpellCard = null
+var _second_ctx: CastContext = null
+var _second_remaining: float = 0.0
+var _second_total: float = 0.0
+
 signal queue_changed(card: SpellCard)
 
 
 func is_busy() -> bool:
 	return current != null
+
+
+## Nombre de sorts en cours de chargement (1, ou 2 avec le passif de double
+## incantation). Lu par les effets qui dependent du nombre de places occupees.
+func active_count() -> int:
+	var n: int = 0
+	if current != null:
+		n += 1
+	if _second != null:
+		n += 1
+	return n
 
 
 func has_queued() -> bool:
@@ -42,6 +59,16 @@ func queue_next(card: SpellCard, ctx: CastContext) -> bool:
 		return false
 	if current == null:
 		return begin(card, ctx)
+	# Passif "Double incantation" : une seconde place de chargement, donc le sort
+	# prepare part TOUT DE SUITE au lieu d attendre la fin du premier.
+	if RunState.cast_slots() > 1 and _second == null:
+		_second = card
+		_second_ctx = ctx
+		var haste: float = battlefield.cast_haste if battlefield != null else 1.0
+		_second_total = maxf(0.05, RunState.effective_cast_time(card) / haste)
+		_second_remaining = _second_total
+		cast_started.emit(card, _second_total)
+		return true
 	_queued = card
 	_queued_ctx = ctx
 	queue_changed.emit(_queued)
@@ -63,6 +90,17 @@ func begin(card: SpellCard, ctx: CastContext) -> bool:
 
 ## delta BRUT : effective_cast_time a deja applique le multiplicateur.
 func tick(delta: float) -> void:
+	# La seconde place avance en parallele, avec son propre chargement.
+	if _second != null:
+		_second_remaining -= delta
+		if _second_remaining <= 0.0:
+			var carte: SpellCard = _second
+			var ctx2: CastContext = _second_ctx
+			_second = null
+			_second_ctx = null
+			if ctx2 != null:
+				EffectRegistry.cast(carte, ctx2)
+			cast_finished.emit(carte)
 	if current == null:
 		return
 	_remaining -= delta
@@ -96,6 +134,9 @@ func cancel() -> void:
 	_remaining = 0.0
 	_queued = null
 	_queued_ctx = null
+	_second = null
+	_second_ctx = null
+	_second_remaining = 0.0
 	queue_changed.emit(null)
 
 

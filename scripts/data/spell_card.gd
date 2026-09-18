@@ -15,6 +15,11 @@ extends Resource
 @export var copies_in_starter: int = 0
 ## Si vrai, la carte quitte la partie apres usage au lieu d'aller a la defausse.
 @export var exile_after_cast: bool = false
+
+## Un POUVOIR PASSIF : se joue une fois, son effet vaut pour tout le combat.
+## Il ne revient jamais en main — le rejouer n aurait aucun sens et il
+## encombrerait la pioche jusqu a la fin de la partie.
+@export var is_passive: bool = false
 @export var icon: Texture2D
 
 
