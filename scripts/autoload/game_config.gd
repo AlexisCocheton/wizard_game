@@ -31,10 +31,10 @@ const MAGE_MAX_HP: int = 100
 ## Mesure au banc : a 4/7/12/18 le mage finissait a 83 PV sur 100, il n y avait
 ## plus aucune tension. Ces valeurs laissent environ 10 erreurs avant la defaite.
 const CONTACT_DAMAGE_BY_POWER: Dictionary = {
-	1: 12, 2: 20, 3: 30, 4: 45,
+	1: 9, 2: 15, 3: 24, 4: 36,
 }
-const CONTACT_DAMAGE_MINIBOSS: int = 55
-const CONTACT_DAMAGE_BOSS: int = 70
+const CONTACT_DAMAGE_MINIBOSS: int = 42
+const CONTACT_DAMAGE_BOSS: int = 50
 
 ## --- Deck / pioche ---
 ## Mesure au banc (tools/sim_balance.gd) : a 8 s, le joueur restait sans carte
@@ -64,7 +64,7 @@ const RARITY_WEIGHTS: Dictionary = {
 ## Ralentissement global de la descente. Mesure au banc : a vitesse d origine, la
 ## fenetre de tir sur un lutin (10 s) etait trop courte pour viser au doigt sur
 ## mobile alors que d autres monstres arrivaient en meme temps.
-const ENEMY_SPEED_SCALE: float = 0.62
+const ENEMY_SPEED_SCALE: float = 0.70
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.
