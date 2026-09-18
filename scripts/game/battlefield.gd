@@ -153,9 +153,15 @@ func _simulate_allies(wd: float) -> void:
 		if a["cooldown"] <= 0.0:
 			var target: Enemy = _closest_enemy()
 			if target != null:
+				# Le tir se voit partir de l allie : sans cela le joueur ne fait
+				# pas le lien entre l invocation et les degats.
+				Fx.projectile(self, a.get("pos", Vector2.ZERO), target.position, Fx.COL_SUMMON)
 				_hit(target, a["damage"], [GameEnums.DamageTag.SUMMON])
 			a["cooldown"] = 1.0
 		if a["time"] <= 0.0:
+			var node: Node = a.get("node")
+			if node != null and is_instance_valid(node):
+				node.queue_free()
 			allies.remove_at(i)
 
 
@@ -299,6 +305,12 @@ func clear_all() -> void:
 			e.queue_free()
 	enemies.clear()
 	zones.clear()
+	# Les sprites d allies doivent partir avec eux, sinon ils restent a l ecran
+	# d une partie a la suivante.
+	for a in allies:
+		var an: Node = a.get("node")
+		if an != null and is_instance_valid(an):
+			an.queue_free()
 	allies.clear()
 	for v in vortices:
 		var vnode: Node = v.get("node")
@@ -424,8 +436,21 @@ func apply_reverse(duration: float) -> void:
 	_reverse_time = maxf(_reverse_time, duration)
 
 
+## Invoque un allie qui frappe le monstre le plus proche.
+##
+## Il a une POSITION et un sprite : le testeur signalait qu on ne voyait pas
+## l invocation. Elle existait bien, mais seulement comme une entree de donnees —
+## le joueur payait une carte pour un effet invisible.
 func spawn_ally(duration: float, damage: float) -> void:
-	allies.append({"time": duration, "damage": damage, "cooldown": 0.5})
+	# Devant le mage, decale au hasard : deux allies ne se superposent pas.
+	var pos := Vector2(
+		clampf(GameConfig.BATTLEFIELD_WIDTH * 0.5 + randf_range(-220.0, 220.0),
+			120.0, GameConfig.BATTLEFIELD_WIDTH - 120.0),
+		GameConfig.MAGE_LINE_Y - 190.0)
+	var node: Node = Fx.sprite(self, "magicbubbles", pos, 130.0, true,
+		Color(Fx.COL_SUMMON.r, Fx.COL_SUMMON.g, Fx.COL_SUMMON.b, 0.95))
+	allies.append({"time": duration, "damage": damage, "cooldown": 0.5,
+		"pos": pos, "node": node})
 
 
 ## Pose un mur qui bloque le pathfinding pendant `duration` secondes.

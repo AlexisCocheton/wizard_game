@@ -65,6 +65,7 @@ func run() -> void:
 	_test_meteor_storm_frappe_toute_la_carte()
 	_test_poison_field_est_une_zone_longue()
 	_test_les_cartes_existent_dans_le_pool()
+	_test_l_allie_invoque_est_visible()
 
 
 # --- 0. Enregistrement ---
@@ -409,3 +410,24 @@ func _test_les_cartes_existent_dans_le_pool() -> void:
 			utilisees[k] = true
 	for k in cles:
 		ok(utilisees.has(k), "le handler '%s' est porte par une carte" % k)
+
+
+## L allie invoque doit SE VOIR. Le testeur signalait : "on ne voit pas
+## l invocation de l Allie dans le sort apprenti miroir". Il frappait bien, mais
+## n existait que comme une entree de donnees : aucun sprite, aucun tir visible.
+func _test_l_allie_invoque_est_visible() -> void:
+	var bf := Battlefield.new()
+	bf.nav = NavGrid.new()
+	attach(bf)
+
+	bf.spawn_ally(6.0, 10.0)
+	eq(bf.allies.size(), 1, "un allie est invoque")
+	var a: Dictionary = bf.allies[0]
+	ok(a.has("pos"), "il a une position sur le terrain")
+	ok(a["pos"].y < GameConfig.MAGE_LINE_Y, "il se tient devant le mage, pas dessus")
+	ok(a["pos"].y > GameConfig.MAGE_LINE_Y - 500.0, "mais pas au milieu du champ")
+
+	# Sa duree reste tenue par la simulation, et il disparait a l expiration.
+	for i in 420:
+		bf.simulate(1.0 / 60.0)
+	eq(bf.allies.size(), 0, "il disparait quand sa duree est ecoulee")

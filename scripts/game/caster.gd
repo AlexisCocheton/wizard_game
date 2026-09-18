@@ -62,6 +62,8 @@ func queue_next(card: SpellCard, ctx: CastContext) -> bool:
 	# Passif "Double incantation" : une seconde place de chargement, donc le sort
 	# prepare part TOUT DE SUITE au lieu d attendre la fin du premier.
 	if RunState.cast_slots() > 1 and _second == null:
+		# Les deux places servent : le malus du passif s applique a partir d ici.
+		RunState.set_casting_count(2)
 		_second = card
 		_second_ctx = ctx
 		var haste: float = battlefield.cast_haste if battlefield != null else 1.0
@@ -100,6 +102,8 @@ func tick(delta: float) -> void:
 			_second_ctx = null
 			if ctx2 != null:
 				EffectRegistry.cast(carte, ctx2)
+			# La seconde place se libere : le malus cesse.
+			RunState.set_casting_count(1)
 			cast_finished.emit(carte)
 	if current == null:
 		return
@@ -137,6 +141,7 @@ func cancel() -> void:
 	_second = null
 	_second_ctx = null
 	_second_remaining = 0.0
+	RunState.set_casting_count(1)
 	queue_changed.emit(null)
 
 

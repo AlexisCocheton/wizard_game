@@ -98,10 +98,12 @@ func _build_deck() -> Array[SpellCard]:
 		if DeckRules.is_valid(ids):
 			var chosen: Array[SpellCard] = DeckRules.resolve(ids)
 			if chosen.size() >= DeckRules.MIN_CARDS:
-				return chosen
+				return DeckRules.with_passives(chosen)
+	# Les pouvoirs passifs s ajoutent a TOUS les decks : ce sont des choix en plus,
+	# pas a la place des cartes.
 	if level_def != null and not level_def.exploration_deck.is_empty():
-		return level_def.exploration_deck
-	return DeckRules.resolve(DeckRules.default_deck_ids())
+		return DeckRules.with_passives(level_def.exploration_deck)
+	return DeckRules.with_passives(DeckRules.resolve(DeckRules.default_deck_ids()))
 
 
 ## Pool du mode infini : les monstres du niveau, boss exclus.

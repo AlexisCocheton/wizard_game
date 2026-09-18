@@ -20,6 +20,8 @@ func run() -> void:
 	_test_reduction_du_temps_de_charge()
 	_test_double_cast_ralentit_les_sorts()
 	_test_les_passifs_repartent_a_zero_entre_les_parties()
+	_test_les_passifs_sont_dans_le_deck_de_depart()
+	_test_le_malus_de_double_cast_se_merite()
 
 
 func _passive(id: String, key: String, magnitude: float = 0.0) -> SpellCard:
@@ -84,7 +86,11 @@ func _test_double_cast_ralentit_les_sorts() -> void:
 	var sans: float = RunState.effective_cast_time(c)
 	RunState.activate_passive(_passive("t_double", "passive_double_cast", 1.0))
 	eq(RunState.cast_slots(), 2, "deux sorts peuvent charger en meme temps")
+	# Le prix ne se paie QUE quand les deux places servent : voir
+	# _test_le_malus_de_double_cast_se_merite().
+	RunState.set_casting_count(2)
 	feq(RunState.effective_cast_time(c), sans * 1.5, "mais chacun prend 50 % de plus")
+	RunState.set_casting_count(1)
 
 
 func _test_les_passifs_repartent_a_zero_entre_les_parties() -> void:
@@ -94,3 +100,57 @@ func _test_les_passifs_repartent_a_zero_entre_les_parties() -> void:
 	RunState.reset()
 	eq(RunState.active_passives.size(), 0, "une nouvelle partie repart sans passif")
 	eq(RunState.cast_slots(), 1, "et avec une seule place d incantation")
+
+
+## Les passifs sont DANS le deck de depart, en plus des cartes ordinaires.
+##
+## Demande du testeur : "on aurait droit a 3 passifs en debut de jeu ; au debut les
+## passifs sont dans le deck EN PLUS des 15 cartes et il faut les jouer". Ils
+## existaient et se jouaient, mais aucun deck ne les contenait : le joueur n avait
+## aucun moyen d en obtenir un en partie.
+func _test_les_passifs_sont_dans_le_deck_de_depart() -> void:
+	var niveau: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if niveau == null:
+		return
+	var deck: Array[SpellCard] = DeckRules.with_passives(niveau.exploration_deck)
+	var passifs: int = 0
+	for c in deck:
+		if c != null and c.is_passive:
+			passifs += 1
+	eq(passifs, GameConfig.STARTING_PASSIVES, "trois passifs au depart")
+	ok(deck.size() > niveau.exploration_deck.size(),
+		"ils s ajoutent au deck, ils ne remplacent pas des cartes")
+
+	# Trois passifs DIFFERENTS : trois copies du meme ne serait pas un choix.
+	var vus: Dictionary = {}
+	for c in deck:
+		if c != null and c.is_passive:
+			not_ok(vus.has(c.id), "le passif %s n est pas en double" % c.id)
+			vus[c.id] = true
+
+
+## La Double incantation ne doit ralentir QUE si la seconde place sert vraiment.
+##
+## Mesure au banc : le mage passait 85 % de son temps a incanter sur un niveau,
+## contre 55 % ailleurs. Le malus de 50 % s appliquait meme quand il ne lancait
+## qu un sort a la fois — le joueur payait un prix pour un avantage qu il n avait
+## pas encore utilise.
+func _test_le_malus_de_double_cast_se_merite() -> void:
+	RunState.reset()
+	var c := SpellCard.new()
+	c.id = &"t_spell"
+	c.base_cast_time = 2.0
+	var sans: float = RunState.effective_cast_time(c)
+
+	RunState.activate_passive(_passive("t_double", "passive_double_cast", 1.0))
+	eq(RunState.cast_slots(), 2, "la seconde place est ouverte")
+	feq(RunState.effective_cast_time(c), sans,
+		"un sort seul garde sa vitesse normale")
+
+	# Des que les deux places servent, les deux sorts ralentissent.
+	RunState.set_casting_count(2)
+	feq(RunState.effective_cast_time(c), sans * 1.5,
+		"deux sorts en parallele coutent 50 % de plus chacun")
+	RunState.set_casting_count(1)
+	feq(RunState.effective_cast_time(c), sans, "retour a la normale ensuite")
+	RunState.reset()

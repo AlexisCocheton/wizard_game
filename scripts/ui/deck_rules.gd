@@ -48,6 +48,26 @@ static func validation_message(deck_ids: Array) -> String:
 
 ## Convertit une liste d ids en cartes. Les ids inconnus sont ignores,
 ## les doublons conserves (un id par exemplaire).
+## Ajoute les POUVOIRS PASSIFS de depart au deck.
+##
+## Ils s ajoutent, ils ne remplacent rien : le cahier des charges du testeur dit
+## "les passifs sont dans le deck EN PLUS des 15 cartes". Trois passifs distincts,
+## car trois copies du meme ne serait pas un choix.
+static func with_passives(cards: Array) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	for c in cards:
+		if c != null:
+			out.append(c)
+	var dispo: Array[SpellCard] = []
+	for c2: SpellCard in ContentDB.cards.values():
+		if c2 != null and c2.is_passive:
+			dispo.append(c2)
+	dispo.sort_custom(func(a: SpellCard, b: SpellCard) -> bool: return a.id < b.id)
+	for i in mini(GameConfig.STARTING_PASSIVES, dispo.size()):
+		out.append(dispo[i])
+	return out
+
+
 static func resolve(deck_ids: Array) -> Array[SpellCard]:
 	var out: Array[SpellCard] = []
 	for id in deck_ids:

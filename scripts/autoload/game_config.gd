@@ -52,6 +52,9 @@ const XP_PER_LEVEL_BASE: int = 12
 const XP_PER_LEVEL_GROWTH: float = 1.25
 ## Nombre de cartes proposees a chaque montee de niveau.
 const LEVEL_UP_CHOICES: int = 3
+## Pouvoirs passifs melanges au deck au debut de chaque partie. Ils s ajoutent aux
+## cartes, ils n en remplacent aucune : ce sont des choix en plus, pas a la place.
+const STARTING_PASSIVES: int = 3
 
 ## --- Raretes au drop de montee de niveau ---
 ## Lecture validee du cahier des charges : la raretes la plus haute est la plus rare.
@@ -64,7 +67,11 @@ const RARITY_WEIGHTS: Dictionary = {
 ## Ralentissement global de la descente. Mesure au banc : a vitesse d origine, la
 ## fenetre de tir sur un lutin (10 s) etait trop courte pour viser au doigt sur
 ## mobile alors que d autres monstres arrivaient en meme temps.
-const ENEMY_SPEED_SCALE: float = 0.70
+## Mesure au banc : avec les trois pouvoirs passifs dans le deck, tous les niveaux
+## sont montes a 100 % de victoires. Les passifs sont un vrai gain de puissance ;
+## la difficulte de base doit remonter pour qu ils restent un choix et non un
+## cadeau.
+const ENEMY_SPEED_SCALE: float = 0.78
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.

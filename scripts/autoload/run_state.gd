@@ -79,6 +79,8 @@ func reset() -> void:
 	active_passives.clear()
 	_passive_cast_cut = 0.0
 	_passive_cast_factor = 1.0
+	_double_cast_penalty = 1.0
+	_casting_count = 1
 	_cast_slots = 1
 	next_spell_multiplier = 1.0
 	_retain_charges = 0
@@ -164,7 +166,11 @@ func draw(count: int = 1) -> int:
 ## a lire au joueur et la barre de charge n aurait plus aucun sens.
 func effective_cast_time(card: SpellCard) -> float:
 	var base: float = maxf(0.1, card.base_cast_time - cost_reduction - _passive_cast_cut)
-	return SpeedGauge.effective_cast_time(base) * _passive_cast_factor
+	var facteur: float = _passive_cast_factor
+	# Le malus de Double incantation ne compte que si les deux places servent.
+	if _casting_count > 1:
+		facteur *= _double_cast_penalty
+	return SpeedGauge.effective_cast_time(base) * facteur
 
 
 func play_card(card: SpellCard) -> bool:
@@ -326,6 +332,11 @@ var _passive_cast_cut: float = 0.0
 var _passive_cast_factor: float = 1.0
 ## Nombre de sorts pouvant charger en meme temps.
 var _cast_slots: int = 1
+## Malus du passif de Double incantation : applique SEULEMENT quand les deux
+## places de chargement servent vraiment. En permanence, le joueur payait 50 % de
+## lenteur pour un avantage qu il n avait pas encore utilise.
+var _double_cast_penalty: float = 1.0
+var _casting_count: int = 1
 
 signal passive_activated(card: SpellCard)
 
@@ -335,6 +346,12 @@ signal passive_activated(card: SpellCard)
 ## Caster n a qu une seule regle a lire, et cumuler les deux ne donne pas 3 places.
 func cast_slots() -> int:
 	return 2 if (_cast_slots > 1 or double_cast_active()) else 1
+
+
+## Combien de sorts chargent en ce moment. Le Caster le tient a jour : lui seul
+## sait si la seconde place est reellement occupee.
+func set_casting_count(n: int) -> void:
+	_casting_count = maxi(1, n)
 
 
 ## Applique un pouvoir passif. Les cles vivent ici et non dans EffectRegistry :
@@ -351,9 +368,11 @@ func activate_passive(card: SpellCard) -> void:
 				_passive_cast_cut += maxf(spec.magnitude, 0.0)
 			&"passive_double_cast":
 				_cast_slots = 2
-				# Deux sorts a la fois, mais chacun 50 % plus lent : sans ce prix
-				# le passif doublerait purement la puissance du mage.
-				_passive_cast_factor *= 1.5
+				# Le malus se MERITE : il ne s applique que lorsque les deux places
+				# servent vraiment (voir set_casting_count). Applique en permanence,
+				# le joueur payait 50 % de lenteur pour un avantage qu il n avait
+				# pas encore utilise — mesure au banc : 85 % du temps a incanter.
+				_double_cast_penalty = 1.5
 			&"passive_wave_ally":
 				pass  # lu par GameController au debut de chaque vague
 	passive_activated.emit(card)
