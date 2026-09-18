@@ -19,7 +19,7 @@ func _ready() -> void:
 	refresh()
 
 
-func _row(title: String, value: String, color: Color = UiTheme.TEXT) -> void:
+func _row(title: String, value: String, color: Color = UiTheme.TEXT_DARK) -> void:
 	var p := PanelContainer.new()
 	_box.add_child(p)
 	var h := HBoxContainer.new()
@@ -63,4 +63,4 @@ func refresh() -> void:
 		var objs: int = SaveData.objectives_done_count(level)
 		_row(level.display_name, "vague %d   -   objectifs %d/%d" % [
 			int(rec.get("best_wave", 0)), objs, level.objectives.size()],
-			UiTheme.GREEN if SaveData.is_level_cleared(level.id) else UiTheme.TEXT)
+			UiTheme.GREEN if SaveData.is_level_cleared(level.id) else UiTheme.TEXT_DARK)

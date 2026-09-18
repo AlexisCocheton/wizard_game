@@ -97,7 +97,8 @@ func _show_detail(card: SpellCard) -> void:
 		_targeting_name(card.targeting)], UiTheme.FONT_BODY, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
 	box.add_child(UiTheme.label("Incantation : %s s" % _fmt(card.base_cast_time),
 		UiTheme.FONT_BODY, UiTheme.BLUE, HORIZONTAL_ALIGNMENT_CENTER))
-	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY, UiTheme.TEXT,
+	# Encre SOMBRE : le panneau est un papier clair, le blanc y etait illisible.
+	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
 		HORIZONTAL_ALIGNMENT_CENTER))
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL

@@ -26,6 +26,7 @@ var game: GameController = null
 @onready var _xp_bar: TextureProgressBar = %XpBar
 @onready var _hand: HBoxContainer = %Hand
 @onready var _cast_bar: TextureProgressBar = %CastBar
+@onready var _draw_label: Label = %DrawTimer
 @onready var _aim: Control = %AimOverlay
 
 ## Carte en cours de glissement (null si aucun geste en cours).
@@ -39,6 +40,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_root.theme = UiTheme.make()
 	_speed_btn.pressed.connect(_on_speed_pressed)
+	# La barre de vitesse se regle au doigt : toucher un point y place la vitesse.
+	_enemy_bar.gui_input.connect(_on_speed_bar_input)
+	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_STOP
 	_pause_btn.pressed.connect(_on_pause_pressed)
 	RunState.card_drawn.connect(func(_c: SpellCard) -> void: AudioBus.play_sfx(&"card_draw"))
 	SpeedGauge.multiplier_changed.connect(_on_multiplier_changed)
@@ -86,6 +90,14 @@ func _refresh_gauges() -> void:
 	# Verrou apres un coup : le bouton dit pourquoi il ne repond pas.
 	_speed_btn.disabled = SpeedGauge.accel_locked()
 	_speed_btn.modulate = Color(1, 0.6, 0.6) if SpeedGauge.accel_locked() else Color.WHITE
+
+	# Compte a rebours de la prochaine pioche : le joueur jouait a l aveugle
+	# entre deux pioches, sans savoir s il devait garder une carte ou la depenser.
+	var dans: float = RunState.seconds_to_draw()
+	_draw_label.text = "pioche dans %.1f s" % dans
+	_draw_label.add_theme_color_override(&"font_color",
+		UiTheme.GOLD if dans < 1.0 else UiTheme.TEXT)
+	_draw_label.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
 
 	var need: int = GameConfig.xp_required(RunState.level)
 	_xp_bar.value = 100.0 * float(RunState.xp) / float(maxi(1, need))
@@ -251,6 +263,21 @@ func _on_cast_progress(ratio: float) -> void:
 func _on_cast_finished(_card: SpellCard) -> void:
 	_cast_bar.visible = false
 	_cast_bar.value = 0.0
+
+
+## Toucher la barre de vitesse : elle est pivotee de -90 degres, donc c est la
+## coordonnee X locale qui monte, pas Y.
+func _on_speed_bar_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb := event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+		return
+	if SpeedGauge.accel_locked():
+		return
+	var largeur: float = maxf(_enemy_bar.size.x, 1.0)
+	SpeedGauge.set_speed_from_ratio(clampf(mb.position.x / largeur, 0.0, 1.0))
+	AudioBus.play_sfx(&"speed_up")
 
 
 func _on_speed_pressed() -> void:

@@ -264,6 +264,20 @@ func tick(delta: float) -> void:
 ## Deux accelerations ne s empilent PAS : on garde la plus forte. Sinon deux copies
 ## de la meme carte reduiraient l intervalle a presque zero et rempliraient la main
 ## instantanement, ce qui retire tout choix au joueur.
+## Avancement vers la prochaine pioche, de 0 a 1. Le joueur ne savait pas quand
+## ses cartes arrivaient : il jouait a l aveugle entre deux pioches.
+func draw_progress() -> float:
+	if draw_interval <= 0.0:
+		return 0.0
+	return clampf(_draw_timer / draw_interval, 0.0, 1.0)
+
+
+## Secondes reelles avant la prochaine pioche, a la vitesse courante.
+func seconds_to_draw() -> float:
+	var restant: float = maxf(0.0, draw_interval - _draw_timer)
+	return restant / maxf(SpeedGauge.multiplier(), 0.01)
+
+
 func boost_draw(factor: float, duration: float) -> void:
 	var f: float = maxf(factor, 1.0)
 	if f >= _draw_boost:

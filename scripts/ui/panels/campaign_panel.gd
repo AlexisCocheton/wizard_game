@@ -71,7 +71,7 @@ func _build() -> void:
 	_massacre_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.MASSACRE))
 	modes.add_child(_massacre_btn)
 
-	_hint = UiTheme.label("", UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+	_hint = UiTheme.label("", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
 	add_child(_hint)
 
 	_play_btn = Button.new()
