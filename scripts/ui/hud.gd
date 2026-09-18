@@ -91,6 +91,15 @@ func _refresh_gauges() -> void:
 	_speed_btn.disabled = SpeedGauge.accel_locked()
 	_speed_btn.modulate = Color(1, 0.6, 0.6) if SpeedGauge.accel_locked() else Color.WHITE
 
+	# Le sort prepare doit se voir, sinon le joueur ne sait pas ce qui va partir.
+	var en_attente: SpellCard = null
+	if game != null and game.caster != null:
+		en_attente = game.caster.queued_card()
+	for child in _hand.get_children():
+		if child is CardView:
+			var cv := child as CardView
+			cv.modulate = Color(1.0, 0.92, 0.6) if (en_attente != null and cv.card == en_attente) 				else Color.WHITE
+
 	# Compte a rebours de la prochaine pioche : le joueur jouait a l aveugle
 	# entre deux pioches, sans savoir s il devait garder une carte ou la depenser.
 	var dans: float = RunState.seconds_to_draw()

@@ -128,6 +128,7 @@ func _run_all() -> void:
 	await _check_menu_screens()
 	await _check_briefing()
 	await _check_boss_reward()
+	await _check_precast()
 	await _check_end_screens()
 	_check_massacre_deck()
 
@@ -295,6 +296,37 @@ func _check_menu_screens() -> void:
 	menu.select_tab(2)
 	menu.queue_free()
 	print("[SMOKE] menu : 5 onglets construits")
+
+
+## Pre-cast : un second sort doit pouvoir etre prepare pendant le chargement du
+## premier, et un troisieme remplacer celui qui attendait.
+func _check_precast() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = true
+	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
+	RunState.draw(4)
+	if RunState.hand.size() < 3:
+		_fail("pas assez de cartes en main pour tester le pre-cast")
+	else:
+		var a: SpellCard = RunState.hand[0]
+		var b: SpellCard = RunState.hand[1]
+		var c: SpellCard = RunState.hand[2]
+		var cible := Vector2(540.0, 700.0)
+		if not g.play_card(a, cible, null):
+			_fail("le premier sort ne part pas")
+		elif not g.play_card(b, cible, null):
+			_fail("impossible de preparer un second sort pendant le chargement")
+		elif not g.play_card(c, cible, null):
+			_fail("impossible de remplacer le sort en attente")
+		elif g.caster.queued_card() != c:
+			_fail("le troisieme sort n a pas remplace le second en attente")
+		else:
+			print("[SMOKE] pre-cast : 1 en cours, 1 en attente, remplacable")
+	g.queue_free()
+	await get_tree().process_frame
 
 
 ## Vaincre un mini-boss ou un boss doit proposer une carte : c est la recompense

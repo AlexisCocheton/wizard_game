@@ -156,7 +156,9 @@ func simulate(delta: float) -> void:
 ##   NONE      -> ignore, l effet agit sur le mage
 func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 		target_enemy: Object = null) -> bool:
-	if not running or caster.is_busy() or card == null:
+	# Pre-cast : on accepte un second sort pendant le chargement du premier. Il
+	# partira a la suite, vise ou le joueur a relache. Un troisieme le remplace.
+	if not running or card == null:
 		return false
 	if not RunState.pending_offer.is_empty():
 		return false
@@ -192,7 +194,7 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 			ctx.direction = Vector2.UP
 			ctx.target_enemy = target_enemy
 
-	return caster.begin(card, ctx)
+	return caster.queue_next(card, ctx)
 
 
 ## Vrai si la carte doit etre glissee sur le terrain pour etre jouee.

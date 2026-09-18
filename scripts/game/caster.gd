@@ -13,9 +13,39 @@ var _remaining: float = 0.0
 var _total: float = 0.0
 var _pending_ctx: CastContext = null
 
+## UNE seule place en attente : le sort prepare pendant que le premier se charge.
+## Un troisieme appui remplace celui qui attendait — c est ce que fait le joueur
+## quand il change d avis, et c est plus lisible qu une file qui s allonge.
+var _queued: SpellCard = null
+var _queued_ctx: CastContext = null
+
+signal queue_changed(card: SpellCard)
+
 
 func is_busy() -> bool:
 	return current != null
+
+
+func has_queued() -> bool:
+	return _queued != null
+
+
+func queued_card() -> SpellCard:
+	return _queued
+
+
+## Prepare le sort suivant. Il partira des que le premier sera resolu, avec son
+## PROPRE temps d incantation : le pre-cast fait gagner le temps de reaction, pas
+## le temps de chargement.
+func queue_next(card: SpellCard, ctx: CastContext) -> bool:
+	if card == null:
+		return false
+	if current == null:
+		return begin(card, ctx)
+	_queued = card
+	_queued_ctx = ctx
+	queue_changed.emit(_queued)
+	return true
 
 
 ## Met une carte en incantation. Renvoie false si le mage est deja occupe.
@@ -50,12 +80,23 @@ func _resolve() -> void:
 	if ctx != null:
 		EffectRegistry.cast(card, ctx)
 	cast_finished.emit(card)
+	# Le sort prepare prend le relais immediatement.
+	if _queued != null:
+		var suivant: SpellCard = _queued
+		var suivant_ctx: CastContext = _queued_ctx
+		_queued = null
+		_queued_ctx = null
+		queue_changed.emit(null)
+		begin(suivant, suivant_ctx)
 
 
 func cancel() -> void:
 	current = null
 	_pending_ctx = null
 	_remaining = 0.0
+	_queued = null
+	_queued_ctx = null
+	queue_changed.emit(null)
 
 
 func progress() -> float:
