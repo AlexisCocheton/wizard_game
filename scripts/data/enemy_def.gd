@@ -74,6 +74,34 @@ extends Resource
 ## fait aussi mal qu une charge rend la distance plus dangereuse que le contact.
 @export var shot_damage: int = 2
 
+@export_group("Mecaniques de boss")
+## MORCELE — le boss porte `parts_count` parties a detruire separement. Tant
+## qu une partie tient, le coeur n encaisse RIEN : le joueur doit changer de
+## cible au lieu d empiler ses degats sur la masse centrale.
+@export var parts_count: int = 0
+## PV de CHAQUE partie. Le surplus d un coup ne coule pas sur la partie suivante :
+## sinon un gros sort balaierait toutes les parties d un coup et la mecanique
+## redeviendrait « plus de PV ».
+@export var part_hp: float = 0.0
+## Ralentissement (%) inflige au boss par partie detruite. C est la recompense
+## immediate : sans elle, le joueur tape dans le vide pendant la moitie du combat.
+@export var part_slow_pct: float = 0.0
+
+## CANONNIER — distance au mage (px) a laquelle le boss s arrete pour tirer.
+## 0 = il descend jusqu au contact comme tout le monde. Un boss qui campe ne
+## peut pas etre attendu sur la ligne de defense : il faut aller le chercher.
+@export var keeps_distance_at: float = 0.0
+
+## INVOCATEUR — engendre `summon_count` exemplaires de `summon_def` toutes les
+## `summon_interval` secondes, tant qu il est en vie. Tuer la source coupe le
+## flux : c est la reponse que ce boss exige.
+@export var summon_interval: float = 0.0
+@export var summon_def: EnemyDef
+@export var summon_count: int = 1
+## Plafond de sbires VIVANTS issus de ce boss. Sans plafond, un joueur qui traine
+## perd par accumulation mecanique, ce qui n est plus une decision de jeu.
+@export var summon_max_alive: int = 6
+
 
 func is_immune_to(tag: GameEnums.DamageTag) -> bool:
 	return tag in immune_tags

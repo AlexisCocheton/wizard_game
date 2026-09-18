@@ -16,16 +16,16 @@ const UNITS: Dictionary = {
 	"pawn_black":  {"frame": 192, "occupancy": 0.40, "walk": ["pawn_black_walk", 12], "idle": ["pawn_black_idle", 6]},
 	"archer_red":  {"frame": 192, "occupancy": 0.47, "walk": ["archer_red_walk", 8], "idle": ["archer_red_idle", 6], "attack": ["archer_red_attack", 12]},
 	"warrior_black": {"frame": 192, "occupancy": 0.48, "walk": ["warrior_black_walk", 8], "idle": ["warrior_black_idle", 6], "guard": ["warrior_black_guard", 8]},
-	"warrior_red": {"frame": 192, "occupancy": 0.62, "walk": ["warrior_red_walk", 10], "idle": ["warrior_red_idle", 6], "attack": ["warrior_red_attack", 10]},
+	"warrior_red": {"frame": 192, "occupancy": 0.48, "walk": ["warrior_red_walk", 10], "idle": ["warrior_red_idle", 6], "attack": ["warrior_red_attack", 10]},
 	"warrior_yellow": {"frame": 192, "occupancy": 0.48, "walk": ["warrior_yellow_walk", 8], "idle": ["warrior_yellow_idle", 6]},
-	"lancer_purple": {"frame": 320, "occupancy": 0.47, "walk": ["lancer_purple_walk", 8], "idle": ["lancer_purple_idle", 8], "guard": ["lancer_purple_guard", 8]},
-	"lancer_red":  {"frame": 320, "occupancy": 0.48, "walk": ["lancer_red_walk", 8], "idle": ["lancer_red_idle", 8], "attack": ["lancer_red_attack", 8]},
-	"lancer_yellow": {"frame": 320, "occupancy": 0.47, "walk": ["lancer_yellow_walk", 8], "idle": ["lancer_yellow_idle", 8]},
-	"monk_black":  {"frame": 192, "occupancy": 0.63, "walk": ["monk_black_walk", 8], "idle": ["monk_black_idle", 6], "cast": ["monk_black_cast", 12]},
-	"monk_purple": {"frame": 192, "occupancy": 0.63, "walk": ["monk_purple_walk", 8], "idle": ["monk_purple_idle", 6], "cast": ["monk_purple_cast", 12]},
-	"monk_blue":   {"frame": 192, "occupancy": 0.63, "walk": ["monk_blue_walk", 8], "idle": ["monk_blue_idle", 6], "cast": ["monk_blue_cast", 12]},
-	"blood":       {"frame": 100, "occupancy": 0.31, "walk": ["blood_walk", 10], "idle": ["blood_idle", 6], "hurt": ["blood_hurt", 14, false], "death": ["blood_death", 10, false], "attack": ["blood_attack", 10, false]},
-	"demon":       {"frame": 100, "occupancy": 0.35, "walk": ["demon_walk", 10], "idle": ["demon_idle", 6], "hurt": ["demon_hurt", 14, false], "death": ["demon_death", 10, false], "attack": ["demon_attack", 10, false]},
+	"lancer_purple": {"frame": 320, "occupancy": 0.45, "walk": ["lancer_purple_walk", 8], "idle": ["lancer_purple_idle", 8], "guard": ["lancer_purple_guard", 8]},
+	"lancer_red":  {"frame": 320, "occupancy": 0.45, "walk": ["lancer_red_walk", 8], "idle": ["lancer_red_idle", 8], "attack": ["lancer_red_attack", 8]},
+	"lancer_yellow": {"frame": 320, "occupancy": 0.45, "walk": ["lancer_yellow_walk", 8], "idle": ["lancer_yellow_idle", 8]},
+	"monk_black":  {"frame": 192, "occupancy": 0.43, "walk": ["monk_black_walk", 8], "idle": ["monk_black_idle", 6], "cast": ["monk_black_cast", 12]},
+	"monk_purple": {"frame": 192, "occupancy": 0.43, "walk": ["monk_purple_walk", 8], "idle": ["monk_purple_idle", 6], "cast": ["monk_purple_cast", 12]},
+	"monk_blue":   {"frame": 192, "occupancy": 0.43, "walk": ["monk_blue_walk", 8], "idle": ["monk_blue_idle", 6], "cast": ["monk_blue_cast", 12]},
+	"blood":       {"frame": 100, "occupancy": 0.20, "walk": ["blood_walk", 10], "idle": ["blood_idle", 6], "hurt": ["blood_hurt", 14, false], "death": ["blood_death", 10, false], "attack": ["blood_attack", 10, false]},
+	"demon":       {"frame": 100, "occupancy": 0.22, "walk": ["demon_walk", 10], "idle": ["demon_idle", 6], "hurt": ["demon_hurt", 14, false], "death": ["demon_death", 10, false], "attack": ["demon_attack", 10, false]},
 	## Feuilles a cases RECTANGULAIRES : "frame" est la largeur, "frame_h" la hauteur.
 	## "count" borne les cases quand la derniere colonne est vide.
 	"golem_blue":   {"frame": 90, "frame_h": 64, "occupancy": 0.66,
@@ -66,6 +66,21 @@ const UNITS: Dictionary = {
 		"walk": ["chaosknight_walk", 10], "idle": ["chaosknight_idle", 8],
 		"hurt": ["chaosknight_hurt", 12, false], "attack": ["chaosknight_attack", 18, false],
 		"death": ["chaosknight_death", 14, false]},
+	## Boss a mecanique unique (docs/histoire.md). Meme pack Duelyst : leur
+	## silhouette plus fine et plus sombre doit trancher sur les monstres du
+	## bestiaire ordinaire.
+	"unhallowed":  {"frame": 120, "frame_h": 120, "occupancy": 0.45,
+		"walk": ["unhallowed_walk", 10], "idle": ["unhallowed_idle", 8],
+		"hurt": ["unhallowed_hurt", 12, false], "attack": ["unhallowed_attack", 18, false],
+		"death": ["unhallowed_death", 14, false]},
+	"decepticle":  {"frame": 100, "frame_h": 100, "occupancy": 0.33,
+		"walk": ["decepticle_walk", 10], "idle": ["decepticle_idle", 8],
+		"hurt": ["decepticle_hurt", 12, false], "attack": ["decepticle_attack", 18, false],
+		"death": ["decepticle_death", 14, false]},
+	"wraith":      {"frame": 120, "frame_h": 120, "occupancy": 0.62,
+		"walk": ["wraith_walk", 10], "idle": ["wraith_idle", 8],
+		"hurt": ["wraith_hurt", 12, false], "attack": ["wraith_attack", 18, false],
+		"death": ["wraith_death", 14, false]},
 	## Le totem est un batiment : texture fixe.
 	"totem_tower": {"static": "totem_tower", "occupancy": 0.72},
 }

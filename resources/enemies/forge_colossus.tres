@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_a5nty"]
+
+[resource]
+script = ExtResource("1_a5nty")
+id = &"forge_colossus"
+display_name = "Colosse des Forges"
+kind = 8
+power = 10
+max_hp = 150.0
+base_speed = 30.0
+base_xp = 30
+contact_damage = 0
+anim_key = &"decepticle"
+sprite_scale = 1.15
+shape = 4
+color = Color(0.8, 0.55, 0.25, 1)
+base_radius = 80.0
+immune_tags = Array[int]([4])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+parts_count = 4
+part_hp = 50.0
+part_slow_pct = 18.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6

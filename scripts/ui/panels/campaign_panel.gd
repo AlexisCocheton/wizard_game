@@ -1,61 +1,80 @@
 class_name CampaignPanel
 extends VBoxContainer
-## Onglet Campagne — l ecran central, inspire du chapitre Archero :
-## la carte du niveau en grand, des fleches pour naviguer, le mode, et un gros JOUER.
+## Onglet Campagne — deux vues qui se remplacent dans le meme onglet :
+##
+##   1. LA CARTE (`CampaignMap`) : l archipel, les noms des etapes, les etoiles.
+##      C est l ecran d accueil de l onglet.
+##   2. LE DETAIL : exactement l ecran qui existait avant (nom, vagues, boss,
+##      objectifs, segment Exploration/Massacre, gros JOUER), plus un RETOUR.
+##
+## POURQUOI garder le detail tel quel : le testeur a demande que le niveau
+## « amene a une interface qui ressemble a l actuelle ». On ne refait pas la
+## fiche, on la deplace derriere un toucher sur la carte. Les fleches < > de
+## navigation entre niveaux disparaissent : la carte les remplace, et garder les
+## deux donnerait deux facons contradictoires de changer de niveau.
 
-var _levels: Array[LevelDef] = []
-var _index: int = 0
 var _mode: GameEnums.Mode = GameEnums.Mode.EXPLORATION
 
-var _prev_btn: Button
-var _next_btn: Button
+## Vue 1 : la carte.
+var _map: CampaignMap
+
+## Vue 2 : le detail d un niveau.
+var _detail: VBoxContainer
+var _detail_id: StringName = &""
 var _card: PanelContainer
 var _card_body: VBoxContainer
 var _explore_btn: Button
 var _massacre_btn: Button
 var _hint: Label
 var _play_btn: Button
+var _back_btn: Button
 
 
 func _ready() -> void:
-	add_theme_constant_override(&"separation", 26)
+	add_theme_constant_override(&"separation", 18)
 	_build()
 	refresh()
 
 
 func _build() -> void:
-	var nav := HBoxContainer.new()
-	nav.add_theme_constant_override(&"separation", 16)
-	nav.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(nav)
+	_map = CampaignMap.new()
+	_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_map.level_pressed.connect(open_level)
+	add_child(_map)
 
-	_prev_btn = Button.new()
-	_prev_btn.text = "<"
-	_prev_btn.custom_minimum_size = Vector2(96, 0)
-	_prev_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_prev_btn.pressed.connect(func() -> void: _shift(-1))
-	nav.add_child(_prev_btn)
+	_detail = VBoxContainer.new()
+	_detail.add_theme_constant_override(&"separation", 22)
+	_detail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_detail.visible = false
+	add_child(_detail)
+
+	# RETOUR en HAUT : c est une action de navigation, pas une action de jeu.
+	# Le bas de l ecran (zone du pouce) reste reserve a JOUER, qui est l action
+	# que le joueur repete.
+	_back_btn = Button.new()
+	_back_btn.text = "< CARTE"
+	_back_btn.custom_minimum_size = Vector2(0, 96)
+	_back_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_back_btn.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		back_to_map())
+	_detail.add_child(_back_btn)
 
 	_card = PanelContainer.new()
 	_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	nav.add_child(_card)
+	_detail.add_child(_card)
 
 	_card_body = VBoxContainer.new()
 	_card_body.add_theme_constant_override(&"separation", 18)
 	_card.add_child(_card_body)
 
-	_next_btn = Button.new()
-	_next_btn.text = ">"
-	_next_btn.custom_minimum_size = Vector2(96, 0)
-	_next_btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_next_btn.pressed.connect(func() -> void: _shift(1))
-	nav.add_child(_next_btn)
-
 	# Segment de mode : deux boutons, un seul enfonce.
 	var modes := HBoxContainer.new()
 	modes.add_theme_constant_override(&"separation", 12)
-	add_child(modes)
+	_detail.add_child(modes)
 	_explore_btn = Button.new()
 	_explore_btn.text = "EXPLORATION"
 	_explore_btn.toggle_mode = true
@@ -72,69 +91,114 @@ func _build() -> void:
 	modes.add_child(_massacre_btn)
 
 	_hint = UiTheme.label("", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
-	add_child(_hint)
+	_detail.add_child(_hint)
 
 	_play_btn = Button.new()
 	_play_btn.text = "JOUER"
 	_play_btn.custom_minimum_size = Vector2(0, 150)
 	UiTheme.style_primary(_play_btn)
 	_play_btn.pressed.connect(_on_play)
-	add_child(_play_btn)
+	_detail.add_child(_play_btn)
 
 
+## Appelee par le menu a chaque retour sur l onglet. On revient TOUJOURS a la
+## carte : c est le point de repere de l onglet, et revenir sur la fiche du
+## dernier niveau joue apres une defaite serait un mur.
 func refresh() -> void:
-	_levels.clear()
-	# Seuls les niveaux debloques : le 2 etait jouable avant d avoir fini le 1.
-	_levels.assign(SaveData.playable_levels())
-	# On rouvre sur le dernier niveau joue.
-	var cur: StringName = SaveData.current_level()
-	_index = 0
-	for i in _levels.size():
-		if _levels[i].id == cur:
-			_index = i
-	_render()
+	_map.rebuild()
+	if _detail.visible and _detail_id != &"" and SaveData.is_level_unlocked(_detail_id):
+		# On etait sur une fiche et elle est toujours valable : on la reaffiche
+		# a jour (les etoiles ont pu changer apres une victoire).
+		_render_detail()
+	else:
+		back_to_map()
 
 
-func _shift(delta: int) -> void:
-	if _levels.is_empty():
+# --------------------------------------------------------------------------
+# Navigation entre les deux vues
+# --------------------------------------------------------------------------
+
+func showing_map() -> bool:
+	return _map.visible
+
+
+func detail_level_id() -> StringName:
+	return _detail_id
+
+
+## Le detail garde bien les commandes de l ancien ecran.
+func has_detail_controls() -> bool:
+	return _play_btn != null and _explore_btn != null and _massacre_btn != null \
+		and _explore_btn.get_parent() != null and _play_btn.get_parent() != null
+
+
+func back_to_map() -> void:
+	_detail.visible = false
+	_map.visible = true
+	# On recentre sur le niveau ou en est le joueur : sans cela, une carte de
+	# 1800 px rouvre toujours sur l acte I, meme arrive au dernier niveau.
+	# Appel detache : `focus_level` attend une frame pour connaitre sa taille,
+	# on ne bloque pas le retour a la carte pour autant.
+	_map.call_deferred("focus_level", SaveData.current_level())
+
+
+## Ouvre la fiche d un niveau. Un niveau verrouille est REFUSE ici et pas
+## seulement dans la carte : c est la garde qui compte, l affichage n est
+## qu une commodite.
+func open_level(level_id: StringName) -> void:
+	if not ContentDB.levels.has(level_id) or not SaveData.is_level_unlocked(level_id):
 		return
-	_index = clampi(_index + delta, 0, _levels.size() - 1)
-	SaveData.set_current_level(_levels[_index].id)
-	_render()
+	_detail_id = level_id
+	SaveData.set_current_level(level_id)
+	_map.visible = false
+	_detail.visible = true
+	_render_detail()
 
 
 func _set_mode(mode: GameEnums.Mode) -> void:
 	_mode = mode
-	_render()
+	_render_detail()
 
 
 func _current() -> LevelDef:
-	if _levels.is_empty():
-		return null
-	return _levels[_index]
+	return ContentDB.levels.get(_detail_id)
 
 
-func _render() -> void:
+# --------------------------------------------------------------------------
+# Fiche du niveau — contenu identique a l ancien ecran
+# --------------------------------------------------------------------------
+
+func _render_detail() -> void:
 	for c in _card_body.get_children():
 		c.queue_free()
-	_prev_btn.disabled = _index <= 0
-	_next_btn.disabled = _index >= _levels.size() - 1
 	_explore_btn.button_pressed = _mode == GameEnums.Mode.EXPLORATION
 	_massacre_btn.button_pressed = _mode == GameEnums.Mode.MASSACRE
 
 	var level: LevelDef = _current()
 	if level == null:
-		_card_body.add_child(UiTheme.label("Aucun niveau", UiTheme.FONT_BODY))
+		_card_body.add_child(UiTheme.label("Aucun niveau", UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
 		_play_btn.disabled = true
 		return
 
 	var unlocked: bool = SaveData.is_level_unlocked(level.id)
 	var cleared: bool = SaveData.is_level_cleared(level.id)
 
-	_card_body.add_child(UiTheme.label("NIVEAU %d" % (_index + 1), UiTheme.FONT_SMALL,
-		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
+	if level.act > 0:
+		_card_body.add_child(UiTheme.label(String(CampaignMap.ACT_NAMES.get(level.act, "")),
+			UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
 	_card_body.add_child(UiTheme.label(level.display_name, UiTheme.FONT_TITLE,
 		UiTheme.GOLD if unlocked else Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
+	if level.subtitle != "":
+		_card_body.add_child(UiTheme.label(level.subtitle, UiTheme.FONT_SMALL,
+			UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+
+	# Les memes etoiles que sur la carte : le joueur retrouve ce qu il a touche.
+	var stars: int = SaveData.objectives_done_count(level)
+	var star_text: String = ""
+	for i in level.objectives.size():
+		star_text += "*" if i < stars else "."
+	_card_body.add_child(UiTheme.label(star_text, 40,
+		UiTheme.GOLD if stars > 0 else Color(0.55, 0.50, 0.45), HORIZONTAL_ALIGNMENT_CENTER))
 
 	# Apercu du boss : ce qui attend le joueur en fin de niveau.
 	var boss: WaveDef = level.boss_wave()
@@ -168,11 +232,11 @@ func _render() -> void:
 				continue
 			var done: bool = bool(objs.get(String(obj.id), false))
 			box.add_child(UiTheme.label("%s  %s" % ["[OK]" if done else "[   ]", obj.description],
-				UiTheme.FONT_SMALL, UiTheme.GREEN if done else UiTheme.TEXT_DIM))
+				UiTheme.FONT_SMALL, UiTheme.GREEN if done else UiTheme.TEXT_DARK))
 		if level.legendary_reward != null:
 			var got: bool = SaveData.unlocked_legendaries().has(String(level.legendary_reward.id))
 			box.add_child(UiTheme.label("Recompense : %s%s" % [level.legendary_reward.display_name,
-				"  (obtenue)" if got else ""], UiTheme.FONT_SMALL, UiTheme.GOLD))
+				"  (obtenue)" if got else ""], UiTheme.FONT_SMALL, UiTheme.rarity_ink(GameEnums.Rarity.LEGENDARY)))
 
 	# Bouton JOUER et message d aide selon le mode.
 	var reason: String = ""

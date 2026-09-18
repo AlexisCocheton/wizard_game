@@ -165,6 +165,75 @@ func _enemies() -> void:
 	chronos.immune_tags = [GameEnums.DamageTag.SLOW]
 	_save(chronos, E + "chronos.tres")
 
+	# --- Boss a MECANIQUE, hors budget (docs/histoire.md) -------------------
+	# Un boss doit demander une reponse DIFFERENTE, pas plus de sorts. Les trois
+	# qui suivent changent chacun une question du jeu : ou frapper (morcele),
+	# quand aller chercher (canonnier), quoi tuer en premier (invocateur).
+
+	# Le sbire de l Ensevelisseur : une goule levee a la chaine. Volontairement
+	# faible et lente — la menace est le FLUX, pas l unite. Puissance 1 pour que
+	# le Glouton puisse les gober : un boss qui invoque doit nourrir le terrain.
+	var risen := _enemy("risen_ghoul", "Goule levee", K.NORMAL, 1, 9.0, 62.0, 1,
+		S.DIAMOND, Color(0.55, 0.65, 0.45), 20.0)
+	risen.anim_key = &"vulture"
+	_save(risen, E + "risen_ghoul.tres")
+
+	# INVOCATEUR — lvl_04, Le Grand Appel. Le Pretre goule qui mene le rituel :
+	# il ne se bat pas, il REMPLIT l ecran. Ses PV sont volontairement bas pour
+	# un boss (220 contre 320 a Chronos) parce que la vraie difficulte est le
+	# flux : si le joueur coupe la source vite, il gagne le combat. C est
+	# exactement la decision qu on veut lui faire prendre.
+	var gravecaller := _enemy("gravecaller", "L Ensevelisseur", K.BOSS, 10, 220.0, 30.0, 30,
+		S.STAR, Color(0.55, 0.85, 0.55), 76.0)
+	gravecaller.anim_key = &"unhallowed"
+	gravecaller.summon_def = load(E + "risen_ghoul.tres")
+	gravecaller.summon_interval = 5.0
+	gravecaller.summon_count = 2
+	# Plafond serre : au-dela, le joueur perd par accumulation mecanique et non
+	# par erreur de jeu. Six goules a l ecran suffisent a l etouffer.
+	gravecaller.summon_max_alive = 6
+	_save(gravecaller, E + "gravecaller.tres")
+
+	# MORCELE — lvl_05, Forges du Mauvais Temps. Les creatures des forges ne
+	# sont pas nees, elles ont ete COULEES : celle-ci se demonte plaque par
+	# plaque. Le coeur (150 PV) est plus tendre que les quatre plaques (200 PV
+	# cumules) : le combat est donc un travail de DEMONTAGE, pas d usure.
+	# Le surplus d un coup ne coule pas d une plaque a l autre, ce qui punit le
+	# gros sort unique et recompense le tir soutenu.
+	var forge_colossus := _enemy("forge_colossus", "Colosse des Forges", K.BOSS, 10, 150.0, 30.0, 30,
+		S.HEXAGON, Color(0.80, 0.55, 0.25), 80.0)
+	forge_colossus.anim_key = &"decepticle"
+	# Le decepticle occupe 33 % de sa case : sans cette correction il entrerait
+	# a la taille d un gnome (voir assets.md, « cases mal remplies »).
+	forge_colossus.sprite_scale = 1.15
+	forge_colossus.parts_count = 4
+	forge_colossus.part_hp = 50.0
+	# 18 % par plaque : les quatre tombees, il avance a 28 % de sa vitesse. Assez
+	# lent pour se lire comme demantele, assez vivant pour rester une menace.
+	forge_colossus.part_slow_pct = 18.0
+	forge_colossus.immune_tags = [GameEnums.DamageTag.SLOW]
+	_save(forge_colossus, E + "forge_colossus.tres")
+
+	# CANONNIER — lvl_06, La Cour brisee. Un seigneur demon qui ne daigne pas
+	# descendre : il campe a 620 px du mage et harcele. Il ne peut donc JAMAIS
+	# etre attendu sur la ligne de defense — c est le seul boss qu il faut aller
+	# chercher. PV bas (170) : il est deja tres difficile a atteindre.
+	var wraith_lord := _enemy("wraith_lord", "Seigneur Spectre", K.BOSS, 10, 170.0, 70.0, 30,
+		S.DIAMOND, Color(0.55, 0.45, 0.85), 70.0)
+	wraith_lord.anim_key = &"wraith"
+	# Mesure au banc : a 620 px avec 20 % d esquive, le boss etait a la fois hors
+	# de portee pratique et difficile a punir — il causait la moitie des degats du
+	# niveau sans jamais rien risquer, et lvl_06 tombait a 20 % de victoires.
+	# Il tient toujours ses distances, mais assez pres pour etre puni, et sans
+	# esquive : sa protection est sa POSITION, pas un jet de des.
+	wraith_lord.keeps_distance_at = 430.0
+	wraith_lord.shoot_interval = 3.4
+	# Tir de boss : plus lourd qu une fleche de lutin (2), loin du contact d un
+	# boss (50). Il doit user le joueur, pas le tuer avant qu il l atteigne.
+	wraith_lord.shot_damage = 5
+	wraith_lord.dodge_chance = 0.0
+	_save(wraith_lord, E + "wraith_lord.tres")
+
 
 func _spec(key: String, magnitude: float, duration: float = 0.0,
 		radius: float = 0.0, params: Dictionary = {}) -> EffectSpec:
@@ -1039,12 +1108,15 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	b6.duration = 45.0
 	b6.difficulty = 1.05
 	b6.is_boss = true
-	# Chronos revient constater la saisie. Escorte demoniaque, plus goule :
-	# le joueur doit comprendre que le camp d en face a change de proprietaire.
+	# L ENSEVELISSEUR. Le Pretre qui mene la Grande Invocation : il ne vient pas
+	# se battre, il vient FINIR SON RITUEL. Il leve deux goules toutes les 5 s
+	# tant qu il vit, ce qui rend la vague ingagnable en nettoyant les sbires.
+	# La seule reponse est de percer jusqu a lui — c est la lecon du niveau.
+	# L escorte est volontairement LEGERE : le flux d invocation fournit deja
+	# tous les corps, en ajouter transformerait la pression en noyade.
 	b6.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 9.0),
-		_entry(E + "hopper.tres", 4, 1.8, 22.0),
+		_entry(E + "gravecaller.tres", 1, 1.0),
+		_entry(E + "void_knight.tres", 1, 2.5, 12.0),
 	]
 	_save(b6, "res://resources/waves/w4_6_boss.tres")
 
@@ -1059,6 +1131,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		load(E + "jelly.tres"), load(E + "ghoul_priest.tres"), load(E + "hive.tres"),
 		load(E + "berserker.tres"), load(E + "void_knight.tres"),
 		load(E + "totem_guardian.tres"), load(E + "behemoth.tres"),
+		load(E + "risen_ghoul.tres"),
 	]
 	# DECK CHARNIERE. Le niveau commence en registre "nombre" et finit en registre
 	# "masse" : le deck doit tenir les deux moities. Zones pour les goules, Meteore
@@ -1178,11 +1251,16 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	c6.duration = 48.0
 	c6.difficulty = 1.05
 	c6.is_boss = true
+	# LE COLOSSE DES FORGES. Quatre plaques de 50 PV devant un coeur de 150 : le
+	# joueur ne peut pas l user, il doit le DEMONTER, et le surplus d un coup ne
+	# passe pas d une plaque a l autre. Le deck mono-cible du niveau (Meteore,
+	# Trait) est exactement l outil qu il faut — c est le paiement du niveau.
+	# Escorte reduite : demonter demande de rester concentre sur une cible, une
+	# foule autour annulerait toute la mecanique.
 	c6.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
-		_entry(E + "golem.tres", 2, 3.0, 10.0),
-		_entry(E + "berserker.tres", 2, 2.5, 26.0),
-		_entry(E + "hopper.tres", 4, 1.8, 36.0),
+		_entry(E + "forge_colossus.tres", 1, 1.0),
+		_entry(E + "golem.tres", 2, 3.0, 14.0),
+		_entry(E + "hopper.tres", 3, 1.8, 34.0),
 	]
 	_save(c6, "res://resources/waves/w5_6_boss.tres")
 
@@ -1295,10 +1373,13 @@ cadran, et ils ignorent qui la passe."
 	# Le trio qui justifie le Vide d emprise : totem (aura), berserkers (rage),
 	# chevaliers (bouclier). Sans dissipation, chacun couvre les deux autres.
 	d5.entries = [
+		# Mesure au banc : cumuler le Gardien-totem (aura d invulnerabilite), deux
+		# Berserkers (rage) et un Chevalier du vide (annule le premier coup) rendait
+		# la vague infranchissable — quatre monstres dont aucun ne meurt au premier
+		# sort, pendant que la Ruche libere ses lutins.
 		_entry(E + "totem_guardian.tres", 1, 1.0),
-		_entry(E + "berserker.tres", 2, 2.5, 8.0),
-		_entry(E + "void_knight.tres", 1, 2.5, 18.0),
-		_entry(E + "sprite.tres", 3, 1.6, 26.0),
+		_entry(E + "berserker.tres", 1, 2.5, 10.0),
+		_entry(E + "sprite.tres", 3, 1.8, 22.0),
 	]
 	_save(d5, "res://resources/waves/w6_5.tres")
 
@@ -1307,8 +1388,13 @@ cadran, et ils ignorent qui la passe."
 	d6.duration = 48.0
 	d6.difficulty = 1.05
 	d6.is_boss = true
+	# LE SEIGNEUR SPECTRE. Il s arrete a 620 px du mage et harcele de loin : il
+	# n arrivera jamais au contact, donc la ligne de defense ne sert a rien
+	# contre lui. Le joueur doit le viser DERRIERE son escorte pendant que
+	# celle-ci descend — c est la seule vague du jeu ou l ordre naturel des
+	# cibles (le plus proche d abord) est le mauvais choix.
 	d6.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "wraith_lord.tres", 1, 1.0),
 		_entry(E + "void_knight.tres", 2, 2.5, 12.0),
 		_entry(E + "shade.tres", 3, 2.0, 26.0),
 	]
@@ -1327,22 +1413,26 @@ cadran, et ils ignorent qui la passe."
 		load(E + "hive.tres"), load(E + "glutton.tres"),
 		load(E + "totem_guardian.tres"),
 	]
-	# DECK POLYVALENT + DISSIPATION. Le niveau ne punit pas la masse mais les
-	# EFFETS cumules : le Vide d emprise y vaut plus que n importe quel sort de
-	# degats. Resonance monte avec le nombre de corps presents, ce que la Cour
-	# fournit genereusement. Gel profond couvre le debordement du Corniste.
+	# DECK DE DEGATS + DISSIPATION. Deux hypotheses testees au banc et rejetees :
+	#  - "il faut du cast court" (Etincelle + Givre) -> 13 % de victoires. Une
+	#    Etincelle a 15 degats ne tue aucun corps de la Cour (30 a 60 PV) : le
+	#    mage lance vite et ne tue rien.
+	#  - "il faut moins de monstres" -> sans effet, le niveau a deja MOINS de PV
+	#    totaux que les Forges (1340 contre 2054).
+	# Ce qui marche : de la densite de degats par sort. Boule de feu et Resonance
+	# frappent tout un groupe, Brasier tient un couloir, et le Vide d emprise
+	# reste la carte signature — seule reponse au trio totem/berserker/chevalier
+	# qui se protege mutuellement.
 	lvl6.exploration_deck = _deck([
 		[C + "epic/void_grip.tres", 2],
-		[C + "epic/resonance.tres", 2],
+		[C + "epic/resonance.tres", 3],
 		[C + "common/fireball.tres", 4],
 		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 2],
-		[C + "common/frost_field.tres", 2],
+		[C + "rare/brazier.tres", 2],
 		[C + "epic/deep_freeze.tres", 1],
 		[C + "rare/chain_break.tres", 1],
-		[C + "rare/brazier.tres", 1],
 		[C + "rare/stone_wall.tres", 2],
-		[C + "rare/brazier.tres", 2],
 	])
 	lvl6.objectives = [o1, o2, o3]
 	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")

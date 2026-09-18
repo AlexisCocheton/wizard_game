@@ -42,6 +42,15 @@ var _base_x: float = 0.0
 var _shoot_timer: float = 0.0
 var _flash_tween: Tween = null
 
+## Boss morcele : PV restants de chaque partie encore debout. On garde un
+## TABLEAU et non un compteur, parce qu une partie a demi entamee doit retenir
+## ses degats d un coup a l autre — sinon le joueur devrait la tuer en une fois.
+var _parts: Array[float] = []
+var _summon_timer: float = 0.0
+## Sbires vivants issus de CE boss. Comptes ici plutot que sur le terrain :
+## deux invocateurs ne doivent pas se voler leur plafond.
+var _summoned: Array[Enemy] = []
+
 const HP_BAR_WIDTH: float = 62.0
 
 @onready var _body: EnemyBody = $Body
@@ -62,6 +71,13 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 	_shield_up = def.first_hit_shield
 	# Premier tir un peu plus tot que l intervalle : le joueur voit vite la menace.
 	_shoot_timer = def.shoot_interval * 0.6
+	# Premiere invocation a l intervalle PLEIN : le joueur a le temps de voir le
+	# boss entrer avant que l ecran se remplisse.
+	_summon_timer = def.summon_interval
+	_parts.clear()
+	if def.parts_count > 0 and def.part_hp > 0.0:
+		for i in def.parts_count:
+			_parts.append(def.part_hp * diff)
 
 
 func _ready() -> void:
@@ -99,7 +115,10 @@ func _setup_visual() -> void:
 	if Fx.enabled():
 		if definition.aura_shield_radius > 0.0:
 			_aura_fx = Fx.halo(self, definition.aura_shield_radius, Color(1.0, 0.92, 0.6, 0.55))
-		if _shield_up:
+		if _shield_up or not _parts.is_empty():
+			# Le meme halo sert au bouclier de premier coup et a l armure du boss
+			# morcele : dans les deux cas il signifie « ce que tu frappes n est
+			# pas encore la creature ».
 			_shield_fx = Fx.halo(self, visual_radius() * 1.05, Color(0.85, 0.9, 1.0, 0.9))
 
 
@@ -163,6 +182,22 @@ func advance(world_delta: float) -> void:
 	var speed: float = (definition.base_speed * GameConfig.ENEMY_SPEED_SCALE
 		* speed_scale * _slow_factor * (1.0 + _enrage_bonus))
 
+	# Boss morcele : chaque partie tombee le ralentit. Le facteur est borne a 15 %
+	# de sa vitesse d origine, sinon un boss a 4 parties finirait immobile et le
+	# combat deviendrait un mur de PV sans menace.
+	if definition.parts_count > 0 and definition.part_slow_pct > 0.0:
+		var perdues: int = definition.parts_count - _parts.size()
+		speed *= maxf(1.0 - perdues * definition.part_slow_pct * 0.01, 0.15)
+
+	# Invocation : elle suit `world_delta`, donc le flux s accelere avec le
+	# multiplicateur comme le reste du monde. Sinon a x4 le boss inviterait
+	# quatre fois moins de sbires par metre parcouru.
+	if definition.summon_interval > 0.0 and definition.summon_def != null and battlefield != null:
+		_summon_timer -= world_delta
+		if _summon_timer <= 0.0:
+			_summon_timer = definition.summon_interval
+			_do_summon()
+
 	# A-coups : fonce, puis marque une pause.
 	if definition.burst_move:
 		_burst_timer += world_delta
@@ -182,6 +217,15 @@ func advance(world_delta: float) -> void:
 		return
 
 	_advance_along_path(speed, world_delta)
+
+	# CANONNIER : il s arrete a sa ligne de tir au lieu de foncer au contact.
+	# Le clamp est pose APRES le deplacement plutot qu en coupant la vitesse :
+	# un souffle de repulsion ou un vortex peut l avoir pousse au-dela, et il
+	# doit alors pouvoir remonter jusqu a sa ligne au lieu d y rester colle.
+	if definition.keeps_distance_at > 0.0:
+		var ligne: float = GameConfig.MAGE_LINE_Y - definition.keeps_distance_at
+		if position.y > ligne:
+			position.y = maxf(ligne, position.y - speed * world_delta)
 
 	# Ondulation laterale, uniquement en descente libre (le chemin A* prime).
 	if definition.wave_amplitude > 0.0 and _path.is_empty():
@@ -291,6 +335,27 @@ func take_damage(amount: float, tags: Array) -> bool:
 			_shield_fx = null
 		AudioBus.play_sfx(&"shield_break")
 		return false
+
+	# BOSS MORCELE : tant qu une partie tient, le coeur n encaisse rien. Le coup
+	# porte sur UNE SEULE partie et le surplus est perdu — un meteore ne doit pas
+	# balayer les quatre parties d un coup, sinon la mecanique se resume a des PV.
+	if not _parts.is_empty():
+		var i: int = _parts.size() - 1
+		_parts[i] = _parts[i] - amount
+		if _parts[i] <= 0.0:
+			_parts.remove_at(i)
+			AudioBus.play_sfx(&"shield_break")
+			if _body != null:
+				_body.set_shield(not _parts.is_empty())
+			if _parts.is_empty() and _shield_fx != null and is_instance_valid(_shield_fx):
+				_shield_fx.queue_free()
+				_shield_fx = null
+			# Le boss se retrecit visiblement a chaque partie perdue : c est le
+			# seul retour immediat que le joueur a, sa barre de PV ne bouge pas.
+			_refresh_parts_visual()
+		_refresh_hp_bar()
+		return true
+
 	hp -= amount
 	_refresh_hp_bar()
 	if definition.enrage_speed_pct > 0.0:
@@ -374,6 +439,49 @@ func enrage_bonus() -> float:
 	return _enrage_bonus
 
 
+## Nombre de parties encore debout (0 pour un monstre ordinaire).
+func parts_left() -> int:
+	return _parts.size()
+
+
+## Le boss maigrit a mesure qu il perd ses parties. On ne descend pas sous 55 %
+## de sa taille : plus petit, il ne se lirait plus comme un boss a l ecran.
+func _refresh_parts_visual() -> void:
+	if definition == null or definition.parts_count <= 0:
+		return
+	var reste: float = float(_parts.size()) / float(definition.parts_count)
+	var facteur: float = lerpf(0.55, 1.0, reste)
+	if _anim != null and _anim.visible:
+		_apply_scale(_anim, float(AnimCatalog.frame_px(definition.anim_key)))
+		_anim.scale *= facteur
+	if _aura_fx != null and is_instance_valid(_aura_fx):
+		_aura_fx.scale = Vector2.ONE * facteur
+
+
+## Invocation. Les sbires naissent SUR LES COTES du boss, pas dessus : nes au
+## centre ils seraient caches par sa silhouette et le joueur ne comprendrait pas
+## d ou ils sortent.
+func _do_summon() -> void:
+	_summoned = _summoned.filter(func(s: Enemy) -> bool:
+		return s != null and is_instance_valid(s) and not s.is_dead())
+	var place: int = definition.summon_max_alive - _summoned.size()
+	if place <= 0:
+		return
+	var combien: int = mini(definition.summon_count, place)
+	play_attack()
+	for i in combien:
+		var ecart: float = (i - (combien - 1) * 0.5) * (radius() + 60.0)
+		var ou := Vector2(
+			clampf(position.x + ecart, 40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0),
+			position.y + radius() * 0.4)
+		var sbire: Enemy = battlefield.spawn_enemy(definition.summon_def, ou.x, difficulty, ou)
+		if sbire != null:
+			_summoned.append(sbire)
+	# Pas de son d invocation dedie dans assets/sfx : "grow" est le plus proche
+	# (quelque chose qui sort et s etend) parmi les cles existantes.
+	AudioBus.play_sfx(&"grow")
+
+
 func max_hp() -> float:
 	return _max_hp
 
@@ -394,6 +502,19 @@ func _refresh_hp_bar() -> void:
 	if _hp_bar == null:
 		return
 	var ratio: float = clampf(hp / _max_hp, 0.0, 1.0)
+	# Boss morcele : tant que des parties tiennent, la barre montre LEUR etat.
+	# Afficher les PV du coeur (toujours pleins) donnerait au joueur l impression
+	# que ses sorts ne servent a rien pendant toute la premiere moitie du combat.
+	if not _parts.is_empty() and definition != null and definition.parts_count > 0:
+		var total: float = definition.part_hp * difficulty * float(definition.parts_count)
+		var reste: float = 0.0
+		for p in _parts:
+			reste += maxf(p, 0.0)
+		_hp_bar.visible = true
+		_hp_bar.value = clampf(reste / maxf(total, 0.001), 0.0, 1.0) * 100.0
+		# Teinte distincte : le joueur doit lire « armure » et non « PV ».
+		_hp_bar.tint_progress = Color(0.70, 0.80, 1.0)
+		return
 	var intact: bool = ratio >= 0.999
 	_hp_bar.visible = not intact
 	if intact:

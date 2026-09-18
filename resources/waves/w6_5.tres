@@ -1,45 +1,37 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_dh3vq"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_26rjj"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_5qql2"]
-[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_ccuuy"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_2knye"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_ffmmo"]
 
-[sub_resource type="Resource" id="Resource_dh3vq"]
+[sub_resource type="Resource" id="Resource_g6egd"]
 script = ExtResource("1_dh3vq")
 enemy = ExtResource("2_26rjj")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_26rjj"]
+[sub_resource type="Resource" id="Resource_dh3vq"]
 script = ExtResource("1_dh3vq")
 enemy = ExtResource("3_5qql2")
-count = 2
-spawn_delay = 2.5
-start_offset = 8.0
-
-[sub_resource type="Resource" id="Resource_5qql2"]
-script = ExtResource("1_dh3vq")
-enemy = ExtResource("4_ccuuy")
 count = 1
 spawn_delay = 2.5
-start_offset = 18.0
+start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_ccuuy"]
+[sub_resource type="Resource" id="Resource_26rjj"]
 script = ExtResource("1_dh3vq")
 enemy = ExtResource("5_2knye")
 count = 3
-spawn_delay = 1.6
-start_offset = 26.0
+spawn_delay = 1.8
+start_offset = 22.0
 
 [resource]
 script = ExtResource("6_ffmmo")
 id = &"w6_5"
 duration = 32.0
-entries = Array[ExtResource("1_dh3vq")]([SubResource("Resource_dh3vq"), SubResource("Resource_26rjj"), SubResource("Resource_5qql2"), SubResource("Resource_ccuuy")])
+entries = Array[ExtResource("1_dh3vq")]([SubResource("Resource_g6egd"), SubResource("Resource_dh3vq"), SubResource("Resource_26rjj")])
 difficulty = 1.3
 is_miniboss = false
 is_boss = false

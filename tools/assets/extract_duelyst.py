@@ -22,6 +22,17 @@ WANTED = {
                                              "hit": "hurt", "attack": "attack", "death": "death"}),
     "boss_chaosknight":      ("chaosknight", {"run": "walk", "breathing": "idle",
                                               "hit": "hurt", "attack": "attack", "death": "death"}),
+    # --- Boss a mecanique unique (voir docs/histoire.md) ---
+    # L Ensevelisseur : le Pretre goule qui mene la Grande Invocation (lvl_04).
+    "boss_unhallowed":       ("unhallowed", {"run": "walk", "breathing": "idle",
+                                             "hit": "hurt", "attack": "attack", "death": "death"}),
+    # Le Decepticle : machine de guerre COULEE dans les forges (lvl_05), d ou
+    # ses plaques a briser une a une.
+    "boss_decepticle":       ("decepticle", {"run": "walk", "breathing": "idle",
+                                             "hit": "hurt", "attack": "attack", "death": "death"}),
+    # Le Spectre : il campe loin et harcele pendant la guerre civile (lvl_06).
+    "boss_wraith":           ("wraith", {"run": "walk", "breathing": "idle",
+                                         "hit": "hurt", "attack": "attack", "death": "death"}),
 }
 
 
