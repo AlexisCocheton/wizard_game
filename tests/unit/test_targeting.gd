@@ -29,6 +29,7 @@ func run() -> void:
 	_test_carte_sans_ciblage()
 	_test_origine_du_rayon_est_le_mage()
 	_test_l_anneau_de_zone_dit_la_verite()
+	_test_la_fleche_percante_touche_la_ligne()
 
 
 ## Une carte a viser doit etre reconnue comme telle par le HUD.
@@ -133,3 +134,40 @@ func _test_l_anneau_de_zone_dit_la_verite() -> void:
 	not_ok(corps.contains("sprite(root, \"protectioncircle\""),
 		"l anneau n est plus la feuille de 34 px etiree x10")
 	ring.free()
+
+
+## La fleche percante touche REELLEMENT les monstres alignes. Le testeur signalait
+## qu elle ne faisait rien : son rayon partait du coin de l ecran (corrige), mais
+## rien ne verifiait qu elle infligeait bien des degats.
+func _test_la_fleche_percante_touche_la_ligne() -> void:
+	var bf := Battlefield.new()
+	bf.nav = NavGrid.new()
+	attach(bf)
+
+	var def := EnemyDef.new()
+	def.id = &"t_cible"
+	def.display_name = "Cible"
+	def.max_hp = 100.0
+	def.base_speed = 0.0
+	def.base_radius = 30.0
+
+	# Trois monstres en colonne au-dessus du mage.
+	var mage := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)
+	var cibles: Array[Enemy] = []
+	for i in 3:
+		cibles.append(bf.spawn_enemy(def, mage.x, 1.0, Vector2(mage.x, mage.y - 300.0 - i * 200.0)))
+
+	var carte: SpellCard = ContentDB.cards.get(&"piercing_arrow")
+	ok(carte != null, "la carte Fleche percante existe")
+	if carte == null:
+		return
+	var ctx := CastContext.make(bf, carte)
+	ctx.direction = Vector2.UP
+	ctx.target_position = mage + Vector2.UP * 500.0
+	EffectRegistry.cast(carte, ctx)
+
+	var touches: int = 0
+	for e in cibles:
+		if e != null and is_instance_valid(e) and e.hp < def.max_hp:
+			touches += 1
+	eq(touches, 3, "les trois monstres alignes sont touches")

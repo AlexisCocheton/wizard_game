@@ -175,6 +175,13 @@ func _simulate_shots(wd: float) -> void:
 		var node: Node2D = s.get("node")
 		if node != null and is_instance_valid(node):
 			node.position = s["pos"]
+		# Un mur de pierre arrete les fleches : il protege du tir comme du contact.
+		if _blocked_by_wall(s["pos"]):
+			if node != null and is_instance_valid(node):
+				node.queue_free()
+			Fx.impact(self, s["pos"], Fx.COL_PHYSICAL)
+			shots.remove_at(i)
+			continue
 		if s["pos"].y >= GameConfig.MAGE_LINE_Y:
 			if node != null and is_instance_valid(node):
 				node.queue_free()
@@ -182,6 +189,20 @@ func _simulate_shots(wd: float) -> void:
 			# BOUCLIER PUIS PV, comme un contact.
 			SpeedGauge.take_hit(int(s["damage"]))
 			mage_hit.emit(int(s["damage"]), s.get("shooter"))
+
+
+## Le point est-il dans un mur ? Les murs sont peu nombreux (un ou deux), une
+## boucle directe est plus claire qu un index spatial.
+func _blocked_by_wall(point: Vector2) -> bool:
+	for w in walls:
+		var centre: Vector2 = w.get("center", Vector2.INF)
+		if centre == Vector2.INF:
+			continue
+		var demi_large: float = float(w.get("half_width", 0.0))
+		var demi_haut: float = float(w.get("thickness", 60.0)) * 0.5
+		if absf(point.x - centre.x) <= demi_large and absf(point.y - centre.y) <= demi_haut:
+			return true
+	return false
 
 
 func enemy_shoot(from: Enemy, damage: int) -> void:
@@ -406,7 +427,8 @@ func spawn_wall(center: Vector2, half_width: float, duration: float,
 		return
 	AudioBus.play_sfx(&"wall")
 	var node: Node = Fx.spawn_wall_visual(self, center, half_width, thickness, duration)
-	walls.append({"cells": cells, "time": maxf(duration, 0.1), "node": node})
+	walls.append({"cells": cells, "time": maxf(duration, 0.1), "node": node,
+		"center": center, "half_width": half_width, "thickness": thickness})
 
 
 func wall_count() -> int:

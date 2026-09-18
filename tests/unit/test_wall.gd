@@ -25,6 +25,7 @@ func run() -> void:
 	_test_mur_bloque_la_grille()
 	_test_mur_expire()
 	_test_monstre_devie()
+	_test_le_mur_arrete_les_projectiles()
 
 
 func _test_handler_enregistre() -> void:
@@ -90,3 +91,34 @@ func _test_monstre_devie() -> void:
 	var dernier: Vector2 = devie[devie.size() - 1]
 	ok(dernier.y >= GameConfig.MAGE_LINE_Y - NavGrid.CELL_SIZE,
 		"le contournement aboutit tout de meme a la ligne du mage")
+
+
+## Un mur de pierre doit ARRETER les fleches : demande du testeur. Sans cela il
+## ne protege que du contact, et les archers le traversent comme s il n existait pas.
+func _test_le_mur_arrete_les_projectiles() -> void:
+	var bf := Battlefield.new()
+	bf.nav = NavGrid.new()
+	attach(bf)
+
+	var centre := Vector2(540.0, 900.0)
+	bf.spawn_wall(centre, 200.0, 20.0, 60.0)
+	eq(bf.wall_count(), 1, "le mur est en place")
+
+	# Une fleche juste au-dessus du mur, dans sa largeur.
+	bf.shots.append({"pos": Vector2(540.0, 880.0), "damage": 2, "node": null,
+		"shooter": null})
+	var pv_avant: int = SpeedGauge.hp
+	for i in 30:
+		bf.simulate(1.0 / 60.0)
+	eq(bf.shots.size(), 0, "la fleche a ete arretee")
+	eq(SpeedGauge.hp, pv_avant, "elle n a pas touche le mage")
+
+	# Une fleche a cote du mur passe normalement.
+	bf.shots.append({"pos": Vector2(100.0, 880.0), "damage": 2, "node": null,
+		"shooter": null})
+	for i in 200:
+		bf.simulate(1.0 / 60.0)
+		if bf.shots.is_empty():
+			break
+	ok(SpeedGauge.hp < pv_avant, "une fleche hors du mur touche bien le mage")
+	SpeedGauge.reset()
