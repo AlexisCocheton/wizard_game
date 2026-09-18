@@ -1,29 +1,37 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_lxelt"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="2_xn4cb"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_hae7h"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_mmxcs"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_xn4cb"]
 
-[sub_resource type="Resource" id="Resource_bdhym"]
+[sub_resource type="Resource" id="Resource_xn4cb"]
 script = ExtResource("1_lxelt")
 enemy = ExtResource("2_xn4cb")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_p2ok8"]
+[sub_resource type="Resource" id="Resource_hae7h"]
 script = ExtResource("1_lxelt")
 enemy = ExtResource("3_hae7h")
 count = 4
 spawn_delay = 2.0
 start_offset = 10.0
 
+[sub_resource type="Resource" id="Resource_mmxcs"]
+script = ExtResource("1_lxelt")
+enemy = ExtResource("4_xn4cb")
+count = 3
+spawn_delay = 1.8
+start_offset = 16.0
+
 [resource]
 script = ExtResource("4_mmxcs")
 id = &"w5_1"
 duration = 28.0
-entries = Array[ExtResource("1_lxelt")]([SubResource("Resource_bdhym"), SubResource("Resource_p2ok8")])
+entries = Array[ExtResource("1_lxelt")]([SubResource("Resource_xn4cb"), SubResource("Resource_hae7h"), SubResource("Resource_mmxcs")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = false

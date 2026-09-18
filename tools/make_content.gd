@@ -1015,6 +1015,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		_entry(E + "jelly.tres", 2, 2.5),
 		_entry(E + "berserker.tres", 2, 2.5, 10.0),
 		_entry(E + "wisp.tres", 3, 1.8, 19.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 24.0),
 	]
 	_save(b4, "res://resources/waves/w4_4.tres")
 
@@ -1029,6 +1030,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 10.0),
 		_entry(E + "gnome.tres", 4, 2.0, 18.0),
+		_entry(E + "sprite.tres", 4, 1.5, 24.0),
 	]
 	_save(b5, "res://resources/waves/w4_5.tres")
 
@@ -1113,6 +1115,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	c1.entries = [
 		_entry(E + "golem.tres", 2, 3.0),
 		_entry(E + "gnome.tres", 4, 2.0, 10.0),
+		_entry(E + "hopper.tres", 3, 1.8, 16.0),
 	]
 	_save(c1, "res://resources/waves/w5_1.tres")
 
@@ -1125,6 +1128,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	c2.entries = [
 		_entry(E + "berserker.tres", 3, 2.5),
 		_entry(E + "void_knight.tres", 1, 2.0, 12.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 18.0),
 	]
 	_save(c2, "res://resources/waves/w5_2.tres")
 
@@ -1150,6 +1154,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		_entry(E + "behemoth.tres", 1, 1.0),
 		_entry(E + "void_knight.tres", 2, 2.5, 8.0),
 		_entry(E + "berserker.tres", 2, 2.5, 18.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 24.0),
 	]
 	_save(c4, "res://resources/waves/w5_4.tres")
 
@@ -1164,6 +1169,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 9.0),
 		_entry(E + "golem.tres", 2, 2.5, 18.0),
+		_entry(E + "sprite.tres", 4, 1.5, 25.0),
 	]
 	_save(c5, "res://resources/waves/w5_5.tres")
 
@@ -1176,6 +1182,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		_entry(E + "chronos.tres", 1, 1.0),
 		_entry(E + "golem.tres", 2, 3.0, 10.0),
 		_entry(E + "berserker.tres", 2, 2.5, 26.0),
+		_entry(E + "hopper.tres", 4, 1.8, 36.0),
 	]
 	_save(c6, "res://resources/waves/w5_6_boss.tres")
 
@@ -1229,10 +1236,13 @@ cadran, et ils ignorent qui la passe."
 	d1.id = &"w6_1"
 	d1.duration = 27.0
 	d1.difficulty = 1.2
+	# Mesure au banc : a 2 chevaliers du vide des la premiere vague, le niveau
+	# tombait a 37 % de victoires. Le chevalier annule le premier coup recu : en
+	# ouvrir la porte a deux exemplaires coutait quatre sorts avant le moindre degat.
 	d1.entries = [
-		_entry(E + "void_knight.tres", 2, 2.5),
-		_entry(E + "sprite.tres", 5, 1.6, 8.0),
-		_entry(E + "wisp.tres", 3, 1.8, 16.0),
+		_entry(E + "void_knight.tres", 1, 2.5),
+		_entry(E + "sprite.tres", 4, 1.8, 8.0),
+		_entry(E + "wisp.tres", 3, 2.0, 16.0),
 	]
 	_save(d1, "res://resources/waves/w6_1.tres")
 
@@ -1243,7 +1253,7 @@ cadran, et ils ignorent qui la passe."
 	# Le Corniste accelere tout le monde de 20 % : il transforme une vague lisible
 	# en debordement. Il entre par le cote, donc il faut le chercher.
 	d2.entries = [
-		_entry(E + "hornblower.tres", 2, 2.5),
+		_entry(E + "hornblower.tres", 1, 2.5),
 		_entry(E + "shade.tres", 3, 2.0, 7.0),
 		_entry(E + "hopper.tres", 4, 1.8, 15.0),
 	]
@@ -1254,10 +1264,13 @@ cadran, et ils ignorent qui la passe."
 	d3.duration = 34.0
 	d3.difficulty = 1.1
 	d3.is_miniboss = true
+	# Mesure au banc : les nuees de rats causaient la moitie des coups recus. Une
+	# nuee compte pour PLUSIEURS corps (swarm_count) et arrivait pendant que le
+	# mini-boss monopolisait l attention. Deux entrees, plus espacees.
 	d3.entries = [
 		_entry(E + "warden.tres", 1, 1.0),
 		_entry(E + "berserker.tres", 2, 2.5, 9.0),
-		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
+		_entry(E + "rat_swarm.tres", 2, 3.0, 22.0),
 	]
 	_save(d3, "res://resources/waves/w6_3_miniboss.tres")
 
@@ -1270,8 +1283,8 @@ cadran, et ils ignorent qui la passe."
 	d4.entries = [
 		_entry(E + "glutton.tres", 1, 1.0),
 		_entry(E + "hive.tres", 1, 2.0, 8.0),
-		_entry(E + "rat_swarm.tres", 3, 2.0, 16.0),
-		_entry(E + "imp_archer.tres", 2, 2.0, 22.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 16.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 24.0),
 	]
 	_save(d4, "res://resources/waves/w6_4.tres")
 
@@ -1284,8 +1297,8 @@ cadran, et ils ignorent qui la passe."
 	d5.entries = [
 		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "berserker.tres", 2, 2.5, 8.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 16.0),
-		_entry(E + "sprite.tres", 4, 1.5, 24.0),
+		_entry(E + "void_knight.tres", 1, 2.5, 18.0),
+		_entry(E + "sprite.tres", 3, 1.6, 26.0),
 	]
 	_save(d5, "res://resources/waves/w6_5.tres")
 
@@ -1296,8 +1309,8 @@ cadran, et ils ignorent qui la passe."
 	d6.is_boss = true
 	d6.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
-		_entry(E + "glutton.tres", 1, 1.0, 10.0),
-		_entry(E + "shade.tres", 3, 2.0, 24.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 12.0),
+		_entry(E + "shade.tres", 3, 2.0, 26.0),
 	]
 	_save(d6, "res://resources/waves/w6_6_boss.tres")
 
@@ -1321,13 +1334,15 @@ cadran, et ils ignorent qui la passe."
 	lvl6.exploration_deck = _deck([
 		[C + "epic/void_grip.tres", 2],
 		[C + "epic/resonance.tres", 2],
-		[C + "common/fireball.tres", 3],
-		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/fireball.tres", 4],
+		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/frost_field.tres", 2],
 		[C + "epic/deep_freeze.tres", 1],
 		[C + "rare/chain_break.tres", 1],
+		[C + "rare/brazier.tres", 1],
+		[C + "rare/stone_wall.tres", 2],
 		[C + "rare/brazier.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl6.objectives = [o1, o2, o3]
 	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")

@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_s2vhl"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_52i17"]
 
-[sub_resource type="Resource" id="Resource_vli27"]
+[sub_resource type="Resource" id="Resource_qmclj"]
 script = ExtResource("1_qmclj")
 enemy = ExtResource("2_63wp0")
-count = 2
+count = 1
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_o2ess"]
+[sub_resource type="Resource" id="Resource_63wp0"]
 script = ExtResource("1_qmclj")
 enemy = ExtResource("3_x2kre")
 count = 3
 spawn_delay = 2.0
 start_offset = 7.0
 
-[sub_resource type="Resource" id="Resource_pl1wx"]
+[sub_resource type="Resource" id="Resource_x2kre"]
 script = ExtResource("1_qmclj")
 enemy = ExtResource("4_s2vhl")
 count = 4
@@ -31,7 +31,7 @@ start_offset = 15.0
 script = ExtResource("5_52i17")
 id = &"w6_2"
 duration = 28.0
-entries = Array[ExtResource("1_qmclj")]([SubResource("Resource_vli27"), SubResource("Resource_o2ess"), SubResource("Resource_pl1wx")])
+entries = Array[ExtResource("1_qmclj")]([SubResource("Resource_qmclj"), SubResource("Resource_63wp0"), SubResource("Resource_x2kre")])
 difficulty = 1.25
 is_miniboss = false
 is_boss = false

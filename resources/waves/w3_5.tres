@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_ljujn"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_yqlwa"]
 
-[sub_resource type="Resource" id="Resource_dyq36"]
+[sub_resource type="Resource" id="Resource_nouso"]
 script = ExtResource("1_nouso")
 enemy = ExtResource("2_slqsm")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_xtrv6"]
+[sub_resource type="Resource" id="Resource_slqsm"]
 script = ExtResource("1_nouso")
 enemy = ExtResource("3_rluyr")
 count = 1
 spawn_delay = 2.0
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_untc8"]
+[sub_resource type="Resource" id="Resource_rluyr"]
 script = ExtResource("1_nouso")
 enemy = ExtResource("4_ljujn")
 count = 3
@@ -31,7 +31,7 @@ start_offset = 18.0
 script = ExtResource("5_yqlwa")
 id = &"w3_5"
 duration = 30.0
-entries = Array[ExtResource("1_nouso")]([SubResource("Resource_dyq36"), SubResource("Resource_xtrv6"), SubResource("Resource_untc8")])
+entries = Array[ExtResource("1_nouso")]([SubResource("Resource_nouso"), SubResource("Resource_slqsm"), SubResource("Resource_rluyr")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false

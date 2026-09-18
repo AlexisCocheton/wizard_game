@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="4_jyqf8"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_lf51o"]
 
-[sub_resource type="Resource" id="Resource_yu57x"]
+[sub_resource type="Resource" id="Resource_joktu"]
 script = ExtResource("1_joktu")
 enemy = ExtResource("2_fc8wg")
 count = 2
 spawn_delay = 2.4
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_f5en6"]
+[sub_resource type="Resource" id="Resource_fc8wg"]
 script = ExtResource("1_joktu")
 enemy = ExtResource("3_quakv")
 count = 4
 spawn_delay = 2.0
 start_offset = 7.0
 
-[sub_resource type="Resource" id="Resource_xpgfh"]
+[sub_resource type="Resource" id="Resource_quakv"]
 script = ExtResource("1_joktu")
 enemy = ExtResource("4_jyqf8")
 count = 2
@@ -31,7 +31,7 @@ start_offset = 15.0
 script = ExtResource("5_lf51o")
 id = &"w3_1"
 duration = 26.0
-entries = Array[ExtResource("1_joktu")]([SubResource("Resource_yu57x"), SubResource("Resource_f5en6"), SubResource("Resource_xpgfh")])
+entries = Array[ExtResource("1_joktu")]([SubResource("Resource_joktu"), SubResource("Resource_fc8wg"), SubResource("Resource_quakv")])
 difficulty = 1.15
 is_miniboss = false
 is_boss = false

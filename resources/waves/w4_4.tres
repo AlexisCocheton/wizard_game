@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_452vt"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="2_svj61"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_8xhiw"]
 [ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_om86t"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_3vxca"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="5_svj61"]
 
-[sub_resource type="Resource" id="Resource_ckxla"]
+[sub_resource type="Resource" id="Resource_svj61"]
 script = ExtResource("1_452vt")
 enemy = ExtResource("2_svj61")
 count = 2
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_dnomc"]
+[sub_resource type="Resource" id="Resource_8xhiw"]
 script = ExtResource("1_452vt")
 enemy = ExtResource("3_8xhiw")
 count = 2
 spawn_delay = 2.5
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_66nit"]
+[sub_resource type="Resource" id="Resource_om86t"]
 script = ExtResource("1_452vt")
 enemy = ExtResource("4_om86t")
 count = 3
 spawn_delay = 1.8
 start_offset = 19.0
 
+[sub_resource type="Resource" id="Resource_3vxca"]
+script = ExtResource("1_452vt")
+enemy = ExtResource("5_svj61")
+count = 2
+spawn_delay = 2.2
+start_offset = 24.0
+
 [resource]
 script = ExtResource("5_3vxca")
 id = &"w4_4"
 duration = 30.0
-entries = Array[ExtResource("1_452vt")]([SubResource("Resource_ckxla"), SubResource("Resource_dnomc"), SubResource("Resource_66nit")])
+entries = Array[ExtResource("1_452vt")]([SubResource("Resource_svj61"), SubResource("Resource_8xhiw"), SubResource("Resource_om86t"), SubResource("Resource_3vxca")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false

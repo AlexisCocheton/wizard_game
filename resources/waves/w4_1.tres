@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_b74bs"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_tdnbq"]
 
-[sub_resource type="Resource" id="Resource_q87ib"]
+[sub_resource type="Resource" id="Resource_2d5xm"]
 script = ExtResource("1_2d5xm")
 enemy = ExtResource("2_xwfu6")
 count = 3
 spawn_delay = 2.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ghe68"]
+[sub_resource type="Resource" id="Resource_xwfu6"]
 script = ExtResource("1_2d5xm")
 enemy = ExtResource("3_va7nd")
 count = 2
 spawn_delay = 2.2
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_idkb7"]
+[sub_resource type="Resource" id="Resource_va7nd"]
 script = ExtResource("1_2d5xm")
 enemy = ExtResource("4_b74bs")
 count = 2
@@ -31,7 +31,7 @@ start_offset = 16.0
 script = ExtResource("5_tdnbq")
 id = &"w4_1"
 duration = 26.0
-entries = Array[ExtResource("1_2d5xm")]([SubResource("Resource_q87ib"), SubResource("Resource_ghe68"), SubResource("Resource_idkb7")])
+entries = Array[ExtResource("1_2d5xm")]([SubResource("Resource_2d5xm"), SubResource("Resource_xwfu6"), SubResource("Resource_va7nd")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = false

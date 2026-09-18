@@ -11,6 +11,9 @@ extends Node
 
 const FIXED_DELTA: float = 1.0 / 60.0
 const MAX_SECONDS: float = 400.0
+## Les niveaux de campagne mesures par le banc. Ajouter ici tout nouveau niveau.
+const LEVELS: Array[String] = ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05",
+	"lvl_06", "lvl_07"]
 
 var _total_damage: float = 0.0
 var _cast_time: float = 0.0
@@ -27,7 +30,7 @@ func _ready() -> void:
 	_report_waves()
 	# Une seule partie ne prouve rien : le tirage des cartes et la composition des
 	# vagues varient. On mesure un TAUX DE REUSSITE sur plusieurs graines.
-	for level_id in ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05", "lvl_06", "lvl_07"]:
+	for level_id in LEVELS:
 		await _run_level_many(StringName(level_id), 30)
 	await _run_massacre_many(20)
 	print("=== FIN ===")
@@ -37,7 +40,7 @@ func _ready() -> void:
 ## Ce que chaque vague envoie, avant meme de jouer.
 func _report_waves() -> void:
 	print("\n-- Contenu des vagues (puissance totale, nombre de monstres) --")
-	for level_id in ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05", "lvl_06", "lvl_07"]:
+	for level_id in LEVELS:
 		var level: LevelDef = ContentDB.levels.get(StringName(level_id))
 		if level == null:
 			continue

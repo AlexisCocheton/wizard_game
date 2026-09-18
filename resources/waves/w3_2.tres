@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_ov5qv"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_4xcg5"]
 
-[sub_resource type="Resource" id="Resource_ekc77"]
+[sub_resource type="Resource" id="Resource_oaiye"]
 script = ExtResource("1_oaiye")
 enemy = ExtResource("2_gv8en")
 count = 1
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_qwf6o"]
+[sub_resource type="Resource" id="Resource_gv8en"]
 script = ExtResource("1_oaiye")
 enemy = ExtResource("3_ck8pi")
 count = 3
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_gyso3"]
+[sub_resource type="Resource" id="Resource_ck8pi"]
 script = ExtResource("1_oaiye")
 enemy = ExtResource("4_ov5qv")
 count = 4
@@ -31,7 +31,7 @@ start_offset = 14.0
 script = ExtResource("5_4xcg5")
 id = &"w3_2"
 duration = 27.0
-entries = Array[ExtResource("1_oaiye")]([SubResource("Resource_ekc77"), SubResource("Resource_qwf6o"), SubResource("Resource_gyso3")])
+entries = Array[ExtResource("1_oaiye")]([SubResource("Resource_oaiye"), SubResource("Resource_gv8en"), SubResource("Resource_ck8pi")])
 difficulty = 1.25
 is_miniboss = false
 is_boss = false

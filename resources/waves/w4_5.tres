@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5fou7"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_lvcv8"]
 [ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="3_avbj8"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="4_n3k1y"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_58nc0"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_lvcv8"]
 
-[sub_resource type="Resource" id="Resource_ectwo"]
+[sub_resource type="Resource" id="Resource_lvcv8"]
 script = ExtResource("1_5fou7")
 enemy = ExtResource("2_lvcv8")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_j8pya"]
+[sub_resource type="Resource" id="Resource_avbj8"]
 script = ExtResource("1_5fou7")
 enemy = ExtResource("3_avbj8")
 count = 1
 spawn_delay = 1.0
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_a5dmt"]
+[sub_resource type="Resource" id="Resource_n3k1y"]
 script = ExtResource("1_5fou7")
 enemy = ExtResource("4_n3k1y")
 count = 4
 spawn_delay = 2.0
 start_offset = 18.0
 
+[sub_resource type="Resource" id="Resource_58nc0"]
+script = ExtResource("1_5fou7")
+enemy = ExtResource("5_lvcv8")
+count = 4
+spawn_delay = 1.5
+start_offset = 24.0
+
 [resource]
 script = ExtResource("5_58nc0")
 id = &"w4_5"
 duration = 32.0
-entries = Array[ExtResource("1_5fou7")]([SubResource("Resource_ectwo"), SubResource("Resource_j8pya"), SubResource("Resource_a5dmt")])
+entries = Array[ExtResource("1_5fou7")]([SubResource("Resource_lvcv8"), SubResource("Resource_avbj8"), SubResource("Resource_n3k1y"), SubResource("Resource_58nc0")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false
