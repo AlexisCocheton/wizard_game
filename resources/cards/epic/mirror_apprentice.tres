@@ -23,3 +23,4 @@ tags = Array[int]([5])
 effects = Array[ExtResource("1_u5spx")]([SubResource("Resource_u5spx")])
 copies_in_starter = 0
 exile_after_cast = false
+is_passive = false

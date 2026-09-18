@@ -27,8 +27,7 @@ func _ready() -> void:
 	_report_waves()
 	# Une seule partie ne prouve rien : le tirage des cartes et la composition des
 	# vagues varient. On mesure un TAUX DE REUSSITE sur plusieurs graines.
-	_run_level(&"lvl_02")
-	for level_id in ["lvl_01", "lvl_02"]:
+	for level_id in ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05", "lvl_06", "lvl_07"]:
 		await _run_level_many(StringName(level_id), 30)
 	await _run_massacre_many(20)
 	print("=== FIN ===")
@@ -38,7 +37,7 @@ func _ready() -> void:
 ## Ce que chaque vague envoie, avant meme de jouer.
 func _report_waves() -> void:
 	print("\n-- Contenu des vagues (puissance totale, nombre de monstres) --")
-	for level_id in ["lvl_01", "lvl_02"]:
+	for level_id in ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05", "lvl_06", "lvl_07"]:
 		var level: LevelDef = ContentDB.levels.get(StringName(level_id))
 		if level == null:
 			continue
@@ -223,7 +222,7 @@ func _on_enemy_killed(_def: EnemyDef) -> void:
 	_killed += 1
 
 
-func _on_mage_hit(_dmg: int) -> void:
+func _on_mage_hit(_dmg: int, _source: EnemyDef = null) -> void:
 	var nom: String = "projectile ou contact inconnu"
 	var y_max: float = -1e9
 	if _watch != null:

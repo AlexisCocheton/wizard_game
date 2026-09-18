@@ -17,6 +17,10 @@ var zones: Array[Dictionary] = []
 var allies: Array[Dictionary] = []
 var walls: Array[Dictionary] = []
 var shots: Array[Dictionary] = []
+## Spirales qui aspirent les monstres vers un point. Separees des zones au sol :
+## une zone agit sur les PV, un vortex agit sur la POSITION, et le joueur doit
+## pouvoir superposer les deux (aspirer dans une mare de venin).
+var vortices: Array[Dictionary] = []
 
 ## Grille de navigation partagee : les monstres la consultent pour contourner
 ## les murs. Sans mur pose, ils descendent tout droit.
@@ -53,6 +57,7 @@ func simulate(delta: float) -> void:
 		_reverse_time -= wd
 
 	_simulate_zones(wd)
+	_simulate_vortices(wd)
 	_simulate_allies(wd)
 	_simulate_walls(wd)
 	_simulate_shots(wd)
@@ -295,6 +300,11 @@ func clear_all() -> void:
 	enemies.clear()
 	zones.clear()
 	allies.clear()
+	for v in vortices:
+		var vnode: Node = v.get("node")
+		if vnode != null and is_instance_valid(vnode):
+			vnode.queue_free()
+	vortices.clear()
 	for w in walls:
 		var node: Node = w.get("node")
 		if node != null and is_instance_valid(node):
@@ -448,3 +458,153 @@ func enemy_nearest_to(point: Vector2, max_dist: float = 260.0) -> Enemy:
 			best_d = d
 			best = e
 	return best if best != null else _closest_enemy()
+
+
+# --- Sorts demandes par le testeur : repousse, vortex, dissipation, murs cassables ---
+
+## Repousse les monstres d un point. Le deplacement est INSTANTANE et non
+## simule : un souffle doit se voir au moment ou la carte part, pas s etaler sur
+## une seconde pendant laquelle le joueur ne sait plus ce qu il a lance.
+##
+## Le monstre est reclampe dans le terrain : pousse dehors il deviendrait
+## invisible, increvable, et continuerait a descendre hors de portee des sorts.
+func knockback_from(center: Vector2, radius: float, push: float) -> int:
+	var touches: int = 0
+	for e in enemies_in_radius(center, radius):
+		var enemy: Enemy = e as Enemy
+		var away: Vector2 = enemy.position - center
+		# Pile au centre : on choisit le haut, la direction qui aide le joueur.
+		var dir: Vector2 = away.normalized() if away.length() > 1.0 else Vector2.UP
+		# Degressif : au bord de la zone le souffle ne porte presque plus.
+		var force: float = push * (1.0 - clampf(away.length() / maxf(radius, 1.0), 0.0, 1.0) * 0.5)
+		var cible: Vector2 = enemy.position + dir * force
+		enemy.position = Vector2(
+			clampf(cible.x, 40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0),
+			clampf(cible.y, GameConfig.SPAWN_LINE_Y, GameConfig.MAGE_LINE_Y - 20.0))
+		enemy.repath()
+		touches += 1
+	return touches
+
+
+## Pose une spirale qui aspire. `pull` est une vitesse d aspiration en px/s a x1.
+func spawn_vortex(center: Vector2, radius: float, duration: float, pull: float) -> void:
+	var vis: Node = Fx.zone_visual(self, center, maxf(radius, 10.0), duration, Fx.COL_ARCANE)
+	vortices.append({
+		"pos": center,
+		"radius": maxf(radius, 10.0),
+		"time": maxf(duration, 0.1),
+		"pull": pull,
+		"node": vis,
+	})
+
+
+func vortex_count() -> int:
+	return vortices.size()
+
+
+## Aspiration : elle passe par `wd`, donc elle s accelere avec le multiplicateur
+## comme tout le reste du monde. Sinon a x4 les monstres traverseraient la spirale.
+func _simulate_vortices(wd: float) -> void:
+	for i in range(vortices.size() - 1, -1, -1):
+		var v: Dictionary = vortices[i]
+		v["time"] -= wd
+		for e in enemies.duplicate():
+			if not _alive(e):
+				continue
+			var vers: Vector2 = v["pos"] - e.position
+			var d: float = vers.length()
+			if d > v["radius"] or d < 4.0:
+				continue
+			var pas: float = minf(float(v["pull"]) * wd, d)
+			e.position += vers / d * pas
+			# Le chemin A* memorise vise depuis l ancienne position : sans
+			# recalcul le monstre revient tout droit vers son ancien couloir.
+			e.repath()
+		if v["time"] <= 0.0:
+			var node: Node = v.get("node")
+			if node != null and is_instance_valid(node):
+				node.queue_free()
+			vortices.remove_at(i)
+
+
+## Dissipation : retire aux monstres de la zone tout ce qu ils ont GAGNE
+## (rage accumulee, bouclier de premier coup, ralentissement en cours).
+## Renvoie le nombre de monstres nettoyes.
+func dispel_at(center: Vector2, radius: float) -> int:
+	var n: int = 0
+	for e in enemies_in_radius(center, radius):
+		(e as Enemy).dispel()
+		n += 1
+	if n > 0:
+		Fx.impact(self, center, Fx.COL_ARCANE, radius)
+	return n
+
+
+## Frappe le mur qui recouvre `point`. Renvoie true si un mur a bien encaisse.
+## Un mur sans PV (les murs temporaires) ignore les coups : seule la duree le tue.
+func damage_wall_at(point: Vector2, amount: float) -> bool:
+	for i in range(walls.size() - 1, -1, -1):
+		var w: Dictionary = walls[i]
+		if float(w.get("hp", 0.0)) <= 0.0:
+			continue
+		var centre: Vector2 = w.get("center", Vector2.INF)
+		if centre == Vector2.INF:
+			continue
+		var demi_large: float = float(w.get("half_width", 0.0))
+		var demi_haut: float = float(w.get("thickness", 60.0)) * 0.5
+		if absf(point.x - centre.x) > demi_large or absf(point.y - centre.y) > demi_haut:
+			continue
+		w["hp"] = float(w["hp"]) - amount
+		if float(w["hp"]) <= 0.0:
+			_break_wall(i)
+		return true
+	return false
+
+
+func _break_wall(index: int) -> void:
+	var w: Dictionary = walls[index]
+	if nav != null:
+		nav.unblock_cells(w["cells"])
+	var node: Node = w.get("node")
+	if node != null and is_instance_valid(node):
+		node.queue_free()
+	Fx.impact(self, w.get("center", Vector2.ZERO), Fx.COL_WALL,
+		float(w.get("half_width", 60.0)))
+	AudioBus.play_sfx(&"wall")
+	walls.remove_at(index)
+
+
+## Mur PERMANENT : il ne compte pas le temps, il compte les PV. Le seul moyen de
+## le faire tomber est de le casser, ce qui donne enfin une raison aux monstres
+## d attaquer le decor au lieu de l attendre.
+##
+## `duration = INF` traverse `_simulate_walls` sans jamais atteindre zero : aucune
+## branche d expiration a ajouter, le meme code gere les deux sortes de murs.
+func spawn_breakable_wall(center: Vector2, half_width: float, thickness: float,
+		hp: float) -> void:
+	spawn_wall(center, half_width, INF, thickness)
+	if walls.is_empty():
+		return
+	walls[walls.size() - 1]["hp"] = maxf(hp, 1.0)
+
+
+## PV restants du mur qui couvre `point`, 0.0 si aucun mur cassable la.
+func wall_hp_at(point: Vector2) -> float:
+	for w in walls:
+		var centre: Vector2 = w.get("center", Vector2.INF)
+		if centre == Vector2.INF:
+			continue
+		if absf(point.x - centre.x) <= float(w.get("half_width", 0.0)) \
+				and absf(point.y - centre.y) <= float(w.get("thickness", 60.0)) * 0.5:
+			return float(w.get("hp", 0.0))
+	return 0.0
+
+
+## Un monstre bloque (aucun chemin vers le mage) tape le mur devant lui.
+## Appele par Enemy quand l A* ne rend rien : c est le seul moment ou le monstre
+## a une raison de s en prendre au decor plutot que de contourner.
+func enemy_strikes_wall(e: Enemy, world_delta: float) -> void:
+	if e == null or e.definition == null:
+		return
+	var devant: Vector2 = e.position + Vector2(0.0, e.radius() + 20.0)
+	damage_wall_at(devant, float(e.definition.contact_hit()) * 4.0 * world_delta)

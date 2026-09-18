@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_dh3vq"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_26rjj"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_5qql2"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_ccuuy"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_2knye"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_ffmmo"]
+
+[sub_resource type="Resource" id="Resource_j2aw1"]
+script = ExtResource("1_dh3vq")
+enemy = ExtResource("2_26rjj")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_s3ibm"]
+script = ExtResource("1_dh3vq")
+enemy = ExtResource("3_5qql2")
+count = 2
+spawn_delay = 2.5
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_qph2s"]
+script = ExtResource("1_dh3vq")
+enemy = ExtResource("4_ccuuy")
+count = 2
+spawn_delay = 2.5
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_k2afu"]
+script = ExtResource("1_dh3vq")
+enemy = ExtResource("5_2knye")
+count = 4
+spawn_delay = 1.5
+start_offset = 24.0
+
+[resource]
+script = ExtResource("6_ffmmo")
+id = &"w6_5"
+duration = 32.0
+entries = Array[ExtResource("1_dh3vq")]([SubResource("Resource_j2aw1"), SubResource("Resource_s3ibm"), SubResource("Resource_qph2s"), SubResource("Resource_k2afu")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_qmclj"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="2_63wp0"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_x2kre"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_s2vhl"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_52i17"]
+
+[sub_resource type="Resource" id="Resource_vli27"]
+script = ExtResource("1_qmclj")
+enemy = ExtResource("2_63wp0")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_o2ess"]
+script = ExtResource("1_qmclj")
+enemy = ExtResource("3_x2kre")
+count = 3
+spawn_delay = 2.0
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_pl1wx"]
+script = ExtResource("1_qmclj")
+enemy = ExtResource("4_s2vhl")
+count = 4
+spawn_delay = 1.8
+start_offset = 15.0
+
+[resource]
+script = ExtResource("5_52i17")
+id = &"w6_2"
+duration = 28.0
+entries = Array[ExtResource("1_qmclj")]([SubResource("Resource_vli27"), SubResource("Resource_o2ess"), SubResource("Resource_pl1wx")])
+difficulty = 1.25
+is_miniboss = false
+is_boss = false

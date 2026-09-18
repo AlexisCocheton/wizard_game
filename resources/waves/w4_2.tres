@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_7a8lf"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_qtejf"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_pfft2"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_mcckk"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_bps5e"]
+
+[sub_resource type="Resource" id="Resource_1s8hm"]
+script = ExtResource("1_7a8lf")
+enemy = ExtResource("2_qtejf")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_1snao"]
+script = ExtResource("1_7a8lf")
+enemy = ExtResource("3_pfft2")
+count = 1
+spawn_delay = 2.0
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_i26y4"]
+script = ExtResource("1_7a8lf")
+enemy = ExtResource("4_mcckk")
+count = 3
+spawn_delay = 2.0
+start_offset = 17.0
+
+[resource]
+script = ExtResource("5_bps5e")
+id = &"w4_2"
+duration = 28.0
+entries = Array[ExtResource("1_7a8lf")]([SubResource("Resource_1s8hm"), SubResource("Resource_1snao"), SubResource("Resource_i26y4")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

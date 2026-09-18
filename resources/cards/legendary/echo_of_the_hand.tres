@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_ief0k"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_qvc5f"]
+
+[sub_resource type="Resource" id="Resource_ief0k"]
+script = ExtResource("1_ief0k")
+key = &"retain_next"
+magnitude = 2.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_qvc5f")
+id = &"echo_of_the_hand"
+display_name = "Echo de la main"
+description = "Les 2 prochaines cartes que tu joues reviennent en main au lieu de partir."
+rarity = 3
+base_cast_time = 1.2
+targeting = 0
+tags = Array[int]([3])
+effects = Array[ExtResource("1_ief0k")]([SubResource("Resource_ief0k")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

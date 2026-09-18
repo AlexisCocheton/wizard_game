@@ -23,3 +23,4 @@ tags = Array[int]([4])
 effects = Array[ExtResource("1_rnomm")]([SubResource("Resource_rnomm")])
 copies_in_starter = 0
 exile_after_cast = false
+is_passive = false

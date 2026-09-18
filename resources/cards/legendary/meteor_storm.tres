@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_87ug4"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_da1ca"]
+
+[sub_resource type="Resource" id="Resource_87ug4"]
+script = ExtResource("1_87ug4")
+key = &"meteor_storm"
+magnitude = 70.0
+duration = 5.0
+radius = 290.0
+params = {
+&"impacts": 18
+}
+
+[resource]
+script = ExtResource("2_da1ca")
+id = &"meteor_storm"
+display_name = "Pluie de meteorites"
+description = "18 meteores s abattent sur tout le terrain pendant 5 s, 70 degats chacun."
+rarity = 3
+base_cast_time = 2.6
+targeting = 0
+tags = Array[int]([1, 0])
+effects = Array[ExtResource("1_87ug4")]([SubResource("Resource_87ug4")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

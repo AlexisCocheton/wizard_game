@@ -31,3 +31,4 @@ tags = Array[int]([3, 4])
 effects = Array[ExtResource("1_38gph")]([SubResource("Resource_38gph"), SubResource("Resource_a06sc")])
 copies_in_starter = 0
 exile_after_cast = false
+is_passive = false

@@ -8,14 +8,17 @@ extends Control
 ##   |            panneau de l onglet           |
 ##   |                                          |
 ##   +------------------------------------------+
-##   | Galerie | Deck | [CAMPAGNE] | Profil | Param |  <- onglets, centre sureleve
+##   | Galerie | Bestiaire | Deck | [CAMPAGNE] | Profil | Regl |  <- centre sureleve
 ##   +------------------------------------------+
 ##
 ## Les onglets changent le panneau sans changer de scene : la navigation est
 ## instantanee, comme sur mobile.
 
-const TABS: Array[String] = ["GALERIE", "DECK", "CAMPAGNE", "PROFIL", "REGLAGES"]
-const HOME_TAB: int = 2
+## 6 onglets : le Bestiaire s insere apres la Galerie (les deux ecrans de
+## consultation restent voisins). CAMPAGNE reste l onglet central sureleve,
+## donc son index suit l insertion.
+const TABS: Array[String] = ["GALERIE", "BESTIAIRE", "DECK", "CAMPAGNE", "PROFIL", "REGLAGES"]
+const HOME_TAB: int = 3
 
 @onready var _content: MarginContainer = %Content
 @onready var _tab_bar: HBoxContainer = %TabBar
@@ -39,6 +42,7 @@ func _ready() -> void:
 func _build_panels() -> void:
 	_panels = [
 		GalleryPanel.new(),
+		BestiaryPanel.new(),
 		DeckPanel.new(),
 		CampaignPanel.new(),
 		ProfilePanel.new(),
@@ -56,7 +60,10 @@ func _build_tabs() -> void:
 		var b := Button.new()
 		b.text = TABS[i]
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+		# 6 onglets sur 1080 px : ~170 px chacun. En FONT_SMALL (24) le mot
+		# "BESTIAIRE" deborde du bouton ; on descend a 20 et on tronque.
+		b.add_theme_font_size_override(&"font_size", 20)
+		b.clip_text = true
 		# L onglet central est plus grand et depasse vers le haut : c est
 		# la signature visuelle d Archero, le "home" se repere au pouce.
 		if i == HOME_TAB:

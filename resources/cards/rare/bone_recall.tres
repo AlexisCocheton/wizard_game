@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_ur3hq"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_0avoj"]
+
+[sub_resource type="Resource" id="Resource_ur3hq"]
+script = ExtResource("1_ur3hq")
+key = &"retain_next"
+magnitude = 2.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_0avoj")
+id = &"bone_recall"
+display_name = "Rappel d ossements"
+description = "Les 2 prochains sorts lances reviennent en main au lieu d etre defausses."
+rarity = 1
+base_cast_time = 0.9
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_ur3hq")]([SubResource("Resource_ur3hq")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

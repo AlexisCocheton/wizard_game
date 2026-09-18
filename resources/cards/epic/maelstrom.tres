@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0sobc"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_6eqlg"]
+
+[sub_resource type="Resource" id="Resource_0sobc"]
+script = ExtResource("1_0sobc")
+key = &"vortex_pull"
+magnitude = 260.0
+duration = 4.0
+radius = 420.0
+params = {}
+
+[resource]
+script = ExtResource("2_6eqlg")
+id = &"maelstrom"
+display_name = "Maelstrom"
+description = "Spirale qui aspire les monstres vers son centre pendant 4 s. Aucun degat, mais tout ce qui tombe dedans est regroupe."
+rarity = 2
+base_cast_time = 1.6
+targeting = 1
+tags = Array[int]([3])
+effects = Array[ExtResource("1_0sobc")]([SubResource("Resource_0sobc")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

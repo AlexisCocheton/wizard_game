@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_itv7d"]
+[ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="2_2uopk"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_igyol"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_osax4"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="5_eodwd"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_5v8um"]
+
+[sub_resource type="Resource" id="Resource_ponlw"]
+script = ExtResource("1_itv7d")
+enemy = ExtResource("2_2uopk")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_62nol"]
+script = ExtResource("1_itv7d")
+enemy = ExtResource("3_igyol")
+count = 1
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_scqp1"]
+script = ExtResource("1_itv7d")
+enemy = ExtResource("4_osax4")
+count = 3
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_nsdur"]
+script = ExtResource("1_itv7d")
+enemy = ExtResource("5_eodwd")
+count = 2
+spawn_delay = 2.0
+start_offset = 22.0
+
+[resource]
+script = ExtResource("6_5v8um")
+id = &"w6_4"
+duration = 30.0
+entries = Array[ExtResource("1_itv7d")]([SubResource("Resource_ponlw"), SubResource("Resource_62nol"), SubResource("Resource_scqp1"), SubResource("Resource_nsdur")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_1x0vq"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_v0og2"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_5mcbm"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_i6fll"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_gmrxt"]
+
+[sub_resource type="Resource" id="Resource_6soiv"]
+script = ExtResource("1_1x0vq")
+enemy = ExtResource("2_v0og2")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_kvuqi"]
+script = ExtResource("1_1x0vq")
+enemy = ExtResource("3_5mcbm")
+count = 5
+spawn_delay = 1.6
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_esl01"]
+script = ExtResource("1_1x0vq")
+enemy = ExtResource("4_i6fll")
+count = 3
+spawn_delay = 1.8
+start_offset = 16.0
+
+[resource]
+script = ExtResource("5_gmrxt")
+id = &"w6_1"
+duration = 27.0
+entries = Array[ExtResource("1_1x0vq")]([SubResource("Resource_6soiv"), SubResource("Resource_kvuqi"), SubResource("Resource_esl01")])
+difficulty = 1.2
+is_miniboss = false
+is_boss = false

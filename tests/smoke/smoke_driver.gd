@@ -278,24 +278,22 @@ func _check_menu_screens() -> void:
 		return
 	var menu: Control = packed.instantiate()
 	add_child(menu)
-	for i in 5:
+	# Le nombre d onglets se lit sur le menu : ajouter un onglet ne doit pas
+	# laisser le smoke en tester silencieusement un de moins.
+	var tabs: Array = menu.get("TABS")
+	var count: int = tabs.size()
+	for i in count:
 		menu.select_tab(i)
 		if menu.current_tab() != i:
 			_fail("l onglet %d ne s active pas" % i)
-	# Un second passage exerce refresh() sur un panneau deja construit.
-	menu.select_tab(2)
-	await _shot("menu_campagne")
-	menu.select_tab(1)
-	await _shot("menu_deck")
-	menu.select_tab(0)
-	await _shot("menu_galerie")
-	menu.select_tab(3)
-	await _shot("menu_profil")
-	menu.select_tab(4)
-	await _shot("menu_reglages")
-	menu.select_tab(2)
+	# Un second passage exerce refresh() sur un panneau deja construit, et
+	# capture chaque onglet sous son propre nom.
+	for i in count:
+		menu.select_tab(i)
+		await _shot("menu_" + String(tabs[i]).to_lower())
+	menu.select_tab(menu.HOME_TAB)
 	menu.queue_free()
-	print("[SMOKE] menu : 5 onglets construits")
+	print("[SMOKE] menu : %d onglets construits" % count)
 
 
 ## Pre-cast : un second sort doit pouvoir etre prepare pendant le chargement du

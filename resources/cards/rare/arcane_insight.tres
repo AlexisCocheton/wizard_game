@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_l883c"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_7vbha"]
+
+[sub_resource type="Resource" id="Resource_l883c"]
+script = ExtResource("1_l883c")
+key = &"draw_cards"
+magnitude = 0.0
+duration = 0.0
+radius = 0.0
+params = {
+&"count": 3
+}
+
+[resource]
+script = ExtResource("2_7vbha")
+id = &"arcane_insight"
+display_name = "Intuition arcanique"
+description = "Pioche 3 cartes immediatement. Rien n est defausse."
+rarity = 1
+base_cast_time = 0.5
+targeting = 0
+tags = Array[int]([3])
+effects = Array[ExtResource("1_l883c")]([SubResource("Resource_l883c")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

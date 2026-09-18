@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_oaiye"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="2_gv8en"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="3_ck8pi"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_ov5qv"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_4xcg5"]
+
+[sub_resource type="Resource" id="Resource_ekc77"]
+script = ExtResource("1_oaiye")
+enemy = ExtResource("2_gv8en")
+count = 1
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_qwf6o"]
+script = ExtResource("1_oaiye")
+enemy = ExtResource("3_ck8pi")
+count = 3
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_gyso3"]
+script = ExtResource("1_oaiye")
+enemy = ExtResource("4_ov5qv")
+count = 4
+spawn_delay = 1.6
+start_offset = 14.0
+
+[resource]
+script = ExtResource("5_4xcg5")
+id = &"w3_2"
+duration = 27.0
+entries = Array[ExtResource("1_oaiye")]([SubResource("Resource_ekc77"), SubResource("Resource_qwf6o"), SubResource("Resource_gyso3")])
+difficulty = 1.25
+is_miniboss = false
+is_boss = false

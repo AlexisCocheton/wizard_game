@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_bhffe"]
+[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_tkamp"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_m4fgc"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_xrtyu"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_00wcg"]
+
+[sub_resource type="Resource" id="Resource_yv7ur"]
+script = ExtResource("1_bhffe")
+enemy = ExtResource("2_tkamp")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_a4mra"]
+script = ExtResource("1_bhffe")
+enemy = ExtResource("3_m4fgc")
+count = 2
+spawn_delay = 2.5
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_xrbuv"]
+script = ExtResource("1_bhffe")
+enemy = ExtResource("4_xrtyu")
+count = 3
+spawn_delay = 2.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_00wcg")
+id = &"w6_3_miniboss"
+duration = 34.0
+entries = Array[ExtResource("1_bhffe")]([SubResource("Resource_yv7ur"), SubResource("Resource_a4mra"), SubResource("Resource_xrbuv")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

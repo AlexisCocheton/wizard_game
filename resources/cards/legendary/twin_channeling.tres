@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_kq7f8"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_58dx3"]
+
+[sub_resource type="Resource" id="Resource_kq7f8"]
+script = ExtResource("1_kq7f8")
+key = &"double_cast"
+magnitude = 0.0
+duration = 10.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_58dx3")
+id = &"twin_channeling"
+display_name = "Canalisation jumelle"
+description = "Pendant 10 s, tu peux charger deux sorts en meme temps."
+rarity = 3
+base_cast_time = 2.0
+targeting = 0
+tags = Array[int]([3])
+effects = Array[ExtResource("1_kq7f8")]([SubResource("Resource_kq7f8")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

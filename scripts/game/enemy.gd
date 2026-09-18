@@ -223,7 +223,12 @@ func _advance_along_path(speed: float, world_delta: float) -> void:
 		if nav.is_blocked(nav.to_cell(Vector2(position.x, next_y))):
 			_recompute_path()
 			if _path.is_empty():
-				return  # totalement enferme : on attend que le mur expire
+				# Totalement enferme. Un mur temporaire finit par expirer, mais un
+				# mur PERMANENT ne partira jamais tout seul : le monstre le casse,
+				# sinon la partie se fige avec une vague qui ne descend plus.
+				if battlefield != null:
+					battlefield.enemy_strikes_wall(self, world_delta)
+				return
 		else:
 			position.y = next_y
 			return
@@ -400,3 +405,33 @@ func _refresh_hp_bar() -> void:
 		_hp_bar.tint_progress = Color(1.0, 0.85, 0.35)
 	else:
 		_hp_bar.tint_progress = Color(1.0, 0.45, 0.4)
+
+
+# --- Sorts demandes par le testeur : vortex et dissipation ---
+
+## Oblige le monstre a reconsiderer son chemin. Un sort qui le DEPLACE (souffle
+## de repulsion, vortex) laisserait sinon un chemin A* calcule depuis l ancienne
+## position : le monstre repartirait en arriere pour rejoindre son ancien couloir.
+func repath() -> void:
+	_path.clear()
+	_path_index = 0
+	_nav_version = -1
+	_base_x = position.x
+
+
+## Dissipation : le monstre perd tout ce qu il a GAGNE en cours de vague.
+## On ne touche pas a ses PV ni a sa definition : un golem reste un golem, mais
+## un berserker deja lance redevient un berserker frais.
+func dispel() -> void:
+	if _dead:
+		return
+	_enrage_bonus = 0.0
+	_slow_factor = 1.0
+	_slow_time = 0.0
+	if _shield_up:
+		_shield_up = false
+		if _body != null:
+			_body.set_shield(false)
+		if _shield_fx != null and is_instance_valid(_shield_fx):
+			_shield_fx.queue_free()
+			_shield_fx = null

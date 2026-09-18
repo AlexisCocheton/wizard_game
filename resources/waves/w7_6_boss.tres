@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_f5oys"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_kpnsu"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_ftmel"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_d635c"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_7m78x"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_ewpsq"]
+
+[sub_resource type="Resource" id="Resource_70y85"]
+script = ExtResource("1_f5oys")
+enemy = ExtResource("2_kpnsu")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_w8cdf"]
+script = ExtResource("1_f5oys")
+enemy = ExtResource("3_ftmel")
+count = 2
+spawn_delay = 2.5
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_lv4m0"]
+script = ExtResource("1_f5oys")
+enemy = ExtResource("4_d635c")
+count = 2
+spawn_delay = 2.5
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_022na"]
+script = ExtResource("1_f5oys")
+enemy = ExtResource("5_7m78x")
+count = 4
+spawn_delay = 1.5
+start_offset = 38.0
+
+[resource]
+script = ExtResource("6_ewpsq")
+id = &"w7_6_boss"
+duration = 55.0
+entries = Array[ExtResource("1_f5oys")]([SubResource("Resource_70y85"), SubResource("Resource_w8cdf"), SubResource("Resource_lv4m0"), SubResource("Resource_022na")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

@@ -350,6 +350,101 @@ func _cards() -> void:
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
 	_save(resonance, "res://resources/cards/epic/resonance.tres")
 
+	# --- Cartes d histoire : un monstre qui se rend apprend son sort au mage ---
+	# Voir docs/histoire.md section 7. Chacune est placee dans le deck du niveau ou
+	# elle se gagne, et chacune contre la famille du niveau SUIVANT : c est ce qui
+	# fait que la progression narrative et la progression mecanique avancent ensemble.
+
+	# Acte II / lvl_03 — enseignee par la Gelee liberee de l Ossuaire.
+	# L Ossuaire envoie des nuees DISPERSEES : une zone seule y frappe un monstre a
+	# la fois. Le vortex ne fait aucun degat, il rassemble pour qu un autre sort paie.
+	var salt := _card("salt_spiral", "Spirale de sel",
+		"Aspire les monstres vers son centre pendant 3 s. Ne fait aucun degat : "
+		+ "elle prepare le sort suivant.",
+		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("vortex_pull", 150.0, 3.0, 220.0)])
+	_save(salt, "res://resources/cards/rare/salt_spiral.tres")
+
+	# Acte II / lvl_04 — enseignee par le Pretre goule repenti.
+	# Le Grand Appel est le niveau le plus LONG : la penurie de cartes y tue plus que
+	# les monstres. Garder ses deux prochains sorts, c est doubler sa main utile.
+	var recall := _card("bone_recall", "Rappel d ossements",
+		"Les 2 prochains sorts lances reviennent en main au lieu d etre defausses.",
+		GameEnums.Rarity.RARE, 0.9, GameEnums.Targeting.NONE, [],
+		[_spec("retain_next", 2.0)])
+	_save(recall, "res://resources/cards/rare/bone_recall.tres")
+
+	# Acte III / lvl_05 — enseignee par le Berserker libere.
+	# Les Forges envoient du blindage lent. On ne le tue pas vite : on le REPOUSSE,
+	# et le temps gagne vaut plus que les degats. D ou une magnitude modeste et un
+	# recul important.
+	var chain := _card("chain_break", "Rupture de chaine",
+		"18 degats en zone, puis repousse violemment tout ce qui reste debout.",
+		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.PHYSICAL],
+		[_spec("knockback", 18.0, 0.0, 190.0, {&"push": 260.0})])
+	_save(chain, "res://resources/cards/rare/chain_break.tres")
+
+	# Acte III / lvl_06 — enseignee par le Chevalier du vide qui se rend.
+	# La Cour brisee empile les monstres A EFFETS : rage du Berserker, bouclier de
+	# premier coup du Chevalier, aura d invulnerabilite du Gardien-totem. Sans
+	# dissipation, ces trois-la se protegent mutuellement.
+	# Zone volontairement petite (voir le handler) : large, elle effacerait aussi
+	# les ralentissements du joueur.
+	var void_grip := _card("void_grip", "Vide d emprise",
+		"Efface rage, boucliers et auras des monstres d une petite zone.",
+		GameEnums.Rarity.EPIC, 1.1, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
+	_save(void_grip, "res://resources/cards/epic/void_grip.tres")
+
+	# --- Legendaires de campagne (une par niveau, voir docs/histoire.md) ---
+
+	# lvl_03 : le registre des goules. Elles comptaient les ames ; le mage compte
+	# les monstres. Piocher 3 d un coup repond au seul vrai probleme de l Ossuaire.
+	var ledger := _card("tide_ledger", "Registre des marees",
+		"Pioche 3 cartes immediatement et lance deux sorts a la fois pendant 8 s.",
+		GameEnums.Rarity.LEGENDARY, 1.6, GameEnums.Targeting.NONE, [],
+		[
+			_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3}),
+			_spec("double_cast", 0.0, 8.0),
+		])
+	_save(ledger, "res://resources/cards/legendary/tide_ledger.tres")
+
+	# lvl_04 : la clef prise sur la porte du Grand Appel. Elle invoque a son tour.
+	var key := _card("summoners_key", "Clef de l Appel",
+		"Invoque deux allies frappant pour 14 pendant 10 s.",
+		GameEnums.Rarity.LEGENDARY, 2.2, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.SUMMON],
+		[
+			_spec("summon_ally", 14.0, 10.0),
+			_spec("summon_ally", 14.0, 10.0),
+		])
+	_save(key, "res://resources/cards/legendary/summoners_key.tres")
+
+	# lvl_05 / lvl_06 : le cadran vole aux forges. C est l outil des demons retourne
+	# contre eux — une commande passee par le mage.
+	var dial := _card("forge_dial", "Cadran des forges",
+		"Pluie de meteorites sur toute l ile : 14 impacts sur 6 s.",
+		GameEnums.Rarity.LEGENDARY, 2.4, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.FIRE],
+		[_spec("meteor_storm", 30.0, 6.0, 110.0, {&"impacts": 14})])
+	_save(dial, "res://resources/cards/legendary/forge_dial.tres")
+
+	# lvl_07 : la machine elle-meme. Elle fait tout un peu, parce qu elle fait tout.
+	var loom := _card("world_loom", "Metier du monde",
+		"Le temps se retisse : ennemis ralentis de 50 pourcent, incantation doublee "
+		+ "et deux sorts a la fois, pendant 8 s.",
+		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.SLOW],
+		[
+			_spec("slow_enemy_gauge", 50.0, 8.0),
+			_spec("self_haste", 100.0, 8.0),
+			_spec("double_cast", 0.0, 8.0),
+		])
+	_save(loom, "res://resources/cards/legendary/world_loom.tres")
+
 	var hourglass := _card("hourglass_shard", "Sablier fendu",
 		"Le temps se fige pour eux et s emballe pour toi : ennemis -60 pourcent, "
 		+ "incantation +100 pourcent, pendant 6 s.",
@@ -360,6 +455,101 @@ func _cards() -> void:
 			_spec("self_haste", 100.0, 6.0),
 		])
 	_save(hourglass, "res://resources/cards/legendary/hourglass_shard.tres")
+
+	# --- Sorts demandes par le testeur ---
+	# Repousser, aspirer, dissiper, piocher, batir : cinq verbes qui manquaient.
+	# Aucun ne fait de gros degats : ils achetent de la PLACE et du TEMPS, ce qui
+	# etait le seul levier absent d un jeu ou tout se jouait sur les PV.
+
+	# Le souffle ne tue pas : il rend au joueur la distance qu il a perdue quand
+	# une vague arrive trop bas. D ou des degats modestes et une grosse poussee.
+	var repulsion := _card("repulsion_wave", "Onde de repulsion",
+		"Souffle une zone : 18 degats et les monstres sont violemment repousses.",
+		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.PHYSICAL],
+		[_spec("knockback", 18.0, 0.0, 220.0, {&"push": 260.0})])
+	_save(repulsion, "res://resources/cards/rare/repulsion_wave.tres")
+
+	# Le vortex ne fait AUCUN degat : c est une carte de mise en place. Elle vaut
+	# une epique parce qu elle transforme n importe quelle zone en sort massif.
+	var maelstrom := _card("maelstrom", "Maelstrom",
+		"Spirale qui aspire les monstres vers son centre pendant 4 s. Aucun degat, "
+		+ "mais tout ce qui tombe dedans est regroupe.",
+		GameEnums.Rarity.EPIC, 1.6, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("vortex_pull", 260.0, 4.0, 420.0)])
+	_save(maelstrom, "res://resources/cards/epic/maelstrom.tres")
+
+	# Zone volontairement PETITE : une dissipation large annulerait aussi les
+	# ralentissements poses par le joueur et se retournerait contre lui.
+	var purify := _card("purifying_light", "Lumiere purifiante",
+		"Petite zone : les monstres perdent rage, boucliers et effets en cours.",
+		GameEnums.Rarity.RARE, 1.0, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
+	_save(purify, "res://resources/cards/rare/purifying_light.tres")
+
+	# Piocher SANS defausser : Cycle de pensee echange, celle-ci ajoute. Cast tres
+	# court, car son interet est de sortir d une main vide au pire moment.
+	var insight := _card("arcane_insight", "Intuition arcanique",
+		"Pioche 3 cartes immediatement. Rien n est defausse.",
+		GameEnums.Rarity.RARE, 0.5, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3})])
+	_save(insight, "res://resources/cards/rare/arcane_insight.tres")
+
+	# Mur PERMANENT : il ne compte pas les secondes, il compte les coups. Il
+	# redessine le terrain pour toute la vague, et les monstres enfermes le
+	# cassent — sinon la carte figerait la partie.
+	var bastion := _card("bastion", "Bastion",
+		"Mur permanent de 120 PV. Il ne disparait pas : les monstres doivent le briser.",
+		GameEnums.Rarity.EPIC, 2.0, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.PHYSICAL],
+		[_spec("build_wall", 0.0, 0.0, 200.0,
+			{&"thickness": 60.0, &"permanent": true, &"wall_hp": 120.0})])
+	_save(bastion, "res://resources/cards/epic/bastion.tres")
+
+	# --- Legendaires ---
+
+	# Garder une carte, c est pouvoir rejouer sa meilleure carte deux fois. On en
+	# garde DEUX et le cast est court : la legendaire doit changer le tour, pas
+	# couter le tour.
+	var echo := _card("echo_of_the_hand", "Echo de la main",
+		"Les 2 prochaines cartes que tu joues reviennent en main au lieu de partir.",
+		GameEnums.Rarity.LEGENDARY, 1.2, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("retain_next", 2.0)])
+	_save(echo, "res://resources/cards/legendary/echo_of_the_hand.tres")
+
+	# Deux sorts a la fois change la FACON de jouer, pas la quantite de degats :
+	# c est exactement ce qu on attend d une legendaire.
+	var twin := _card("twin_channeling", "Canalisation jumelle",
+		"Pendant 10 s, tu peux charger deux sorts en meme temps.",
+		GameEnums.Rarity.LEGENDARY, 2.0, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.ARCANE],
+		[_spec("double_cast", 0.0, 10.0)])
+	_save(twin, "res://resources/cards/legendary/twin_channeling.tres")
+
+	# Pluie sur TOUTE la carte : 16 impacts etales sur 5 s. Aucun ciblage — c est
+	# le sort qu on lance quand on a deja perdu le controle du terrain.
+	var storm := _card("meteor_storm", "Pluie de meteorites",
+		"18 meteores s abattent sur tout le terrain pendant 5 s, "
+		+ "70 degats chacun.",
+		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.NONE,
+		[GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
+		[_spec("meteor_storm", 70.0, 5.0, 290.0, {&"impacts": 18})])
+	_save(storm, "res://resources/cards/legendary/meteor_storm.tres")
+
+	# Enorme et TRES longue : elle ne nettoie pas une vague, elle interdit un
+	# couloir pendant presque toute la vague suivante. Degats par seconde faibles
+	# expres — c est la duree qui coute cher, pas la puissance.
+	var venom := _card("venom_mire", "Mare de venin",
+		"Enorme mare empoisonnee : 10 degats par seconde pendant 20 s, "
+		+ "et les monstres y avancent 25 pourcent moins vite.",
+		GameEnums.Rarity.LEGENDARY, 2.8, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.FIRE, GameEnums.DamageTag.SLOW],
+		[_spec("ground_zone", 10.0, 20.0, 340.0, {&"slow_pct": 25.0})])
+	_save(venom, "res://resources/cards/legendary/venom_mire.tres")
 
 
 ## Deck pre-etabli EXPLICITE : [[chemin, exemplaires], ...] -> une entree par exemplaire.
@@ -493,7 +683,17 @@ func _waves_and_level() -> void:
 		[C + "common/fireball.tres", 2],
 		[C + "rare/stone_wall.tres", 2],
 	])
+	# Le niveau 1 ne debloque qu UN niveau : la campagne doit rester lineaire au
+	# demarrage. La premiere fourche est en lvl_04 (voir docs/histoire.md section 8).
 	lvl.next_levels = [&"lvl_02"]
+	lvl.act = 1
+	lvl.subtitle = "Le matin de la premiere attaque"
+	lvl.intro_text = "Le royaume est tombe. Tu as remonte le temps jusqu ici, le \
+premier matin, pour trouver qui a donne l ordre. Ce ne sont que des gnomes et des \
+lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne."
+	lvl.outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette \
+guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher \
+qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl.objectives = [o1, o2, o3]
 	lvl.legendary_reward = load("res://resources/cards/legendary/time_rift.tres")
 	_save(lvl, "res://resources/levels/lvl_01.tres")
@@ -618,5 +818,663 @@ func _waves_and_level() -> void:
 	])
 	lvl2.objectives = [o1, o2, o3]
 	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
-	lvl2.next_levels = []
+	lvl2.next_levels = [&"lvl_03"]
+	lvl2.act = 1
+	lvl2.subtitle = "L ile qui a commence a tomber"
+	lvl2.intro_text = "La Tour des Sables se decroche : le temps y coule de travers, \
+et des creatures qui n ont rien a faire sur une ile volante s y entassent. Ombres, \
+Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
+	lvl2.outro_text = "Ils fuyaient le puits. Sous la tour s ouvre une descente vers \
+le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 	_save(lvl2, "res://resources/levels/lvl_02.tres")
+
+	_acte_2(o1, o2, o3, C, E)
+	_acte_3(o1, o2, o3, C, E)
+	_acte_final(o1, o2, o3, C, E)
+
+
+## =====================================================================
+## ACTE II — LE GRAND CIMETIERE  (voir docs/histoire.md sections 4 et 9)
+##
+## Intention commune aux deux niveaux : apres deux niveaux ou la menace etait la
+## MASSE (golems, behemoths), l Acte II bascule sur le NOMBRE. C est un contraste
+## volontaire : le joueur qui a appris a concentrer ses degats doit desapprendre.
+## Les decks suivent — beaucoup de zones, peu de mono-cible.
+## =====================================================================
+func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
+		C: String, E: String) -> void:
+
+	# ---------- lvl_03 : Ossuaire des Marees ----------
+	# Les goules comptent les ames pendant que le mage traverse les fosses.
+	# Toutes les vagues sont batie sur des monstres qui SE MULTIPLIENT (nuees,
+	# gelees, ruches) : le nombre a l ecran grimpe sans que les PV explosent.
+	# La courbe reprend au-dessus de la fin du niveau 2 sans jamais doubler.
+	var a1 := WaveDef.new()
+	a1.id = &"w3_1"
+	a1.duration = 26.0
+	a1.difficulty = 1.15
+	# Premiere lecon de l acte : deux nuees valent 8 corps. On ouvre doucement.
+	a1.entries = [
+		_entry(E + "rat_swarm.tres", 2, 2.4),
+		_entry(E + "gnome.tres", 4, 2.0, 7.0),
+		_entry(E + "jelly_mid.tres", 2, 2.2, 15.0),
+	]
+	_save(a1, "res://resources/waves/w3_1.tres")
+
+	var a2 := WaveDef.new()
+	a2.id = &"w3_2"
+	a2.duration = 27.0
+	a2.difficulty = 1.25
+	# La Gelee entiere entre en scene : 36 PV qui deviennent 6 corps si on la tue
+	# mal. C est la vague qui apprend a poser une zone AVANT de frapper.
+	a2.entries = [
+		_entry(E + "jelly.tres", 1, 2.5),
+		_entry(E + "rat_swarm.tres", 3, 2.0, 6.0),
+		_entry(E + "sprite.tres", 4, 1.6, 14.0),
+	]
+	_save(a2, "res://resources/waves/w3_2.tres")
+
+	var a3 := WaveDef.new()
+	a3.id = &"w3_3"
+	a3.duration = 28.0
+	a3.difficulty = 1.3
+	# Le Pretre goule soigne : tant qu il vit, les degats etales ne servent a rien.
+	# Il force a choisir une cible prioritaire au milieu de la foule.
+	a3.entries = [
+		_entry(E + "ghoul_priest.tres", 2, 3.0),
+		_entry(E + "jelly_mid.tres", 3, 2.0, 8.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 16.0),
+	]
+	_save(a3, "res://resources/waves/w3_3.tres")
+
+	var a4 := WaveDef.new()
+	a4.id = &"w3_4_miniboss"
+	a4.duration = 32.0
+	# Le mini-boss EST le saut : son escorte reste legere, comme au niveau 1.
+	a4.difficulty = 1.05
+	a4.is_miniboss = true
+	a4.entries = [
+		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "rat_swarm.tres", 3, 2.2, 8.0),
+		_entry(E + "hopper.tres", 3, 1.8, 18.0),
+	]
+	_save(a4, "res://resources/waves/w3_4_miniboss.tres")
+
+	var a5 := WaveDef.new()
+	a5.id = &"w3_5"
+	a5.duration = 30.0
+	a5.difficulty = 1.35
+	# La Ruche explose en 4 lutins : un seul monstre en vaut cinq. C est la vague
+	# ou la Spirale de sel du deck paie enfin son temps d incantation.
+	a5.entries = [
+		_entry(E + "hive.tres", 2, 3.0),
+		_entry(E + "jelly.tres", 1, 2.0, 10.0),
+		_entry(E + "wisp.tres", 3, 1.8, 18.0),
+	]
+	_save(a5, "res://resources/waves/w3_5.tres")
+
+	var a6 := WaveDef.new()
+	a6.id = &"w3_6_boss"
+	a6.duration = 42.0
+	# Difficulte basse sur la vague de boss : Chronos apporte deja 320 PV bruts,
+	# le multiplier reviendrait a empiler deux sauts dans la meme vague.
+	a6.difficulty = 1.1
+	a6.is_boss = true
+	a6.entries = [
+		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "ghoul_priest.tres", 2, 2.5, 8.0),
+		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
+	]
+	_save(a6, "res://resources/waves/w3_6_boss.tres")
+
+	var lvl3 := LevelDef.new()
+	lvl3.id = &"lvl_03"
+	lvl3.display_name = "Ossuaire des Marees"
+	lvl3.terrain = "sand"
+	lvl3.waves = [a1, a2, a3, a4, a5, a6]
+	lvl3.enemy_pool = [
+		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
+		load(E + "wisp.tres"), load(E + "hopper.tres"), load(E + "imp_archer.tres"),
+		load(E + "jelly.tres"), load(E + "ghoul_priest.tres"), load(E + "hive.tres"),
+		load(E + "shade.tres"),
+	]
+	# DECK ANTI-NOMBRE. Le contenu du niveau est fait de monstres qui se divisent et
+	# qui pullulent : le mono-cible y est un piege (tuer une Gelee au Trait, c est
+	# creer deux Gelees). D ou 9 cartes de zone sur 16, et la Spirale de sel qui
+	# rassemble avant la frappe. Un seul Trait subsiste, pour achever les Pretres.
+	lvl3.exploration_deck = _deck([
+		[C + "common/fireball.tres", 3],
+		[C + "common/ember_pool.tres", 3],
+		[C + "common/frost_rain.tres", 2],
+		[C + "common/arcane_bolt.tres", 1],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "rare/salt_spiral.tres", 2],
+		[C + "epic/resonance.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
+	])
+	lvl3.objectives = [o1, o2, o3]
+	lvl3.legendary_reward = load(C + "legendary/tide_ledger.tres")
+	lvl3.next_levels = [&"lvl_04"]
+	lvl3.act = 2
+	lvl3.subtitle = "Une administration, pas un cimetiere"
+	lvl3.intro_text = "Ici les morts sont tries, comptes, reaffectes. Les Pretres \
+goules tiennent les registres et leur ile se vide : les ames partent ailleurs. Ils \
+n ont pas efface ton royaume par haine. Ils l ont fait pour le STOCK."
+	lvl3.outro_text = "Une Gelee prisonniere d un cercle de sel t a regarde la \
+liberer, puis t a montre comment un corps se separe et se rassemble. Les registres, \
+eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
+	_save(lvl3, "res://resources/levels/lvl_03.tres")
+
+	# ---------- lvl_04 : Le Grand Appel ----------
+	# Le rituel a lieu et IL REUSSIT. Le joueur ne l empeche pas — c est le
+	# rebondissement. Traduction mecanique : la vague 5 change brutalement de
+	# nature (les demons franchissent la porte) au milieu du niveau, pas a la fin.
+	var b1 := WaveDef.new()
+	b1.id = &"w4_1"
+	b1.duration = 26.0
+	b1.difficulty = 1.2
+	b1.entries = [
+		_entry(E + "jelly_mid.tres", 3, 2.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 16.0),
+	]
+	_save(b1, "res://resources/waves/w4_1.tres")
+
+	var b2 := WaveDef.new()
+	b2.id = &"w4_2"
+	b2.duration = 28.0
+	b2.difficulty = 1.3
+	# Deux Pretres qui se soignent l un l autre : le premier vrai probleme
+	# d ordre de cibles du jeu.
+	b2.entries = [
+		_entry(E + "ghoul_priest.tres", 2, 2.5),
+		_entry(E + "hive.tres", 1, 2.0, 9.0),
+		_entry(E + "shade.tres", 3, 2.0, 17.0),
+	]
+	_save(b2, "res://resources/waves/w4_2.tres")
+
+	var b3 := WaveDef.new()
+	b3.id = &"w4_3_miniboss"
+	b3.duration = 34.0
+	b3.difficulty = 1.1
+	b3.is_miniboss = true
+	# Le Gardien du seuil : il tient la porte pendant que le rituel s acheve.
+	b3.entries = [
+		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "ghoul_priest.tres", 1, 1.0, 7.0),
+		_entry(E + "jelly.tres", 1, 2.0, 15.0),
+		_entry(E + "sprite.tres", 4, 1.6, 24.0),
+	]
+	_save(b3, "res://resources/waves/w4_3_miniboss.tres")
+
+	var b4 := WaveDef.new()
+	b4.id = &"w4_4"
+	b4.duration = 30.0
+	b4.difficulty = 1.35
+	b4.entries = [
+		_entry(E + "jelly.tres", 2, 2.5),
+		_entry(E + "berserker.tres", 2, 2.5, 10.0),
+		_entry(E + "wisp.tres", 3, 1.8, 19.0),
+	]
+	_save(b4, "res://resources/waves/w4_4.tres")
+
+	var b5 := WaveDef.new()
+	b5.id = &"w4_5"
+	b5.duration = 32.0
+	b5.difficulty = 1.35
+	# LA PORTE S OUVRE. Behemoth et Gardien-totem franchissent le seuil : ce ne
+	# sont plus des goules. Le changement doit se VOIR — deux P4 d un coup, mais
+	# sans escorte lourde pour que le saut de PV reste sous le double.
+	b5.entries = [
+		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "behemoth.tres", 1, 1.0, 10.0),
+		_entry(E + "gnome.tres", 4, 2.0, 18.0),
+	]
+	_save(b5, "res://resources/waves/w4_5.tres")
+
+	var b6 := WaveDef.new()
+	b6.id = &"w4_6_boss"
+	b6.duration = 45.0
+	b6.difficulty = 1.05
+	b6.is_boss = true
+	# Chronos revient constater la saisie. Escorte demoniaque, plus goule :
+	# le joueur doit comprendre que le camp d en face a change de proprietaire.
+	b6.entries = [
+		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 9.0),
+		_entry(E + "hopper.tres", 4, 1.8, 22.0),
+	]
+	_save(b6, "res://resources/waves/w4_6_boss.tres")
+
+	var lvl4 := LevelDef.new()
+	lvl4.id = &"lvl_04"
+	lvl4.display_name = "Le Grand Appel"
+	lvl4.terrain = "sand"
+	lvl4.waves = [b1, b2, b3, b4, b5, b6]
+	lvl4.enemy_pool = [
+		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
+		load(E + "wisp.tres"), load(E + "shade.tres"), load(E + "imp_archer.tres"),
+		load(E + "jelly.tres"), load(E + "ghoul_priest.tres"), load(E + "hive.tres"),
+		load(E + "berserker.tres"), load(E + "void_knight.tres"),
+		load(E + "totem_guardian.tres"), load(E + "behemoth.tres"),
+	]
+	# DECK CHARNIERE. Le niveau commence en registre "nombre" et finit en registre
+	# "masse" : le deck doit tenir les deux moities. Zones pour les goules, Meteore
+	# et Marque de faiblesse pour les deux P4 de la vague 5. Le Rappel d ossements
+	# repond au vrai probleme du niveau : c est le plus long de la campagne, on y
+	# manque de cartes avant d y manquer de PV.
+	lvl4.exploration_deck = _deck([
+		[C + "common/fireball.tres", 3],
+		[C + "common/ember_pool.tres", 2],
+		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "rare/bone_recall.tres", 2],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/salt_spiral.tres", 1],
+		[C + "epic/weakness_mark.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
+	])
+	lvl4.objectives = [o1, o2, o3]
+	lvl4.legendary_reward = load(C + "legendary/summoners_key.tres")
+	# PREMIERE FOURCHE de la campagne : la porte s ouvre sur deux entrees du monde
+	# demoniaque, equivalentes en difficulte mais opposees en nature.
+	lvl4.next_levels = [&"lvl_05", &"lvl_06"]
+	lvl4.act = 2
+	lvl4.subtitle = "Le rituel reussit"
+	lvl4.intro_text = "Tu arrives trop tard : le cercle est deja trace et les \
+Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement \
+etre la quand la porte s ouvrira, pour voir ce qui en sortira."
+	lvl4.outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un \
+PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le \
+rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti \
+— puis t a montre la porte, encore ouverte."
+	_save(lvl4, "res://resources/levels/lvl_04.tres")
+
+
+## =====================================================================
+## ACTE III — LE MONDE DEMONIAQUE  (docs/histoire.md sections 5 et 8)
+##
+## Les deux niveaux sont une FOURCHE : meme place dans la courbe, exigences
+## opposees. lvl_05 = peu de monstres tres blindes (mono-cible lourd).
+## lvl_06 = beaucoup de monstres varies a effets (zones + dissipation).
+## Le joueur choisit son epreuve ; les deux menent au final.
+## =====================================================================
+func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
+		C: String, E: String) -> void:
+
+	# ---------- lvl_05 : Forges du Mauvais Temps ----------
+	# Peu de corps, enormement de PV. Les vagues sont COURTES en nombre : c est ce
+	# qui permet de monter les PV sans que l ecran devienne illisible, et ce qui
+	# rend le mono-cible lourd (Meteore, Focalisation) enfin superieur aux zones.
+	var c1 := WaveDef.new()
+	c1.id = &"w5_1"
+	c1.duration = 28.0
+	c1.difficulty = 1.2
+	c1.entries = [
+		_entry(E + "golem.tres", 2, 3.0),
+		_entry(E + "gnome.tres", 4, 2.0, 10.0),
+	]
+	_save(c1, "res://resources/waves/w5_1.tres")
+
+	var c2 := WaveDef.new()
+	c2.id = &"w5_2"
+	c2.duration = 28.0
+	c2.difficulty = 1.25
+	# Le Berserker accelere a chaque coup recu : l arroser de petits degats le rend
+	# plus dangereux. Premiere vague qui punit le reflexe acquis a l Acte II.
+	c2.entries = [
+		_entry(E + "berserker.tres", 3, 2.5),
+		_entry(E + "void_knight.tres", 1, 2.0, 12.0),
+	]
+	_save(c2, "res://resources/waves/w5_2.tres")
+
+	var c3 := WaveDef.new()
+	c3.id = &"w5_3_miniboss"
+	c3.duration = 34.0
+	c3.difficulty = 1.1
+	c3.is_miniboss = true
+	c3.entries = [
+		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "golem.tres", 2, 3.0, 10.0),
+		_entry(E + "sprite.tres", 4, 1.6, 22.0),
+	]
+	_save(c3, "res://resources/waves/w5_3_miniboss.tres")
+
+	var c4 := WaveDef.new()
+	c4.id = &"w5_4"
+	c4.duration = 30.0
+	c4.difficulty = 1.3
+	# Premier Behemoth seul : 130 PV qui avancent a 26 px/s et frappent pour 2.
+	# Lent, donc traitable ; mais il faut y consacrer plusieurs sorts d affilee.
+	c4.entries = [
+		_entry(E + "behemoth.tres", 1, 1.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 8.0),
+		_entry(E + "berserker.tres", 2, 2.5, 18.0),
+	]
+	_save(c4, "res://resources/waves/w5_4.tres")
+
+	var c5 := WaveDef.new()
+	c5.id = &"w5_5"
+	c5.duration = 32.0
+	c5.difficulty = 1.3
+	# Le Gardien-totem rend les autres invulnerables dans 240 px : avec deux
+	# Behemoths sous son aura, il DOIT tomber en premier. La vague enseigne la
+	# priorite de cible que le boss exigera.
+	c5.entries = [
+		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "behemoth.tres", 1, 1.0, 9.0),
+		_entry(E + "golem.tres", 2, 2.5, 18.0),
+	]
+	_save(c5, "res://resources/waves/w5_5.tres")
+
+	var c6 := WaveDef.new()
+	c6.id = &"w5_6_boss"
+	c6.duration = 48.0
+	c6.difficulty = 1.05
+	c6.is_boss = true
+	c6.entries = [
+		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "golem.tres", 2, 3.0, 10.0),
+		_entry(E + "berserker.tres", 2, 2.5, 26.0),
+	]
+	_save(c6, "res://resources/waves/w5_6_boss.tres")
+
+	var lvl5 := LevelDef.new()
+	lvl5.id = &"lvl_05"
+	lvl5.display_name = "Forges du Mauvais Temps"
+	lvl5.terrain = "sand"
+	lvl5.waves = [c1, c2, c3, c4, c5, c6]
+	lvl5.enemy_pool = [
+		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "golem.tres"),
+		load(E + "berserker.tres"), load(E + "void_knight.tres"),
+		load(E + "behemoth.tres"), load(E + "totem_guardian.tres"),
+		load(E + "hornblower.tres"), load(E + "imp_archer.tres"),
+	]
+	# DECK ANTI-BLINDAGE. Contre 55 a 130 PV par corps, une zone a 8 degats/s est
+	# du gaspillage : il faut des paquets de degats. Meteore (60 d un coup),
+	# Focalisation (x2 sur le sort suivant) et Marque de faiblesse (x2 en zone) se
+	# combinent — c est la combo que le niveau veut enseigner.
+	# La Rupture de chaine est la reponse d urgence : elle n a pas besoin de tuer,
+	# elle rend du temps en repoussant ce qu on n a pas fini.
+	lvl5.exploration_deck = _deck([
+		[C + "rare/meteor.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "rare/focus.tres", 2],
+		[C + "epic/weakness_mark.tres", 2],
+		[C + "rare/chain_break.tres", 2],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "rare/brazier.tres", 1],
+		[C + "rare/stone_wall.tres", 1],
+	])
+	lvl5.objectives = [o1, o2, o3]
+	lvl5.legendary_reward = load(C + "legendary/forge_dial.tres")
+	lvl5.next_levels = [&"lvl_07"]
+	lvl5.act = 3
+	lvl5.subtitle = "Ils ne conquierent pas, ils fabriquent"
+	lvl5.intro_text = "De l autre cote de la porte : pas de chateau, pas de trone. \
+Des ateliers. Les demons fabriquent du temps, et ces creatures blindees ne sont pas \
+nees — elles ont ete coulees."
+	lvl5.outro_text = "Un Berserker a brise sa chaine devant toi au lieu de charger. \
+Les demons ne choisissent rien : une horloge bat au centre de leur monde et les \
+reveille. Elle n est pas a eux. Chaque extinction est une COMMANDE qui arrive par le \
+cadran, et ils ignorent qui la passe."
+	_save(lvl5, "res://resources/levels/lvl_05.tres")
+
+	# ---------- lvl_06 : La Cour brisee ----------
+	# Meme niveau de difficulte que lvl_05, nature inverse : beaucoup de corps,
+	# toutes les familles melangees, et surtout des monstres A EFFETS qui se
+	# protegent mutuellement (rage, bouclier de premier coup, aura d invulnerabilite).
+	# C est une guerre civile ou le mage n est qu un passant.
+	var d1 := WaveDef.new()
+	d1.id = &"w6_1"
+	d1.duration = 27.0
+	d1.difficulty = 1.2
+	d1.entries = [
+		_entry(E + "void_knight.tres", 2, 2.5),
+		_entry(E + "sprite.tres", 5, 1.6, 8.0),
+		_entry(E + "wisp.tres", 3, 1.8, 16.0),
+	]
+	_save(d1, "res://resources/waves/w6_1.tres")
+
+	var d2 := WaveDef.new()
+	d2.id = &"w6_2"
+	d2.duration = 28.0
+	d2.difficulty = 1.25
+	# Le Corniste accelere tout le monde de 20 % : il transforme une vague lisible
+	# en debordement. Il entre par le cote, donc il faut le chercher.
+	d2.entries = [
+		_entry(E + "hornblower.tres", 2, 2.5),
+		_entry(E + "shade.tres", 3, 2.0, 7.0),
+		_entry(E + "hopper.tres", 4, 1.8, 15.0),
+	]
+	_save(d2, "res://resources/waves/w6_2.tres")
+
+	var d3 := WaveDef.new()
+	d3.id = &"w6_3_miniboss"
+	d3.duration = 34.0
+	d3.difficulty = 1.1
+	d3.is_miniboss = true
+	d3.entries = [
+		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "berserker.tres", 2, 2.5, 9.0),
+		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
+	]
+	_save(d3, "res://resources/waves/w6_3_miniboss.tres")
+
+	var d4 := WaveDef.new()
+	d4.id = &"w6_4"
+	d4.duration = 30.0
+	d4.difficulty = 1.3
+	# Le Glouton gobe les faibles et grossit : le laisser vivre au milieu d une
+	# nuee, c est fabriquer soi-meme le monstre qui tuera le mage.
+	d4.entries = [
+		_entry(E + "glutton.tres", 1, 1.0),
+		_entry(E + "hive.tres", 1, 2.0, 8.0),
+		_entry(E + "rat_swarm.tres", 3, 2.0, 16.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 22.0),
+	]
+	_save(d4, "res://resources/waves/w6_4.tres")
+
+	var d5 := WaveDef.new()
+	d5.id = &"w6_5"
+	d5.duration = 32.0
+	d5.difficulty = 1.3
+	# Le trio qui justifie le Vide d emprise : totem (aura), berserkers (rage),
+	# chevaliers (bouclier). Sans dissipation, chacun couvre les deux autres.
+	d5.entries = [
+		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "berserker.tres", 2, 2.5, 8.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 16.0),
+		_entry(E + "sprite.tres", 4, 1.5, 24.0),
+	]
+	_save(d5, "res://resources/waves/w6_5.tres")
+
+	var d6 := WaveDef.new()
+	d6.id = &"w6_6_boss"
+	d6.duration = 48.0
+	d6.difficulty = 1.05
+	d6.is_boss = true
+	d6.entries = [
+		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "glutton.tres", 1, 1.0, 10.0),
+		_entry(E + "shade.tres", 3, 2.0, 24.0),
+	]
+	_save(d6, "res://resources/waves/w6_6_boss.tres")
+
+	var lvl6 := LevelDef.new()
+	lvl6.id = &"lvl_06"
+	lvl6.display_name = "La Cour brisee"
+	lvl6.terrain = "sand"
+	lvl6.waves = [d1, d2, d3, d4, d5, d6]
+	lvl6.enemy_pool = [
+		load(E + "sprite.tres"), load(E + "wisp.tres"), load(E + "shade.tres"),
+		load(E + "hopper.tres"), load(E + "rat_swarm.tres"),
+		load(E + "imp_archer.tres"), load(E + "hornblower.tres"),
+		load(E + "berserker.tres"), load(E + "void_knight.tres"),
+		load(E + "hive.tres"), load(E + "glutton.tres"),
+		load(E + "totem_guardian.tres"),
+	]
+	# DECK POLYVALENT + DISSIPATION. Le niveau ne punit pas la masse mais les
+	# EFFETS cumules : le Vide d emprise y vaut plus que n importe quel sort de
+	# degats. Resonance monte avec le nombre de corps presents, ce que la Cour
+	# fournit genereusement. Gel profond couvre le debordement du Corniste.
+	lvl6.exploration_deck = _deck([
+		[C + "epic/void_grip.tres", 2],
+		[C + "epic/resonance.tres", 2],
+		[C + "common/fireball.tres", 3],
+		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "epic/deep_freeze.tres", 1],
+		[C + "rare/chain_break.tres", 1],
+		[C + "rare/brazier.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
+	])
+	lvl6.objectives = [o1, o2, o3]
+	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")
+	lvl6.next_levels = [&"lvl_07"]
+	lvl6.act = 3
+	lvl6.subtitle = "Une guerre civile ou tu n es qu un passant"
+	lvl6.intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui \
+portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera \
+quand meme, en passant."
+	lvl6.outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a \
+enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur \
+le cadran, tu as lu une adresse."
+	_save(lvl6, "res://resources/levels/lvl_06.tres")
+
+
+## =====================================================================
+## ACTE FINAL — LE MONDE D ORIGINE  (docs/histoire.md section 6)
+##
+## Terrain `grass` a dessein : le joueur reconnait le decor du niveau 1, en faux.
+## L histoire est circulaire, donc le premier ennemi est aussi le dernier.
+## =====================================================================
+func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
+		C: String, E: String) -> void:
+
+	var f1 := WaveDef.new()
+	f1.id = &"w7_1"
+	f1.duration = 28.0
+	f1.difficulty = 1.25
+	# Ouverture en citation du niveau 1 : gnomes et lutins, le motif que la
+	# machine repete. Sauf qu ils arrivent deux fois plus vite et accompagnes.
+	f1.entries = [
+		_entry(E + "gnome.tres", 5, 1.8),
+		_entry(E + "sprite.tres", 5, 1.5, 8.0),
+		_entry(E + "golem.tres", 2, 2.5, 17.0),
+	]
+	_save(f1, "res://resources/waves/w7_1.tres")
+
+	var f2 := WaveDef.new()
+	f2.id = &"w7_2"
+	f2.duration = 29.0
+	f2.difficulty = 1.3
+	f2.entries = [
+		_entry(E + "void_knight.tres", 2, 2.5),
+		_entry(E + "ghoul_priest.tres", 2, 2.5, 9.0),
+		_entry(E + "wisp.tres", 4, 1.8, 18.0),
+	]
+	_save(f2, "res://resources/waves/w7_2.tres")
+
+	var f3 := WaveDef.new()
+	f3.id = &"w7_3_miniboss"
+	f3.duration = 36.0
+	f3.difficulty = 1.1
+	f3.is_miniboss = true
+	f3.entries = [
+		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "berserker.tres", 2, 2.5, 9.0),
+		_entry(E + "hopper.tres", 4, 1.8, 20.0),
+	]
+	_save(f3, "res://resources/waves/w7_3_miniboss.tres")
+
+	var f4 := WaveDef.new()
+	f4.id = &"w7_4"
+	f4.duration = 32.0
+	f4.difficulty = 1.3
+	# Les deux registres du jeu dans la meme vague : le blindage (Behemoth) et le
+	# nombre (Ruche qui eclate en 4). Le final ne laisse plus choisir son deck.
+	f4.entries = [
+		_entry(E + "behemoth.tres", 1, 1.0),
+		_entry(E + "hive.tres", 2, 2.5, 9.0),
+		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
+	]
+	_save(f4, "res://resources/waves/w7_4.tres")
+
+	var f5 := WaveDef.new()
+	f5.id = &"w7_5"
+	f5.duration = 34.0
+	f5.difficulty = 1.3
+	# Avant-derniere vague : totem + glouton + jelly, les trois monstres qui
+	# fabriquent du probleme si on les laisse vivre.
+	f5.entries = [
+		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "glutton.tres", 1, 1.0, 9.0),
+		_entry(E + "jelly.tres", 2, 2.5, 18.0),
+		_entry(E + "sprite.tres", 4, 1.5, 27.0),
+	]
+	_save(f5, "res://resources/waves/w7_5.tres")
+
+	var f6 := WaveDef.new()
+	f6.id = &"w7_6_boss"
+	f6.duration = 55.0
+	f6.difficulty = 1.05
+	f6.is_boss = true
+	# CHRONOS, DEUXIEME FORME. L huissier du niveau 1 revient : on comprend enfin
+	# qu il est le navetteur de la machine. Un SEUL Chronos, pas deux — l escorte
+	# fait la difficulte, sinon le saut de PV depasserait le double autorise et,
+	# surtout, la vague deviendrait une course impossible a lire.
+	f6.entries = [
+		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 10.0),
+		_entry(E + "berserker.tres", 2, 2.5, 24.0),
+		_entry(E + "sprite.tres", 4, 1.5, 38.0),
+	]
+	_save(f6, "res://resources/waves/w7_6_boss.tres")
+
+	var lvl7 := LevelDef.new()
+	lvl7.id = &"lvl_07"
+	lvl7.display_name = "Le Metier du Monde"
+	# `grass` comme le niveau 1 : l herbe est FAUSSE, c est un motif que les
+	# divinites repetent. Le decor doit etre reconnu.
+	lvl7.terrain = "grass"
+	lvl7.waves = [f1, f2, f3, f4, f5, f6]
+	lvl7.enemy_pool = [
+		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "wisp.tres"),
+		load(E + "rat_swarm.tres"), load(E + "hopper.tres"), load(E + "golem.tres"),
+		load(E + "berserker.tres"), load(E + "void_knight.tres"),
+		load(E + "ghoul_priest.tres"), load(E + "hive.tres"), load(E + "jelly.tres"),
+		load(E + "glutton.tres"), load(E + "totem_guardian.tres"),
+		load(E + "behemoth.tres"), load(E + "shade.tres"),
+	]
+	# DECK DE SYNTHESE. Le final envoie les DEUX registres, donc le deck porte les
+	# deux : Meteore et Trait pour le blindage, Boule de feu et Resonance pour le
+	# nombre. Les quatre cartes d histoire sont toutes la — c est leur paiement
+	# narratif : le mage entre dans la matrice avec les sorts de ses quatre allies.
+	lvl7.exploration_deck = _deck([
+		[C + "common/fireball.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "rare/meteor.tres", 2],
+		[C + "epic/resonance.tres", 2],
+		[C + "rare/salt_spiral.tres", 1],
+		[C + "rare/bone_recall.tres", 1],
+		[C + "rare/chain_break.tres", 1],
+		[C + "epic/void_grip.tres", 1],
+		[C + "epic/weakness_mark.tres", 1],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
+	])
+	lvl7.objectives = [o1, o2, o3]
+	lvl7.legendary_reward = load(C + "legendary/world_loom.tres")
+	lvl7.next_levels = []
+	lvl7.act = 4
+	lvl7.subtitle = "Ce n est pas un monde, c est une matrice"
+	lvl7.intro_text = "Une grille de fils tendus entre des etoiles, ou des divinites \
+tissent les evenements. Elles ne sont ni bonnes ni mauvaises : elles sont OCCUPEES. \
+L herbe sous tes pieds est le meme motif qu au premier matin, repete."
+	lvl7.outro_text = "Il n y a pas de coupable, il y a un calcul. Ton royaume \
+generait trop de futurs possibles : on l a coupe pour simplifier le motif. Et en \
+remontant le temps, tu es devenu exactement ce que la machine voulait supprimer — le \
+fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu \
+laisses la boucle ouverte."
+	_save(lvl7, "res://resources/levels/lvl_07.tres")

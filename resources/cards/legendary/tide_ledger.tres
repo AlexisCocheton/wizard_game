@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7goh8"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_q8jgj"]
+
+[sub_resource type="Resource" id="Resource_7goh8"]
+script = ExtResource("1_7goh8")
+key = &"draw_cards"
+magnitude = 0.0
+duration = 0.0
+radius = 0.0
+params = {
+&"count": 3
+}
+
+[sub_resource type="Resource" id="Resource_q8jgj"]
+script = ExtResource("1_7goh8")
+key = &"double_cast"
+magnitude = 0.0
+duration = 8.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_q8jgj")
+id = &"tide_ledger"
+display_name = "Registre des marees"
+description = "Pioche 3 cartes immediatement et lance deux sorts a la fois pendant 8 s."
+rarity = 3
+base_cast_time = 1.6
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_7goh8")]([SubResource("Resource_7goh8"), SubResource("Resource_q8jgj")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

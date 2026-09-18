@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_h0hek"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_kr1a0"]
+
+[sub_resource type="Resource" id="Resource_h0hek"]
+script = ExtResource("1_h0hek")
+key = &"build_wall"
+magnitude = 0.0
+duration = 0.0
+radius = 200.0
+params = {
+&"permanent": true,
+&"thickness": 60.0,
+&"wall_hp": 120.0
+}
+
+[resource]
+script = ExtResource("2_kr1a0")
+id = &"bastion"
+display_name = "Bastion"
+description = "Mur permanent de 120 PV. Il ne disparait pas : les monstres doivent le briser."
+rarity = 2
+base_cast_time = 2.0
+targeting = 1
+tags = Array[int]([0])
+effects = Array[ExtResource("1_h0hek")]([SubResource("Resource_h0hek")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false

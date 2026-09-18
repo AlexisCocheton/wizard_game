@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_cyq0y"]
+[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_fvekw"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_eyx1u"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_68ik4"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_wnuuc"]
+
+[sub_resource type="Resource" id="Resource_vc1ox"]
+script = ExtResource("1_cyq0y")
+enemy = ExtResource("2_fvekw")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ntfvu"]
+script = ExtResource("1_cyq0y")
+enemy = ExtResource("3_eyx1u")
+count = 2
+spawn_delay = 2.5
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_pot4b"]
+script = ExtResource("1_cyq0y")
+enemy = ExtResource("4_68ik4")
+count = 4
+spawn_delay = 1.8
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_wnuuc")
+id = &"w7_3_miniboss"
+duration = 36.0
+entries = Array[ExtResource("1_cyq0y")]([SubResource("Resource_vc1ox"), SubResource("Resource_ntfvu"), SubResource("Resource_pot4b")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

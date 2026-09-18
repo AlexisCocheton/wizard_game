@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ga3fk"]
+[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="2_ys376"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_ysykw"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_gyp2p"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_g11fe"]
+
+[sub_resource type="Resource" id="Resource_dm35c"]
+script = ExtResource("1_ga3fk")
+enemy = ExtResource("2_ys376")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_gv04l"]
+script = ExtResource("1_ga3fk")
+enemy = ExtResource("3_ysykw")
+count = 2
+spawn_delay = 2.5
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_daq2o"]
+script = ExtResource("1_ga3fk")
+enemy = ExtResource("4_gyp2p")
+count = 3
+spawn_delay = 2.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_g11fe")
+id = &"w7_4"
+duration = 32.0
+entries = Array[ExtResource("1_ga3fk")]([SubResource("Resource_dm35c"), SubResource("Resource_gv04l"), SubResource("Resource_daq2o")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_pse75"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_lpd4f"]
+
+[sub_resource type="Resource" id="Resource_pse75"]
+script = ExtResource("1_pse75")
+key = &"vortex_pull"
+magnitude = 150.0
+duration = 3.0
+radius = 220.0
+params = {}
+
+[resource]
+script = ExtResource("2_lpd4f")
+id = &"salt_spiral"
+display_name = "Spirale de sel"
+description = "Aspire les monstres vers son centre pendant 3 s. Ne fait aucun degat : elle prepare le sort suivant."
+rarity = 1
+base_cast_time = 1.2
+targeting = 1
+tags = Array[int]([3])
+effects = Array[ExtResource("1_pse75")]([SubResource("Resource_pse75")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
