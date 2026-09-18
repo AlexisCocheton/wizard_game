@@ -13,6 +13,7 @@ func run() -> void:
 	_test_cadence_massacre()
 	_test_un_boss_vaincu_offre_une_carte()
 	_test_les_trois_choix_melangent_les_raretes()
+	_test_bruler_une_carte_proposee()
 
 
 func _test_offre_de_trois() -> void:
@@ -128,4 +129,27 @@ func _test_les_trois_choix_melangent_les_raretes() -> void:
 		if vu_melange:
 			break
 	ok(vu_melange, "les trois choix ne sont pas tous de la meme rarete")
+	RunState.reset()
+
+
+## Option BRULER : on clique "bruler" puis une des trois cartes. Elle est lancee
+## immediatement mais n entre PAS dans le deck. Demande du testeur : un choix de
+## puissance immediate contre une valeur a long terme.
+func _test_bruler_une_carte_proposee() -> void:
+	RunState.reset()
+	RunState.set_seed(77)
+	var offre: Array[SpellCard] = RunState.offer_choices(3)
+	if offre.size() < 1:
+		return
+	var avant_deck: int = RunState.deck.size()
+	var avant_defausse: int = RunState.discard.size()
+	var avant_main: int = RunState.hand.size()
+
+	var brulee: SpellCard = RunState.burn_offer(0)
+	ok(brulee != null, "une carte est brulee")
+	eq(RunState.deck.size(), avant_deck, "elle n entre pas dans la pioche")
+	eq(RunState.discard.size(), avant_defausse, "ni dans la defausse")
+	eq(RunState.hand.size(), avant_main, "ni dans la main")
+	ok(RunState.pending_offer.is_empty(), "l offre est consommee")
+	eq(RunState.burned_card, brulee, "la carte a lancer est retenue pour le controleur")
 	RunState.reset()

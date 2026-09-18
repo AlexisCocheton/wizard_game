@@ -75,6 +75,7 @@ func reset() -> void:
 	took_any_damage = false
 	hits_by_source.clear()
 	speed_dropped = false
+	burned_card = null
 	active_passives.clear()
 	_passive_cast_cut = 0.0
 	_passive_cast_factor = 1.0
@@ -429,6 +430,29 @@ func offer_of_rarity(rarity: GameEnums.Rarity, count: int = 3) -> Array[SpellCar
 	if not chosen.is_empty():
 		offer_ready.emit(chosen.duplicate())
 	return chosen
+
+
+## Carte brulee en attente de lancement, lue par GameController. Null si aucune.
+var burned_card: SpellCard = null
+
+
+## BRULER une carte proposee : elle est lancee immediatement mais n entre jamais
+## dans le deck. C est un choix de puissance TOUT DE SUITE contre une valeur sur
+## la duree — sans ce prix, bruler serait toujours le bon choix.
+func burn_offer(i: int) -> SpellCard:
+	if i < 0 or i >= pending_offer.size():
+		return null
+	var card: SpellCard = pending_offer[i]
+	pending_offer.clear()
+	burned_card = card
+	offer_taken.emit(card)
+	return card
+
+
+func take_burned() -> SpellCard:
+	var c: SpellCard = burned_card
+	burned_card = null
+	return c
 
 
 func pick_offer(i: int) -> SpellCard:

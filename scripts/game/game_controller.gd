@@ -229,6 +229,25 @@ func choose_card(i: int) -> SpellCard:
 	return RunState.pick_offer(i)
 
 
+## BRULER l option i : la carte est lancee TOUT DE SUITE, au centre du terrain,
+## et n entre jamais dans le deck.
+func burn_card(i: int) -> SpellCard:
+	var card: SpellCard = RunState.burn_offer(i)
+	if card == null:
+		return null
+	RunState.take_burned()
+	var ctx := CastContext.make(battlefield, card)
+	ctx.caster = self
+	# Pas de visee possible pendant l ecran de choix : on frappe au centre de la
+	# moitie haute, la ou les monstres descendent.
+	var cible := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y * 0.45)
+	ctx.target_position = cible
+	ctx.direction = Vector2.UP
+	ctx.target_enemy = battlefield.enemy_nearest_to(cible) if battlefield != null else null
+	EffectRegistry.cast(card, ctx)
+	return card
+
+
 func _on_level_up(_new_level: int) -> void:
 	AudioBus.play_sfx(&"level_up")
 	if mode == GameEnums.Mode.EXPLORATION:

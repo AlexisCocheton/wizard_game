@@ -87,10 +87,28 @@ const TINTS: Dictionary = {
 
 
 ## Teinte de l icone : c est elle qui distingue deux cartes partageant une feuille.
+##
+## Sans entree explicite, la teinte est DERIVEE de l identifiant. Le contenu du jeu
+## grandit (histoire, actes, cartes liees aux monstres) et lister chaque carte a la
+## main condamnerait toute nouvelle carte a l icone d une autre.
 static func tint_for(card: SpellCard) -> Color:
 	if card == null:
 		return Color.WHITE
-	return TINTS.get(card.id, Color.WHITE)
+	if TINTS.has(card.id):
+		return TINTS[card.id]
+	return _derived_tint(String(card.id))
+
+
+## Teinte stable et lisible tiree du nom : meme carte, meme couleur a chaque
+## lancement. Saturation et luminosite bornees pour rester visible sur le papier.
+static func _derived_tint(id: String) -> Color:
+	if id == "":
+		return Color.WHITE
+	var h: int = 0
+	for i in id.length():
+		h = (h * 31 + id.unicode_at(i)) % 100003
+	var teinte: float = float(h % 360) / 360.0
+	return Color.from_hsv(teinte, 0.45, 1.0)
 
 
 ## Signature unique d une carte : feuille + teinte.

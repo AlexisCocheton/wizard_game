@@ -243,6 +243,17 @@ func _show_choice(cards: Array[SpellCard]) -> void:
 	box.add_child(UiTheme.label("CHOISIS UN SORT", UiTheme.FONT_TITLE, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
 	box.add_child(UiTheme.label("Il rejoint ta defausse et reviendra dans la pioche.",
 		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	# Mode BRULER : on arme d abord, puis on touche la carte a sacrifier.
+	var burn_btn := Button.new()
+	burn_btn.text = "BRULER UNE CARTE"
+	burn_btn.custom_minimum_size = Vector2(0, 76)
+	burn_btn.toggle_mode = true
+	burn_btn.toggled.connect(func(on: bool) -> void:
+		_burn_armed = on
+		burn_btn.text = "CHOISIS LA CARTE A BRULER" if on else "BRULER UNE CARTE")
+	box.add_child(burn_btn)
+	box.add_child(UiTheme.label("Brulee : lancee tout de suite, mais elle n entre pas dans ton deck.",
+		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 24)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -255,11 +266,20 @@ func _show_choice(cards: Array[SpellCard]) -> void:
 	_choice.visible = true
 
 
+## Armement du mode bruler : le joueur clique le bouton, puis la carte.
+var _burn_armed: bool = false
+
+
 func _pick(i: int) -> void:
 	AudioBus.play_sfx(&"card_pick")
 	_choice.visible = false
-	if game != null:
-		game.choose_card(i)
+	if game == null:
+		return
+	if _burn_armed:
+		_burn_armed = false
+		game.burn_card(i)
+		return
+	game.choose_card(i)
 
 
 # --- Divers ---
