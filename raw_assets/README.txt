@@ -35,3 +35,66 @@ Duelyst-Unit-Animations.unitypackage : 696 unites (51 boss), chacune avec course
                                 (ajouter l unite voulue dans WANTED).
                                 Style plus fin et sombre que Tiny Swords : reserve
                                 aux boss, dont la silhouette doit trancher.
+
+--- Ajouts du 2026-09-18 (fonds de bataille et effets) ---
+11 archives deposees a la racine du projet, rangees ici. Inventaire complet
+ci-dessous, avec CE QUI EN EST PRIS et CE QUI EST ECARTE (et pourquoi).
+Licence des packs craftpix : https://craftpix.net/file-licenses/ — gratuits pour
+un usage commercial, redistribution des fichiers sources interdite. C est
+precisement pour cela que ces zips restent ici, hors du depot.
+
+RETENU
+------
+craftpix-net-593685-free-4-nature-backgrounds-for-rpg-battle.zip (194 Mo)
+    4 saisons, chacune en couches separees + un PNG complet 3840x2160.
+    PRIS : PNG/spring/6.png  -> assets/backdrops/act1_sky.png
+           PNG/autumn/6.png  -> assets/backdrops/act4_origin.png
+    L automne rejoue la composition du printemps dans une autre teinte : c est
+    exactement l effet voulu par docs/histoire.md pour l acte final, ou le joueur
+    doit reconnaitre le decor du niveau 1 « en faux ».
+
+craftpix-net-889507-free-vampires-locations-battle-background-pack.zip (170 Mo)
+    4 lieux (terrasse, salle du trone, chateau, foret morte).
+    PRIS : PNG/4/dead forest.png  -> assets/backdrops/act2_graveyard.png
+           PNG/2/throne room.png  -> assets/backdrops/act3_demon.png
+    La foret morte EST un cimetiere (grilles, croix, tombes, ciel rouge).
+
+VFX Free Pack.zip (90 Mo, 2084 PNG)
+    22 effets, chacun en frames 30 et 60 fps + spritesheet + gif.
+    PRIS : Effect_TheVortex -> assets/fx/vortex_hd.png
+           Effect_Explosion -> assets/fx/boom_hd.png
+
+Pipoya VFX HEXShield.zip (16 Mo)
+    5 boucliers hexagonaux, grilles de 192 px (et 480 px).
+    PRIS : pipo-btleffect206 -> assets/fx/shield_hex.png
+
+ECARTE (et pourquoi)
+--------------------
+craftpix-net-298993-free-rpg-battleground-asset-pack.zip (137 Mo)
+    4 ponts (bambou, foret, ciel, chateau). Beaux, mais tous batis autour d une
+    PASSERELLE horizontale : le decor raconte qu on traverse de gauche a droite,
+    alors que le jeu se lit de haut en bas. Le fond contredirait le mouvement.
+
+free-demon-characters-pixel-art.zip
+    8 demons en PORTRAITS STATIQUES (une pose, 4 visages). Aucune animation de
+    marche : inutilisable comme monstre, et le jeu n a pas d ecran de dialogue
+    ou un portrait servirait.
+
+craftpix-net-809047-free-animated-magic-book-pixel-art-asset-pack.zip
+    Livre de sorts anime + 40 icones. Joli, mais le deck du jeu est deja dessine
+    (papiers recomposes, icones derivees du nom de carte) : remplacer l UI n est
+    pas une amelioration, c est un autre parti pris.
+
+free-pixel-magic-sprite-effects-pack.zip
+    15 bandes de 72 px. Trop petites et trop pauvres (3 a 8 frames) face aux
+    grilles de 100 px deja en place.
+
+Pixel Holy Spell Effect 32x32 Pack 3.rar
+    2 planches de 32 px. Meme raison : bien en dessous de l existant.
+    NOTE OUTIL : ni unrar ni le module python rarfile sur ce poste, mais
+    "C:\Program Files\7-Zip\7z.exe" lit le .rar (l x -o<dossier> fonctionne).
+
+PIPOYA FREE VFX Mysterious Object.zip (63 Mo)
+Pipoya VFX WarpPortal.zip
+    Objets flottants et portails. Aucun crochet de jeu : pas de sort de
+    teleportation, pas d objet ramassable. Beaux mais sans emploi.

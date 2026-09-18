@@ -1,21 +1,36 @@
 class_name BattleBackdrop
 extends Node2D
-## Decor du champ de bataille, entierement en tuiles et sprites Tiny Swords :
-## eau autour, ile d herbe (ou de sable) bordee, rochers, buissons, arbres, et
-## la tour du mage en bas. Rien n est dessine par le code : seules des textures
-## du pack sont posees.
+## Decor du champ de bataille. Deux modes, dans cet ordre :
+##
+## 1. FOND PEINT (`LevelDef.backdrop`) : une image 1080x1920 par acte, composee
+##    hors du jeu par `tools/assets/compose_backdrops.py` depuis les packs
+##    craftpix. C est le mode normal des niveaux de la campagne.
+## 2. TUILES Tiny Swords (`LevelDef.terrain`) : eau, ile d herbe ou de sable,
+##    rochers, buissons, arbres, tour du mage. Repli quand aucun fond n est
+##    donne — le mode Massacre et les tests s en servent encore.
+##
+## Rien n est dessine par le code : seules des textures des packs sont posees.
 
 const T := "res://assets/terrain/"
+const B := "res://assets/backdrops/"
 const TILE: int = 64
 ## Ile : marge autour du terrain jouable.
 const ISLAND := Rect2(32.0, 96.0, 1016.0, 1536.0)
 
 var terrain: String = "grass"
+## Cle du fond peint (voir LevelDef.backdrop). Vide = decor en tuiles.
+var backdrop: String = ""
 var _rng := RandomNumberGenerator.new()
 
 
-func setup(terrain_key: String, seed_value: int = 7) -> void:
+## `backdrop_key` est FACULTATIF. Omis, on lit `RunState.current_level_def.backdrop` :
+## `GameController` le renseigne avant d appeler `setup()`, et il n a pas a connaitre
+## le decor. Un appelant de test peut toujours imposer une cle a la main.
+func setup(terrain_key: String, backdrop_key: String = "", seed_value: int = 7) -> void:
 	terrain = terrain_key
+	backdrop = backdrop_key
+	if backdrop.is_empty() and RunState.current_level_def != null:
+		backdrop = RunState.current_level_def.backdrop
 	_rng.seed = seed_value
 	for c in get_children():
 		c.queue_free()
@@ -25,10 +40,41 @@ func setup(terrain_key: String, seed_value: int = 7) -> void:
 
 
 func _build() -> void:
+	# Un fond peint est une scene complete (horizon, sol, premier plan) : il
+	# remplace l eau, l ile et la tour. Y reposer des rochers et des arbres Tiny
+	# Swords melangerait deux styles de dessin sur la meme image.
+	if _paint_backdrop():
+		# La tour reste, meme sur un fond peint : elle marque la LIGNE DU MAGE.
+		# Sans elle le mage flotte au milieu du decor et le joueur ne voit plus
+		# ce qu il defend. Les rochers et arbres Tiny Swords, eux, sont ecartes :
+		# ils melangeraient deux styles de dessin sur la meme image.
+		_mage_tower()
+		return
 	_tile_water()
 	_tile_island()
 	_scatter_decor()
 	_mage_tower()
+
+
+## Fond peint de l acte, etire au champ de bataille. Rend false si la cle est
+## vide ou le fichier absent : l appelant retombe alors sur les tuiles.
+func _paint_backdrop() -> bool:
+	if backdrop.is_empty():
+		return false
+	var tex: Texture2D = SheetLib.texture(B + backdrop + ".png")
+	if tex == null:
+		return false
+	var tr := TextureRect.new()
+	tr.texture = tex
+	# Les fonds sont composes a 1080x1920, la taille exacte du champ : STRETCH_SCALE
+	# ne fait donc rien tant que la resolution ne bouge pas, et reste correct si
+	# elle bouge (l etage visual tourne en 540x960).
+	tr.stretch_mode = TextureRect.STRETCH_SCALE
+	tr.position = Vector2.ZERO
+	tr.size = Vector2(GameConfig.BATTLEFIELD_WIDTH, GameConfig.BATTLEFIELD_HEIGHT)
+	tr.z_index = -20
+	add_child(tr)
+	return true
 
 
 func _tile_water() -> void:

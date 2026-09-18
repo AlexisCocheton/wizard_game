@@ -33,12 +33,19 @@ const STRIPS: Dictionary = {
 	"explosion_c": ["explosion_c", 128, 80, 24], "dust": ["ts_dust_01", 64, 64, 16],
 	"ts_explosion": ["ts_explosion_01", 192, 192, 20], "ts_fire": ["ts_fire_02", 64, 64, 14],
 	"heal_effect": ["heal_effect", 192, 192, 14],
+	## Feuilles haute definition (VFX Free Pack, Pipoya), extraites par
+	## tools/assets/extract_vfx.py. Cases de 160 px : elles restent nettes la ou
+	## les grilles de 100 px bavaient.
+	"shield_hex": ["shield_hex", 160, 160, 20],
+	"vortex_hd": ["vortex_hd", 160, 160, 26],
+	"boom_hd": ["boom_hd", 160, 160, 28],
 }
 
 
 ## Part de la case reellement occupee par l effet (mesuree sur les feuilles).
 const OCC: Dictionary = {
 	"bluefire": 0.52,
+	"boom_hd": 0.91,
 	"brightfire": 0.32,
 	"casting": 0.37,
 	"explosion_c": 0.98,
@@ -55,10 +62,12 @@ const OCC: Dictionary = {
 	"magicspell": 0.45,
 	"midnight": 0.56,
 	"protectioncircle": 0.34,
+	"shield_hex": 0.84,
 	"ts_dust_01": 0.55,
 	"ts_explosion_01": 0.33,
 	"ts_fire_02": 0.56,
 	"vortex": 0.76,
+	"vortex_hd": 0.99,
 	"weaponhit": 0.37,
 }
 
@@ -256,8 +265,15 @@ static func hit_flash(enemy: Node2D) -> void:
 
 
 ## Mort d un monstre : explosion du pack, proportionnee a sa taille.
+## Trois paliers : les gros monstres meurent avec `boom_hd` (cases de 160 px), qui
+## tient l agrandissement la ou `explosion_e` (192 px, mais 100 % de case) pixelisait.
 static func death(parent: Node2D, at: Vector2, radius: float) -> void:
-	sprite(parent, "explosion_d" if radius < 45.0 else "explosion_e", at, radius * 3.2, false)
+	var sheet: String = "explosion_d"
+	if radius >= 70.0:
+		sheet = "boom_hd"
+	elif radius >= 45.0:
+		sheet = "explosion_e"
+	sprite(parent, sheet, at, radius * 3.2, false)
 
 
 ## Aura sur le mage : sorts qui agissent sur soi.
@@ -269,7 +285,9 @@ static func self_aura(parent: Node2D, col: Color) -> void:
 ## Effet plein ecran bref (ralentissement, volte-face).
 static func screen_tint(parent: Node2D, col: Color) -> void:
 	var at := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y * 0.5)
-	var sheet: String = "vortex" if col == COL_ARCANE else "midnight"
+	# `vortex_hd` (VFX Free Pack, cases de 160 px) plutot que la grille de 100 px :
+	# cet effet est affiche a 1400 px de large, la ou l ancienne feuille pixelisait.
+	var sheet: String = "vortex_hd" if col == COL_ARCANE else "midnight"
 	sprite(parent, sheet, at, 1400.0, false, Color(1, 1, 1, 0.6))
 
 
@@ -303,5 +321,9 @@ static func heal_effect(parent: Node2D, at: Vector2) -> void:
 ## Halo persistant (bouclier du premier coup, aura protectrice).
 ## Le halo doit couvrir EXACTEMENT la zone protegee : le joueur s en sert pour juger
 ## s il est dans la portee. Un facteur cosmetique mentirait sur la regle.
+##
+## Feuille `shield_hex` (Pipoya) et non `protectioncircle` : l ancienne n occupait
+## que 34 % de sa case, donc un halo de 200 px l agrandissait 6x et la reduisait en
+## bouillie. L hexagone en remplit 84 % et reste net a la taille protegee.
 static func halo(parent: Node2D, radius: float, tint: Color = Color.WHITE) -> Node:
-	return sprite(parent, "protectioncircle", Vector2.ZERO, radius * 2.0, true, tint)
+	return sprite(parent, "shield_hex", Vector2.ZERO, radius * 2.0, true, tint)

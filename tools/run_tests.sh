@@ -32,7 +32,7 @@ if [[ ! -x "$GODOT" ]] && [[ ! -f "$GODOT" ]]; then
   exit 2
 fi
 
-ALL_STAGES=(ci_load compile audit unit smoke visual)
+ALL_STAGES=(ci_load compile audit unit smoke visual backdrops)
 if [[ $# -gt 0 ]]; then STAGES=("$@"); else STAGES=("${ALL_STAGES[@]}"); fi
 
 declare -A RESULT TIMES
@@ -84,10 +84,13 @@ run_stage() {
   else
     scene="res://tests/stages/${s}.tscn"
   fi
-  if [[ "$s" == "visual" ]]; then
+  if [[ "$s" == "visual" || "$s" == "backdrops" ]]; then
     # Fenetre REELLE : le seul etage qui execute le code de sprites et d effets
     # (inerte en headless). Il ecrit des captures dans .testout/shot_*.png.
-    rm -f "$OUT"/shot_*.png
+    # Chaque etage n efface QUE ses propres captures : visual ecrit shot_*,
+    # backdrops ecrit bg_*. Les melanger faisait disparaitre les captures de
+    # backdrops des que visual tournait apres lui.
+    if [[ "$s" == "visual" ]]; then rm -f "$OUT"/shot_*.png; else rm -f "$OUT"/bg_*.png; fi
     timeout "$STAGE_TIMEOUT" "$GODOT" --path "$PROJ" --resolution 540x960 "$scene" >"$OUT/$s.out" 2>"$OUT/$s.err"
   else
     timeout "$STAGE_TIMEOUT" "$GODOT" --headless --path "$PROJ" "$scene" >"$OUT/$s.out" 2>"$OUT/$s.err"
@@ -112,6 +115,14 @@ run_stage() {
   if [[ $code -ne 0 ]]; then
     RESULT[$s]='FAIL'; FAILED=1
     printf '%sFAIL%s (%sms) code=%d\n' "$R" "$N" "$dur" "$code"
+    tail -20 "$OUT/$s.out" | sed 's/^/     /'
+    return
+  fi
+
+  if [[ "$s" == "backdrops" ]] && ! grep -q 'BACKDROPS_OK' "$OUT/$s.out"; then
+    RESULT[$s]='INCOMPLET'; FAILED=1
+    printf '%sFAIL%s (%sms) — marqueur BACKDROPS_OK absent
+' "$R" "$N" "$dur"
     tail -20 "$OUT/$s.out" | sed 's/^/     /'
     return
   fi

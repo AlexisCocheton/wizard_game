@@ -736,6 +736,7 @@ func _waves_and_level() -> void:
 	lvl.id = &"lvl_01"
 	lvl.display_name = "Les Marches du Temps"
 	lvl.terrain = "grass"
+	lvl.backdrop = "act1_sky"
 	lvl.waves = [w1, w2, w3, w4, w5, w6]
 	lvl.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "golem.tres"),
@@ -861,6 +862,7 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl2.id = &"lvl_02"
 	lvl2.display_name = "La Tour des Sables"
 	lvl2.terrain = "sand"
+	lvl2.backdrop = "act1_sky"
 	lvl2.waves = [v1, v2, v3, v4, v5, v6, v7]
 	lvl2.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
@@ -1000,6 +1002,7 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	lvl3.id = &"lvl_03"
 	lvl3.display_name = "Ossuaire des Marees"
 	lvl3.terrain = "sand"
+	lvl3.backdrop = "act2_graveyard"
 	lvl3.waves = [a1, a2, a3, a4, a5, a6]
 	lvl3.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
@@ -1124,6 +1127,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	lvl4.id = &"lvl_04"
 	lvl4.display_name = "Le Grand Appel"
 	lvl4.terrain = "sand"
+	lvl4.backdrop = "act2_graveyard"
 	lvl4.waves = [b1, b2, b3, b4, b5, b6]
 	lvl4.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
@@ -1268,6 +1272,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	lvl5.id = &"lvl_05"
 	lvl5.display_name = "Forges du Mauvais Temps"
 	lvl5.terrain = "sand"
+	lvl5.backdrop = "act3_demon"
 	lvl5.waves = [c1, c2, c3, c4, c5, c6]
 	lvl5.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "golem.tres"),
@@ -1404,6 +1409,7 @@ cadran, et ils ignorent qui la passe."
 	lvl6.id = &"lvl_06"
 	lvl6.display_name = "La Cour brisee"
 	lvl6.terrain = "sand"
+	lvl6.backdrop = "act3_demon"
 	lvl6.waves = [d1, d2, d3, d4, d5, d6]
 	lvl6.enemy_pool = [
 		load(E + "sprite.tres"), load(E + "wisp.tres"), load(E + "shade.tres"),
@@ -1543,6 +1549,9 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# `grass` comme le niveau 1 : l herbe est FAUSSE, c est un motif que les
 	# divinites repetent. Le decor doit etre reconnu.
 	lvl7.terrain = "grass"
+	# Acte final : MEME composition que l acte I dans une teinte fausse. Le joueur
+	# doit reconnaitre le decor du premier niveau et sentir que quelque chose cloche.
+	lvl7.backdrop = "act4_origin"
 	lvl7.waves = [f1, f2, f3, f4, f5, f6]
 	lvl7.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "wisp.tres"),

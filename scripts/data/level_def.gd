@@ -17,7 +17,13 @@ extends Resource
 ## Texte lu a la victoire : le rebondissement que le niveau vient de reveler.
 @export_multiline var outro_text: String = ""
 ## Tuiles du decor : "grass" ou "sand" (tilesets Tiny Swords).
+## Ne sert plus que de REPLI, quand `backdrop` est vide.
 @export var terrain: String = "grass"
+## Fond peint de l acte, dans `assets/backdrops/` sans l extension :
+## "act1_sky", "act2_graveyard", "act3_demon", "act4_origin".
+## Vide = on retombe sur les tuiles `terrain`, pour qu un niveau sans fond
+## reste jouable (meme regle que les champs narratifs).
+@export var backdrop: String = ""
 @export var waves: Array[WaveDef] = []
 ## Pool de monstres utilisable par la generation procedurale de vagues.
 @export var enemy_pool: Array[EnemyDef] = []
