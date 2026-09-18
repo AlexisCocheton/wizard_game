@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_c16pj"]
+
+[resource]
+script = ExtResource("1_c16pj")
+id = &"rw_title_origine"
+display_name = "Temoin de l Origine"
+description = "Titre affiche sur ton profil."
+at_level = 10
+kind = 0
+texture_name = ""

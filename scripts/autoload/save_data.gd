@@ -6,6 +6,8 @@ extends Node
 
 signal save_loaded()
 signal profile_changed()
+signal account_level_up(new_level: int)
+signal challenge_completed(challenge: ChallengeDef)
 
 const SAVE_PATH: String = "user://profile.json"
 const CORRUPT_PATH: String = "user://profile.corrupt.json"
@@ -30,6 +32,7 @@ func _defaults() -> Dictionary:
 			"levels": {},
 			"massacre_deck": [],
 			"discovered_enemies": [],
+			"account": {"level": 1, "xp": 0, "challenges": [], "stats": {}},
 		},
 		"settings": {
 			"master_volume": 0.8,
@@ -321,6 +324,129 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 		discover_card(level.legendary_reward.id)
 	profile_changed.emit()
 	return newly
+
+
+## --- Progression de COMPTE ---
+##
+## Elle ne donne QUE des titres et des avatars. Un niveau de compte qui rendrait
+## le mage plus fort perimerait les taux de victoire mesures au banc et
+## avantagerait qui joue beaucoup plutot que qui joue bien.
+
+## XP total a atteindre pour passer AU niveau donne. Progression douce : les
+## premiers paliers tombent vite, pour que le joueur voie la mecanique bouger.
+func account_xp_for_level(level: int) -> int:
+	if level <= 1:
+		return 0
+	var total: int = 0
+	for n in range(2, level + 1):
+		total += 250 + 150 * (n - 2)
+	return total
+
+
+func _account() -> Dictionary:
+	var p: Dictionary = profile()
+	if not p.has("account"):
+		p["account"] = {"level": 1, "xp": 0, "challenges": []}
+	return p["account"]
+
+
+func account_level() -> int:
+	return int(_account().get("level", 1))
+
+
+func account_xp() -> int:
+	return int(_account().get("xp", 0))
+
+
+## Avancement vers le palier suivant, de 0 a 1 : c est ce que la barre affiche.
+func account_progress() -> float:
+	var lvl: int = account_level()
+	var bas: int = account_xp_for_level(lvl)
+	var haut: int = account_xp_for_level(lvl + 1)
+	if haut <= bas:
+		return 1.0
+	return clampf(float(account_xp() - bas) / float(haut - bas), 0.0, 1.0)
+
+
+## Verse de l XP et fait monter le niveau autant de fois qu il le faut.
+## Rend le nombre de niveaux gagnes, pour que l interface puisse le feter.
+func grant_account_xp(amount: int) -> int:
+	if amount <= 0:
+		return 0
+	var a: Dictionary = _account()
+	a["xp"] = int(a.get("xp", 0)) + amount
+	var gagnes: int = 0
+	while int(a.get("xp", 0)) >= account_xp_for_level(int(a.get("level", 1)) + 1):
+		a["level"] = int(a.get("level", 1)) + 1
+		gagnes += 1
+		if gagnes > 200:
+			break  # garde-fou : jamais de boucle infinie sur un profil corrompu
+	if gagnes > 0:
+		account_level_up.emit(int(a["level"]))
+	profile_changed.emit()
+	return gagnes
+
+
+## Compteurs durables lus par les defis (monstres tues, niveaux finis...).
+func challenge_stats() -> Dictionary:
+	var a: Dictionary = _account()
+	if not a.has("stats"):
+		a["stats"] = {}
+	return a["stats"]
+
+
+func set_challenge_stats(stats: Dictionary) -> void:
+	_account()["stats"] = stats
+	profile_changed.emit()
+
+
+func completed_challenges() -> Array:
+	return (_account().get("challenges", []) as Array).duplicate()
+
+
+func is_challenge_done(challenge_id: StringName) -> bool:
+	return (_account().get("challenges", []) as Array).has(String(challenge_id))
+
+
+## Valide un defi. Rend false s il etait deja accompli : un defi ne paie qu une
+## fois, sinon ce serait une source d XP infinie.
+func complete_challenge(challenge_id: StringName) -> bool:
+	if is_challenge_done(challenge_id):
+		return false
+	var d: ChallengeDef = ContentDB.challenges.get(challenge_id)
+	if d == null:
+		return false
+	var a: Dictionary = _account()
+	var liste: Array = a.get("challenges", [])
+	liste.append(String(challenge_id))
+	a["challenges"] = liste
+	grant_account_xp(d.xp_reward)
+	challenge_completed.emit(d)
+	return true
+
+
+## Les recompenses debloquees a un niveau donne.
+func rewards_unlocked_at(level: int) -> Array[AccountRewardDef]:
+	var out: Array[AccountRewardDef] = []
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.at_level == level:
+			out.append(r)
+	return out
+
+
+## Tout ce que le compte a deja debloque, pour l ecran de profil.
+func unlocked_rewards() -> Array[AccountRewardDef]:
+	var out: Array[AccountRewardDef] = []
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.at_level <= account_level():
+			out.append(r)
+	return out
+
+
+## Pour les tests : charge un profil brut en passant par la migration.
+func load_from_dictionary(raw: Dictionary) -> void:
+	_data = _migrate(raw.duplicate(true))
+	profile_changed.emit()
 
 
 func reset_profile() -> void:

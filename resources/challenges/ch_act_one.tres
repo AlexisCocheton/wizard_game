@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_41i2d"]
+
+[resource]
+script = ExtResource("1_41i2d")
+id = &"ch_act_one"
+display_name = "Le Monde volant"
+description = "Terminer les deux niveaux du premier acte."
+xp_reward = 400
+track_key = &"levels_cleared"
+target = 2

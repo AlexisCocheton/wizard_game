@@ -29,6 +29,17 @@ func _ready() -> void:
 		if obj != null:
 			done[obj.id] = ObjectiveChecker.evaluate(obj)
 
+	# Defis de compte : un niveau fini, et la performance s il n a rien encaisse.
+	var cleared: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		if SaveData.is_level_cleared(lv.id):
+			cleared += 1
+	ChallengeTracker.record_best(&"levels_cleared", cleared + 1)
+	if not RunState.took_any_damage:
+		ChallengeTracker.bump(&"flawless_clears")
+	ChallengeTracker.record_best(&"cards_discovered", SaveData.discovered_count())
+	ChallengeTracker.record_best(&"enemies_discovered", SaveData.discovered_enemies().size())
+
 	var newly: bool = SaveData.record_victory(level, RunState.mode, done, RunState.wave_index)
 	SaveData.save_profile()
 

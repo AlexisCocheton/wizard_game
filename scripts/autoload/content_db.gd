@@ -8,6 +8,8 @@ var enemies: Dictionary = {}     # StringName -> EnemyDef
 var waves: Dictionary = {}       # StringName -> WaveDef
 var levels: Dictionary = {}      # StringName -> LevelDef
 var objectives: Dictionary = {}  # StringName -> ObjectiveDef
+var challenges: Dictionary = {}  # StringName -> ChallengeDef
+var rewards: Dictionary = {}     # StringName -> AccountRewardDef
 
 ## Ids rencontres deux fois — l'AUDIT echoue dessus (ecrasement silencieux sinon).
 var duplicate_ids: Array[String] = []
@@ -23,6 +25,8 @@ func reload() -> void:
 	waves.clear()
 	levels.clear()
 	objectives.clear()
+	challenges.clear()
+	rewards.clear()
 	duplicate_ids.clear()
 	_scan_dir("res://resources")
 	discover_starters()
@@ -69,6 +73,10 @@ func _index(path: String) -> void:
 		_put(levels, (res as LevelDef).id, res, path)
 	elif res is ObjectiveDef:
 		_put(objectives, (res as ObjectiveDef).id, res, path)
+	elif res is ChallengeDef:
+		_put(challenges, (res as ChallengeDef).id, res, path)
+	elif res is AccountRewardDef:
+		_put(rewards, (res as AccountRewardDef).id, res, path)
 
 
 func _put(target: Dictionary, id: StringName, res: Resource, path: String) -> void:
@@ -94,4 +102,24 @@ func starter_cards() -> Array[SpellCard]:
 	for c: SpellCard in cards.values():
 		if c.copies_in_starter > 0:
 			out.append(c)
+	return out
+
+
+## Defis tries par XP croissant : les plus accessibles en premier.
+func challenges_list() -> Array[ChallengeDef]:
+	var out: Array[ChallengeDef] = []
+	for c: ChallengeDef in challenges.values():
+		out.append(c)
+	out.sort_custom(func(a: ChallengeDef, b: ChallengeDef) -> bool:
+		return a.xp_reward < b.xp_reward if a.xp_reward != b.xp_reward else a.id < b.id)
+	return out
+
+
+## Recompenses triees par niveau : c est l ordre ou le joueur les obtiendra.
+func rewards_list() -> Array[AccountRewardDef]:
+	var out: Array[AccountRewardDef] = []
+	for r: AccountRewardDef in rewards.values():
+		out.append(r)
+	out.sort_custom(func(a: AccountRewardDef, b: AccountRewardDef) -> bool:
+		return a.at_level < b.at_level if a.at_level != b.at_level else a.id < b.id)
 	return out

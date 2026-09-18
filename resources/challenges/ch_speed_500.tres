@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_iq7aj"]
+
+[resource]
+script = ExtResource("1_iq7aj")
+id = &"ch_speed_500"
+display_name = "Course du temps"
+description = "Atteindre 500 pourcent de vitesse dans une partie."
+xp_reward = 500
+track_key = &"max_speed_reached"
+target = 500

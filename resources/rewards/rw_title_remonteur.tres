@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_dc6mr"]
+
+[resource]
+script = ExtResource("1_dc6mr")
+id = &"rw_title_remonteur"
+display_name = "Remonteur de temps"
+description = "Titre affiche sur ton profil."
+at_level = 4
+kind = 0
+texture_name = ""

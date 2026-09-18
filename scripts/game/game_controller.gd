@@ -66,6 +66,7 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	_connect_once(SpeedGauge.died, _on_died)
 	_connect_once(SpeedGauge.shield_collapsed, _on_shield_collapsed)
 	_connect_once(battlefield.mage_hit, _on_mage_hit)
+	_connect_once(battlefield.enemy_killed, _on_enemy_killed_for_challenges)
 	_connect_once(RunState.level_up, _on_level_up)
 
 	var hud: Node = get_node_or_null("HUD")
@@ -282,10 +283,17 @@ func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
 	RunState.note_damage_taken(source)
 
 
+func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:
+	ChallengeTracker.bump(&"enemies_killed")
+
+
 func _on_wave_cleared(index: int) -> void:
 	var wave: WaveDef = spawner.waves[index] if index < spawner.waves.size() else null
 	RunState.wave_index = index + 1
 	RunState.wave_changed.emit(RunState.wave_index)
+	ChallengeTracker.record_best(&"max_speed_reached", SpeedGauge.speed_percent)
+	if mode == GameEnums.Mode.MASSACRE:
+		ChallengeTracker.record_best(&"massacre_wave", RunState.wave_index)
 	# Recompense de boss (cahier des charges) : le mini-boss lache de l epique,
 	# le boss final de la legendaire. Sans cela, vaincre un boss ne rapportait rien
 	# et la seule source de cartes etait la montee de niveau.

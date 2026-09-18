@@ -26,6 +26,7 @@ SpeedGauge="*res://scripts/autoload/speed_gauge.gd"
 RunState="*res://scripts/autoload/run_state.gd"
 SceneRouter="*res://scripts/autoload/scene_router.gd"
 AudioBus="*res://scripts/autoload/audio_bus.gd"
+ChallengeTracker="*res://scripts/autoload/challenge_tracker.gd"
 
 [display]
 

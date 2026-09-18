@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_nlksi"]
+
+[resource]
+script = ExtResource("1_nlksi")
+id = &"ch_first_win"
+display_name = "Premier souffle"
+description = "Terminer un niveau."
+xp_reward = 250
+track_key = &"levels_cleared"
+target = 1

@@ -37,6 +37,10 @@ enum Shape { SQUARE, CIRCLE, TRIANGLE, DIAMOND, HEXAGON, CAPSULE, STAR }
 
 enum Mode { EXPLORATION, MASSACRE }
 
+## Recompenses de compte : COSMETIQUES uniquement. Ajouter ici un type qui
+## donnerait de la puissance perimerait l equilibrage mesure des niveaux.
+enum RewardKind { TITLE, AVATAR }
+
 
 static func rarity_name(r: int) -> String:
 	match r:

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_cnts4"]
+
+[resource]
+script = ExtResource("1_cnts4")
+id = &"ch_campaign"
+display_name = "Jusqu a la source"
+description = "Terminer les sept niveaux de la campagne."
+xp_reward = 1200
+track_key = &"levels_cleared"
+target = 7

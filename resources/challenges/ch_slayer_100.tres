@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_pjkkj"]
+
+[resource]
+script = ExtResource("1_pjkkj")
+id = &"ch_slayer_100"
+display_name = "Chasseur"
+description = "Tuer 100 monstres, toutes parties confondues."
+xp_reward = 250
+track_key = &"enemies_killed"
+target = 100
