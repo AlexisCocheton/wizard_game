@@ -59,6 +59,7 @@ func run() -> void:
 	_test_vulnerabilite()
 	_test_resonance()
 	_test_le_halo_couvre_la_zone_protegee()
+	_test_les_degats_varient_selon_le_monstre()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -175,7 +176,7 @@ func _test_volte_face() -> void:
 
 func _test_tireur() -> void:
 	_fresh()
-	SpeedGauge.set_step(3)
+	SpeedGauge.set_speed_percent(400)
 	var d := _def("archer", 20.0, 0.0)
 	d.shoot_interval = 0.5
 	d.shot_damage = 1
@@ -184,7 +185,7 @@ func _test_tireur() -> void:
 	_sim(0.5)
 	ok(_bf.shot_count() > 0, "le tireur a tire")
 	_sim(2.0)
-	eq(SpeedGauge.step_index, 0, "le tir a fait tomber le bouclier du mage")
+	ok(SpeedGauge.speed_percent < 400, "le tir a fait retomber la vitesse du mage")
 
 
 func _test_a_coups() -> void:
@@ -273,3 +274,27 @@ func _test_le_halo_couvre_la_zone_protegee() -> void:
 		"le halo est dessine au diametre exact (radius * 2.0), pas a un facteur cosmetique")
 	# Un monstre juste au bord est protege ; juste au-dela ne l est pas.
 	feq(rayon * 2.0 / 2.0, rayon, "le demi-diametre dessine vaut le rayon de la regle")
+
+
+## Les degats au mage sont VARIABLES selon le monstre, et un tir fait moins mal
+## qu un contact : avec 8 PV et 1 degat partout, tout coup valait pareil.
+func _test_les_degats_varient_selon_le_monstre() -> void:
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	var behemoth: EnemyDef = ContentDB.enemies.get(&"behemoth")
+	var chronos: EnemyDef = ContentDB.enemies.get(&"chronos")
+	var archer: EnemyDef = ContentDB.enemies.get(&"imp_archer")
+	if gnome == null or behemoth == null or chronos == null or archer == null:
+		return
+
+	ok(gnome.contact_hit() < behemoth.contact_hit(),
+		"un gnome fait moins mal qu un behemoth")
+	ok(behemoth.contact_hit() < chronos.contact_hit(),
+		"un behemoth fait moins mal que le boss")
+	ok(archer.shot_damage < gnome.contact_hit(),
+		"une fleche pique moins qu un contact de gnome")
+
+	# Le mage encaisse plusieurs coups : la partie ne se joue pas sur une erreur.
+	ok(GameConfig.MAGE_MAX_HP / maxi(chronos.contact_hit(), 1) >= 2,
+		"meme le boss ne tue pas en un coup")
+	ok(GameConfig.MAGE_MAX_HP / maxi(gnome.contact_hit(), 1) >= 10,
+		"les petits monstres laissent une vraie marge")

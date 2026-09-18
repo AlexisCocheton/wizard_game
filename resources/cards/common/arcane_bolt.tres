@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Resource_gj7ww"]
 script = ExtResource("1_gj7ww")
 key = &"damage_single"
-magnitude = 14.0
+magnitude = 26.0
 duration = 0.0
 radius = 0.0
 params = {}
@@ -15,7 +15,7 @@ params = {}
 script = ExtResource("2_7h5tv")
 id = &"arcane_bolt"
 display_name = "Trait arcanique"
-description = "Inflige 14 degats a une cible."
+description = "Inflige 26 degats a une cible."
 rarity = 0
 base_cast_time = 1.1
 targeting = 3

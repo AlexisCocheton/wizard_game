@@ -18,6 +18,8 @@ func run() -> void:
 	_test_niveau_courant()
 	_test_deck_exploration_contient_le_mur()
 	_test_deck_explicite_conserve_les_exemplaires()
+	_test_seuls_les_niveaux_debloques_sont_jouables()
+	_test_le_hud_reste_actif_en_pause()
 	# Etat propre pour les suites suivantes.
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
@@ -118,3 +120,43 @@ func _test_deck_explicite_conserve_les_exemplaires() -> void:
 		if c.id == &"stone_wall":
 			murs_en_jeu += 1
 	ok(murs_en_jeu >= 1, "le mur est piochable en partie")
+
+
+## Un niveau verrouille ne doit pas etre jouable : le niveau 2 etait accessible
+## avant d avoir termine le 1, la campagne listait tout sans filtrer.
+func _test_seuls_les_niveaux_debloques_sont_jouables() -> void:
+	SaveData.reset_profile()
+	var jouables: Array[LevelDef] = SaveData.playable_levels()
+	ok(jouables.size() >= 1, "au moins un niveau est jouable sur un profil neuf")
+	for lv in jouables:
+		ok(SaveData.is_level_unlocked(lv.id),
+			"%s est bien debloque" % lv.id)
+	var total: int = ContentDB.levels.size()
+	ok(jouables.size() < total or total == 1,
+		"tous les niveaux ne sont pas offerts d emblee")
+
+	# Apres la victoire sur le niveau 1, le niveau 2 devient jouable.
+	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if l1 != null and not l1.next_levels.is_empty():
+		var suivant: StringName = l1.next_levels[0]
+		not_ok(SaveData.is_level_unlocked(suivant), "le niveau suivant est verrouille au depart")
+		SaveData.record_victory(l1, GameEnums.Mode.EXPLORATION, {}, 6)
+		ok(SaveData.is_level_unlocked(suivant), "il se debloque a la victoire")
+		var apres: Array[LevelDef] = SaveData.playable_levels()
+		eq(apres.size(), jouables.size() + 1, "la campagne propose un niveau de plus")
+	SaveData.reset_profile()
+
+
+## Le bouton pause doit pouvoir RELANCER la partie. Le HUD etait mis en pause avec
+## le jeu : un seul clic figeait tout, y compris le moyen de repartir.
+func _test_le_hud_reste_actif_en_pause() -> void:
+	var packed: PackedScene = load("res://scenes/hud/HUD.tscn")
+	ok(packed != null, "la scene du HUD existe")
+	if packed == null:
+		return
+	var hud: Node = packed.instantiate()
+	# Le mode est pose dans _ready() : on l appelle via l arbre.
+	Engine.get_main_loop().root.add_child(hud)
+	eq(hud.process_mode, Node.PROCESS_MODE_ALWAYS,
+		"le HUD continue de tourner quand l arbre est en pause")
+	hud.queue_free()

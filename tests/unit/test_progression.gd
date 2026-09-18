@@ -23,7 +23,7 @@ func _test_xp_scales_with_speed() -> void:
 	RunState.gain_xp(4)
 	eq(got[0], 4, "XP brute a x1")
 
-	SpeedGauge.set_step(3)
+	SpeedGauge.set_speed_percent(400)
 	RunState.gain_xp(4)
 	eq(got[0], 16, "XP multipliee par 4 a x4")
 
@@ -89,10 +89,10 @@ func _test_cost_reduction() -> void:
 	RunState.apply_cost_reduction(1.0, 5.0)
 	feq(RunState.effective_cast_time(card), 3.0, "la reduction retire 1 s")
 
-	SpeedGauge.set_step(3)
+	SpeedGauge.set_speed_percent(400)
 	feq(RunState.effective_cast_time(card), 0.75, "reduction puis multiplicateur a x4")
 
 	# La reduction expire.
 	RunState.tick(5.1)
-	SpeedGauge.set_step(0)
+	SpeedGauge.set_speed_percent(100)
 	feq(RunState.effective_cast_time(card), 4.0, "la reduction a expire")

@@ -176,6 +176,18 @@ func unlocked_levels() -> Array:
 	return profile().get("campaign", {}).get("unlocked_levels", [])
 
 
+## Les niveaux reellement jouables, dans l ordre. La campagne listait tout le
+## catalogue : le niveau 2 etait accessible avant d avoir termine le 1.
+func playable_levels() -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	var ids: Array = ContentDB.levels.keys()
+	ids.sort()
+	for id in ids:
+		if is_level_unlocked(id):
+			out.append(ContentDB.levels[id])
+	return out
+
+
 func is_level_unlocked(level_id: StringName) -> bool:
 	return unlocked_levels().has(String(level_id))
 

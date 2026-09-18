@@ -250,7 +250,7 @@ func _on_enemy_died(e: Enemy) -> void:
 
 
 func _on_enemy_reached_mage(e: Enemy) -> void:
-	var dmg: int = e.definition.contact_damage if e.definition != null else 1
+	var dmg: int = e.definition.contact_hit() if e.definition != null else 5
 	enemies.erase(e)
 	e.queue_free()
 	# BOUCLIER PUIS PV : toute la regle vit dans SpeedGauge.take_hit().

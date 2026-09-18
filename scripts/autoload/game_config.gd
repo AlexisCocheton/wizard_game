@@ -3,17 +3,38 @@ extends Node
 ## Premier autoload charge : tous les autres peuvent le lire dans leur _ready().
 
 ## --- Vitesse / bouclier ---
-const SPEED_STEPS: Array[float] = [1.0, 1.5, 2.0, 4.0]
+## Vitesse en POURCENTAGE : 100 % normal, 500 % maximum, par pas de 10 %.
+## Les quatre paliers fixes d origine (x1/x1.5/x2/x4) ne laissaient aucune nuance.
+const SPEED_MAX_PERCENT: int = 500
+const SPEED_STEP_PERCENT: int = 10
+## Bouclier gagne par point de pourcentage au-dessus de 100 : a 500 % le mage
+## encaisse 40 PV de plus, soit une bonne moitie de sa vie. Aller vite est un pari
+## payant, mais a 0,2 le bouclier rendait le mage quasi invulnerable au banc.
+const SHIELD_PER_PERCENT: float = 0.1
+## Ce qu un coup fait perdre en vitesse, et le temps pendant lequel on ne peut
+## plus accelerer : on ne relance pas la machine dans la seconde ou l on est touche.
+const SPEED_DROP_ON_HIT: int = 60
+const SPEED_LOCK_AFTER_HIT: float = 3.0
 ## Secondes avant que le jeu monte d'un cran tout seul.
 const AUTO_RISE_INTERVAL: float = 20.0
 ## Vitesse a laquelle le monde tourne pendant l'agonie (25 %).
 const DEATH_SLOWMO: float = 0.25
 ## Fraction de jauge d'agonie perdue par seconde reelle -> 4 s avant la defaite.
 const DEATH_DRAIN_RATE: float = 0.25
-## Mesure au banc : le joueur intercepte ~2 monstres sur 3. Avec 3 PV il perdait
-## avant la vague 2. A 8 PV il encaisse ses erreurs et apprend, tout en mourant
-## quand meme s il decroche vraiment.
-const MAGE_MAX_HP: int = 8
+## Echelle de 100 PV : avec 8 PV, tout coup valait 12,5 % de la vie et les degats
+## ne pouvaient pas etre nuances. Ici un gnome egratigne, un boss fait vraiment mal,
+## et la fleche d un archer se distingue d une charge de behemoth.
+const MAGE_MAX_HP: int = 100
+
+## Degats de contact par puissance de monstre (P1 a P4), puis mini-boss et boss.
+## Un monstre sans valeur explicite prend celle de sa puissance.
+## Mesure au banc : a 4/7/12/18 le mage finissait a 83 PV sur 100, il n y avait
+## plus aucune tension. Ces valeurs laissent environ 10 erreurs avant la defaite.
+const CONTACT_DAMAGE_BY_POWER: Dictionary = {
+	1: 12, 2: 20, 3: 30, 4: 45,
+}
+const CONTACT_DAMAGE_MINIBOSS: int = 55
+const CONTACT_DAMAGE_BOSS: int = 70
 
 ## --- Deck / pioche ---
 ## Mesure au banc (tools/sim_balance.gd) : a 8 s, le joueur restait sans carte

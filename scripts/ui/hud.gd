@@ -34,6 +34,9 @@ var _choice: Control = null
 
 
 func _ready() -> void:
+	# Sans cela le HUD gele avec le jeu : son propre bouton pause ne repond plus
+	# et la partie reste bloquee pour de bon.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	_root.theme = UiTheme.make()
 	_speed_btn.pressed.connect(_on_speed_pressed)
 	_pause_btn.pressed.connect(_on_pause_pressed)
@@ -75,12 +78,14 @@ func _refresh_all() -> void:
 
 
 func _refresh_gauges() -> void:
-	var steps: int = GameConfig.SPEED_STEPS.size() - 1
-	var ratio: float = float(SpeedGauge.step_index) / float(maxi(1, steps))
-	# Gauche : vitesse des ennemis. Droite : vitesse de lancer ET PV du mage.
-	_enemy_bar.value = ratio * 100.0
-	_spell_bar.value = ratio * 100.0
-	_speed_btn.text = "x%s" % _fmt(SpeedGauge.multiplier())
+	# Gauche : la vitesse, de 100 a 500 %. Droite : les PV du mage, bouclier inclus.
+	_enemy_bar.value = SpeedGauge.speed_ratio() * 100.0
+	var pv_max: float = float(maxi(1, SpeedGauge.max_hp))
+	_spell_bar.value = 100.0 * float(SpeedGauge.hp) / pv_max
+	_speed_btn.text = "%d%%" % SpeedGauge.speed_percent
+	# Verrou apres un coup : le bouton dit pourquoi il ne repond pas.
+	_speed_btn.disabled = SpeedGauge.accel_locked()
+	_speed_btn.modulate = Color(1, 0.6, 0.6) if SpeedGauge.accel_locked() else Color.WHITE
 
 	var need: int = GameConfig.xp_required(RunState.level)
 	_xp_bar.value = 100.0 * float(RunState.xp) / float(maxi(1, need))
@@ -249,12 +254,19 @@ func _on_cast_finished(_card: SpellCard) -> void:
 
 
 func _on_speed_pressed() -> void:
+	if SpeedGauge.accel_locked():
+		return
 	AudioBus.play_sfx(&"speed_up")
-	SpeedGauge.cycle()
+	SpeedGauge.bump_speed()
 
 
+## Le HUD DOIT continuer a tourner en pause, sinon son propre bouton ne repond
+## plus et la partie reste bloquee. C est ce qui arrivait : un seul clic figeait
+## tout, y compris le moyen de repartir.
 func _on_pause_pressed() -> void:
-	get_tree().paused = not get_tree().paused
+	var tree: SceneTree = get_tree()
+	tree.paused = not tree.paused
+	_pause_btn.text = ">" if tree.paused else "II"
 
 
 func _on_multiplier_changed(_old: int, _new: int) -> void:

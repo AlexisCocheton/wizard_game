@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Resource_013tf"]
 script = ExtResource("1_013tf")
 key = &"damage_single"
-magnitude = 8.0
+magnitude = 15.0
 duration = 0.0
 radius = 0.0
 params = {}
@@ -15,9 +15,9 @@ params = {}
 script = ExtResource("2_0tbp0")
 id = &"spark"
 display_name = "Etincelle"
-description = "8 degats sur une cible. Rapide a lancer."
+description = "15 degats sur une cible. Tres rapide a lancer."
 rarity = 0
-base_cast_time = 0.6
+base_cast_time = 0.45
 targeting = 3
 tags = Array[int]([3])
 effects = Array[ExtResource("1_013tf")]([SubResource("Resource_013tf")])

@@ -171,12 +171,12 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 	while t < MAX_SECONDS:
 		t += FIXED_DELTA
 		var before_hp: int = SpeedGauge.hp
-		var before_idx: int = SpeedGauge.step_index
+		var before_idx: int = SpeedGauge.speed_percent
 		g.simulate(FIXED_DELTA)
 
 		if SpeedGauge.hp < before_hp:
 			hits += 1
-		if SpeedGauge.step_index < before_idx and before_idx > 0:
+		if SpeedGauge.speed_percent < before_idx and before_idx > 100:
 			shield_breaks += 1
 		max_enemies = maxi(max_enemies, g.battlefield.enemies.size())
 		_alive_sum += g.battlefield.enemies.size()

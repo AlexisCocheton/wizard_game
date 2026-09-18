@@ -81,7 +81,9 @@ func _enemies() -> void:
 	var archer := _enemy("imp_archer", "Lutin archer", K.SHOOTER, 2, 14.0, 48.0, 3, S.DIAMOND, Color(0.90, 0.32, 0.28), 24.0)
 	archer.anim_key = &"archer_red"
 	archer.shoot_interval = 3.5
-	archer.shot_damage = 1
+	# L archer harcele : sa fleche pique, elle ne perce pas. Un contact de gnome
+	# (4 PV) doit rester plus grave qu une fleche.
+	archer.shot_damage = 2
 	_save(archer, E + "imp_archer.tres")
 
 	var serpent := _enemy("sand_serpent", "Serpent des sables", K.WAVER, 2, 20.0, 75.0, 2, S.CAPSULE, Color(0.32, 0.72, 0.68), 24.0)
@@ -150,7 +152,6 @@ func _enemies() -> void:
 
 	var behemoth := _enemy("behemoth", "Behemoth", K.TANK, 4, 130.0, 26.0, 9, S.SQUARE, Color(0.36, 0.34, 0.40), 52.0)
 	behemoth.anim_key = &"golem_orange"
-	behemoth.contact_damage = 2
 	behemoth.immune_tags = [GameEnums.DamageTag.SLOW]
 	_save(behemoth, E + "behemoth.tres")
 
@@ -161,7 +162,6 @@ func _enemies() -> void:
 
 	var chronos := _enemy("chronos", "Chronos", K.BOSS, 10, 320.0, 34.0, 30, S.STAR, Color(0.95, 0.20, 0.25), 84.0)
 	chronos.anim_key = &"juggernaut"
-	chronos.contact_damage = 2
 	chronos.immune_tags = [GameEnums.DamageTag.SLOW]
 	_save(chronos, E + "chronos.tres")
 
@@ -197,9 +197,9 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
-		"Inflige 14 degats a une cible.", GameEnums.Rarity.COMMON, 1.1,
+		"Inflige 26 degats a une cible.", GameEnums.Rarity.COMMON, 1.1,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
-		[_spec("damage_single", 14.0)], 4)
+		[_spec("damage_single", 26.0)], 4)
 	_save(bolt, "res://resources/cards/common/arcane_bolt.tres")
 
 	var pierce := _card("piercing_arrow", "Fleche percante",
@@ -210,7 +210,7 @@ func _cards() -> void:
 	_save(pierce, "res://resources/cards/common/piercing_arrow.tres")
 
 	var frost := _card("frost_field", "Champ de givre",
-		"Zone qui ralentit de 50 pourcent pendant 5 s.", GameEnums.Rarity.COMMON, 1.4,
+		"Zone qui ralentit de 50 pourcent pendant 5 s.", GameEnums.Rarity.COMMON, 0.6,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 5.0, 180.0, {&"slow_pct": 50.0})], 3)
 	_save(frost, "res://resources/cards/common/frost_field.tres")
@@ -254,9 +254,9 @@ func _cards() -> void:
 	_save(flow, "res://resources/cards/rare/mana_flow.tres")
 
 	var wall := _card("stone_wall", "Mur de pierre",
-		"Erige un mur qui force les monstres a le contourner pendant 8 s.",
-		GameEnums.Rarity.RARE, 1.3, GameEnums.Targeting.POSITION, [],
-		[_spec("build_wall", 0.0, 8.0, 200.0, {&"thickness": 60.0})])
+		"Mur de 20 s : les monstres le contournent et il arrete leurs projectiles.",
+		GameEnums.Rarity.RARE, 1.5, GameEnums.Targeting.POSITION, [],
+		[_spec("build_wall", 0.0, 20.0, 200.0, {&"thickness": 60.0})])
 	_save(wall, "res://resources/cards/rare/stone_wall.tres")
 
 	# --- Epiques ---
@@ -297,9 +297,9 @@ func _cards() -> void:
 
 	# --- Variete : cast court/long, petite/grande zone, court/long effet ---
 	var spark := _card("spark", "Etincelle",
-		"8 degats sur une cible. Rapide a lancer.", GameEnums.Rarity.COMMON, 0.6,
+		"15 degats sur une cible. Tres rapide a lancer.", GameEnums.Rarity.COMMON, 0.45,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
-		[_spec("damage_single", 8.0)], 2)
+		[_spec("damage_single", 15.0)], 2)
 	_save(spark, "res://resources/cards/common/spark.tres")
 
 	var frost_rain := _card("frost_rain", "Pluie de givre",

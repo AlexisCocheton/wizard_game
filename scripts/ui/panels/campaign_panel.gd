@@ -84,10 +84,8 @@ func _build() -> void:
 
 func refresh() -> void:
 	_levels.clear()
-	var ids: Array = ContentDB.levels.keys()
-	ids.sort()
-	for id in ids:
-		_levels.append(ContentDB.levels[id])
+	# Seuls les niveaux debloques : le 2 etait jouable avant d avoir fini le 1.
+	_levels.assign(SaveData.playable_levels())
 	# On rouvre sur le dernier niveau joue.
 	var cur: StringName = SaveData.current_level()
 	_index = 0

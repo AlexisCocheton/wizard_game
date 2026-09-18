@@ -7,7 +7,7 @@
 script = ExtResource("1_1rujh")
 key = &"build_wall"
 magnitude = 0.0
-duration = 8.0
+duration = 20.0
 radius = 200.0
 params = {
 &"thickness": 60.0
@@ -17,9 +17,9 @@ params = {
 script = ExtResource("2_1ifur")
 id = &"stone_wall"
 display_name = "Mur de pierre"
-description = "Erige un mur qui force les monstres a le contourner pendant 8 s."
+description = "Mur de 20 s : les monstres le contournent et il arrete leurs projectiles."
 rarity = 1
-base_cast_time = 1.3
+base_cast_time = 1.5
 targeting = 1
 tags = Array[int]([])
 effects = Array[ExtResource("1_1rujh")]([SubResource("Resource_1rujh")])

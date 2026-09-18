@@ -114,8 +114,8 @@ func _test_pioche_suit_la_vitesse() -> void:
 	RunState.reset()
 	RunState.set_seed(7)
 	RunState.build_starter_deck([_card("spark", 40)])
-	SpeedGauge.set_step(GameConfig.SPEED_STEPS.size() - 1)
-	feq(SpeedGauge.multiplier(), 4.0, "la jauge est bien a x4")
+	SpeedGauge.set_speed_percent(400)
+	feq(SpeedGauge.multiplier(), 4.0, "la jauge est bien a 400 %")
 	RunState.tick(SpeedGauge.world_delta(GameConfig.DRAW_INTERVAL))
 	eq(RunState.hand.size(), GameConfig.DRAW_COUNT * 4,
 		"x4 : quatre pioches dans le meme temps reel")

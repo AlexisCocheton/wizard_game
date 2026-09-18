@@ -447,8 +447,9 @@ func _check_defeat_path() -> void:
 	var died: Array[bool] = [false]
 	var cb := func() -> void: died[0] = true
 	SpeedGauge.died.connect(cb)
-	for i in 8:
-		SpeedGauge.take_hit()
+	# Un seul coup de la valeur des PV : compter des coups de 1 dependait de
+	# l ancienne echelle (8 PV) et cassait des que MAGE_MAX_HP changeait.
+	SpeedGauge.take_hit(GameConfig.MAGE_MAX_HP)
 	var guard: int = 0
 	while not died[0] and guard < 6000:
 		SpeedGauge.tick(FIXED_DELTA)

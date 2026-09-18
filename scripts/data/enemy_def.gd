@@ -16,7 +16,9 @@ extends Resource
 ## XP de base ; multipliee par le multiplicateur de vitesse a la mort.
 @export var base_xp: int = 1
 ## Degats infliges au mage au contact (passe par le bouclier avant les PV).
-@export var contact_damage: int = 1
+## 0 = deduit de la puissance (voir GameConfig.CONTACT_DAMAGE_BY_POWER).
+## Une valeur explicite l emporte, pour un monstre volontairement hors bareme.
+@export var contact_damage: int = 0
 
 @export_group("Apparence")
 ## Cle dans AnimCatalog (feuille animee des packs). Vide = forme dessinee de secours.
@@ -68,7 +70,9 @@ extends Resource
 @export var heal_per_second: float = 0.0
 ## Tire un projectile sur le mage toutes les N secondes. 0 = ne tire pas.
 @export var shoot_interval: float = 0.0
-@export var shot_damage: int = 1
+## Les tirs font PEU de degats : ils harcelent, ils ne tuent pas. Un archer qui
+## fait aussi mal qu une charge rend la distance plus dangereuse que le contact.
+@export var shot_damage: int = 2
 
 
 func is_immune_to(tag: GameEnums.DamageTag) -> bool:
@@ -77,3 +81,15 @@ func is_immune_to(tag: GameEnums.DamageTag) -> bool:
 
 func is_boss() -> bool:
 	return kind == GameEnums.EnemyKind.BOSS or kind == GameEnums.EnemyKind.MINIBOSS
+
+
+## Degats infliges au mage au contact. Le bareme vit dans GameConfig pour qu un
+## reglage d equilibrage ne demande pas de rouvrir 22 fichiers de contenu.
+func contact_hit() -> int:
+	if contact_damage > 0:
+		return contact_damage
+	if kind == GameEnums.EnemyKind.BOSS:
+		return GameConfig.CONTACT_DAMAGE_BOSS
+	if kind == GameEnums.EnemyKind.MINIBOSS:
+		return GameConfig.CONTACT_DAMAGE_MINIBOSS
+	return int(GameConfig.CONTACT_DAMAGE_BY_POWER.get(power, 5))
