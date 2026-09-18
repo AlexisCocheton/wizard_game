@@ -58,14 +58,14 @@ params = {}
 [sub_resource type="Resource" id="Resource_2d5xm"]
 script = ExtResource("29_4aop1")
 enemy = ExtResource("30_j8rcl")
-count = 3
-spawn_delay = 2.0
+count = 2
+spawn_delay = 2.2
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_xwfu6"]
 script = ExtResource("29_4aop1")
 enemy = ExtResource("4_amgrg")
-count = 2
+count = 1
 spawn_delay = 2.2
 start_offset = 8.0
 
@@ -176,7 +176,7 @@ start_offset = 19.0
 [sub_resource type="Resource" id="Resource_3vxca"]
 script = ExtResource("29_4aop1")
 enemy = ExtResource("4_amgrg")
-count = 2
+count = 1
 spawn_delay = 2.2
 start_offset = 24.0
 
@@ -255,8 +255,13 @@ id = &"lvl_04"
 display_name = "Le Grand Appel"
 act = 2
 subtitle = "Le rituel reussit"
-intro_text = "Tu arrives trop tard : le cercle est deja trace et les Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement etre la quand la porte s ouvrira, pour voir ce qui en sortira."
-outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti — puis t a montre la porte, encore ouverte."
+intro_text = "Tu arrives trop tard : le cercle est deja trace et les 
+Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement 
+etre la quand la porte s ouvrira, pour voir ce qui en sortira."
+outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un 
+PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le 
+rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti 
+— puis t a montre la porte, encore ouverte."
 terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("28_ke8ff")]([SubResource("Resource_yn11s"), SubResource("Resource_th6to"), SubResource("Resource_nxc80"), SubResource("Resource_amgrg"), SubResource("Resource_6lwi4"), SubResource("Resource_ujq15")])

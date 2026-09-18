@@ -21,7 +21,7 @@ func run() -> void:
 	_test_le_detail_contient_la_description()
 	_test_le_nom_court_reste_distinctif()
 	_test_le_nom_de_main_ne_se_replie_jamais()
-	_test_la_main_tient_a_huit_cartes()
+	_test_la_main_tient_pleine()
 	_test_le_nom_de_main_ne_depasse_pas_deux_lignes()
 	_test_l_icone_corrige_l_occupation_de_la_case()
 
@@ -129,12 +129,17 @@ func _test_le_nom_de_main_ne_se_replie_jamais() -> void:
 	avec.free()
 
 
-## 8 cartes est le maximum de la main. A cette largeur, le nom doit encore etre
-## ecrit assez GROS pour se lire sur un telephone : c est la contrainte qui a fait
+## La main PLEINE est le pire cas. A cette largeur, le nom doit encore etre ecrit
+## assez GROS pour se lire sur un telephone : c est la contrainte qui a fait
 ## disparaitre la description.
-func _test_la_main_tient_a_huit_cartes() -> void:
-	var largeur: float = (1052.0 - 6.0 * 7.0) / 8.0
-	between(largeur, 118.0, 200.0, "8 cartes tiennent dans la largeur de l ecran")
+##
+## Le nombre vient de GameConfig : ecrire 8 en dur ici a deja empeche de passer la
+## main a 6, alors que le test etait cense proteger la LISIBILITE, pas le chiffre.
+func _test_la_main_tient_pleine() -> void:
+	var n: int = GameConfig.MAX_HAND_SIZE
+	var largeur: float = (1052.0 - 6.0 * float(n - 1)) / float(n)
+	between(largeur, 118.0, 220.0,
+		"%d cartes tiennent dans la largeur de l ecran" % n)
 	# Cible tactile : un doigt, pas une souris.
 	ok(largeur >= 90.0, "une carte de main reste une cible tactile (>= 90 px)")
 	for card: SpellCard in ContentDB.cards.values():

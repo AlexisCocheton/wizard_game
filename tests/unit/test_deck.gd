@@ -117,8 +117,12 @@ func _test_pioche_suit_la_vitesse() -> void:
 	SpeedGauge.set_speed_percent(400)
 	feq(SpeedGauge.multiplier(), 4.0, "la jauge est bien a 400 %")
 	RunState.tick(SpeedGauge.world_delta(GameConfig.DRAW_INTERVAL))
-	eq(RunState.hand.size(), GameConfig.DRAW_COUNT * 4,
-		"x4 : quatre pioches dans le meme temps reel")
+	# La main a un PLAFOND : au-dela, c est lui qui repond, pas la vitesse de
+	# pioche. Le test porte sur la regle (quatre fois plus de cartes a x4), pas
+	# sur un nombre qui depend de MAX_HAND_SIZE.
+	var attendu: int = mini(GameConfig.DRAW_COUNT * 4, GameConfig.MAX_HAND_SIZE)
+	eq(RunState.hand.size(), attendu,
+		"x4 : quatre pioches dans le meme temps reel, dans la limite de la main")
 	SpeedGauge.reset()
 
 

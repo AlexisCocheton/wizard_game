@@ -16,7 +16,12 @@ const SHIELD_PER_PERCENT: float = 0.1
 const SPEED_DROP_ON_HIT: int = 60
 const SPEED_LOCK_AFTER_HIT: float = 3.0
 ## Secondes avant que le jeu monte d'un cran tout seul.
-const AUTO_RISE_INTERVAL: float = 20.0
+## Retour du testeur : "la vitesse du jeu c est cool si elle augmente
+## naturellement petit a petit". A 20 s, une partie entiere finissait a 190 % sur
+## un maximum de 500 : la montee ne se sentait pas. A 8 s elle traverse la moitie
+## de l echelle sur une partie, tout en laissant la premiere minute calme, le
+## temps d apprendre la vague.
+const AUTO_RISE_INTERVAL: float = 8.0
 ## Vitesse a laquelle le monde tourne pendant l'agonie (25 %).
 const DEATH_SLOWMO: float = 0.25
 ## Fraction de jauge d'agonie perdue par seconde reelle -> 4 s avant la defaite.
@@ -48,7 +53,10 @@ const CONTACT_DAMAGE_BOSS: int = 50
 ## joueur se retrouverait les mains vides, ce qui est pire que de lire vite.
 const DRAW_INTERVAL: float = 6.5
 const DRAW_COUNT: int = 2
-const MAX_HAND_SIZE: int = 8
+## 6 et non 8 : a 8 cartes chacune tombait sous 130 px de large et le nom se
+## coupait. Une main plus courte se lit d un coup d oeil, ce qui compte plus que
+## d avoir le choix entre huit options qu on n a pas le temps de comparer.
+const MAX_HAND_SIZE: int = 6
 ## Pas de delai de remelange : la defausse repart dans la pioche des qu elle est
 ## vide. Le cahier des charges evoquait une "vitesse de melange", mais un temps
 ## mort au moment ou le joueur n a plus de carte le punit deux fois.
@@ -78,7 +86,7 @@ const RARITY_WEIGHTS: Dictionary = {
 ## sont montes a 100 % de victoires. Les passifs sont un vrai gain de puissance ;
 ## la difficulte de base doit remonter pour qu ils restent un choix et non un
 ## cadeau.
-const ENEMY_SPEED_SCALE: float = 0.78
+const ENEMY_SPEED_SCALE: float = 0.62
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.

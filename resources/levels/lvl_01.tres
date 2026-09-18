@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=51 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=52 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_vmxm3"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_4lqvx"]
@@ -73,8 +73,8 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_ce7hc"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("3_8wkm5")
-count = 3
-spawn_delay = 1.6
+count = 4
+spawn_delay = 1.3
 start_offset = 5.0
 
 [sub_resource type="Resource" id="Resource_s7sqw"]
@@ -130,25 +130,32 @@ difficulty = 1.2
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_t2586"]
+[sub_resource type="Resource" id="Resource_t2ef7"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("19_ilyg2")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_o1ap2"]
+[sub_resource type="Resource" id="Resource_y0x5k"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("2_4lqvx")
 count = 3
 spawn_delay = 2.5
 start_offset = 10.0
 
+[sub_resource type="Resource" id="Resource_wullt"]
+script = ExtResource("18_d8uqj")
+enemy = ExtResource("3_8wkm5")
+count = 3
+spawn_delay = 1.6
+start_offset = 18.0
+
 [sub_resource type="Resource" id="Resource_mjm5p"]
 script = ExtResource("17_smbsg")
 id = &"w4_miniboss"
 duration = 30.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_t2586"), SubResource("Resource_o1ap2")])
+entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_t2ef7"), SubResource("Resource_y0x5k"), SubResource("Resource_wullt")])
 difficulty = 0.85
 is_miniboss = true
 is_boss = false
@@ -219,8 +226,12 @@ id = &"lvl_01"
 display_name = "Les Marches du Temps"
 act = 1
 subtitle = "Le matin de la premiere attaque"
-intro_text = "Le royaume est tombe. Tu as remonte le temps jusqu ici, le premier matin, pour trouver qui a donne l ordre. Ce ne sont que des gnomes et des lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne."
-outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher qu obeir. Chronos n etait qu un huissier venu verifier les delais."
+intro_text = "Le royaume est tombe. Tu as remonte le temps jusqu ici, le 
+premier matin, pour trouver qui a donne l ordre. Ce ne sont que des gnomes et des 
+lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne."
+outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette 
+guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher 
+qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 terrain = "grass"
 backdrop = "act1_sky"
 waves = Array[ExtResource("17_smbsg")]([SubResource("Resource_elxgn"), SubResource("Resource_vs6mp"), SubResource("Resource_jmste"), SubResource("Resource_mjm5p"), SubResource("Resource_31cm4"), SubResource("Resource_6wclg")])

@@ -16,6 +16,7 @@ func run() -> void:
 	_test_un_coup_fait_tomber_la_vitesse()
 	_test_pas_d_acceleration_juste_apres_un_coup()
 	_test_reglage_direct_par_la_barre()
+	_test_la_vitesse_monte_toute_seule()
 	SpeedGauge.reset()
 
 
@@ -87,3 +88,33 @@ func _test_reglage_direct_par_la_barre() -> void:
 	eq(SpeedGauge.speed_percent, GameConfig.SPEED_MAX_PERCENT, "tout en haut = 500 %")
 	SpeedGauge.set_speed_from_ratio(0.5)
 	eq(SpeedGauge.speed_percent, 300, "au milieu = 300 %")
+
+
+## La vitesse doit monter TOUTE SEULE, assez pour se sentir sur une partie.
+##
+## Retour du testeur : "la vitesse du jeu c est cool si elle augmente
+## naturellement petit a petit". A +10 % toutes les 20 s, une partie de 200 s
+## finissait a 200 % sur un maximum de 500 : la montee etait invisible, et le
+## bouton restait le seul vrai moyen d aller vite.
+func _test_la_vitesse_monte_toute_seule() -> void:
+	SpeedGauge.reset()
+	# Une partie type dure environ 200 s (mesure au banc).
+	var duree: float = 200.0
+	var pas: float = 0.1
+	var t: float = 0.0
+	while t < duree:
+		SpeedGauge.tick(pas)
+		t += pas
+	ok(SpeedGauge.speed_percent >= 250,
+		"apres une partie entiere la vitesse a nettement monte (%d %%)" % SpeedGauge.speed_percent)
+	ok(SpeedGauge.speed_percent <= GameConfig.SPEED_MAX_PERCENT,
+		"sans jamais depasser le maximum")
+
+	# Mais elle ne doit pas SAUTER : la premiere minute reste calme, le temps
+	# d apprendre la vague.
+	SpeedGauge.reset()
+	for i in 600:
+		SpeedGauge.tick(0.1)
+	ok(SpeedGauge.speed_percent <= 200,
+		"la premiere minute reste jouable (%d %%)" % SpeedGauge.speed_percent)
+	SpeedGauge.reset()

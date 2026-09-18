@@ -656,9 +656,14 @@ func _waves_and_level() -> void:
 	w2.id = &"w2"
 	w2.duration = 25.0
 	w2.difficulty = 1.1
+	# Mesure au banc : sur les six premieres vagues, les PV du mage ne bougeaient
+	# pas avant la vague 5 (interception 89 a 96 %). Les vagues 2 a 4 passaient
+	# SOUS le debit de nettoyage du joueur : il n y avait rien a rater. On resserre
+	# l arrivee des lutins plutot que d ajouter des monstres — c est le groupement
+	# qui cree la pression, pas le nombre.
 	w2.entries = [
 		_entry(E + "gnome.tres", 4, 1.8),
-		_entry(E + "sprite.tres", 3, 1.6, 5.0),
+		_entry(E + "sprite.tres", 4, 1.3, 5.0),
 		_entry(E + "hopper.tres", 2, 2.0, 12.0),
 	]
 	_save(w2, "res://resources/waves/w2.tres")
@@ -683,9 +688,12 @@ func _waves_and_level() -> void:
 	# le joueur puisse se concentrer sur lui.
 	w4.difficulty = 0.85
 	w4.is_miniboss = true
+	# Le mini-boss arrivait presque seul : 4 corps sur 30 s, la vague la plus
+	# calme du niveau alors qu elle porte son premier gros monstre.
 	w4.entries = [
 		_entry(E + "warden.tres", 1, 1.0),
 		_entry(E + "gnome.tres", 3, 2.5, 10.0),
+		_entry(E + "sprite.tres", 3, 1.6, 18.0),
 	]
 	_save(w4, "res://resources/waves/w4_miniboss.tres")
 
@@ -1045,9 +1053,15 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	b1.id = &"w4_1"
 	b1.duration = 26.0
 	b1.difficulty = 1.2
+	# Mesure au banc : cette vague D OUVERTURE etait la plus dense de toute la
+	# campagne. Une nuee compte pour 4 corps, donc `rat_swarm, 2` faisait 8 rats,
+	# et chaque gelee moyenne se scinde en 2 : 19 corps la ou le niveau 3 en
+	# ouvrait 16 et le niveau 6 seulement 8. Le taux d interception tombait a
+	# 40 % et le joueur mourait AVANT la fin de la premiere vague.
+	# Une seule nuee et deux gelees : 13 corps, juste au-dessus du niveau 3.
 	b1.entries = [
-		_entry(E + "jelly_mid.tres", 3, 2.0),
-		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
+		_entry(E + "jelly_mid.tres", 2, 2.2),
+		_entry(E + "rat_swarm.tres", 1, 2.2, 8.0),
 		_entry(E + "imp_archer.tres", 2, 2.0, 16.0),
 	]
 	_save(b1, "res://resources/waves/w4_1.tres")
@@ -1083,11 +1097,13 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	b4.id = &"w4_4"
 	b4.duration = 30.0
 	b4.difficulty = 1.35
+	# 15 corps : le PIC du niveau tombait ici et non sur le boss. La nuee arrivait
+	# a 24 s, par-dessus des monstres deja en place. On la ramene a 4 rats.
 	b4.entries = [
 		_entry(E + "jelly.tres", 2, 2.5),
 		_entry(E + "berserker.tres", 2, 2.5, 10.0),
 		_entry(E + "wisp.tres", 3, 1.8, 19.0),
-		_entry(E + "rat_swarm.tres", 2, 2.2, 24.0),
+		_entry(E + "rat_swarm.tres", 1, 2.2, 24.0),
 	]
 	_save(b4, "res://resources/waves/w4_4.tres")
 
@@ -1227,10 +1243,13 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	c4.difficulty = 1.3
 	# Premier Behemoth seul : 130 PV qui avancent a 26 px/s et frappent pour 2.
 	# Lent, donc traitable ; mais il faut y consacrer plusieurs sorts d affilee.
+	# Meme cause : 6 corps, tous mono-cible. Une nuee oblige a sortir une zone au
+	# milieu du duel contre le behemoth.
 	c4.entries = [
 		_entry(E + "behemoth.tres", 1, 1.0),
 		_entry(E + "void_knight.tres", 2, 2.5, 8.0),
 		_entry(E + "berserker.tres", 2, 2.5, 18.0),
+		_entry(E + "rat_swarm.tres", 1, 2.4, 20.0),
 		_entry(E + "hornblower.tres", 1, 1.0, 24.0),
 	]
 	_save(c4, "res://resources/waves/w5_4.tres")
@@ -1242,10 +1261,17 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# Le Gardien-totem rend les autres invulnerables dans 240 px : avec deux
 	# Behemoths sous son aura, il DOIT tomber en premier. La vague enseigne la
 	# priorite de cible que le boss exigera.
+	# Mesure au banc : le niveau 5 etait a 100 % de victoires alors que le niveau 4
+	# qui le PRECEDE etait a 63 %. Cause : c est le seul niveau sans aucune nuee ni
+	# aucun scindeur — que de grosses cibles uniques, exactement ce que le joueur
+	# (et l IA du banc) traite le mieux avec un deck mono-cible. Il n y avait pas
+	# trop peu de PV, il y avait trop peu de CIBLES SIMULTANEES.
+	# La gelee force a gerer deux fronts pendant que le behemoth avance.
 	c5.entries = [
 		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 9.0),
 		_entry(E + "golem.tres", 2, 2.5, 18.0),
+		_entry(E + "jelly.tres", 1, 2.0, 22.0),
 		_entry(E + "sprite.tres", 4, 1.5, 25.0),
 	]
 	_save(c5, "res://resources/waves/w5_5.tres")

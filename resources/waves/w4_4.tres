@@ -31,7 +31,7 @@ start_offset = 19.0
 [sub_resource type="Resource" id="Resource_3vxca"]
 script = ExtResource("1_452vt")
 enemy = ExtResource("5_svj61")
-count = 2
+count = 1
 spawn_delay = 2.2
 start_offset = 24.0
 
