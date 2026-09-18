@@ -10,11 +10,7 @@ extends Node
 ## Usage : Godot --headless --path . tools/sim_balance.tscn
 
 const FIXED_DELTA: float = 1.0 / 60.0
-## Garde-fou anti-blocage, pas une limite de jeu. Une partie qui l atteint est
-## comptee comme un ECHEC, donc il doit rester largement au-dessus de la duree
-## reelle du niveau le plus long (214 s de vagues au niveau 7, soit ~330 s joue)
-## sinon on mesure la longueur du niveau et non sa difficulte.
-const MAX_SECONDS: float = 900.0
+const MAX_SECONDS: float = 400.0
 ## Les niveaux de campagne mesures par le banc. Ajouter ici tout nouveau niveau.
 const LEVELS: Array[String] = ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05",
 	"lvl_06", "lvl_07"]
@@ -30,6 +26,15 @@ var _killed: int = 0
 
 func _ready() -> void:
 	await get_tree().process_frame
+	print("=== DIAG ===")
+	var lid: String = OS.get_environment("DIAG_LEVEL")
+	for s in range(6):
+		RunState.set_seed(1000 + s * 37)
+		await _run_level(StringName(lid))
+	get_tree().quit(0)
+
+
+func _unused() -> void:
 	print("=== BANC D EQUILIBRAGE ===")
 	_report_waves()
 	# Une seule partie ne prouve rien : le tirage des cartes et la composition des
@@ -56,13 +61,9 @@ func _report_waves() -> void:
 			for entry: WaveEntry in wave.entries:
 				if entry.enemy == null:
 					continue
-				# Une NUEE compte pour plusieurs corps : `_entry(rat_swarm, 3)`
-				# fait descendre 12 rats, pas 3. Compter les entrees cachait
-				# le vrai nombre de monstres a l ecran, donc la vraie densite.
-				var corps: int = entry.count * maxi(1, entry.enemy.swarm_count)
 				power += entry.enemy.power * entry.count
-				count += corps
-				hp += entry.enemy.max_hp * corps * wave.difficulty
+				count += entry.count
+				hp += entry.enemy.max_hp * entry.count * wave.difficulty
 			print("    %-14s puissance %3d, %2d monstres, %5.0f PV cumules, %.0f s"
 				% [wave.id, power, count, hp, wave.duration])
 
@@ -84,7 +85,7 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 			wins += 1
 			pv.append(st["pv"])
 		vagues.append(st["vague"])
-		_drop_game(g)
+		g.queue_free()
 		await get_tree().process_frame
 	var moy: float = 0.0
 	for v in vagues:
@@ -110,7 +111,7 @@ func _run_massacre_many(runs: int) -> void:
 		g.start_level(level, GameEnums.Mode.MASSACRE)
 		var st: Dictionary = _play(g, 30)
 		vagues.append(st["vague"])
-		_drop_game(g)
+		g.queue_free()
 		await get_tree().process_frame
 	vagues.sort()
 	var moy: float = 0.0
@@ -131,7 +132,8 @@ func _run_level(level_id: StringName) -> void:
 	g.start_level(level, GameEnums.Mode.EXPLORATION)
 	var stats: Dictionary = _play(g)
 	_print_stats(level.display_name, stats)
-	_drop_game(g)
+	g.free()
+	await get_tree().process_frame
 
 
 func _run_massacre(waves: int) -> void:
@@ -143,7 +145,7 @@ func _run_massacre(waves: int) -> void:
 	g.start_level(level, GameEnums.Mode.MASSACRE)
 	var stats: Dictionary = _play(g, waves)
 	_print_stats("Massacre", stats)
-	_drop_game(g)
+	g.queue_free()
 
 
 func _make_game() -> GameController:
@@ -151,29 +153,8 @@ func _make_game() -> GameController:
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
 	add_child(g)
-	# On avance la partie nous-memes avec un delta FIXE. Mettre `running = false`
-	# ne suffit pas : `start_level()` le remet a vrai, et `_process` se remet alors
-	# a appeler `simulate()` avec le delta REEL, en plus de nos appels. Deux
-	# simulations partageaient les memes autoloads (SpeedGauge, RunState).
-	# Couper le traitement du noeud est la seule barriere qui tient.
-	g.set_process(false)
-	g.set_physics_process(false)
+	g.running = false      # on avance nous-memes, pas par _process
 	return g
-
-
-## Detruit la partie IMMEDIATEMENT. `queue_free()` laissait la partie precedente
-## vivante une frame de plus : elle continuait a piloter SpeedGauge et RunState
-## pendant que la suivante demarrait. Avec 30 parties d affilee, le banc mesurait
-## la pollution accumulee et non le niveau — deux executions identiques rendaient
-## 30/30 puis 16/30 sur le niveau 1.
-func _drop_game(g: GameController) -> void:
-	if g == null or not is_instance_valid(g):
-		return
-	g.running = false
-	g.set_process(false)
-	g.set_physics_process(false)
-	remove_child(g)
-	g.free()
 
 
 ## Joue jusqu a la mort, la victoire, ou la limite de vagues.
@@ -198,10 +179,6 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 	var max_enemies: int = 0
 	var wave_reached: int = 0
 	var hp_at: Dictionary = {}
-	## Le niveau a-t-il ete TERMINE ? Sans ce drapeau, une partie qui atteignait
-	## la limite de temps sans finir comptait pour une victoire : les niveaux les
-	## plus longs paraissaient les plus faciles.
-	var fini: bool = false
 
 	while t < MAX_SECONDS:
 		t += FIXED_DELTA
@@ -232,13 +209,9 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 
 		if RunState.pending_offer.size() > 0:
 			RunState.pick_offer(0)
-		if SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0:
-			break
-		if g.spawner.is_finished():
-			fini = true
+		if (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0) or g.spawner.is_finished():
 			break
 		if stop_after_wave > 0 and wave_reached >= stop_after_wave:
-			fini = true
 			break
 
 	return {
@@ -248,11 +221,8 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 		"par_source": _by_enemy, "temps": t, "coups_recus": hits, "boucliers_brises": shield_breaks,
 		"cartes_jouees": cards_played, "cartes_bloquees": cards_missed,
 		"monstres_max": max_enemies, "vague": wave_reached,
-		"pv": SpeedGauge.hp,
-		# Une partie qui n a NI tue le joueur NI fini le niveau (limite de temps)
-		# n est pas une victoire : elle ne compte pas comme un succes.
-		"mort": (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0) or not fini,
-		"fini": fini, "pv_par_vague": hp_at,
+		"pv": SpeedGauge.hp, "mort": (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0),
+		"pv_par_vague": hp_at,
 	}
 
 

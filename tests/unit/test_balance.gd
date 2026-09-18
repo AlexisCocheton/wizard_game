@@ -108,5 +108,10 @@ func _test_la_simulation_s_arrete_a_la_mort() -> void:
 	var corps: String = source.substr(debut, 900)
 	# Apres le tick de la jauge, la fonction doit pouvoir sortir : sinon elle
 	# continue a simuler un monde qui n existe plus.
-	ok(corps.contains("if not running:") or corps.contains("if _ended"),
+	ok(corps.contains("if _ended:"),
 		"simulate() sort des que la partie est finie, avant de toucher au terrain")
+	# Le drapeau doit etre DISTINCT de `running` : le smoke met running a faux
+	# pour piloter la simulation lui-meme, et confondre les deux rendait la
+	# partie de test totalement inerte.
+	not_ok(corps.contains("if not running:"),
+		"la garde ne reutilise pas `running`, que le smoke met deliberement a faux")

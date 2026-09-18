@@ -24,6 +24,34 @@ const FONT_SMALL: int = 24
 
 const UI := "res://assets/ui/"
 
+## Police du jeu. Le projet tournait sur la police par defaut de Godot (Open Sans) :
+## un caractere a traits FINS, concu pour du papier, qui se delave sur un fond
+## peint des qu on descend sous 30 px. Retour du testeur : "les polices d ecriture
+## ca ne va pas du tout, c est tres peu lisible".
+##
+## Planes_ValMore est la police du pack "free pixel magic sprite effects"
+## (craftpix) : GRASSE par construction, hauteur d x elevee, formes de pixel art.
+## Comparee cote a cote avec Silkscreen (l autre police des packs), elle gagne sur
+## les deux points qui comptent ici : Silkscreen n a pas de vraies minuscules (elle
+## rend des petites capitales) et ses traits font 1 px, donc elle est PIRE que
+## l existant sur un fond charge.
+##
+## Le contenu du jeu est ecrit SANS ACCENTS (verifie sur les 44 cartes et les
+## descriptions) : l absence de e-accent dans la fonte n a donc aucun effet.
+const FONT_PATH := "res://assets/ui/planes_valmore.ttf"
+
+## Chargee une seule fois : un FontFile porte son propre cache de rendu, en
+## recreer un par label rendrait le cache inutile et multiplierait la memoire.
+static var _font: FontFile = null
+
+
+## La police du jeu, ou null si le fichier manque (on retombe alors sur la police
+## par defaut de Godot plutot que d afficher un ecran vide).
+static func font() -> Font:
+	if _font == null and ResourceLoader.exists(FONT_PATH):
+		_font = load(FONT_PATH) as FontFile
+	return _font
+
 ## Marges 9-tranches des textures recomposees (gauche, haut, droite, bas).
 const NINE: Dictionary = {
 	"banner9": [100, 68, 84, 111],
@@ -116,11 +144,28 @@ static func make() -> Theme:
 	var t := Theme.new()
 	t.default_font_size = FONT_BODY
 
+	# La police s applique au THEME, donc a tous les Control sous le theme d un
+	# coup : c est le seul reglage qui touche aussi les boutons, les curseurs et
+	# les panneaux des autres agents sans y toucher fichier par fichier.
+	var f: Font = font()
+	if f != null:
+		t.default_font = f
+		for cls in [&"Label", &"Button", &"CheckButton", &"LineEdit", &"RichTextLabel", &"OptionButton"]:
+			t.set_font(&"font", cls, f)
+
 	t.set_font_size(&"font_size", &"Label", FONT_BODY)
 	t.set_color(&"font_color", &"Label", TEXT)
+	# Contour sombre : le HUD ecrit par-dessus un fond PEINT (ciel, cimetiere,
+	# salle du trone). Sans contour, un texte clair disparait sur une zone claire
+	# et un texte sombre sur une zone sombre — quelle que soit sa taille. Deux
+	# pixels d ombre garantissent le contraste partout.
+	t.set_color(&"font_outline_color", &"Label", Color(0.04, 0.03, 0.06, 0.85))
+	t.set_constant(&"outline_size", &"Label", 6)
 
 	t.set_font_size(&"font_size", &"Button", FONT_BUTTON)
 	t.set_color(&"font_color", &"Button", TEXT)
+	t.set_color(&"font_outline_color", &"Button", Color(0.04, 0.03, 0.06, 0.85))
+	t.set_constant(&"outline_size", &"Button", 6)
 	t.set_color(&"font_hover_color", &"Button", GOLD)
 	t.set_color(&"font_pressed_color", &"Button", GOLD)
 	t.set_color(&"font_disabled_color", &"Button", TEXT_DIM)
@@ -195,18 +240,43 @@ static func style_primary(b: Button) -> void:
 
 
 ## Panneau papier, teinte optionnelle (cartes par rarete).
-static func style_paper(c: Control, tint: Color = Color.WHITE, special: bool = false) -> void:
-	c.add_theme_stylebox_override(&"panel", tex_box("paper_special" if special else "paper", 44, 22.0, tint))
+##
+## `special` employait la planche `paper_special`, qui est un papier SOMBRE
+## (82,91,102 au centre). Teintee en or pour une legendaire, elle donnait un brun
+## olive tres fonce sur lequel l encre sombre des cartes devenait invisible : sur
+## la capture a 8 cartes, les legendaires etaient les seules illisibles.
+##
+## La legendaire garde donc le papier CLAIR et son identite passe par la teinte
+## doree, deja portee par rarity_bg. La planche sombre reste disponible pour un
+## panneau a texte clair, ou elle fonctionne.
+static func style_paper(c: Control, tint: Color = Color.WHITE, dark: bool = false) -> void:
+	c.add_theme_stylebox_override(&"panel", tex_box("paper_special" if dark else "paper", 44, 22.0, tint))
 
 
+## Un Label du jeu. `wrap = false` coupe l autowrap : dans une colonne etroite,
+## AUTOWRAP_WORD_SMART replie un mot LETTRE PAR LETTRE, ce qui est le defaut le
+## plus visible de l ancienne main de cartes ("Double incantatio / n").
 static func label(text: String, size: int = FONT_BODY, color: Color = TEXT,
-		align: int = HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+		align: int = HORIZONTAL_ALIGNMENT_LEFT, wrap: bool = true) -> Label:
 	var l := Label.new()
 	l.text = text
+	var f: Font = font()
+	if f != null:
+		l.add_theme_font_override(&"font", f)
 	l.add_theme_font_size_override(&"font_size", size)
 	l.add_theme_color_override(&"font_color", color)
 	l.horizontal_alignment = align
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART if wrap else TextServer.AUTOWRAP_OFF
+	return l
+
+
+## Label lisible SUR LE CHAMP DE BATAILLE : meme texte, plus un contour sombre.
+## A utiliser des que le fond derriere le texte n est pas maitrise.
+static func label_hud(text: String, size: int = FONT_BODY, color: Color = TEXT,
+		align: int = HORIZONTAL_ALIGNMENT_LEFT, wrap: bool = false) -> Label:
+	var l: Label = label(text, size, color, align, wrap)
+	l.add_theme_color_override(&"font_outline_color", Color(0.04, 0.03, 0.06, 0.9))
+	l.add_theme_constant_override(&"outline_size", 8)
 	return l
 
 

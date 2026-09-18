@@ -25,6 +25,11 @@ const WAVES_PER_CHOICE: int = 2
 var level_def: LevelDef = null
 var mode: GameEnums.Mode = GameEnums.Mode.EXPLORATION
 var running: bool = false
+## La partie est TERMINEE (mort ou victoire). Distinct de `running`, que le smoke
+## met a faux pour piloter la simulation lui-meme : confondre les deux rendait la
+## partie de test inerte. Ce drapeau-la ne dit pas "qui fait avancer le temps",
+## il dit "il n y a plus rien a faire avancer".
+var _ended: bool = false
 ## Vrai en test headless : on ne change pas de scene a la fin.
 var headless_mode: bool = false
 
@@ -43,6 +48,9 @@ func _ready() -> void:
 func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	level_def = def
 	mode = level_mode
+	# Sans cette remise a zero, REJOUER apres une defaite laisserait la partie
+	# inerte : le drapeau de fin serait encore leve.
+	_ended = false
 
 	SpeedGauge.reset()
 	RunState.reset()
@@ -142,7 +150,7 @@ func simulate(delta: float) -> void:
 	# La mort (ou la victoire) declenche un CHANGEMENT DE SCENE depuis ce tick :
 	# le champ de bataille est alors en cours de liberation. Continuer a le
 	# simuler plantait la partie au boss du niveau 4.
-	if not running:
+	if _ended:
 		return
 	# La pioche suit le temps du MONDE : a x4, quatre fois plus de monstres
 	# arrivent, il faut quatre fois plus de cartes pour y repondre.
@@ -151,7 +159,7 @@ func simulate(delta: float) -> void:
 	battlefield.simulate(delta)
 	# Une carte lancee peut tuer le dernier monstre et terminer le niveau : on
 	# reverifie avant de faire apparaitre la vague suivante.
-	if not running:
+	if _ended:
 		return
 	spawner.tick(delta)
 	if not spawner.active and not spawner.is_finished():
@@ -325,6 +333,7 @@ func _offer_boss_reward(final_boss: bool) -> void:
 
 func _on_all_cleared() -> void:
 	running = false
+	_ended = true
 	level_won.emit()
 	AudioBus.play_music(&"victory", false)
 	AudioBus.play_sfx(&"victory")
@@ -334,6 +343,7 @@ func _on_all_cleared() -> void:
 
 func _on_died() -> void:
 	running = false
+	_ended = true
 	level_lost.emit()
 	AudioBus.play_music(&"defeat", false)
 	AudioBus.play_sfx(&"defeat")

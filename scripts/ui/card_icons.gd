@@ -130,6 +130,16 @@ static func for_card(card: SpellCard) -> String:
 
 
 ## Premiere case de la feuille : une icone est une image fixe, pas une animation.
+##
+## La region est RECADREE sur la partie reellement dessinee de la case. Les cases
+## des feuilles d effets sont loin d etre pleines (cercle de protection 34 %,
+## casting 37 %) : prendre la case entiere donnait une icone dessinee sur un tiers
+## de la vignette, soit le point indistinct que le testeur ne reconnaissait pas.
+##
+## Le recadrage se fait ici et non sur le TextureRect parce qu un conteneur
+## (HBoxContainer, VBoxContainer) reecrit `size` et `scale` de ses enfants a
+## chaque passe de mise en page : toute correction posee sur le Control est
+## effacee. La region de l atlas, elle, appartient a la texture.
 static func texture(sheet: String) -> Texture2D:
 	if sheet == "":
 		return null
@@ -137,10 +147,27 @@ static func texture(sheet: String) -> Texture2D:
 	if tex == null:
 		return null
 	var cell: int = _cell_of(sheet, tex)
+	var h: int = mini(cell, int(tex.get_height()))
 	var at := AtlasTexture.new()
 	at.atlas = tex
-	at.region = Rect2(0, 0, cell, mini(cell, int(tex.get_height())))
+	# On garde la part occupee, centree dans la case.
+	var occ: float = clampf(occupancy(sheet), 0.05, 1.0)
+	var cw: float = float(cell) * occ
+	var ch: float = float(h) * occ
+	at.region = Rect2((float(cell) - cw) * 0.5, (float(h) - ch) * 0.5, cw, ch)
 	return at
+
+
+## Part de la case reellement dessinee, pour une feuille donnee. Meme table que
+## les effets du terrain (Fx.OCC) : une seule source de verite, mesuree sur les
+## feuilles par tools/assets/measure_occupancy.py.
+static func occupancy(sheet: String) -> float:
+	if sheet == "":
+		return 1.0
+	var file: String = sheet
+	if Fx.STRIPS.has(sheet):
+		file = str(Fx.STRIPS[sheet][0])
+	return float(Fx.OCC.get(file, Fx.OCC.get(sheet, 1.0)))
 
 
 ## Les feuilles d effets sont soit des grilles de 100 px, soit des bandes dont la
@@ -156,8 +183,19 @@ static func _cell_of(sheet: String, tex: Texture2D) -> int:
 
 
 ## Vignette prete a poser dans une interface.
+##
+## `size` est la taille VISIBLE voulue, pas la taille de la case. Les cases des
+## feuilles d effets sont loin d etre pleines (le cercle de protection n occupe
+## que 34 % de la sienne, la casting 37 %) : demander une case de 82 px donnait
+## une icone reellement dessinee sur 28 px, c est-a-dire le point indistinct que
+## le testeur n arrivait pas a reconnaitre.
+##
+## Fx.sprite() applique deja cette correction pour les effets sur le terrain
+## (voir Fx.OCC). Elle manquait ici, ce qui rendait les icones de cartes
+## systematiquement deux a trois fois trop petites.
 static func make_rect(card: SpellCard, size: float) -> TextureRect:
-	var tex: Texture2D = texture(for_card(card))
+	var sheet: String = for_card(card)
+	var tex: Texture2D = texture(sheet)
 	if tex == null:
 		return null
 	var tr := TextureRect.new()
@@ -168,3 +206,4 @@ static func make_rect(card: SpellCard, size: float) -> TextureRect:
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tr.modulate = tint_for(card)
 	return tr
+
