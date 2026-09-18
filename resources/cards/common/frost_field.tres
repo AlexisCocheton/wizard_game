@@ -26,3 +26,5 @@ effects = Array[ExtResource("1_t6wfx")]([SubResource("Resource_t6wfx")])
 copies_in_starter = 3
 exile_after_cast = false
 is_passive = false
+fx_key = &"rune_square"
+sfx_key = &"drip_frost"

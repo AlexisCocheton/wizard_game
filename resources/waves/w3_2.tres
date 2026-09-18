@@ -16,7 +16,7 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_gv8en"]
 script = ExtResource("1_oaiye")
 enemy = ExtResource("3_ck8pi")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 6.0
 

@@ -26,3 +26,5 @@ effects = Array[ExtResource("1_xxukd")]([SubResource("Resource_xxukd")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+fx_key = &"lightning_web"
+sfx_key = &"spell_crackle"

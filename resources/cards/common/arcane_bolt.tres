@@ -24,3 +24,5 @@ effects = Array[ExtResource("1_gj7ww")]([SubResource("Resource_gj7ww")])
 copies_in_starter = 4
 exile_after_cast = false
 is_passive = false
+fx_key = &"orb_burst"
+sfx_key = &"spell_arcane"

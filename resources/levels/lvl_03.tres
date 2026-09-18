@@ -90,7 +90,7 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_gv8en"]
 script = ExtResource("25_4wdce")
 enemy = ExtResource("4_76r2s")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 6.0
 
@@ -150,7 +150,7 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_hme0u"]
 script = ExtResource("25_4wdce")
 enemy = ExtResource("4_76r2s")
-count = 3
+count = 2
 spawn_delay = 2.2
 start_offset = 8.0
 
@@ -236,12 +236,8 @@ id = &"lvl_03"
 display_name = "Ossuaire des Marees"
 act = 2
 subtitle = "Une administration, pas un cimetiere"
-intro_text = "Ici les morts sont tries, comptes, reaffectes. Les Pretres 
-goules tiennent les registres et leur ile se vide : les ames partent ailleurs. Ils 
-n ont pas efface ton royaume par haine. Ils l ont fait pour le STOCK."
-outro_text = "Une Gelee prisonniere d un cercle de sel t a regarde la 
-liberer, puis t a montre comment un corps se separe et se rassemble. Les registres, 
-eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
+intro_text = "Ici les morts sont tries, comptes, reaffectes. Les Pretres goules tiennent les registres et leur ile se vide : les ames partent ailleurs. Ils n ont pas efface ton royaume par haine. Ils l ont fait pour le STOCK."
+outro_text = "Une Gelee prisonniere d un cercle de sel t a regarde la liberer, puis t a montre comment un corps se separe et se rassemble. Les registres, eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("24_8xb40")]([SubResource("Resource_m52cv"), SubResource("Resource_7sh5u"), SubResource("Resource_0sax4"), SubResource("Resource_76r2s"), SubResource("Resource_ufmgy"), SubResource("Resource_4ljjb")])

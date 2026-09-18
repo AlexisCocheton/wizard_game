@@ -245,12 +245,8 @@ id = &"lvl_06"
 display_name = "La Cour brisee"
 act = 3
 subtitle = "Une guerre civile ou tu n es qu un passant"
-intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui 
-portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera 
-quand meme, en passant."
-outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a 
-enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur 
-le cadran, tu as lu une adresse."
+intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera quand meme, en passant."
+outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur le cadran, tu as lu une adresse."
 terrain = "sand"
 backdrop = "act3_demon"
 waves = Array[ExtResource("27_ytel0")]([SubResource("Resource_hygvp"), SubResource("Resource_7juvv"), SubResource("Resource_qoior"), SubResource("Resource_ydw5w"), SubResource("Resource_itjfv"), SubResource("Resource_o6g41")])

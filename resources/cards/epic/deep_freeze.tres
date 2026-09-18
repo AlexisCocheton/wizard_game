@@ -26,3 +26,5 @@ effects = Array[ExtResource("1_e0lxf")]([SubResource("Resource_e0lxf")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+fx_key = &"frost_spikes"
+sfx_key = &"zap_short"

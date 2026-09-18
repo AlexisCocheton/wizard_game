@@ -84,6 +84,10 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 		RunState.activate_passive(card)
 		return
 	ctx.card = card
+	# Le son PROPRE au sort. Trois sons generiques couvraient 45 cartes : a
+	# l oreille, tous les sorts etaient le meme.
+	if card.sfx_key != &"":
+		AudioBus.play_sfx(card.sfx_key)
 	# Focalisation : le multiplicateur est consomme par le sort suivant, quel qu il soit.
 	ctx.damage_mult = RunState.take_next_spell_multiplier()
 	for spec in card.effects:

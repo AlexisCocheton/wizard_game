@@ -92,7 +92,7 @@ is_boss = false
 [sub_resource type="Resource" id="Resource_n2ela"]
 script = ExtResource("21_17akq")
 enemy = ExtResource("6_hu6pk")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 0.0
 
@@ -296,11 +296,8 @@ id = &"lvl_02"
 display_name = "La Tour des Sables"
 act = 1
 subtitle = "L ile qui a commence a tomber"
-intro_text = "La Tour des Sables se decroche : le temps y coule de travers, 
-et des creatures qui n ont rien a faire sur une ile volante s y entassent. Ombres, 
-Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
-outro_text = "Ils fuyaient le puits. Sous la tour s ouvre une descente vers 
-le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
+intro_text = "La Tour des Sables se decroche : le temps y coule de travers, et des creatures qui n ont rien a faire sur une ile volante s y entassent. Ombres, Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
+outro_text = "Ils fuyaient le puits. Sous la tour s ouvre une descente vers le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 terrain = "sand"
 backdrop = "act1_sky"
 waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_q8nio"), SubResource("Resource_ktaj7"), SubResource("Resource_o0ilu"), SubResource("Resource_e17r0"), SubResource("Resource_dnda2"), SubResource("Resource_vo2kc"), SubResource("Resource_17akq")])

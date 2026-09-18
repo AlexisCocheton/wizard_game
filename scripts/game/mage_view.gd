@@ -41,4 +41,7 @@ func _on_cast_finished(_card: SpellCard) -> void:
 	if _charge != null and is_instance_valid(_charge):
 		_charge.queue_free()
 	_charge = null
-	AudioBus.play_sfx(&"cast_done")
+	# Le son generique seulement si la carte n a pas le sien : sinon deux sons
+	# se superposent a chaque lancer.
+	if _card == null or _card.sfx_key == &"":
+		AudioBus.play_sfx(&"cast_done")

@@ -255,13 +255,8 @@ id = &"lvl_04"
 display_name = "Le Grand Appel"
 act = 2
 subtitle = "Le rituel reussit"
-intro_text = "Tu arrives trop tard : le cercle est deja trace et les 
-Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement 
-etre la quand la porte s ouvrira, pour voir ce qui en sortira."
-outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un 
-PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le 
-rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti 
-— puis t a montre la porte, encore ouverte."
+intro_text = "Tu arrives trop tard : le cercle est deja trace et les Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement etre la quand la porte s ouvrira, pour voir ce qui en sortira."
+outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti — puis t a montre la porte, encore ouverte."
 terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("28_ke8ff")]([SubResource("Resource_yn11s"), SubResource("Resource_th6to"), SubResource("Resource_nxc80"), SubResource("Resource_amgrg"), SubResource("Resource_6lwi4"), SubResource("Resource_ujq15")])

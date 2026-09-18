@@ -21,7 +21,7 @@ class DamageSingle extends EffectHandler:
 			return
 		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
 		var to: Vector2 = (ctx.target_enemy as Node2D).position
-		Fx.projectile(ctx.battlefield, ctx.caster_position(), to, col)
+		Fx.projectile(ctx.battlefield, ctx.caster_position(), to, col, Fx.card_sheet(ctx.card))
 		ctx.battlefield.damage_enemy(ctx.target_enemy, spec.magnitude * ctx.damage_mult, ctx.card)
 
 
@@ -69,7 +69,7 @@ class DamagePerEnemy extends EffectHandler:
 			return
 		var inside: Array = ctx.battlefield.enemies_in_radius(ctx.target_position, spec.radius)
 		var per_target: float = spec.magnitude * inside.size() * ctx.damage_mult
-		Fx.impact(ctx.battlefield, ctx.target_position, Fx.color_for(EffectHandlers._tags(ctx)), spec.radius)
+		Fx.impact(ctx.battlefield, ctx.target_position, Fx.color_for(EffectHandlers._tags(ctx)), spec.radius, Fx.card_sheet(ctx.card))
 		for e in inside:
 			ctx.battlefield.damage_enemy(e, per_target, ctx.card)
 
@@ -229,7 +229,7 @@ class Knockback extends EffectHandler:
 		if ctx.battlefield == null:
 			return
 		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
-		Fx.impact(ctx.battlefield, ctx.target_position, col, spec.radius)
+		Fx.impact(ctx.battlefield, ctx.target_position, col, spec.radius, Fx.card_sheet(ctx.card))
 		for e in ctx.battlefield.enemies_in_radius(ctx.target_position, spec.radius):
 			ctx.battlefield.damage_enemy(e, spec.magnitude * ctx.damage_mult, ctx.card)
 		ctx.battlefield.knockback_from(ctx.target_position, spec.radius,

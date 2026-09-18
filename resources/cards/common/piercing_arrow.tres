@@ -26,3 +26,5 @@ effects = Array[ExtResource("1_iydxl")]([SubResource("Resource_iydxl")])
 copies_in_starter = 3
 exile_after_cast = false
 is_passive = false
+fx_key = &"pin_thrust"
+sfx_key = &"arrow_laser"

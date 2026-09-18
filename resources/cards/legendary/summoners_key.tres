@@ -32,3 +32,5 @@ effects = Array[ExtResource("1_23bqu")]([SubResource("Resource_23bqu"), SubResou
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+fx_key = &"hex_summon"
+sfx_key = &"whoosh_summon"

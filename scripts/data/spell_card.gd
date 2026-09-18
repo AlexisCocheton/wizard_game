@@ -20,6 +20,15 @@ extends Resource
 ## Il ne revient jamais en main — le rejouer n aurait aucun sens et il
 ## encombrerait la pioche jusqu a la fin de la partie.
 @export var is_passive: bool = false
+
+## Feuille d effet PROPRE a cette carte (nom dans Fx.STRIPS ou Fx.GRIDS). Vide,
+## l effet retombe sur la feuille de l element — ce qui faisait que tous les sorts
+## de feu partageaient la meme animation. L AUDIT exige une feuille par carte,
+## et jamais la meme pour deux cartes : c est ce qui les rend reconnaissables.
+@export var fx_key: StringName = &""
+## Son joue a la resolution du sort (cle dans AudioBus.sfx_keys()). Vide, le son
+## generique d incantation est joue.
+@export var sfx_key: StringName = &""
 @export var icon: Texture2D
 
 

@@ -24,3 +24,5 @@ effects = Array[ExtResource("1_1yp48")]([SubResource("Resource_1yp48")])
 copies_in_starter = 2
 exile_after_cast = false
 is_passive = false
+fx_key = &"ember_flames"
+sfx_key = &"fire_ignite"

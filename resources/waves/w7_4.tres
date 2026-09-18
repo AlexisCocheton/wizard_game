@@ -16,14 +16,14 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_ys376"]
 script = ExtResource("1_ga3fk")
 enemy = ExtResource("3_ysykw")
-count = 2
+count = 1
 spawn_delay = 2.5
 start_offset = 9.0
 
 [sub_resource type="Resource" id="Resource_ysykw"]
 script = ExtResource("1_ga3fk")
 enemy = ExtResource("4_gyp2p")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 

@@ -39,36 +39,128 @@ const STRIPS: Dictionary = {
 	"shield_hex": ["shield_hex", 160, 160, 20],
 	"vortex_hd": ["vortex_hd", 160, 160, 26],
 	"boom_hd": ["boom_hd", 160, 160, 28],
+	## --- Pack "Effect and FX Pixel All Free" : genere par tools/assets/extract_fxpack.py ---
+	"orb_burst": ["orb_burst", 64, 64, 16],
+	"pin_thrust": ["pin_thrust", 64, 64, 16],
+	"rune_square": ["rune_square", 64, 64, 16],
+	"ember_flames": ["ember_flames", 64, 64, 16],
+	"fireball_hit": ["fireball_hit", 64, 64, 16],
+	"spark_burst": ["spark_burst", 64, 64, 16],
+	"crystal_field": ["crystal_field", 64, 64, 16],
+	"ray_wheel": ["ray_wheel", 64, 64, 16],
+	"clock_spiral": ["clock_spiral", 64, 64, 16],
+	"cycle_swirl": ["cycle_swirl", 64, 64, 16],
+	"wisp_rise": ["wisp_rise", 64, 64, 16],
+	"stone_peak": ["stone_peak", 64, 64, 16],
+	"flame_pillar": ["flame_pillar", 64, 64, 16],
+	"meteor_streak": ["meteor_streak", 64, 64, 16],
+	"pinwheel_turn": ["pinwheel_turn", 64, 64, 16],
+	"star_focus": ["star_focus", 64, 64, 16],
+	"spiral_salt": ["spiral_salt", 64, 64, 16],
+	"bone_shards": ["bone_shards", 64, 64, 16],
+	"shatter_burst": ["shatter_burst", 64, 64, 16],
+	"ring_expand": ["ring_expand", 64, 64, 16],
+	"halo_ring": ["halo_ring", 64, 64, 16],
+	"sun_burst": ["sun_burst", 64, 64, 16],
+	"lotus_bloom": ["lotus_bloom", 64, 64, 16],
+	"hex_sigil": ["hex_sigil", 64, 64, 16],
+	"lightning_web": ["lightning_web", 64, 64, 16],
+	"orb_shatter": ["orb_shatter", 64, 64, 16],
+	"frost_spikes": ["frost_spikes", 64, 64, 16],
+	"diamond_mark": ["diamond_mark", 64, 64, 16],
+	"pulse_ring": ["pulse_ring", 64, 64, 16],
+	"void_mandala": ["void_mandala", 64, 64, 16],
+	"spiral_pull": ["spiral_pull", 64, 64, 16],
+	"dome_bastion": ["dome_bastion", 64, 64, 16],
+	"orbit_cross": ["orbit_cross", 64, 64, 16],
+	"glass_shards": ["glass_shards", 64, 64, 16],
+	"tide_waves": ["tide_waves", 64, 64, 16],
+	"hex_summon": ["hex_summon", 64, 64, 16],
+	"fire_bloom": ["fire_bloom", 64, 64, 16],
+	"weave_bloom": ["weave_bloom", 64, 64, 16],
+	"echo_rings": ["echo_rings", 64, 64, 16],
+	"twin_flames": ["twin_flames", 64, 64, 16],
+	"magma_burst": ["magma_burst", 64, 64, 16],
+	"skull_burst": ["skull_burst", 64, 64, 16],
+	"slash_arc": ["slash_arc", 64, 64, 16],
+	"lightning_fork": ["lightning_fork", 64, 64, 16],
+	"flame_gust": ["flame_gust", 64, 64, 16],
+	## --- fin du pack Effect and FX ---
 }
 
 
 ## Part de la case reellement occupee par l effet (mesuree sur les feuilles).
 const OCC: Dictionary = {
 	"bluefire": 0.52,
+	"bone_shards": 1.00,
 	"boom_hd": 0.91,
 	"brightfire": 0.32,
 	"casting": 0.37,
+	"clock_spiral": 0.69,
+	"crystal_field": 0.97,
+	"cycle_swirl": 0.83,
+	"diamond_mark": 0.84,
+	"dome_bastion": 0.77,
+	"echo_rings": 0.88,
+	"ember_flames": 1.00,
 	"explosion_c": 0.98,
 	"explosion_d": 0.98,
 	"explosion_e": 1.00,
 	"felspell": 0.71,
 	"fire": 0.50,
+	"fire_bloom": 0.78,
+	"fireball_hit": 0.72,
 	"firespin": 0.38,
+	"flame_gust": 0.84,
+	"flame_pillar": 0.95,
 	"freezing": 0.78,
+	"frost_spikes": 1.00,
+	"glass_shards": 1.00,
+	"halo_ring": 1.00,
 	"heal_effect": 0.67,
+	"hex_sigil": 1.00,
+	"hex_summon": 0.80,
+	"lightning_fork": 1.00,
+	"lightning_web": 1.00,
+	"lotus_bloom": 1.00,
 	"magic8": 0.59,
 	"magicbubbles": 0.49,
 	"magickahit": 0.60,
 	"magicspell": 0.45,
+	"magma_burst": 0.66,
+	"meteor_streak": 0.94,
 	"midnight": 0.56,
+	"orb_burst": 0.62,
+	"orb_shatter": 0.83,
+	"orbit_cross": 0.97,
+	"pin_thrust": 0.55,
+	"pinwheel_turn": 1.00,
 	"protectioncircle": 0.34,
+	"pulse_ring": 0.70,
+	"ray_wheel": 0.97,
+	"ring_expand": 0.50,
+	"rune_square": 0.91,
+	"shatter_burst": 1.00,
 	"shield_hex": 0.84,
+	"skull_burst": 0.91,
+	"slash_arc": 0.75,
+	"spark_burst": 0.91,
+	"spiral_pull": 0.66,
+	"spiral_salt": 0.91,
+	"star_focus": 0.66,
+	"stone_peak": 0.67,
+	"sun_burst": 0.89,
+	"tide_waves": 0.88,
 	"ts_dust_01": 0.55,
 	"ts_explosion_01": 0.33,
 	"ts_fire_02": 0.56,
+	"twin_flames": 0.89,
+	"void_mandala": 0.77,
 	"vortex": 0.76,
 	"vortex_hd": 0.99,
 	"weaponhit": 0.37,
+	"weave_bloom": 0.95,
+	"wisp_rise": 0.52,
 }
 
 
@@ -148,8 +240,24 @@ static func sprite(parent: Node2D, name: String, at: Vector2, size_px: float,
 	return sp
 
 
+## Une feuille est-elle connue (grille ou bande) ?
+static func has_sheet(name: String) -> bool:
+	return name != "" and (GRIDS.has(name) or STRIPS.has(name))
+
+
+## Feuille PROPRE a une carte, "" si elle n en a pas (ou si elle est inconnue :
+## on prefere l effet de l element a un trou dans l ecran).
+static func card_sheet(card: SpellCard) -> String:
+	if card == null or card.fx_key == &"":
+		return ""
+	var name: String = String(card.fx_key)
+	return name if has_sheet(name) else ""
+
+
 ## Projectile magique du mage vers la cible, puis impact.
-static func projectile(parent: Node2D, from: Vector2, to: Vector2, col: Color) -> void:
+## `sheet` : feuille propre a la carte pour l impact, sinon celle de l element.
+static func projectile(parent: Node2D, from: Vector2, to: Vector2, col: Color,
+		sheet: String = "") -> void:
 	if not enabled() or parent == null:
 		return
 	var dot: AnimatedSprite2D = sprite(parent, "magic8", from, 90.0, true, col.lightened(0.3))
@@ -159,14 +267,16 @@ static func projectile(parent: Node2D, from: Vector2, to: Vector2, col: Color) -
 	var tw: Tween = parent.create_tween()
 	tw.tween_property(dot, "position", to, 0.22)
 	tw.tween_callback(func() -> void:
-		impact(parent, to, col)
+		impact(parent, to, col, 70.0, sheet)
 		if is_instance_valid(dot):
 			dot.queue_free())
 
 
-## Eclat a l impact, feuille selon l element.
-static func impact(parent: Node2D, at: Vector2, col: Color, radius: float = 70.0) -> void:
-	sprite(parent, impact_sheet(col), at, radius * 2.2, false)
+## Eclat a l impact : la feuille PROPRE a la carte si elle en a une, sinon
+## celle de l element. Sans cela tous les sorts de feu explosaient pareil.
+static func impact(parent: Node2D, at: Vector2, col: Color, radius: float = 70.0,
+		sheet: String = "") -> void:
+	sprite(parent, sheet if sheet != "" else impact_sheet(col), at, radius * 2.2, false)
 
 
 ## Fleche percante : une fleche du pack qui file du mage vers le haut.
@@ -194,7 +304,7 @@ static func beam(parent: Node2D, from: Vector2, direction: Vector2,
 ## un anneau (cercle de protection) a l echelle du VRAI rayon pour lire la portee,
 ## et l effet elementaire au centre a taille contenue pour rester net.
 static func zone_visual(parent: Node2D, at: Vector2, radius: float,
-		_duration: float, col: Color) -> Node:
+		_duration: float, col: Color, sheet: String = "") -> Node:
 	if not enabled() or parent == null:
 		return null
 	var root := Node2D.new()
@@ -206,7 +316,10 @@ static func zone_visual(parent: Node2D, at: Vector2, radius: float,
 	ring.setup(radius, col)
 	root.add_child(ring)
 	# L effet elementaire reste une feuille, a taille contenue pour rester net.
-	sprite(root, zone_sheet(col), Vector2.ZERO, clampf(radius * 1.2, 110.0, 200.0), true, Color(1, 1, 1, 0.9))
+	# Au centre, l effet PROPRE a la carte quand elle en a un : deux zones de feu
+	# ne doivent pas se ressembler.
+	sprite(root, sheet if sheet != "" else zone_sheet(col), Vector2.ZERO,
+		clampf(radius * 1.2, 110.0, 200.0), true, Color(1, 1, 1, 0.9))
 	return root
 
 

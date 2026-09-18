@@ -24,3 +24,5 @@ effects = Array[ExtResource("1_pse75")]([SubResource("Resource_pse75")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+fx_key = &"spiral_salt"
+sfx_key = &"wind_gust"

@@ -408,7 +408,8 @@ func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
 	var col: Color = Fx.color_for(card.tags if card != null else [])
 	if vuln_mult > 1.0:
 		col = Fx.COL_VULN
-	var vis: Node = Fx.zone_visual(self, pos, maxf(radius, 10.0), duration, col)
+	var vis: Node = Fx.zone_visual(self, pos, maxf(radius, 10.0), duration, col,
+		Fx.card_sheet(card))
 	zones.append({
 		"pos": pos,
 		"radius": maxf(radius, 10.0),

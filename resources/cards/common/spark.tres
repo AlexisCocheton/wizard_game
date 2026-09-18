@@ -24,3 +24,5 @@ effects = Array[ExtResource("1_013tf")]([SubResource("Resource_013tf")])
 copies_in_starter = 2
 exile_after_cast = false
 is_passive = false
+fx_key = &"spark_burst"
+sfx_key = &"spell_arcane"

@@ -263,12 +263,20 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 	return c
 
 
+## Chaque carte non passive porte SA feuille d effet (fx_key, unique : l AUDIT
+## refuse un partage) et SON son (sfx_key, partage au plus entre 2-3 cartes d une
+## meme famille). Les feuilles viennent du pack Effect and FX Pixel, extraites
+## par tools/assets/extract_fxpack.py, deja teintees a l element du sort. Avant,
+## l effet etait choisi par ELEMENT : tous les sorts de feu se ressemblaient, et
+## l icone (derivee de la feuille) aussi.
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
 		"Inflige 26 degats a une cible.", GameEnums.Rarity.COMMON, 1.1,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_single", 26.0)], 4)
+	bolt.fx_key = &"orb_burst"
+	bolt.sfx_key = &"spell_arcane"
 	_save(bolt, "res://resources/cards/common/arcane_bolt.tres")
 
 	var pierce := _card("piercing_arrow", "Fleche percante",
@@ -276,24 +284,32 @@ func _cards() -> void:
 		GameEnums.Rarity.COMMON, 1.5, GameEnums.Targeting.DIRECTION,
 		[GameEnums.DamageTag.PHYSICAL],
 		[_spec("pierce_line", 10.0, 0.0, 120.0, {&"max_targets": 5})], 3)
+	pierce.fx_key = &"pin_thrust"
+	pierce.sfx_key = &"arrow_laser"
 	_save(pierce, "res://resources/cards/common/piercing_arrow.tres")
 
 	var frost := _card("frost_field", "Champ de givre",
 		"Zone qui ralentit de 50 pourcent pendant 5 s.", GameEnums.Rarity.COMMON, 0.6,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 5.0, 180.0, {&"slow_pct": 50.0})], 3)
+	frost.fx_key = &"rune_square"
+	frost.sfx_key = &"drip_frost"
 	_save(frost, "res://resources/cards/common/frost_field.tres")
 
 	var ember := _card("ember_pool", "Braises",
 		"Zone infligeant 8 degats par seconde pendant 4 s.", GameEnums.Rarity.COMMON, 1.7,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 8.0, 4.0, 160.0)], 2)
+	ember.fx_key = &"ember_flames"
+	ember.sfx_key = &"fire_ignite"
 	_save(ember, "res://resources/cards/common/ember_pool.tres")
 
 	var fireball := _card("fireball", "Boule de feu",
 		"Explosion de 26 degats dans une zone visee.", GameEnums.Rarity.COMMON, 1.4,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 26.0, 0.6, 170.0)], 2)
+	fireball.fx_key = &"fireball_hit"
+	fireball.sfx_key = &"blast_short"
 	_save(fireball, "res://resources/cards/common/fireball.tres")
 
 	# --- Rares ---
@@ -301,18 +317,24 @@ func _cards() -> void:
 		"Accelere l incantation de 60 pourcent pendant 6 s.", GameEnums.Rarity.RARE, 0.8,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("self_haste", 60.0, 6.0)])
+	haste.fx_key = &"ray_wheel"
+	haste.sfx_key = &"spell_rise"
 	_save(haste, "res://resources/cards/rare/quickening.tres")
 
 	var drag := _card("temporal_drag", "Entrave temporelle",
 		"Ralentit tous les ennemis de 40 pourcent pendant 5 s.", GameEnums.Rarity.RARE, 1.4,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.SLOW],
 		[_spec("slow_enemy_gauge", 40.0, 5.0)])
+	drag.fx_key = &"clock_spiral"
+	drag.sfx_key = &"zap_long"
 	_save(drag, "res://resources/cards/rare/temporal_drag.tres")
 
 	var cycle := _card("cycle_of_thought", "Cycle de pensee",
 		"Defausse 2 cartes, en pioche 2.", GameEnums.Rarity.RARE, 0.6,
 		GameEnums.Targeting.NONE, [],
 		[_spec("discard_draw", 0.0, 0.0, 0.0, {&"count": 2})])
+	cycle.fx_key = &"cycle_swirl"
+	cycle.sfx_key = &"spell_deep"
 	_save(cycle, "res://resources/cards/rare/cycle_of_thought.tres")
 
 	# Le cahier des charges promet une pioche "ameliorable" : voici la carte qui le fait.
@@ -320,12 +342,16 @@ func _cards() -> void:
 		"Pioche deux fois plus vite pendant 12 s.", GameEnums.Rarity.RARE, 0.8,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("draw_boost", 2.0, 12.0)])
+	flow.fx_key = &"wisp_rise"
+	flow.sfx_key = &"spell_rise"
 	_save(flow, "res://resources/cards/rare/mana_flow.tres")
 
 	var wall := _card("stone_wall", "Mur de pierre",
 		"Mur de 20 s : les monstres le contournent et il arrete leurs projectiles.",
 		GameEnums.Rarity.RARE, 1.5, GameEnums.Targeting.POSITION, [],
 		[_spec("build_wall", 0.0, 20.0, 200.0, {&"thickness": 60.0})])
+	wall.fx_key = &"stone_peak"
+	wall.sfx_key = &"stone_shove"
 	_save(wall, "res://resources/cards/rare/stone_wall.tres")
 
 	# --- Epiques ---
@@ -333,24 +359,32 @@ func _cards() -> void:
 		"Invoque un allie qui frappe pour 12 pendant 8 s.", GameEnums.Rarity.EPIC, 1.8,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.SUMMON],
 		[_spec("summon_ally", 12.0, 8.0)])
+	ally.fx_key = &"lotus_bloom"
+	ally.sfx_key = &"whoosh_summon"
 	_save(ally, "res://resources/cards/epic/mirror_apprentice.tres")
 
 	var focus := _card("deep_focus", "Concentration",
 		"Defausse ta main : moins 1 s d incantation par carte, 8 s.",
 		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
 		[_spec("discard_hand_for_speed", 0.0, 8.0, 0.0, {&"seconds_per_card": 1.0})])
+	focus.fx_key = &"hex_sigil"
+	focus.sfx_key = &"charge_magic"
 	_save(focus, "res://resources/cards/epic/deep_focus.tres")
 
 	var bargain := _card("reckless_bargain", "Pacte imprudent",
 		"Accelere les ennemis de 30 pourcent pendant 5 s, pioche 3 cartes.",
 		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
 		[_spec("haste_enemies_boon", 30.0, 5.0, 0.0, {&"draw": 3})])
+	bargain.fx_key = &"lightning_web"
+	bargain.sfx_key = &"spell_crackle"
 	_save(bargain, "res://resources/cards/epic/reckless_bargain.tres")
 
 	var purge := _card("deck_purge", "Epuration",
 		"Retire 2 cartes du deck.", GameEnums.Rarity.EPIC, 1.0,
 		GameEnums.Targeting.NONE, [],
 		[_spec("remove_cards", 0.0, 0.0, 0.0, {&"count": 2})])
+	purge.fx_key = &"orb_shatter"
+	purge.sfx_key = &"ward_light"
 	_save(purge, "res://resources/cards/epic/deck_purge.tres")
 
 	# --- Legendaire ---
@@ -362,6 +396,8 @@ func _cards() -> void:
 			_spec("cost_reduction", 1.5, 10.0),
 			_spec("pierce_line", 40.0, 0.0, 200.0, {&"max_targets": 99}),
 		])
+	rift.fx_key = &"orbit_cross"
+	rift.sfx_key = &"spell_grand"
 	_save(rift, "res://resources/cards/legendary/time_rift.tres")
 
 	# --- Variete : cast court/long, petite/grande zone, court/long effet ---
@@ -369,54 +405,72 @@ func _cards() -> void:
 		"15 degats sur une cible. Tres rapide a lancer.", GameEnums.Rarity.COMMON, 0.45,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_single", 15.0)], 2)
+	spark.fx_key = &"spark_burst"
+	spark.sfx_key = &"spell_arcane"
 	_save(spark, "res://resources/cards/common/spark.tres")
 
 	var frost_rain := _card("frost_rain", "Pluie de givre",
 		"Tres grande zone qui ralentit de 30 pourcent pendant 8 s.", GameEnums.Rarity.COMMON, 1.8,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 8.0, 260.0, {&"slow_pct": 30.0})])
+	frost_rain.fx_key = &"crystal_field"
+	frost_rain.sfx_key = &"drip_frost"
 	_save(frost_rain, "res://resources/cards/common/frost_rain.tres")
 
 	var brazier := _card("brazier", "Brasier",
 		"Zone de feu : 14 degats par seconde pendant 6 s.", GameEnums.Rarity.RARE, 2.1,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 14.0, 6.0, 140.0)])
+	brazier.fx_key = &"flame_pillar"
+	brazier.sfx_key = &"fire_ignite"
 	_save(brazier, "res://resources/cards/rare/brazier.tres")
 
 	var meteor := _card("meteor", "Meteore",
 		"Long a invoquer, mais 60 degats d un coup dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
 		[_spec("ground_zone", 200.0, 0.3, 120.0)])
+	meteor.fx_key = &"meteor_streak"
+	meteor.sfx_key = &"blast_pop"
 	_save(meteor, "res://resources/cards/rare/meteor.tres")
 
 	var about_face := _card("about_face", "Volte-face",
 		"Tous les monstres font demi-tour pendant 3 s.", GameEnums.Rarity.RARE, 1.0,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("reverse_enemies", 0.0, 3.0)])
+	about_face.fx_key = &"pinwheel_turn"
+	about_face.sfx_key = &"whoosh_deep"
 	_save(about_face, "res://resources/cards/rare/about_face.tres")
 
 	var focalisation := _card("focus", "Focalisation",
 		"Le prochain sort inflige le double de degats.", GameEnums.Rarity.RARE, 0.7,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
 		[_spec("empower_next", 2.0)])
+	focalisation.fx_key = &"star_focus"
+	focalisation.sfx_key = &"spell_arcane"
 	_save(focalisation, "res://resources/cards/rare/focus.tres")
 
 	var deep_freeze := _card("deep_freeze", "Gel profond",
 		"Zone qui ralentit de 85 pourcent pendant 4 s. Presque un arret.", GameEnums.Rarity.EPIC, 1.5,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 0.0, 4.0, 170.0, {&"slow_pct": 85.0})])
+	deep_freeze.fx_key = &"frost_spikes"
+	deep_freeze.sfx_key = &"zap_short"
 	_save(deep_freeze, "res://resources/cards/epic/deep_freeze.tres")
 
 	var weakness := _card("weakness_mark", "Marque de faiblesse",
 		"Zone ou les monstres subissent le double de degats pendant 6 s.", GameEnums.Rarity.EPIC, 1.3,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
 		[_spec("ground_zone", 0.0, 6.0, 200.0, {&"vuln_mult": 2.0})])
+	weakness.fx_key = &"diamond_mark"
+	weakness.sfx_key = &"charge_magic"
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
 
 	var resonance := _card("resonance", "Resonance",
 		"6 degats par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
 		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
+	resonance.fx_key = &"pulse_ring"
+	resonance.sfx_key = &"spell_crackle"
 	_save(resonance, "res://resources/cards/epic/resonance.tres")
 
 	# --- Cartes d histoire : un monstre qui se rend apprend son sort au mage ---
@@ -433,6 +487,8 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("vortex_pull", 150.0, 3.0, 220.0)])
+	salt.fx_key = &"spiral_salt"
+	salt.sfx_key = &"wind_gust"
 	_save(salt, "res://resources/cards/rare/salt_spiral.tres")
 
 	# Acte II / lvl_04 — enseignee par le Pretre goule repenti.
@@ -442,6 +498,8 @@ func _cards() -> void:
 		"Les 2 prochains sorts lances reviennent en main au lieu d etre defausses.",
 		GameEnums.Rarity.RARE, 0.9, GameEnums.Targeting.NONE, [],
 		[_spec("retain_next", 2.0)])
+	recall.fx_key = &"bone_shards"
+	recall.sfx_key = &"ward_deep"
 	_save(recall, "res://resources/cards/rare/bone_recall.tres")
 
 	# Acte III / lvl_05 — enseignee par le Berserker libere.
@@ -453,6 +511,8 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.PHYSICAL],
 		[_spec("knockback", 18.0, 0.0, 190.0, {&"push": 260.0})])
+	chain.fx_key = &"shatter_burst"
+	chain.sfx_key = &"impact_heavy"
 	_save(chain, "res://resources/cards/rare/chain_break.tres")
 
 	# Acte III / lvl_06 — enseignee par le Chevalier du vide qui se rend.
@@ -466,6 +526,8 @@ func _cards() -> void:
 		GameEnums.Rarity.EPIC, 1.1, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
+	void_grip.fx_key = &"void_mandala"
+	void_grip.sfx_key = &"ward_light"
 	_save(void_grip, "res://resources/cards/epic/void_grip.tres")
 
 	# --- Legendaires de campagne (une par niveau, voir docs/histoire.md) ---
@@ -479,6 +541,8 @@ func _cards() -> void:
 			_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3}),
 			_spec("double_cast", 0.0, 8.0),
 		])
+	ledger.fx_key = &"tide_waves"
+	ledger.sfx_key = &"spell_deep"
 	_save(ledger, "res://resources/cards/legendary/tide_ledger.tres")
 
 	# lvl_04 : la clef prise sur la porte du Grand Appel. Elle invoque a son tour.
@@ -490,6 +554,8 @@ func _cards() -> void:
 			_spec("summon_ally", 14.0, 10.0),
 			_spec("summon_ally", 14.0, 10.0),
 		])
+	key.fx_key = &"hex_summon"
+	key.sfx_key = &"whoosh_summon"
 	_save(key, "res://resources/cards/legendary/summoners_key.tres")
 
 	# lvl_05 / lvl_06 : le cadran vole aux forges. C est l outil des demons retourne
@@ -499,6 +565,8 @@ func _cards() -> void:
 		GameEnums.Rarity.LEGENDARY, 2.4, GameEnums.Targeting.NONE,
 		[GameEnums.DamageTag.FIRE],
 		[_spec("meteor_storm", 30.0, 6.0, 110.0, {&"impacts": 14})])
+	dial.fx_key = &"fire_bloom"
+	dial.sfx_key = &"blast_long"
 	_save(dial, "res://resources/cards/legendary/forge_dial.tres")
 
 	# lvl_07 : la machine elle-meme. Elle fait tout un peu, parce qu elle fait tout.
@@ -512,6 +580,8 @@ func _cards() -> void:
 			_spec("self_haste", 100.0, 8.0),
 			_spec("double_cast", 0.0, 8.0),
 		])
+	loom.fx_key = &"weave_bloom"
+	loom.sfx_key = &"spell_grand"
 	_save(loom, "res://resources/cards/legendary/world_loom.tres")
 
 	var hourglass := _card("hourglass_shard", "Sablier fendu",
@@ -523,6 +593,8 @@ func _cards() -> void:
 			_spec("slow_enemy_gauge", 60.0, 6.0),
 			_spec("self_haste", 100.0, 6.0),
 		])
+	hourglass.fx_key = &"glass_shards"
+	hourglass.sfx_key = &"spell_grand"
 	_save(hourglass, "res://resources/cards/legendary/hourglass_shard.tres")
 
 	# --- Sorts demandes par le testeur ---
@@ -537,6 +609,8 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.PHYSICAL],
 		[_spec("knockback", 18.0, 0.0, 220.0, {&"push": 260.0})])
+	repulsion.fx_key = &"ring_expand"
+	repulsion.sfx_key = &"impact_heavy"
 	_save(repulsion, "res://resources/cards/rare/repulsion_wave.tres")
 
 	# Le vortex ne fait AUCUN degat : c est une carte de mise en place. Elle vaut
@@ -547,6 +621,8 @@ func _cards() -> void:
 		GameEnums.Rarity.EPIC, 1.6, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("vortex_pull", 260.0, 4.0, 420.0)])
+	maelstrom.fx_key = &"spiral_pull"
+	maelstrom.sfx_key = &"wind_gust"
 	_save(maelstrom, "res://resources/cards/epic/maelstrom.tres")
 
 	# Zone volontairement PETITE : une dissipation large annulerait aussi les
@@ -556,6 +632,8 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 1.0, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
+	purify.fx_key = &"halo_ring"
+	purify.sfx_key = &"ward_light"
 	_save(purify, "res://resources/cards/rare/purifying_light.tres")
 
 	# Piocher SANS defausser : Cycle de pensee echange, celle-ci ajoute. Cast tres
@@ -565,6 +643,8 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 0.5, GameEnums.Targeting.NONE,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3})])
+	insight.fx_key = &"sun_burst"
+	insight.sfx_key = &"spell_deep"
 	_save(insight, "res://resources/cards/rare/arcane_insight.tres")
 
 	# Mur PERMANENT : il ne compte pas les secondes, il compte les coups. Il
@@ -576,6 +656,8 @@ func _cards() -> void:
 		[GameEnums.DamageTag.PHYSICAL],
 		[_spec("build_wall", 0.0, 0.0, 200.0,
 			{&"thickness": 60.0, &"permanent": true, &"wall_hp": 120.0})])
+	bastion.fx_key = &"dome_bastion"
+	bastion.sfx_key = &"stone_shove"
 	_save(bastion, "res://resources/cards/epic/bastion.tres")
 
 	# --- Legendaires ---
@@ -588,6 +670,8 @@ func _cards() -> void:
 		GameEnums.Rarity.LEGENDARY, 1.2, GameEnums.Targeting.NONE,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("retain_next", 2.0)])
+	echo.fx_key = &"echo_rings"
+	echo.sfx_key = &"ward_deep"
 	_save(echo, "res://resources/cards/legendary/echo_of_the_hand.tres")
 
 	# Deux sorts a la fois change la FACON de jouer, pas la quantite de degats :
@@ -597,6 +681,8 @@ func _cards() -> void:
 		GameEnums.Rarity.LEGENDARY, 2.0, GameEnums.Targeting.NONE,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("double_cast", 0.0, 10.0)])
+	twin.fx_key = &"twin_flames"
+	twin.sfx_key = &"charge_magic"
 	_save(twin, "res://resources/cards/legendary/twin_channeling.tres")
 
 	# Pluie sur TOUTE la carte : 16 impacts etales sur 5 s. Aucun ciblage — c est
@@ -607,6 +693,8 @@ func _cards() -> void:
 		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.NONE,
 		[GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
 		[_spec("meteor_storm", 70.0, 5.0, 290.0, {&"impacts": 18})])
+	storm.fx_key = &"magma_burst"
+	storm.sfx_key = &"blast_long"
 	_save(storm, "res://resources/cards/legendary/meteor_storm.tres")
 
 	# Enorme et TRES longue : elle ne nettoie pas une vague, elle interdit un
@@ -618,6 +706,8 @@ func _cards() -> void:
 		GameEnums.Rarity.LEGENDARY, 2.8, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.FIRE, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 10.0, 20.0, 340.0, {&"slow_pct": 25.0})])
+	venom.fx_key = &"skull_burst"
+	venom.sfx_key = &"spell_crackle"
 	_save(venom, "res://resources/cards/legendary/venom_mire.tres")
 
 
@@ -794,8 +884,13 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	v2.id = &"w2_2"
 	v2.duration = 26.0
 	v2.difficulty = 1.2
+	# Mesure au banc : c est ICI que le niveau 2 se perdait. `rat_swarm, 3` fait
+	# 12 rats a 110 px/s des la seconde 0 — plus de corps que n en envoie la
+	# derniere vague du niveau 1 — et les trois feux follets qui suivent esquivent
+	# 35 % des coups. Les traces de PV montraient la chute sur cette vague seule
+	# (v2 a 0, 12 ou 18 PV). Deux nuees suffisent a poser la lecon.
 	v2.entries = [
-		_entry(E + "rat_swarm.tres", 3, 2.0),
+		_entry(E + "rat_swarm.tres", 2, 2.0),
 		_entry(E + "wisp.tres", 3, 2.0, 7.0),
 		_entry(E + "berserker.tres", 1, 2.5, 14.0),
 		_entry(E + "hornblower.tres", 1, 1.0, 19.0),
@@ -946,9 +1041,14 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	a2.difficulty = 1.25
 	# La Gelee entiere entre en scene : 36 PV qui deviennent 6 corps si on la tue
 	# mal. C est la vague qui apprend a poser une zone AVANT de frapper.
+	# Mesure au banc : le niveau 3 ne tuait pas d un coup, il USAIT — 185 a 245 s
+	# de partie, PV qui descendent vague apres vague avec une interception pourtant
+	# saine (81 a 92 %). Cause : c est le niveau le plus long ET il portait DEUX
+	# vagues a 12 rats (w3_2 et w3_4) en plus des gelees qui se scindent. On
+	# ramene chacune a 8 rats : la lecon du nombre reste, l usure devient tenable.
 	a2.entries = [
 		_entry(E + "jelly.tres", 1, 2.5),
-		_entry(E + "rat_swarm.tres", 3, 2.0, 6.0),
+		_entry(E + "rat_swarm.tres", 2, 2.0, 6.0),
 		_entry(E + "sprite.tres", 4, 1.6, 14.0),
 	]
 	_save(a2, "res://resources/waves/w3_2.tres")
@@ -974,7 +1074,7 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	a4.is_miniboss = true
 	a4.entries = [
 		_entry(E + "warden.tres", 1, 1.0),
-		_entry(E + "rat_swarm.tres", 3, 2.2, 8.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
 		_entry(E + "hopper.tres", 3, 1.8, 18.0),
 	]
 	_save(a4, "res://resources/waves/w3_4_miniboss.tres")
@@ -1531,10 +1631,16 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	f4.difficulty = 1.3
 	# Les deux registres du jeu dans la meme vague : le blindage (Behemoth) et le
 	# nombre (Ruche qui eclate en 4). Le final ne laisse plus choisir son deck.
+	# Mesure au banc : cette vague videeait la barre de vie d un coup (95 -> 2 PV,
+	# 53 -> 29). Elle cumulait TROIS multiplicateurs invisibles a l ecriture : la
+	# ruche eclate en 4 lutins (x2 ruches = 8 corps) et la nuee vaut 4 rats
+	# (x3 = 12), soit 23 corps en 32 s — le pic de toute la campagne, sur la vague
+	# 4 d un niveau de 6. Une ruche et deux nuees : 14 corps, le finale reste dur
+	# sans etre un mur.
 	f4.entries = [
 		_entry(E + "behemoth.tres", 1, 1.0),
-		_entry(E + "hive.tres", 2, 2.5, 9.0),
-		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
+		_entry(E + "hive.tres", 1, 2.5, 9.0),
+		_entry(E + "rat_swarm.tres", 2, 2.0, 20.0),
 	]
 	_save(f4, "res://resources/waves/w7_4.tres")
 

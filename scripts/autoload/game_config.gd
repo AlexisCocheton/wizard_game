@@ -86,7 +86,7 @@ const RARITY_WEIGHTS: Dictionary = {
 ## sont montes a 100 % de victoires. Les passifs sont un vrai gain de puissance ;
 ## la difficulte de base doit remonter pour qu ils restent un choix et non un
 ## cadeau.
-const ENEMY_SPEED_SCALE: float = 0.62
+const ENEMY_SPEED_SCALE: float = 0.70
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.

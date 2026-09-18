@@ -13,6 +13,7 @@ func stage_name() -> String:
 func run_stage() -> void:
 	_check_duplicates()
 	_check_effect_keys()
+	_check_card_fx()
 	_check_unused_handlers()
 	_check_enemies_spawned()
 	_check_levels()
@@ -27,6 +28,31 @@ func run_stage() -> void:
 func _check_duplicates() -> void:
 	for dup in ContentDB.duplicate_ids:
 		fail("id duplique : %s" % dup)
+
+
+## Chaque carte a SA feuille d effet et SON son, et deux cartes ne partagent
+## jamais une feuille. Retour du testeur : "beaucoup trop de sorts utilisent les
+## memes animations et les memes icones". Les effets etaient choisis par ELEMENT
+## (feu, givre...) : tous les sorts de feu explosaient pareil. L icone derivant
+## de la feuille, l unicite de l une entraine celle de l autre.
+func _check_card_fx() -> void:
+	var prises: Dictionary = {}
+	var sons: Array[StringName] = AudioBus.sfx_keys()
+	for card: SpellCard in ContentDB.cards.values():
+		if card.is_passive:
+			continue  # un passif n a pas d effet visible sur le terrain
+		if card.fx_key == &"":
+			fail("carte %s : pas de feuille d effet propre (fx_key)" % card.id)
+		elif not Fx.has_sheet(String(card.fx_key)):
+			fail("carte %s : feuille '%s' inconnue de Fx" % [card.id, card.fx_key])
+		elif prises.has(card.fx_key):
+			fail("carte %s : feuille '%s' deja prise par %s" % [card.id, card.fx_key, prises[card.fx_key]])
+		else:
+			prises[card.fx_key] = card.id
+		if card.sfx_key == &"":
+			fail("carte %s : pas de son propre (sfx_key)" % card.id)
+		elif not sons.has(card.sfx_key):
+			fail("carte %s : son '%s' absent de AudioBus.sfx_keys()" % [card.id, card.sfx_key])
 
 
 ## Une cle d'effet sans handler = echec runtime garanti des que la carte est jouee.

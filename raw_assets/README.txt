@@ -98,3 +98,27 @@ PIPOYA FREE VFX Mysterious Object.zip (63 Mo)
 Pipoya VFX WarpPortal.zip
     Objets flottants et portails. Aucun crochet de jeu : pas de sort de
     teleportation, pas d objet ramassable. Beaux mais sans emploi.
+
+--- Ajout du 2026-09-18 (effets et sons PROPRES a chaque sort) ---
+Effect and FX Pixel All Free.zip (28 Mo, 180 PNG en 15 dossiers "Part N")
+    FORMAT VERIFIE : chaque PNG est une grille de cases 64x64, 9 LIGNES x 5 a
+    23 COLONNES. Une LIGNE = une animation complete ; les 9 lignes = 9 TEINTES
+    du meme effet (0 rouge-orange, 1 violet, 2 bleu, 3 vert, 4 orange/brun,
+    5 blanc, 6 brun-mauve terne, 7 rouge, 8 bleu-violet sombre).
+    PIEGE : la premiere case de chaque ligne est une amorce presque vide, les
+    images grossissent au fil de la ligne. Le GIF d apercu tourne a 60 ms/image
+    (16 fps).
+    PRIS : 45 effets (une ligne chacun) -> assets/fx/<nom>.png, par
+    tools/assets/extract_fxpack.py (TABLE nom -> (part, fichier, ligne)).
+    Chaque carte non passive a SA feuille (AUDIT _check_card_fx). Planches-
+    contact des 180 effets : relancer le script de contact du scratchpad ou
+    ouvrir les "Preview Free N.gif".
+    LICENCE : aucun fichier de licence dans le zip. A verifier sur la page du
+    pack avant publication.
+FreeSFX.zip, 400 Sounds Pack.zip (deja presents)
+    PRIS EN PLUS : 21 sons de sorts -> assets/sfx/<cle>.wav (table SOUNDS du
+    meme script) : Retro Magic 06/11/34/54, Retro Magic Electric 03, Retro
+    Magic Protection 01/25, Retro Charge Magic 11, Retro Electric 02/21, Retro
+    Explosion Short 01/15, Retro Explosion Long 02, Retro Impact 20, Retro
+    Weapon Laser 03, Retro Water Drop 01, Retro Cinematic Wind 02,
+    fire_lighting, whoosh_1, whoosh_2, stone_push_short.

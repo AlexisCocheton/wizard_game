@@ -94,6 +94,10 @@ const TINTS: Dictionary = {
 static func tint_for(card: SpellCard) -> Color:
 	if card == null:
 		return Color.WHITE
+	# Une feuille propre est deja coloree par son element : la teinter encore
+	# brouillerait ses couleurs.
+	if Fx.card_sheet(card) != "":
+		return Color.WHITE
 	if TINTS.has(card.id):
 		return TINTS[card.id]
 	return _derived_tint(String(card.id))
@@ -121,6 +125,12 @@ static func signature(card: SpellCard) -> String:
 static func for_card(card: SpellCard) -> String:
 	if card == null:
 		return ""
+	# La feuille PROPRE de la carte d abord : l icone est alors l effet meme que
+	# le sort affichera sur le terrain, et deux cartes ne peuvent pas se ressembler
+	# puisque l AUDIT interdit de partager une feuille.
+	var propre: String = Fx.card_sheet(card)
+	if propre != "":
+		return propre
 	if BY_CARD.has(card.id):
 		return String(BY_CARD[card.id])
 	for tag in card.tags:
@@ -150,11 +160,20 @@ static func texture(sheet: String) -> Texture2D:
 	var h: int = mini(cell, int(tex.get_height()))
 	var at := AtlasTexture.new()
 	at.atlas = tex
+	# Quelle case ? Sur une BANDE d animation, la premiere image est souvent
+	# l amorce, presque vide (un point, un trait) : l icone serait illisible. On
+	# prend l image du MILIEU, la ou l effet est deploye. Les grilles de 100 px
+	# gardent leur premiere case, qui est deja lisible.
+	var frame: int = 0
+	if Fx.STRIPS.has(sheet):
+		var count: int = maxi(1, int(tex.get_width()) / cell)
+		if count >= 6:
+			frame = count / 2
 	# On garde la part occupee, centree dans la case.
 	var occ: float = clampf(occupancy(sheet), 0.05, 1.0)
 	var cw: float = float(cell) * occ
 	var ch: float = float(h) * occ
-	at.region = Rect2((float(cell) - cw) * 0.5, (float(h) - ch) * 0.5, cw, ch)
+	at.region = Rect2(float(frame * cell) + (float(cell) - cw) * 0.5, (float(h) - ch) * 0.5, cw, ch)
 	return at
 
 

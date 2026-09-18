@@ -26,3 +26,5 @@ effects = Array[ExtResource("1_kki6v")]([SubResource("Resource_kki6v")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+fx_key = &"shatter_burst"
+sfx_key = &"impact_heavy"

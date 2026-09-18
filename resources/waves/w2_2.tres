@@ -10,7 +10,7 @@
 [sub_resource type="Resource" id="Resource_n2ela"]
 script = ExtResource("1_t4wbb")
 enemy = ExtResource("2_n2ela")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 0.0
 

@@ -28,7 +28,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	print("=== DIAG ===")
 	var lid: String = OS.get_environment("DIAG_LEVEL")
-	for s in range(6):
+	for s in range(10):
 		RunState.set_seed(1000 + s * 37)
 		await _run_level(StringName(lid))
 	get_tree().quit(0)

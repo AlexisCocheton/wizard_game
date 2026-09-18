@@ -92,7 +92,16 @@ func stop_music() -> void:
 static func sfx_keys() -> Array[StringName]:
 	return [&"cast_start", &"cast_done", &"cast_zone", &"hit", &"enemy_die", &"shield_break",
 		&"hp_lost", &"wall", &"wave_start", &"boss", &"victory", &"defeat", &"ui_tap",
-		&"card_pick", &"card_draw", &"speed_up", &"level_up", &"arrow", &"explosion", &"grow", &"heal"]
+		&"card_pick", &"card_draw", &"speed_up", &"level_up", &"arrow", &"explosion", &"grow", &"heal",
+		# Sons PROPRES aux sorts (SpellCard.sfx_key), extraits par
+		# tools/assets/extract_fxpack.py : un son par famille de sorts, partage
+		# entre 2 ou 3 cartes au plus. Retour du testeur : tous les sorts
+		# faisaient le meme "cast_done".
+		&"spell_arcane", &"spell_deep", &"spell_rise", &"spell_grand", &"spell_crackle",
+		&"ward_light", &"ward_deep", &"charge_magic", &"zap_short", &"zap_long",
+		&"blast_short", &"blast_pop", &"blast_long", &"impact_heavy", &"arrow_laser",
+		&"drip_frost", &"wind_gust", &"fire_ignite", &"whoosh_summon", &"whoosh_deep",
+		&"stone_shove"]
 
 
 static func music_keys() -> Array[StringName]:

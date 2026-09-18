@@ -24,3 +24,5 @@ effects = Array[ExtResource("1_b3g8l")]([SubResource("Resource_b3g8l")])
 copies_in_starter = 2
 exile_after_cast = false
 is_passive = false
+fx_key = &"fireball_hit"
+sfx_key = &"blast_short"

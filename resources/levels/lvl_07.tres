@@ -157,14 +157,14 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_ys376"]
 script = ExtResource("33_tka0t")
 enemy = ExtResource("11_vewni")
-count = 2
+count = 1
 spawn_delay = 2.5
 start_offset = 9.0
 
 [sub_resource type="Resource" id="Resource_ysykw"]
 script = ExtResource("33_tka0t")
 enemy = ExtResource("5_u1eb3")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
@@ -257,14 +257,8 @@ id = &"lvl_07"
 display_name = "Le Metier du Monde"
 act = 4
 subtitle = "Ce n est pas un monde, c est une matrice"
-intro_text = "Une grille de fils tendus entre des etoiles, ou des divinites 
-tissent les evenements. Elles ne sont ni bonnes ni mauvaises : elles sont OCCUPEES. 
-L herbe sous tes pieds est le meme motif qu au premier matin, repete."
-outro_text = "Il n y a pas de coupable, il y a un calcul. Ton royaume 
-generait trop de futurs possibles : on l a coupe pour simplifier le motif. Et en 
-remontant le temps, tu es devenu exactement ce que la machine voulait supprimer — le 
-fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu 
-laisses la boucle ouverte."
+intro_text = "Une grille de fils tendus entre des etoiles, ou des divinites tissent les evenements. Elles ne sont ni bonnes ni mauvaises : elles sont OCCUPEES. L herbe sous tes pieds est le meme motif qu au premier matin, repete."
+outro_text = "Il n y a pas de coupable, il y a un calcul. Ton royaume generait trop de futurs possibles : on l a coupe pour simplifier le motif. Et en remontant le temps, tu es devenu exactement ce que la machine voulait supprimer — le fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu laisses la boucle ouverte."
 terrain = "grass"
 backdrop = "act4_origin"
 waves = Array[ExtResource("32_raevg")]([SubResource("Resource_xuvbo"), SubResource("Resource_lyna4"), SubResource("Resource_2enmq"), SubResource("Resource_qnhb2"), SubResource("Resource_u1eb3"), SubResource("Resource_63ls2")])

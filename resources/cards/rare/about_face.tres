@@ -24,3 +24,5 @@ effects = Array[ExtResource("1_ab1no")]([SubResource("Resource_ab1no")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+fx_key = &"pinwheel_turn"
+sfx_key = &"whoosh_deep"
