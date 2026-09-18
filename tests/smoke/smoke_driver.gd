@@ -100,6 +100,20 @@ func _run_all() -> void:
 		if _visual and not shot_done and RunState.wave_index >= 4 				and _game.battlefield.alive_count() >= 5 and RunState.pending_offer.is_empty():
 			shot_done = true
 			await _shot("bataille")
+			# Le panneau de pause montre les passifs actifs : on le capture avec un
+			# passif joue, sinon la capture ne prouve rien.
+			if _visual:
+				var hud: Node = _game.get_node_or_null("HUD")
+				if hud != null and hud.has_method("_show_pause_panel"):
+					var pass_card: SpellCard = ContentDB.cards.get(&"pass_celerity")
+					if pass_card != null:
+						RunState.activate_passive(pass_card)
+					hud.call("_show_pause_panel")
+					await _shot("pause")
+					var panel: Node = hud.get("_pause_panel")
+					if panel != null:
+						panel.queue_free()
+						hud.set("_pause_panel", null)
 		if _visual and RunState.pending_offer.size() > 0 and _shot_index < 2:
 			await _shot("choix")
 

@@ -323,6 +323,101 @@ func _on_pause_pressed() -> void:
 	var tree: SceneTree = get_tree()
 	tree.paused = not tree.paused
 	_pause_btn.text = ">" if tree.paused else "II"
+	if tree.paused:
+		_show_pause_panel()
+	elif _pause_panel != null:
+		_pause_panel.queue_free()
+		_pause_panel = null
+
+
+## Panneau de pause : ce que le joueur a en cours. Les pouvoirs passifs sont
+## invisibles une fois joues — sans cet ecran, il ne peut plus savoir lesquels il
+## a pris ni ce qui lui reste en deck.
+var _pause_panel: Control = null
+
+
+func _show_pause_panel() -> void:
+	if _pause_panel != null:
+		_pause_panel.queue_free()
+	_pause_panel = Control.new()
+	_pause_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pause_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	_root.add_child(_pause_panel)
+
+	var scrim := ColorRect.new()
+	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	scrim.color = Color(0.05, 0.04, 0.09, 0.82)
+	_pause_panel.add_child(scrim)
+
+	var paper := PanelContainer.new()
+	paper.set_anchors_preset(Control.PRESET_FULL_RECT)
+	paper.offset_left = 50.0
+	paper.offset_right = -50.0
+	paper.offset_top = 260.0
+	paper.offset_bottom = -260.0
+	UiTheme.style_paper(paper)
+	_pause_panel.add_child(paper)
+
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	paper.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override(&"separation", 16)
+	scroll.add_child(box)
+
+	box.add_child(UiTheme.label("PAUSE", UiTheme.FONT_TITLE, UiTheme.GOLD,
+		HORIZONTAL_ALIGNMENT_CENTER))
+
+	# Les passifs d abord : c est l information qu on ne peut lire nulle part ailleurs.
+	box.add_child(UiTheme.label("POUVOIRS ACTIFS", UiTheme.FONT_BODY, UiTheme.GOLD))
+	if RunState.active_passives.is_empty():
+		box.add_child(UiTheme.label("Aucun pour l instant.", 20, UiTheme.TEXT_DARK))
+	else:
+		for p: SpellCard in RunState.active_passives:
+			var ligne := HBoxContainer.new()
+			ligne.add_theme_constant_override(&"separation", 12)
+			var ico: TextureRect = CardIcons.make_rect(p, 44.0)
+			if ico != null:
+				ligne.add_child(ico)
+			var col := VBoxContainer.new()
+			col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			col.add_child(UiTheme.label(p.display_name, 22, UiTheme.TEXT_DARK))
+			col.add_child(UiTheme.label(p.description, 17, Color(0.42, 0.33, 0.24)))
+			ligne.add_child(col)
+			box.add_child(ligne)
+
+	box.add_child(UiTheme.label("TON DECK", UiTheme.FONT_BODY, UiTheme.GOLD))
+	box.add_child(UiTheme.label(
+		"Pioche %d   -   Main %d   -   Defausse %d"
+		% [RunState.deck.size(), RunState.hand.size(), RunState.discard.size()],
+		20, UiTheme.TEXT_DARK))
+
+	# Composition restante, par nom : le joueur decide s il garde ou depense.
+	var restant: Dictionary = {}
+	for c: SpellCard in RunState.deck:
+		restant[c.display_name] = int(restant.get(c.display_name, 0)) + 1
+	for c2: SpellCard in RunState.discard:
+		restant[c2.display_name] = int(restant.get(c2.display_name, 0)) + 1
+	var noms: Array = restant.keys()
+	noms.sort()
+	var wrap := HFlowContainer.new()
+	wrap.add_theme_constant_override(&"h_separation", 14)
+	wrap.add_theme_constant_override(&"v_separation", 6)
+	for nom in noms:
+		var tag := UiTheme.label("%s x%d" % [nom, restant[nom]], 18, UiTheme.TEXT_DARK)
+		# Sans cela le nom se replie LETTRE PAR LETTRE dans la colonne etroite que
+		# le conteneur lui accorde : UiTheme.label active l autowrap par defaut.
+		tag.autowrap_mode = TextServer.AUTOWRAP_OFF
+		wrap.add_child(tag)
+	box.add_child(wrap)
+
+	var reprendre := Button.new()
+	reprendre.text = "REPRENDRE"
+	reprendre.custom_minimum_size = Vector2(0, 96)
+	reprendre.process_mode = Node.PROCESS_MODE_ALWAYS
+	reprendre.pressed.connect(_on_pause_pressed)
+	box.add_child(reprendre)
 
 
 func _on_multiplier_changed(_old: int, _new: int) -> void:
