@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_tfhs8"]
+
+[resource]
+script = ExtResource("1_tfhs8")
+id = &"lvl_02_intro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "C est la ! La maison bleue, c est chez moi !"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ne regarde pas la maison. Regarde la ligne."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Quelle ligne ?"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ils avancent en rang. Des nuisibles pillent au hasard. Ceux-la marchent. Quelqu un leur bat la mesure."
+}])

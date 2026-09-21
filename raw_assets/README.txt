@@ -122,3 +122,38 @@ FreeSFX.zip, 400 Sounds Pack.zip (deja presents)
     Explosion Short 01/15, Retro Explosion Long 02, Retro Impact 20, Retro
     Weapon Laser 03, Retro Water Drop 01, Retro Cinematic Wind 02,
     fire_lighting, whoosh_1, whoosh_2, stone_push_short.
+
+--- Audit des licences, 2026-09-21 (les 23 entrees) ---
+Tableau complet : docs/assets_index.md. AUCUN pack n est a retirer.
+A regler avant de VENDRE (rien ne bloque le developpement) :
+  1. "Effect and FX Pixel All Free" (BDragon1727) : gratuit en non-commercial,
+     CONTRIBUTION de montant libre demandee en commercial. C est le pack des 45
+     feuilles de sorts. A payer sur la page itch avant la sortie ; aucun asset
+     n est a remplacer.
+  2. xDeviruchi : le DOCUMENTATION & LICENSE.pdf DU ZIP impose le credit exact
+     "Original music by Marllon Silva (xDeviruchi)". Les resumes web qui disent
+     l inverse sont faux pour la version 2025. Le fichier embarque fait foi.
+  3. FreeSFX.zip : aucun fichier de licence, auteur NON PROUVE (piste Kronbits /
+     CC0, deduite). Demander a Alexis d ou vient ce zip.
+DUELYST : la crainte est LEVEE. Counterplay Games a ouvert le jeu, code et
+assets, en CC0 (depot open-duelyst/duelyst). Le pack itch n est qu un portage
+Unity de fichiers deja dans le domaine public. Reserve propre au CC0 : les
+marques et logos ne sont pas cedes ; on n utilise que les sprites.
+
+--- Corrections d inventaire, 2026-09-21 ---
+godot-pixel-effect-windows.zip : ce n est PAS un pack d assets, seulement
+     PixelEffect.exe + .pck, un logiciel d edition d effets. Rien a extraire.
+SpaceBackgroundSource.zip : ne contient AUCUNE image de fond. C est un projet
+     Godot 3 qui GENERE ses fonds par shaders ; ses seuls PNG sont des brosses
+     de quelques dizaines de pixels. Les shaders ont ete portes en Python dans
+     tools/assets/compose_space.py -> assets/backdrops/menu_space.png et
+     act5_divine.png (1080x1920). Ne rien embarquer du projet lui-meme.
+Pixel Holy Spell 32x32 Pack 3 : ECARTE apres examen visuel (et pas seulement
+     pour sa taille) : anneaux et moulinets en traits fins qui SE DISSOLVENT en
+     fin d animation, donc illisibles meme en icone (l icone se prend au milieu
+     de la bande). En plus sous les 64 px deja en place.
+PRIS EN PLUS : Pipoya WarpPortal + Mysterious Object -> 8 bandes de 160 px dans
+     assets/fx/ (3 portails, 2 esprits, 3 orbes), par tools/assets/extract_vfx.py.
+     Aucune carte ne les joue encore.
+     free-demon-characters -> assets/portraits/ (8 demons x 4 expressions +
+     demon_heads.png), par tools/assets/extract_portraits.py, pour le visual novel.

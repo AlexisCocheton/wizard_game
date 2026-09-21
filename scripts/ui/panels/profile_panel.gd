@@ -88,7 +88,7 @@ func _build_account() -> void:
 		if r.kind == GameEnums.RewardKind.TITLE:
 			titre = r.display_name
 	if titre != "":
-		_box.add_child(UiTheme.label(titre, 24, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER))
+		_box.add_child(UiTheme.label(titre, UiTheme.FONT_BODY, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER))
 
 	# Barre d avancement vers le palier suivant.
 	var barre := ProgressBar.new()
@@ -124,16 +124,16 @@ func _build_challenges() -> void:
 		var ligne := HBoxContainer.new()
 		col.add_child(ligne)
 		var nom := UiTheme.label("%s %s" % ["[OK]" if fait else "[   ]", d.display_name],
-			22, Color(0.2, 0.5, 0.25) if fait else UiTheme.TEXT_DARK)
+			UiTheme.FONT_BODY, Color(0.2, 0.5, 0.25) if fait else UiTheme.TEXT_DARK)
 		nom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		nom.autowrap_mode = TextServer.AUTOWRAP_OFF
 		ligne.add_child(nom)
-		var xp := UiTheme.label("+%d XP" % d.xp_reward, 19, UiTheme.GOLD,
+		var xp := UiTheme.label("+%d XP" % d.xp_reward, UiTheme.FONT_SMALL, UiTheme.GOLD,
 			HORIZONTAL_ALIGNMENT_RIGHT)
 		xp.autowrap_mode = TextServer.AUTOWRAP_OFF
 		ligne.add_child(xp)
 
-		col.add_child(UiTheme.label(d.description, 17, Color(0.42, 0.33, 0.24)))
+		col.add_child(UiTheme.label(d.description, UiTheme.FONT_SMALL, Color(0.42, 0.33, 0.24)))
 		if not fait:
 			# L avancement chiffre : un defi sans progres visible n en est pas un.
 			var vu: int = ChallengeTracker.value_of(d.track_key)
@@ -164,7 +164,7 @@ func _build_rewards() -> void:
 			ligne.add_child(ico)
 
 		var texte: String = r.display_name if acquis else "Niveau %d  -  ???" % r.at_level
-		var lab := UiTheme.label(texte, 21,
+		var lab := UiTheme.label(texte, UiTheme.FONT_SMALL,
 			UiTheme.TEXT_DARK if acquis else UiTheme.TEXT_DIM)
 		lab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lab.autowrap_mode = TextServer.AUTOWRAP_OFF

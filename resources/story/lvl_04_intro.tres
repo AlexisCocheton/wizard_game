@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_4pu6b"]
+
+[resource]
+script = ExtResource("1_4pu6b")
+id = &"lvl_04_intro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Bougez pas, touchez a rien, et surtout ne montez pas. Il manque une valve, deux ailerons et ma patience."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Combien de temps ?"
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Le temps qu il faut. Vous, dehors. Moi, dessous."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Les arbres, au fond de la clairiere, s ecartent d eux-memes."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "C est le Gardien ! C est lui qui protege la foret, il va nous aider !"
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Petit... il marche sur les arbres, pas entre."
+}])

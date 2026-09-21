@@ -63,14 +63,48 @@ func _enemies() -> void:
 	_save(jelly_mid, E + "jelly_mid.tres")
 
 	# --- Puissance 2 ---
-	var swarm := _enemy("rat_swarm", "Nuee de rats", K.SWARM, 2, 4.0, 110.0, 1, S.CIRCLE, Color(0.85, 0.52, 0.62), 13.0)
+	# Renomme "Oiseau mirage" (demande du testeur). L id reste `rat_swarm` : il
+	# est grave dans toutes les vagues, les pools de niveau et les sauvegardes de
+	# bestiaire deja sur les telephones. Renommer l id casserait ces references
+	# pour un simple changement d etiquette.
+	var swarm := _enemy("rat_swarm", "Oiseau mirage", K.SWARM, 2, 4.0, 110.0, 1, S.CIRCLE, Color(0.85, 0.52, 0.62), 13.0)
 	swarm.anim_key = &"peacock"
 	swarm.swarm_count = 4
 	_save(swarm, E + "rat_swarm.tres")
 
-	var wisp := _enemy("wisp", "Feu follet", K.EVASIVE, 2, 10.0, 90.0, 2, S.CIRCLE, Color(0.45, 0.90, 0.88), 22.0)
+	# BOULE DE POISON — la munition du Planogo. C est un EnemyDef et non un
+	# projectile a part : tout le ciblage, les zones et les degats existants s y
+	# appliquent donc sans une ligne de code neuve, et le testeur obtient ce
+	# qu il demandait — "qui a 10 PV", donc DESTRUCTIBLE.
+	# `projectile` la tient hors du bestiaire et hors de l XP : on ne farme pas
+	# des munitions, on tue la source.
+	var poison_ball := _enemy("poison_ball", "Boule de poison", K.FAST, 1, 10.0, 120.0, 0, S.CIRCLE, Color(0.45, 1.00, 0.30), 16.0)
+	poison_ball.anim_key = &"poison_ball"
+	poison_ball.projectile = true
+	# Volante : elle survole les murs comme celui qui la tire. Un mur qui
+	# arreterait la boule mais pas le Planogo serait incomprehensible.
+	poison_ball.flying = true
+	# 8 : elle pique nettement moins qu un contact de Planogo (15 en P2), donc
+	# l ignorer coute, mais ne punit pas comme de laisser passer le tireur.
+	poison_ball.contact_damage = 8
+	_save(poison_ball, E + "poison_ball.tres")
+
+	# PLANOGO (ex "Feu follet"). Vole par-dessus les murs et tire des boules de
+	# poison : il ne se gere ni par le decor ni en l ignorant.
+	var wisp := _enemy("wisp", "Planogo", K.EVASIVE, 2, 10.0, 90.0, 2, S.CIRCLE, Color(0.45, 0.90, 0.88), 22.0)
 	wisp.anim_key = &"flyer"
 	wisp.dodge_chance = 0.35
+	wisp.flying = true
+	# Les boules passent par le mecanisme d INVOCATION existant plutot que par
+	# `shoot_interval` : un tir traverse le terrain et frappe le mage sans qu on
+	# puisse rien y faire, alors qu une invocation est un corps sur le terrain,
+	# que le joueur voit arriver et peut abattre.
+	wisp.summon_def = poison_ball
+	wisp.summon_interval = 5.0
+	wisp.summon_count = 1
+	# Deux boules en l air au plus : au-dela, un groupe de Planogos noierait
+	# l ecran sous des munitions et la vague ne se lirait plus.
+	wisp.summon_max_alive = 2
 	_save(wisp, E + "wisp.tres")
 
 	var shade := _enemy("shade", "Ombre", K.PHASER, 2, 16.0, 80.0, 3, S.DIAMOND, Color(0.42, 0.40, 0.80), 26.0)
@@ -836,6 +870,10 @@ func _waves_and_level() -> void:
 	lvl.id = &"lvl_01"
 	lvl.display_name = "Les Marches du Temps"
 	lvl.terrain = "grass"
+	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
+	# acte 1). Generees par tools/make_story.gd.
+	lvl.intro_story = &"lvl_01_intro"
+	lvl.outro_story = &"lvl_01_outro"
 	lvl.backdrop = "act1_sky"
 	lvl.waves = [w1, w2, w3, w4, w5, w6]
 	lvl.enemy_pool = [
@@ -967,6 +1005,10 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl2.id = &"lvl_02"
 	lvl2.display_name = "La Tour des Sables"
 	lvl2.terrain = "sand"
+	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
+	# acte 1). Generees par tools/make_story.gd.
+	lvl2.intro_story = &"lvl_02_intro"
+	lvl2.outro_story = &"lvl_02_outro"
 	lvl2.backdrop = "act1_sky"
 	lvl2.waves = [v1, v2, v3, v4, v5, v6, v7]
 	lvl2.enemy_pool = [
@@ -1112,6 +1154,10 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	lvl3.id = &"lvl_03"
 	lvl3.display_name = "Ossuaire des Marees"
 	lvl3.terrain = "sand"
+	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
+	# acte 1). Generees par tools/make_story.gd.
+	lvl3.intro_story = &"lvl_03_intro"
+	lvl3.outro_story = &"lvl_03_outro"
 	lvl3.backdrop = "act2_graveyard"
 	lvl3.waves = [a1, a2, a3, a4, a5, a6]
 	lvl3.enemy_pool = [
@@ -1245,6 +1291,10 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	lvl4.id = &"lvl_04"
 	lvl4.display_name = "Le Grand Appel"
 	lvl4.terrain = "sand"
+	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
+	# acte 1). Generees par tools/make_story.gd.
+	lvl4.intro_story = &"lvl_04_intro"
+	lvl4.outro_story = &"lvl_04_outro"
 	lvl4.backdrop = "act2_graveyard"
 	lvl4.waves = [b1, b2, b3, b4, b5, b6]
 	lvl4.enemy_pool = [

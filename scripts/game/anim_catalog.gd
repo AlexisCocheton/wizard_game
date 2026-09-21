@@ -40,8 +40,14 @@ const UNITS: Dictionary = {
 		"walk": ["flyer_walk", 12], "idle": ["flyer_idle", 8],
 		"hurt": ["flyer_hurt", 12, false], "attack": ["flyer_attack", 14, false],
 		"death": ["flyer_death", 12, false]},
-	"peacock":      {"frame": 32, "frame_h": 32, "occupancy": 1.00,
-		"walk": ["peacock_walk", 8], "idle": ["peacock_idle", 5]},
+	## Oiseau mirage. Les planches du pack sont des grilles 4 DIRECTIONS x N poses :
+	## une COLONNE est une direction, une LIGNE une pose. La premiere extraction
+	## avait pris une LIGNE, donc quatre orientations a la suite — l oiseau
+	## semblait pivoter sur lui meme en marchant. Les bandes "_front_" sont la
+	## colonne de FACE, celle que montre un monstre qui descend vers le mage.
+	## Voir tools/assets/extract_peacock.py.
+	"peacock":      {"frame": 32, "frame_h": 32, "occupancy": 0.78,
+		"walk": ["peacock_front_walk", 8], "idle": ["peacock_front_idle", 5]},
 	## Enemies Pack : petites creatures, bandes composees depuis les images unitaires.
 	"dog":     {"frame": 33, "frame_h": 26, "occupancy": 0.88,
 		"walk": ["dog_walk", 8], "idle": ["dog_idle", 5]},
@@ -54,6 +60,14 @@ const UNITS: Dictionary = {
 	"slimer":  {"frame": 41, "frame_h": 38, "occupancy": 0.66,
 		"walk": ["slimer_walk", 8], "idle": ["slimer_idle", 5],
 		"death": ["slimer_death", 10, false]},
+	## Boule de poison du Planogo. Pas de feuille dediee dans les packs : on
+	## reprend la silhouette de la gelee, qui est deja une masse ronde sans
+	## membres — exactement ce qu on veut lire comme "projectile" — et la teinte
+	## verte du poison est posee par MODULATE. Cle distincte de "slimer" pour
+	## que la Gelee garde sa propre couleur.
+	"poison_ball": {"frame": 41, "frame_h": 38, "occupancy": 0.66,
+		"walk": ["slimer_idle", 8], "idle": ["slimer_idle", 5],
+		"death": ["slimer_death", 12, false]},
 	"vulture": {"frame": 39, "frame_h": 39, "occupancy": 0.74,
 		"walk": ["vulture_walk", 8], "idle": ["vulture_idle", 5]},
 	## Duelyst (atlas recomposes par tools/assets/extract_duelyst.py) : reserve aux
@@ -93,6 +107,10 @@ const MODULATE: Dictionary = {
 	"hopper": Color(0.62, 0.95, 0.45),
 	## Le vautour est brun : l Ombre doit rester spectrale.
 	"shade": Color(0.42, 0.42, 0.62, 0.80),
+	## La boule de poison reprend la gelee : il faut un vert franc, nettement
+	## plus acide que celui de la Gelee, pour qu on ne confonde pas une munition
+	## avec un monstre qu il vaut la peine de tuer.
+	"poison_ball": Color(0.45, 1.00, 0.30),
 }
 
 

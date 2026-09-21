@@ -41,6 +41,17 @@ extends Resource
 @export var swarm_count: int = 1
 ## Entre par le cote de l ecran au lieu du haut.
 @export var entry_side: bool = false
+## VOLANT — ignore la grille de navigation et descend TOUT DROIT : un mur pose
+## par le joueur ne l arrete pas et ne le detourne pas. C est la reponse a
+## "capacite volante qui passe au-dessus des murs" : un volant ne se gere pas
+## avec du decor, il se gere en le tuant.
+@export var flying: bool = false
+## PROJECTILE — n est pas une creature : ni bestiaire, ni XP, ni statistiques.
+## Une boule de poison tiree par un Planogo reste un monstre du terrain (donc
+## ciblable et destructible par tous les sorts existants, sans code neuf), mais
+## le joueur ne doit pas la trouver dans son bestiaire ni la farmer pour monter
+## de niveau.
+@export var projectile: bool = false
 ## Intervalle de disparition temporaire en secondes, pour les PHASER. 0 = jamais.
 @export var phase_interval: float = 0.0
 ## Bonus de vitesse (%) accorde aux autres monstres, pour les BUFFER.

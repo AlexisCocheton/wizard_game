@@ -20,15 +20,15 @@ Legende : **FAIT** = en place et teste · **PARTIEL** = base en place, a etendre
 | Tiny RPG Character Pack 02 | Blood Monster, Demon |
 | Free Pixel Effects Pack | grilles 100 px, encore quelques zones/impacts |
 | Effect and FX Pixel All Free (750 effets) | **45 feuilles, une par carte** (DEC-017) |
-| VFX Free Pack, Pipoya HEXShield / WarpPortal / Mysterious Object | vortex_hd, boom_hd, shield_hex ; WarpPortal et Mysterious Object pas encore branches |
-| Pixel Holy Spell 32x32 (.rar, ouvrir avec 7-Zip) | pas branche (32 px, trop petit pour le terrain, possible en icone) |
+| VFX Free Pack, Pipoya HEXShield / WarpPortal / Mysterious Object | vortex_hd, boom_hd, shield_hex ; **+ 8 feuilles extraites** (3 portails, 2 esprits, 3 orbes) dans `Fx.STRIPS`, en attente d'une carte qui les joue |
+| Pixel Holy Spell 32x32 (.rar, ouvrir avec 7-Zip) | **ECARTE** — les 2 planches vues a l'oeil : anneaux et moulinets en traits fins qui se DISSOLVENT en fin d'animation. Meme en icone c'est illisible (piege deja paye sur 7 effets du pack FX), et 32 px sous les 64 px en place |
 | craftpix battleground / 4 nature / vampires locations | 4 fonds peints par acte |
 | craftpix animated magic book | **pas branche** — prioritaire pour galerie/bestiaire/deck |
-| free-demon-characters (portraits statiques) | pas branche — portraits de PNJ pour le visual novel |
+| free-demon-characters (portraits statiques) | **extrait** : `assets/portraits/` — 8 demons x 4 expressions + `demon_heads.png` (grille 8x4 de tetes 64 px). Pret pour le chantier D |
 | free-pixel-magic-sprite-effects | police Planes_ValMore ; effets 72 px non branches |
-| godot-pixel-effect (henrysoftware) | pas branche — sorts de deplacement |
+| godot-pixel-effect (henrysoftware) | **SANS OBJET** — le zip ne contient que `PixelEffect.exe` + `.pck` : c'est un LOGICIEL d'edition d'effets, pas un pack d'assets. Rien a extraire |
 | explosion pack 1 | explosion_c/d/e |
-| SpaceBackgroundSource (deep-fold) | pas branche — fonds de menu, effets plein ecran, acte final |
+| SpaceBackgroundSource (deep-fold) | **2 fonds composes** : `assets/backdrops/menu_space.png` et `act5_divine.png` (1080x1920, 22 et 39 ko). Le zip n'a AUCUNE image : c'est un generateur Godot 3 a shaders, porte en Python par `tools/assets/compose_space.py`. Rien n'est branche : a afficher par les chantiers C et D/J |
 | 400 Sounds, FreeSFX, 16-bit RPG Music, xDeviruchi | 42 sons, 10 musiques |
 | monsters_2026_09 : Golems, FlyingForest, Peacock, Enemies Pack (Sunnyland), Duelyst | 8 familles + 5 boss |
 
@@ -37,6 +37,16 @@ Legende : **FAIT** = en place et teste · **PARTIEL** = base en place, a etendre
 L'assistant ne peut pas telecharger depuis itch.io / craftpix (connexion et
 conditions d'utilisation par pack). Deposer les archives a la racine, elles
 seront rangees dans `raw_assets/`.
+
+*Liste VERIFIEE le 2026-09-21 : chacun de ces noms a ete cherche sur le disque
+(projet, Bureau, Telechargements). Tous sont bien absents, aucune archive neuve
+n'attend a la racine, et rien de cette liste n'est present sous un autre nom.
+Deux besoins sont toutefois DEJA couverts en partie, voir les corrections :*
+
+- *visual novel (D) : les portraits de `free-demon-characters` sont extraits
+  (`assets/portraits/`). Les packs ci-dessous restent utiles pour varier les
+  PNJ, mais le chantier D n'est plus bloque faute de tout portrait.*
+- *fonds (C et D/J) : `menu_space.png` et `act5_divine.png` sont composes.*
 
 **Debloquent les menus (chantier C)** : paper-texture-pack (oddsandents),
 dungeonmode (datagoblin), menu-buttons (nectanebo).
@@ -65,13 +75,30 @@ dark-spell-effect (pimen), sc-anime-essentials (seraphcircle).
 
 **Skins du mage** : witches-pack (9e0).
 
-### Licences — a VERIFIER avant publication (chantier A)
+### Licences — AUDITEES le 2026-09-21 (chantier A)
 
-Aucun pack n'a ete audite sur sa page. Points connus : craftpix = usage
-commercial libre, redistribution des sources interdite (d'ou `raw_assets/` hors
-depot) ; **Duelyst** est un jeu commercial (Counterplay Games) re-empaquete par
-un tiers, son usage dans un jeu publie est douteux, a remplacer si la licence ne
-le couvre pas ; Effect and FX Pixel n'a pas de fichier de licence dans le zip.
+Les 23 entrees ont ete auditees. Tableau complet : **`docs/assets_index.md`**.
+Aucun pack n'est a retirer ; il reste **trois points a regler avant de VENDRE**
+le jeu (rien ne bloque le developpement) :
+
+1. **Effect and FX Pixel All Free** (BDragon1727) — les 45 feuilles de sorts,
+   donc l'ossature visuelle du jeu. Gratuit en non-commercial ; en commercial
+   l'auteur demande une **contribution de montant libre** sur sa page itch. A
+   payer avant la sortie ; aucun remplacement d'asset n'est necessaire.
+2. **xDeviruchi** (musiques) — le PDF embarque impose un credit a la lettre :
+   `Original music by Marllon Silva (xDeviruchi)`. Les resumes web qui disent
+   l'inverse sont faux pour la version 2025 qu'on a. A mettre dans un ecran de
+   credits.
+3. **FreeSFX** — aucun fichier de licence, auteur non prouve (piste Kronbits /
+   CC0, deduite mais non certaine). Demander a Alexis d'ou vient le zip.
+
+**Duelyst : la crainte est levee.** Counterplay Games a ouvert Duelyst, code ET
+assets, en **CC0** (depot `open-duelyst/duelyst`) ; le pack itch n'est qu'un
+portage Unity de fichiers deja dans le domaine public. Seule reserve, propre au
+CC0 : les marques et logos ne sont pas cedes — on n'utilise que les sprites.
+
+craftpix (6 packs) : usage commercial libre, sans credit, **redistribution des
+sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du depot.
 
 ---
 

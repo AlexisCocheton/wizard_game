@@ -3,10 +3,11 @@ extends Node
 ## Premier autoload charge : tous les autres peuvent le lire dans leur _ready().
 
 ## --- Vitesse / bouclier ---
-## Vitesse en POURCENTAGE : 100 % normal, 500 % maximum, par pas de 10 %.
+## Vitesse en POURCENTAGE : 100 % normal, 500 % maximum.
 ## Les quatre paliers fixes d origine (x1/x1.5/x2/x4) ne laissaient aucune nuance.
+## Le pas de 10 % a disparu avec le bouton d acceleration : la vitesse monte
+## desormais en continu (SPEED_RISE_PER_SECOND) et ne se commande plus.
 const SPEED_MAX_PERCENT: int = 500
-const SPEED_STEP_PERCENT: int = 10
 ## Bouclier gagne par point de pourcentage au-dessus de 100 : a 500 % le mage
 ## encaisse 40 PV de plus, soit une bonne moitie de sa vie. Aller vite est un pari
 ## payant, mais a 0,2 le bouclier rendait le mage quasi invulnerable au banc.
@@ -15,13 +16,19 @@ const SHIELD_PER_PERCENT: float = 0.1
 ## plus accelerer : on ne relance pas la machine dans la seconde ou l on est touche.
 const SPEED_DROP_ON_HIT: int = 60
 const SPEED_LOCK_AFTER_HIT: float = 3.0
-## Secondes avant que le jeu monte d'un cran tout seul.
-## Retour du testeur : "la vitesse du jeu c est cool si elle augmente
-## naturellement petit a petit". A 20 s, une partie entiere finissait a 190 % sur
-## un maximum de 500 : la montee ne se sentait pas. A 8 s elle traverse la moitie
-## de l echelle sur une partie, tout en laissant la premiere minute calme, le
-## temps d apprendre la vague.
-const AUTO_RISE_INTERVAL: float = 8.0
+## Points de pourcentage gagnes par seconde, tout seuls.
+##
+## Retour du testeur (21 septembre) : "La barre de vitesse n est plus accelerable
+## manuellement ni en cliquant ni par le bouton. La vitesse augmente naturellement
+## progressivement, 1 % par 0,5 seconde." Soit 2 points par seconde.
+##
+## La montee est CONTINUE, pas par paliers : SpeedGauge garde un accumulateur
+## flottant et ne fait avancer le pourcentage affiche que par pas entiers de 1.
+## Les paliers de 10 % toutes les 8 s se voyaient comme des a-coups — le monde
+## changeait de vitesse d un coup au milieu d une vague, sans que le joueur ait
+## rien fait. A 2 points/s, l echelle complete (100 -> 500) prend 200 s, soit la
+## duree d une partie : la montee se sent sans jamais se remarquer.
+const SPEED_RISE_PER_SECOND: float = 2.0
 ## Vitesse a laquelle le monde tourne pendant l'agonie (25 %).
 const DEATH_SLOWMO: float = 0.25
 ## Fraction de jauge d'agonie perdue par seconde reelle -> 4 s avant la defaite.
@@ -86,14 +93,38 @@ const RARITY_WEIGHTS: Dictionary = {
 ## sont montes a 100 % de victoires. Les passifs sont un vrai gain de puissance ;
 ## la difficulte de base doit remonter pour qu ils restent un choix et non un
 ## cadeau.
-const ENEMY_SPEED_SCALE: float = 0.70
+##
+## 0,61 et non 0,70 depuis que la ligne d apparition est descendue a y=120 :
+## la descente est passee de 1580 px a 1380 px, soit 12,7 % de moins. Mesure au
+## banc (30 parties par niveau), le RACCOURCISSEMENT SEUL faisait tomber les
+## taux de 57-93 % a 27-77 % — le joueur perdait un huitieme de sa fenetre de
+## reaction sans que rien d autre ait bouge. On rend ce temps en ralentissant
+## les monstres du meme rapport (0,70 x 1380/1580), ce qui conserve la DUREE de
+## descente au lieu de la vitesse : c est le temps de viser qui fait la
+## difficulte, pas les pixels par seconde.
+const ENEMY_SPEED_SCALE: float = 0.61
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.
 const BATTLEFIELD_WIDTH: float = 1080.0
 const BATTLEFIELD_HEIGHT: float = 1920.0
 const MAGE_LINE_Y: float = 1500.0
-const SPAWN_LINE_Y: float = -80.0
+## Ligne d apparition des monstres. Retour du testeur : "les monstres
+## apparaissent au fond de l ecran, c est bizarre avec le decor : fais-les
+## apparaitre un peu plus loin, au debut de l herbe".
+##
+## A -80 le monstre naissait HORS CHAMP et glissait dans l image comme une
+## affiche qu on fait defiler ; le decor peint commence pourtant par une bande
+## d arbres, et rien ne sortait de dessous. A 120 il nait DANS le decor, juste
+## sous la bande decoree des fonds peints (mesuree entre y=140 et y=210 selon
+## l acte), la ou l herbe s ouvre. Le fondu (SPAWN_FADE_TIME) remplace la
+## glissade : il apparait, puis il avance.
+const SPAWN_LINE_Y: float = 120.0
+## Duree du fondu d apparition. Pendant ce temps le monstre est IMMOBILE et
+## INTOUCHABLE : sans cette immunite le joueur frapperait des fantomes a peine
+## visibles, et une zone au sol posee sur la ligne d apparition tuerait les
+## vagues avant qu elles existent.
+const SPAWN_FADE_TIME: float = 0.5
 
 
 func xp_required(level: int) -> int:

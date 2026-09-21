@@ -17,10 +17,25 @@ const RED := Color(0.85, 0.25, 0.28)
 const BLUE := Color(0.35, 0.65, 0.95)
 const GREEN := Color(0.40, 0.80, 0.45)
 
-const FONT_BODY: int = 30
-const FONT_BUTTON: int = 34
-const FONT_TITLE: int = 52
-const FONT_SMALL: int = 24
+## TAILLES DE POLICE — remontees le 2026-09-21.
+##
+## Retour du testeur : "la police n est pas assez lisible en petit, augmente un
+## peu la taille de toutes les ecritures". Le probleme n etait pas que la police
+## soit petite dans l absolu (30 px sur 1920, c est correct) mais que le CONTOUR
+## sombre de 6 px, pose pour rendre le HUD lisible sur un fond peint, ronge
+## l interieur des lettres : a 24 px, le "e" de Planes_ValMore se bouche.
+##
+## Deux corrections ensemble, car separees elles ne suffisent pas :
+##   - +6 px sur chaque palier (24->30, 30->36, 34->40, 52->60) ;
+##   - contour ramene de 6 a 4 px dans le theme (voir make()), les ecrans de
+##     MENU ayant un fond maitrise ; le HUD garde son contour epais via
+##     label_hud(), la ou le fond est un decor peint.
+##
+## Juge sur capture : a 24 px les sous-titres des tuiles etaient des paves gris.
+const FONT_BODY: int = 36
+const FONT_BUTTON: int = 40
+const FONT_TITLE: int = 60
+const FONT_SMALL: int = 30
 
 const UI := "res://assets/ui/"
 
@@ -56,6 +71,9 @@ static func font() -> Font:
 const NINE: Dictionary = {
 	"banner9": [100, 68, 84, 111],
 	"bar_base9": [24, 0, 24, 0],
+	# Page du grimoire : bois a gauche/droite, reliure epaisse en bas. Mesure sur
+	# les pixels creme de la planche (tools/assets/extract_book.py).
+	"book_page9": [12, 6, 12, 22],
 	"bar_fill9": [24, 0, 24, 0],
 	"btn_blue9": [45, 47, 45, 47],
 	"btn_blue_pressed9": [50, 36, 50, 49],
@@ -127,6 +145,32 @@ static func tex_box(name: String, _margin: int = 48, content: float = 18.0,
 	return sb
 
 
+## Page du grimoire (onglet Galerie), en 9-tranches.
+##
+## Marges internes calees sur le DESSIN de la page : le bois de la reliure fait
+## une trentaine de pixels une fois la planche etiree a la largeur de l ecran.
+## En dessous, les vignettes de bord chevauchent le cadre ; bien au-dessus, on
+## gaspille la largeur, qui est la ressource rare d un ecran portrait.
+static func book_page_box() -> StyleBox:
+	var t: Texture2D = tex("book_page9")
+	if t == null:
+		# Repli : le papier deja present. Un panneau sans fond laisserait le
+		# texte sombre sur le bois sombre du menu, donc illisible.
+		return tex_box("paper", 44, 26.0)
+	var sb := StyleBoxTexture.new()
+	sb.texture = t
+	var m: Array = NINE.get("book_page9", [12, 6, 12, 22])
+	sb.texture_margin_left = m[0]
+	sb.texture_margin_top = m[1]
+	sb.texture_margin_right = m[2]
+	sb.texture_margin_bottom = m[3]
+	sb.content_margin_left = 42.0
+	sb.content_margin_right = 42.0
+	sb.content_margin_top = 30.0
+	sb.content_margin_bottom = 44.0
+	return sb
+
+
 ## Conserve pour les fonds discrets (ombres) — pas de forme visible.
 static func flat_box(color: Color, radius: int = 18, margin: float = 16.0,
 		border: Color = Color.TRANSPARENT, border_width: int = 0) -> StyleBoxFlat:
@@ -160,12 +204,15 @@ static func make() -> Theme:
 	# et un texte sombre sur une zone sombre — quelle que soit sa taille. Deux
 	# pixels d ombre garantissent le contraste partout.
 	t.set_color(&"font_outline_color", &"Label", Color(0.04, 0.03, 0.06, 0.85))
-	t.set_constant(&"outline_size", &"Label", 6)
+	# 4 px et non 6 : un contour de 6 px sur une lettre de 30 px bouche les
+	# contre-formes (le o, le e) et rend le texte PIRE, pas meilleur. Le HUD,
+	# qui ecrit sur un fond peint, garde 8 px via label_hud().
+	t.set_constant(&"outline_size", &"Label", 4)
 
 	t.set_font_size(&"font_size", &"Button", FONT_BUTTON)
 	t.set_color(&"font_color", &"Button", TEXT)
 	t.set_color(&"font_outline_color", &"Button", Color(0.04, 0.03, 0.06, 0.85))
-	t.set_constant(&"outline_size", &"Button", 6)
+	t.set_constant(&"outline_size", &"Button", 4)
 	t.set_color(&"font_hover_color", &"Button", GOLD)
 	t.set_color(&"font_pressed_color", &"Button", GOLD)
 	t.set_color(&"font_disabled_color", &"Button", TEXT_DIM)

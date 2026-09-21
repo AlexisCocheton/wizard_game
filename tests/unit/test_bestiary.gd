@@ -23,6 +23,12 @@ func run() -> void:
 	_test_comportements_lisibles()
 	_test_comportements_jamais_vides()
 	_test_le_panneau_se_construit()
+	_test_grimoire_trois_sections()
+	_test_grimoire_pagination()
+	_test_grimoire_fleches_dans_la_fiche()
+	_test_grimoire_compteurs_dusage()
+	_test_grimoire_compteurs_branches()
+	_test_grimoire_ameliorations()
 	_test_double_toucher_du_deck()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
@@ -97,11 +103,11 @@ func _test_spawn_enregistre_la_rencontre() -> void:
 ## ferait croire a un ecran casse.
 func _test_tous_les_monstres_ont_une_description() -> void:
 	for def: EnemyDef in ContentDB.enemies.values():
-		var lignes: Array[String] = BestiaryPanel.behaviours(def)
+		var lignes: Array[String] = BestiaryLore.behaviours(def)
 		ok(lignes.size() >= 1, "%s a au moins une competence decrite" % def.id)
 		for l in lignes:
 			ok(l.strip_edges() != "", "%s : aucune ligne vide" % def.id)
-		ok(BestiaryPanel.kind_name(def.kind) != "", "%s a un nom de famille" % def.id)
+		ok(BestiaryLore.kind_name(def.kind) != "", "%s a un nom de famille" % def.id)
 
 
 ## Les phrases decrivent bien LE champ qui les declenche. On lit les champs et
@@ -109,7 +115,7 @@ func _test_tous_les_monstres_ont_une_description() -> void:
 func _test_comportements_lisibles() -> void:
 	var jelly: EnemyDef = ContentDB.enemies.get(&"jelly")
 	if jelly != null and jelly.split_count > 0:
-		ok(_contient(BestiaryPanel.behaviours(jelly), "divise"),
+		ok(_contient(BestiaryLore.behaviours(jelly), "divise"),
 			"la gelee annonce qu elle se divise")
 
 	# On teste la traduction sur une definition construite a la main plutot que
@@ -121,7 +127,7 @@ func _test_comportements_lisibles() -> void:
 	d.shot_damage = 3
 	d.immune_tags = [GameEnums.DamageTag.SLOW]
 	d.dodge_chance = 0.25
-	var lignes: Array[String] = BestiaryPanel.behaviours(d)
+	var lignes: Array[String] = BestiaryLore.behaviours(d)
 	ok(_contient(lignes, "Tire a distance"), "un tireur annonce sa portee")
 	ok(_contient(lignes, "ralentissement"), "une immunite est nommee en clair")
 	ok(_contient(lignes, "25"), "le pourcentage d esquive est chiffre")
@@ -132,20 +138,20 @@ func _test_comportements_lisibles() -> void:
 func _test_comportements_jamais_vides() -> void:
 	var nu := EnemyDef.new()
 	nu.id = &"test_nu"
-	var lignes: Array[String] = BestiaryPanel.behaviours(nu)
+	var lignes: Array[String] = BestiaryLore.behaviours(nu)
 	eq(lignes.size(), 1, "un monstre sans particularite a une ligne de repli")
 
 	# Et rien ne doit planter sur une definition absente.
-	eq(BestiaryPanel.behaviours(null).size(), 0, "null ne fait pas planter la fiche")
+	eq(BestiaryLore.behaviours(null).size(), 0, "null ne fait pas planter la fiche")
 
 
-## L ecran lui-meme : construction et comptage, tuiles verrouillees comprises.
+## L ecran lui-meme : c est desormais la section BESTIAIRE du grimoire.
 func _test_le_panneau_se_construit() -> void:
 	SaveData.reset_profile()
-	var panel := BestiaryPanel.new()
+	var panel := GalleryPanel.new()
 	attach(panel)
-	panel.refresh()
-	var total: int = BestiaryPanel.listed_enemies().size()
+	panel.show_section(GalleryPanel.Section.BEASTS)
+	var total: int = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS).size()
 	ok(total >= 1, "le bestiaire liste des monstres (%d)" % total)
 	eq(total, ContentDB.enemies.size(), "tous les monstres du contenu sont listes")
 
@@ -214,3 +220,147 @@ func _contient(lignes: Array[String], motif: String) -> bool:
 		if l.findn(motif) != -1:
 			return true
 	return false
+
+
+# --- Le grimoire (galerie + bestiaire fusionnes, DEC-018) ---
+
+## Les trois sections ne se melangent pas : un passif n est pas un sort, et la
+## somme des deux sections de cartes doit couvrir TOUT le contenu. Sans ce test,
+## une carte passive ajoutee plus tard pourrait n apparaitre nulle part.
+func _test_grimoire_trois_sections() -> void:
+	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
+	var passifs: Array = GalleryPanel.entries_of(GalleryPanel.Section.PASSIVES)
+	var betes: Array = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS)
+	eq(sorts.size() + passifs.size(), ContentDB.cards.size(),
+		"sorts + passifs = toutes les cartes du jeu, aucune carte orpheline")
+	eq(betes.size(), ContentDB.enemies.size(), "le bestiaire liste tous les monstres")
+	ok(passifs.size() >= 1, "il y a au moins un passif (%d)" % passifs.size())
+	for c: SpellCard in sorts:
+		not_ok(c.is_passive, "%s est dans SORTS donc n est pas passive" % c.id)
+	for c: SpellCard in passifs:
+		ok(c.is_passive, "%s est dans PASSIFS donc est passive" % c.id)
+
+
+## La pagination est la regle de l ecran : 9 par page, au moins une page meme
+## vide, et tourner revient au debut apres la derniere page.
+func _test_grimoire_pagination() -> void:
+	eq(GalleryPanel.pages_for(0), 1, "une section vide garde une page, pas zero")
+	eq(GalleryPanel.pages_for(9), 1, "9 entrees tiennent sur une page")
+	eq(GalleryPanel.pages_for(10), 2, "la 10e entree ouvre une deuxieme page")
+	eq(GalleryPanel.pages_for(27), 3, "27 entrees = 3 pages pleines")
+
+	var panel := GalleryPanel.new()
+	attach(panel)
+	panel.show_section(GalleryPanel.Section.SPELLS)
+	eq(panel.current_page(), 0, "on ouvre une section a sa premiere page")
+	var total: int = panel.page_count()
+	ok(total >= 2, "les sorts tiennent sur plusieurs pages (%d)" % total)
+	panel.turn_page(1)
+	eq(panel.current_page(), 1, "la fleche droite avance d une page")
+	panel.turn_page(-1)
+	eq(panel.current_page(), 0, "la fleche gauche revient")
+	# Boucle : depuis la premiere page, reculer mene a la DERNIERE. Le joueur qui
+	# cherche une legendaire l atteint d un toucher au lieu de quatre.
+	panel.turn_page(-1)
+	eq(panel.current_page(), total - 1, "reculer depuis la page 1 boucle a la fin")
+	panel.turn_page(1)
+	eq(panel.current_page(), 0, "et avancer depuis la fin revient au debut")
+
+	# Changer de section repart de la premiere page : rester en page 4 dans une
+	# section qui n en a que 2 afficherait une page vide.
+	panel.turn_page(1)
+	panel.show_section(GalleryPanel.Section.PASSIVES)
+	eq(panel.current_page(), 0, "changer de section remet a la page 1")
+	eq(panel.current_section(), GalleryPanel.Section.PASSIVES, "la section a bien change")
+	detach(panel)
+
+
+## Demande explicite du testeur : "les memes fleches defilent au suivant dans le
+## detail". Dans la fiche, tourner ne change donc pas de page mais d ENTREE.
+func _test_grimoire_fleches_dans_la_fiche() -> void:
+	var panel := GalleryPanel.new()
+	attach(panel)
+	panel.show_section(GalleryPanel.Section.SPELLS)
+	var n: int = panel.entries().size()
+	ok(n >= 2, "au moins deux sorts pour pouvoir defiler")
+	eq(panel.detail_index(), -1, "aucune fiche ouverte au depart")
+
+	panel.open_detail(0)
+	eq(panel.detail_index(), 0, "la fiche 0 est ouverte")
+	panel.turn_page(1)
+	eq(panel.detail_index(), 1, "dans la fiche, la fleche passe a l entree suivante")
+	panel.turn_page(-1)
+	eq(panel.detail_index(), 0, "et l autre fleche a la precedente")
+	panel.turn_page(-1)
+	eq(panel.detail_index(), n - 1, "la fiche boucle comme les pages")
+
+	# La page suit la fiche : en fermant sur la derniere entree, on ne retombe
+	# pas page 1 en ayant perdu sa place.
+	eq(panel.current_page(), (n - 1) / GalleryPanel.PER_PAGE,
+		"la page courante suit l entree affichee")
+	panel.close_detail()
+	eq(panel.detail_index(), -1, "FERMER referme la fiche")
+
+	# Un index hors liste ne doit rien ouvrir plutot que planter.
+	panel.open_detail(9999)
+	eq(panel.detail_index(), -1, "un index hors liste n ouvre rien")
+	detach(panel)
+
+
+## Les deux compteurs demandes : usages d un sort et monstres tues par espece.
+## Ils passent par ChallengeTracker, donc sont persistes avec le profil.
+func _test_grimoire_compteurs_dusage() -> void:
+	SaveData.reset_profile()
+	eq(GalleryPanel.card_uses(&"fireball"), 0, "profil neuf : aucun lancer compte")
+	eq(GalleryPanel.kills_of(&"jelly"), 0, "profil neuf : aucune gelee tuee")
+
+	ChallengeTracker.bump(&"card_uses:fireball")
+	ChallengeTracker.bump(&"card_uses:fireball")
+	eq(GalleryPanel.card_uses(&"fireball"), 2, "deux lancers comptes")
+	eq(GalleryPanel.card_uses(&"spark"), 0, "le compteur est PAR CARTE, pas global")
+
+	ChallengeTracker.bump(&"kills:jelly", 3)
+	eq(GalleryPanel.kills_of(&"jelly"), 3, "trois gelees vaincues")
+	eq(GalleryPanel.kills_of(&"shade"), 0, "le compteur est PAR ESPECE")
+
+
+## Le branchement REEL des deux compteurs. Sans ces deux tests, retirer la ligne
+## de EffectRegistry.cast() ou celle de GameController passerait inapercu :
+## l ecran afficherait tranquillement zero pour toujours.
+func _test_grimoire_compteurs_branches() -> void:
+	SaveData.reset_profile()
+	var card: SpellCard = ContentDB.cards.get(&"fireball")
+	ok(card != null, "la boule de feu existe")
+	if card == null:
+		return
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	attach(g)
+
+	var avant: int = GalleryPanel.card_uses(card.id)
+	var ctx: CastContext = CastContext.make(g.battlefield, card)
+	ctx.target_position = Vector2(500.0, 900.0)
+	EffectRegistry.cast(card, ctx)
+	eq(GalleryPanel.card_uses(card.id), avant + 1,
+		"lancer un sort incremente son compteur d usage")
+
+	var def: EnemyDef = ContentDB.enemies.get(&"jelly")
+	if def != null:
+		var tues: int = GalleryPanel.kills_of(def.id)
+		g._on_enemy_killed_for_challenges(def)
+		eq(GalleryPanel.kills_of(def.id), tues + 1,
+			"tuer un monstre incremente le compteur de son espece")
+	detach(g)
+
+
+## La section AMELIORATIONS doit exister AVANT le systeme d amelioration : elle
+## annonce au joueur ce qui l attend. Tant que les cartes n ont pas le champ,
+## la liste est vide et l ecran affiche "a decouvrir en combat".
+func _test_grimoire_ameliorations() -> void:
+	for card: SpellCard in ContentDB.cards.values():
+		var ups: Array = GalleryPanel.upgrades_of(card)
+		for u in ups:
+			ok(u is Dictionary, "%s : une amelioration est un dictionnaire" % card.id)
+			ok(String(u.get("text", "")) != "", "%s : une amelioration a un texte" % card.id)
+	eq(GalleryPanel.upgrades_of(null).size(), 0, "null ne fait pas planter la fiche")

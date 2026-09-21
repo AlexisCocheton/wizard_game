@@ -1,126 +1,17 @@
-class_name BestiaryPanel
-extends Control
-## Onglet Bestiaire — les monstres DEJA RENCONTRES, avec leurs competences.
+class_name BestiaryLore
+extends RefCounted
+## Le SAVOIR sur les monstres : traduire un EnemyDef en phrases et en couleurs
+## lisibles par le joueur, et en tirer un portrait.
 ##
-## Racine en Control (pas en conteneur), meme raison que la Galerie : la fiche
-## detaillee doit se SUPERPOSER a la grille ; un VBoxContainer la placerait
-## dessous et il faudrait faire defiler pour la lire.
+## C etait un PANNEAU d onglet (BestiaryPanel). Le bestiaire a fusionne avec la
+## galerie dans le grimoire a pages (`gallery_panel.gd`, section BESTIAIRE) :
+## un seul ecran de consultation au lieu de deux onglets voisins qui faisaient
+## la meme chose. Ce qui restait ici — la traduction des champs en competences,
+## les couleurs de puissance, le portrait — n avait aucune raison de disparaitre
+## avec l ecran : c est de la CONNAISSANCE du domaine, pas de l affichage.
 ##
-## Un monstre jamais croise reste en silhouette "???" : le bestiaire est une
-## recompense d exploration, pas une fiche technique offerte d emblee.
-
-## Hauteur de tuile : le portrait + DEUX lignes de texte (nom, chiffres) +
-## les marges du bouton. Calibree en lisant les captures : a 250 px le nom
-## sortait de la tuile qui rogne, et le monstre s affichait anonyme.
-const TILE_H: float = 300.0   ## cible tactile : 3 colonnes de ~336x300, bien au-dela des 90 px
-const SPRITE_PX: float = 120.0
-const SPRITE_PX_BIG: float = 240.0
-
-var _grid: GridContainer
-var _counter: Label
-var _detail: PanelContainer
-
-
-func _ready() -> void:
-	_build()
-	refresh()
-
-
-func _build() -> void:
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override(&"separation", 16)
-	add_child(vbox)
-
-	_counter = UiTheme.label("", UiTheme.FONT_BODY, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	vbox.add_child(_counter)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(scroll)
-	_grid = GridContainer.new()
-	_grid.columns = 3
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_grid.add_theme_constant_override(&"h_separation", 12)
-	_grid.add_theme_constant_override(&"v_separation", 12)
-	scroll.add_child(_grid)
-
-	_detail = PanelContainer.new()
-	_detail.visible = false
-	_detail.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_detail)
-
-
-## Les monstres du bestiaire, tries du plus faible au plus fort : le joueur lit
-## la hierarchie de puissance dans l ordre de la grille.
-static func listed_enemies() -> Array:
-	var out: Array = []
-	for e: EnemyDef in ContentDB.enemies.values():
-		out.append(e)
-	out.sort_custom(func(a: EnemyDef, b: EnemyDef) -> bool:
-		if a.power != b.power:
-			return a.power < b.power
-		return a.display_name < b.display_name)
-	return out
-
-
-func refresh() -> void:
-	_detail.visible = false
-	for c in _grid.get_children():
-		c.queue_free()
-	var defs: Array = listed_enemies()
-	var seen: int = 0
-	for def: EnemyDef in defs:
-		var known: bool = SaveData.is_enemy_discovered(def.id)
-		if known:
-			seen += 1
-		_grid.add_child(_tile(def, known))
-	_counter.text = "Monstres rencontres : %d / %d" % [seen, defs.size()]
-
-
-func _tile(def: EnemyDef, known: bool) -> Control:
-	var tile := Button.new()
-	tile.custom_minimum_size = Vector2(0, TILE_H)
-	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tile.clip_contents = true
-
-	# Le sprite se pose PAR-DESSUS le bouton, en ignorant la souris : sinon il
-	# avalerait le toucher et la tuile ne reagirait plus.
-	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_FULL_RECT)
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override(&"separation", 4)
-	tile.add_child(box)
-
-	var art: Control = _portrait(def, SPRITE_PX, known)
-	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	box.add_child(art)
-
-	if known:
-		# Le nom en TEXT clair et non en couleur de puissance : la tuile est le
-		# bouton bleu du pack, les teintes vives (teal, or) s y noyaient — la
-		# couleur de puissance ne sert que sur la ligne chiffree et la fiche.
-		# Nom sur UNE ligne, tronque par des points de suspension. En autowrap
-		# (le defaut de UiTheme.label) un nom long prenait deux lignes et
-		# poussait la ligne chiffree hors de la tuile, qui rogne.
-		var nom := UiTheme.label(def.display_name, UiTheme.FONT_SMALL,
-			UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-		nom.autowrap_mode = TextServer.AUTOWRAP_OFF
-		nom.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		box.add_child(nom)
-		box.add_child(UiTheme.label("P%d   %d PV" % [def.power, int(def.max_hp)],
-			UiTheme.FONT_SMALL, _power_color(def.power), HORIZONTAL_ALIGNMENT_CENTER))
-		tile.pressed.connect(_show_detail.bind(def))
-	else:
-		box.add_child(UiTheme.label("???", UiTheme.FONT_BODY, UiTheme.TEXT,
-			HORIZONTAL_ALIGNMENT_CENTER))
-		box.add_child(UiTheme.label("jamais croise", UiTheme.FONT_SMALL,
-			UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
-		tile.disabled = true
-	return tile
-
+## En RefCounted et non en Control : plus rien ici ne se place a l ecran, et un
+## Control inutilise dans l arbre est un piege a `queue_free` oublie.
 
 ## Portrait du monstre : premiere image de sa feuille de MARCHE, son etat
 ## permanent (DEC assets : l attaque et la mort sont des poses etirees).
@@ -130,7 +21,7 @@ func _tile(def: EnemyDef, known: bool) -> Control:
 ## pleines (le Blood Monster n occupe que 31 % de sa case). Sans cette
 ## correction, mise a l echelle de la case entiere, les gros monstres
 ## s affichaient minuscules — le piege deja mesure dans [[assets]].
-func _portrait(def: EnemyDef, px: float, known: bool) -> Control:
+static func portrait_of(def: EnemyDef, px: float, known: bool) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = Vector2(px, px)
 	holder.clip_contents = true
@@ -140,7 +31,7 @@ func _portrait(def: EnemyDef, px: float, known: bool) -> Control:
 	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tr.texture = _portrait_texture(def)
+	tr.texture = portrait_texture(def)
 
 	# On centre une zone de dessin plus grande que le cadre : la partie occupee
 	# de la case remplit alors la vignette, le vide deborde et est rogne.
@@ -163,7 +54,7 @@ func _portrait(def: EnemyDef, px: float, known: bool) -> Control:
 ## Une AtlasTexture sur la premiere case de la feuille de marche. On ne passe pas
 ## par AnimatedSprite2D : une grille de 21 lecteurs animes pour une consultation
 ## couterait plus que l ecran ne rapporte.
-func _portrait_texture(def: EnemyDef) -> Texture2D:
+static func portrait_texture(def: EnemyDef) -> Texture2D:
 	if def == null or String(def.anim_key) == "":
 		return def.sprite if def != null else null
 	var key: StringName = def.anim_key
@@ -196,10 +87,6 @@ static func power_color(power: int) -> Color:
 	if power >= 3:
 		return Color(0.85, 0.62, 0.10)
 	return Color(0.10, 0.35, 0.40)
-
-
-func _power_color(power: int) -> Color:
-	return power_color(power)
 
 
 ## Version lisible sur PAPIER (fond clair) : les teintes vives ci-dessus y
@@ -327,63 +214,3 @@ static func speed_word(base_speed: float) -> String:
 	if base_speed >= 35.0:
 		return "lente"
 	return "tres lente"
-
-
-func _show_detail(def: EnemyDef) -> void:
-	for c in _detail.get_children():
-		c.queue_free()
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_detail.add_child(scroll)
-	var box := VBoxContainer.new()
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override(&"separation", 14)
-	scroll.add_child(box)
-
-	var art: Control = _portrait(def, SPRITE_PX_BIG, true)
-	art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	box.add_child(art)
-
-	# Encre SOMBRE partout : le panneau est un papier clair du pack, le blanc y
-	# est illisible (bug deja signale par le testeur).
-	box.add_child(UiTheme.label(def.display_name, UiTheme.FONT_TITLE,
-		power_ink(def.power), HORIZONTAL_ALIGNMENT_CENTER))
-	box.add_child(UiTheme.label("%s   -   puissance %d" % [kind_name(def.kind), def.power],
-		UiTheme.FONT_BODY, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
-
-	var stats := HBoxContainer.new()
-	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override(&"separation", 28)
-	box.add_child(stats)
-	stats.add_child(_stat("PV", str(int(def.max_hp)), Color(0.62, 0.12, 0.14)))
-	stats.add_child(_stat("Vitesse", speed_word(def.base_speed), Color(0.15, 0.38, 0.75)))
-	stats.add_child(_stat("Degats", "%d" % def.contact_hit(), Color(0.45, 0.30, 0.10)))
-	stats.add_child(_stat("XP", str(def.base_xp), Color(0.62, 0.45, 0.05)))
-
-	box.add_child(UiTheme.label("COMPETENCES", UiTheme.FONT_BODY,
-		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
-	for line in behaviours(def):
-		box.add_child(UiTheme.label("- " + line, UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
-
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 10)
-	box.add_child(spacer)
-	var close := Button.new()
-	close.text = "FERMER"
-	close.custom_minimum_size = Vector2(0, 110)   # cible tactile confortable
-	close.pressed.connect(func() -> void: _detail.visible = false)
-	box.add_child(close)
-	_detail.visible = true
-
-
-func _stat(title: String, value: String, ink: Color) -> Control:
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override(&"separation", 2)
-	var t := UiTheme.label(title, UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25),
-		HORIZONTAL_ALIGNMENT_CENTER)
-	t.autowrap_mode = TextServer.AUTOWRAP_OFF
-	v.add_child(t)
-	var l := UiTheme.label(value, UiTheme.FONT_BUTTON, ink, HORIZONTAL_ALIGNMENT_CENTER)
-	l.autowrap_mode = TextServer.AUTOWRAP_OFF
-	v.add_child(l)
-	return v

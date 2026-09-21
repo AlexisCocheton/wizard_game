@@ -40,10 +40,15 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_root.theme = UiTheme.make()
 	_style_hud_labels()
-	_speed_btn.pressed.connect(_on_speed_pressed)
-	# La barre de vitesse se regle au doigt : toucher un point y place la vitesse.
-	_enemy_bar.gui_input.connect(_on_speed_bar_input)
-	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_STOP
+	# La vitesse n est plus PILOTABLE (demande du testeur du 21 septembre) : ni
+	# par le bouton, ni en touchant la barre. Le bouton reste comme AFFICHAGE du
+	# pourcentage, sans signal `pressed` — et la barre laisse passer le doigt,
+	# sinon elle avalerait les glissements de carte qui commencent au-dessus
+	# d elle (un Control en MOUSE_FILTER_STOP consomme l evenement, voir le
+	# piege du Button documente en memoire).
+	_speed_btn.disabled = true
+	_speed_btn.focus_mode = Control.FOCUS_NONE
+	_enemy_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pause_btn.pressed.connect(_on_pause_pressed)
 	RunState.card_drawn.connect(func(_c: SpellCard) -> void: AudioBus.play_sfx(&"card_draw"))
 	SpeedGauge.multiplier_changed.connect(_on_multiplier_changed)
@@ -105,8 +110,9 @@ func _refresh_gauges() -> void:
 	var pv_max: float = float(maxi(1, SpeedGauge.max_hp))
 	_spell_bar.value = 100.0 * float(SpeedGauge.hp) / pv_max
 	_speed_btn.text = "%d%%" % SpeedGauge.speed_percent
-	# Verrou apres un coup : le bouton dit pourquoi il ne repond pas.
-	_speed_btn.disabled = SpeedGauge.accel_locked()
+	# Simple afficheur : il reste `disabled` en permanence (regle une fois dans
+	# _ready), et sa teinte dit seulement si la montee est retenue par un coup
+	# recu — la seule chose que le joueur peut encore lire sur la vitesse.
 	_speed_btn.modulate = Color(1, 0.6, 0.6) if SpeedGauge.accel_locked() else Color.WHITE
 
 	# Le sort prepare doit se voir, sinon le joueur ne sait pas ce qui va partir.
@@ -321,28 +327,6 @@ func _on_cast_finished(_card: SpellCard) -> void:
 	_cast_bar.value = 0.0
 
 
-## Toucher la barre de vitesse : elle est pivotee de -90 degres, donc c est la
-## coordonnee X locale qui monte, pas Y.
-func _on_speed_bar_input(event: InputEvent) -> void:
-	if not (event is InputEventMouseButton):
-		return
-	var mb := event as InputEventMouseButton
-	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
-		return
-	if SpeedGauge.accel_locked():
-		return
-	var largeur: float = maxf(_enemy_bar.size.x, 1.0)
-	SpeedGauge.set_speed_from_ratio(clampf(mb.position.x / largeur, 0.0, 1.0))
-	AudioBus.play_sfx(&"speed_up")
-
-
-func _on_speed_pressed() -> void:
-	if SpeedGauge.accel_locked():
-		return
-	AudioBus.play_sfx(&"speed_up")
-	SpeedGauge.bump_speed()
-
-
 ## Le HUD DOIT continuer a tourner en pause, sinon son propre bouton ne repond
 ## plus et la partie reste bloquee. C est ce qui arrivait : un seul clic figeait
 ## tout, y compris le moyen de repartir.
@@ -454,6 +438,39 @@ func _show_pause_panel() -> void:
 	reprendre.process_mode = Node.PROCESS_MODE_ALWAYS
 	reprendre.pressed.connect(_on_pause_pressed)
 	box.add_child(reprendre)
+
+	# QUITTER (demande du testeur) : "dans l onglet pause on peut quitter le
+	# combat pour retourner au menu". En dessous de REPRENDRE et non au-dessus :
+	# on ne met pas la sortie definitive sous le pouce de quelqu un qui voulait
+	# seulement reprendre.
+	var quitter := Button.new()
+	quitter.text = "QUITTER LE COMBAT"
+	quitter.custom_minimum_size = Vector2(0, 96)
+	quitter.process_mode = Node.PROCESS_MODE_ALWAYS
+	quitter.pressed.connect(_on_quit_pressed)
+	box.add_child(quitter)
+
+
+## Quitter le combat et revenir au menu.
+##
+## L ORDRE compte et c est tout le piege : on DEPAUSE avant de changer de scene.
+## Partir en laissant `get_tree().paused` a vrai rendrait le menu inerte — ses
+## boutons ne repondraient plus et le joueur serait coince sur un ecran mort,
+## sans meme comprendre pourquoi.
+##
+## On arrete ensuite la partie (`abandon_run`) AVANT `goto()` : le champ de
+## bataille part en liberation avec la scene, et une simulation qui continuerait
+## dessus planterait.
+func _on_quit_pressed() -> void:
+	get_tree().paused = false
+	if _pause_panel != null:
+		_pause_panel.queue_free()
+		_pause_panel = null
+	_pause_btn.text = "II"
+	if game != null and game.has_method("abandon_run"):
+		game.abandon_run()
+	AudioBus.play_music(&"menu")
+	SceneRouter.goto(SceneRouter.MAIN_MENU)
 
 
 ## Les cartes en main, en grand et avec leur description complete.

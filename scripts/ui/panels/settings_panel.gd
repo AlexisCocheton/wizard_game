@@ -53,7 +53,10 @@ func _build() -> void:
 	_reset_btn.pressed.connect(_on_reset)
 	add_child(_reset_btn)
 
-	add_child(UiTheme.label("Wizard Story  -  prototype", UiTheme.FONT_SMALL,
+	# Le jeu s appelle "Time Wizard" depuis le 2026-09-21 (demande du testeur).
+	# Verrouille par un test sur le titre du menu : ce pied de page etait la
+	# derniere occurrence de l ancien nom dans l interface.
+	add_child(UiTheme.label("Time Wizard  -  prototype", UiTheme.FONT_SMALL,
 		UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 
 

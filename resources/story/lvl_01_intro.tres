@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_ropqf"]
+
+[resource]
+script = ExtResource("1_ropqf")
+id = &"lvl_01_intro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "La foret de Nuri, six jours avant sa fin. Elle ne le sait pas encore."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Meme odeur de mousse. Meme lumiere entre les branches. Je suis au bon endroit, au bon matin."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Et je suis vide. De quoi lancer trois sorts et courir vite. Ca ira."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Puis un cri, entre les arbres. Une voix d enfant."
+}])

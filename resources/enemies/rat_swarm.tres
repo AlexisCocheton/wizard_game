@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_gw600")
 id = &"rat_swarm"
-display_name = "Nuee de rats"
+display_name = "Oiseau mirage"
 kind = 4
 power = 2
 max_hp = 4.0
@@ -21,6 +21,8 @@ immune_tags = Array[int]([])
 dodge_chance = 0.0
 swarm_count = 4
 entry_side = false
+flying = false
+projectile = false
 phase_interval = 0.0
 buff_speed_pct = 0.0
 devours = false

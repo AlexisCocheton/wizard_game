@@ -6,14 +6,18 @@ extends Node
 ##   2. multiplie l'XP gagnee a chaque mort
 ##   3. donne du BOUCLIER, absorbe avant les PV
 ##
-## Echelle : 100 % (normal) a 500 % (maximum), par pas de 10 %. Les quatre paliers
-## fixes d'origine (x1/x1.5/x2/x4) ne laissaient aucune nuance : on sautait du
-## simple au double, et arrive au maximum un appui de plus repassait a x1 — un
-## bug qui punissait le joueur au pire moment.
+## Echelle : 100 % (normal) a 500 % (maximum).
+##
+## La vitesse n'est PAS pilotable par le joueur. Elle monte toute seule, de
+## GameConfig.SPEED_RISE_PER_SECOND points par seconde, en continu. Le bouton
+## d'acceleration et la barre cliquable ont ete RETIRES (demande du testeur du
+## 21 septembre) : le joueur decidait quand prendre le risque, ce qui revenait a
+## choisir sa difficulte au lieu de la subir. Desormais la pression monte d'elle
+## meme et la seule facon de la faire retomber est de se faire toucher.
 ##
 ## Regle d'ordre (la plus facile a casser en silence) : un coup entame d'abord le
 ## BOUCLIER, et seul le reliquat touche les PV. Un coup fait aussi retomber la
-## vitesse et interdit d'accelerer pendant quelques secondes : on ne relance pas
+## vitesse et retient la montee pendant quelques secondes : on ne relance pas
 ## la machine dans la seconde ou l'on vient d'etre touche.
 ##
 ## Aucun noeud, aucun rendu : logique pure, pilotable par tick(delta) en headless.
@@ -35,8 +39,12 @@ var is_dying: bool = false
 ## Jauge residuelle qui se vide lentement une fois les PV a zero.
 var death_gauge: float = 1.0
 
-var _auto_timer: float = 0.0
-## Secondes restantes pendant lesquelles accelerer est refuse (apres un coup).
+## Reste FRACTIONNAIRE de la montee naturelle. Le pourcentage affiche est un
+## entier, mais le temps ne l'est pas : sans cet accumulateur, une image de
+## 1/60 s vaudrait 0 point arrondi et la vitesse ne monterait JAMAIS.
+var _rise_accumulator: float = 0.0
+## Secondes restantes pendant lesquelles la montee naturelle est retenue
+## (apres un coup).
 var _accel_lock: float = 0.0
 
 
@@ -81,22 +89,10 @@ func speed_ratio() -> float:
 	return clampf(float(speed_percent - 100) / etendue, 0.0, 1.0)
 
 
-## Un appui sur l'accelerateur : +10 %. Au maximum il ne se passe rien — surtout
-## PAS de retour a 100 %, qui etait le bug le plus punitif du bouton.
-func bump_speed() -> void:
-	if accel_locked():
-		return
-	set_speed_percent(speed_percent + GameConfig.SPEED_STEP_PERCENT)
-
-
-## Reglage direct : le joueur touche un point de la barre.
-func set_speed_from_ratio(ratio: float) -> void:
-	if accel_locked():
-		return
-	var etendue: float = float(GameConfig.SPEED_MAX_PERCENT - 100)
-	set_speed_percent(100 + int(round(clampf(ratio, 0.0, 1.0) * etendue)))
-
-
+## Il n'y a VOLONTAIREMENT plus de bump_speed() ni de set_speed_from_ratio() :
+## la vitesse ne se commande plus. Les laisser en place « au cas ou » aurait
+## garde un chemin par lequel un bouton oublie dans une scene aurait pu la
+## pousser en silence. test_speed_percent.gd verifie leur absence.
 func set_speed_percent(percent: int) -> void:
 	var clamped: int = clampi(percent, 100, GameConfig.SPEED_MAX_PERCENT)
 	if clamped == speed_percent:
@@ -110,7 +106,8 @@ func is_at_max() -> bool:
 	return speed_percent >= GameConfig.SPEED_MAX_PERCENT
 
 
-## Vrai tant que le joueur ne peut pas accelerer (fenetre apres un coup).
+## Vrai tant que la montee naturelle est retenue (fenetre apres un coup).
+## L'interface s'en sert pour expliquer pourquoi le pourcentage stagne.
 func accel_locked() -> bool:
 	return _accel_lock > 0.0
 
@@ -124,8 +121,11 @@ func accel_lock_left() -> float:
 func take_hit(amount: int = 1) -> void:
 	if is_dying:
 		return
-	# Le coup interdit d'accelerer pendant quelques secondes, quoi qu'il arrive.
+	# Le coup retient la montee pendant quelques secondes, quoi qu'il arrive.
 	_accel_lock = GameConfig.SPEED_LOCK_AFTER_HIT
+	# Le reste fractionnaire accumule avant le coup est perdu avec la vitesse :
+	# le garder ferait regagner un point dans l'instant qui suit la chute.
+	_rise_accumulator = 0.0
 
 	var absorbe: int = mini(shield(), amount)
 	var reste: int = amount - absorbe
@@ -156,11 +156,25 @@ func tick(delta: float) -> void:
 		return
 	if _accel_lock > 0.0:
 		_accel_lock = maxf(0.0, _accel_lock - delta)
-	_auto_timer += delta
-	if _auto_timer >= GameConfig.AUTO_RISE_INTERVAL:
-		_auto_timer = 0.0
-		if not is_at_max() and not accel_locked():
-			set_speed_percent(speed_percent + GameConfig.SPEED_STEP_PERCENT)
+		# Le verrou RETIENT la montee : on ne cumule meme pas le temps ecoule,
+		# sinon les 3 s de repit se rattraperaient d'un bloc a sa levee.
+		return
+	if is_at_max():
+		return
+	# Montee CONTINUE : on accumule des points fractionnaires et on ne pousse le
+	# pourcentage que lorsqu'un point entier est atteint. Le reste est conserve,
+	# donc le rythme ne depend pas de la cadence d'images.
+	_rise_accumulator += delta * GameConfig.SPEED_RISE_PER_SECOND
+	# EPSILON : additionner 60 fois 1/60 ne redonne pas 1,0 mais
+	# 0,9999999999999997. Sans cette tolerance, un point entier sur deux serait
+	# AVALE par l arrondi et la vitesse monterait deux fois moins vite que le
+	# reglage annonce — un ecart invisible en une seconde, enorme sur une partie.
+	const EPSILON: float = 1e-9
+	if _rise_accumulator < 1.0 - EPSILON:
+		return
+	var gagnes: int = int(floor(_rise_accumulator + EPSILON))
+	_rise_accumulator -= float(gagnes)
+	set_speed_percent(speed_percent + gagnes)
 
 
 func reset() -> void:
@@ -169,5 +183,5 @@ func reset() -> void:
 	hp = max_hp
 	is_dying = false
 	death_gauge = 1.0
-	_auto_timer = 0.0
+	_rise_accumulator = 0.0
 	_accel_lock = 0.0

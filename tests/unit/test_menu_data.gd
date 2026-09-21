@@ -20,6 +20,9 @@ func run() -> void:
 	_test_deck_explicite_conserve_les_exemplaires()
 	_test_seuls_les_niveaux_debloques_sont_jouables()
 	_test_le_hud_reste_actif_en_pause()
+	_test_coquille_du_menu()
+	_test_entete_affiche_niveau_et_cartes()
+	_test_profil_en_superposition()
 	# Etat propre pour les suites suivantes.
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
@@ -160,3 +163,89 @@ func _test_le_hud_reste_actif_en_pause() -> void:
 	eq(hud.process_mode, Node.PROCESS_MODE_ALWAYS,
 		"le HUD continue de tourner quand l arbre est en pause")
 	hud.queue_free()
+
+
+# --- La coquille du menu (chantier C) ---
+
+## Le nom du jeu et la forme de la barre d onglets. Ce sont des demandes
+## explicites du testeur, donc des regressions possibles : un agent qui
+## reintroduit un onglet BESTIAIRE ou le nom "Wizard Story" doit faire rougir
+## le harnais, pas attendre une relecture de capture.
+func _test_coquille_du_menu() -> void:
+	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
+	ok(packed != null, "la scene du menu existe")
+	if packed == null:
+		return
+	var menu: Control = packed.instantiate()
+	attach(menu)
+
+	var tabs: Array = menu.get("TABS")
+	eq(tabs.size(), 4, "quatre onglets : le bestiaire a fusionne, le profil est monte")
+	not_ok(tabs.has("BESTIAIRE"), "plus d onglet BESTIAIRE dans la barre du bas")
+	not_ok(tabs.has("PROFIL"), "le profil n est plus un onglet du bas")
+	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "REGLAGES"]:
+		ok(tabs.has(attendu), "l onglet %s est present" % attendu)
+	eq(tabs[int(menu.get("HOME_TAB"))], "CAMPAGNE",
+		"l onglet central sureleve reste la CAMPAGNE")
+
+	# Une icone par onglet, et AUCUNE des icones de materiel de Tiny Swords que
+	# le testeur a refusees ("pas un steak pour la campagne" : icon_04).
+	var icones: Array = menu.get("TAB_ICONS")
+	eq(icones.size(), tabs.size(), "une icone par onglet")
+	for nom in icones:
+		ok(UiTheme.tex(String(nom)) != null, "l icone %s existe sur le disque" % nom)
+	not_ok(icones.has("icon_04"), "le steak n est plus l icone de la campagne")
+
+	# Chaque onglet doit s activer sans erreur.
+	for i in tabs.size():
+		menu.select_tab(i)
+		eq(menu.current_tab(), i, "l onglet %s s active" % tabs[i])
+	detach(menu)
+
+
+## Le titre affiche "TIME WIZARD", et l en-tete porte le niveau du joueur et le
+## compte de cartes, tous deux lus dans SaveData.
+func _test_entete_affiche_niveau_et_cartes() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
+	var menu: Control = packed.instantiate()
+	attach(menu)
+
+	var titre: Label = menu.find_child("Title", true, false) as Label
+	ok(titre != null, "le titre existe dans la scene")
+	if titre != null:
+		eq(titre.text, "TIME WIZARD", "le jeu s appelle desormais Time Wizard")
+		not_ok(titre.text.to_lower().contains("story"), "l ancien nom a disparu")
+
+	var niveau: Label = menu.find_child("LevelLabel", true, false) as Label
+	ok(niveau != null, "le niveau du joueur est affiche en haut")
+	if niveau != null:
+		ok(niveau.text.contains(str(SaveData.account_level())),
+			"l en-tete montre le niveau de compte reel (%s)" % niveau.text)
+
+	var cartes: Label = menu.find_child("CardsLabel", true, false) as Label
+	ok(cartes != null, "le compteur de cartes est affiche en haut")
+	if cartes != null:
+		ok(cartes.text.contains(str(SaveData.discovered_count())),
+			"le compteur montre les cartes reellement decouvertes (%s)" % cartes.text)
+		ok(cartes.text.contains(str(ContentDB.cards.size())),
+			"et le total du contenu")
+	detach(menu)
+
+
+## Le profil ouvert par l avatar en haut a droite, et non par un onglet du bas.
+func _test_profil_en_superposition() -> void:
+	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
+	var menu: Control = packed.instantiate()
+	attach(menu)
+
+	var bouton: Button = menu.find_child("ProfileButton", true, false) as Button
+	ok(bouton != null, "le bouton PROFIL est dans la barre du haut")
+	not_ok(menu.call("profile_open"), "ferme au depart")
+	menu.call("show_profile", true)
+	ok(menu.call("profile_open"), "l avatar ouvre le profil")
+	# Changer d onglet doit le refermer, sinon il resterait pose par-dessus.
+	menu.select_tab(0)
+	not_ok(menu.call("profile_open"), "changer d onglet referme le profil")
+	detach(menu)

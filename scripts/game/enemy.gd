@@ -27,6 +27,9 @@ var _phase_timer: float = 0.0
 var _hidden: bool = false
 var _dead: bool = false
 var _absorbed: bool = false
+## Secondes restantes de fondu d apparition. Tant qu il est > 0 le monstre est
+## IMMOBILE et INTOUCHABLE : voir GameConfig.SPAWN_FADE_TIME.
+var _spawn_fade: float = 0.0
 
 var _path: Array[Vector2] = []
 var _path_index: int = 0
@@ -124,7 +127,10 @@ func _setup_visual() -> void:
 
 ## Le rayon logique (gobage, contact) etait calibre pour des formes ; les sprites
 ## doivent etre nettement plus grands pour se lire sur un ecran 1080 de large.
-const VISUAL_FACTOR: float = 1.9
+## 2,1 et non 1,9 : demande du testeur, "augmente legerement la taille de tous
+## les monstres". Ne touche QUE l affichage — le rayon logique (contact, gobage,
+## portee des auras) reste `radius()`.
+const VISUAL_FACTOR: float = 2.1
 
 ## Part des degats encaissee par un monstre en phase (Ombre).
 const PHASE_DAMAGE_FACTOR: float = 0.4
@@ -154,6 +160,19 @@ func _place_hp_bar() -> void:
 	_hp_bar.position = Vector2(-56.0 * sc, -r * 0.78 - 51.0 * sc)
 
 
+## Demarre le fondu d apparition. Appele par Battlefield pour les monstres qui
+## naissent sur la ligne d apparition ; PAS pour ceux qu on pose a un endroit
+## precis (division, invocation, vitrine), qui doivent exister tout de suite.
+func begin_spawn_fade() -> void:
+	_spawn_fade = GameConfig.SPAWN_FADE_TIME
+	modulate.a = 0.0
+
+
+## Vrai pendant le fondu : immobile et intouchable.
+func is_spawning() -> bool:
+	return _spawn_fade > 0.0
+
+
 func radius() -> float:
 	if _body != null:
 		return _body.radius()
@@ -164,6 +183,16 @@ func radius() -> float:
 func advance(world_delta: float) -> void:
 	if _dead or definition == null:
 		return
+	# APPARITION : il se montre, sans bouger et sans pouvoir etre frappe. Le
+	# fondu suit le temps du MONDE comme le reste de la descente, sinon a 400 %
+	# il resterait une demi-seconde fantome pendant que la vague le double.
+	if _spawn_fade > 0.0:
+		_spawn_fade -= world_delta
+		if _spawn_fade > 0.0:
+			modulate.a = 1.0 - clampf(_spawn_fade / maxf(GameConfig.SPAWN_FADE_TIME, 0.001), 0.0, 1.0)
+			return
+		_spawn_fade = 0.0
+		modulate.a = 1.0
 	if _slow_time > 0.0:
 		_slow_time -= world_delta
 		if _slow_time <= 0.0:
@@ -254,7 +283,10 @@ func advance(world_delta: float) -> void:
 
 ## Descente directe tant qu aucun mur ne gene ; sinon on suit le chemin A*.
 func _advance_along_path(speed: float, world_delta: float) -> void:
-	if nav == null:
+	# VOLANT : il passe AU-DESSUS des murs. Pas d A*, pas de contournement, pas
+	# de coup porte au decor — il descend tout droit. C est tout l interet de la
+	# capacite : le joueur ne peut pas la repousser avec un mur, il doit la tuer.
+	if nav == null or definition.flying:
 		position.y += speed * world_delta
 		return
 
@@ -314,6 +346,10 @@ func _recompute_path() -> void:
 ## Array[GameEnums.DamageTag] a l appel, ce qui casserait tous les degats.
 func take_damage(amount: float, tags: Array) -> bool:
 	if _dead or definition == null:
+		return false
+	# Intouchable pendant le fondu : frapper un monstre a peine visible, qui n a
+	# pas encore commence a avancer, revient a frapper un fantome.
+	if _spawn_fade > 0.0:
 		return false
 	for t in tags:
 		if definition.is_immune_to(t):

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_y878n"]
+
+[resource]
+script = ExtResource("1_y878n")
+id = &"lvl_02_outro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le corniste tombe en dernier. Sa corne roule dans la boue et continue a sonner deux secondes de trop."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il jouait pour les autres."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il jouait pour quelqu un d autre. Il recevait un tempo, il le repetait."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ou est ton maire, petit ?"
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Dans la grange. Il s y cache depuis trois jours."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Trois jours. Avant meme l attaque, donc. Interessant."
+}])

@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_b0wf5"]
+
+[resource]
+script = ExtResource("1_b0wf5")
+id = &"lvl_04_outro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le Gardien s effondre en un tas de bois mort. Dans sa poitrine ouverte, plantee la comme une echarde, une plaque de metal noir que personne n a taillee ici."
+}, {
+"portrait": &"guardian",
+"side": "right",
+"speaker": "Le Gardien",
+"text": "... pas... voulu..."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il n est pas devenu fou. On lui a mis quelque chose dedans."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Vu la soudure, c est du travail d en haut. Sky Lands. Je connais le style, j en viens."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Alors on monte ?"
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "On monte. Accrochez-vous a ce qui est visse."
+}])

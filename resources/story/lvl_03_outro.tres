@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_r4va7"]
+
+[resource]
+script = ExtResource("1_r4va7")
+id = &"lvl_03_outro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au bout de la route, une carcasse de dirigeable coincee dans les arbres comme une baleine echouee. Elle fume encore."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il y a quelqu un dedans. Ca tape."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ca tape avec un outil. Ce n est pas un monstre, c est un mecanicien."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Loin derriere eux, dans la foret, quelque chose de tres grand se met debout."
+}])

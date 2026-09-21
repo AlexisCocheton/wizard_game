@@ -1,26 +1,28 @@
-[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_pnnur"]
 
-[resource]
+[sub_resource type="Resource" id="Resource_pnnur"]
 script = ExtResource("1_pnnur")
-id = &"wisp"
-display_name = "Feu follet"
-kind = 3
-power = 2
+id = &"poison_ball"
+display_name = "Boule de poison"
+kind = 1
+power = 1
 max_hp = 10.0
-base_speed = 90.0
-base_xp = 2
-contact_damage = 0
-anim_key = &"flyer"
+base_speed = 120.0
+base_xp = 0
+contact_damage = 8
+anim_key = &"poison_ball"
 sprite_scale = 1.0
 shape = 1
-color = Color(0.45, 0.9, 0.88, 1)
-base_radius = 22.0
+color = Color(0.45, 1, 0.3, 1)
+base_radius = 16.0
 immune_tags = Array[int]([])
-dodge_chance = 0.35
+dodge_chance = 0.0
 swarm_count = 1
 entry_side = false
+flying = true
+projectile = true
 phase_interval = 0.0
 buff_speed_pct = 0.0
 devours = false
@@ -44,3 +46,49 @@ keeps_distance_at = 0.0
 summon_interval = 0.0
 summon_count = 1
 summon_max_alive = 6
+
+[resource]
+script = ExtResource("1_pnnur")
+id = &"wisp"
+display_name = "Planogo"
+kind = 3
+power = 2
+max_hp = 10.0
+base_speed = 90.0
+base_xp = 2
+contact_damage = 0
+anim_key = &"flyer"
+sprite_scale = 1.0
+shape = 1
+color = Color(0.45, 0.9, 0.88, 1)
+base_radius = 22.0
+immune_tags = Array[int]([])
+dodge_chance = 0.35
+swarm_count = 1
+entry_side = false
+flying = true
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 5.0
+summon_def = SubResource("Resource_pnnur")
+summon_count = 1
+summon_max_alive = 2

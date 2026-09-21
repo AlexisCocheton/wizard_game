@@ -5,6 +5,10 @@ extends TestCase
 ## (100 a 500 %). Les regles protegees ici n ont PAS change : le bouclier passe
 ## avant les PV, le temps d incantation suit la vitesse, l XP aussi, et l agonie
 ## laisse quelques secondes avant la defaite.
+##
+## La MONTEE de la vitesse (continue, 2 points par seconde, plus aucune commande
+## manuelle) vit dans test_speed_percent.gd : elle a change le 21 septembre et
+## la garder en double ici aurait fige l ancienne regle par paliers.
 
 func get_suite_name() -> String:
 	return "speed_gauge"
@@ -17,7 +21,6 @@ func run() -> void:
 	_test_shield_before_hp()
 	_test_death_drain()
 	_test_world_delta()
-	_test_auto_rise()
 	SpeedGauge.reset()
 
 
@@ -126,17 +129,3 @@ func _test_world_delta() -> void:
 	SpeedGauge.take_hit(GameConfig.MAGE_MAX_HP)
 	feq(SpeedGauge.world_delta(1.0), GameConfig.DEATH_SLOWMO, "world_delta au ralenti en agonie")
 
-
-func _test_auto_rise() -> void:
-	SpeedGauge.reset()
-	SpeedGauge.tick(GameConfig.AUTO_RISE_INTERVAL - 0.1)
-	eq(SpeedGauge.speed_percent, 100, "pas encore de montee automatique")
-	SpeedGauge.tick(0.2)
-	eq(SpeedGauge.speed_percent, 100 + GameConfig.SPEED_STEP_PERCENT,
-		"montee automatique d un pas")
-	# Ne doit jamais depasser le maximum.
-	for i in 100:
-		SpeedGauge.tick(GameConfig.AUTO_RISE_INTERVAL + 0.1)
-	ok(SpeedGauge.is_at_max(), "la montee automatique plafonne au maximum")
-	eq(SpeedGauge.speed_percent, GameConfig.SPEED_MAX_PERCENT,
-		"et ne reboucle jamais sur 100 %")

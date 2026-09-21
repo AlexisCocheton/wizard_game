@@ -265,8 +265,15 @@ id = &"lvl_05"
 display_name = "Forges du Mauvais Temps"
 act = 3
 subtitle = "Ils ne conquierent pas, ils fabriquent"
-intro_text = "De l autre cote de la porte : pas de chateau, pas de trone. Des ateliers. Les demons fabriquent du temps, et ces creatures blindees ne sont pas nees — elles ont ete coulees."
-outro_text = "Un Berserker a brise sa chaine devant toi au lieu de charger. Les demons ne choisissent rien : une horloge bat au centre de leur monde et les reveille. Elle n est pas a eux. Chaque extinction est une COMMANDE qui arrive par le cadran, et ils ignorent qui la passe."
+intro_text = "De l autre cote de la porte : pas de chateau, pas de trone. 
+Des ateliers. Les demons fabriquent du temps, et ces creatures blindees ne sont pas 
+nees — elles ont ete coulees."
+outro_text = "Un Berserker a brise sa chaine devant toi au lieu de charger. 
+Les demons ne choisissent rien : une horloge bat au centre de leur monde et les 
+reveille. Elle n est pas a eux. Chaque extinction est une COMMANDE qui arrive par le 
+cadran, et ils ignorent qui la passe."
+intro_story = &""
+outro_story = &""
 terrain = "sand"
 backdrop = "act3_demon"
 waves = Array[ExtResource("23_bva8d")]([SubResource("Resource_ld88m"), SubResource("Resource_7t2wd"), SubResource("Resource_cfeh0"), SubResource("Resource_u8rys"), SubResource("Resource_41mbm"), SubResource("Resource_tefmi")])

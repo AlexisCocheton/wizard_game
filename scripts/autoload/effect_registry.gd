@@ -83,6 +83,10 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 	if card.is_passive:
 		RunState.activate_passive(card)
 		return
+	# Compteur d usage lu par la fiche du grimoire ("lance N fois"). Pose ici et
+	# non dans l interface de la main : c est le SEUL point par ou passe un sort
+	# reellement lance, quel que soit l ecran qui l a declenche.
+	ChallengeTracker.bump(StringName("card_uses:%s" % card.id))
 	ctx.card = card
 	# Le son PROPRE au sort. Trois sons generiques couvraient 45 cartes : a
 	# l oreille, tous les sorts etaient le meme.

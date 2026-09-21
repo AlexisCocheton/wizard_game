@@ -33,6 +33,9 @@ func _defaults() -> Dictionary:
 			"massacre_deck": [],
 			"discovered_enemies": [],
 			"account": {"level": 1, "xp": 0, "challenges": [], "stats": {}},
+			## Scenes d histoire deja vues : une scene ne se rejoue pas quand on
+			## refait un niveau. _migrate() ajoute la cle aux vieux profils.
+			"stories_seen": [],
 		},
 		"settings": {
 			"master_volume": 0.8,
@@ -191,6 +194,35 @@ func discovered_enemies() -> Array:
 
 func discovered_enemies_count() -> int:
 	return profile().get("discovered_enemies", []).size()
+
+
+# --- Histoire ---
+##
+## Une scene de visual novel se joue UNE fois : rejouer un niveau pour ses
+## objectifs ne doit pas imposer de relire le dialogue. Le profil retient les
+## ids vus ; SceneRouter consulte la liste avant de router vers StoryScene.
+
+func mark_story_seen(story_id: StringName) -> void:
+	if String(story_id) == "":
+		return
+	var seen: Array = profile().get("stories_seen", [])
+	if seen.has(String(story_id)):
+		return
+	seen.append(String(story_id))
+	profile()["stories_seen"] = seen
+	profile_changed.emit()
+
+
+## Un id vide compte comme "vu" : un niveau sans scene n a rien a jouer.
+func is_story_seen(story_id: StringName) -> bool:
+	if String(story_id) == "":
+		return true
+	return profile().get("stories_seen", []).has(String(story_id))
+
+
+## Copie, pour que l appelant ne puisse pas vider la liste du profil.
+func stories_seen() -> Array:
+	return profile().get("stories_seen", []).duplicate()
 
 
 # --- Deck Massacre ---

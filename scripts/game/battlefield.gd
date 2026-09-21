@@ -89,6 +89,14 @@ func _alive(e: Enemy) -> bool:
 	return e != null and is_instance_valid(e) and not e.is_dead()
 
 
+## Cible valide pour un sort : vivante ET deja apparue. Distinct de `_alive`,
+## qui sert aussi a compter les monstres restants — un monstre en train
+## d apparaitre COMPTE (la vague ne doit pas se terminer sans lui) mais ne se
+## frappe pas encore.
+func _targetable(e: Enemy) -> bool:
+	return _alive(e) and not e.is_spawning()
+
+
 ## Soigneurs et Gloutons : tout ce qui agit sur les AUTRES monstres.
 func _simulate_support(wd: float) -> void:
 	for e in enemies.duplicate():
@@ -111,7 +119,7 @@ func _simulate_support(wd: float) -> void:
 func _devour_nearby(glutton: Enemy) -> void:
 	var reach: float = glutton.radius() + 30.0
 	for prey in enemies.duplicate():
-		if prey == glutton or not _alive(prey) or prey.definition == null:
+		if prey == glutton or not _targetable(prey) or prey.definition == null:
 			continue
 		if prey.definition.devours or prey.definition.is_boss():
 			continue
@@ -130,7 +138,7 @@ func _simulate_zones(wd: float) -> void:
 		var z: Dictionary = zones[i]
 		z["time"] -= wd
 		for e in enemies.duplicate():
-			if not _alive(e):
+			if not _targetable(e):
 				continue
 			if e.position.distance_to(z["pos"]) > z["radius"]:
 				continue
@@ -234,7 +242,7 @@ func _closest_enemy() -> Enemy:
 	var best: Enemy = null
 	var best_y: float = -INF
 	for e in enemies:
-		if not _alive(e):
+		if not _targetable(e):
 			continue
 		if e.position.y > best_y:
 			best_y = e.position.y
@@ -249,16 +257,26 @@ func spawn_enemy(def: EnemyDef, x: float, difficulty: float = 1.0,
 		push_error("Scene d ennemi introuvable : %s" % ENEMY_SCENE)
 		return null
 	var e: Enemy = packed.instantiate()
-	SaveData.discover_enemy(def.id)  # rencontre memorisee pour le bestiaire
+	# Une boule de poison n est pas une creature : elle n a rien a faire dans le
+	# bestiaire, que le joueur consulte pour apprendre ce qu il affronte.
+	if not def.projectile:
+		SaveData.discover_enemy(def.id)  # rencontre memorisee pour le bestiaire
 	e.setup(def, difficulty)
 	e.nav = nav
 	e.battlefield = self
 	# Position AVANT add_child : _ready() s execute des l ajout.
-	e.position = at if at != Vector2.INF else Vector2(x, GameConfig.SPAWN_LINE_Y)
+	var spontane: bool = at == Vector2.INF
+	e.position = at if not spontane else Vector2(x, GameConfig.SPAWN_LINE_Y)
 	e.died.connect(_on_enemy_died)
 	e.reached_mage.connect(_on_enemy_reached_mage)
 	enemies.append(e)
 	add_child(e)
+	# Fondu d apparition pour les monstres de VAGUE seulement. Un monstre pose a
+	# une position explicite (division, invocation, vitrine) doit exister tout de
+	# suite : le rendre intouchable au milieu du combat offrirait une demi-seconde
+	# d immunite a chaque sbire, en plein dans les zones deja posees par le joueur.
+	if spontane:
+		e.begin_spawn_fade()
 	return e
 
 
@@ -270,8 +288,12 @@ func _on_enemy_died(e: Enemy) -> void:
 	Fx.death(self, where, e.radius())
 	AudioBus.play_sfx(&"explosion" if (def != null and def.is_boss()) else &"enemy_die")
 	if def != null:
-		RunState.gain_xp(def.base_xp)
-		enemy_killed.emit(def)
+		# Une boule de poison ne rapporte ni XP ni statistique de chasse : sinon
+		# le joueur monterait de niveau en tapant des munitions au lieu de
+		# s en prendre au Planogo qui les tire.
+		if not def.projectile:
+			RunState.gain_xp(def.base_xp)
+			enemy_killed.emit(def)
 		# Division / explosion : les enfants naissent la ou le parent est mort.
 		if def.split_into != null and def.split_count > 0:
 			for i in def.split_count:
@@ -357,7 +379,7 @@ func damage_multiplier_at(pos: Vector2) -> float:
 
 
 func _hit(e: Enemy, amount: float, tags: Array) -> bool:
-	if not _alive(e):
+	if not _targetable(e):
 		return false
 	if is_shielded_by_aura(e):
 		return false
@@ -382,7 +404,7 @@ func enemies_in_line(origin: Vector2, dir: Vector2, width: float, max_targets: i
 	var d: Vector2 = dir.normalized()
 	var half: float = maxf(width, 40.0) * 0.5
 	for e in enemies:
-		if not _alive(e):
+		if not _targetable(e):
 			continue
 		var to_e: Vector2 = e.position - origin
 		if to_e.dot(d) < 0.0:
@@ -398,7 +420,7 @@ func enemies_in_line(origin: Vector2, dir: Vector2, width: float, max_targets: i
 func enemies_in_radius(center: Vector2, radius: float) -> Array:
 	var out: Array = []
 	for e in enemies:
-		if _alive(e) and e.position.distance_to(center) <= radius:
+		if _targetable(e) and e.position.distance_to(center) <= radius:
 			out.append(e)
 	return out
 
@@ -477,7 +499,7 @@ func enemy_nearest_to(point: Vector2, max_dist: float = 260.0) -> Enemy:
 	var best: Enemy = null
 	var best_d: float = max_dist
 	for e in enemies:
-		if not _alive(e):
+		if not _targetable(e):
 			continue
 		var d: float = e.position.distance_to(point)
 		if d < best_d:
@@ -535,7 +557,9 @@ func _simulate_vortices(wd: float) -> void:
 		var v: Dictionary = vortices[i]
 		v["time"] -= wd
 		for e in enemies.duplicate():
-			if not _alive(e):
+			# Immobile pendant son fondu : une spirale ne doit pas l arracher a
+			# sa ligne d apparition avant meme qu il soit visible.
+			if not _targetable(e):
 				continue
 			var vers: Vector2 = v["pos"] - e.position
 			var d: float = vers.length()

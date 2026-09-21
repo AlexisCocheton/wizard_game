@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_0j7ju"]
+
+[resource]
+script = ExtResource("1_0j7ju")
+id = &"lvl_03_intro"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"mayor",
+"side": "left",
+"speaker": "Le Maire",
+"text": "Je n ai rien cache. J ai... attendu."
+}, {
+"portrait": &"mage",
+"side": "right",
+"speaker": "Le Mage",
+"text": "Vous avez attendu quoi, exactement ?"
+}, {
+"portrait": &"mayor",
+"side": "left",
+"speaker": "Le Maire",
+"text": "Que ca s arrete tout seul. Ca arrivait par le ciel, mage. Tous les mois, un peu plus bas."
+}, {
+"portrait": &"mayor",
+"side": "left",
+"speaker": "Le Maire",
+"text": "Des betes qui tombaient d en haut et qui ne remontaient pas."
+}, {
+"portrait": &"mage",
+"side": "right",
+"speaker": "Le Mage",
+"text": "D en haut. Donc il y a une ile au-dessus de la notre."
+}, {
+"portrait": &"mayor",
+"side": "left",
+"speaker": "Le Maire",
+"text": "Il y a les Sky Lands. Et il y a un dirigeable ecrase au bout de cette route. Si vous voulez monter, c est la seule facon."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Je viens."
+}, {
+"portrait": &"mage",
+"side": "right",
+"speaker": "Le Mage",
+"text": "Non."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Mon village est derriere moi et il n y a plus rien dedans. Je viens."
+}])

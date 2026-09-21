@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_han4h"]
+
+[resource]
+script = ExtResource("1_han4h")
+id = &"prologue"
+scene_background = "act1_sky"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Ils ne sont pas venus d un pays. Ils ne sont pas venus d une mer. Un matin, ils etaient la."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "La foret de Nuri a brule en six jours. La ville de Nox, promise aux siecles, a tenu une nuit."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Je n ai pas su les arreter. Alors j ai arrete le temps."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Il a tout donne d un coup. Sa magie, ses annees, et jusqu au dernier de ses cheveux."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Me voila revenu avant. Avant la foret. Avant la ville. Avant eux."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il ne me reste qu une chose : aller vite. Plus vite que ce qui arrive."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Cette fois je ne vais pas defendre. Je vais remonter le courant jusqu a l origine du mal."
+}])

@@ -302,6 +302,9 @@ func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
 
 func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:
 	ChallengeTracker.bump(&"enemies_killed")
+	# Compteur PAR ESPECE, affiche sur la fiche du bestiaire ("N vaincus").
+	if _def != null:
+		ChallengeTracker.bump(StringName("kills:%s" % _def.id))
 
 
 func _on_wave_cleared(index: int) -> void:
@@ -339,6 +342,21 @@ func _on_all_cleared() -> void:
 	AudioBus.play_sfx(&"victory")
 	if not headless_mode:
 		SceneRouter.goto(SceneRouter.VICTORY, {"level_id": level_def.id})
+
+
+## ABANDON — le joueur quitte le combat depuis l ecran de pause.
+##
+## Distinct d une defaite : aucune statistique, aucun ecran de fin, aucun signal.
+## Il n a pas perdu, il s en va.
+##
+## `_ended` AVANT tout le reste : la partie est en pause, donc `_process` ne
+## tourne pas, mais le smoke et les tests pilotent `simulate()` a la main. Sans
+## ce drapeau la simulation continuerait sur un champ de bataille en cours de
+## liberation pendant le changement de scene — exactement le plantage deja vu au
+## boss du niveau 4.
+func abandon_run() -> void:
+	_ended = true
+	running = false
 
 
 func _on_died() -> void:

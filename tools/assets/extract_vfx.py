@@ -27,8 +27,8 @@ Ce qui est repris, et pourquoi c est mieux que l existant :
 
 Tout le reste des packs est ECARTE : effets monochromes trop fins pour du mobile
 (Impact, Charged), texte anglais incruste (Kabooms : "KABOOM"), objets flottants
-decoratifs sans crochet de jeu (Pipoya nazoobj / mapeffect), portails (aucun sort
-de teleportation dans le jeu).
+decoratifs (Pipoya nazoobj / mapeffect : seuls 5 des 25 sont pris, pour les
+chantiers a venir ; les autres teintes n ajoutent rien).
 
 Format de sortie : une BANDE horizontale d une seule ligne, comme les autres
 feuilles de `assets/fx/`, pour que `Fx.STRIPS` la lise sans cas particulier.
@@ -57,6 +57,30 @@ SHEETS = [
      "Effect_TheVortex/30fps/Spritesheets/Effect_TheVortex_1_427x431.png", 427, 431, 30, 160),
     ("boom_hd", "raw_assets/VFX Free Pack.zip",
      "Effect_Explosion/30fps/Spritesheets/Effect_Explosion_1_517x517.png", 517, 517, 30, 160),
+    # --- Pipoya WarpPortal / Mysterious Object (2026-09-21) ---
+    # Extraits en avance pour les chantiers B1 (sorts de deplacement, Planogo) et
+    # D/J (acte final, objets divins). Grilles pleines de 192 px : 5 colonnes x
+    # 3, 4 ou 6 lignes. Les 5 portails ne different que par la teinte ; on en
+    # prend trois (bleu = arcane/teleportation, violet = vitesse, rouge = demon)
+    # plutot que de teinter un blanc qui n existe pas dans le pack.
+    ("portal_blue", "raw_assets/Pipoya VFX WarpPortal.zip",
+     "Pipoya VFX WarpPortal/192x192/pipo-gate01b192.png", 192, 192, 15, 160),
+    ("portal_violet", "raw_assets/Pipoya VFX WarpPortal.zip",
+     "Pipoya VFX WarpPortal/192x192/pipo-gate01e192.png", 192, 192, 15, 160),
+    ("portal_red", "raw_assets/Pipoya VFX WarpPortal.zip",
+     "Pipoya VFX WarpPortal/192x192/pipo-gate01a192.png", 192, 192, 15, 160),
+    # Flammes-esprits verticales (mapeffect) : une violette et une doree.
+    ("spirit_violet", "raw_assets/PIPOYA FREE VFX Mysterious Object.zip",
+     "PIPOYA FREE VFX Mysterious Object/192x192/pipo-mapeffect023_192.png", 192, 192, 20, 160),
+    ("spirit_gold", "raw_assets/PIPOYA FREE VFX Mysterious Object.zip",
+     "PIPOYA FREE VFX Mysterious Object/192x192/pipo-mapeffect025_192.png", 192, 192, 20, 160),
+    # Objets mysterieux (nazoobj) : orbes rayonnants qui pulsent, 30 images.
+    ("orb_magenta", "raw_assets/PIPOYA FREE VFX Mysterious Object.zip",
+     "PIPOYA FREE VFX Mysterious Object/192x192/pipo-nazoobj01a_192.png", 192, 192, 30, 160),
+    ("orb_cyan", "raw_assets/PIPOYA FREE VFX Mysterious Object.zip",
+     "PIPOYA FREE VFX Mysterious Object/192x192/pipo-nazoobj03b_192.png", 192, 192, 30, 160),
+    ("orb_gold", "raw_assets/PIPOYA FREE VFX Mysterious Object.zip",
+     "PIPOYA FREE VFX Mysterious Object/192x192/pipo-nazoobj05c_192.png", 192, 192, 30, 160),
 ]
 
 

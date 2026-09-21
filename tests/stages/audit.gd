@@ -93,6 +93,15 @@ func _check_enemies_spawned() -> void:
 	for enemy: EnemyDef in ContentDB.enemies.values():
 		if enemy.split_into != null:
 			spawned[enemy.split_into.id] = true
+	# Un monstre INVOQUE l est aussi : son parent le fait apparaitre en combat,
+	# il n a donc rien a faire dans une vague. C est le cas de la boule de poison
+	# du Planogo, et deja celui de la goule du Necromancien — qui ne passait
+	# jusqu ici que parce qu elle figure AUSSI dans un pool de niveau. La regle
+	# (« tout contenu doit etre atteignable ») est la bonne ; c est le releve
+	# des chemins d apparition qui en oubliait un.
+	for enemy: EnemyDef in ContentDB.enemies.values():
+		if enemy.summon_def != null:
+			spawned[enemy.summon_def.id] = true
 	for enemy: EnemyDef in ContentDB.enemies.values():
 		if not spawned.has(enemy.id):
 			_soft.append("monstre jamais place dans une vague : %s" % enemy.id)

@@ -141,6 +141,7 @@ func _run_all() -> void:
 	# 4) Tous les ecrans du menu et de fin de niveau doivent se construire.
 	await _check_menu_screens()
 	await _check_briefing()
+	await _check_story()
 	await _check_boss_reward()
 	await _check_precast()
 	await _check_end_screens()
@@ -305,6 +306,38 @@ func _check_menu_screens() -> void:
 	for i in count:
 		menu.select_tab(i)
 		await _shot("menu_" + String(tabs[i]).to_lower())
+
+	# Le grimoire (onglet Galerie) a trois SECTIONS et une fiche detaillee : un
+	# seul passage par l onglet n en montrerait qu un neuvieme. On les parcourt
+	# toutes, plus une fiche, sinon une section qui plante resterait invisible.
+	menu.select_tab(0)
+	var grimoire: Control = null
+	for p in menu.get_node("%Content").get_children():
+		if p is GalleryPanel:
+			grimoire = p
+	if grimoire == null:
+		_fail("le grimoire est introuvable dans l onglet Galerie")
+	else:
+		for s in GalleryPanel.SECTIONS.size():
+			grimoire.show_section(s)
+			await _shot("livre_" + GalleryPanel.SECTIONS[s].to_lower())
+		# Une fiche ouverte : c est la moitie de l ecran que le joueur lit.
+		grimoire.show_section(GalleryPanel.Section.SPELLS)
+		grimoire.open_detail(0)
+		await _shot("livre_fiche")
+		# Une fiche de MONSTRE aussi : elle est bien plus longue (competences),
+		# c est elle qui deborde si la mise en page est trop serree.
+		grimoire.show_section(GalleryPanel.Section.BEASTS)
+		grimoire.open_detail(1)
+		await _shot("livre_fiche_monstre")
+		grimoire.close_detail()
+
+	# Le profil a quitte la barre du bas pour l en-tete : sans cette capture il
+	# ne serait plus verifie du tout.
+	menu.call("show_profile", true)
+	await _shot("menu_profil")
+	menu.call("show_profile", false)
+
 	menu.select_tab(menu.HOME_TAB)
 	menu.queue_free()
 	print("[SMOKE] menu : %d onglets construits" % count)
@@ -396,6 +429,43 @@ func _check_briefing() -> void:
 	if SceneRouter.LOADING == SceneRouter.GAME:
 		_fail("la route de briefing pointe sur la partie")
 	print("[SMOKE] briefing construit pour les deux modes")
+
+
+## Une scene de visual novel doit se construire et se derouler jusqu au bout.
+## En fenetre reelle, la capture montre fond + portraits + boite de texte : c est
+## la seule preuve que le texte sombre est lisible sur le papier.
+func _check_story() -> void:
+	var packed: PackedScene = load(SceneRouter.STORY)
+	if packed == null:
+		_fail("StoryScene.tscn introuvable")
+		return
+	# test_mode : la scene ne previent pas le routeur a la fin, sinon elle
+	# ferait changer de scene le harnais lui-meme au milieu du smoke.
+	SceneRouter.payload = {"story_id": SceneRouter.PROLOGUE_STORY, "test_mode": true}
+	var screen: Control = packed.instantiate()
+	add_child(screen)
+	await get_tree().process_frame
+	var total: int = int(screen.call("total_lines"))
+	if total <= 0:
+		_fail("la scene de prologue n a aucune replique")
+		screen.queue_free()
+		return
+	# Capture sur la 3e replique : le prologue y a un portrait ET du texte long,
+	# donc la capture prouve la mise en page, pas un ecran presque vide.
+	for i: int in mini(2, total - 1):
+		screen.call("advance")
+		await get_tree().process_frame
+	await _shot("histoire")
+	var garde: int = 0
+	while not bool(screen.call("is_finished")) and garde < 200:
+		screen.call("advance")
+		garde += 1
+	if not bool(screen.call("is_finished")):
+		_fail("la scene d histoire ne se termine jamais")
+	print("[SMOKE] scene d histoire deroulee : %d repliques" % total)
+	screen.queue_free()
+	await get_tree().process_frame
+	SceneRouter.payload = {}
 
 
 ## Victoire puis defaite, avec la progression reelle derriere.

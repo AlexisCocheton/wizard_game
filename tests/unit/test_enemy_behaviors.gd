@@ -60,6 +60,11 @@ func run() -> void:
 	_test_resonance()
 	_test_le_halo_couvre_la_zone_protegee()
 	_test_les_degats_varient_selon_le_monstre()
+	_test_apparition_en_fondu()
+	_test_le_vol_passe_par_dessus_les_murs()
+	_test_le_planogo_tire_une_boule_de_poison_destructible()
+	_test_l_oiseau_mirage_ne_tourne_plus()
+	_test_les_monstres_sont_un_peu_plus_grands()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -84,7 +89,10 @@ func _test_bouclier_premier_coup() -> void:
 	_fresh()
 	var d := _def("knight", 40.0)
 	d.first_hit_shield = true
-	var e: Enemy = _bf.spawn_enemy(d, 500.0)
+	# Position explicite : on veut eprouver le BOUCLIER, pas le fondu
+	# d apparition. Ne sur la ligne d apparition, le monstre serait intouchable
+	# une demi-seconde et le premier coup ne partirait meme pas.
+	var e: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 400.0))
 	ok(e.has_shield(), "bouclier leve au depart")
 	not_ok(e.take_damage(15.0, []), "le premier coup est absorbe")
 	feq(e.hp, 40.0, "PV intacts apres le premier coup")
@@ -298,3 +306,151 @@ func _test_les_degats_varient_selon_le_monstre() -> void:
 		"meme le boss ne tue pas en un coup")
 	ok(GameConfig.MAGE_MAX_HP / maxi(gnome.contact_hit(), 1) >= 10,
 		"les petits monstres laissent une vraie marge")
+
+
+## Demande du testeur : "fais-les apparaitre un peu plus loin, par exemple au
+## debut de l herbe, en fondu sur une demi-seconde, statiques, avant d avancer".
+## Pendant le fondu le monstre ne bouge pas et ne peut pas etre touche — sinon
+## on frappe des fantomes. Il compte pourtant comme vivant : la vague ne doit
+## pas se terminer pendant qu il apparait.
+func _test_apparition_en_fondu() -> void:
+	_fresh()
+	ok(GameConfig.SPAWN_LINE_Y > 0.0,
+		"la ligne d apparition est DANS le decor visible, plus au-dessus de l ecran")
+	var d := _def("m", 50.0, 100.0)
+	# Apparition de vague : pas de position explicite, donc la ligne d apparition.
+	var e: Enemy = _bf.spawn_enemy(d, 500.0)
+	feq(e.position.y, GameConfig.SPAWN_LINE_Y, "il nait sur la ligne d apparition")
+	ok(e.is_spawning(), "il est en train d apparaitre")
+	ok(e.modulate.a < 0.05, "invisible a l instant zero")
+	eq(_bf.alive_count(), 1, "il compte deja comme vivant (la vague ne se termine pas)")
+	not_ok(_bf.damage_enemy(e, 10.0, _damage_card()), "intouchable pendant le fondu")
+	# DEUX verrous, testes separement : le terrain ecarte le monstre du ciblage,
+	# et le monstre refuse lui-meme le coup. Sans ce second appel, saboter la
+	# garde de Enemy.take_damage() ne ferait rougir aucun test — le filtre du
+	# terrain masquerait le trou, et un handler qui appellerait take_damage()
+	# directement frapperait un fantome sans que rien ne le signale.
+	not_ok(e.take_damage(10.0, []), "le monstre lui-meme refuse le coup pendant le fondu")
+	feq(e.hp, 50.0, "PV intacts")
+	eq(_bf.enemies_in_radius(e.position, 100.0).size(), 0, "invisible aux sorts de zone")
+	ok(_bf.enemy_nearest_to(e.position) == null, "invisible au ciblage au doigt")
+
+	_sim(GameConfig.SPAWN_FADE_TIME * 0.5)
+	feq(e.position.y, GameConfig.SPAWN_LINE_Y, "immobile a mi-fondu")
+	between(e.modulate.a, 0.3, 0.7, "a mi-fondu il est a moitie visible")
+
+	_sim(GameConfig.SPAWN_FADE_TIME * 0.5 + 0.2)
+	not_ok(e.is_spawning(), "le fondu est fini")
+	feq(e.modulate.a, 1.0, "pleinement visible")
+	ok(e.position.y > GameConfig.SPAWN_LINE_Y, "et il avance enfin")
+	ok(_bf.damage_enemy(e, 10.0, _damage_card()), "et il peut etre touche")
+
+	# Un monstre pose a une position explicite (division, invocation, vitrine)
+	# apparait tel quel : un fondu au milieu du combat rendrait intouchables des
+	# monstres deja au contact des zones du joueur.
+	var e2: Enemy = _bf.spawn_enemy(d, 300.0, 1.0, Vector2(300.0, 700.0))
+	not_ok(e2.is_spawning(), "pas de fondu pour une apparition a position explicite")
+
+
+## Planogo : "capacite volante qui passe au-dessus des murs". Un volant ignore
+## la grille de navigation et descend tout droit ; un marcheur, lui, reste
+## bloque devant un mur qui barre toute la largeur.
+func _test_le_vol_passe_par_dessus_les_murs() -> void:
+	_fresh()
+	_bf.spawn_wall(Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, 600.0),
+		GameConfig.BATTLEFIELD_WIDTH * 0.5, 10.0, 60.0)
+	ok(_bf.wall_count() > 0, "un mur barre toute la largeur")
+	var volant := _def("flyer", 50.0, 200.0)
+	volant.flying = true
+	var marcheur := _def("walker", 50.0, 200.0)
+	var v: Enemy = _bf.spawn_enemy(volant, 300.0, 1.0, Vector2(300.0, 400.0))
+	var m: Enemy = _bf.spawn_enemy(marcheur, 700.0, 1.0, Vector2(700.0, 400.0))
+	_sim(3.0)
+	ok(v.position.y > 640.0, "le volant a passe le mur (y = %.0f)" % v.position.y)
+	ok(m.position.y < 600.0, "le marcheur est reste devant (y = %.0f)" % m.position.y)
+	feq(v.position.x, 300.0, "le volant descend tout droit, sans contourner")
+
+
+## Planogo : "tire une boule de poison vers le joueur, moyennement rapide, qui
+## a 10 PV". La boule est un monstre-projectile invoque : tout le ciblage et les
+## degats existants s y appliquent, elle est donc DESTRUCTIBLE par les sorts.
+func _test_le_planogo_tire_une_boule_de_poison_destructible() -> void:
+	var wisp: EnemyDef = ContentDB.enemies.get(&"wisp")
+	var ball: EnemyDef = ContentDB.enemies.get(&"poison_ball")
+	ok(wisp != null, "le Planogo existe (id historique : wisp)")
+	ok(ball != null, "la boule de poison existe")
+	if wisp == null or ball == null:
+		return
+	eq(wisp.display_name, "Planogo", "le Feu follet s appelle desormais Planogo")
+	ok(wisp.flying, "le Planogo vole")
+	ok(wisp.summon_def != null and wisp.summon_def.id == &"poison_ball",
+		"le Planogo invoque des boules de poison")
+	ok(wisp.summon_interval > 0.0, "a intervalle regulier")
+
+	feq(ball.max_hp, 10.0, "la boule a 10 PV (demande du testeur)")
+	ok(ball.flying, "la boule vole elle aussi : un mur ne l arrete pas")
+	ok(ball.projectile, "c est un projectile : ni bestiaire, ni XP")
+	eq(ball.base_xp, 0, "pas d XP")
+	ok(ball.contact_hit() > 0, "elle fait mal au contact")
+	ok(ball.contact_hit() < wisp.contact_hit(), "moins qu un contact du Planogo lui-meme")
+	ok(ball.base_speed > 100.0 and ball.base_speed < 150.0, "moyennement rapide")
+	ok(AnimCatalog.has(ball.anim_key), "elle a une feuille dans le catalogue")
+
+	_fresh()
+	var xp_avant: int = RunState.xp
+	var p: Enemy = _bf.spawn_enemy(wisp, 540.0, 1.0, Vector2(540.0, 400.0))
+	_sim(wisp.summon_interval + 0.2)
+	eq(_bf.alive_count(), 2, "apres l intervalle, une boule est en l air")
+	var boule: Enemy = null
+	for e in _bf.enemies:
+		if e != p and e.definition != null and e.definition.id == &"poison_ball":
+			boule = e
+	ok(boule != null, "la boule est un monstre du terrain")
+	if boule == null:
+		return
+	ok(boule.position.y >= 400.0, "elle part du Planogo vers le mage")
+	ok(_bf.damage_enemy(boule, 10.0, _damage_card()), "un sort la touche")
+	ok(boule.is_dead(), "10 degats la detruisent")
+	eq(RunState.xp, xp_avant, "la detruire ne rapporte aucune XP")
+
+
+## "Nuee de rats -> Oiseau mirage : son sprite tourne en se deplacant". Cause :
+## la planche du paon est une grille 4 DIRECTIONS x 3 frames, et la bande de
+## marche avait ete decoupee sur une LIGNE (gauche, face, dos, droite) au lieu
+## d une COLONNE. Regle : toutes les cases de marche montrent la MEME face, donc
+## leur silhouette a la meme largeur ; des vues de cote et de face melangees
+## different de 6 px et plus.
+func _test_l_oiseau_mirage_ne_tourne_plus() -> void:
+	var swarm: EnemyDef = ContentDB.enemies.get(&"rat_swarm")
+	ok(swarm != null and swarm.display_name == "Oiseau mirage",
+		"la Nuee de rats s appelle desormais Oiseau mirage")
+	var sf: SpriteFrames = AnimCatalog.frames(&"peacock")
+	ok(sf != null and sf.has_animation("walk"), "le paon a une marche")
+	if sf == null or not sf.has_animation("walk"):
+		return
+	var n: int = sf.get_frame_count("walk")
+	ok(n >= 3, "la marche a au moins 3 cases (%d)" % n)
+	var largeurs: Array[int] = []
+	for i in n:
+		var tex: Texture2D = sf.get_frame_texture("walk", i)
+		var img: Image = tex.get_image()
+		if img == null:
+			continue
+		var rect: Rect2i = img.get_used_rect()
+		largeurs.append(rect.size.x)
+	ok(largeurs.size() == n, "chaque case a une image lisible")
+	if largeurs.is_empty():
+		return
+	var lo: int = largeurs.min()
+	var hi: int = largeurs.max()
+	ok(hi - lo <= 4, "toutes les cases montrent la meme face (largeurs %s)" % str(largeurs))
+
+
+## "Augmente legerement la taille de tous les monstres" : le facteur visuel
+## passe de 1,9 a 2,1 (+10 %). Il ne touche pas la hitbox, qui reste le rayon.
+func _test_les_monstres_sont_un_peu_plus_grands() -> void:
+	ok(Enemy.VISUAL_FACTOR >= 2.05, "facteur visuel remonte (%.2f)" % Enemy.VISUAL_FACTOR)
+	_fresh()
+	var e: Enemy = _bf.spawn_enemy(_def("m", 10.0), 500.0, 1.0, Vector2(500.0, 600.0))
+	feq(e.radius(), 32.0, "le rayon logique (contact, gobage) ne change pas")
+	feq(e.visual_radius(), 32.0 * Enemy.VISUAL_FACTOR, "seule la taille a l ecran grandit")

@@ -16,6 +16,12 @@ extends Resource
 @export_multiline var intro_text: String = ""
 ## Texte lu a la victoire : le rebondissement que le niveau vient de reveler.
 @export_multiline var outro_text: String = ""
+## Scenes de visual novel (DialogueDef dans resources/story/), jouees par
+## SceneRouter AVANT le briefing et APRES la victoire, une seule fois par
+## profil. Vide = pas de scene : meme regle que les textes ci-dessus, un niveau
+## sans histoire reste jouable. Voir docs/histoire.md.
+@export var intro_story: StringName = &""
+@export var outro_story: StringName = &""
 ## Tuiles du decor : "grass" ou "sand" (tilesets Tiny Swords).
 ## Ne sert plus que de REPLI, quand `backdrop` est vide.
 @export var terrain: String = "grass"
