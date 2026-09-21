@@ -87,7 +87,7 @@ start_offset = 12.0
 [sub_resource type="Resource" id="Resource_vs6mp"]
 script = ExtResource("17_smbsg")
 id = &"w2"
-duration = 25.0
+duration = 27.0
 entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_l1cdp"), SubResource("Resource_ce7hc"), SubResource("Resource_s7sqw")])
 difficulty = 1.1
 is_miniboss = false

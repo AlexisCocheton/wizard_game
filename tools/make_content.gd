@@ -744,7 +744,9 @@ func _waves_and_level() -> void:
 
 	var w2 := WaveDef.new()
 	w2.id = &"w2"
-	w2.duration = 25.0
+	# 27 s et non 25 : a 25 s la vague 2 etait la plus dense du niveau et passait
+	# juste au-dessus du rythme de pioche (garde-fou de test_balance.gd).
+	w2.duration = 27.0
 	w2.difficulty = 1.1
 	# Mesure au banc : sur les six premieres vagues, les PV du mage ne bougeaient
 	# pas avant la vague 5 (interception 89 a 96 %). Les vagues 2 a 4 passaient

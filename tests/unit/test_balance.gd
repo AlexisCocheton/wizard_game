@@ -79,14 +79,22 @@ func _test_le_mode_infini_laisse_le_temps_de_construire() -> void:
 		% [WaveBudget.budget_for(5), derniere])
 
 
+## Une NUEE compte pour plusieurs corps (swarm_count) : `_entry(rat_swarm, 3)`
+## fait descendre 12 rats. Compter les entrees faisait diverger ce test du banc,
+## qui compte les corps, et il voyait un saut x2 la ou le jeu n en fait pas.
 func _wave_hp(wave: WaveDef) -> float:
 	var pv: float = 0.0
 	for entry: WaveEntry in wave.entries:
 		if entry.enemy != null:
-			pv += entry.enemy.max_hp * entry.count * wave.difficulty
+			var corps: int = entry.count * maxi(1, entry.enemy.swarm_count)
+			pv += entry.enemy.max_hp * corps * wave.difficulty
 	return pv
 
 
+## Pour la PIOCHE, on compte les DECISIONS et non les corps : une nuee de quatre
+## rats se traite d une seule zone, elle ne demande pas quatre cartes. Compter
+## les corps ici exigeait une pioche impossible des qu une vague contenait des
+## nuees, alors que le joueur y repond tres bien avec un seul sort.
 func _wave_count(wave: WaveDef) -> float:
 	var n: float = 0.0
 	for entry: WaveEntry in wave.entries:
