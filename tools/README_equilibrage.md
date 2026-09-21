@@ -12,11 +12,34 @@ composition des vagues font varier le resultat du simple au double.
 
 | Mesure | Cible | Pourquoi |
 |---|---|---|
-| Victoires niveau 1 | 70 a 85 % | il s apprend, il ne se donne pas |
-| Victoires niveau 2 | 50 a 70 % | un cran au-dessus |
-| Massacre | vague 4 a 6 en moyenne | assez long pour construire un deck |
+| **Victoires, TOUT niveau** | **60 a 95 %** | voir ci-dessous |
+| Massacre | vague 4 a 8 en moyenne | assez long pour construire un deck |
 | Taux d interception | > 75 % | sous 70 %, le joueur subit |
 | Temps passe a incanter | < 60 % | au-dela il regarde au lieu de jouer |
+
+### Pourquoi une seule fenetre pour les sept niveaux
+
+Ce tableau donnait deux cibles differentes pour les niveaux 1 et 2 (70-85 et
+50-70). Elles dataient d une epoque a deux niveaux et n ont jamais ete etendues
+aux cinq suivants : chaque chantier visait donc une fenetre 60-95 qui n etait
+ecrite NULLE PART, et se la transmettait de rapport en rapport.
+
+**Sous 60 %**, le joueur rejoue le meme niveau plus d une fois sur trois, et un
+jeu mobile se ferme a ce moment-la. **Au-dessus de 95 %**, le niveau ne demande
+plus de choix : mesure faite sur lvl_03 a 29 victoires sur 30, la cause etait que
+cinq de ses dix monstres craignaient le feu et qu un tiers du deck en etait — le
+joueur ne pouvait pas se tromper d element.
+
+La difficulte se lit dans la PROGRESSION a l interieur de la fenetre, pas dans
+des cibles separees : les derniers niveaux se tiennent vers le bas (63 %), les
+premiers vers le haut (83 %).
+
+### Variance : ne jamais regler sur un seul banc
+
+Deux passages du banc sur un contenu IDENTIQUE ont rendu 66,7 % puis 96,7 % sur
+lvl_02. Trente parties ne suffisent pas a departager deux reglages proches. Une
+correction ne se juge que sur un ecart FRANC, et un banc lance pendant que
+d autres processus Godot tournent mesure une machine chargee, pas le jeu.
 
 ## Les leviers, du plus fort au plus faible
 

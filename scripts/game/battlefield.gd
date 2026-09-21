@@ -260,7 +260,11 @@ func spawn_enemy(def: EnemyDef, x: float, difficulty: float = 1.0,
 	# Une boule de poison n est pas une creature : elle n a rien a faire dans le
 	# bestiaire, que le joueur consulte pour apprendre ce qu il affronte.
 	if not def.projectile:
-		SaveData.discover_enemy(def.id)  # rencontre memorisee pour le bestiaire
+		# Pas les projectiles : ils ne sont pas des especes, et les compter
+		# fausserait aussi bien le "N / total" du bestiaire que les succes
+		# "rencontrer N especes".
+		if not def.projectile:
+			SaveData.discover_enemy(def.id)  # rencontre memorisee pour le bestiaire
 	e.setup(def, difficulty)
 	e.nav = nav
 	e.battlefield = self

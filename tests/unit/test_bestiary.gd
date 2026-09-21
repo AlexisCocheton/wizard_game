@@ -153,7 +153,15 @@ func _test_le_panneau_se_construit() -> void:
 	panel.show_section(GalleryPanel.Section.BEASTS)
 	var total: int = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS).size()
 	ok(total >= 1, "le bestiaire liste des monstres (%d)" % total)
-	eq(total, ContentDB.enemies.size(), "tous les monstres du contenu sont listes")
+	# Toutes les CREATURES, et elles seules. Comparer au total brut de
+	# ContentDB.enemies exigeait aussi les PROJECTILES (la boule de poison tiree
+	# par un Planogo), alors que le commentaire d EnemyDef.projectile promet
+	# l inverse : "ni bestiaire, ni XP".
+	var creatures: int = 0
+	for e: EnemyDef in ContentDB.enemies.values():
+		if not e.projectile:
+			creatures += 1
+	eq(total, creatures, "toutes les creatures du contenu sont listees")
 
 	SaveData.discover_enemy(&"jelly")
 	panel.refresh()
@@ -240,7 +248,19 @@ func _test_grimoire_trois_sections() -> void:
 	var betes: Array = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS)
 	eq(sorts.size() + passifs.size(), ContentDB.cards.size(),
 		"sorts + passifs = toutes les cartes du jeu, aucune carte orpheline")
-	eq(betes.size(), ContentDB.enemies.size(), "le bestiaire liste tous les monstres")
+	var vraies: int = 0
+	for e: EnemyDef in ContentDB.enemies.values():
+		if not e.projectile:
+			vraies += 1
+	eq(betes.size(), vraies, "le bestiaire liste toutes les creatures")
+	# Et AUCUN projectile : sans cette moitie, le test passerait encore si le
+	# filtre disparaissait et que quelqu un ajoutait une creature en meme temps.
+	for e: EnemyDef in betes:
+		not_ok(e.projectile,
+			"%s est un projectile, il n a pas de fiche de bestiaire" % e.id)
+	ok(vraies < ContentDB.enemies.size(),
+		"le contenu contient bien au moins un projectile a exclure (%d sur %d)"
+		% [ContentDB.enemies.size() - vraies, ContentDB.enemies.size()])
 	ok(passifs.size() >= 1, "il y a au moins un passif (%d)" % passifs.size())
 	for c: SpellCard in sorts:
 		not_ok(c.is_passive, "%s est dans SORTS donc n est pas passive" % c.id)

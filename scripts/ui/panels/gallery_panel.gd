@@ -264,6 +264,14 @@ static func entries_of(section: int) -> Array:
 			out.sort_custom(_sort_cards)
 		Section.BEASTS:
 			for e: EnemyDef in ContentDB.enemies.values():
+				# Les PROJECTILES ne sont pas des creatures. Une boule de poison
+				# tiree par un Planogo est un monstre du terrain pour le moteur
+				# (donc ciblable et destructible sans code neuf), mais le
+				# commentaire d EnemyDef.projectile promet "ni bestiaire, ni XP"
+				# et seule la moitie XP etait tenue : elle occupait une fiche,
+				# entre deux vraies especes.
+				if e.projectile:
+					continue
 				out.append(e)
 			out.sort_custom(func(a: EnemyDef, b: EnemyDef) -> bool:
 				if a.power != b.power:
@@ -582,9 +590,15 @@ func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:
 		BestiaryLore.kind_name(def.kind), def.power], UiTheme.FONT_SMALL,
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
 
-	var stats := HBoxContainer.new()
-	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override(&"separation", 26)
+	# DEUX PAR DEUX, pas quatre de front. Sur une fiche de 460 px de large, quatre
+	# colonnes ne laissaient que 26 px entre elles : les valeurs se touchaient et
+	# un mot un peu long comme "vive" debordait sous le titre voisin (vu sur
+	# capture). Une grille de deux donne a chaque paire la moitie de la largeur.
+	var stats := GridContainer.new()
+	stats.columns = 2
+	stats.add_theme_constant_override(&"h_separation", 80)
+	stats.add_theme_constant_override(&"v_separation", 10)
+	stats.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(stats)
 	stats.add_child(_stat("PV", str(int(def.max_hp)), Color(0.62, 0.12, 0.14)))
 	stats.add_child(_stat("Vitesse", BestiaryLore.speed_word(def.base_speed),
