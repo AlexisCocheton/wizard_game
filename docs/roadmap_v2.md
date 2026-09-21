@@ -301,3 +301,39 @@ Chacun est desormais verrouille par un controle qui mord (sabotage verifie).
 d histoire. Les sept feuilles de cosmetique ajoutees depuis sont des vues de
 DESSUS (on voit le sommet du chapeau, pas un visage) : aucune ne peut servir de
 buste. Il faut un vrai portrait humain sur le disque.
+
+---
+
+## 6. Vague 2 terminee — etat au 21 septembre (commits `0406e0c`, `b35820a`)
+
+**Les cinq chantiers sont livres** : F (passifs hors deck), B3 (elements et
+resistances), K (regles de deck), L (profil et cosmetiques), E (carte de
+campagne). Harnais 7/7 vert, sept niveaux dans la fenetre 60-95 %.
+
+| Niveau | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Massacre |
+|---|---|---|---|---|---|---|---|---|
+| Victoires | 83 % | 80 % | 83 % | 83 % | 87 % | 63 % | 63 % | vague 6,7 |
+
+`ENEMY_SPEED_SCALE` est passe de 0,61 a 0,52 : la valeur d origine avait ete
+calibree AVEC trois passifs offerts d office, et les sortir du deck faisait
+tomber `lvl_06` a 0 victoire sur 30.
+
+`lvl_03` gagnait 29 fois sur 30. La cause n etait ni la vitesse ni le budget des
+vagues : cinq de ses dix monstres craignent le feu et un tiers du deck en etait,
+donc le joueur ne pouvait pas se tromper d element. Corrige par le CONTENU du
+niveau. Premiere tentative a deux cartes remplacees : 53 %, correction plus
+grosse que le defaut ; ramenee a une seule.
+
+**Reste a faire** :
+- **G** — amelioration des cartes en combat.
+- **H** — nouveaux sorts et rebati des niveaux 1-2.
+- **Vague 3, bloquee sur les packs absents** : I (boss et monstres), J (mode
+  infini). La liste des ~45 packs est en section 1.
+
+**Dette connue, non bloquante** :
+- Le **mage reste un demon cornu** dans les scenes d histoire. Reverifie : les
+  sept feuilles de cosmetique sont des vues de DESSUS (on voit le sommet du
+  chapeau, pas un visage), aucune ne peut servir de buste. Il faut un vrai
+  portrait humain sur le disque.
+- `poison_ball` emprunte la feuille du slime teintee en vert.
+- Trois points de licence a regler avant une vente (section 1).
