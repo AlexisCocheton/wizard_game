@@ -14,6 +14,9 @@ func run() -> void:
 	_test_un_boss_vaincu_offre_une_carte()
 	_test_les_trois_choix_melangent_les_raretes()
 	_test_bruler_une_carte_proposee()
+	_test_un_cinquieme_de_passifs_a_la_montee_de_niveau()
+	_test_un_passif_choisi_s_equipe_au_lieu_d_aller_dans_le_deck()
+	_test_un_quatrieme_passif_choisi_attend_un_echange()
 
 
 func _test_offre_de_trois() -> void:
@@ -152,4 +155,78 @@ func _test_bruler_une_carte_proposee() -> void:
 	eq(RunState.hand.size(), avant_main, "ni dans la main")
 	ok(RunState.pending_offer.is_empty(), "l offre est consommee")
 	eq(RunState.burned_card, brulee, "la carte a lancer est retenue pour le controleur")
+	RunState.reset()
+
+
+## "Les passifs sont plus rares que les cartes durant les montees de niveau :
+## 20 pourcent de passifs."
+##
+## Le test se mesure sur 400 tirages et tolere une marge : un tirage aleatoire ne
+## tombe jamais pile sur 20 %. La marge est large a dessein — on verrouille
+## l INTENTION (environ un cinquieme), pas une graine.
+func _test_un_cinquieme_de_passifs_a_la_montee_de_niveau() -> void:
+	RunState.reset()
+	var passifs: int = 0
+	var total: int = 0
+	for essai in 400:
+		RunState.set_seed(9000 + essai)
+		var offre: Array[SpellCard] = RunState.offer_choices(3)
+		for c in offre:
+			if c == null:
+				continue
+			total += 1
+			if c.is_passive:
+				passifs += 1
+		RunState.pending_offer.clear()
+	ok(total > 0, "des cartes ont bien ete proposees")
+	var taux: float = float(passifs) / float(maxi(total, 1))
+	ok(taux > 0.10 and taux < 0.32,
+		"environ 20 %% de passifs a la montee de niveau (mesure : %.1f %%)" % (taux * 100.0))
+	RunState.reset()
+
+
+## Un passif propose ne rejoint PAS la defausse : il s EQUIPE. Le mettre dans le
+## deck le rendrait piochable, et tout le chantier serait annule en un appel.
+func _test_un_passif_choisi_s_equipe_au_lieu_d_aller_dans_le_deck() -> void:
+	RunState.reset()
+	SpeedGauge.reset()
+	var p: SpellCard = null
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and c.is_passive:
+			p = c
+			break
+	if p == null:
+		ok(false, "aucun passif au catalogue")
+		return
+	RunState.pending_offer = [p]
+	var avant_cartes: int = RunState.total_cards()
+	var pris: SpellCard = RunState.pick_offer(0)
+	eq(pris, p, "le passif est bien rendu")
+	eq(RunState.total_cards(), avant_cartes, "le deck n a pas grandi")
+	not_ok(RunState.discard.has(p), "il n est pas a la defausse")
+	ok(RunState.equipped_passives.has(p), "il occupe un emplacement de passif")
+	RunState.reset()
+
+
+## Quand les trois emplacements sont pleins, choisir un quatrieme passif ne
+## l equipe pas en douce : il reste EN ATTENTE d un echange decide par le joueur.
+func _test_un_quatrieme_passif_choisi_attend_un_echange() -> void:
+	RunState.reset()
+	SpeedGauge.reset()
+	var tous: Array[SpellCard] = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and c.is_passive:
+			tous.append(c)
+	if tous.size() < 4:
+		ok(false, "il faut au moins 4 passifs au catalogue")
+		return
+	for i in GameConfig.PASSIVE_SLOTS:
+		RunState.equip_passive(tous[i])
+	RunState.pending_offer = [tous[3]]
+	RunState.pick_offer(0)
+	eq(RunState.pending_passive, tous[3], "le quatrieme attend un echange")
+	eq(RunState.equipped_passives.size(), GameConfig.PASSIVE_SLOTS, "toujours trois equipes")
+	ok(RunState.resolve_pending_passive(0), "le joueur designe l emplacement 0")
+	eq(RunState.equipped_passives[0], tous[3], "le nouveau a pris la place")
+	eq(RunState.pending_passive, null, "plus rien en attente")
 	RunState.reset()

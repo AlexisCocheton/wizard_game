@@ -16,10 +16,23 @@ extends Resource
 ## Si vrai, la carte quitte la partie apres usage au lieu d'aller a la defausse.
 @export var exile_after_cast: bool = false
 
-## Un POUVOIR PASSIF : se joue une fois, son effet vaut pour tout le combat.
-## Il ne revient jamais en main — le rejouer n aurait aucun sens et il
-## encombrerait la pioche jusqu a la fin de la partie.
+## Un POUVOIR PASSIF. Il n est PLUS une carte du deck (demande du testeur du
+## 21 septembre) : il s EQUIPE dans un des trois emplacements et agit des le
+## debut du combat, sans incantation ni pioche.
 @export var is_passive: bool = false
+
+## Vitesse MINIMALE, en pourcentage, a partir de laquelle un passif agit.
+##
+## "Les passifs ne sont actifs que si la vitesse du jeu va assez vite. Exemple
+## pour fire boom : le passif n a lieu qu a partir de 140 % de speed."
+##
+## C est ce qui fait tenir la mecanique signature ensemble : aller vite ne donne
+## plus seulement de l XP et du bouclier, ca ALLUME des regles. Et comme un coup
+## recu fait retomber la vitesse, il eteint aussi les passifs — le prix d un
+## contact devient lisible d un coup d oeil sur la barre.
+##
+## La valeur n a de sens que si `is_passive` est vrai ; elle est ignoree ailleurs.
+@export var speed_threshold: int = 100
 
 ## Feuille d effet PROPRE a cette carte (nom dans Fx.STRIPS ou Fx.GRIDS). Vide,
 ## l effet retombe sur la feuille de l element — ce qui faisait que tous les sorts

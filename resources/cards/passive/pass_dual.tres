@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_ewqeq"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_tn7vx"]
 
-[sub_resource type="Resource" id="Resource_os2cm"]
+[sub_resource type="Resource" id="Resource_ewqeq"]
 script = ExtResource("1_ewqeq")
 key = &"passive_double_cast"
 magnitude = 1.0
@@ -15,12 +15,15 @@ params = {}
 script = ExtResource("2_tn7vx")
 id = &"pass_dual"
 display_name = "Double incantation"
-description = "Passif : deux sorts chargent en meme temps, mais chacun prend 50 pourcent plus de temps."
+description = "Au-dela de 200 % de vitesse : deux sorts chargent en meme temps, mais chacun prend 50 % plus de temps tant que les deux places servent."
 rarity = 2
-base_cast_time = 2.5
+base_cast_time = 0.0
 targeting = 0
 tags = Array[int]([])
-effects = Array[ExtResource("1_ewqeq")]([SubResource("Resource_os2cm")])
+effects = Array[ExtResource("1_ewqeq")]([SubResource("Resource_ewqeq")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = true
+speed_threshold = 200
+fx_key = &""
+sfx_key = &""

@@ -24,5 +24,6 @@ effects = Array[ExtResource("1_u3o8y")]([SubResource("Resource_u3o8y")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"ray_wheel"
 sfx_key = &"spell_rise"

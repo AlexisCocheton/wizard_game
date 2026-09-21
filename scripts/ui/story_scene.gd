@@ -51,7 +51,11 @@ const FACES: Dictionary = {
 ## aucun monstre, mais le jeu a deja leurs feuilles. On y decoupe la premiere case
 ## d "idle" — pas une pose de plus a dessiner ni a maintenir.
 ## Le mage, lui, reste sur un portrait dessine : sa feuille de combat est une vue
-## de DESSUS, illisible en buste (verifie en capture).
+## de DESSUS, illisible en buste. REVERIFIE le 21 septembre sur les sept feuilles
+## de cosmetique ajoutees depuis (monk_blue/black/purple et les quatre chapeaux) :
+## toutes montrent le SOMMET du chapeau et aucun visage. Aucune ne peut donc
+## remplacer le portrait, et le mage reste un demon cornu dans les scenes tant
+## qu un vrai buste humain n est pas sur le disque.
 const SHEET_FACES: Dictionary = {
 	&"guardian_beast": &"chaosknight",
 }

@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Resource_t6wfx"]
 script = ExtResource("1_t6wfx")
 key = &"ground_zone"
-magnitude = 0.0
+magnitude = 1.0
 duration = 5.0
 radius = 180.0
 params = {
@@ -17,7 +17,7 @@ params = {
 script = ExtResource("2_i1x5g")
 id = &"frost_field"
 display_name = "Champ de givre"
-description = "Zone qui ralentit de 50 pourcent pendant 5 s."
+description = "Zone qui inflige 1 degat de GIVRE par seconde et ralentit de 50 pourcent pendant 5 s."
 rarity = 0
 base_cast_time = 0.6
 targeting = 1
@@ -26,5 +26,6 @@ effects = Array[ExtResource("1_t6wfx")]([SubResource("Resource_t6wfx")])
 copies_in_starter = 3
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"rune_square"
 sfx_key = &"drip_frost"

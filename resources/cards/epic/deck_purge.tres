@@ -26,5 +26,6 @@ effects = Array[ExtResource("1_lehn2")]([SubResource("Resource_lehn2")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"orb_shatter"
 sfx_key = &"ward_light"

@@ -351,6 +351,10 @@ func take_damage(amount: float, tags: Array) -> bool:
 	# pas encore commence a avancer, revient a frapper un fantome.
 	if _spawn_fade > 0.0:
 		return false
+	# Resistance TOTALE (0 %) a l un des elements du sort : rien ne passe, et
+	# `false` coupe aussi l eclair et le son de coup — le joueur voit que son
+	# sort n a pas mordu. La graduation entre 0 et 1 est appliquee en amont par
+	# Battlefield._hit(), le point de passage unique des degats.
 	for t in tags:
 		if definition.is_immune_to(t):
 			return false
@@ -439,10 +443,21 @@ func grow(hp_gain: float, scale_gain: float) -> void:
 	_refresh_hp_bar()
 
 
+## Le ralentissement passe par la MEME table de resistances que les degats :
+## un monstre qui y resiste a 50 % est ralenti moitie moins, au lieu d etre
+## insensible ou pas du tout. L immunite binaire ne laissait que tout ou rien,
+## ce qui rendait les cartes de controle inutiles contre la moitie du bestiaire.
 func apply_slow(factor: float, duration: float) -> void:
-	if definition != null and definition.is_immune_to(GameEnums.DamageTag.SLOW):
+	if definition == null:
+		_slow_factor = clampf(factor, 0.05, 1.0)
+		_slow_time = duration
 		return
-	_slow_factor = clampf(factor, 0.05, 1.0)
+	var effectif: float = definition.slow_factor(clampf(factor, 0.05, 1.0))
+	# Totalement resiste : aucun effet, et surtout aucun compteur pose, sinon
+	# le monstre porterait un ralentissement de 0 % qui effacerait le precedent.
+	if effectif >= 1.0:
+		return
+	_slow_factor = effectif
 	_slow_time = duration
 
 

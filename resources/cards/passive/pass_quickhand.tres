@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_73j8r"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_hbuuo"]
+
+[sub_resource type="Resource" id="Resource_omne0"]
+script = ExtResource("1_73j8r")
+key = &"passive_draw_haste"
+magnitude = 35.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_hbuuo")
+id = &"pass_quickhand"
+display_name = "Main leste"
+description = "Au-dela de 120 % de vitesse : la pioche va 35 % plus vite."
+rarity = 0
+base_cast_time = 0.0
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_73j8r")]([SubResource("Resource_omne0")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 120
+fx_key = &""
+sfx_key = &""

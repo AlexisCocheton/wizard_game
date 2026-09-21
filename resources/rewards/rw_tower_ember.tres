@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_s40bh"]
+
+[resource]
+script = ExtResource("1_s40bh")
+id = &"rw_tower_ember"
+display_name = "Tour de braise"
+description = "Une tour qui rougeoie encore de la derniere bataille."
+at_level = 10
+kind = 4
+texture_name = "tower_ember"

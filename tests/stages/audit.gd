@@ -20,6 +20,7 @@ func run_stage() -> void:
 	_check_objective_keys()
 	_check_assets()
 	_check_raw_sheets()
+	_check_gauge_tints()
 	for w in _soft:
 		print("  [AVERTISSEMENT] %s" % w)
 	print("[AUDIT] %d avertissement(s)" % _soft.size())
@@ -59,7 +60,8 @@ func _check_card_fx() -> void:
 func _check_effect_keys() -> void:
 	for card: SpellCard in ContentDB.cards.values():
 		# Les POUVOIRS PASSIFS n ont pas de handler : ils changent une regle dans
-		# RunState.activate_passive() au lieu de s executer une fois.
+		# RunState (equipped_passives) au lieu de s executer une fois. Leurs cles
+		# sont verrouillees par test_passives.gd contre RunState.PASSIVE_KEYS.
 		if card.is_passive:
 			continue
 		for spec in card.effects:
@@ -144,6 +146,45 @@ func _check_raw_sheets() -> void:
 		for name in raw:
 			if text.contains("assets/ui/%s.png\"" % name) or text.contains("tex(\"%s\")" % name):
 				fail("%s : planche brute '%s' referencee (utiliser %s9.png / tex_box)" % [path, name, name])
+
+
+## La VIE doit rester ROUGE dans le HUD.
+##
+## Le defaut reel qui justifie ce controle : SpellBar portait encore
+## tint_progress bleu de son ancien role (la barre d incantation). La texture du
+## pack etant deja rouge, la multiplication donnait un VIOLET sombre, impossible
+## a lire comme une barre de vie — elle paraissait vide a 100 / 100. Rien ne
+## plantait, aucun test ne rougissait : seule une capture le montrait.
+##
+## On verifie donc la teinte dans la scene, parce qu un passage dans l editeur
+## Godot peut la reecrire en silence — c est deja arrive au fond du menu.
+func _check_gauge_tints() -> void:
+	var path: String = "res://scenes/hud/HUD.tscn"
+	var text: String = FileAccess.get_file_as_string(path)
+	if text == "":
+		fail("%s : illisible" % path)
+		return
+	var bloc: int = text.find("[node name=\"SpellBar\"")
+	if bloc < 0:
+		fail("%s : SpellBar (la barre de VIE) est introuvable" % path)
+		return
+	var fin: int = text.find("[node ", bloc + 10)
+	if fin < 0:
+		fin = text.length()
+	var corps: String = text.substr(bloc, fin - bloc)
+	var i: int = corps.find("tint_progress = Color(")
+	if i < 0:
+		return  # pas de teinte : la texture rouge du pack passe telle quelle
+	var reste: String = corps.substr(i + 22)
+	var args: PackedStringArray = reste.substr(0, reste.find(")")).split(",")
+	if args.size() < 3:
+		fail("%s : tint_progress de SpellBar illisible" % path)
+		return
+	var r: float = float(args[0])
+	var b: float = float(args[2])
+	if b > r:
+		fail("%s : la barre de VIE est teintee en bleu (r=%.2f, b=%.2f) — la"
+			% [path, r, b] + " texture du pack est rouge, le produit rend du violet")
 
 
 func _scan_text(dir_path: String, out: Array[String]) -> void:

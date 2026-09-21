@@ -33,7 +33,19 @@ extends Resource
 @export var sprite: Texture2D
 
 @export_group("Comportements de base")
-## Tags de sorts auxquels ce monstre est totalement immunise.
+## RESISTANCES EN POURCENTAGE — DamageTag -> multiplicateur de degats subis.
+## 0.0 = immunite totale, 0.5 = moitie des degats, 1.0 = normal (valeur par
+## defaut quand le tag est absent), 1.5 = degats majores de moitie.
+##
+## C est la table qui remplace l immunite BINAIRE : avec deux etats seulement,
+## un golem de pierre et une gelee encaissaient le feu exactement pareil, et
+## changer de deck ne servait a rien. Ce sont les ECARTS entre monstres qui
+## donnent une raison de recomposer son deck pour un niveau.
+@export var resistances: Dictionary = {}
+## DEPRECIE — remplace par `resistances` (une immunite = resistance 0.0).
+## Conserve parce que les .tres deja sur les telephones le portent encore et
+## qu un chargement ne doit pas perdre l information : `resistance_to()` le lit
+## en repli. Tout contenu NEUF passe par `resistances`.
 @export var immune_tags: Array[GameEnums.DamageTag] = []
 ## Probabilite d esquiver un sort (0..1), pour les EVASIVE.
 @export var dodge_chance: float = 0.0
@@ -114,8 +126,53 @@ extends Resource
 @export var summon_max_alive: int = 6
 
 
+## Multiplicateur de degats subis pour UN tag. 1.0 si rien n est declare.
+func resistance_to(tag: int) -> float:
+	if resistances.has(tag):
+		return maxf(float(resistances[tag]), 0.0)
+	# Repli sur l ancien champ : une immunite heritee vaut resistance 0.
+	if tag in immune_tags:
+		return 0.0
+	return 1.0
+
+
+## Multiplicateur pour un SORT, qui peut porter plusieurs elements (le Meteore
+## est feu + physique). On retient le PLUS FAIBLE, donc le meilleur pour le
+## monstre : sinon ajouter un second element a une carte serait un bonus gratuit
+## et toute carte finirait bi-element pour contourner les resistances.
+##
+## Les tags non elementaires (SLOW, SUMMON) sont ignores ici : ils ne portent
+## pas les degats, ils qualifient l effet.
+func resistance_to_tags(tags: Array) -> float:
+	var m: float = 1.0
+	var vu: bool = false
+	for t in tags:
+		if not (t in GameEnums.ELEMENTS):
+			continue
+		var r: float = resistance_to(t)
+		m = r if not vu else minf(m, r)
+		vu = true
+	return m
+
+
+## Vrai quand RIEN ne passe. Garde le nom d origine : tout le code qui posait la
+## question en binaire (ralentissement, retour visuel) continue de fonctionner,
+## et la reponse vient maintenant de la table.
 func is_immune_to(tag: GameEnums.DamageTag) -> bool:
-	return tag in immune_tags
+	return resistance_to(tag) <= 0.0
+
+
+## Facteur de vitesse effectif d un ralentissement, resistance comprise.
+## Un monstre qui resiste a 50 % au ralentissement doit etre ralenti MOITIE
+## MOINS, pas insensible : l immunite binaire ne laissait que tout ou rien, ce
+## qui rendait les cartes de controle inutilisables contre la moitie du bestiaire.
+func slow_factor(factor: float) -> float:
+	var r: float = resistance_to(GameEnums.DamageTag.SLOW)
+	if r <= 0.0:
+		return 1.0
+	# `factor` = 0.5 signifie « moitie de vitesse », soit 50 % de perte.
+	# On attenue la PERTE, pas la vitesse.
+	return clampf(1.0 - (1.0 - factor) * r, 0.05, 1.0)
 
 
 func is_boss() -> bool:

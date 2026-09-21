@@ -28,5 +28,6 @@ effects = Array[ExtResource("1_h0hek")]([SubResource("Resource_h0hek")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"dome_bastion"
 sfx_key = &"stone_shove"

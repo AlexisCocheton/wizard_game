@@ -235,3 +235,69 @@ cartes en combat), H (nouveaux sorts et rebati des niveaux 1-2), L (profil,
 succes par rarete, cosmetiques), E (carte de campagne sur les fonds d acte).
 
 **Vague 3, quand les packs arrivent** : I (boss et monstres), J (mode infini).
+
+---
+
+## 5. Etat au 21 septembre, apres la deuxieme vague
+
+**Livres** : K (regles de deck), L (profil, succes par rarete, cosmetiques),
+E (carte de campagne sur les fonds d acte). F (passifs) et B3 (elements) etaient
+encore en vol a la redaction de cette section.
+
+**Arbitrage tranche — les decks de campagne** : K a signale que six niveaux sur
+sept violaient la nouvelle regle des 15 cartes (jusqu a 20 cartes et 6 epiques
+sur `lvl_06`). Ils ne plantaient rien parce que `GameController._build_deck()`
+prend `level_def.exploration_deck` directement, sans passer par
+`DeckRules.is_valid()` : seul le mode Massacre etait valide. La regle du testeur
+vaut pourtant "que ce soit en campagne ou en massacre", donc les sept decks ont
+ete ramenes a 15 cartes dans `tools/make_content.gd`, avec au plus 3 epiques.
+Chaque coupe retire des exemplaires du fond commun (eclair arcanique, boule de
+feu) pour garder l identite du niveau ; `lvl_06` et `lvl_07` perdent en plus des
+epiques, parce que le plafond mord chez eux.
+
+Le trou de verification est bouche par
+`test_deck_rules._test_les_decks_de_campagne_suivent_la_regle()`, qui verifie le
+contenu LIVRE et non seulement la fonction qui l evalue. Sabotage teste : une
+carte ajoutee a `lvl_01` rend le harnais rouge.
+
+**Chantiers restants** : G (amelioration des cartes en combat), H (nouveaux
+sorts et rebati des niveaux 1-2), puis vague 3 (I, J) quand les packs arrivent.
+
+### Defauts trouves EN CAPTURE pendant la vague 2, corriges
+
+Tous invisibles aux tests : rien ne plantait, aucune assertion ne rougissait.
+Chacun est desormais verrouille par un controle qui mord (sabotage verifie).
+
+1. **La barre de VIE paraissait vide a 100 / 100.** `SpellBar` portait encore
+   `tint_progress` bleu de son ancien role (la barre d incantation). La texture
+   du pack etant rouge, la multiplication rendait un violet sombre. Verrouille
+   par `_check_gauge_tints()` dans l AUDIT, parce qu un passage dans l editeur
+   Godot reecrit ces valeurs en silence — c est deja arrive au fond du menu.
+2. **Les succes deja merites n etaient jamais accordes.** `_check()` ne validait
+   qu au FRANCHISSEMENT du seuil : les six succes ajoutes par le chantier L
+   seraient restes inaccessibles a tout profil existant. Corrige par
+   `ChallengeTracker.rattraper()` au demarrage.
+3. **Les barres d avancement du profil etaient rouges**, la couleur de la vie.
+   Un `modulate` dore ne suffisait pas (rouge x or = rouge orange) : la planche
+   est reteintee couleur par couleur (`tools/assets/make_gold_bar.py`).
+4. **L onglet des cosmetiques n etait que du texte** : on choisissait une robe
+   sans voir sa couleur. Ajout de `UiTheme.cosmetic_preview()`. Le recadrage
+   compte autant que la vignette : le mage occupe 58 px sur 192, donc la case
+   entiere donnait une silhouette perdue dans le vide.
+5. **Les etoiles acquises ne se distinguaient pas des vides** sur la carte de
+   campagne (ecart mesure : 40 sur 255). Acquise = pleine, doree, grande ;
+   vide = un creux sombre et reduit. Ecart porte a 76, et la FORME porte
+   l information autant que la couleur.
+6. **L ecran de victoire ressemblait a un journal d erreurs** : prefixes
+   "[OK]" / "[   ]", aucune etoile, aucune trace de l XP de compte, moitie de
+   page vide. Refait autour des etoiles. Le prefixe entre crochets a ete retire
+   des trois ecrans qui le portaient.
+7. **Le briefing ecrivait en corps 17** la ou le plancher du theme est 30, et
+   coupait les noms de monstres au milieu d un mot.
+8. **La rarete ne se voyait pas dans l ecran de deck** : elle ne teintait que le
+   compteur "x1". Contour de rarete ajoute, comme dans le profil.
+
+**Reverifie et toujours vrai** : le mage reste un demon cornu dans les scenes
+d histoire. Les sept feuilles de cosmetique ajoutees depuis sont des vues de
+DESSUS (on voit le sommet du chapeau, pas un visage) : aucune ne peut servir de
+buste. Il faut un vrai portrait humain sur le disque.

@@ -32,5 +32,6 @@ effects = Array[ExtResource("1_38gph")]([SubResource("Resource_38gph"), SubResou
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"glass_shards"
 sfx_key = &"spell_grand"

@@ -17,6 +17,10 @@ sprite_scale = 1.0
 shape = 0
 color = Color(0.62, 0.42, 0.28, 1)
 base_radius = 26.0
+resistances = {
+0: 0.9,
+1: 1.15
+}
 immune_tags = Array[int]([])
 dodge_chance = 0.0
 swarm_count = 1

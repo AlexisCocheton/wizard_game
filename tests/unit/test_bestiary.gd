@@ -170,6 +170,13 @@ func _test_double_toucher_du_deck() -> void:
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
+	# Le deck de depart fait desormais PILE 15 cartes (chantier K) : plus une
+	# seule case libre, donc plus rien d ajoutable. On en retire deux pour
+	# rendre au double toucher la place qu il lui faut pour s exercer.
+	var place: Array = SaveData.massacre_deck()
+	place.resize(maxi(0, place.size() - 2))
+	SaveData.set_massacre_deck(place)
+	panel.refresh()
 
 	var a: SpellCard = _premiere_carte_ajoutable(panel, &"")
 	ok(a != null, "au moins une carte decouverte est ajoutable")

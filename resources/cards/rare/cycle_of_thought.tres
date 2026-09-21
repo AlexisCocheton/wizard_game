@@ -26,5 +26,6 @@ effects = Array[ExtResource("1_amhwp")]([SubResource("Resource_amhwp")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"cycle_swirl"
 sfx_key = &"spell_deep"

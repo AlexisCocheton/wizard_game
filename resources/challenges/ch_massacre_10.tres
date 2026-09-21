@@ -7,6 +7,7 @@ script = ExtResource("1_8h8nw")
 id = &"ch_massacre_10"
 display_name = "Sans fin"
 description = "Survivre a 10 vagues en Massacre."
+rarity = 1
 xp_reward = 500
 track_key = &"massacre_wave"
 target = 10

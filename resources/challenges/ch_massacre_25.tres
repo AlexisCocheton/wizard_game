@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_cj7e2"]
+
+[resource]
+script = ExtResource("1_cj7e2")
+id = &"ch_massacre_25"
+display_name = "Le mur"
+description = "Survivre a 25 vagues en Massacre."
+rarity = 2
+xp_reward = 900
+track_key = &"massacre_wave"
+target = 25

@@ -1,12 +1,21 @@
 extends TestCase
-## Carte de selection des niveaux (onglet Campagne).
+## Carte de selection des niveaux (onglet Campagne) — UN ECRAN PAR ACTE.
 ##
 ## Ce que ce test verrouille, et POURQUOI :
 ##  - la carte montre TOUS les niveaux, y compris les verrouilles. Une carte qui
 ##    ne montre que ce qu on a deja debloque n est pas une carte, c est une liste :
 ##    le joueur ne voit plus ou il va. C est la demande exacte du testeur.
-##  - les liens suivent `next_levels` : la fourche de lvl_04 doit etre visible,
-##    sinon l arborescence de l histoire n existe que dans le document.
+##  - un acte = un ecran, et les fleches gauche/droite en changent. C est la
+##    navigation demandee ; un defilement vertical la remplacerait en silence.
+##  - un acte dont AUCUN niveau n est debloque reste visible et navigable : le
+##    joueur doit voir qu il y a une suite. C est explicitement demande.
+##  - un acte SANS niveau (l acte 5 n en a encore aucun) ne doit ni planter ni
+##    disparaitre : il s affiche vide, avec son fond.
+##  - le fond de l ecran est celui de l acte (`LevelDef.backdrop`), pas une
+##    texture choisie par l UI : les deux doivent rester d accord sans qu on ait
+##    a les resynchroniser a la main.
+##  - les points se posent sur le SOL du fond, jamais dans la bande decoree du
+##    haut ni dans le premier plan du bas — sinon le nom devient illisible.
 ##  - les etoiles viennent de `SaveData.objectives_done_count`, jamais d un compteur
 ##    parallele qui pourrait diverger de la verite du profil.
 ##  - un niveau verrouille n est pas cliquable : autrement on ouvrirait le panneau
@@ -19,12 +28,15 @@ func get_suite_name() -> String:
 func run() -> void:
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
-	_test_la_carte_place_tous_les_niveaux()
-	_test_les_liens_suivent_next_levels()
-	_test_la_fourche_du_niveau_4()
-	_test_les_rangs_respectent_la_profondeur()
+	_test_un_ecran_par_acte()
+	_test_les_fleches_changent_d_acte()
+	_test_un_acte_verrouille_reste_visible()
+	_test_un_acte_vide_ne_plante_pas()
+	_test_le_fond_est_celui_de_l_acte()
+	_test_les_points_sont_sur_le_sol()
 	_test_etoiles_lues_du_profil()
 	_test_seuls_les_debloques_sont_cliquables()
+	_test_l_ouverture_se_cale_sur_l_acte_en_cours()
 	_test_le_panneau_bascule_carte_detail()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
@@ -32,66 +44,156 @@ func run() -> void:
 
 func _map() -> CampaignMap:
 	var m := CampaignMap.new()
+	# La carte se dimensionne sur sa taille reelle : sans taille, tous les points
+	# tomberaient en (0,0) et le test des positions ne prouverait rien.
+	m.size = Vector2(1040.0, 1474.0)
 	attach(m)
 	m.rebuild()
 	return m
 
 
-## La carte montre l archipel ENTIER. Le testeur veut « voir les noms des etapes » :
-## cacher les niveaux verrouilles reviendrait a cacher la carte.
-func _test_la_carte_place_tous_les_niveaux() -> void:
+## La carte montre l archipel ENTIER, reparti par acte. Le testeur veut « voir les
+## noms des etapes » : cacher les niveaux verrouilles reviendrait a cacher la carte.
+func _test_un_ecran_par_acte() -> void:
 	var m: CampaignMap = _map()
-	eq(m.node_count(), ContentDB.levels.size(),
-		"chaque niveau du catalogue a une ile sur la carte")
-	for id in ContentDB.levels.keys():
-		ok(m.has_node_for(id), "%s est place sur la carte" % id)
-	# Le nom affiche est bien celui du niveau, pas son identifiant technique.
-	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
-	eq(m.label_for(&"lvl_01"), l1.display_name, "l ile porte le nom du niveau")
-	detach(m)
-
-
-## Un trait par entree de next_levels : la carte ne peut pas inventer de chemin
-## ni en oublier un.
-func _test_les_liens_suivent_next_levels() -> void:
-	var m: CampaignMap = _map()
-	var attendus: int = 0
+	var total: int = 0
+	for a in m.acts():
+		total += m.levels_in_act(a).size()
+	eq(total, ContentDB.levels.size(),
+		"chaque niveau du catalogue est pose sur l ecran de son acte")
 	for id in ContentDB.levels.keys():
 		var lv: LevelDef = ContentDB.levels[id]
-		for nxt in lv.next_levels:
-			if ContentDB.levels.has(nxt):
-				attendus += 1
-				ok(m.has_link(lv.id, nxt), "le chemin %s -> %s est trace" % [lv.id, nxt])
-	eq(m.link_count(), attendus, "aucun chemin invente")
-	ok(attendus >= 6, "l archipel est bien connecte (%d chemins)" % attendus)
+		ok(m.levels_in_act(lv.act).has(id), "%s est sur l ecran de l acte %d" % [id, lv.act])
+	# Le nom affiche est bien celui du niveau, pas son identifiant technique.
+	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	eq(m.label_for(&"lvl_01"), l1.display_name, "le point porte le nom du niveau")
+
+	# ORDRE DE LECTURE. `Array.sort()` sur un Array non type de StringName rend
+	# [lvl_02..lvl_07, lvl_01] sur 4.4.stable : l acte I affichait « La Tour des
+	# Sables » AVANT « Les Marches du Temps », et le joueur lisait son voyage a
+	# l envers. Le defaut etait invisible a tous les autres tests.
+	var acte1: Array[StringName] = m.levels_in_act(1)
+	eq(acte1[0], &"lvl_01", "le premier niveau de l acte I vient en premier")
+	# Et le premier point est bien le plus HAUT : on lit l acte du fond vers soi.
+	ok(m.position_of(acte1[0]).y < m.position_of(acte1[1]).y,
+		"le premier niveau de l acte est pose au-dessus du suivant")
 	detach(m)
 
 
-## La fourche de l acte II est le seul endroit ou le joueur CHOISIT son epreuve.
-## Si elle n apparait pas, la carte ment sur la structure du jeu.
-func _test_la_fourche_du_niveau_4() -> void:
+## Les fleches sont la SEULE navigation entre actes. Elles bouclent sur les bornes
+## en restant inertes plutot qu en sautant a l autre bout : un joueur qui appuie
+## deux fois trop a droite ne doit pas se retrouver a l acte I.
+func _test_les_fleches_changent_d_acte() -> void:
 	var m: CampaignMap = _map()
-	ok(m.has_link(&"lvl_04", &"lvl_05"), "lvl_04 mene aux Forges")
-	ok(m.has_link(&"lvl_04", &"lvl_06"), "lvl_04 mene a la Cour brisee")
-	# Les deux branches se rejoignent : la carte doit le montrer aussi.
-	ok(m.has_link(&"lvl_05", &"lvl_07"), "les Forges menent au final")
-	ok(m.has_link(&"lvl_06", &"lvl_07"), "la Cour brisee mene au final")
+	var actes: Array[int] = m.acts()
+	# Les 4 actes qui ont du contenu PLUS l acte 5, ecrit mais encore vide. Le
+	# nombre est ecrit en dur exprès : ecrire `>= 4` laissait passer la
+	# disparition de l acte 5, c est-a-dire exactement le defaut a empecher.
+	eq(actes.size(), 5, "les 5 actes de l histoire sont sur la carte")
+	for a in [1, 2, 3, 4, 5]:
+		ok(actes.has(a), "l acte %d est atteignable avec les fleches" % a)
+	m.show_act(actes[0])
+	eq(m.current_act(), actes[0], "on peut se poser sur le premier acte")
+	not_ok(m.can_go_previous(), "pas d acte avant le premier")
+	ok(m.can_go_next(), "il y a une suite apres le premier acte")
+
+	m.go_next()
+	eq(m.current_act(), actes[1], "la fleche droite avance d un acte")
+	m.go_previous()
+	eq(m.current_act(), actes[0], "la fleche gauche revient d un acte")
+	m.go_previous()
+	eq(m.current_act(), actes[0], "la fleche gauche est inerte sur le premier acte")
+
+	m.show_act(actes[actes.size() - 1])
+	not_ok(m.can_go_next(), "pas d acte apres le dernier")
+	m.go_next()
+	eq(m.current_act(), actes[actes.size() - 1], "la fleche droite est inerte sur le dernier")
 	detach(m)
 
 
-## Le placement vertical vient de la PROFONDEUR dans l arborescence, pas de
-## l ordre alphabetique des ids : lvl_05 et lvl_06 sont des freres et doivent
-## etre sur la meme ligne, sinon la fourche se lit comme une suite.
-func _test_les_rangs_respectent_la_profondeur() -> void:
+## « Un acte dont aucun niveau n est debloque reste visible mais ferme » : on
+## doit pouvoir l ATTEINDRE avec les fleches, et ses points restent gris.
+func _test_un_acte_verrouille_reste_visible() -> void:
+	SaveData.reset_profile()
 	var m: CampaignMap = _map()
-	eq(m.rank_of(&"lvl_01"), 0, "le premier niveau est la racine")
-	ok(m.rank_of(&"lvl_02") > m.rank_of(&"lvl_01"), "lvl_02 vient apres lvl_01")
-	eq(m.rank_of(&"lvl_05"), m.rank_of(&"lvl_06"),
-		"les deux branches de l acte III sont sur la meme ligne")
-	ok(m.rank_of(&"lvl_07") > m.rank_of(&"lvl_05"), "le final est apres les deux branches")
-	# Deux freres ne peuvent pas se superposer.
-	ok(absf(m.position_of(&"lvl_05").x - m.position_of(&"lvl_06").x) > 100.0,
-		"les deux branches sont ecartees horizontalement")
+	# Profil neuf : seul lvl_01 est ouvert, donc les actes 2+ sont entierement fermes.
+	var dernier: int = m.acts()[m.acts().size() - 1]
+	m.show_act(dernier)
+	eq(m.current_act(), dernier, "on atteint le dernier acte sur un profil neuf")
+	not_ok(m.act_is_open(dernier), "le dernier acte est ferme sur un profil neuf")
+	ok(m.act_is_open(1), "l acte I est ouvert des le depart")
+	# Ferme ne veut pas dire vide : les points sont la, gris.
+	for id in m.levels_in_act(3):
+		not_ok(m.is_enabled(id), "%s reste verrouille" % id)
+		ok(m.position_of(id) != Vector2.ZERO, "%s est tout de meme place" % id)
+	detach(m)
+
+
+## L acte 5 n a encore aucun niveau. Il ne doit ni faire disparaitre l ecran ni
+## planter : c est le cas qui arrive a chaque fois qu on ecrit l histoire avant
+## le contenu.
+func _test_un_acte_vide_ne_plante_pas() -> void:
+	var m: CampaignMap = _map()
+	# On demande un acte qui n existe pas dans le contenu.
+	m.show_act(9)
+	eq(m.levels_in_act(9).size(), 0, "un acte sans niveau n en invente pas")
+	ok(m.act_title(9) != "", "un acte inconnu a tout de meme un titre")
+	ok(m.empty_notice() != "", "un acte vide affiche un message, pas un ecran blanc")
+	# Et on peut en repartir.
+	m.show_act(1)
+	eq(m.current_act(), 1, "on revient d un acte vide sans rester coince")
+	detach(m)
+
+
+## Le fond vient de `LevelDef.backdrop` : si un niveau change d acte ou de fond,
+## la carte suit sans qu on ait a modifier une table dans l UI.
+func _test_le_fond_est_celui_de_l_acte() -> void:
+	var m: CampaignMap = _map()
+	for a in m.acts():
+		var ids: Array[StringName] = m.levels_in_act(a)
+		if ids.is_empty():
+			continue
+		var lv: LevelDef = ContentDB.levels[ids[0]]
+		if lv.backdrop == "":
+			continue
+		eq(m.backdrop_for_act(a), lv.backdrop,
+			"l acte %d affiche le fond de ses niveaux" % a)
+		ok(FileAccess.file_exists("res://assets/backdrops/%s.png" % m.backdrop_for_act(a)),
+			"le fond de l acte %d existe sur le disque" % a)
+	# Un acte sans niveau a quand meme un fond : sinon l ecran serait noir.
+	ok(m.backdrop_for_act(5) != "", "l acte 5, sans niveau, a tout de meme un fond")
+	detach(m)
+
+
+## Les fonds ont une bande DECOREE en haut et un premier plan en bas. Un point
+## pose dedans devient illisible (feuillage, tombes, grilles). Ils vivent sur le
+## SOL, la bande mediane.
+func _test_les_points_sont_sur_le_sol() -> void:
+	var m: CampaignMap = _map()
+	var h: float = m.size.y
+	var vus: int = 0
+	for a in m.acts():
+		for id in m.levels_in_act(a):
+			var p: Vector2 = m.position_of(id)
+			vus += 1
+			# Bornes ECRITES EN DUR, jamais `CampaignMap.GROUND_*` : un test qui
+			# relit la constante qu il est cense contraindre passe toujours. Verifie
+			# en sabotant GROUND_TOP a 0.02 — l assertion ne mordait pas.
+			# 0.22 = sous la bande decoree du fond ET sous le titre de l acte ;
+			# 0.84 = au-dessus du premier plan (herbes hautes, dalles).
+			between(p.y, h * 0.22, h * 0.84, "%s est pose sur le sol du fond" % id)
+			# Les fleches mangent les bords : un point dessous serait inatteignable.
+			# 140 px couvre la fleche (120) plus son ecart au bord.
+			between(p.x, 140.0, m.size.x - 140.0, "%s est entre les deux fleches" % id)
+	ok(vus >= 7, "les 7 niveaux existants sont places (%d)" % vus)
+	# Deux niveaux du meme acte ne se superposent pas : sinon un point en cache
+	# un autre et le joueur ne peut plus le toucher.
+	for a in m.acts():
+		var ids: Array[StringName] = m.levels_in_act(a)
+		for i in ids.size():
+			for j in range(i + 1, ids.size()):
+				ok(m.position_of(ids[i]).distance_to(m.position_of(ids[j])) > CampaignMap.DOT_SIZE,
+					"%s et %s ne se superposent pas" % [ids[i], ids[j]])
 	detach(m)
 
 
@@ -136,6 +238,22 @@ func _test_seuls_les_debloques_sont_cliquables() -> void:
 	SaveData.reset_profile()
 
 
+## On rouvre la campagne sur l acte ou le joueur en est, pas sur l acte I : avec
+## 5 actes, retrouver son niveau demanderait sinon 4 appuis a chaque fois.
+func _test_l_ouverture_se_cale_sur_l_acte_en_cours() -> void:
+	SaveData.reset_profile()
+	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	SaveData.record_victory(l1, GameEnums.Mode.EXPLORATION, {}, 6)
+	var l2: LevelDef = ContentDB.levels.get(&"lvl_02")
+	SaveData.record_victory(l2, GameEnums.Mode.EXPLORATION, {}, 6)
+	SaveData.set_current_level(&"lvl_03")
+	var m: CampaignMap = _map()
+	var l3: LevelDef = ContentDB.levels.get(&"lvl_03")
+	eq(m.current_act(), l3.act, "la carte s ouvre sur l acte du niveau en cours")
+	detach(m)
+	SaveData.reset_profile()
+
+
 ## Le panneau garde le detail EXISTANT (vagues, boss, objectifs, modes, JOUER) :
 ## la carte est une couche de navigation par-dessus, pas un remplacement.
 func _test_le_panneau_bascule_carte_detail() -> void:
@@ -147,7 +265,7 @@ func _test_le_panneau_bascule_carte_detail() -> void:
 	ok(p.showing_map(), "on arrive sur la carte, pas sur une fiche")
 
 	p.open_level(&"lvl_01")
-	not_ok(p.showing_map(), "toucher une ile ouvre le detail")
+	not_ok(p.showing_map(), "toucher un point ouvre le detail")
 	eq(p.detail_level_id(), &"lvl_01", "c est le detail du niveau touche")
 	# Le detail est bien l ancien ecran : ses commandes existent toujours.
 	ok(p.has_detail_controls(), "le detail garde modes + JOUER")

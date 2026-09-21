@@ -110,13 +110,20 @@ func _portraits(defs: Array[EnemyDef]) -> Control:
 	wrap.add_theme_constant_override(&"v_separation", 10)
 	for def in defs:
 		var cell := VBoxContainer.new()
-		cell.custom_minimum_size = Vector2(112.0, 0.0)
+		# 150 px et non 112 : a FONT_SMALL, "Sauterelle" et "Corniste" ne
+		# tenaient plus et AUTOWRAP_WORD_SMART coupait AU MILIEU du mot
+		# ("Sautere / lle"). Un nom coupe se lit plus mal qu un nom serre.
+		cell.custom_minimum_size = Vector2(150.0, 0.0)
 		cell.add_theme_constant_override(&"separation", 2)
 		var tex: TextureRect = _thumb(def, 78.0)
 		if tex != null:
 			cell.add_child(tex)
-		var nom := UiTheme.label(def.display_name, 17, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
-		nom.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var nom := UiTheme.label(def.display_name, UiTheme.FONT_SMALL, UiTheme.TEXT_DARK,
+			HORIZONTAL_ALIGNMENT_CENTER)
+		# WORD, pas WORD_SMART : "smart" s autorise a casser un mot trop long
+		# pour la ligne, ce qui est exactement le defaut constate. WORD prefere
+		# deborder, et le nom reste lisible.
+		nom.autowrap_mode = TextServer.AUTOWRAP_WORD
 		cell.add_child(nom)
 		wrap.add_child(cell)
 	return wrap
@@ -130,7 +137,7 @@ func _boss_line(etiquette: String, def: EnemyDef, teinte: Color) -> Control:
 		row.add_child(tex)
 	var col := VBoxContainer.new()
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(UiTheme.label(etiquette, 20, teinte))
+	col.add_child(UiTheme.label(etiquette, UiTheme.FONT_SMALL, teinte))
 	col.add_child(UiTheme.label(def.display_name, UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
 	row.add_child(col)
 	return row
@@ -168,13 +175,23 @@ func _build_objectives() -> void:
 		if obj == null:
 			continue
 		var fait: bool = SaveData.is_objective_done(_level.id, obj.id)
-		_waves.add_child(UiTheme.label("%s  %s" % ["[OK]" if fait else "[   ]", obj.description],
-			19, Color(0.2, 0.5, 0.25) if fait else UiTheme.TEXT_DARK))
+		# Plus de prefixe "[   ]" : il se lisait comme une case a cocher cassee.
+		# Le MOT dit l etat, la couleur le confirme — et un joueur daltonien lit
+		# quand meme "Acquis" ou "A faire".
+		_waves.add_child(UiTheme.label(
+			"%s  -  %s" % ["Acquis" if fait else "A faire", obj.description],
+			UiTheme.FONT_BODY,
+			Color(0.16, 0.46, 0.22) if fait else UiTheme.TEXT_DARK))
 	if _level.legendary_reward != null:
 		_waves.add_child(UiTheme.label("Recompense : %s" % _level.legendary_reward.display_name,
-			19, UiTheme.GOLD))
+			UiTheme.FONT_BODY, UiTheme.GOLD))
 
 
+## Aucune taille de police LITTERALE dans cet ecran : elles echappent au theme.
+## Le briefing en portait trois (17, 19, 20) la ou la plus petite taille du theme
+## vaut 30 — le texte y faisait donc la moitie de ce qui est lisible, ce qui est
+## exactement la plainte du testeur sur les polices. Passer par FONT_SMALL et
+## FONT_BODY garantit qu un reglage de taille touche AUSSI cet ecran.
 ## Avec quoi : la composition du deck, par nom et nombre de copies.
 func _build_deck() -> void:
 	var cartes: Array = _deck_list()
@@ -196,7 +213,7 @@ func _build_deck() -> void:
 	wrap.add_theme_constant_override(&"v_separation", 8)
 	for c in ordre:
 		var tag := UiTheme.label("%s x%d" % [c.display_name, copies[c.id]],
-			19, UiTheme.rarity_ink(c.rarity))
+			UiTheme.FONT_SMALL, UiTheme.rarity_ink(c.rarity))
 		tag.autowrap_mode = TextServer.AUTOWRAP_OFF
 		wrap.add_child(tag)
 	_deck.add_child(wrap)

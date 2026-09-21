@@ -7,6 +7,7 @@ script = ExtResource("1_7vpyf")
 id = &"ch_slayer_1000"
 display_name = "Fleau des monstres"
 description = "Tuer 1000 monstres."
+rarity = 2
 xp_reward = 900
 track_key = &"enemies_killed"
 target = 1000

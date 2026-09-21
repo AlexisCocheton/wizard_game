@@ -78,10 +78,11 @@ func dispatch(spec: EffectSpec, ctx: CastContext) -> bool:
 func cast(card: SpellCard, ctx: CastContext) -> void:
 	if card == null:
 		return
-	# Un POUVOIR PASSIF ne passe pas par les handlers : il ne "s execute" pas, il
-	# change une regle pour tout le combat. RunState en tient le registre.
+	# Un POUVOIR PASSIF ne passe plus JAMAIS par ici : il est equipe hors deck et
+	# ses regles sont relues en continu par RunState. Le garde reste pour qu une
+	# sauvegarde ancienne, dont le deck contiendrait encore un id de passif, ne
+	# le lance pas comme un sort sans effet.
 	if card.is_passive:
-		RunState.activate_passive(card)
 		return
 	# Compteur d usage lu par la fiche du grimoire ("lance N fois"). Pose ici et
 	# non dans l interface de la main : c est le SEUL point par ou passe un sort
@@ -96,3 +97,16 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 	ctx.damage_mult = RunState.take_next_spell_multiplier()
 	for spec in card.effects:
 		dispatch(spec, ctx)
+	# PASSIF "Debordement" (legendaire) : chaque sort est RESOLU DEUX FOIS. La
+	# regle change ici, au point unique par ou passe tout sort reellement lance —
+	# aucune carte n a besoin de le savoir. Le garde  empeche la
+	# seconde resolution de se dedoubler a son tour (2 sorts, pas 4).
+	if not _resolving and RunState.has_passive(&"passive_twin_cast"):
+		_resolving = true
+		for spec2 in card.effects:
+			dispatch(spec2, ctx)
+		_resolving = false
+
+
+## Vrai pendant la seconde resolution de "Debordement" : voir cast().
+var _resolving: bool = false

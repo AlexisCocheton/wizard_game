@@ -87,7 +87,7 @@ func _apercu_pause() -> void:
 		RunState.hand.append(c)
 	var passif: SpellCard = ContentDB.cards.get(&"pass_celerity")
 	if passif != null:
-		RunState.activate_passive(passif)
+		RunState.equip_passive(passif)
 
 	var hud: Node = g.get_node_or_null("HUD")
 	if hud != null and hud.has_method("_show_pause_panel"):

@@ -24,5 +24,6 @@ effects = Array[ExtResource("1_aaeue")]([SubResource("Resource_aaeue")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"star_focus"
 sfx_key = &"spell_arcane"

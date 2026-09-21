@@ -24,5 +24,6 @@ effects = Array[ExtResource("1_f4wvw")]([SubResource("Resource_f4wvw")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"void_mandala"
 sfx_key = &"ward_light"

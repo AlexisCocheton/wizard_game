@@ -58,7 +58,10 @@ const BY_TAG: Dictionary = {
 	GameEnums.DamageTag.FROST: "freezing",
 	GameEnums.DamageTag.ARCANE: "magic8",
 	GameEnums.DamageTag.PHYSICAL: "arrow",
+	GameEnums.DamageTag.POISON: "skull_burst",
+	GameEnums.DamageTag.LIGHTNING: "lightning_fork",
 	GameEnums.DamageTag.SLOW: "midnight",
+	GameEnums.DamageTag.SUMMON: "hex_summon",
 }
 
 

@@ -132,6 +132,8 @@ static func _tag_name(tag: int) -> String:
 		GameEnums.DamageTag.FIRE: return "au feu"
 		GameEnums.DamageTag.FROST: return "au givre"
 		GameEnums.DamageTag.ARCANE: return "aux arcanes"
+		GameEnums.DamageTag.POISON: return "au poison"
+		GameEnums.DamageTag.LIGHTNING: return "a la foudre"
 		GameEnums.DamageTag.SLOW: return "au ralentissement"
 		GameEnums.DamageTag.SUMMON: return "aux invocations"
 	return "a certains sorts"
@@ -187,13 +189,59 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 		out.append("Arrive en groupe de %d" % def.swarm_count)
 	if def.entry_side:
 		out.append("Entre par le cote de l ecran, pas par le haut")
-	for tag in def.immune_tags:
-		out.append("Immunise %s" % _tag_name(tag))
+	# VOL — la ligne la plus utile de la fiche. Sans elle, le joueur depense un
+	# Mur de pierre contre un monstre qui lui passe au-dessus, et n a aucun
+	# moyen de comprendre pourquoi son sort n a servi a rien.
+	if def.flying:
+		out.append("Vole : passe au-dessus des murs, aucun decor ne l arrete")
+	# PROJECTILE — ce n est pas une creature : le joueur doit savoir qu il peut
+	# l abattre mais qu il ne gagnera ni XP ni entree de bestiaire a le farmer.
+	if def.projectile:
+		out.append("Projectile, pas une creature : destructible, mais ne donne"
+			+ " aucune experience")
+	out.append_array(resistance_lines(def))
 
 	# Toujours une ligne, meme pour un monstre sans particularite : un encadre
 	# vide laisserait croire que la fiche est cassee.
 	if out.is_empty():
 		out.append("Descend tout droit vers le mage, sans ruse")
+	return out
+
+
+## RESISTANCES en clair. Le joueur ne verra jamais la table : il lit des phrases,
+## triees du plus dangereux pour lui (immunite) au plus avantageux (faiblesse).
+##
+## On n ecrit QUE les ecarts : une ligne "subit 100 % des degats de foudre" sur
+## chaque element non declare noierait les trois qui comptent sous six qui ne
+## disent rien. Une fiche de monstre se lit en deux secondes, entre deux vagues.
+static func resistance_lines(def: EnemyDef) -> Array[String]:
+	var out: Array[String] = []
+	if def == null:
+		return out
+	var immunites: Array[String] = []
+	var resistes: Array[String] = []
+	var faiblesses: Array[String] = []
+	for tag in GameEnums.ELEMENTS:
+		var r: float = def.resistance_to(tag)
+		if r <= 0.0:
+			immunites.append(GameEnums.tag_name(tag))
+		elif r < 1.0:
+			resistes.append("%s (-%d %%)" % [GameEnums.tag_name(tag),
+				int(round((1.0 - r) * 100.0))])
+		elif r > 1.0:
+			faiblesses.append("%s (+%d %%)" % [GameEnums.tag_name(tag),
+				int(round((r - 1.0) * 100.0))])
+	# Le ralentissement n est pas un element mais le joueur doit le lire au meme
+	# endroit : c est la moitie de ses cartes de controle qui en depend.
+	if def.resistance_to(GameEnums.DamageTag.SLOW) <= 0.0:
+		immunites.append("ralentissement")
+
+	if not immunites.is_empty():
+		out.append("Immunise : %s" % ", ".join(immunites))
+	if not resistes.is_empty():
+		out.append("Resiste : %s" % ", ".join(resistes))
+	if not faiblesses.is_empty():
+		out.append("Vulnerable : %s" % ", ".join(faiblesses))
 	return out
 
 

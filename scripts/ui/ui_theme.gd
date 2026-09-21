@@ -75,6 +75,13 @@ const NINE: Dictionary = {
 	# les pixels creme de la planche (tools/assets/extract_book.py).
 	"book_page9": [12, 6, 12, 22],
 	"bar_fill9": [24, 0, 24, 0],
+	# Meme barre, reteintee en or (tools/assets/make_gold_bar.py). Le pack ne
+	# fournit qu une barre ROUGE — la couleur de la vie dans tout le reste du
+	# jeu. Un modulate dore ne la sauve pas : multiplier du rouge par de l or
+	# rend du rouge orange. Les 4 couleurs sont donc remplacees une a une, ce
+	# qui garde l ombrage du pack. Reservee aux barres d AVANCEMENT (profil) ;
+	# la vie et le combat gardent le rouge.
+	"bar_fill_gold9": [24, 0, 24, 0],
 	"btn_blue9": [45, 47, 45, 47],
 	"btn_blue_pressed9": [50, 36, 50, 49],
 	"btn_red9": [45, 47, 45, 47],
@@ -109,6 +116,80 @@ static func rarity_ink(rarity: int) -> Color:
 	return TEXT_DARK
 
 
+## Contour de RARETE, a poser sur n importe quel panneau (carte, monstre, succes).
+##
+## Demande du testeur : "applique une couleur de contour claire a chaque rarete,
+## pour toutes cartes, monstres ou defis". Jusqu ici la rarete ne se lisait que
+## par la teinte du papier (`rarity_bg`), qui est PALE par construction : sur la
+## capture du profil, rien ne distinguait un succes commun d un legendaire.
+##
+## Un contour resout cela sans toucher au fond : il encadre, donc il se voit meme
+## quand l interieur du panneau est deja occupe par du texte. La largeur monte
+## avec la rarete (4 -> 7 px) pour que le classement se lise aussi du coin de
+## l oeil, sans lire la couleur.
+##
+## `fill` sert aux panneaux poses sur un fond sombre (le menu) ; laisse a
+## TRANSPARENT, le contour se superpose a ce qui est deja dessine.
+static func rarity_border(rarity: int, fill: Color = Color.TRANSPARENT,
+		radius: int = 10, margin: float = 16.0) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = fill
+	sb.set_corner_radius_all(radius)
+	sb.set_content_margin_all(margin)
+	sb.border_color = rarity_color(rarity)
+	sb.set_border_width_all(rarity_border_width(rarity))
+	return sb
+
+
+## Epaisseur du contour par rarete. Separee pour que les ecrans qui dessinent
+## leur propre cadre (la galerie du chantier C) puissent s y accorder.
+static func rarity_border_width(rarity: int) -> int:
+	match rarity:
+		GameEnums.Rarity.COMMON: return 4
+		GameEnums.Rarity.RARE: return 5
+		GameEnums.Rarity.EPIC: return 6
+		GameEnums.Rarity.LEGENDARY: return 7
+	return 4
+
+
+## --- BANNIERE DE TITRE selon le NIVEAU DE COMPTE ---
+##
+## Demande du testeur : "change le fond de la barre du dessus du menu, ou il y a
+## le titre du jeu, en fonction du niveau du joueur". C est la recompense la plus
+## visible du compte : elle se voit des l ouverture du jeu, sans ouvrir d ecran.
+##
+## Quatre paliers, materiaux de plus en plus precieux. Les variantes sont des
+## reteintures de `ribbon_title9.png` fabriquees par tools/assets/make_cosmetics.py.
+## Le suffixe `9` est obligatoire : l AUDIT prend pour une planche brute toute
+## texture d UI qui ne le porte pas (piege documente).
+const BANNER_TIERS: Array = [
+	[1, "ribbon_title9"],           ## bois : le depart
+	[4, "ribbon_title_silver9"],    ## argent
+	[8, "ribbon_title_gold9"],      ## or
+	[14, "ribbon_title_crystal9"],  ## cristal : le dernier palier, tenu pour toujours
+]
+
+
+## La banniere correspondant a un niveau de compte. Au-dela du dernier palier
+## elle ne change plus : un joueur de niveau 40 garde le cristal, il ne retombe
+## pas au bois par debordement de la liste.
+static func banner_for_level(level: int) -> String:
+	var choix: String = String(BANNER_TIERS[0][1])
+	for tier: Array in BANNER_TIERS:
+		if level >= int(tier[0]):
+			choix = String(tier[1])
+	return choix
+
+
+## Le prochain palier de banniere, ou 0 si le dernier est atteint. Sert a dire au
+## joueur ce qu il gagne au niveau suivant plutot que de le lui laisser deviner.
+static func next_banner_level(level: int) -> int:
+	for tier: Array in BANNER_TIERS:
+		if level < int(tier[0]):
+			return int(tier[0])
+	return 0
+
+
 ## Teinte du papier de carte selon la rarete (modulation d une texture).
 static func rarity_bg(rarity: int) -> Color:
 	match rarity:
@@ -117,6 +198,108 @@ static func rarity_bg(rarity: int) -> Color:
 		GameEnums.Rarity.EPIC: return Color(0.88, 0.76, 1.0)
 		GameEnums.Rarity.LEGENDARY: return Color(1.0, 0.92, 0.62)
 	return Color.WHITE
+
+
+## --- APPARENCE DU MAGE (cosmetiques equipes) ---
+##
+## Le mage est fait de DEUX cosmetiques qui vivent sur la meme feuille : la ROBE
+## (monk_blue / monk_black / monk_purple, trois variantes fournies par le pack)
+## et le CHAPEAU (monk_hat_*, reteintures faites par tools/assets/make_cosmetics.py).
+##
+## Comme ils partagent une feuille, on ne peut pas les superposer : on choisit
+## celle des deux qui est la PLUS SPECIFIQUE. Un chapeau autre que celui d
+## origine gagne, parce que c est le choix que le joueur vient de faire ; sinon
+## on rend la robe. Une vraie superposition demanderait de decouper le sprite en
+## deux calques, ce qui n est pas ce que le pack fournit.
+##
+## Ce code vit ici et non dans AnimCatalog parce que les feuilles de chapeau sont
+## des assets de COSMETIQUE : le catalogue d animations decrit les silhouettes de
+## jeu, et mage_view.gd ne doit avoir qu une seule ligne a lire.
+const MAGE_ANIMS: Dictionary = {"idle": 6.0, "walk": 8.0, "cast": 12.0}
+const MAGE_FRAME: int = 192
+const MAGE_DEFAULT := "monk_blue"
+## Region reellement occupee par le mage dans une case de MAGE_FRAME px.
+## MESUREE sur la couche alpha des SEPT feuilles de robe et de chapeau
+## (tools/assets/measure_occupancy.py) : toutes rendent exactement
+## (67, 65) -> (125, 134), ce qui confirme que ce sont des palettes echangees
+## d une meme planche. On garde 1 px de marge de chaque cote pour ne pas raser
+## le contour noir du sprite.
+const MAGE_CROP := Rect2i(66, 64, 60, 71)
+
+
+## La feuille d animation que le mage doit porter, d apres le profil.
+## Rend toujours une cle utilisable : un mage sans feuille ne s afficherait pas.
+static func mage_sheet_key() -> String:
+	var chapeau: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.HAT)
+	if chapeau != "" and chapeau != MAGE_DEFAULT:
+		return chapeau
+	var robe: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.MAGE_COLOR)
+	return robe if robe != "" else MAGE_DEFAULT
+
+
+## Les animations du mage tel qu il est equipe. Passe par AnimCatalog quand la
+## cle y figure (les trois robes du pack), et decoupe la feuille directement pour
+## les chapeaux, qui sont des assets de cosmetique et n ont rien a faire dans le
+## catalogue des silhouettes de jeu.
+static func mage_frames() -> SpriteFrames:
+	var key: String = mage_sheet_key()
+	if AnimCatalog.has(StringName(key)):
+		return AnimCatalog.frames(StringName(key))
+	var spec: Dictionary = {}
+	for anim: String in MAGE_ANIMS:
+		spec[anim] = {
+			"path": "res://assets/units/%s_%s.png" % [key, anim],
+			"frame": MAGE_FRAME,
+			"fps": float(MAGE_ANIMS[anim]),
+			"loop": true,
+		}
+	var sf: SpriteFrames = SheetLib.frames("cosmetic:" + key, spec)
+	# Repli : une feuille absente donnerait un mage invisible en combat, ce qui
+	# est bien pire que de perdre le chapeau choisi.
+	if sf == null or not sf.has_animation("idle") or sf.get_frame_count("idle") == 0:
+		return AnimCatalog.frames(&"monk_blue")
+	return sf
+
+
+## VIGNETTE d une piece de cosmetique DONNEE — pas de celle qui est equipee.
+##
+## mage_frames() et tower_texture() resolvent ce que le joueur PORTE ; l ecran de
+## choix a besoin de l inverse : montrer chaque piece de la grille. Sans cela le
+## joueur choisit une robe en lisant "Robe d encre", sans jamais voir la couleur
+## — ce qui vide de son sens un ecran dont le seul objet est l apparence.
+##
+## Rend null quand la feuille manque : l appelant retombe alors sur le texte
+## seul, ce qui reste utilisable.
+static func cosmetic_preview(kind: int, texture_name: String) -> Texture2D:
+	if texture_name == "":
+		return null
+	match kind:
+		GameEnums.RewardKind.TOWER:
+			return SheetLib.texture("res://assets/terrain/%s.png" % texture_name)
+		GameEnums.RewardKind.MAGE_COLOR, GameEnums.RewardKind.HAT:
+			# La premiere image de la pose d attente : le mage debout, de face.
+			var sheet: Texture2D = SheetLib.texture(
+				"res://assets/units/%s_idle.png" % texture_name)
+			if sheet == null:
+				return null
+			var at := AtlasTexture.new()
+			at.atlas = sheet
+			# On recadre sur la region OCCUPEE, pas sur la case entiere. Mesure
+			# faite sur monk_blue_idle.png : le mage tient dans 58 px sur 192,
+			# soit moins d un tiers — decouper la case complete donnait une
+			# silhouette minuscule perdue au centre d un grand vide, et
+			# agrandir la vignette n y changeait rien. C est le meme piege que
+			# pour les icones de cartes (voir card_icons.gd).
+			at.region = Rect2(MAGE_CROP.position, MAGE_CROP.size)
+			return at
+	return null
+
+
+## La texture de tour que le joueur a equipee, avec repli sur celle d origine.
+static func tower_texture() -> Texture2D:
+	var key: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.TOWER)
+	var t: Texture2D = SheetLib.texture("res://assets/terrain/%s.png" % key)
+	return t if t != null else SheetLib.texture("res://assets/terrain/tower_blue.png")
 
 
 static func tex(name: String) -> Texture2D:
@@ -230,7 +413,7 @@ static func make() -> Theme:
 
 	# Barres : base et remplissage recomposes du pack.
 	t.set_stylebox(&"background", &"ProgressBar", tex_box("bar_base", 0, 0.0))
-	t.set_stylebox(&"fill", &"ProgressBar", tex_box("bar_fill", 0, 0.0, Color(0.95, 0.80, 0.35)))
+	t.set_stylebox(&"fill", &"ProgressBar", tex_box("bar_fill_gold", 0, 0.0))
 
 	# Curseurs : petite barre du pack en rail, remplissage en zone parcourue,
 	# bouton rond rouge reduit en poignee.

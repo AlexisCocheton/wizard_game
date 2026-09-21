@@ -295,6 +295,17 @@ func _on_enemy_died(e: Enemy) -> void:
 			RunState.gain_xp(def.base_xp)
 			enemy_killed.emit(def)
 		# Division / explosion : les enfants naissent la ou le parent est mort.
+		# PASSIF "Combustion" (le "fire boom" du testeur) : le monstre explose en
+		# mourant et blesse ses voisins. C est ici et pas dans un handler d effet
+		# parce qu aucune carte ne le declenche : c est la MORT elle-meme qui devient
+		# une source de degats. has_passive() teste deja le seuil de vitesse.
+		if not def.projectile:
+			_passive_death_blast(where, e.radius())
+			# PASSIF "Pulsation" : chaque mort repousse la jauge de vitesse. Le joueur
+			# qui nettoie vite remonte vers ses autres seuils au lieu de les attendre.
+			var poussee: float = RunState.passive_magnitude(&"passive_kill_speed")
+			if poussee > 0.0:
+				SpeedGauge.set_speed_percent(SpeedGauge.speed_percent + int(poussee))
 		if def.split_into != null and def.split_count > 0:
 			for i in def.split_count:
 				var offset := Vector2((i - (def.split_count - 1) * 0.5) * 44.0, 0.0)
@@ -304,10 +315,55 @@ func _on_enemy_died(e: Enemy) -> void:
 	e.queue_free()
 
 
+## Explosion a la mort d un monstre (passif "Combustion", et sa version
+## legendaire "Reaction en chaine").
+##
+## `_chain_depth` borne la recursion : sans lui, une explosion qui tue un voisin
+## rappellerait _on_enemy_died() pendant que la premiere est encore en cours et
+## une vague dense partirait en boucle jusqu a la pile pleine. La chaine est le
+## SEUL passif autorise a repartir, et seulement CHAIN_MAX fois.
+const CHAIN_MAX: int = 3
+var _chain_depth: int = 0
+
+
+func _passive_death_blast(where: Vector2, rayon_mort: float) -> void:
+	var degats: float = RunState.passive_magnitude(&"passive_death_blast")
+	if degats <= 0.0:
+		return
+	# La chaine ne relance l explosion que si le passif legendaire est actif.
+	if _chain_depth > 0 and not RunState.has_passive(&"passive_chain_blast"):
+		return
+	if _chain_depth >= CHAIN_MAX:
+		return
+	var rayon: float = maxf(rayon_mort, 40.0) * 2.6
+	# Teinte de braise : l explosion doit se lire comme du feu, pas comme un sort.
+	Fx.impact(self, where, Color(1.0, 0.55, 0.15), rayon)
+	_chain_depth += 1
+	# Copie : _hit() peut tuer, donc modifier `enemies` pendant l iteration.
+	for voisin in enemies_in_radius(where, rayon):
+		var cible: Enemy = voisin as Enemy
+		if cible == null or not _alive(cible):
+			continue
+		# Tableau de tags NON TYPE : Godot 4.4 refuse de convertir Array vers
+		# Array[T] au passage d argument (piege documente en memoire).
+		var tags: Array = []
+		_hit(cible, degats, tags)
+	_chain_depth -= 1
+
+
+## Vitesse relevee juste avant le dernier coup encaisse (passif "Verrou temporel").
+var speed_before_hit: int = 100
+
+
 func _on_enemy_reached_mage(e: Enemy) -> void:
 	var dmg: int = e.definition.contact_hit() if e.definition != null else 5
 	enemies.erase(e)
 	e.queue_free()
+	# Photo de la vitesse AVANT l encaissement : le passif legendaire "Verrou
+	# temporel" en a besoin pour savoir combien la jauge a perdu. On la prend ici
+	# plutot que de toucher a SpeedGauge.take_hit(), dont le chemin bouclier-puis-PV
+	# doit rester le seul et rester intact (voir memoire).
+	speed_before_hit = SpeedGauge.speed_percent
 	# BOUCLIER PUIS PV : toute la regle vit dans SpeedGauge.take_hit().
 	SpeedGauge.take_hit(dmg)
 	mage_hit.emit(dmg, e.definition)
@@ -383,10 +439,30 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 		return false
 	if is_shielded_by_aura(e):
 		return false
-	var applied: bool = e.take_damage(amount * damage_multiplier_at(e.position), tags)
+	# PASSIF "Apotheose" (legendaire) : la vitesse ne multiplie plus seulement
+	# l XP, elle multiplie les DEGATS. Applique ici, au point de passage unique
+	# des degats, pour qu aucune carte ni aucun autre passif n y echappe.
+	var total: float = amount * damage_multiplier_at(e.position) \
+		* RunState.passive_damage_multiplier()
+	# RESISTANCE ELEMENTAIRE du monstre. Elle s applique ICI, au point de passage
+	# unique des degats, et nulle part ailleurs : une source qui la contournerait
+	# ignorerait tout le bestiaire.
+	# Elle vient EN DERNIER, apres la vulnerabilite de terrain et les passifs :
+	# une Marque de faiblesse (x2) sur un monstre qui resiste a 50 % redonne des
+	# degats normaux, ce qui est la lecture attendue par le joueur — la zone
+	# COMPENSE la resistance, elle ne l ecrase pas.
+	if e.definition != null:
+		total *= e.definition.resistance_to_tags(tags)
+	var applied: bool = e.take_damage(total, tags)
 	if applied:
 		Fx.hit_flash(e)
 		AudioBus.play_sfx(&"hit")
+		# PASSIF "Morsure de givre" : TOUT degat ralentit, quel que soit l element
+		# du sort. C est une regle, pas un bonus chiffre : les sorts de feu se
+		# mettent a freiner les monstres.
+		var chill: float = RunState.passive_magnitude(&"passive_chill_on_hit")
+		if chill > 0.0:
+			e.apply_slow(maxf(0.25, 1.0 - chill * 0.01), 1.5)
 	return applied
 
 

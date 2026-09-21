@@ -36,6 +36,49 @@ func _enemy(id: String, dname: String, kind: GameEnums.EnemyKind, power: int,
 	return e
 
 
+## RESISTANCES — chaque monstre oppose un pourcentage a chaque element.
+##
+## Une table par monstre, jamais une table commune : ce sont les ECARTS qui
+## donnent une raison de changer de deck. Un golem de pierre encaisse le
+## physique et se fend a l arcane ; une gelee fond au feu mais baigne dans le
+## poison ; un mort-vivant ne sent pas le venin. Le joueur qui lit le bestiaire
+## doit pouvoir en deduire quoi emporter.
+##
+## PLAFOND DES ECARTS : +/- 35 % au plus, et +15 % seulement quand le niveau ou
+## le monstre apparait fournit deja un deck de cet element. Mesure au banc :
+## l Ossuaire (deck a 43 % de feu, vagues de gelees et de goules toutes
+## vulnerables au feu a +30 %) montait a 100 % de victoires, au-dessus du
+## plafond de 95 %. Un niveau dont le deck fourni EST la reponse doit rester
+## avantageux sans se jouer tout seul.
+##
+## REGLE D EQUILIBRAGE : la somme des ecarts d un monstre reste proche de zero
+## (autant de resistance que de vulnerabilite, ponderee). Sans cette regle, la
+## table serait un reglage de difficulte deguise et decalerait les sept niveaux
+## deja mesures au banc. Ici elle deplace la difficulte d un DECK a l autre, pas
+## le niveau global.
+##
+## Cles : 0.0 = immunite, 0.5 = moitie des degats, 1.5 = degats majores.
+func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
+	var T := GameEnums.DamageTag
+	var out: Dictionary = {}
+	for nom in table.keys():
+		match String(nom):
+			"phys": out[T.PHYSICAL] = float(table[nom])
+			"feu": out[T.FIRE] = float(table[nom])
+			"givre": out[T.FROST] = float(table[nom])
+			"arcane": out[T.ARCANE] = float(table[nom])
+			"poison": out[T.POISON] = float(table[nom])
+			"foudre": out[T.LIGHTNING] = float(table[nom])
+			"lent": out[T.SLOW] = float(table[nom])
+			_: printerr("element inconnu dans une table de resistances : ", nom)
+	e.resistances = out
+	# L ancien champ est vide desormais : la table est la seule source de verite.
+	# Le laisser rempli ferait exister DEUX endroits ou lire une immunite, et
+	# c est toujours le second qu on oublie de mettre a jour.
+	e.immune_tags = []
+	return e
+
+
 ## Hierarchie : puissance 1 (chair a canon) -> 4 (menace), boss hors budget.
 ## Chaque famille a SA forme et SA couleur pour etre reconnue immediatement.
 func _enemies() -> void:
@@ -46,20 +89,34 @@ func _enemies() -> void:
 	# --- Puissance 1 ---
 	var gnome := _enemy("gnome", "Gnome", K.NORMAL, 1, 12.0, 70.0, 1, S.SQUARE, Color(0.62, 0.42, 0.28), 26.0)
 	gnome.anim_key = &"pawn_red"
+	# Petite brute en cuir bouilli : le coup qui porte lui glisse un peu dessus,
+	# la flamme prend tout de suite. Son ecart est volontairement FAIBLE : c est
+	# le monstre de reference, celui sur lequel le joueur juge tous les autres.
+	_resist(gnome, {&"phys": 0.9, &"feu": 1.15})
 	_save(gnome, E + "gnome.tres")
 
 	var sprite := _enemy("sprite", "Lutin fileur", K.FAST, 1, 6.0, 150.0, 1, S.TRIANGLE, Color(0.98, 0.82, 0.30), 18.0)
 	sprite.anim_key = &"beetle"
+	# Fileur : il va si vite que le froid ne le prend pas et que la foudre le
+	# traverse sans l arreter. Mais 6 PV et aucune armure : le moindre coup
+	# physique le coupe en deux.
+	_resist(sprite, {&"phys": 1.2, &"givre": 0.85, &"foudre": 0.8})
 	_save(sprite, E + "sprite.tres")
 
 	var jelly_small := _enemy("jelly_small", "Gelee (petite)", K.SPLITTER, 1, 6.0, 85.0, 1, S.CIRCLE, Color(0.55, 0.92, 0.45), 12.0)
 	jelly_small.anim_key = &"slimer"
+	# Gelee : masse molle et acide. Les coups s y enfoncent sans rien trancher,
+	# le poison s y dissout, le froid la durcit sans la tuer. Le feu la fait
+	# bouillir — c est la reponse, et le joueur doit la trouver.
+	_resist(jelly_small, {&"phys": 0.8, &"feu": 1.15, &"givre": 0.8, &"poison": 0.55})
 	_save(jelly_small, E + "jelly_small.tres")
 
 	var jelly_mid := _enemy("jelly_mid", "Gelee (moyenne)", K.SPLITTER, 1, 14.0, 65.0, 1, S.CIRCLE, Color(0.50, 0.88, 0.42), 20.0)
 	jelly_mid.anim_key = &"slimer"
 	jelly_mid.split_into = jelly_small
 	jelly_mid.split_count = 2
+	# Meme chair que la petite : une division ne change pas ce dont on est fait.
+	_resist(jelly_mid, {&"phys": 0.8, &"feu": 1.15, &"givre": 0.8, &"poison": 0.55})
 	_save(jelly_mid, E + "jelly_mid.tres")
 
 	# --- Puissance 2 ---
@@ -70,6 +127,9 @@ func _enemies() -> void:
 	var swarm := _enemy("rat_swarm", "Oiseau mirage", K.SWARM, 2, 4.0, 110.0, 1, S.CIRCLE, Color(0.85, 0.52, 0.62), 13.0)
 	swarm.anim_key = &"peacock"
 	swarm.swarm_count = 4
+	# Oiseau mirage : nuee de plumes. Le feu et la foudre balayent un groupe
+	# serre ; l arcane, qui vise une cible, se perd dans le mirage.
+	_resist(swarm, {&"phys": 1.1, &"feu": 1.3, &"arcane": 0.85, &"foudre": 1.2})
 	_save(swarm, E + "rat_swarm.tres")
 
 	# BOULE DE POISON — la munition du Planogo. C est un EnemyDef et non un
@@ -87,6 +147,9 @@ func _enemies() -> void:
 	# 8 : elle pique nettement moins qu un contact de Planogo (15 en P2), donc
 	# l ignorer coute, mais ne punit pas comme de laisser passer le tireur.
 	poison_ball.contact_damage = 8
+	# Munition de venin : elle EST du poison, en arroser une n a aucun sens. La
+	# bruler la fait eclater en vol. Le froid la fige sans la percer.
+	_resist(poison_ball, {&"feu": 1.35, &"givre": 0.7, &"arcane": 1.15, &"poison": 0})
 	_save(poison_ball, E + "poison_ball.tres")
 
 	# PLANOGO (ex "Feu follet"). Vole par-dessus les murs et tire des boules de
@@ -105,11 +168,18 @@ func _enemies() -> void:
 	# Deux boules en l air au plus : au-dela, un groupe de Planogos noierait
 	# l ecran sous des munitions et la vague ne se lirait plus.
 	wisp.summon_max_alive = 2
+	# Planogo : corps a peine materiel. Une fleche le traverse ; l arcane et la
+	# foudre, elles, frappent la chose et non la forme. C est le monstre qui
+	# punit un deck tout physique.
+	_resist(wisp, {&"phys": 0.65, &"feu": 0.9, &"givre": 1.1, &"arcane": 1.3, &"foudre": 1.2})
 	_save(wisp, E + "wisp.tres")
 
 	var shade := _enemy("shade", "Ombre", K.PHASER, 2, 16.0, 80.0, 3, S.DIAMOND, Color(0.42, 0.40, 0.80), 26.0)
 	shade.anim_key = &"vulture"
 	shade.phase_interval = 2.5
+	# Ombre : rien de solide a percer ni a empoisonner. L arcane l atteint parce
+	# qu elle agit sur ce qui la tient ensemble, pas sur sa chair.
+	_resist(shade, {&"phys": 0.65, &"feu": 0.9, &"arcane": 1.3, &"poison": 0, &"foudre": 1.1})
 	_save(shade, E + "shade.tres")
 
 	var archer := _enemy("imp_archer", "Lutin archer", K.SHOOTER, 2, 14.0, 48.0, 3, S.DIAMOND, Color(0.90, 0.32, 0.28), 24.0)
@@ -118,12 +188,19 @@ func _enemies() -> void:
 	# L archer harcele : sa fleche pique, elle ne perce pas. Un contact de gnome
 	# (4 PV) doit rester plus grave qu une fleche.
 	archer.shot_damage = 2
+	# Lutin des braises : il vit dans le feu, il ne le craint pas. Le givre lui
+	# fige les doigts — et un archer qui ne tire plus n est plus une menace.
+	_resist(archer, {&"phys": 1.1, &"feu": 0.8, &"givre": 1.2})
 	_save(archer, E + "imp_archer.tres")
 
 	var serpent := _enemy("sand_serpent", "Serpent des sables", K.WAVER, 2, 20.0, 75.0, 2, S.CAPSULE, Color(0.32, 0.72, 0.68), 24.0)
 	serpent.anim_key = &"lancer_yellow"
 	serpent.wave_amplitude = 170.0
 	serpent.wave_frequency = 0.55
+	# Creature des sables, ecailleuse et a sang froid : la chaleur est son
+	# element, le gel l engourdit. Ondulant ET resistant au feu, il oblige a
+	# changer d element ET a mieux viser.
+	_resist(serpent, {&"phys": 0.9, &"feu": 0.8, &"givre": 1.3, &"poison": 0.85})
 	_save(serpent, E + "sand_serpent.tres")
 
 	var hopper := _enemy("hopper", "Sauterelle", K.BURSTER, 2, 10.0, 95.0, 2, S.TRIANGLE, Color(0.55, 0.85, 0.30), 20.0)
@@ -131,6 +208,9 @@ func _enemies() -> void:
 	hopper.burst_move = true
 	hopper.burst_dash_time = 0.5
 	hopper.burst_pause_time = 0.8
+	# Sauterelle : carapace et nerfs. La foudre coupe les nerfs en plein bond ;
+	# le venin ne mord pas sur une chitine, et le froid la ralentit a peine.
+	_resist(hopper, {&"phys": 1.1, &"givre": 0.9, &"poison": 0.8, &"foudre": 1.3})
 	_save(hopper, E + "hopper.tres")
 
 	# --- Puissance 3 ---
@@ -138,65 +218,107 @@ func _enemies() -> void:
 	horn.anim_key = &"monk_purple"
 	horn.entry_side = true
 	horn.buff_speed_pct = 20.0
+	# Corniste : il porte des protections rituelles contre la magie savante,
+	# pas contre un orage. Le faire taire vite vaut mieux que le taper fort.
+	_resist(horn, {&"phys": 0.95, &"feu": 1.1, &"arcane": 0.8, &"foudre": 1.2})
 	_save(horn, E + "hornblower.tres")
 
 	var golem := _enemy("golem", "Golem de pierre", K.TANK, 3, 55.0, 32.0, 4, S.SQUARE, Color(0.50, 0.50, 0.56), 40.0)
 	golem.anim_key = &"golem_blue"
-	golem.immune_tags = [GameEnums.DamageTag.SLOW]
+	# GOLEM DE PIERRE — l exemple que le testeur a nomme. De la roche : les
+	# coups s y ebrechent, le feu et le gel n y mordent pas, le venin n a rien a
+	# empoisonner. Mais il tient par une RUNE, et l arcane la defait. Il reste
+	# insensible au ralentissement : une masse lancee ne se retient pas.
+	_resist(golem, {&"phys": 0.65, &"feu": 0.85, &"givre": 0.9, &"arcane": 1.35, &"poison": 0, &"foudre": 1.1, &"lent": 0})
 	_save(golem, E + "golem.tres")
 
 	var berserker := _enemy("berserker", "Berserker", K.ENRAGER, 3, 30.0, 58.0, 4, S.SQUARE, Color(0.70, 0.15, 0.18), 30.0)
 	berserker.anim_key = &"warrior_red"
 	berserker.enrage_speed_pct = 12.0
 	berserker.enrage_cap = 1.5
+	# Berserker : la rage le rechauffe, le gel ne l atteint plus, et sa peau
+	# tannee encaisse. Le feu et l arcane, eux, passent sous la fureur.
+	_resist(berserker, {&"phys": 0.9, &"feu": 1.15, &"givre": 0.8, &"arcane": 1.15, &"poison": 0.85})
 	_save(berserker, E + "berserker.tres")
 
 	var knight := _enemy("void_knight", "Chevalier du vide", K.SHIELDED, 3, 34.0, 55.0, 4, S.HEXAGON, Color(0.55, 0.35, 0.85), 30.0)
 	knight.anim_key = &"lancer_purple"
 	knight.first_hit_shield = true
+	# Chevalier du vide : armure faite pour AVALER la magie. Contre lui, la
+	# reponse est le metal et l orage, pas un deck de sorts arcaniques — c est
+	# le retournement le plus net du bestiaire.
+	_resist(knight, {&"phys": 1.15, &"givre": 1.1, &"arcane": 0.65, &"poison": 0.7, &"foudre": 1.15})
 	_save(knight, E + "void_knight.tres")
 
 	var jelly := _enemy("jelly", "Gelee", K.SPLITTER, 3, 36.0, 50.0, 3, S.CIRCLE, Color(0.45, 0.85, 0.40), 32.0)
 	jelly.anim_key = &"slimer"
 	jelly.split_into = jelly_mid
 	jelly.split_count = 2
+	# GELEE — l autre exemple nomme par le testeur. Meme table que ses enfants :
+	# ce qui se divise garde sa nature.
+	_resist(jelly, {&"phys": 0.8, &"feu": 1.15, &"givre": 0.8, &"poison": 0.55})
 	_save(jelly, E + "jelly.tres")
 
 	var priest := _enemy("ghoul_priest", "Pretre goule", K.HEALER, 3, 24.0, 45.0, 5, S.STAR, Color(0.78, 0.95, 0.72), 28.0)
 	priest.anim_key = &"monk_black"
 	priest.heal_per_second = 3.0
+	# PRETRE GOULE — le mort-vivant du testeur. Rien a empoisonner dans un corps
+	# deja mort, et le froid ne raidit pas ce qui est deja raide. Le feu, lui,
+	# consume la charogne : c est ainsi qu on arrete un soigneur.
+	_resist(priest, {&"phys": 0.8, &"feu": 1.15, &"givre": 0.8, &"arcane": 1.1, &"poison": 0})
 	_save(priest, E + "ghoul_priest.tres")
 
 	var hive := _enemy("hive", "Ruche", K.BOMBER, 3, 40.0, 40.0, 4, S.HEXAGON, Color(0.95, 0.72, 0.20), 34.0)
 	hive.anim_key = &"warrior_yellow"
 	hive.split_into = sprite
 	hive.split_count = 4
+	# Ruche : nid de cire et de larves. Bruler un nid le vide d un coup ; le
+	# frapper ne fait que sortir ce qu il y a dedans.
+	_resist(hive, {&"phys": 0.9, &"feu": 1.35, &"givre": 1.1, &"poison": 0.65})
 	_save(hive, E + "hive.tres")
 
 	# --- Puissance 4 ---
 	var totem := _enemy("totem_guardian", "Gardien-totem", K.GUARDIAN, 4, 60.0, 30.0, 8, S.STAR, Color(0.85, 0.70, 0.35), 36.0)
 	totem.anim_key = &"totem_tower"
 	totem.aura_shield_radius = 240.0
+	# Gardien-totem : bois grave et pierre. L aura vient de la gravure, donc
+	# l arcane la brise, et le bois brule. Il attire la foudre au lieu de la
+	# subir. Le tuer VITE est tout l enjeu : ses resistances disent comment.
+	_resist(totem, {&"phys": 0.7, &"feu": 1.15, &"givre": 0.9, &"arcane": 1.3, &"poison": 0, &"foudre": 0.85})
 	_save(totem, E + "totem_guardian.tres")
 
 	var glutton := _enemy("glutton", "Glouton", K.DEVOURER, 4, 70.0, 42.0, 8, S.CIRCLE, Color(0.60, 0.25, 0.60), 38.0)
 	glutton.anim_key = &"dino"
 	glutton.devours = true
+	# Glouton : il gobe tout, y compris ce qu il ne faut pas. L empoisonner de
+	# l interieur est le seul moyen rapide — ses bourrelets absorbent le reste.
+	# C est la carte de venin qui trouve enfin sa cible.
+	_resist(glutton, {&"phys": 0.85, &"feu": 1.1, &"givre": 0.85, &"arcane": 0.9, &"poison": 1.35})
 	_save(glutton, E + "glutton.tres")
 
 	var behemoth := _enemy("behemoth", "Behemoth", K.TANK, 4, 130.0, 26.0, 9, S.SQUARE, Color(0.36, 0.34, 0.40), 52.0)
 	behemoth.anim_key = &"golem_orange"
-	behemoth.immune_tags = [GameEnums.DamageTag.SLOW]
+	# Behemoth : 130 PV de cuir et d os. Rien de physique ne l entame vraiment ;
+	# sa masse conduit la foudre et l arcane atteint ce qui l anime. Trop lourd
+	# pour etre ralenti.
+	_resist(behemoth, {&"phys": 0.7, &"feu": 0.85, &"givre": 0.85, &"arcane": 1.2, &"poison": 0.8, &"foudre": 1.15, &"lent": 0})
 	_save(behemoth, E + "behemoth.tres")
 
 	# --- Boss (hors budget) ---
 	var warden := _enemy("warden", "Gardien", K.MINIBOSS, 6, 140.0, 40.0, 12, S.HEXAGON, Color(0.90, 0.40, 0.25), 62.0)
 	warden.anim_key = &"chaosknight"
+	# Gardien (mini-boss) : armure lourde et bouclier. Un mini-boss doit avoir
+	# une REPONSE, pas une armure uniforme : la sienne est la magie savante.
+	_resist(warden, {&"phys": 0.8, &"feu": 0.85, &"givre": 0.95, &"arcane": 1.2, &"foudre": 1.15})
 	_save(warden, E + "warden.tres")
 
 	var chronos := _enemy("chronos", "Chronos", K.BOSS, 10, 320.0, 34.0, 30, S.STAR, Color(0.95, 0.20, 0.25), 84.0)
 	chronos.anim_key = &"juggernaut"
-	chronos.immune_tags = [GameEnums.DamageTag.SLOW]
+	# CHRONOS — il regne sur le temps : le gel, qui n est qu un ralentissement
+	# deguise, glisse sur lui, et le ralentir est hors de question. En revanche
+	# il n a aucune armure : l acier et la flamme, choses grossieres, le
+	# touchent pleinement. Le boss qui recompense un deck SIMPLE.
+	_resist(chronos, {&"phys": 1.15, &"feu": 1.15, &"givre": 0.7, &"arcane": 0.9, &"poison": 1.1, &"lent": 0})
 	_save(chronos, E + "chronos.tres")
 
 	# --- Boss a MECANIQUE, hors budget (docs/histoire.md) -------------------
@@ -210,6 +332,9 @@ func _enemies() -> void:
 	var risen := _enemy("risen_ghoul", "Goule levee", K.NORMAL, 1, 9.0, 62.0, 1,
 		S.DIAMOND, Color(0.55, 0.65, 0.45), 20.0)
 	risen.anim_key = &"vulture"
+	# Goule levee : meme chair morte que le Pretre. Une nuee de mort-vivants se
+	# nettoie au feu, jamais au venin — et c est exactement la lecon du niveau.
+	_resist(risen, {&"phys": 0.85, &"feu": 1.1, &"givre": 0.85, &"arcane": 1.05, &"poison": 0})
 	_save(risen, E + "risen_ghoul.tres")
 
 	# INVOCATEUR — lvl_04, Le Grand Appel. Le Pretre goule qui mene le rituel :
@@ -226,6 +351,10 @@ func _enemies() -> void:
 	# Plafond serre : au-dela, le joueur perd par accumulation mecanique et non
 	# par erreur de jeu. Six goules a l ecran suffisent a l etouffer.
 	gravecaller.summon_max_alive = 6
+	# L Ensevelisseur : le plus grand des morts-vivants. Sa table est celle de
+	# ses goules, en plus dur : le joueur qui a compris le niveau sait deja quoi
+	# lancer quand le boss arrive.
+	_resist(gravecaller, {&"phys": 0.9, &"feu": 1.2, &"givre": 0.8, &"arcane": 1.1, &"poison": 0, &"foudre": 1.05})
 	_save(gravecaller, E + "gravecaller.tres")
 
 	# MORCELE — lvl_05, Forges du Mauvais Temps. Les creatures des forges ne
@@ -245,7 +374,10 @@ func _enemies() -> void:
 	# 18 % par plaque : les quatre tombees, il avance a 28 % de sa vitesse. Assez
 	# lent pour se lire comme demantele, assez vivant pour rester une menace.
 	forge_colossus.part_slow_pct = 18.0
-	forge_colossus.immune_tags = [GameEnums.DamageTag.SLOW]
+	# Colosse des Forges : coule dans le metal en fusion. Le feu ne fait que le
+	# rechauffer ; le choc thermique du givre, lui, fend les plaques. Un boss
+	# morcele qu on attaque a l element exactement oppose a son decor.
+	_resist(forge_colossus, {&"phys": 0.8, &"feu": 0.6, &"givre": 1.35, &"arcane": 1.1, &"poison": 0, &"foudre": 1.15, &"lent": 0})
 	_save(forge_colossus, E + "forge_colossus.tres")
 
 	# CANONNIER — lvl_06, La Cour brisee. Un seigneur demon qui ne daigne pas
@@ -266,6 +398,10 @@ func _enemies() -> void:
 	# boss (50). Il doit user le joueur, pas le tuer avant qu il l atteigne.
 	wraith_lord.shot_damage = 5
 	wraith_lord.dodge_chance = 0.0
+	# Seigneur Spectre : il campe au loin et il n a pas de corps. Un deck de
+	# fleches echoue deux fois contre lui — la distance ET la matiere. C est le
+	# boss qui exige un deck magique, annonce par ses tables des la Cour brisee.
+	_resist(wraith_lord, {&"phys": 0.6, &"feu": 0.95, &"givre": 1.05, &"arcane": 1.3, &"poison": 0, &"foudre": 1.15})
 	_save(wraith_lord, E + "wraith_lord.tres")
 
 
@@ -306,7 +442,7 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
-		"Inflige 26 degats a une cible.", GameEnums.Rarity.COMMON, 1.1,
+		"Inflige 26 degats d ARCANE a une cible.", GameEnums.Rarity.COMMON, 1.1,
 		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_single", 26.0)], 4)
 	bolt.fx_key = &"orb_burst"
@@ -314,7 +450,7 @@ func _cards() -> void:
 	_save(bolt, "res://resources/cards/common/arcane_bolt.tres")
 
 	var pierce := _card("piercing_arrow", "Fleche percante",
-		"Traverse jusqu a 5 ennemis en ligne, 10 degats chacun.",
+		"Traverse jusqu a 5 ennemis en ligne, 10 degats PHYSIQUES chacun.",
 		GameEnums.Rarity.COMMON, 1.5, GameEnums.Targeting.DIRECTION,
 		[GameEnums.DamageTag.PHYSICAL],
 		[_spec("pierce_line", 10.0, 0.0, 120.0, {&"max_targets": 5})], 3)
@@ -323,15 +459,22 @@ func _cards() -> void:
 	_save(pierce, "res://resources/cards/common/piercing_arrow.tres")
 
 	var frost := _card("frost_field", "Champ de givre",
-		"Zone qui ralentit de 50 pourcent pendant 5 s.", GameEnums.Rarity.COMMON, 0.6,
+		"Zone qui inflige 1 degat de GIVRE par seconde et ralentit de 50 pourcent "
+		+ "pendant 5 s.", GameEnums.Rarity.COMMON, 0.6,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
-		[_spec("ground_zone", 0.0, 5.0, 180.0, {&"slow_pct": 50.0})], 3)
+		# Degats VOLONTAIREMENT minimes (1/s contre 8/s pour les Braises). Sans eux,
+		# le givre n etait pas un element mais une simple etiquette : aucune carte
+		# de degats ne le portait, donc « vulnerable au givre » etait une
+		# recompense que le joueur ne pouvait jamais encaisser. Un point par
+		# seconde suffit a rendre la resistance LISIBLE sans transformer une
+		# carte de controle en carte de degats.
+		[_spec("ground_zone", 1.0, 5.0, 180.0, {&"slow_pct": 50.0})], 3)
 	frost.fx_key = &"rune_square"
 	frost.sfx_key = &"drip_frost"
 	_save(frost, "res://resources/cards/common/frost_field.tres")
 
 	var ember := _card("ember_pool", "Braises",
-		"Zone infligeant 8 degats par seconde pendant 4 s.", GameEnums.Rarity.COMMON, 1.7,
+		"Zone infligeant 8 degats de FEU par seconde pendant 4 s.", GameEnums.Rarity.COMMON, 1.7,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 8.0, 4.0, 160.0)], 2)
 	ember.fx_key = &"ember_flames"
@@ -339,7 +482,7 @@ func _cards() -> void:
 	_save(ember, "res://resources/cards/common/ember_pool.tres")
 
 	var fireball := _card("fireball", "Boule de feu",
-		"Explosion de 26 degats dans une zone visee.", GameEnums.Rarity.COMMON, 1.4,
+		"Explosion de 26 degats de FEU dans une zone visee.", GameEnums.Rarity.COMMON, 1.4,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 26.0, 0.6, 170.0)], 2)
 	fireball.fx_key = &"fireball_hit"
@@ -407,7 +550,10 @@ func _cards() -> void:
 
 	var bargain := _card("reckless_bargain", "Pacte imprudent",
 		"Accelere les ennemis de 30 pourcent pendant 5 s, pioche 3 cartes.",
-		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
+		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE,
+		# Aucun degat : l element n est ici qu une etiquette de FAMILLE, pour que
+		# la carte s affiche avec la couleur de sa feuille d orage.
+		[GameEnums.DamageTag.LIGHTNING],
 		[_spec("haste_enemies_boon", 30.0, 5.0, 0.0, {&"draw": 3})])
 	bargain.fx_key = &"lightning_web"
 	bargain.sfx_key = &"spell_crackle"
@@ -435,24 +581,30 @@ func _cards() -> void:
 	_save(rift, "res://resources/cards/legendary/time_rift.tres")
 
 	# --- Variete : cast court/long, petite/grande zone, court/long effet ---
+	# FOUDRE et non arcane : l Etincelle est un eclair, et ce nouvel element lui
+	# donne enfin une raison d exister a cote du Trait arcanique, qui faisait la
+	# meme chose avec le meme element pour deux fois plus de degats. Elle devient
+	# le sort qui passe la ou l arcane est absorbee (Chevalier du vide).
 	var spark := _card("spark", "Etincelle",
-		"15 degats sur une cible. Tres rapide a lancer.", GameEnums.Rarity.COMMON, 0.45,
-		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
+		"15 degats de FOUDRE sur une cible. Tres rapide a lancer.",
+		GameEnums.Rarity.COMMON, 0.45,
+		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.LIGHTNING],
 		[_spec("damage_single", 15.0)], 2)
 	spark.fx_key = &"spark_burst"
 	spark.sfx_key = &"spell_arcane"
 	_save(spark, "res://resources/cards/common/spark.tres")
 
 	var frost_rain := _card("frost_rain", "Pluie de givre",
-		"Tres grande zone qui ralentit de 30 pourcent pendant 8 s.", GameEnums.Rarity.COMMON, 1.8,
+		"Tres grande zone : 2 degats de GIVRE par seconde et ralentissement de "
+		+ "30 pourcent pendant 8 s.", GameEnums.Rarity.COMMON, 1.8,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
-		[_spec("ground_zone", 0.0, 8.0, 260.0, {&"slow_pct": 30.0})])
+		[_spec("ground_zone", 2.0, 8.0, 260.0, {&"slow_pct": 30.0})])
 	frost_rain.fx_key = &"crystal_field"
 	frost_rain.sfx_key = &"drip_frost"
 	_save(frost_rain, "res://resources/cards/common/frost_rain.tres")
 
 	var brazier := _card("brazier", "Brasier",
-		"Zone de feu : 14 degats par seconde pendant 6 s.", GameEnums.Rarity.RARE, 2.1,
+		"Zone de FEU : 14 degats par seconde pendant 6 s.", GameEnums.Rarity.RARE, 2.1,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 14.0, 6.0, 140.0)])
 	brazier.fx_key = &"flame_pillar"
@@ -460,7 +612,7 @@ func _cards() -> void:
 	_save(brazier, "res://resources/cards/rare/brazier.tres")
 
 	var meteor := _card("meteor", "Meteore",
-		"Long a invoquer, mais 60 degats d un coup dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
+		"Long a invoquer : 60 degats de FEU et de choc dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
 		[_spec("ground_zone", 200.0, 0.3, 120.0)])
 	meteor.fx_key = &"meteor_streak"
@@ -484,9 +636,10 @@ func _cards() -> void:
 	_save(focalisation, "res://resources/cards/rare/focus.tres")
 
 	var deep_freeze := _card("deep_freeze", "Gel profond",
-		"Zone qui ralentit de 85 pourcent pendant 4 s. Presque un arret.", GameEnums.Rarity.EPIC, 1.5,
+		"Zone qui ralentit de 85 pourcent et inflige 4 degats de GIVRE par seconde "
+		+ "pendant 4 s. Presque un arret.", GameEnums.Rarity.EPIC, 1.5,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
-		[_spec("ground_zone", 0.0, 4.0, 170.0, {&"slow_pct": 85.0})])
+		[_spec("ground_zone", 4.0, 4.0, 170.0, {&"slow_pct": 85.0})])
 	deep_freeze.fx_key = &"frost_spikes"
 	deep_freeze.sfx_key = &"zap_short"
 	_save(deep_freeze, "res://resources/cards/epic/deep_freeze.tres")
@@ -500,7 +653,7 @@ func _cards() -> void:
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
 
 	var resonance := _card("resonance", "Resonance",
-		"6 degats par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
+		"6 degats d ARCANE par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
 		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
 	resonance.fx_key = &"pulse_ring"
@@ -541,7 +694,7 @@ func _cards() -> void:
 	# et le temps gagne vaut plus que les degats. D ou une magnitude modeste et un
 	# recul important.
 	var chain := _card("chain_break", "Rupture de chaine",
-		"18 degats en zone, puis repousse violemment tout ce qui reste debout.",
+		"18 degats PHYSIQUES en zone, puis repousse violemment tout ce qui reste debout.",
 		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.PHYSICAL],
 		[_spec("knockback", 18.0, 0.0, 190.0, {&"push": 260.0})])
@@ -639,7 +792,7 @@ func _cards() -> void:
 	# Le souffle ne tue pas : il rend au joueur la distance qu il a perdue quand
 	# une vague arrive trop bas. D ou des degats modestes et une grosse poussee.
 	var repulsion := _card("repulsion_wave", "Onde de repulsion",
-		"Souffle une zone : 18 degats et les monstres sont violemment repousses.",
+		"Souffle une zone : 18 degats d ARCANE et les monstres sont violemment repousses.",
 		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.PHYSICAL],
 		[_spec("knockback", 18.0, 0.0, 220.0, {&"push": 260.0})])
@@ -735,10 +888,14 @@ func _cards() -> void:
 	# couloir pendant presque toute la vague suivante. Degats par seconde faibles
 	# expres — c est la duree qui coute cher, pas la puissance.
 	var venom := _card("venom_mire", "Mare de venin",
-		"Enorme mare empoisonnee : 10 degats par seconde pendant 20 s, "
+		"Enorme mare empoisonnee : 10 degats de POISON par seconde pendant 20 s, "
 		+ "et les monstres y avancent 25 pourcent moins vite.",
 		GameEnums.Rarity.LEGENDARY, 2.8, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.FIRE, GameEnums.DamageTag.SLOW],
+		# Elle etait marquee FEU, ce qui etait un contresens : une mare de venin
+		# ne brule pas. Passee en POISON, elle devient la reponse au Glouton (qui
+		# gobe tout, y compris le venin) et reste inutile contre les morts-vivants
+		# — exactement le genre d arbitrage que les resistances doivent creer.
+		[GameEnums.DamageTag.POISON, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 10.0, 20.0, 340.0, {&"slow_pct": 25.0})])
 	venom.fx_key = &"skull_burst"
 	venom.sfx_key = &"spell_crackle"
@@ -1026,13 +1183,13 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl2.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/piercing_arrow.tres", 2],
-		[C + "common/frost_field.tres", 2],
-		[C + "common/ember_pool.tres", 3],
-		[C + "common/fireball.tres", 4],
-		[C + "rare/stone_wall.tres", 2],
+		[C + "common/frost_field.tres", 1],
+		[C + "common/ember_pool.tres", 2],
+		[C + "common/fireball.tres", 3],
+		[C + "rare/stone_wall.tres", 1],
 		[C + "rare/temporal_drag.tres", 1],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/brazier.tres", 2],
+		[C + "rare/brazier.tres", 1],
 	])
 	lvl2.objectives = [o1, o2, o3]
 	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
@@ -1168,15 +1325,31 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	]
 	# DECK ANTI-NOMBRE. Le contenu du niveau est fait de monstres qui se divisent et
 	# qui pullulent : le mono-cible y est un piege (tuer une Gelee au Trait, c est
-	# creer deux Gelees). D ou 9 cartes de zone sur 16, et la Spirale de sel qui
-	# rassemble avant la frappe. Un seul Trait subsiste, pour achever les Pretres.
+	# creer deux Gelees). D ou une majorite de cartes de zone, et la Spirale de sel
+	# qui rassemble avant la frappe. Un seul Trait subsiste, pour achever les Pretres.
+	#
+	# POURQUOI DEUX ZONES DE FEU EN MOINS. Mesure au banc : lvl_03 gagnait
+	# 29 fois sur 30, tres au-dessus de la cible 60-95 %. La cause n etait ni la
+	# vitesse ni le budget des vagues, mais un croisement : CINQ des dix monstres
+	# du niveau craignent le feu (Nuee x1.30, Feu follet x1.35, Gelee, Gnome et
+	# Pretre x1.15) et un TIERS du deck etait du feu. Le joueur ne pouvait pas se
+	# tromper d element — il n avait aucun choix a faire.
+	#
+	# UNE carte de feu devient donc une zone ARCANIQUE (mesure : en en
+	# remplacant DEUX, le niveau tombait a 53 %, sous la cible — la correction
+	# etait alors plus grosse que le defaut). L arcane est plus
+	# neutre sur ce bestiaire (moyenne 1.04 contre 1.08 pour le feu) et surtout
+	# elle frappe d AUTRES monstres : l Ombre resiste au feu (0.90) mais craint
+	# l arcane (1.30), l Archer resiste au feu (0.80) et pas a l arcane. Le deck
+	# reste anti-nombre, mais il faut maintenant choisir QUELLE zone poser.
 	lvl3.exploration_deck = _deck([
 		[C + "common/fireball.tres", 3],
-		[C + "common/ember_pool.tres", 3],
+		[C + "common/ember_pool.tres", 1],
 		[C + "common/frost_rain.tres", 2],
 		[C + "common/arcane_bolt.tres", 1],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "rare/salt_spiral.tres", 2],
+		[C + "rare/purifying_light.tres", 1],
 		[C + "epic/resonance.tres", 2],
 		[C + "rare/stone_wall.tres", 1],
 	])
@@ -1311,11 +1484,11 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	# repond au vrai probleme du niveau : c est le plus long de la campagne, on y
 	# manque de cartes avant d y manquer de PV.
 	lvl4.exploration_deck = _deck([
-		[C + "common/fireball.tres", 3],
+		[C + "common/fireball.tres", 2],
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/piercing_arrow.tres", 2],
-		[C + "rare/bone_recall.tres", 2],
+		[C + "rare/bone_recall.tres", 1],
 		[C + "rare/meteor.tres", 2],
 		[C + "rare/salt_spiral.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
@@ -1466,7 +1639,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# elle rend du temps en repoussant ce qu on n a pas fini.
 	lvl5.exploration_deck = _deck([
 		[C + "rare/meteor.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 2],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "rare/chain_break.tres", 2],
@@ -1608,15 +1781,14 @@ cadran, et ils ignorent qui la passe."
 	# reste la carte signature — seule reponse au trio totem/berserker/chevalier
 	# qui se protege mutuellement.
 	lvl6.exploration_deck = _deck([
-		[C + "epic/void_grip.tres", 2],
-		[C + "epic/resonance.tres", 3],
-		[C + "common/fireball.tres", 4],
+		[C + "epic/void_grip.tres", 1],
+		[C + "epic/resonance.tres", 2],
+		[C + "common/fireball.tres", 3],
 		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "rare/brazier.tres", 2],
-		[C + "epic/deep_freeze.tres", 1],
 		[C + "rare/chain_break.tres", 1],
-		[C + "rare/stone_wall.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl6.objectives = [o1, o2, o3]
 	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")
@@ -1751,15 +1923,15 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# narratif : le mage entre dans la matrice avec les sorts de ses quatre allies.
 	lvl7.exploration_deck = _deck([
 		[C + "common/fireball.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 2],
 		[C + "rare/meteor.tres", 2],
-		[C + "epic/resonance.tres", 2],
+		[C + "epic/resonance.tres", 1],
 		[C + "rare/salt_spiral.tres", 1],
 		[C + "rare/bone_recall.tres", 1],
 		[C + "rare/chain_break.tres", 1],
 		[C + "epic/void_grip.tres", 1],
 		[C + "epic/weakness_mark.tres", 1],
-		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/piercing_arrow.tres", 1],
 		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl7.objectives = [o1, o2, o3]

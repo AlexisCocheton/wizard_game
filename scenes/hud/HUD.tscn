@@ -90,7 +90,7 @@ stretch_margin_right = 24
 stretch_margin_bottom = 0
 texture_under = ExtResource("3")
 texture_progress = ExtResource("4")
-tint_progress = Color(0.4, 0.7, 1, 1)
+tint_progress = Color(1, 1, 1, 1)
 
 [node name="HpLabel" type="Label" parent="Root"]
 unique_name_in_owner = true

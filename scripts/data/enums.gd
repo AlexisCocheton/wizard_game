@@ -13,8 +13,40 @@ enum Targeting {
 	TARGET,     ## un ennemi precis
 }
 
-## Tags portes par les sorts ; les ennemis peuvent y etre immunises.
-enum DamageTag { PHYSICAL, FIRE, FROST, ARCANE, SLOW, SUMMON }
+## Tags portes par les sorts. Les six PREMIERS sont des ELEMENTS de degats :
+## chaque monstre leur oppose un pourcentage de resistance (EnemyDef.resistances).
+## SLOW et SUMMON ferment la liste parce qu ils ne sont pas des elements mais des
+## CATEGORIES d effet — un sort peut etre a la fois de givre et ralentissant.
+##
+## POISON et LIGHTNING ont ete ajoutes en fin d enum, jamais inseres au milieu :
+## les .tres livres et les sauvegardes stockent la valeur ENTIERE du tag, et
+## glisser une valeur decalerait toutes les suivantes (le feu deviendrait du
+## givre sur les telephones deja installes).
+enum DamageTag { PHYSICAL, FIRE, FROST, ARCANE, SLOW, SUMMON, POISON, LIGHTNING }
+
+## Les tags qui sont de vrais ELEMENTS de degats. Une carte qui inflige des
+## degats doit en porter au moins un (verifie par tests/unit/test_elements.gd) :
+## sans element, elle echapperait a toutes les resistances et serait par
+## accident la meilleure carte du jeu.
+const ELEMENTS: Array[int] = [
+	DamageTag.PHYSICAL, DamageTag.FIRE, DamageTag.FROST,
+	DamageTag.ARCANE, DamageTag.POISON, DamageTag.LIGHTNING,
+]
+
+
+## Nom joueur d un element, au masculin sans article. Sert partout ou l element
+## doit s ecrire : fiche de monstre, carte, bilan de fin.
+static func tag_name(tag: int) -> String:
+	match tag:
+		DamageTag.PHYSICAL: return "physique"
+		DamageTag.FIRE: return "feu"
+		DamageTag.FROST: return "givre"
+		DamageTag.ARCANE: return "arcane"
+		DamageTag.POISON: return "poison"
+		DamageTag.LIGHTNING: return "foudre"
+		DamageTag.SLOW: return "ralentissement"
+		DamageTag.SUMMON: return "invocation"
+	return "inconnu"
 
 ## Famille de monstre : sert a l affichage et a l equilibrage.
 ## Les comportements eux-memes sont pilotes par les champs d EnemyDef.
@@ -39,7 +71,18 @@ enum Mode { EXPLORATION, MASSACRE }
 
 ## Recompenses de compte : COSMETIQUES uniquement. Ajouter ici un type qui
 ## donnerait de la puissance perimerait l equilibrage mesure des niveaux.
-enum RewardKind { TITLE, AVATAR }
+##
+## Les trois derniers changent l APPARENCE du mage en combat, et rien d autre :
+## une couleur de robe, une couleur de chapeau, une tour. Aucun ne touche aux
+## PV, aux degats ni a la vitesse — c est la regle qui protege les taux de
+## victoire mesures au banc sur les sept niveaux.
+enum RewardKind {
+	TITLE,       ## un titre affiche sur le profil
+	AVATAR,      ## un portrait pour le profil
+	MAGE_COLOR,  ## la robe du mage (feuilles monk_blue / black / purple)
+	HAT,         ## la couleur de son chapeau (palette remappee)
+	TOWER,       ## la tour posee sur la ligne du mage
+}
 
 
 static func rarity_name(r: int) -> String:

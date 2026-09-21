@@ -24,5 +24,6 @@ effects = Array[ExtResource("1_0sobc")]([SubResource("Resource_0sobc")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"spiral_pull"
 sfx_key = &"wind_gust"

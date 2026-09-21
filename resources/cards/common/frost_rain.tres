@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Resource_453lm"]
 script = ExtResource("1_453lm")
 key = &"ground_zone"
-magnitude = 0.0
+magnitude = 2.0
 duration = 8.0
 radius = 260.0
 params = {
@@ -17,7 +17,7 @@ params = {
 script = ExtResource("2_wd8s3")
 id = &"frost_rain"
 display_name = "Pluie de givre"
-description = "Tres grande zone qui ralentit de 30 pourcent pendant 8 s."
+description = "Tres grande zone : 2 degats de GIVRE par seconde et ralentissement de 30 pourcent pendant 8 s."
 rarity = 0
 base_cast_time = 1.8
 targeting = 1
@@ -26,5 +26,6 @@ effects = Array[ExtResource("1_453lm")]([SubResource("Resource_453lm")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"crystal_field"
 sfx_key = &"drip_frost"

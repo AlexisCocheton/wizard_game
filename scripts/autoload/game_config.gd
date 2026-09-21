@@ -74,9 +74,17 @@ const XP_PER_LEVEL_BASE: int = 12
 const XP_PER_LEVEL_GROWTH: float = 1.25
 ## Nombre de cartes proposees a chaque montee de niveau.
 const LEVEL_UP_CHOICES: int = 3
-## Pouvoirs passifs melanges au deck au debut de chaque partie. Ils s ajoutent aux
-## cartes, ils n en remplacent aucune : ce sont des choix en plus, pas a la place.
-const STARTING_PASSIVES: int = 3
+## Emplacements de pouvoirs passifs. Les passifs ne sont PLUS dans le deck : ils
+## sont equipes et agissent des le debut du combat (demande du testeur du
+## 21 septembre). Trois, et pas plus : un quatrieme impose un ECHANGE, ce qui
+## transforme chaque nouveau passif en decision au lieu d une accumulation.
+const PASSIVE_SLOTS: int = 3
+## Ancien nom, garde le temps que les ecrans de menu migrent. Meme valeur.
+const STARTING_PASSIVES: int = PASSIVE_SLOTS
+
+## Part de PASSIFS dans les cartes proposees a la montee de niveau.
+## "Les passifs sont plus rares que les cartes : 20 pourcent de passifs."
+const PASSIVE_OFFER_CHANCE: float = 0.20
 
 ## --- Raretes au drop de montee de niveau ---
 ## Lecture validee du cahier des charges : la raretes la plus haute est la plus rare.
@@ -102,7 +110,16 @@ const RARITY_WEIGHTS: Dictionary = {
 ## les monstres du meme rapport (0,70 x 1380/1580), ce qui conserve la DUREE de
 ## descente au lieu de la vitesse : c est le temps de viser qui fait la
 ## difficulte, pas les pixels par seconde.
-const ENEMY_SPEED_SCALE: float = 0.61
+##
+## 0,51 et non 0,61 depuis que les PASSIFS ont quitte le deck. L ancienne valeur
+## avait ete calibree AVEC trois passifs offerts d office dans le deck de depart.
+## Mesure au banc (30 parties par niveau), les retirer SEUL faisait tomber les
+## taux de 63-93 % a 0-77 % — le niveau 6 devenait invincible. Les passifs
+## arrivent desormais par les montees de niveau, un sur cinq, et seulement
+## au-dela de leur seuil de vitesse : le joueur commence donc nu et il faut lui
+## rendre le temps de reaction que les trois passifs gratuits lui donnaient.
+## Apres reglage : 77/87/93/77/77/77/77 %, les sept niveaux dans la bande 60-95.
+const ENEMY_SPEED_SCALE: float = 0.52
 
 ## --- Terrain ---
 ## Le mage se tient en bas ; les monstres descendent vers cette ligne.

@@ -47,6 +47,8 @@ const PROFILE_TAB: int = -1
 @onready var _cards_label: Label = %CardsLabel
 @onready var _level_label: Label = %LevelLabel
 @onready var _profile_button: Button = %ProfileButton
+## La banniere du titre : elle CHANGE avec le niveau de compte (chantier L).
+@onready var _title_ribbon: NinePatchRect = %TitleRibbon
 
 var _panels: Array[Control] = []
 var _tab_buttons: Array[Button] = []
@@ -186,3 +188,12 @@ func _refresh_top_bar() -> void:
 			SaveData.discovered_count(), ContentDB.cards.size()]
 	if _level_label != null:
 		_level_label.text = "Niv.\n%d" % SaveData.account_level()
+	# La banniere du titre suit le NIVEAU DE COMPTE : bois, argent, or, cristal.
+	# C est la recompense la plus visible du compte — elle se voit a l ouverture
+	# du jeu, sans ouvrir le moindre ecran, et c est ce que le testeur demandait.
+	# Les paliers vivent dans UiTheme.BANNER_TIERS, jamais ici : le profil affiche
+	# le meme palier, et deux listes se seraient contredites.
+	if _title_ribbon != null:
+		var banniere: Texture2D = UiTheme.tex(UiTheme.banner_for_level(SaveData.account_level()))
+		if banniere != null:
+			_title_ribbon.texture = banniere

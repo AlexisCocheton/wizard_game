@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_jrvs2"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5ukdx"]
+
+[sub_resource type="Resource" id="Resource_w7of6"]
+script = ExtResource("1_jrvs2")
+key = &"passive_death_blast"
+magnitude = 5.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_5ukdx")
+id = &"pass_fireboom"
+display_name = "Combustion"
+description = "Au-dela de 140 % de vitesse : les monstres explosent en mourant et infligent 5 degats autour d eux."
+rarity = 1
+base_cast_time = 0.0
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_jrvs2")]([SubResource("Resource_w7of6")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 140
+fx_key = &""
+sfx_key = &""

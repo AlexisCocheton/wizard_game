@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_nl72k"]
+
+[resource]
+script = ExtResource("1_nl72k")
+id = &"ch_flawless_3"
+display_name = "Sans une egratignure"
+description = "Terminer trois niveaux sans subir le moindre degat."
+rarity = 3
+xp_reward = 1600
+track_key = &"flawless_clears"
+target = 3

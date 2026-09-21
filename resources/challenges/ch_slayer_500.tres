@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_sx47e"]
+
+[resource]
+script = ExtResource("1_sx47e")
+id = &"ch_slayer_500"
+display_name = "Moissonneur"
+description = "Tuer 500 monstres."
+rarity = 1
+xp_reward = 500
+track_key = &"enemies_killed"
+target = 500

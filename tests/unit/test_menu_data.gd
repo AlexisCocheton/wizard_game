@@ -12,6 +12,8 @@ func run() -> void:
 	_test_persistance_coupee()
 	_test_cartes_de_depart_decouvertes()
 	_test_deck_massacre()
+	_test_plusieurs_decks()
+	_test_migration_ancien_deck_unique()
 	_test_reglages()
 	_test_victoire_debloque_le_niveau_suivant()
 	_test_legendaire_cumulative()
@@ -44,6 +46,73 @@ func _test_deck_massacre() -> void:
 	var ids: Array = SaveData.massacre_deck()
 	eq(ids.size(), 3, "le deck est memorise avec ses doublons")
 	eq(ids[0], "arcane_bolt", "les ids sont stockes en String")
+
+
+## Le joueur peut tenir PLUSIEURS decks nommes et basculer de l un a l autre :
+## il n a plus a demonter son deck de campagne pour essayer autre chose en
+## Massacre. `massacre_deck()` reste l ancien nom du deck COURANT, pour que le
+## reste du jeu (GameController, campagne, profil) n ait rien a changer.
+func _test_plusieurs_decks() -> void:
+	SaveData.reset_profile()
+	eq(SaveData.deck_count(), 1, "un profil neuf a deja un deck, jamais zero")
+	eq(SaveData.current_deck_index(), 0, "le premier deck est le courant")
+
+	SaveData.set_massacre_deck(["arcane_bolt", "fireball"])
+	eq(SaveData.deck_at(0).size(), 2, "ecrire le deck courant ecrit le deck 0")
+
+	var idx: int = SaveData.create_deck("Givre")
+	eq(idx, 1, "le nouveau deck est ajoute a la fin")
+	eq(SaveData.deck_count(), 2, "deux decks")
+	eq(SaveData.current_deck_index(), 1, "creer un deck le rend courant")
+	eq(SaveData.massacre_deck().size(), 0, "un deck neuf est vide")
+	eq(SaveData.deck_name(1), "Givre", "le nom est retenu")
+
+	# Le deck 0 n a pas bouge : c est tout l interet d en avoir plusieurs.
+	eq(SaveData.deck_at(0).size(), 2, "l ancien deck est intact")
+	SaveData.set_current_deck(0)
+	eq(SaveData.massacre_deck().size(), 2, "revenir au deck 0 rend son contenu")
+
+	SaveData.rename_deck(0, "Feu")
+	eq(SaveData.deck_name(0), "Feu", "renommage")
+	# Un nom vide serait un onglet invisible : on refuse en gardant l ancien.
+	SaveData.rename_deck(0, "   ")
+	eq(SaveData.deck_name(0), "Feu", "un nom vide est refuse")
+
+	SaveData.set_current_deck(1)
+	SaveData.delete_deck(1)
+	eq(SaveData.deck_count(), 1, "suppression")
+	eq(SaveData.current_deck_index(), 0, "le courant retombe sur un deck existant")
+	# Le dernier deck ne se supprime pas : sans deck, l ecran n aurait plus
+	# d onglet a afficher ni le jeu de quoi composer une partie.
+	SaveData.delete_deck(0)
+	eq(SaveData.deck_count(), 1, "le dernier deck ne se supprime pas")
+
+	# Index hors bornes : aucune erreur, aucune donnee perdue.
+	SaveData.set_current_deck(99)
+	ok(SaveData.current_deck_index() >= 0 and SaveData.current_deck_index() < SaveData.deck_count(),
+		"un index hors bornes est ramene dans les clous")
+	eq(SaveData.deck_at(42).size(), 0, "lire un deck inexistant rend une liste vide")
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+
+## Les telephones deja en service ont un profil avec UN seul `massacre_deck`.
+## La migration doit le retrouver dans le premier onglet, sinon le joueur
+## rallume son jeu et son deck a disparu.
+func _test_migration_ancien_deck_unique() -> void:
+	SaveData.load_from_dictionary({
+		"schema_version": 1,
+		"profile": {
+			"discovered_cards": ["arcane_bolt"],
+			"massacre_deck": ["arcane_bolt", "arcane_bolt", "fireball"],
+		},
+	})
+	eq(SaveData.deck_count(), 1, "l ancien profil donne exactement un deck")
+	eq(SaveData.deck_at(0).size(), 3, "l ancien deck est repris tel quel")
+	eq(SaveData.massacre_deck()[0], "arcane_bolt", "avec ses cartes")
+	ok(SaveData.deck_name(0).length() > 0, "et un nom d onglet non vide")
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
 
 
 func _test_reglages() -> void:

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_y25gb"]
+
+[resource]
+script = ExtResource("1_y25gb")
+id = &"ch_massacre_50"
+display_name = "Le temps n existe plus"
+description = "Survivre a 50 vagues en Massacre."
+rarity = 3
+xp_reward = 1600
+track_key = &"massacre_wave"
+target = 50

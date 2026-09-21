@@ -13,6 +13,11 @@ const COL_ARCANE := Color(0.62, 0.45, 0.95)
 const COL_FIRE := Color(0.95, 0.45, 0.20)
 const COL_FROST := Color(0.45, 0.80, 0.95)
 const COL_PHYSICAL := Color(0.90, 0.85, 0.70)
+## Deux elements ajoutes avec les resistances (chantier B3). Teintes choisies
+## LOIN des quatre autres : un element qu on ne distingue pas a l impact ne
+## sert a rien, le joueur ne peut pas verifier qu il a joue le bon sort.
+const COL_POISON := Color(0.55, 0.90, 0.30)
+const COL_LIGHTNING := Color(0.95, 0.90, 0.35)
 const COL_SUMMON := Color(0.55, 0.90, 0.55)
 const COL_WALL := Color(0.60, 0.55, 0.50)
 const COL_HASTE := Color(0.95, 0.80, 0.35)
@@ -192,9 +197,13 @@ static func color_for(tags: Array) -> Color:
 		match t:
 			GameEnums.DamageTag.FIRE: return COL_FIRE
 			GameEnums.DamageTag.FROST: return COL_FROST
-			GameEnums.DamageTag.SLOW: return COL_FROST
+			GameEnums.DamageTag.POISON: return COL_POISON
+			GameEnums.DamageTag.LIGHTNING: return COL_LIGHTNING
 			GameEnums.DamageTag.PHYSICAL: return COL_PHYSICAL
 			GameEnums.DamageTag.SUMMON: return COL_SUMMON
+			# SLOW passe APRES les elements : un Champ de givre est givre AVANT
+			# d etre ralentissant, et une Mare de venin doit rester verte.
+			GameEnums.DamageTag.SLOW: return COL_FROST
 	return COL_ARCANE
 
 
@@ -202,6 +211,8 @@ static func color_for(tags: Array) -> Color:
 static func impact_sheet(col: Color) -> String:
 	if col == COL_FIRE: return "brightfire"
 	if col == COL_FROST: return "freezing"
+	if col == COL_POISON: return "skull_burst"
+	if col == COL_LIGHTNING: return "lightning_fork"
 	if col == COL_PHYSICAL: return "weaponhit"
 	if col == COL_SUMMON: return "magicbubbles"
 	return "magickahit"
@@ -210,6 +221,9 @@ static func impact_sheet(col: Color) -> String:
 static func zone_sheet(col: Color) -> String:
 	if col == COL_FIRE: return "fire"
 	if col == COL_FROST: return "freezing"
+	if col == COL_POISON: return "spiral_salt"
+	if col == COL_LIGHTNING: return "lightning_web"
+	if col == COL_PHYSICAL: return "stone_peak"
 	if col == COL_VULN: return "felspell"
 	return "magicspell"
 

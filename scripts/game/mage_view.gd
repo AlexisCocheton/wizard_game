@@ -11,7 +11,8 @@ func _ready() -> void:
 	if not Fx.enabled():
 		return
 	_anim = AnimatedSprite2D.new()
-	_anim.sprite_frames = AnimCatalog.frames(&"monk_blue")
+	# Robe et chapeau viennent du profil : le compte ne donne que du cosmetique.
+	_anim.sprite_frames = UiTheme.mage_frames()
 	_anim.scale = Vector2(1.35, 1.35)
 	_anim.position = Vector2(0.0, -20.0)
 	add_child(_anim)

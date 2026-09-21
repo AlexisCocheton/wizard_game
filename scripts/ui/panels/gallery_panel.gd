@@ -521,7 +521,12 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 
 	var stats := HBoxContainer.new()
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override(&"separation", 40)
+	# 96 px, pas 40 : "Incantation" est un titre LARGE au-dessus d une valeur
+	# COURTE, si bien que les deux nombres finissaient cote a cote pendant que
+	# leurs titres restaient loin l un de l autre — on ne savait plus lequel
+	# allait avec quoi (vu sur capture). L ecart doit separer les COLONNES, pas
+	# les titres.
+	stats.add_theme_constant_override(&"separation", 96)
 	box.add_child(stats)
 	stats.add_child(_stat("Incantation", "%s s" % _fmt(card.base_cast_time),
 		Color(0.15, 0.38, 0.75)))

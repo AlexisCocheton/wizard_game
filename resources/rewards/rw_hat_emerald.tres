@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_yfkmq"]
+
+[resource]
+script = ExtResource("1_yfkmq")
+id = &"rw_hat_emerald"
+display_name = "Chapeau d emeraude"
+description = "Un chapeau vert profond, couleur des forets d avant."
+at_level = 5
+kind = 3
+texture_name = "monk_hat_emerald"

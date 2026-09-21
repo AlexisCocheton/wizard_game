@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_hl47d"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ahqvc"]
 
-[sub_resource type="Resource" id="Resource_nt502"]
+[sub_resource type="Resource" id="Resource_hl47d"]
 script = ExtResource("1_hl47d")
 key = &"passive_cast_haste"
 magnitude = 0.3
@@ -15,12 +15,15 @@ params = {}
 script = ExtResource("2_ahqvc")
 id = &"pass_celerity"
 display_name = "Celerite"
-description = "Passif : chaque sort se lance 0,3 s plus vite, pour tout le combat."
-rarity = 1
-base_cast_time = 1.5
+description = "Au-dela de 110 % de vitesse : chaque sort se lance 0,3 s plus vite."
+rarity = 0
+base_cast_time = 0.0
 targeting = 0
 tags = Array[int]([])
-effects = Array[ExtResource("1_hl47d")]([SubResource("Resource_nt502")])
+effects = Array[ExtResource("1_hl47d")]([SubResource("Resource_hl47d")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = true
+speed_threshold = 110
+fx_key = &""
+sfx_key = &""

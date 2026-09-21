@@ -15,6 +15,26 @@ signal challenge_reached(challenge: ChallengeDef)
 func _ready() -> void:
 	# ContentDB et SaveData sont charges avant : l ordre des autoloads le garantit.
 	SaveData.challenge_completed.connect(_on_completed)
+	rattraper()
+
+
+## Valide les succes DEJA MERITES mais jamais valides.
+##
+## Le defaut que ceci repare : _check() n etait appele qu au moment ou un
+## compteur FRANCHIT le seuil. Un succes ajoute apres coup ne se declenchait donc
+## jamais, meme chez un joueur tres au-dela de la cible — il restait affiche avec
+## sa barre pleine, dans la liste des non accomplis, indefiniment. Le chantier L
+## venant d ajouter six succes, tout profil existant aurait perdu ce qu il avait
+## deja gagne.
+##
+## Appele au demarrage : c est le seul moment ou le catalogue et la sauvegarde
+## sont tous deux charges, et ou un ecart entre les deux peut exister.
+func rattraper() -> void:
+	for c: ChallengeDef in ContentDB.challenges_list():
+		if c == null or c.target <= 0:
+			continue
+		if value_of(c.track_key) >= c.target:
+			SaveData.complete_challenge(c.id)
 
 
 func _on_completed(c: ChallengeDef) -> void:

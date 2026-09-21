@@ -107,12 +107,17 @@ func _build_deck() -> Array[SpellCard]:
 		if DeckRules.is_valid(ids):
 			var chosen: Array[SpellCard] = DeckRules.resolve(ids)
 			if chosen.size() >= DeckRules.MIN_CARDS:
-				return DeckRules.with_passives(chosen)
-	# Les pouvoirs passifs s ajoutent a TOUS les decks : ce sont des choix en plus,
-	# pas a la place des cartes.
+				return chosen
+	# Plus AUCUN passif dans le deck : ils sont equipes hors deck et agissent des
+	# le debut du combat (voir RunState.equipped_passives). Les melanger aux
+	# cartes obligeait a les piocher puis a les incanter pour en profiter.
 	if level_def != null and not level_def.exploration_deck.is_empty():
-		return DeckRules.with_passives(level_def.exploration_deck)
-	return DeckRules.with_passives(DeckRules.resolve(DeckRules.default_deck_ids()))
+		var expl: Array[SpellCard] = []
+		for c: SpellCard in level_def.exploration_deck:
+			if c != null and not c.is_passive:
+				expl.append(c)
+		return expl
+	return DeckRules.resolve(DeckRules.default_deck_ids())
 
 
 ## Pool du mode infini : les monstres du niveau, boss exclus.
@@ -278,8 +283,20 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 	# Passif "Compagnon fidele" : un allie a chaque nouvelle vague. C est ici, et
 	# pas dans EffectRegistry, parce qu un passif ne s execute pas une fois : il
 	# change une regle pour tout le combat.
-	if RunState.has_passive(&"passive_wave_ally") and battlefield != null:
-		battlefield.spawn_ally(12.0, 10.0)
+	#
+	# has_passive() teste DEJA le seuil de vitesse : si la jauge est retombee a
+	# 100 % juste avant la vague, l allie n arrive pas. C est voulu — un passif
+	# ne recompense que le joueur qui tient sa vitesse.
+	if battlefield != null:
+		if RunState.has_passive(&"passive_wave_ally"):
+			battlefield.spawn_ally(12.0, 10.0)
+		# Passif "Ecorce vive" : un mur pousse en travers du chemin a chaque vague.
+		# Il ne tue rien, il ACHETE DU TEMPS — c est le passif commun le plus
+		# lisible : on voit exactement ce qu il fait.
+		if RunState.has_passive(&"passive_start_wall"):
+			var au_milieu := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5,
+				GameConfig.MAGE_LINE_Y * 0.62)
+			battlefield.spawn_wall(au_milieu, 170.0, 14.0)
 	if wave != null and (wave.is_boss or wave.is_miniboss):
 		AudioBus.play_sfx(&"boss")
 		if wave.is_boss:
@@ -298,6 +315,19 @@ func _on_shield_collapsed() -> void:
 
 func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
 	RunState.note_damage_taken(source)
+	# PASSIF "Verrou temporel" (legendaire) : un coup ne ramene plus la vitesse
+	# au plancher, il n en fait perdre que la moitie. C est la regle la plus
+	# bouleversante du jeu — elle s attaque a la punition centrale — d ou son
+	# seuil tres haut : il faut deja avoir tenu 300 % pour en profiter.
+	#
+	# On RE-POUSSE la jauge apres coup au lieu de modifier SpeedGauge.take_hit() :
+	# le chemin du bouclier reste unique et intouche (voir memoire), et le passif
+	# se lit comme ce qu il est, une exception rendue au joueur.
+	var avant: int = battlefield.speed_before_hit if battlefield != null else 100
+	if avant > 100 and RunState.has_passive(&"passive_shield_keeper"):
+		var perdu: int = avant - SpeedGauge.speed_percent
+		if perdu > 0:
+			SpeedGauge.set_speed_percent(SpeedGauge.speed_percent + perdu / 2)
 
 
 func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:

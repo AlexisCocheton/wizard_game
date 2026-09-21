@@ -1,411 +1,524 @@
 class_name CampaignMap
-extends ScrollContainer
-## Carte de l archipel : les niveaux poses sur des iles volantes, relies par les
-## chemins de `LevelDef.next_levels`.
+extends Control
+## Carte de campagne : UN ECRAN PAR ACTE, pose sur le fond de combat de l acte.
 ##
 ##   +--------------------------------------------------+
-##   |  ACTE I   Le Monde volant                        |
-##   |               [ ile : Les Marches du Temps ]      |  <- rang 0
-##   |                        |                          |
-##   |               [ ile : La Tour des Sables  ]       |  <- rang 1
-##   |  ...                                              |
-##   |  ACTE III                                         |
-##   |     [ ile : Forges ]        [ ile : Cour brisee ] |  <- rang 4, deux freres
-##   |              \                    /               |
-##   |               [ ile : Le Metier du Monde ]        |  <- rang 5
+##   |  ####  bande decoree du fond de l acte  ########  |
+##   |                                                   |
+##   |         ACTE II  -  Le Grand Cimetiere            |
+##   | +-+                                         +-+   |
+##   | |<|     (o) Ossuaire des Marees             |>|   |
+##   | +-+     * * .                               +-+   |
+##   |                                                   |
+##   |              (o) Le Grand Appel                   |
+##   |              . . .                                |
+##   |                                                   |
+##   |  ####  premier plan du fond  ###################   |
 ##   +--------------------------------------------------+
 ##
-## POURQUOI une ScrollContainer et pas un Control fixe : 7 niveaux a 260 px de
-## haut font 1800 px, ce qui depasse la zone de contenu du menu. Le defilement
-## vertical est explicitement demande, et il encaisse les niveaux a venir sans
-## qu on ait a re-serrer la mise en page a chaque ajout.
+## POURQUOI un ecran par acte et non plus un defilement vertical : demande du
+## testeur, mot pour mot — « utilise les fonds de combat pour l image de fond de
+## l acte, change d acte avec les fleches ». Un fond peint ne se defile pas : il
+## est compose pour 1080x1920 (bande decoree en haut, sol au milieu, premier plan
+## en bas). Le faire glisser sous une colonne d iles le decoupe n importe ou.
 ##
-## POURQUOI les liens sont dessines par un Control dedie (`_links`) sous les iles :
-## un trait entre deux points n est pas du decor, c est l INFORMATION elle-meme
-## (quel niveau mene ou). Meme raisonnement que ZoneRing, DEC-015 : une texture
-## etiree entre deux points arbitraires serait moins lisible qu un trait exact.
+## POURQUOI un Control et non plus une ScrollContainer : il n y a plus rien a
+## faire defiler. Un acte tient dans un ecran, et c est precisement ce qui rend
+## la navigation par fleches lisible — on voit d un coup tout l acte.
+##
+## POURQUOI le fond vient de `LevelDef.backdrop` et non d une table dans l UI :
+## le combat de lvl_03 et le point de lvl_03 sur la carte doivent montrer le meme
+## lieu. Deux tables finiraient par diverger a la premiere reorganisation des
+## actes ; ici la carte lit la meme donnee que `BattleBackdrop`.
 
 signal level_pressed(level_id: StringName)
 
-## Geometrie de la carte. Les iles sont des cibles tactiles : 300x230 depasse
-## largement les 90 px minimum, un doigt ne peut pas rater.
-const ISLAND_W: float = 330.0
-const ISLAND_H: float = 240.0
-## Ecart vertical entre deux rangs : l ile (240) + le trait de liaison + la place
-## d un bandeau d acte. En dessous, le bandeau se pose SUR l ile suivante.
-const RANK_STEP: float = 360.0
-## Marge du haut : la place du bandeau de l acte I, qui se pose AU-DESSUS de la
-## premiere ile. Sans elle, « ACTE I » sort de la zone defilante.
-const MARGIN_TOP: float = 190.0
-const MAP_WIDTH: float = 1080.0
-## Bandeau d acte : hauteur reservee au-dessus du premier niveau d un acte.
-const ACT_BANNER_H: float = 60.0
+## Un point de niveau. 96 px de diametre, mais la CIBLE TACTILE est le bouton qui
+## le porte (DOT_HIT), largement au-dessus des 90 px du cahier des charges : le
+## joueur vise le point ET son etiquette.
+const DOT_SIZE: float = 96.0
+const DOT_HIT_W: float = 420.0
+const DOT_HIT_H: float = 190.0
 
-const TERRAIN: String = "res://assets/terrain/"
-## Colonne de depart du bloc 4x4 dans le tileset : 0 = bord clair (herbe),
-## 5 = bord de pierre. Le pack n a pas de vraie feuille de sable, les deux
-## fichiers sont identiques ; on distingue les terrains par le BORD de l ile.
-const GRASS_BLOCK_X: int = 0
-const SAND_BLOCK_X: int = 5
+## Bande utilisable du fond, en fraction de la hauteur de l ecran. Les fonds ont
+## une bande DECOREE en haut (arbres, grilles, vitraux) et un PREMIER PLAN en bas
+## (herbes hautes, dalles). Un point pose dedans se noie dans le decor : ces deux
+## bornes delimitent le SOL, ou un point et son nom restent lisibles.
+## Le haut est fixe par le TITRE de l acte (qui occupe jusqu a ~0.07) plus la
+## bande decoree ; le bas par le premier plan, qui commence vers 0.85 sur les
+## quatre fonds composes. Verifie a l oeil sur les 5 captures `map_acte*.png`.
+const GROUND_TOP: float = 0.24
+const GROUND_BOTTOM: float = 0.83
+
+## Largeur reservee aux fleches sur chaque bord. Un point sous une fleche serait
+## inatteignable : les positions sont contraintes a l interieur.
+const SIDE_MARGIN: float = 150.0
+
+## Fleches de changement d acte : 120x170, bien au-dela des 90 px minimum, et
+## collees aux BORDS de l ecran — c est la ou tombe naturellement le pouce.
+const ARROW_W: float = 120.0
+const ARROW_H: float = 170.0
+
+## Fond de repli quand l acte n a aucun niveau (donc aucun `backdrop` a lire).
+## L acte 5 existe dans l histoire mais n a pas encore de niveau : il doit tout
+## de meme s afficher, sinon le joueur croit que le jeu s arrete a l acte 4.
+const ACT_BACKDROPS: Dictionary = {
+	1: "act1_sky",
+	2: "act2_graveyard",
+	3: "act3_demon",
+	4: "act4_origin",
+	5: "act5_divine",
+}
+const BACKDROP_DIR: String = "res://assets/backdrops/"
+const FALLBACK_BACKDROP: String = "menu_space"
+
 ## Le pack Tiny Swords n a pas d icone d etoile. La piece d or (icon_03) est la
 ## seule pastille ronde qui se lit a 34 px, doree quand elle est acquise et
 ## eteinte sinon. On ne DESSINE pas une etoile : la regle du projet est de
 ## n utiliser que les assets fournis (DEC-012).
 const STAR_ICON: int = 3
 
+## Jaune du point jouable — l or du cahier des charges, demande mot pour mot
+## (« des points de couleur jaune, qui sont grises quand pas encore debloques »).
+const DOT_OPEN: Color = Color(0.95, 0.80, 0.35)
+const DOT_LOCKED: Color = Color(0.42, 0.42, 0.46)
+
 const ACT_NAMES: Dictionary = {
 	1: "ACTE I  -  Le Monde volant",
 	2: "ACTE II  -  Le Grand Cimetiere",
 	3: "ACTE III  -  Le Monde demoniaque",
-	4: "ACTE FINAL  -  Le Monde d origine",
+	4: "ACTE IV  -  Le Monde d origine",
+	5: "ACTE V  -  L espace divin",
 }
 
-## Un noeud de la carte : tout ce que les tests et le rendu ont besoin de savoir.
-## Dictionnaire plutot qu une classe interne : il traverse `node_data()` sans
-## qu un appelant puisse modifier l etat de la carte par reference.
-var _nodes: Dictionary = {}          # StringName -> {level, rank, col, pos, stars, enabled}
-var _links: Array = []               # [{from, to}]
-var _order: Array[StringName] = []   # ids tries par rang puis colonne
+## Message d un acte encore vide. Il dit la VERITE (le contenu n existe pas
+## encore) plutot que de laisser un ecran nu que le joueur lirait comme un bug.
+const EMPTY_NOTICE: String = "Le voyage ne va pas encore jusqu ici."
 
-var _canvas: Control
-var _link_layer: Control
-var _buttons: Dictionary = {}        # StringName -> Button
+## Etat calcule : acte -> [ids ordonnes], et id -> donnees du point.
+var _by_act: Dictionary = {}          # int -> Array[StringName]
+var _nodes: Dictionary = {}           # StringName -> {level, pos, stars, max_stars, enabled}
+var _acts: Array[int] = []
+var _act: int = 0
+
+var _backdrop: TextureRect
+var _title: Label
+var _empty_lbl: Label
+var _layer: Control                   # porte les points ; vide a chaque changement d acte
+var _prev_btn: Button
+var _next_btn: Button
+var _buttons: Dictionary = {}         # StringName -> Button
 
 
 func _ready() -> void:
-	horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	# Le doigt fait defiler : sur mobile c est le geste attendu, et il ne doit pas
-	# etre confondu avec un appui sur une ile (Godot gere le seuil de glissement).
-	follow_focus = true
-	if _canvas == null:
+	clip_contents = true
+	if _backdrop == null:
 		rebuild()
+	# Un changement de taille (rotation, redimension du menu) replace les points :
+	# ils sont exprimes en fraction de la taille, pas en pixels figes.
+	if not resized.is_connected(_on_resized):
+		resized.connect(_on_resized)
+
+
+func _on_resized() -> void:
+	_layout_dots()
 
 
 ## Reconstruit entierement la carte depuis ContentDB + SaveData.
 ## Appelee a chaque `refresh()` du panneau : les etoiles et les verrous sont
 ## relus du profil, jamais memorises a cote.
 func rebuild() -> void:
-	_compute_graph()
-	_build_view()
+	_compute()
+	_build_shell()
+	# On rouvre sur l acte du niveau en cours : avec 5 actes, retomber sur l acte I
+	# a chaque retour obligerait a quatre appuis pour revenir ou on en est.
+	show_act(_act_of_current_level())
 
 
 # --------------------------------------------------------------------------
-# Graphe
+# Donnees
 # --------------------------------------------------------------------------
 
-## Rang = profondeur dans l arborescence. On prend le rang MAXIMAL sur tous les
-## chemins menant a un niveau : lvl_07 est atteint par lvl_05 ET lvl_06, il doit
-## se poser SOUS les deux, pas sous le premier trouve.
-func _compute_graph() -> void:
+func _compute() -> void:
+	_by_act.clear()
 	_nodes.clear()
-	_links.clear()
-	_order.clear()
+	_acts.clear()
 
-	var ids: Array = ContentDB.levels.keys()
-	ids.sort()
-	if ids.is_empty():
-		return
-
-	# Qui a un parent ? Ceux qui n en ont pas sont les racines.
-	var has_parent: Dictionary = {}
+	# ORDRE DE LECTURE DE L ACTE. Mesure sur 4.4.stable : `sort()` sur l `Array`
+	# NON TYPE rendu par `Dictionary.keys()` ne trie PAS des StringName de facon
+	# fiable — il a rendu [lvl_02..lvl_07, lvl_01], et l acte I affichait « La
+	# Tour des Sables » AU-DESSUS de « Les Marches du Temps » : le joueur lisait
+	# son voyage a l envers. Le resultat dependait en plus du contexte d appel,
+	# donc le defaut apparaissait a l ecran sans apparaitre au test.
+	# On compare explicitement les valeurs en String : plus rien a deviner.
+	var ids: Array[StringName] = []
+	for k in ContentDB.levels.keys():
+		ids.append(StringName(k))
+	ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
 	for id in ids:
 		var lv: LevelDef = ContentDB.levels[id]
-		for nxt in lv.next_levels:
-			if ContentDB.levels.has(nxt):
-				has_parent[nxt] = true
-				_links.append({"from": lv.id, "to": StringName(nxt)})
+		var a: int = lv.act
+		if not _by_act.has(a):
+			_by_act[a] = []
+		(_by_act[a] as Array).append(StringName(id))
+		_nodes[StringName(id)] = {
+			"level": lv,
+			"act": a,
+			"pos": Vector2.ZERO,
+			"stars": SaveData.objectives_done_count(lv),
+			"max_stars": lv.objectives.size(),
+			"enabled": SaveData.is_level_unlocked(id),
+		}
 
-	var rank: Dictionary = {}
-	for id in ids:
-		if not has_parent.has(id):
-			rank[id] = 0
+	# Les actes affichables sont ceux du contenu UNION ceux de l histoire : l acte
+	# 5 est ecrit mais n a pas encore de niveau, et le joueur doit voir qu il y a
+	# une suite. C est exactement la demande « un acte ... reste visible ».
+	var seen: Dictionary = {}
+	for a in _by_act.keys():
+		if int(a) > 0:
+			seen[int(a)] = true
+	for a in ACT_BACKDROPS.keys():
+		seen[int(a)] = true
+	_acts = []
+	for a in seen.keys():
+		_acts.append(int(a))
+	_acts.sort()
 
-	# Relaxation : on repasse tant qu un rang augmente. Le graphe a 7 sommets,
-	# le cout est nul, et cela tolere un ordre d ids quelconque. La borne de
-	# passes est la taille du graphe : elle empeche une boucle infinie si un
-	# jour un `next_levels` creait un cycle par erreur de contenu.
-	for _pass in ids.size() + 1:
-		var changed: bool = false
-		for link: Dictionary in _links:
-			if not rank.has(link["from"]):
-				continue
-			var candidate: int = int(rank[link["from"]]) + 1
-			if candidate > int(rank.get(link["to"], -1)):
-				rank[link["to"]] = candidate
-				changed = true
-		if not changed:
-			break
-	# Un niveau orphelin (ni racine ni cible) tomberait hors de la carte.
-	for id in ids:
-		if not rank.has(id):
-			rank[id] = 0
 
-	# Regroupement par rang pour repartir les colonnes.
-	var by_rank: Dictionary = {}
-	for id in ids:
-		var r: int = int(rank[id])
-		if not by_rank.has(r):
-			by_rank[r] = []
-		by_rank[r].append(id)
-
-	var ranks: Array = by_rank.keys()
-	ranks.sort()
-	for r: int in ranks:
-		var row: Array = by_rank[r]
-		row.sort()
-		for c in row.size():
-			var id: StringName = StringName(row[c])
-			var lv: LevelDef = ContentDB.levels[id]
-			# Colonnes centrees : un seul niveau tombe au milieu, deux freres
-			# s ecartent symetriquement de part et d autre.
-			var span: float = MAP_WIDTH / float(row.size() + 1)
-			var x: float = span * float(c + 1)
-			var y: float = MARGIN_TOP + float(r) * RANK_STEP
-			_nodes[id] = {
-				"level": lv,
-				"rank": r,
-				"col": c,
-				"pos": Vector2(x, y),
-				"stars": SaveData.objectives_done_count(lv),
-				"max_stars": lv.objectives.size(),
-				"enabled": SaveData.is_level_unlocked(id),
-				"cleared": SaveData.is_level_cleared(id),
-			}
-			_order.append(id)
+func _act_of_current_level() -> int:
+	var cur: StringName = SaveData.current_level()
+	if _nodes.has(cur):
+		return int(_nodes[cur]["act"])
+	return _acts[0] if not _acts.is_empty() else 1
 
 
 # --------------------------------------------------------------------------
-# Vue
+# Vue : la coquille (fond, titre, fleches) ne se reconstruit qu au rebuild ;
+# seuls les POINTS changent quand on tourne les pages.
 # --------------------------------------------------------------------------
 
-func _build_view() -> void:
-	if _canvas != null:
-		_canvas.queue_free()
+func _build_shell() -> void:
+	for c in get_children():
+		c.queue_free()
 	_buttons.clear()
 
-	_canvas = Control.new()
-	_canvas.custom_minimum_size = Vector2(MAP_WIDTH, _content_height())
-	_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_child(_canvas)
+	# 1) le fond de l acte, en pleine surface. COVERED : le fond est compose pour
+	# 1080x1920 et la zone de contenu du menu est plus courte ; l etirer libre
+	# ecraserait les arbres. On rogne plutot que de deformer.
+	_backdrop = TextureRect.new()
+	_backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_backdrop)
 
-	# Couche des traits SOUS les iles : un chemin passe derriere l ile, pas devant.
-	# Classe dediee et non `draw.connect` : Godot 4.4 refuse tout appel de dessin
-	# qui ne vient pas du `_draw()` du noeud lui-meme, y compris depuis un
-	# callable connecte au signal `draw` d un autre objet.
-	_link_layer = LinkLayer.new()
-	_link_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_link_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	(_link_layer as LinkLayer).segments = _link_segments()
-	_canvas.add_child(_link_layer)
+	# 2) le titre de l acte. Contour sombre (label_hud) : le fond est un decor
+	# PEINT dont on ne maitrise pas la couleur sous le texte — l acte I est un
+	# ciel clair, l acte III une salle sombre. C est le piege connu du projet.
+	_title = UiTheme.label_hud("", UiTheme.FONT_BODY, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	_title.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_title.offset_top = 24.0
+	_title.offset_bottom = 90.0
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_title)
 
-	var seen_acts: Dictionary = {}
-	for id in _order:
-		var data: Dictionary = _nodes[id]
-		var lv: LevelDef = data["level"]
-		# Bandeau d acte, pose une seule fois, au premier niveau de l acte.
-		if lv.act > 0 and not seen_acts.has(lv.act):
-			seen_acts[lv.act] = true
-			# Centre dans l espace LIBRE au-dessus de l ile : le bandeau ne doit
-			# jamais mordre sur le sol de l ile ni sur celle du rang precedent.
-			_add_act_banner(lv.act, data["pos"].y - ISLAND_H * 0.5 - ACT_BANNER_H - 24.0)
-		_add_island(id, data)
+	# 3) la couche des points, videe a chaque changement d acte.
+	_layer = Control.new()
+	_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_layer)
 
+	# 4) le message d acte vide, au centre du sol.
+	_empty_lbl = UiTheme.label_hud(EMPTY_NOTICE, UiTheme.FONT_BODY,
+		Color(0.88, 0.86, 0.92), HORIZONTAL_ALIGNMENT_CENTER, true)
+	_empty_lbl.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_empty_lbl.anchor_left = 0.12
+	_empty_lbl.anchor_right = 0.88
+	_empty_lbl.anchor_top = 0.45
+	_empty_lbl.anchor_bottom = 0.45
+	_empty_lbl.offset_left = 0.0
+	_empty_lbl.offset_right = 0.0
+	_empty_lbl.offset_bottom = 140.0
+	_empty_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_empty_lbl.visible = false
+	add_child(_empty_lbl)
 
-func _content_height() -> float:
-	var max_y: float = MARGIN_TOP
-	for id in _nodes:
-		max_y = maxf(max_y, _nodes[id]["pos"].y)
-	return max_y + ISLAND_H * 0.5 + 60.0
-
-
-## Bandeau d acte : un titre sur une bande de bois du pack, pour qu il se
-## detache du fond et se lise comme un separateur de chapitre et non comme une
-## legende flottante posee sur l ile.
-func _add_act_banner(act: int, y: float) -> void:
-	var holder := PanelContainer.new()
-	holder.add_theme_stylebox_override(&"panel", UiTheme.tex_box("wood", 40, 10.0))
-	holder.position = Vector2(MAP_WIDTH * 0.18, y)
-	holder.size = Vector2(MAP_WIDTH * 0.64, ACT_BANNER_H)
-	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.add_child(holder)
-
-	var l: Label = UiTheme.label(String(ACT_NAMES.get(act, "ACTE %d" % act)),
-		UiTheme.FONT_SMALL, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	holder.add_child(l)
+	# 5) les fleches, PAR-DESSUS tout le reste : ce sont elles qui doivent gagner
+	# le toucher sur les bords, jamais un point qui deborderait.
+	_prev_btn = _make_arrow("<", false)
+	_next_btn = _make_arrow(">", true)
 
 
-## Une ile = un Button (la cible tactile) qui porte le decor de tuiles, le nom
-## et les etoiles. Le Button est la racine pour que TOUTE la surface reponde au
-## doigt, y compris le sol de l ile.
-func _add_island(id: StringName, data: Dictionary) -> void:
+## Une fleche de bord. Ancrage sur le bord et centrage vertical : elle reste au
+## meme endroit quelle que soit la hauteur reelle de la zone de contenu.
+func _make_arrow(glyph: String, at_right: bool) -> Button:
+	var b := Button.new()
+	b.text = glyph
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(ARROW_W, ARROW_H)
+	b.add_theme_font_size_override(&"font_size", 64)
+	# Bois du pack, comme les autres commandes de navigation du menu : une fleche
+	# sans fond disparaitrait sur la bande decoree de certains actes.
+	b.add_theme_stylebox_override(&"normal", UiTheme.tex_box("wood", 40, 6.0))
+	b.add_theme_stylebox_override(&"hover", UiTheme.tex_box("wood", 40, 6.0, Color(1.15, 1.15, 1.15)))
+	b.add_theme_stylebox_override(&"pressed", UiTheme.tex_box("wood", 40, 6.0, Color(0.8, 0.8, 0.8)))
+	b.add_theme_stylebox_override(&"disabled", UiTheme.tex_box("wood", 40, 6.0, Color(0.5, 0.5, 0.55, 0.6)))
+	b.add_theme_color_override(&"font_color", UiTheme.GOLD)
+	b.add_theme_color_override(&"font_disabled_color", Color(0.6, 0.58, 0.55, 0.7))
+	b.set_anchors_preset(Control.PRESET_CENTER_RIGHT if at_right else Control.PRESET_CENTER_LEFT)
+	b.offset_top = -ARROW_H * 0.5
+	b.offset_bottom = ARROW_H * 0.5
+	if at_right:
+		b.offset_left = -ARROW_W - 8.0
+		b.offset_right = -8.0
+	else:
+		b.offset_left = 8.0
+		b.offset_right = ARROW_W + 8.0
+	b.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		if at_right: go_next() else: go_previous())
+	add_child(b)
+	return b
+
+
+# --------------------------------------------------------------------------
+# Navigation entre actes
+# --------------------------------------------------------------------------
+
+func acts() -> Array[int]:
+	return _acts.duplicate()
+
+
+func current_act() -> int:
+	return _act
+
+
+func act_title(act: int) -> String:
+	return String(ACT_NAMES.get(act, "ACTE %d" % act))
+
+
+func empty_notice() -> String:
+	return EMPTY_NOTICE
+
+
+func levels_in_act(act: int) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id in _by_act.get(act, []):
+		out.append(StringName(id))
+	return out
+
+
+## Un acte est « ouvert » des qu UN de ses niveaux est jouable. Ferme, il reste
+## affiche et atteignable : le joueur doit voir qu il y a une suite.
+func act_is_open(act: int) -> bool:
+	for id in levels_in_act(act):
+		if bool(_nodes[id]["enabled"]):
+			return true
+	return false
+
+
+func can_go_previous() -> bool:
+	return _acts.find(_act) > 0
+
+
+func can_go_next() -> bool:
+	var i: int = _acts.find(_act)
+	return i >= 0 and i < _acts.size() - 1
+
+
+## Les bornes sont INERTES plutot que bouclantes : un joueur qui appuie une fois
+## de trop a droite ne doit pas se retrouver a l acte I sans avoir rien compris.
+func go_next() -> void:
+	if can_go_next():
+		show_act(_acts[_acts.find(_act) + 1])
+
+
+func go_previous() -> void:
+	if can_go_previous():
+		show_act(_acts[_acts.find(_act) - 1])
+
+
+func show_act(act: int) -> void:
+	_act = act
+	if _backdrop == null:
+		return
+	_backdrop.texture = SheetLib.texture(BACKDROP_DIR + backdrop_for_act(act) + ".png")
+	_title.text = act_title(act)
+	if _prev_btn != null:
+		_prev_btn.disabled = not can_go_previous()
+		_next_btn.disabled = not can_go_next()
+	_build_dots()
+
+
+## Le fond de l acte se LIT dans les niveaux de cet acte, pas dans une table de
+## l UI : combat et carte montrent alors forcement le meme lieu. La table
+## `ACT_BACKDROPS` n est qu un repli pour un acte encore sans niveau.
+func backdrop_for_act(act: int) -> String:
+	for id in levels_in_act(act):
+		var lv: LevelDef = _nodes[id]["level"]
+		if lv.backdrop != "":
+			return lv.backdrop
+	return String(ACT_BACKDROPS.get(act, FALLBACK_BACKDROP))
+
+
+# --------------------------------------------------------------------------
+# Les points
+# --------------------------------------------------------------------------
+
+## Place les points de l acte courant sur le sol du fond. Le calcul est separe de
+## la construction pour qu un simple redimensionnement les replace sans
+## reconstruire les boutons (et donc sans recasser les connexions).
+func _layout_dots() -> void:
+	var ids: Array[StringName] = levels_in_act(_act)
+	if ids.is_empty():
+		return
+	var w: float = maxf(size.x, 1.0)
+	var h: float = maxf(size.y, 1.0)
+	# Repartition sur la hauteur du sol : le premier niveau de l acte en haut, le
+	# dernier en bas — on lit l acte dans le sens de la marche, du fond vers soi.
+	var top: float = h * GROUND_TOP
+	var bottom: float = h * GROUND_BOTTOM
+	var step: float = (bottom - top) / float(maxi(ids.size(), 1))
+	# Zigzag horizontal : deux niveaux d affilee au meme x donneraient une colonne,
+	# ou le nom du second passerait sous le point du premier. L amplitude est
+	# bornee par SIDE_MARGIN pour ne jamais passer sous une fleche.
+	#
+	# UN SEUL niveau dans l acte (cas de l acte IV) : pas de zigzag du tout. Le
+	# decaler le collait contre une fleche, ce qui etait pire que la colonne que
+	# le zigzag cherche a eviter. Vu sur la capture `map_acte4.png`.
+	var amp: float = 0.0
+	if ids.size() > 1:
+		amp = minf(w * 0.16, maxf((w - 2.0 * SIDE_MARGIN - DOT_HIT_W) * 0.5, 0.0))
+	for i in ids.size():
+		var id: StringName = ids[i]
+		var y: float = top + step * (float(i) + 0.5)
+		var x: float = w * 0.5 + (amp if i % 2 == 1 else -amp)
+		var pos := Vector2(x, y)
+		_nodes[id]["pos"] = pos
+		var b: Button = _buttons.get(id)
+		if b != null:
+			b.position = pos - Vector2(DOT_HIT_W, DOT_HIT_H) * 0.5
+
+
+func _build_dots() -> void:
+	if _layer == null:
+		return
+	for c in _layer.get_children():
+		_layer.remove_child(c)
+		c.queue_free()
+	_buttons.clear()
+
+	var ids: Array[StringName] = levels_in_act(_act)
+	_empty_lbl.visible = ids.is_empty()
+	for id in ids:
+		_add_dot(id)
+	_layout_dots()
+
+
+## Un point = un Button transparent de 420x190 qui porte la pastille, le nom et
+## les etoiles. Le bouton est la racine pour que TOUTE l etiquette reponde au
+## doigt, pas seulement la pastille de 96 px.
+func _add_dot(id: StringName) -> void:
+	var data: Dictionary = _nodes[id]
 	var lv: LevelDef = data["level"]
-	var enabled: bool = data["enabled"]
+	var enabled: bool = bool(data["enabled"])
 
 	var b := Button.new()
 	b.flat = true
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(ISLAND_W, ISLAND_H)
-	b.size = Vector2(ISLAND_W, ISLAND_H)
-	b.position = data["pos"] - Vector2(ISLAND_W, ISLAND_H) * 0.5
+	b.size = Vector2(DOT_HIT_W, DOT_HIT_H)
+	b.custom_minimum_size = b.size
 	b.disabled = not enabled
 	# Un bouton desactive ne montre pas d infobulle ; on met la raison dans le
 	# nom accessible, ce qui sert aussi au debogage des captures.
 	b.tooltip_text = lv.display_name if enabled else "Verrouille"
-	_canvas.add_child(b)
+	_layer.add_child(b)
 	_buttons[id] = b
 
-	# Sol de l ile : les tuiles du terrain du niveau, donc l ile ressemble a ce
-	# qu on va reellement jouer (grass = acte I et final, sand = le reste).
-	# Elle occupe TOUTE la surface du bouton : le contour rocheux du tileset est
-	# ce qui donne la silhouette d ile volante, il ne doit pas etre recouvert.
-	var ground: Control = _build_ground(lv.terrain, enabled)
-	ground.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(ground)
-
-	# Cartouche papier du nom, pose sur le BAS de l ile : le haut reste de l herbe
-	# visible, sinon l ile disparait sous son etiquette et ne se lit plus.
-	var plate := PanelContainer.new()
-	UiTheme.style_paper(plate, Color.WHITE if enabled else Color(0.80, 0.78, 0.82))
-	plate.position = Vector2(10.0, ISLAND_H - 122.0)
-	plate.size = Vector2(ISLAND_W - 20.0, 116.0)
-	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(plate)
-
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override(&"separation", 2)
+	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.add_theme_constant_override(&"separation", 4)
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	plate.add_child(vb)
+	b.add_child(vb)
 
-	# Texte SOMBRE sur le papier clair, y compris verrouille : un gris pale sur
-	# du papier ne se lit pas, et le joueur doit pouvoir lire ou il va.
-	var name_text: String = lv.display_name if enabled else "? ? ?"
-	var name_lbl: Label = UiTheme.label(name_text, 22,
-		UiTheme.TEXT_DARK if enabled else Color(0.44, 0.34, 0.28), HORIZONTAL_ALIGNMENT_CENTER)
-	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Deux lignes au maximum : « Forges du Mauvais Temps » tient en deux lignes,
-	# une troisieme chasserait les etoiles hors du papier.
-	name_lbl.max_lines_visible = 2
-	name_lbl.custom_minimum_size = Vector2(0, 58)
-	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	vb.add_child(name_lbl)
+	# LA PASTILLE. Jaune quand jouable, grise sinon : la demande litterale du
+	# testeur. Un Panel rond plutot qu une icone du pack : aucune icone ronde
+	# unie n existe dans les feuilles, et un point est une forme, pas un dessin.
+	var dot_row := HBoxContainer.new()
+	dot_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	dot_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(dot_row)
+	var dot := Panel.new()
+	dot.custom_minimum_size = Vector2(DOT_SIZE, DOT_SIZE)
+	# Bord sombre epais : sur le ciel clair de l acte I comme sur les dalles
+	# sombres de l acte III, c est le contour qui detache la pastille du fond.
+	dot.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
+		DOT_OPEN if enabled else DOT_LOCKED, int(DOT_SIZE * 0.5), 0.0,
+		Color(0.10, 0.07, 0.05, 0.95), 7))
+	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dot_row.add_child(dot)
 
-	# Etoiles : une par objectif, en icones du pack (jamais du texte ASCII, qui
-	# ne se lit pas comme une note). Pleines = acquises, ternies = restantes.
-	var stars: int = int(data["stars"])
-	var max_stars: int = int(data["max_stars"])
-	var star_row := HBoxContainer.new()
-	star_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	star_row.add_theme_constant_override(&"separation", 6)
-	star_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.add_child(star_row)
-	for i in max_stars:
-		var s: TextureRect = UiTheme.icon(STAR_ICON, 34.0)
-		# Acquise : l or du cahier des charges. Restante : la meme icone eteinte,
-		# pour que le joueur compte les etoiles qui lui manquent d un coup d oeil.
-		s.modulate = UiTheme.GOLD if i < stars else Color(0.42, 0.36, 0.30, 0.55)
-		star_row.add_child(s)
-
-	# Le niveau ou en est le joueur porte un liseré : sur une carte de 7 iles il
+	# Le niveau ou en est le joueur porte un halo : sur un acte de 3 points il
 	# faut un repere « tu es ici », sinon on cherche.
 	if enabled and id == SaveData.current_level():
 		var here := Panel.new()
-		here.add_theme_stylebox_override(&"panel",
-			UiTheme.flat_box(Color.TRANSPARENT, 14, 0.0, UiTheme.GOLD, 5))
+		here.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
+			Color.TRANSPARENT, int(DOT_SIZE * 0.62), 0.0, Color(1.0, 0.95, 0.6, 0.85), 5))
 		here.set_anchors_preset(Control.PRESET_FULL_RECT)
+		here.offset_left = -14.0
+		here.offset_top = -14.0
+		here.offset_right = 14.0
+		here.offset_bottom = 14.0
 		here.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_child(here)
+		dot.add_child(here)
+
+	# LE NOM, en contour sombre : le fond est peint et sa couleur sous le texte
+	# n est pas maitrisee. Un texte clair sans contour disparait sur le ciel de
+	# l acte I — c est le piege deja paye sur le HUD.
+	#
+	# Le nom est ecrit MEME VERROUILLE, juste plus terne. Le testeur demande
+	# « on voit les noms des etapes » : masquer en « ? ? ? » repondrait a la
+	# question inverse, et une carte dont les etapes n ont pas de nom ne donne
+	# plus envie d y aller.
+	var name_lbl: Label = UiTheme.label_hud(lv.display_name, UiTheme.FONT_SMALL,
+		Color(1.0, 0.97, 0.90) if enabled else Color(0.74, 0.74, 0.78),
+		HORIZONTAL_ALIGNMENT_CENTER)
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(name_lbl)
+
+	# LES ETOILES : une par objectif, en icones du pack (jamais du texte ASCII,
+	# qui ne se lit pas comme une note). Pleines = acquises, ternies = restantes.
+	var stars: int = int(data["stars"])
+	var star_row := HBoxContainer.new()
+	star_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	star_row.add_theme_constant_override(&"separation", 8)
+	star_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vb.add_child(star_row)
+	for i in int(data["max_stars"]):
+		var acquise: bool = i < stars
+		# MESURE, pas impression : sur la capture de l acte I, une pastille
+		# acquise rendait rgb(171,148,54) et une vide rgb(149,152,78). Un ecart
+		# aussi faible ne se lit pas sur de l herbe, et la teinte grise prenait
+		# la couleur du fond. Les deux etats se distinguent donc par le
+		# CONTRASTE et la TAILLE, pas par la seule teinte : la pastille acquise
+		# est pleine, doree et plus grande ; la vide est un creux sombre et
+		# reduit. Un joueur daltonien compte alors ses etoiles a la forme.
+		var s: TextureRect = UiTheme.icon(STAR_ICON, 40.0 if acquise else 30.0)
+		if acquise:
+			s.modulate = Color(1.0, 0.88, 0.35)
+		else:
+			# Sombre et translucide : un CREUX. Il reste visible sur les fonds
+			# clairs comme sur les fonds sombres, sans jamais passer pour de l or.
+			s.modulate = Color(0.22, 0.20, 0.18, 0.55)
+		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		star_row.add_child(s)
 
 	if enabled:
 		var idx: StringName = id
 		b.pressed.connect(func() -> void:
 			AudioBus.play_sfx(&"ui_tap")
 			level_pressed.emit(idx))
-
-
-## Sol de l ile, decoupe dans le tileset du terrain. On reprend le bloc 3x3 du
-## tileset comme `BattleBackdrop` : coins, bords, centre. Un niveau verrouille
-## est assombri, pas cache : le joueur doit voir ou il va.
-func _build_ground(terrain: String, enabled: bool) -> Control:
-	var holder := Control.new()
-	holder.custom_minimum_size = Vector2(ISLAND_W, ISLAND_H)
-	holder.size = Vector2(ISLAND_W, ISLAND_H)
-	var tex: Texture2D = SheetLib.texture(TERRAIN + "tilemap_grass.png")
-	if tex == null:
-		return holder
-	# Le tileset est un bloc 4x4 de tuiles de 64 avec un CONTOUR ROCHEUX complet
-	# (colonnes 0-3 : bord clair, colonnes 5-8 : bord de pierre). C est ce contour
-	# qui fait l ile volante ; on prend donc les tuiles de bord sur tout le tour
-	# et les tuiles pleines au centre. Les deux feuilles du pack sont identiques
-	# en herbe : la variante de bord sert a distinguer les terrains.
-	var col0: int = SAND_BLOCK_X if terrain == "sand" else GRASS_BLOCK_X
-	var cols: int = 5
-	var rows: int = 4
-	var tile: int = 64
-	# Tuiles presque carrees : le contour rocheux du tileset est dessine pour une
-	# case carree. L etirer en 110x80 ecrase les rochers et l ile redevient un
-	# rectangle — c est ce que montrait la premiere capture.
-	var cw: float = ISLAND_W / float(cols)
-	var ch: float = ISLAND_H / float(rows)
-	for r in rows:
-		for c in cols:
-			# Colonne / ligne de la tuile DANS le bloc 4x4 : bords aux extremites,
-			# interieur repete au milieu.
-			var tx: int = 1
-			var ty: int = 1
-			if c == 0: tx = 0
-			elif c == cols - 1: tx = 3
-			if r == 0: ty = 0
-			elif r == rows - 1: ty = 3
-			var at := AtlasTexture.new()
-			at.atlas = tex
-			at.region = Rect2((col0 + tx) * tile, ty * tile, tile, tile)
-			var tr := TextureRect.new()
-			tr.texture = at
-			tr.position = Vector2(float(c) * cw, float(r) * ch)
-			tr.size = Vector2(cw, ch)
-			tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			tr.stretch_mode = TextureRect.STRETCH_SCALE
-			tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			# Verrouille : assombri et desature par modulation. L ile reste
-			# VISIBLE — c est une carte, le joueur doit voir la suite du voyage.
-			tr.modulate = Color.WHITE if enabled else Color(0.42, 0.44, 0.50)
-			holder.add_child(tr)
-	return holder
-
-
-## Les chemins de l archipel, convertis en segments prets a dessiner. Un trait
-## clair quand la suite est ouverte, sombre quand elle ne l est pas : le joueur
-## lit son avancement sans compter les iles.
-func _link_segments() -> Array:
-	var out: Array = []
-	for link: Dictionary in _links:
-		if not _nodes.has(link["from"]) or not _nodes.has(link["to"]):
-			continue
-		var a: Vector2 = _nodes[link["from"]]["pos"] + Vector2(0.0, ISLAND_H * 0.42)
-		var b: Vector2 = _nodes[link["to"]]["pos"] - Vector2(0.0, ISLAND_H * 0.42)
-		var open: bool = bool(_nodes[link["to"]]["enabled"])
-		var col: Color = UiTheme.GOLD if open else Color(0.35, 0.30, 0.28, 0.75)
-		# Coude a mi-hauteur : une fourche se lit mieux en angles droits qu en
-		# diagonale, surtout quand deux traits partent du meme point.
-		var mid_y: float = (a.y + b.y) * 0.5
-		out.append({"a": a, "b": Vector2(a.x, mid_y), "color": col})
-		out.append({"a": Vector2(a.x, mid_y), "b": Vector2(b.x, mid_y), "color": col})
-		out.append({"a": Vector2(b.x, mid_y), "b": b, "color": col})
-	return out
-
-
-## Couche de traits. Elle ne calcule rien : la carte lui donne des segments deja
-## resolus, elle se contente de les tracer dans son propre `_draw()`.
-class LinkLayer extends Control:
-	const WIDTH: float = 8.0
-	var segments: Array = []
-
-	func _draw() -> void:
-		for s: Dictionary in segments:
-			draw_line(s["a"], s["b"], s["color"], WIDTH)
 
 
 # --------------------------------------------------------------------------
@@ -426,12 +539,20 @@ func label_for(level_id: StringName) -> String:
 	return (_nodes[level_id]["level"] as LevelDef).display_name
 
 
-func rank_of(level_id: StringName) -> int:
-	return int(_nodes.get(level_id, {}).get("rank", -1))
-
-
+## Position du point. Pour un niveau qui n est pas sur l acte affiche, on calcule
+## la position qu il AURAIT : les tests verifient le placement de tous les actes
+## sans avoir a tourner les pages, et le resultat est le meme.
 func position_of(level_id: StringName) -> Vector2:
-	return _nodes.get(level_id, {}).get("pos", Vector2.ZERO)
+	if not _nodes.has(level_id):
+		return Vector2.ZERO
+	var pos: Vector2 = _nodes[level_id]["pos"]
+	if pos != Vector2.ZERO:
+		return pos
+	var memo: int = _act
+	_act = int(_nodes[level_id]["act"])
+	_layout_dots()
+	_act = memo
+	return _nodes[level_id]["pos"]
 
 
 func stars_for(level_id: StringName) -> int:
@@ -446,29 +567,8 @@ func is_enabled(level_id: StringName) -> bool:
 	return bool(_nodes.get(level_id, {}).get("enabled", false))
 
 
-func link_count() -> int:
-	return _links.size()
-
-
-func has_link(from_id: StringName, to_id: StringName) -> bool:
-	for link: Dictionary in _links:
-		if link["from"] == from_id and link["to"] == to_id:
-			return true
-	return false
-
-
-## Fait defiler la carte jusqu a une ile. Le joueur rouvre la campagne sur le
-## niveau ou il en est, pas en haut d une carte de 1800 px.
-##
-## Le defilement est REPORTE d une frame : appele depuis `refresh()`, la
-## ScrollContainer n a pas encore sa taille finale (`size.y` vaut 0), et le
-## calcul de centrage renvoyait un decalage absurde — c est ce qui coupait le
-## premier acte en haut de la capture.
+## Amene le joueur sur l acte d un niveau. Remplace l ancien `focus_level`, qui
+## faisait defiler une carte verticale qui n existe plus.
 func focus_level(level_id: StringName) -> void:
-	if not _nodes.has(level_id) or not is_inside_tree():
-		return
-	var target_y: float = _nodes[level_id]["pos"].y
-	await get_tree().process_frame
-	if not is_instance_valid(self) or not is_inside_tree():
-		return
-	scroll_vertical = int(maxf(0.0, target_y - size.y * 0.5))
+	if _nodes.has(level_id):
+		show_act(int(_nodes[level_id]["act"]))

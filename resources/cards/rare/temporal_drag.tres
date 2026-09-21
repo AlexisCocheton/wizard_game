@@ -24,5 +24,6 @@ effects = Array[ExtResource("1_rnomm")]([SubResource("Resource_rnomm")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"clock_spiral"
 sfx_key = &"zap_long"

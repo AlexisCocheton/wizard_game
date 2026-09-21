@@ -26,5 +26,6 @@ effects = Array[ExtResource("1_x5acs")]([SubResource("Resource_x5acs")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"fire_bloom"
 sfx_key = &"blast_long"

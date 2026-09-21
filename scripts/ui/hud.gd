@@ -28,6 +28,11 @@ var game: GameController = null
 @onready var _cast_bar: TextureProgressBar = %CastBar
 @onready var _draw_label: Label = %DrawTimer
 @onready var _aim: Control = %AimOverlay
+## Rail des icones de passifs, pose le long de la barre de vitesse.
+## Cree par code : les passifs equipes changent en cours de partie, une
+## scene figee ne pourrait pas les suivre.
+var _passive_rail: Control = null
+var _passive_icons: Array[Control] = []
 
 ## Carte en cours de glissement (null si aucun geste en cours).
 var _dragging: SpellCard = null
@@ -60,6 +65,12 @@ func _ready() -> void:
 		if _choice != null:
 			_choice.visible = false)
 	_build_choice_overlay()
+	_build_passive_rail()
+	# Le rail se reconstruit quand la barre de passifs change (gain, echange).
+	if not RunState.passives_changed.is_connected(_build_passive_rail):
+		RunState.passives_changed.connect(_build_passive_rail)
+	if not RunState.passive_swap_needed.is_connected(_on_passive_swap_needed):
+		RunState.passive_swap_needed.connect(_on_passive_swap_needed)
 	_refresh_all()
 
 
@@ -139,6 +150,178 @@ func _refresh_gauges() -> void:
 
 	if SpeedGauge.is_dying:
 		_spell_bar.modulate = Color(1, 1, 1, 0.4 + 0.6 * SpeedGauge.death_gauge)
+
+	_refresh_passive_rail()
+
+
+# --- Icones des passifs, le long de la barre de vitesse ---
+#
+# Demande du testeur : "en combat, afficher l icone des passifs a cote de la
+# barre de speed, AU NIVEAU CORRESPONDANT D ACTIVATION du passif."
+#
+# La barre de vitesse (EnemyBar) est un TextureProgressBar tourne de -90 deg :
+# son origine est en bas et elle monte. On ne peut donc pas y ranger des enfants
+# sans qu ils tournent avec elle. Le rail est un Control SOEUR, pose a cote, qui
+# recalcule les memes coordonnees en droit fil.
+#
+# Chaque icone est placee a la HAUTEUR de son seuil : le joueur lit d un coup
+# d oeil ce qui va s allumer s il tient encore un peu, et ce qu il vient de
+# perdre en se faisant toucher. Grise sous le seuil, allumee au-dessus.
+
+## Geometrie de la barre de vitesse, relevee sur HUD.tscn. Le rail doit suivre
+## la barre a l identique ; une valeur en dur ici et une autre dans la scene
+## divergeraient au premier deplacement.
+const RAIL_BAS: float = 1484.0      ## y de 100 % (bas de la barre)
+const RAIL_HAUT: float = 234.0      ## y du maximum (haut de la barre)
+const RAIL_X: float = 104.0         ## a droite de la barre, hors de son epaisseur
+const ICONE: float = 54.0
+
+
+func _build_passive_rail() -> void:
+	if _passive_rail == null:
+		_passive_rail = Control.new()
+		_passive_rail.name = "PassiveRail"
+		# IGNORE : le rail couvre la zone ou commencent les glissements de carte.
+		# Un Control en STOP y avalerait le geste (piege du Button, en memoire).
+		_passive_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_passive_rail.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_root.add_child(_passive_rail)
+	for c in _passive_icons:
+		if is_instance_valid(c):
+			c.queue_free()
+	_passive_icons.clear()
+
+	var etendue: float = float(GameConfig.SPEED_MAX_PERCENT - 100)
+	for p: SpellCard in RunState.equipped_passives:
+		if p == null:
+			continue
+		var t: float = clampf(float(p.speed_threshold - 100) / maxf(etendue, 1.0), 0.0, 1.0)
+		# Marge d une demi-pastille en haut ET en bas : un passif a 110 % tombait
+		# pile sur le bord bas de la barre, derriere le mage et la main, donc
+		# invisible — alors que c est justement le passif le plus souvent allume.
+		var y: float = clampf(RAIL_BAS - t * (RAIL_BAS - RAIL_HAUT),
+			RAIL_HAUT + ICONE * 0.5, RAIL_BAS - ICONE * 0.7)
+		var pastille := Panel.new()
+		# IGNORE par defaut : hors echange, le rail ne doit rien avaler du geste de
+		# glisser-deposer qui commence souvent a gauche de l ecran. Il ne redevient
+		# cliquable que pendant un echange (voir _on_passive_swap_needed).
+		pastille.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pastille.custom_minimum_size = Vector2(ICONE, ICONE)
+		# position AVANT add_child : _ready() part des l ajout.
+		pastille.position = Vector2(RAIL_X, y - ICONE * 0.5)
+		pastille.size = Vector2(ICONE, ICONE)
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.08, 0.07, 0.11, 0.92)
+		sb.set_border_width_all(4)
+		sb.border_color = UiTheme.rarity_color(p.rarity)
+		sb.set_corner_radius_all(int(ICONE * 0.5))
+		pastille.add_theme_stylebox_override(&"panel", sb)
+
+		# L initiale suffit a distinguer trois passifs et tient dans 54 px ; un
+		# nom entier y serait illisible et une icone d asset n existe pas encore.
+		var lettre := Label.new()
+		lettre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		lettre.text = p.display_name.substr(0, 1).to_upper()
+		lettre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lettre.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lettre.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lettre.add_theme_font_override(&"font", UiTheme.font())
+		lettre.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+		lettre.add_theme_color_override(&"font_color", UiTheme.rarity_color(p.rarity))
+		pastille.add_child(lettre)
+
+		# Le SEUIL en clair sous la pastille : sans le nombre, le joueur devine la
+		# hauteur sans jamais savoir combien il lui manque.
+		var seuil := Label.new()
+		seuil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		seuil.text = "%d%%" % p.speed_threshold
+		seuil.position = Vector2(RAIL_X + ICONE + 6.0, y - 16.0)
+		seuil.add_theme_font_override(&"font", UiTheme.font())
+		# 22 px etait sous le plancher du theme : le seuil, qui est la seule
+		# information CHIFFREE du rail, etait le texte le moins lisible de l ecran.
+		seuil.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+		seuil.add_theme_color_override(&"font_outline_color", Color(0.04, 0.03, 0.06, 0.95))
+		seuil.add_theme_constant_override(&"outline_size", 8)
+		pastille.set_meta(&"seuil_label", seuil)
+		pastille.set_meta(&"carte", p)
+
+		_passive_rail.add_child(pastille)
+		_passive_rail.add_child(seuil)
+		_passive_icons.append(pastille)
+
+
+func _refresh_passive_rail() -> void:
+	for pastille in _passive_icons:
+		if not is_instance_valid(pastille):
+			continue
+		var p: SpellCard = pastille.get_meta(&"carte") as SpellCard
+		if p == null:
+			continue
+		var allume: bool = SpeedGauge.speed_percent >= p.speed_threshold
+		# Grise tant que la vitesse n atteint pas le seuil, pleine au-dessus. Le
+		# changement doit etre FRANC : c est la seule facon de voir, au moment ou
+		# on encaisse un coup, ce que la chute de vitesse vient d eteindre.
+		pastille.modulate = Color.WHITE if allume else Color(0.55, 0.55, 0.62, 0.8)
+		var l: Label = pastille.get_meta(&"seuil_label") as Label
+		if l != null and is_instance_valid(l):
+			l.modulate = pastille.modulate
+		# Pendant un echange, la pastille designee clignote pour dire "touche-moi".
+		if RunState.pending_passive != null:
+			pastille.modulate = Color(1, 1, 1, 0.65 + 0.35 * sin(Time.get_ticks_msec() * 0.006))
+
+
+## Un quatrieme passif est gagne alors que les trois emplacements sont pleins.
+## "On doit selectionner un des trois passifs a changer" : le choix se fait SUR
+## LE RAIL lui-meme, la ou les trois passifs sont deja affiches a leur hauteur.
+## Un panneau separe aurait oblige le joueur a retrouver, dans une liste, les
+## memes trois icones qu il a sous les yeux.
+func _on_passive_swap_needed(card: SpellCard) -> void:
+	if card == null:
+		return
+	_build_passive_rail()
+	for i in _passive_icons.size():
+		var pastille: Control = _passive_icons[i]
+		if not is_instance_valid(pastille):
+			continue
+		# Seules ces trois pastilles redeviennent cliquables, et seulement le temps
+		# de l echange : ensuite le rail redevient transparent au doigt.
+		pastille.mouse_filter = Control.MOUSE_FILTER_STOP
+		var slot: int = i
+		pastille.gui_input.connect(func(ev: InputEvent) -> void:
+			if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
+				_resolve_passive_swap(slot))
+	_passive_prompt(card)
+
+
+## Bandeau qui annonce le passif gagne et ce qu il attend du joueur. Sans lui,
+## trois pastilles qui clignotent ne veulent rien dire.
+func _passive_prompt(card: SpellCard) -> void:
+	if _passive_swap_label != null and is_instance_valid(_passive_swap_label):
+		_passive_swap_label.queue_free()
+	var l := UiTheme.label_hud(
+		"%s\nTouche le pouvoir a remplacer" % card.display_name,
+		UiTheme.FONT_BODY, UiTheme.rarity_color(card.rarity))
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.position = Vector2(180.0, 1180.0)
+	l.size = Vector2(760.0, 140.0)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(l)
+	_passive_swap_label = l
+
+
+var _passive_swap_label: Label = null
+
+
+func _resolve_passive_swap(slot: int) -> void:
+	if RunState.pending_passive == null:
+		return
+	AudioBus.play_sfx(&"card_pick")
+	RunState.resolve_pending_passive(slot)
+	if _passive_swap_label != null and is_instance_valid(_passive_swap_label):
+		_passive_swap_label.queue_free()
+		_passive_swap_label = null
+	# _build_passive_rail() est rappele par passives_changed : les pastilles
+	# reviennent en MOUSE_FILTER_IGNORE et cessent de clignoter.
 
 
 func _fmt(v: float) -> String:
@@ -388,10 +571,10 @@ func _show_pause_panel() -> void:
 
 	# Les passifs ensuite : information qu on ne peut lire nulle part ailleurs.
 	box.add_child(UiTheme.label("POUVOIRS ACTIFS", UiTheme.FONT_BODY, UiTheme.GOLD))
-	if RunState.active_passives.is_empty():
+	if RunState.equipped_passives.is_empty():
 		box.add_child(UiTheme.label("Aucun pour l instant.", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
 	else:
-		for p: SpellCard in RunState.active_passives:
+		for p: SpellCard in RunState.equipped_passives:
 			var ligne := HBoxContainer.new()
 			ligne.add_theme_constant_override(&"separation", 12)
 			var ico: TextureRect = CardIcons.make_rect(p, 64.0)
@@ -399,11 +582,13 @@ func _show_pause_panel() -> void:
 				ligne.add_child(ico)
 			var col := VBoxContainer.new()
 			col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			# 22/17 px etait illisible sur la capture : le nom du passif ne se
-			# distinguait pas de sa description.
-			col.add_child(UiTheme.label(p.display_name, 28, UiTheme.TEXT_DARK,
+			# Tailles prises dans le THEME et jamais ecrites en dur : une taille
+			# litterale ne profite d aucun reglage global, et ce panneau s etait
+			# deja detache une fois de cette facon (piege consigne en memoire).
+			col.add_child(UiTheme.label(p.display_name, UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
 				HORIZONTAL_ALIGNMENT_LEFT, false))
-			col.add_child(UiTheme.label(p.description, 22, Color(0.40, 0.31, 0.22)))
+			col.add_child(UiTheme.label(p.description, UiTheme.FONT_SMALL,
+				Color(0.40, 0.31, 0.22)))
 			ligne.add_child(col)
 			box.add_child(ligne)
 
@@ -427,8 +612,8 @@ func _show_pause_panel() -> void:
 	for nom in noms:
 		# `wrap = false` : sans cela le nom se replie LETTRE PAR LETTRE dans la
 		# colonne etroite que le conteneur lui accorde.
-		var tag := UiTheme.label("%s x%d" % [nom, restant[nom]], 22, UiTheme.TEXT_DARK,
-			HORIZONTAL_ALIGNMENT_LEFT, false)
+		var tag := UiTheme.label("%s x%d" % [nom, restant[nom]], UiTheme.FONT_SMALL,
+			UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, false)
 		wrap.add_child(tag)
 	box.add_child(wrap)
 
@@ -501,18 +686,19 @@ func _build_pause_hand(box: VBoxContainer) -> void:
 		# que le conteneur accorde, UiTheme.label replierait LETTRE PAR LETTRE.
 		var entete := HBoxContainer.new()
 		entete.add_theme_constant_override(&"separation", 14)
-		var nom := UiTheme.label(c.display_name, 28, UiTheme.TEXT_DARK,
+		var nom := UiTheme.label(c.display_name, UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
 			HORIZONTAL_ALIGNMENT_LEFT, false)
 		nom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		entete.add_child(nom)
-		entete.add_child(UiTheme.label("%ss" % _fmt(c.base_cast_time), 26,
+		entete.add_child(UiTheme.label("%ss" % _fmt(c.base_cast_time), UiTheme.FONT_SMALL,
 			UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_RIGHT, false))
 		col.add_child(entete)
 
 		# La description, elle, DOIT se replier : c est une phrase.
-		col.add_child(UiTheme.label(c.description, 22, Color(0.36, 0.28, 0.20)))
+		col.add_child(UiTheme.label(c.description, UiTheme.FONT_SMALL,
+			Color(0.36, 0.28, 0.20)))
 		if c.targeting != GameEnums.Targeting.NONE:
-			col.add_child(UiTheme.label(_targeting_hint(c.targeting), 20,
+			col.add_child(UiTheme.label(_targeting_hint(c.targeting), UiTheme.FONT_SMALL,
 				Color(0.20, 0.38, 0.70), HORIZONTAL_ALIGNMENT_LEFT, false))
 		ligne.add_child(col)
 		box.add_child(ligne)

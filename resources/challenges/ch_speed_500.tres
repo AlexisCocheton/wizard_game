@@ -7,6 +7,7 @@ script = ExtResource("1_iq7aj")
 id = &"ch_speed_500"
 display_name = "Course du temps"
 description = "Atteindre 500 pourcent de vitesse dans une partie."
+rarity = 1
 xp_reward = 500
 track_key = &"max_speed_reached"
 target = 500

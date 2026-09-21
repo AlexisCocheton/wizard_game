@@ -65,6 +65,7 @@ func run() -> void:
 	_test_le_planogo_tire_une_boule_de_poison_destructible()
 	_test_l_oiseau_mirage_ne_tourne_plus()
 	_test_les_monstres_sont_un_peu_plus_grands()
+	_test_la_resistance_change_les_degats_recus()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -454,3 +455,43 @@ func _test_les_monstres_sont_un_peu_plus_grands() -> void:
 	var e: Enemy = _bf.spawn_enemy(_def("m", 10.0), 500.0, 1.0, Vector2(500.0, 600.0))
 	feq(e.radius(), 32.0, "le rayon logique (contact, gobage) ne change pas")
 	feq(e.visual_radius(), 32.0 * Enemy.VISUAL_FACTOR, "seule la taille a l ecran grandit")
+
+
+## RESISTANCES ELEMENTAIRES — le meme sort, deux monstres, deux resultats.
+##
+## C est la raison d etre du systeme : si ce test tombe, changer de deck ne sert
+## plus a rien et le bestiaire redevient decoratif. On mesure sur un VRAI
+## Battlefield parce que la resistance vit dans `_hit()`, pas dans `Enemy`.
+func _test_la_resistance_change_les_degats_recus() -> void:
+	_fresh()
+	var feu := _def("brulable", 100.0)
+	feu.resistances = {GameEnums.DamageTag.FIRE: 1.5}
+	var pierre := _def("pierreux", 100.0)
+	pierre.resistances = {GameEnums.DamageTag.FIRE: 0.5}
+
+	var a: Enemy = _bf.spawn_enemy(feu, 300.0, 1.0, Vector2(300.0, 600.0))
+	var b: Enemy = _bf.spawn_enemy(pierre, 700.0, 1.0, Vector2(700.0, 600.0))
+	_sim(0.6)  # on epuise le fondu d apparition, sinon rien ne porte
+
+	var brulure := SpellCard.new()
+	brulure.id = &"t_feu"
+	var tags: Array[GameEnums.DamageTag] = []
+	tags.append(GameEnums.DamageTag.FIRE)
+	brulure.tags = tags
+	_bf.damage_enemy(a, 40.0, brulure)
+	_bf.damage_enemy(b, 40.0, brulure)
+
+	feq(a.hp, 40.0, "le monstre vulnerable au feu prend 150 pourcent", 0.01)
+	feq(b.hp, 80.0, "le monstre resistant au feu prend 50 pourcent", 0.01)
+	ok(a.hp < b.hp, "le MEME sort ne vaut pas la meme chose sur deux monstres")
+
+	# Et le contenu livre porte bien cet ecart : golem contre gelee, sur le feu.
+	var golem: EnemyDef = ContentDB.enemies.get(&"golem")
+	var gelee: EnemyDef = ContentDB.enemies.get(&"jelly")
+	if golem != null and gelee != null:
+		ok(golem.resistance_to(GameEnums.DamageTag.FIRE)
+			< gelee.resistance_to(GameEnums.DamageTag.FIRE),
+			"la pierre encaisse le feu mieux que la gelee")
+		ok(golem.resistance_to(GameEnums.DamageTag.ARCANE)
+			> gelee.resistance_to(GameEnums.DamageTag.ARCANE),
+			"et l inverse sur l arcane : chaque element a sa bonne cible")

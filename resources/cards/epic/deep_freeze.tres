@@ -6,7 +6,7 @@
 [sub_resource type="Resource" id="Resource_e0lxf"]
 script = ExtResource("1_e0lxf")
 key = &"ground_zone"
-magnitude = 0.0
+magnitude = 4.0
 duration = 4.0
 radius = 170.0
 params = {
@@ -17,7 +17,7 @@ params = {
 script = ExtResource("2_1iesi")
 id = &"deep_freeze"
 display_name = "Gel profond"
-description = "Zone qui ralentit de 85 pourcent pendant 4 s. Presque un arret."
+description = "Zone qui ralentit de 85 pourcent et inflige 4 degats de GIVRE par seconde pendant 4 s. Presque un arret."
 rarity = 2
 base_cast_time = 1.5
 targeting = 1
@@ -26,5 +26,6 @@ effects = Array[ExtResource("1_e0lxf")]([SubResource("Resource_e0lxf")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
+speed_threshold = 100
 fx_key = &"frost_spikes"
 sfx_key = &"zap_short"

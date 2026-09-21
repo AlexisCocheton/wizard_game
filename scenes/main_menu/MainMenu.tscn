@@ -5,11 +5,11 @@
 [ext_resource type="Texture2D" uid="uid://d0kjfpl82n217" path="res://assets/ui/avatar.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://dhadhtsilxxvt" path="res://assets/ui/ribbon_title9.png" id="4"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1"]
-
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -70,6 +70,7 @@ size_flags_vertical = 4
 theme_override_constants/separation = 2
 
 [node name="TitleRibbon" type="NinePatchRect" parent="Layout/TopBar/TopRow/TitleBlock"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 124)
 layout_mode = 2
 texture = ExtResource("4")
@@ -92,7 +93,6 @@ theme_override_font_sizes/font_size = 52
 text = "TIME WIZARD"
 horizontal_alignment = 1
 vertical_alignment = 1
-autowrap_mode = 0
 
 [node name="CardsLabel" type="Label" parent="Layout/TopBar/TopRow/TitleBlock"]
 unique_name_in_owner = true
@@ -116,14 +116,14 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.28, 0.18, 0.1, 1)
 theme_override_constants/outline_size = 0
 theme_override_font_sizes/font_size = 28
-theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_2")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_3")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
 text = "PROFIL"
 icon = ExtResource("3")
-expand_icon = true
 icon_alignment = 1
 vertical_icon_alignment = 0
+expand_icon = true
 
 [node name="Content" type="MarginContainer" parent="Layout"]
 unique_name_in_owner = true

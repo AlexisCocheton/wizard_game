@@ -31,8 +31,25 @@ func _defaults() -> Dictionary:
 			"campaign": {"current_node": "lvl_01", "unlocked_levels": ["lvl_01"]},
 			"levels": {},
 			"massacre_deck": [],
+			## Decks nommes et index du courant. La liste part VIDE a dessein :
+			## _decks() la remplit au premier acces, et c est ce meme chemin qui
+			## reprend l ancien "massacre_deck" plat des profils deja en service.
+			"decks": [],
+			"current_deck": 0,
+			## Pouvoirs passifs equipes (0 a 3). Hors du deck depuis le
+			## chantier F : ils ne se piochent plus, ils s equipent.
+			"equipped_passives": [],
 			"discovered_enemies": [],
 			"account": {"level": 1, "xp": 0, "challenges": [], "stats": {}},
+			## Cosmetiques EQUIPES, un par axe. Les valeurs sont les cles lues par
+			## mage_view.gd et battle_backdrop.gd. Un ancien profil ne possede pas
+			## cette cle : _migrate() la lui ajoute avec ces defauts, ce qui fait
+			## qu il s affiche exactement comme avant la mise a jour.
+			"cosmetics": {
+				"mage_color": "monk_blue",
+				"hat": "monk_blue",
+				"tower": "tower_blue",
+			},
 			## Scenes d histoire deja vues : une scene ne se rejoue pas quand on
 			## refait un niveau. _migrate() ajoute la cle aux vieux profils.
 			"stories_seen": [],
@@ -226,16 +243,145 @@ func stories_seen() -> Array:
 
 
 # --- Deck Massacre ---
+##
+## Le profil tient une LISTE de decks nommes ("decks") et l index du deck
+## COURANT ("current_deck"). Les deux fonctions historiques ci-dessous lisent et
+## ecrivent le deck courant : tout le reste du jeu (GameController, campagne,
+## profil, ecran de chargement) continue de parler d un seul deck sans changer
+## une ligne, et c est l ecran de deck qui decide lequel c est.
+##
+## Forme stockee : [{"name": "Feu", "cards": ["arcane_bolt", ...]}, ...]
 
 func massacre_deck() -> Array:
-	return profile().get("massacre_deck", [])
+	return deck_at(current_deck_index())
 
 
 func set_massacre_deck(ids: Array) -> void:
 	var clean: Array = []
 	for id in ids:
 		clean.append(String(id))
-	profile()["massacre_deck"] = clean
+	var liste: Array = _decks()
+	liste[current_deck_index()]["cards"] = clean
+	profile_changed.emit()
+
+
+## --- Plusieurs decks (chantier K) ---
+
+## Nom par defaut d un onglet de deck. Numerote plutot que vide : un onglet sans
+## texte est un bouton que le joueur ne sait pas viser.
+const DECK_NAME_DEFAULT: String = "Deck %d"
+
+## Garde-fou : au-dela, la barre d onglets deborde de l ecran portrait.
+const MAX_DECKS: int = 8
+
+
+## La liste des decks, TOUJOURS non vide.
+##
+## C est ici que se fait la migration des anciens profils : un telephone deja en
+## service a un "massacre_deck" plat et aucun "decks". On le reprend comme
+## premier onglet plutot que de le perdre. La migration vit dans un accesseur et
+## non dans _migrate() parce qu elle doit aussi rattraper un profil neuf, un
+## profil de test charge a la main et un profil dont la cle "decks" a ete videe.
+func _decks() -> Array:
+	var p: Dictionary = profile()
+	var liste: Array = p.get("decks", [])
+	if liste.is_empty():
+		var anciennes: Array = []
+		for id in p.get("massacre_deck", []):
+			anciennes.append(String(id))
+		liste = [{"name": DECK_NAME_DEFAULT % 1, "cards": anciennes}]
+		p["decks"] = liste
+	return liste
+
+
+func deck_count() -> int:
+	return _decks().size()
+
+
+## Index du deck courant, toujours ramene dans les bornes : un profil corrompu
+## ou un deck supprime ailleurs ne doit jamais faire pointer l ecran dans le vide.
+func current_deck_index() -> int:
+	var n: int = _decks().size()
+	return clampi(int(profile().get("current_deck", 0)), 0, n - 1)
+
+
+func set_current_deck(index: int) -> void:
+	var n: int = _decks().size()
+	profile()["current_deck"] = clampi(index, 0, n - 1)
+	profile_changed.emit()
+
+
+## Les cartes d un deck donne. Copie : l appelant trie et modifie librement sans
+## vider le profil (piege deja rencontre avec offer_choices()).
+func deck_at(index: int) -> Array:
+	var liste: Array = _decks()
+	if index < 0 or index >= liste.size():
+		return []
+	return (liste[index].get("cards", []) as Array).duplicate()
+
+
+func deck_name(index: int) -> String:
+	var liste: Array = _decks()
+	if index < 0 or index >= liste.size():
+		return ""
+	return String(liste[index].get("name", DECK_NAME_DEFAULT % (index + 1)))
+
+
+## Cree un deck VIDE et le rend courant. Rend son index, ou celui du courant si
+## le plafond est atteint (on ne signale pas une creation qui n a pas eu lieu).
+func create_deck(name: String = "") -> int:
+	var liste: Array = _decks()
+	if liste.size() >= MAX_DECKS:
+		return current_deck_index()
+	var propre: String = name.strip_edges()
+	if propre.is_empty():
+		propre = DECK_NAME_DEFAULT % (liste.size() + 1)
+	liste.append({"name": propre, "cards": []})
+	profile()["current_deck"] = liste.size() - 1
+	profile_changed.emit()
+	return liste.size() - 1
+
+
+func rename_deck(index: int, name: String) -> void:
+	var liste: Array = _decks()
+	if index < 0 or index >= liste.size():
+		return
+	var propre: String = name.strip_edges()
+	# Un nom vide donnerait un onglet invisible : on garde l ancien.
+	if propre.is_empty():
+		return
+	liste[index]["name"] = propre
+	profile_changed.emit()
+
+
+## Supprime un deck. Le DERNIER ne se supprime jamais : sans deck, l ecran
+## n aurait plus d onglet a afficher et le jeu plus rien a distribuer.
+func delete_deck(index: int) -> void:
+	var liste: Array = _decks()
+	if liste.size() <= 1 or index < 0 or index >= liste.size():
+		return
+	liste.remove_at(index)
+	profile()["current_deck"] = clampi(current_deck_index(), 0, liste.size() - 1)
+	profile_changed.emit()
+
+
+## --- Passifs equipes (0 a 3, HORS du deck) ---
+##
+## Ils vivent a cote des decks et non dedans : un passif est equipe par le mage,
+## pas pioche. Le stockage est global au profil et non par deck, pour que
+## changer d onglet de deck ne redemande pas de tout re-equiper.
+
+func equipped_passives() -> Array:
+	return (profile().get("equipped_passives", []) as Array).duplicate()
+
+
+func set_equipped_passives(ids: Array) -> void:
+	var clean: Array = []
+	for id in ids:
+		if clean.size() >= DeckRules.MAX_PASSIVES:
+			break
+		clean.append(String(id))
+	profile()["equipped_passives"] = clean
 	profile_changed.emit()
 
 
@@ -473,6 +619,74 @@ func unlocked_rewards() -> Array[AccountRewardDef]:
 		if r != null and r.at_level <= account_level():
 			out.append(r)
 	return out
+
+
+## --- COSMETIQUES EQUIPES ---
+##
+## Trois axes independants : la robe du mage, la couleur de son chapeau, sa tour.
+## Chacun retient une CLE (nom de feuille d animation ou de texture) et non un id
+## de recompense : les deux fichiers de jeu qui la lisent n ont ainsi rien a
+## chercher dans ContentDB, et une seule ligne leur suffit.
+##
+## Ils ne changent QUE l apparence. Aucun n existe en version "qui tape plus
+## fort" : c est la regle qui protege l equilibrage mesure des sept niveaux.
+
+## La cle du dictionnaire pour un axe donne. Une fonction plutot qu un match
+## recopie dans chaque appelant : le nom stocke dans le JSON ne doit exister
+## qu a un seul endroit.
+func _cosmetic_slot(kind: int) -> String:
+	match kind:
+		GameEnums.RewardKind.MAGE_COLOR: return "mage_color"
+		GameEnums.RewardKind.HAT: return "hat"
+		GameEnums.RewardKind.TOWER: return "tower"
+	return ""
+
+
+func _cosmetics() -> Dictionary:
+	var p: Dictionary = profile()
+	if not p.has("cosmetics"):
+		p["cosmetics"] = (_defaults()["profile"] as Dictionary)["cosmetics"]
+	return p["cosmetics"]
+
+
+## Ce que le joueur porte sur un axe. Rend TOUJOURS une cle utilisable, jamais
+## une chaine vide : un mage sans feuille d animation ne s afficherait pas du
+## tout, et un profil neuf n a encore rien choisi.
+func equipped_cosmetic(kind: int) -> String:
+	var slot: String = _cosmetic_slot(kind)
+	if slot == "":
+		return ""
+	var defauts: Dictionary = (_defaults()["profile"] as Dictionary)["cosmetics"]
+	var valeur: String = String(_cosmetics().get(slot, ""))
+	return valeur if valeur != "" else String(defauts.get(slot, ""))
+
+
+## Equipe une recompense cosmetique. Rend false si elle n existe pas, n est pas
+## equipable, ou n est pas encore debloquee par le niveau de compte : sans ce
+## garde-fou, l onglet Cosmetiques rendrait accessible tout le catalogue d un
+## coup et le niveau de compte ne recompenserait plus rien.
+func equip_cosmetic(reward_id: StringName) -> bool:
+	var r: AccountRewardDef = ContentDB.rewards.get(reward_id)
+	if r == null or not r.is_equippable():
+		return false
+	if r.at_level > account_level():
+		return false
+	var slot: String = _cosmetic_slot(r.kind)
+	if slot == "":
+		return false
+	_cosmetics()[slot] = r.texture_name
+	profile_changed.emit()
+	return true
+
+
+## La recompense actuellement portee sur un axe, ou null. Sert a l interface pour
+## cocher le bon jeton sans comparer des chaines a la main.
+func equipped_reward(kind: int) -> AccountRewardDef:
+	var porte: String = equipped_cosmetic(kind)
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.kind == kind and r.texture_name == porte:
+			return r
+	return null
 
 
 ## Pour les tests : charge un profil brut en passant par la migration.

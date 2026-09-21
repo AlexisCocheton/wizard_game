@@ -162,7 +162,8 @@ func _scatter_decor() -> void:
 
 
 func _mage_tower() -> void:
-	var tex: Texture2D = SheetLib.texture(T + "tower_blue.png")
+	# La tour est un cosmetique de compte : elle suit ce que le joueur a equipe.
+	var tex: Texture2D = UiTheme.tower_texture()
 	if tex == null:
 		return
 	var s := Sprite2D.new()

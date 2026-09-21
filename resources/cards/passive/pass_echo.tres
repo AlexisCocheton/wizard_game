@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_3mtdy"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_qdmiw"]
+
+[sub_resource type="Resource" id="Resource_4kh6s"]
+script = ExtResource("1_3mtdy")
+key = &"passive_echo_cast"
+magnitude = 3.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_qdmiw")
+id = &"pass_echo"
+display_name = "Echo perpetuel"
+description = "Au-dela de 225 % de vitesse : une carte lancee sur trois revient en main au lieu d aller a la defausse."
+rarity = 2
+base_cast_time = 0.0
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_3mtdy")]([SubResource("Resource_4kh6s")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 225
+fx_key = &""
+sfx_key = &""

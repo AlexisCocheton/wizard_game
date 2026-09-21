@@ -2,16 +2,17 @@ class_name CampaignPanel
 extends VBoxContainer
 ## Onglet Campagne — deux vues qui se remplacent dans le meme onglet :
 ##
-##   1. LA CARTE (`CampaignMap`) : l archipel, les noms des etapes, les etoiles.
-##      C est l ecran d accueil de l onglet.
+##   1. LA CARTE (`CampaignMap`) : un ecran par acte, pose sur le fond de combat
+##      de l acte, avec les points des niveaux, leurs noms et leurs etoiles.
+##      On change d acte avec les fleches de bord. C est l ecran d accueil.
 ##   2. LE DETAIL : exactement l ecran qui existait avant (nom, vagues, boss,
 ##      objectifs, segment Exploration/Massacre, gros JOUER), plus un RETOUR.
 ##
 ## POURQUOI garder le detail tel quel : le testeur a demande que le niveau
 ## « amene a une interface qui ressemble a l actuelle ». On ne refait pas la
-## fiche, on la deplace derriere un toucher sur la carte. Les fleches < > de
-## navigation entre niveaux disparaissent : la carte les remplace, et garder les
-## deux donnerait deux facons contradictoires de changer de niveau.
+## fiche, on la deplace derriere un toucher sur un point de la carte. Les fleches
+## < > ne changent plus de NIVEAU mais d ACTE : elles sont passees dans la carte,
+## ou elles tournent les pages du voyage.
 
 var _mode: GameEnums.Mode = GameEnums.Mode.EXPLORATION
 
@@ -135,11 +136,11 @@ func has_detail_controls() -> bool:
 func back_to_map() -> void:
 	_detail.visible = false
 	_map.visible = true
-	# On recentre sur le niveau ou en est le joueur : sans cela, une carte de
-	# 1800 px rouvre toujours sur l acte I, meme arrive au dernier niveau.
-	# Appel detache : `focus_level` attend une frame pour connaitre sa taille,
-	# on ne bloque pas le retour a la carte pour autant.
-	_map.call_deferred("focus_level", SaveData.current_level())
+	# On revient sur l ACTE du niveau ou en est le joueur : sans cela, la carte
+	# rouvre toujours sur l acte I et il faut re-appuyer 4 fois sur la fleche.
+	# Appel direct : `show_act` ne depend plus de la taille du noeud, les points
+	# sont exprimes en fraction et se replacent au `resized`.
+	_map.focus_level(SaveData.current_level())
 
 
 ## Ouvre la fiche d un niveau. Un niveau verrouille est REFUSE ici et pas
@@ -231,7 +232,10 @@ func _render_detail() -> void:
 			if obj == null:
 				continue
 			var done: bool = bool(objs.get(String(obj.id), false))
-			box.add_child(UiTheme.label("%s  %s" % ["[OK]" if done else "[   ]", obj.description],
+			# Meme formulation que le briefing et l ecran de victoire : le mot
+			# porte l etat, jamais un prefixe entre crochets.
+			box.add_child(UiTheme.label(
+				"%s  -  %s" % ["Acquis" if done else "A faire", obj.description],
 				UiTheme.FONT_SMALL, UiTheme.GREEN if done else UiTheme.TEXT_DARK))
 		if level.legendary_reward != null:
 			var got: bool = SaveData.unlocked_legendaries().has(String(level.legendary_reward.id))

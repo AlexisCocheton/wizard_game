@@ -7,6 +7,7 @@ script = ExtResource("1_nlksi")
 id = &"ch_first_win"
 display_name = "Premier souffle"
 description = "Terminer un niveau."
+rarity = 0
 xp_reward = 250
 track_key = &"levels_cleared"
 target = 1

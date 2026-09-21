@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1ocau"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5bgiv"]
+
+[sub_resource type="Resource" id="Resource_72hvr"]
+script = ExtResource("1_1ocau")
+key = &"passive_xp_boost"
+magnitude = 30.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_5bgiv")
+id = &"pass_scholar"
+display_name = "Erudition"
+description = "Au-dela de 115 % de vitesse : +30 % d experience gagnee."
+rarity = 0
+base_cast_time = 0.0
+targeting = 0
+tags = Array[int]([])
+effects = Array[ExtResource("1_1ocau")]([SubResource("Resource_72hvr")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 115
+fx_key = &""
+sfx_key = &""

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChallengeDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/challenge_def.gd" id="1_rdclx"]
+
+[resource]
+script = ExtResource("1_rdclx")
+id = &"ch_bestiary_10"
+display_name = "Curieux"
+description = "Rencontrer 10 especes de monstres."
+rarity = 0
+xp_reward = 250
+track_key = &"enemies_discovered"
+target = 10

@@ -99,15 +99,24 @@ func _run_all() -> void:
 		# Vers la vague 5 : des monstres varies, des zones au sol, une incantation.
 		if _visual and not shot_done and RunState.wave_index >= 4 				and _game.battlefield.alive_count() >= 5 and RunState.pending_offer.is_empty():
 			shot_done = true
+			# Trois passifs a SEUILS ECARTES avant la capture : sans cela la
+			# capture ne prouve rien du rail. Il en faut un sous la vitesse
+			# courante (allume) et un tres au-dessus (grise), sinon on ne voit
+			# jamais que le seuil commande bien l affichage.
+			# On VIDE d abord la barre : les passifs deja gagnes en jeu occupaient
+			# les trois places et le passif a seuil eleve — celui qui prouve
+			# l etat GRISE — ne pouvait plus entrer.
+			RunState.equipped_passives.clear()
+			for id in [&"pass_celerity", &"pass_fireboom", &"pass_apotheosis"]:
+				var pc: SpellCard = ContentDB.cards.get(id)
+				if pc != null:
+					RunState.equip_passive(pc)
 			await _shot("bataille")
 			# Le panneau de pause montre les passifs actifs : on le capture avec un
 			# passif joue, sinon la capture ne prouve rien.
 			if _visual:
 				var hud: Node = _game.get_node_or_null("HUD")
 				if hud != null and hud.has_method("_show_pause_panel"):
-					var pass_card: SpellCard = ContentDB.cards.get(&"pass_celerity")
-					if pass_card != null:
-						RunState.activate_passive(pass_card)
 					hud.call("_show_pause_panel")
 					await _shot("pause")
 					var panel: Node = hud.get("_pause_panel")
@@ -145,6 +154,7 @@ func _run_all() -> void:
 	await _check_boss_reward()
 	await _check_precast()
 	await _check_end_screens()
+	await _check_cosmetics_in_battle()
 	_check_massacre_deck()
 
 	# 4) La defaite doit aussi fonctionner.
@@ -307,6 +317,29 @@ func _check_menu_screens() -> void:
 		menu.select_tab(i)
 		await _shot("menu_" + String(tabs[i]).to_lower())
 
+	# La campagne est maintenant UN ECRAN PAR ACTE : une seule capture n en
+	# montrerait qu un cinquieme, et un fond manquant ou un point pose dans le
+	# ciel resterait invisible sur les quatre autres. On tourne toutes les pages,
+	# y compris l acte 5, qui n a encore aucun niveau — c est justement le cas qui
+	# plante si on oublie le tableau vide.
+	menu.select_tab(menu.HOME_TAB)
+	var campagne: Control = null
+	for p in menu.get_node("%Content").get_children():
+		if p is CampaignPanel:
+			campagne = p
+	if campagne == null:
+		_fail("le panneau de campagne est introuvable")
+	else:
+		var carte: CampaignMap = campagne.get_child(0)
+		for a in carte.acts():
+			carte.show_act(a)
+			await _shot("campagne_acte%d" % a)
+		# Le detail d un niveau : c est l ecran que le testeur voulait conserver,
+		# et il n est atteignable que par un toucher sur un point de la carte.
+		campagne.open_level(SaveData.current_level())
+		await _shot("campagne_detail")
+		campagne.back_to_map()
+
 	# Le grimoire (onglet Galerie) a trois SECTIONS et une fiche detaillee : un
 	# seul passage par l onglet n en montrerait qu un neuvieme. On les parcourt
 	# toutes, plus une fiche, sinon une section qui plante resterait invisible.
@@ -332,10 +365,51 @@ func _check_menu_screens() -> void:
 		await _shot("livre_fiche_monstre")
 		grimoire.close_detail()
 
+	# L ecran de deck a plusieurs ONGLETS DE DECKS et une fiche d effet qui prend
+	# la page : la capture de l onglet ne montre que le premier deck plein. On en
+	# cree un second, VIDE, parce que c est lui qui expose le cas limite (les six
+	# emplacements vides et le message "il manque 15 cartes").
+	menu.select_tab(1)
+	var deck_ecran: Control = null
+	for p2 in menu.get_node("%Content").get_children():
+		if p2 is DeckPanel:
+			deck_ecran = p2
+	if deck_ecran == null:
+		_fail("l ecran de deck est introuvable dans l onglet Deck")
+	else:
+		deck_ecran.create_deck()
+		await _shot("deck_vide")
+		# Tourner une page de collection : les fleches du pied de page doivent
+		# marcher ici comme dans le grimoire.
+		deck_ecran.turn_page(1)
+		await _shot("deck_page2")
+		deck_ecran.delete_current_deck()
+		await _shot("deck_plein")
+
 	# Le profil a quitte la barre du bas pour l en-tete : sans cette capture il
 	# ne serait plus verifie du tout.
+	# Un compte de niveau 6 pour la capture : au niveau 1 tous les cosmetiques
+	# sont verrouilles et l onglet ne montrerait que des cases grises, donc ni
+	# le cadre dore de l equipe, ni les contours de rarete des succes accomplis.
+	# Le profil est deja factice en smoke (persistence desactivee en headless).
+	SaveData.grant_account_xp(SaveData.account_xp_for_level(6))
+	for _ch: ChallengeDef in ContentDB.challenges_list():
+		if _ch.rarity <= GameEnums.Rarity.RARE:
+			SaveData.complete_challenge(_ch.id)
 	menu.call("show_profile", true)
 	await _shot("menu_profil")
+	# Le profil a TROIS sections depuis le chantier L (succes, cosmetiques,
+	# stats). Un seul passage n en montrerait qu un tiers, et une section qui
+	# plante resterait invisible — exactement le defaut que le SMOKE existe pour
+	# attraper sur les autres ecrans a sections (le grimoire, plus haut).
+	var profil: Control = _find_profile_panel(menu)
+	if profil == null:
+		_fail("le panneau de profil est introuvable")
+	else:
+		for s in ProfilePanel.SECTIONS.size():
+			profil.show_section(s)
+			await _shot("profil_" + ProfilePanel.SECTIONS[s].to_lower())
+		profil.show_section(ProfilePanel.Section.ACHIEVEMENTS)
 	menu.call("show_profile", false)
 
 	menu.select_tab(menu.HOME_TAB)
@@ -479,6 +553,23 @@ func _check_end_screens() -> void:
 	add_child(vs)
 	if not SaveData.is_level_unlocked(&"lvl_02"):
 		_fail("l ecran de victoire n a pas debloque le niveau suivant")
+	# Les ETOILES sont ce que le joueur regarde en premier. Une rangee vide
+	# passerait inapercue : l ecran continuerait de s afficher, et seule une
+	# capture relue a l oeil le montrerait. On compte donc les pastilles.
+	var etoiles: int = 0
+	var barres: int = 0
+	for n in _tous_les_noeuds(vs):
+		if n is TextureRect and n.get_parent() is HBoxContainer:
+			etoiles += 1
+		elif n is ProgressBar:
+			barres += 1
+	var attendu: int = ContentDB.levels[&"lvl_01"].objectives.size()
+	if etoiles != attendu:
+		_fail("ecran de victoire : %d pastilles d objectif au lieu de %d"
+			% [etoiles, attendu])
+	# La progression de COMPTE : la seule chose qui survit a la partie.
+	if barres < 1:
+		_fail("ecran de victoire : aucune barre d avancement de compte")
 	await _shot("victoire")
 	vs.queue_free()
 
@@ -573,3 +664,72 @@ func _check_defeat_path() -> void:
 		_fail("le drain post-mortem n a jamais abouti a la defaite")
 		return
 	print("[SMOKE] chemin de defaite verifie")
+
+
+## Le panneau de profil, ou qu il soit dans l arbre du menu. Il est pose sous un
+## CALQUE de superposition (Content > calque > boite > panneau) : chercher dans
+## les enfants directs de Content ne le trouve pas.
+func _find_profile_panel(root: Node) -> Control:
+	if root is ProfilePanel:
+		return root as Control
+	for c in root.get_children():
+		var found: Control = _find_profile_panel(c)
+		if found != null:
+			return found
+	return null
+
+
+## Le mage et la tour doivent CHANGER quand on equipe un cosmetique. Sans cette
+## verification, `equipped_cosmetic()` pourrait rendre la bonne chaine pendant
+## que le combat continue d afficher le moine bleu : la seule preuve qui compte
+## est que les deux fichiers de jeu lisent bien le profil.
+func _check_cosmetics_in_battle() -> void:
+	SaveData.grant_account_xp(SaveData.account_xp_for_level(12))
+	if not SaveData.equip_cosmetic(&"rw_hat_gold"):
+		_fail("le chapeau d or ne s equipe pas au niveau 12")
+	if not SaveData.equip_cosmetic(&"rw_tower_ember"):
+		_fail("la tour de braise ne s equipe pas au niveau 12")
+
+	# Le mage : la feuille lue doit etre celle du chapeau equipe, et porter ses
+	# trois animations — une feuille vide donnerait un mage invisible en combat.
+	if UiTheme.mage_sheet_key() != "monk_hat_gold":
+		_fail("le mage ne lit pas le chapeau equipe (%s)" % UiTheme.mage_sheet_key())
+	var sf: SpriteFrames = UiTheme.mage_frames()
+	if sf == null:
+		_fail("le mage equipe n a aucune feuille d animation")
+	else:
+		for anim in ["idle", "walk", "cast"]:
+			if not sf.has_animation(anim) or sf.get_frame_count(anim) == 0:
+				_fail("le mage equipe n a pas d animation %s" % anim)
+
+	# La tour : une texture differente de celle d origine, pas un simple repli.
+	var tour: Texture2D = UiTheme.tower_texture()
+	var origine: Texture2D = SheetLib.texture("res://assets/terrain/tower_blue.png")
+	if tour == null or tour == origine:
+		_fail("la tour equipee ne change pas de texture")
+
+	# Et une capture du combat ainsi equipe : c est la seule facon de voir que le
+	# mage et la tour ont vraiment change de couleur a l ecran.
+	if _visual:
+		var packed: PackedScene = load("res://scenes/game/Game.tscn")
+		var g: GameController = packed.instantiate()
+		g.headless_mode = true
+		add_child(g)
+		g.running = false
+		g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
+		for _i in 40:
+			g.simulate(FIXED_DELTA)
+		await _shot("bataille_cosmetiques")
+		g.queue_free()
+	SaveData.reset_profile()
+	print("[SMOKE] cosmetiques : mage et tour equipes")
+
+
+## Tous les descendants d un noeud, a plat. Sert aux controles d ecran qui
+## comptent des elements sans connaitre la structure exacte du panneau.
+func _tous_les_noeuds(racine: Node) -> Array[Node]:
+	var out: Array[Node] = []
+	for c in racine.get_children():
+		out.append(c)
+		out.append_array(_tous_les_noeuds(c))
+	return out

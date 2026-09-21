@@ -7,6 +7,7 @@ script = ExtResource("1_pjkkj")
 id = &"ch_slayer_100"
 display_name = "Chasseur"
 description = "Tuer 100 monstres, toutes parties confondues."
+rarity = 0
 xp_reward = 250
 track_key = &"enemies_killed"
 target = 100
