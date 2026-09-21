@@ -108,15 +108,15 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Demande | Etat | Chantier |
 |---|---|---|
 | Structure titre / centre / menu bas | FAIT | — |
-| Niveau du joueur + cartes en haut, profil en haut a droite | A FAIRE | C |
-| Fusionner bestiaire et galerie (onglets Sorts / Passifs / Bestiaire) | PARTIEL (les deux existent, separes) | C |
-| Livre a pages (asset magic book), fleches gauche/droite | A FAIRE | C |
-| Detail avec nb d'utilisations, monstres tues, ameliorations | PARTIEL (detail sans stats) | C |
+| Niveau du joueur + cartes en haut, profil en haut a droite | **FAIT** | C |
+| Fusionner bestiaire et galerie (onglets Sorts / Passifs / Bestiaire) | **FAIT** | C |
+| Livre a pages (asset magic book), fleches gauche/droite | **FAIT** | C |
+| Detail avec nb d'utilisations, monstres tues, ameliorations | **FAIT** (ameliorations en attente du chantier G) | C |
 | Inconnu = grise | FAIT | — |
 | Icones de sort partout | FAIT (45 feuilles propres) ; a re-choisir dans les packs d'icones quand ils arriveront | C |
-| Police plus lisible, tout un peu plus grand | PARTIEL (Planes_ValMore posee, tailles a remonter) | C |
-| Vraies icones de menu (pas un steak) | A FAIRE (Tiny Swords icon_01..12 seulement) | C |
-| Titre stylise, nom "Time Wizard" | A FAIRE | C |
+| Police plus lisible, tout un peu plus grand | **FAIT** (la cause etait le contour de 6 px, pas la taille) | C |
+| Vraies icones de menu (pas un steak) | **FAIT** | C |
+| Titre stylise, nom "Time Wizard" | **FAIT** | C |
 | Deck : 15 cartes exactement, 0-3 passifs, ≤3 legendaires, ≤3 epiques | A FAIRE (regles actuelles : 8-20 cartes) | K |
 | Plusieurs onglets de deck | A FAIRE | K |
 | Profil : succes par rarete au lieu des defis | PARTIEL (10 defis + niveau de compte existent) | L |
@@ -129,8 +129,8 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 |---|---|---|
 | Carte de campagne sur les fonds de combat, points jaunes, fleches d'acte | PARTIEL (carte en iles existe) | E |
 | 3 objectifs par niveau | FAIT (3 par niveau, 4 types) ; types a enrichir | H |
-| Histoire : prologue, 5 actes (Nuri, Sky, Tombol, Demons, Divin), plot twist de l'enfant | A FAIRE (histoire actuelle = 4 actes differents) | D |
-| Sequences visual novel entre les niveaux | A FAIRE (aucun systeme de dialogue) | D |
+| Histoire : prologue, 5 actes, plot twist de l'enfant | **FAIT** (docs/histoire.md) | D |
+| Sequences visual novel entre les niveaux | **FAIT** (systeme + 9 scenes : prologue et acte 1) | D |
 | Niveau 1 tutoriel, deck 9 cartes, 3 vagues ; niveau 2 en 4 vagues ; puis 6 | A FAIRE | H |
 | Pool de cartes qui grandit de 3 par niveau | A FAIRE | H |
 | Fin : deblocage du mode infini | A FAIRE | J |
@@ -154,19 +154,19 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 ### Monstres
 | Demande | Etat | Chantier |
 |---|---|---|
-| Monstres un peu plus grands | A FAIRE (VISUAL_FACTOR 1.9) | B1 |
-| Apparition plus bas + fondu de 0,5 s | A FAIRE | B1 |
-| Feu follet -> Planogo, vole par-dessus les murs, boule de poison 10 PV | A FAIRE | B1 |
-| Nuee de rats -> Oiseau mirage, sprite qui ne tourne plus | A FAIRE | B1 |
+| Monstres un peu plus grands | **FAIT** (2.1) | B1 |
+| Apparition plus bas + fondu de 0,5 s | **FAIT** | B1 |
+| Feu follet -> Planogo, vole par-dessus les murs, boule de poison 10 PV | **FAIT** | B1 |
+| Nuee de rats -> Oiseau mirage, sprite qui ne tourne plus | **FAIT** | B1 |
 | Boss a mecaniques originales (revient 3 fois, ressuscite, bouclier renvoi, 10 coups immunises, slime enorme qui se divise, 3 mages a resistances, renard qui dort, mecha laser, executeur onde de choc, demon slime immunise au feu) | PARTIEL (3 boss a mecanique) ; la plupart BLOQUES par les packs absents | I |
 | Boss d'un acte devenant monstre courant ensuite | A FAIRE | I |
 
 ### Combat
 | Demande | Etat | Chantier |
 |---|---|---|
-| Vitesse non accelerable manuellement, +1 % toutes les 0,5 s | PARTIEL (monte de 10 % / 8 s ET bouton + barre cliquable, a retirer) | B1 |
+| Vitesse non accelerable manuellement, +1 % toutes les 0,5 s | **FAIT** (bouton et barre supprimes) | B1 |
 | Main a 6 cartes | FAIT | — |
-| Quitter le combat depuis la pause | A FAIRE | B1 |
+| Quitter le combat depuis la pause | **FAIT** | B1 |
 
 ---
 
@@ -208,3 +208,30 @@ Chaque chantier a un perimetre de fichiers. Un agent n'ecrit que dans le sien.
 
 Chaque chantier se termine par : harnais vert, mesure au banc si la puissance
 change (`balance-tester`), captures lues pour tout ce qui se voit.
+
+
+---
+
+## 4. Etat au 21 septembre, apres la premiere vague
+
+**Livres et pousses** (commit `da704a2`) : chantiers A (licences et assets),
+B1 (combat), C (menus et grimoire), D (histoire et visual novel).
+
+**Ce qui bloque encore, et sur quoi** :
+- Le **mage est un demon cornu** dans les scenes d histoire : aucun portrait
+  humain sur le disque. Une ligne a changer quand les packs de personnages
+  arrivent.
+- `poison_ball` emprunte la feuille du slime teintee en vert : une vraie feuille
+  d effet serait plus lisible.
+- Le **bestiaire ne traduit pas** les champs `flying` et `projectile` ajoutes par
+  B1. `flying` merite une ligne : le joueur doit comprendre avant de poser un mur
+  inutile.
+- `lvl_05` est a 97 % de victoires, au-dessus de la cible. Il etait deja le plus
+  facile avant : a passer au `balance-tester`.
+
+**Vague 2, a lancer** : F (passifs hors deck, seuils de vitesse, raretes),
+K (regles de deck 15 cartes), B3 (elements et resistances), G (amelioration des
+cartes en combat), H (nouveaux sorts et rebati des niveaux 1-2), L (profil,
+succes par rarete, cosmetiques), E (carte de campagne sur les fonds d acte).
+
+**Vague 3, quand les packs arrivent** : I (boss et monstres), J (mode infini).
