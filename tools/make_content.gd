@@ -312,6 +312,55 @@ func _enemies() -> void:
 	_resist(warden, {&"phys": 0.8, &"feu": 0.85, &"givre": 0.95, &"arcane": 1.2, &"foudre": 1.15})
 	_save(warden, E + "warden.tres")
 
+	# QUATRE MINI-BOSS DE PLUS, un par monde du mode infini.
+	#
+	# POURQUOI. Le Massacre pose un mini-boss toutes les 3 vagues et traverse
+	# CINQ mondes, mais le jeu n avait qu UN SEUL monstre de type MINIBOSS : le
+	# Gardien revenait a chaque palier, dans chaque monde. C est exactement le
+	# defaut corrige pour la campagne (onze adversaires au lieu de deux), et il
+	# restait entier cote mode infini.
+	#
+	# Chacun oppose une REPONSE differente, jamais une armure uniforme : c est
+	# ce qui fait qu on change de deck plutot que de lancer plus de sorts. Les
+	# silhouettes viennent des trois feuilles du catalogue qu aucun monstre
+	# n utilisait, plus une promotion — rien n est dessine.
+
+	# MONDE VOLANT. Leger et rapide la ou les autres mini-boss sont lourds : il
+	# n encaisse pas, il ARRIVE. La reponse est la zone posee en avance, pas le
+	# tir tendu.
+	var skyreaver := _enemy("skyreaver", "Ecumeur du ciel", K.MINIBOSS, 6,
+		96.0, 62.0, 12, S.TRIANGLE, Color(0.55, 0.80, 0.95), 54.0)
+	skyreaver.anim_key = &"pawn_yellow"
+	skyreaver.flying = true
+	_resist(skyreaver, {&"phys": 1.2, &"feu": 0.9, &"givre": 0.7, &"arcane": 1.0, &"foudre": 1.25})
+	_save(skyreaver, E + "skyreaver.tres")
+
+	# GRAND CIMETIERE. L inverse du precedent : lent, lourd, immunise au poison
+	# comme tout mort-vivant. Le givre le fige, le feu le consume.
+	var bonewarden := _enemy("bonewarden", "Gardien d ossements", K.MINIBOSS, 6,
+		165.0, 30.0, 13, S.HEXAGON, Color(0.80, 0.78, 0.70), 64.0)
+	bonewarden.anim_key = &"warrior_black"
+	_resist(bonewarden, {&"phys": 0.75, &"feu": 1.25, &"givre": 1.15, &"arcane": 0.9, &"poison": 0})
+	_save(bonewarden, E + "bonewarden.tres")
+
+	# MONDE DEMONIAQUE. Il rend les coups : resistant au feu de son propre
+	# monde, il craint le givre — le choc thermique, comme le Colosse.
+	var emberlord := _enemy("emberlord", "Seigneur de braise", K.MINIBOSS, 6,
+		150.0, 38.0, 13, S.DIAMOND, Color(0.95, 0.45, 0.20), 62.0)
+	emberlord.anim_key = &"pawn_purple"
+	_resist(emberlord, {&"phys": 0.9, &"feu": 0.55, &"givre": 1.35, &"arcane": 1.0, &"poison": 0.8, &"foudre": 1.1})
+	_save(emberlord, E + "emberlord.tres")
+
+	# MONDE D ORIGINE. Promotion du Gardien-totem, deja dans le jeu : le testeur
+	# demandait qu un boss d acte redevienne un monstre courant ; ici c est le
+	# chemin inverse, un monstre courant qui prend du galon. Sa silhouette est
+	# donc deja connue du joueur, ce qui rend la promotion lisible.
+	var totem_elder := _enemy("totem_elder", "Totem ancien", K.MINIBOSS, 6,
+		175.0, 26.0, 14, S.SQUARE, Color(0.60, 0.85, 0.55), 66.0)
+	totem_elder.anim_key = &"totem_tower"
+	_resist(totem_elder, {&"phys": 0.7, &"feu": 1.2, &"givre": 0.95, &"arcane": 1.3, &"poison": 0, &"lent": 0.5})
+	_save(totem_elder, E + "totem_elder.tres")
+
 	var chronos := _enemy("chronos", "Chronos", K.BOSS, 10, 320.0, 34.0, 30, S.STAR, Color(0.95, 0.20, 0.25), 84.0)
 	chronos.anim_key = &"juggernaut"
 	# CHRONOS — il regne sur le temps : le gel, qui n est qu un ralentissement
@@ -1261,6 +1310,12 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	v5.id = &"w2_5"
 	v5.duration = 28.0
 	v5.difficulty = 1.4
+	# L Ecumeur du ciel APPARAIT ICI, tard dans la vague. Ce n est pas un
+	# habillage : `WaveSpawner.build_membership()` deduit le monde d un monstre
+	# de sa DENSITE dans les vagues ECRITES. Un mini-boss qui n apparait dans
+	# aucune vague n appartient a aucun monde, donc le mode infini ne le
+	# proposera JAMAIS — verifie par sonde, les quatre nouveaux etaient
+	# invisibles. Le creer ne suffisait pas, il faut le montrer une fois.
 	v5.entries = [
 		_entry(E + "hive.tres", 1, 3.0),
 		_entry(E + "golem.tres", 2, 2.5, 7.0),
@@ -1272,8 +1327,18 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	v6.id = &"w2_6"
 	v6.duration = 30.0
 	v6.difficulty = 1.55
+	# L Ecumeur du ciel APPARAIT ICI. Ce n est pas un habillage :
+	# `WaveSpawner.build_membership()` deduit le monde d un monstre de sa
+	# DENSITE dans les vagues ECRITES. Un mini-boss absent de toute vague
+	# n appartient a aucun monde, donc le mode infini ne le proposera JAMAIS —
+	# verifie par sonde, les quatre nouveaux etaient invisibles.
+	#
+	# En vague 6 et non 5 : le garde-fou d equilibrage a attrape le premier
+	# essai ("428 PV apres 182"), ses 96 PV creant un saut de plus de x2 sur une
+	# vague legere. La vague 6 porte deja le Gardien-totem, elle l absorbe.
 	v6.entries = [
 		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "skyreaver.tres", 1, 1.0, 20.0),
 		_entry(E + "gnome.tres", 4, 1.6, 3.0),
 		_entry(E + "glutton.tres", 1, 1.0, 11.0),
 		_entry(E + "sprite.tres", 5, 1.5, 16.0),
@@ -1452,8 +1517,11 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	a5.difficulty = 1.35
 	# La Ruche explose en 4 lutins : un seul monstre en vaut cinq. C est la vague
 	# ou la Spirale de sel du deck paie enfin son temps d incantation.
+	# Le Gardien d ossements : voir la note sur l Ecumeur (w2_5) — un mini-boss
+	# absent des vagues ecrites n existe pas pour le mode infini.
 	a5.entries = [
 		_entry(E + "hive.tres", 2, 3.0),
+		_entry(E + "bonewarden.tres", 1, 1.0, 22.0),
 		_entry(E + "jelly.tres", 1, 2.0, 10.0),
 		_entry(E + "wisp.tres", 3, 1.8, 18.0),
 	]
@@ -1589,19 +1657,25 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	b3.duration = 34.0
 	b3.difficulty = 1.1
 	b3.is_miniboss = true
-	# L OMBRE, et non le Pretre goule (qui mene deja le mini-boss de `lvl_03`) ni
-	# le Gardien : docs/histoire.md le fait mourir a la fin de CE niveau, "il
-	# s effondre en un tas de bois mort", et la plaque de metal dans sa poitrine
-	# lance toute l intrigue. Le montrer en mini-boss avant de le tuer en boss
-	# affaiblirait la scene.
+	# LE GARDIEN D OSSEMENTS, et non le Pretre goule (qui mene deja le mini-boss
+	# de `lvl_03`) ni le Gardien de la foret : docs/histoire.md le fait mourir a
+	# la fin de CE niveau, "il s effondre en un tas de bois mort", et la plaque
+	# de metal dans sa poitrine lance toute l intrigue. Le montrer en mini-boss
+	# avant de le tuer en boss affaiblirait la scene.
 	#
-	# L Ombre disparait la moitie du temps : un mini-boss qu on ne peut pas
-	# frapper en continu oblige a garder un sort pret plutot qu a tout lancer.
+	# Premier essai : l Ombre. Mesure au banc, le niveau est tombe a 57-63 % de
+	# victoires, sous la cible. Cause : 16 PV la ou le Gardien en pesait 140,
+	# donc la vague 3 devenait plus LEGERE que la vague 2 et la vague 4 remontait
+	# d un coup. Une Ombre qui disparait la moitie du temps allonge en plus la
+	# vague sans rien apprendre.
+	#
+	# Le Gardien d ossements pese 165 PV, immunise au poison comme tout
+	# mort-vivant : dans un niveau plein de goules, il ferme la porte a la Mare
+	# de venin au pire moment. Il rattache aussi le monde 2 du mode infini.
 	b3.entries = [
-		_entry(E + "shade.tres", 1, 1.0),
-		_entry(E + "ghoul_priest.tres", 2, 2.0, 7.0),
-		_entry(E + "jelly.tres", 1, 2.0, 15.0),
-		_entry(E + "sprite.tres", 4, 1.6, 24.0),
+		_entry(E + "bonewarden.tres", 1, 1.0),
+		_entry(E + "ghoul_priest.tres", 2, 2.0, 9.0),
+		_entry(E + "sprite.tres", 4, 1.6, 22.0),
 	]
 	_save(b3, "res://resources/waves/w4_3_miniboss.tres")
 
@@ -1795,8 +1869,10 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# (et l IA du banc) traite le mieux avec un deck mono-cible. Il n y avait pas
 	# trop peu de PV, il y avait trop peu de CIBLES SIMULTANEES.
 	# La gelee force a gerer deux fronts pendant que le behemoth avance.
+	# Le Seigneur de braise : voir la note sur l Ecumeur (w2_5).
 	c5.entries = [
 		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "emberlord.tres", 1, 1.0, 24.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 9.0),
 		_entry(E + "golem.tres", 2, 2.5, 18.0),
 		_entry(E + "jelly.tres", 1, 2.0, 22.0),
@@ -2034,9 +2110,19 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		C: String, E: String) -> void:
 
 	var f1 := WaveDef.new()
+	# DERNIER NIVEAU DE LA CAMPAGNE, et il se gagnait 93 fois sur 100 — le plus
+	# facile des sept. Mesure du poids brut : la courbe n est pas monotone, elle
+	# recule de 33 % au niveau 3 et de 43 % au niveau 6, et le multiplicateur de
+	# difficulte etait quasi plat partout (1,20 a 1,29), donc il ne compensait
+	# rien. Un dernier niveau qui se donne ne cloture pas une campagne.
+	#
+	# On monte la PRESSION des vagues normales (1,25-1,30 -> 1,40-1,45) plutot
+	# que d ajouter des corps : la composition du niveau est deja celle qu on
+	# veut, c est son exigence qui manquait. Les vagues de mini-boss et de boss
+	# gardent leur reglage bas, leur tete apportant deja le saut.
 	f1.id = &"w7_1"
 	f1.duration = 28.0
-	f1.difficulty = 1.25
+	f1.difficulty = 1.40
 	# Ouverture en citation du niveau 1 : gnomes et lutins, le motif que la
 	# machine repete. Sauf qu ils arrivent deux fois plus vite et accompagnes.
 	f1.entries = [
@@ -2049,7 +2135,7 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	var f2 := WaveDef.new()
 	f2.id = &"w7_2"
 	f2.duration = 29.0
-	f2.difficulty = 1.3
+	f2.difficulty = 1.45
 	f2.entries = [
 		_entry(E + "void_knight.tres", 2, 2.5),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 9.0),
@@ -2076,7 +2162,7 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	var f4 := WaveDef.new()
 	f4.id = &"w7_4"
 	f4.duration = 32.0
-	f4.difficulty = 1.3
+	f4.difficulty = 1.45
 	# Les deux registres du jeu dans la meme vague : le blindage (Behemoth) et le
 	# nombre (Ruche qui eclate en 4). Le final ne laisse plus choisir son deck.
 	# Mesure au banc : cette vague videeait la barre de vie d un coup (95 -> 2 PV,
@@ -2085,8 +2171,10 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# (x3 = 12), soit 23 corps en 32 s — le pic de toute la campagne, sur la vague
 	# 4 d un niveau de 6. Une ruche et deux nuees : 14 corps, le finale reste dur
 	# sans etre un mur.
+	# Le Totem ancien : voir la note sur l Ecumeur (w2_5).
 	f4.entries = [
 		_entry(E + "behemoth.tres", 1, 1.0),
+		_entry(E + "totem_elder.tres", 1, 1.0, 26.0),
 		_entry(E + "hive.tres", 1, 2.5, 9.0),
 		_entry(E + "rat_swarm.tres", 2, 2.0, 20.0),
 	]
@@ -2095,7 +2183,7 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	var f5 := WaveDef.new()
 	f5.id = &"w7_5"
 	f5.duration = 34.0
-	f5.difficulty = 1.3
+	f5.difficulty = 1.45
 	# Avant-derniere vague : totem + glouton + jelly, les trois monstres qui
 	# fabriquent du probleme si on les laisse vivre.
 	f5.entries = [

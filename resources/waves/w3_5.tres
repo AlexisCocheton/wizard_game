@@ -1,26 +1,34 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_nouso"]
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="2_slqsm"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="3_rluyr"]
+[ext_resource type="Resource" path="res://resources/enemies/bonewarden.tres" id="3_slqsm"]
 [ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_ljujn"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_yqlwa"]
 
-[sub_resource type="Resource" id="Resource_nouso"]
+[sub_resource type="Resource" id="Resource_slqsm"]
 script = ExtResource("1_nouso")
 enemy = ExtResource("2_slqsm")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_slqsm"]
+[sub_resource type="Resource" id="Resource_rluyr"]
+script = ExtResource("1_nouso")
+enemy = ExtResource("3_slqsm")
+count = 1
+spawn_delay = 1.0
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_ljujn"]
 script = ExtResource("1_nouso")
 enemy = ExtResource("3_rluyr")
 count = 1
 spawn_delay = 2.0
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_rluyr"]
+[sub_resource type="Resource" id="Resource_yqlwa"]
 script = ExtResource("1_nouso")
 enemy = ExtResource("4_ljujn")
 count = 3
@@ -31,7 +39,7 @@ start_offset = 18.0
 script = ExtResource("5_yqlwa")
 id = &"w3_5"
 duration = 30.0
-entries = Array[ExtResource("1_nouso")]([SubResource("Resource_nouso"), SubResource("Resource_slqsm"), SubResource("Resource_rluyr")])
+entries = Array[ExtResource("1_nouso")]([SubResource("Resource_slqsm"), SubResource("Resource_rluyr"), SubResource("Resource_ljujn"), SubResource("Resource_yqlwa")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false

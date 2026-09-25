@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_wicnh"]
+
+[resource]
+script = ExtResource("1_wicnh")
+id = &"bonewarden"
+display_name = "Gardien d ossements"
+kind = 7
+power = 6
+max_hp = 165.0
+base_speed = 30.0
+base_xp = 13
+contact_damage = 0
+anim_key = &"warrior_black"
+sprite_scale = 1.0
+shape = 4
+color = Color(0.8, 0.78, 0.7, 1)
+base_radius = 64.0
+resistances = {
+0: 0.75,
+1: 1.25,
+2: 1.15,
+3: 0.9,
+6: 0.0
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6

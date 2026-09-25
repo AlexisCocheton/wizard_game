@@ -138,7 +138,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 ### Mode infini
 | Demande | Etat | Chantier |
 |---|---|---|
-| Tous monstres et boss, fond change toutes les 6 vagues, mini-boss v3 / boss v6, fond qui pese sur le tirage | PARTIEL (Massacre = infini par budget, mini-boss v5 / boss v10) | J |
+| Tous monstres et boss, fond change toutes les 6 vagues, mini-boss v3 / boss v6, fond qui pese sur le tirage | **FAIT** (5 mondes qui bouclent, 47-70 % de monstres du lieu) | J |
 
 ### Sorts et passifs
 | Demande | Etat | Chantier |
@@ -414,3 +414,46 @@ Deux corrections faites en cours de route, toutes deux attrapees par un test :
 dans la fenetre, mais la courbe est PLATE et `lvl_07` est le plus facile des
 sept. A regarder : un dernier niveau qui se gagne 9 fois sur 10 ne cloture pas
 une campagne.
+
+
+---
+
+## 8. Mode infini et mini-boss — 25 septembre
+
+**Le Massacre traverse cinq mondes.** Le fond change toutes les 6 vagues, un
+mini-boss tous les 3 tours, un boss tous les 6, et le lieu pese sur le tirage
+(47 a 70 % de monstres de la famille locale). Apres le cinquieme monde on boucle
+SANS remettre le budget a zero : le deuxieme passage dans le Monde volant envoie
+les memes creatures avec trois fois plus de points.
+
+**Quatre mini-boss crees**, un par monde : Ecumeur du ciel (volant, leger et
+rapide), Gardien d ossements (lourd, immunise au poison), Seigneur de braise
+(resiste au feu, craint le givre), Totem ancien (promotion du Gardien-totem).
+Le jeu n en avait qu UN — c etait le meme Gardien a chaque palier de chaque
+monde, exactement le defaut corrige pour la campagne.
+
+**Le piege qui a failli passer** : les CREER ne suffisait pas.
+`WaveSpawner.build_membership()` deduit le monde d un monstre de sa DENSITE dans
+les vagues ECRITES ; les quatre nouveaux n apparaissaient dans aucune vague,
+donc ils n appartenaient a aucun monde et le mode infini ne les proposait
+jamais. Une sonde l a montre : invisibles malgre leur existence, et l AUDIT ne
+voyait rien. Chacun est desormais place une fois dans une vague de son acte, et
+`test_wave_budget` verifie l APPARTENANCE et le TIRAGE REEL, pas seulement le
+catalogue.
+
+**Deux corrections attrapees par le garde-fou d equilibrage**, pas par moi :
+1. l Ecumeur en vague 5 de `lvl_02` creait un saut de plus de x2 ("428 PV apres
+   182") — deplace en vague 6, qui l absorbe ;
+2. l Ombre en mini-boss de `lvl_04` pesait 16 PV la ou le Gardien en pesait 140 :
+   la vague 3 devenait plus legere que la vague 2 et le niveau tombait a 57-63 %.
+   Remplacee par le Gardien d ossements (165 PV).
+
+**Dernier niveau renforce** : `lvl_07` se gagnait 93 fois sur 100, le plus facile
+des sept. Mesure du poids brut : la courbe n est pas monotone (recul de 33 % au
+niveau 3, de 43 % au niveau 6) et le multiplicateur de difficulte etait plat
+partout (1,20-1,29), donc il ne compensait rien. Les vagues normales passent de
+1,25-1,30 a 1,40-1,45.
+
+**A surveiller** : `lvl_04` est le niveau le plus VARIABLE du banc — trois
+mesures ont donne 57 %, 63 % et 73 %. Sa moyenne est proche du plancher de 60 %.
+Ne pas le regler sur une seule mesure.

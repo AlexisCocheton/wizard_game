@@ -38,6 +38,7 @@ func run() -> void:
 	_test_boss_differents_selon_le_monde()
 	_test_budget_laisse_place_au_boss()
 	_test_chaque_monde_a_une_famille_reelle()
+	_test_chaque_monde_a_son_mini_boss()
 
 
 func _test_budget_progressif() -> void:
@@ -325,3 +326,67 @@ func _acte_a_un_niveau(act: int) -> bool:
 		if lvl != null and lvl.act == act and not lvl.waves.is_empty():
 			return true
 	return false
+
+
+## Chaque monde du mode infini doit avoir SON mini-boss.
+##
+## Le defaut mesure : le Massacre pose un mini-boss toutes les 3 vagues et
+## traverse CINQ mondes, mais le jeu n avait qu UN SEUL monstre de type
+## MINIBOSS. C etait le meme Gardien a chaque palier, dans chaque monde —
+## exactement le defaut corrige pour la campagne.
+##
+## Le piege qui a failli me tromper : CREER les mini-boss ne suffisait pas.
+## `build_membership()` deduit le monde d un monstre de sa DENSITE dans les
+## vagues ECRITES ; les quatre nouveaux n apparaissaient dans aucune vague, donc
+## ils n appartenaient a aucun monde et le mode infini ne les proposait jamais.
+## Une sonde l a montre : ils etaient invisibles malgre leur existence.
+## Ce test verifie donc l APPARTENANCE, pas seulement le catalogue.
+func _test_chaque_monde_a_son_mini_boss() -> void:
+	var minis: Array[EnemyDef] = []
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e != null and e.kind == GameEnums.EnemyKind.MINIBOSS:
+			minis.append(e)
+	ok(minis.size() >= 4,
+		"le jeu a au moins 4 mini-boss (%d) — un seul les rendait tous identiques"
+		% minis.size())
+
+	var membership: Dictionary = WaveSpawner.build_membership()
+	var mondes: Dictionary = {}
+	for e in minis:
+		var w: int = int(membership.get(e.id, -1))
+		if w >= 0:
+			mondes[w] = true
+	# Les mondes adosses a un acte QUI A DES NIVEAUX. Le Seuil divin n en a
+	# aucun, donc aucun monstre ne peut lui etre rattache : c est voulu, il y
+	# tire uniformement.
+	var actes: Dictionary = {}
+	for lv: LevelDef in ContentDB.levels.values():
+		actes[lv.act] = true
+	var attendus: int = 0
+	for i in WaveBudget.WORLDS.size():
+		if actes.has(int(WaveBudget.WORLDS[i].get("act", 0))):
+			attendus += 1
+	eq(mondes.size(), attendus,
+		"chaque monde adosse a un acte a son mini-boss (%d sur %d)"
+		% [mondes.size(), attendus])
+
+	# Et ils sont REELLEMENT tires : un mini-boss rattache mais jamais choisi
+	# serait du contenu mort qu aucun audit ne voit.
+	var pool: Array[EnemyDef] = []
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e != null and not e.projectile:
+			pool.append(e)
+	var tires: Dictionary = {}
+	var rng := RandomNumberGenerator.new()
+	for graine in 12:
+		rng.seed = graine
+		for vague in range(1, 25):
+			var w: WaveDef = WaveBudget.build_wave(vague, pool, rng, pool, membership)
+			if w == null:
+				continue
+			for entree: WaveEntry in w.entries:
+				if entree != null and entree.enemy != null 						and entree.enemy.kind == GameEnums.EnemyKind.MINIBOSS:
+					tires[entree.enemy.id] = true
+	ok(tires.size() >= attendus,
+		"chaque monde propose reellement son mini-boss (%d tires sur %d attendus)"
+		% [tires.size(), attendus])
