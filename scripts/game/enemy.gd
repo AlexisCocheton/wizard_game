@@ -23,6 +23,14 @@ var growth: float = 1.0
 var _max_hp: float = 1.0
 var _slow_time: float = 0.0
 var _slow_factor: float = 1.0
+## Secondes d immobilisation restantes (sort d etourdissement, chantier H).
+## Distinct du ralentissement : un ralentissement est un FACTEUR, qui ne peut que
+## tendre vers zero sans jamais l atteindre, alors qu un etourdissement est un
+## ETAT — le monstre n avance pas, ne tire pas, ne frappe rien. Melanger les deux
+## aurait fait d un stun un ralentissement a 100 %, que la table de resistances
+## aurait ramene a 99 % chez la moitie du bestiaire : le joueur aurait vu son sort
+## le plus cher ne rien figer du tout.
+var _stun_time: float = 0.0
 var _phase_timer: float = 0.0
 var _hidden: bool = false
 var _dead: bool = false
@@ -193,6 +201,17 @@ func advance(world_delta: float) -> void:
 			return
 		_spawn_fade = 0.0
 		modulate.a = 1.0
+	# ETOURDISSEMENT : il ne bouge pas, il ne tire pas, il ne frappe rien. Le
+	# compteur suit le temps du MONDE comme tout le reste, donc a 500 % de vitesse
+	# une seconde d etourdissement ne dure qu un cinquieme de seconde reelle —
+	# c est le prix de la mecanique signature, et il vaut mieux qu il soit paye
+	# ici, visiblement, que dissimule dans un temps reel qui rendrait le stun
+	# demesure en fin de partie.
+	if _stun_time > 0.0:
+		_stun_time -= world_delta
+		if _stun_time > 0.0:
+			return
+		_stun_time = 0.0
 	if _slow_time > 0.0:
 		_slow_time -= world_delta
 		if _slow_time <= 0.0:
@@ -244,6 +263,22 @@ func advance(world_delta: float) -> void:
 		_path.clear()
 		_path_index = 0
 		return
+
+	# PROVOCATION : un arbre plante a portee remplace le mage comme objectif. Le
+	# monstre marche droit dessus au lieu de descendre, et Battlefield lui fait
+	# encaisser des coups quand il arrive au pied. C est tout l achat de temps que
+	# paie la carte : le monstre ne recule pas, il se DETOURNE.
+	#
+	# Traite AVANT `_advance_along_path` et sans passer par l A*, parce qu un arbre
+	# ne bloque aucune cellule : il n y a rien a contourner, seulement une cible
+	# plus proche. Le retour coupe aussi l ondulation et la ligne de tir, qui sont
+	# des comportements de descente et n ont plus de sens quand la descente est
+	# abandonnee.
+	if battlefield != null:
+		var cible: TerrainProp = battlefield.taunt_target_for(position)
+		if cible != null:
+			_walk_to_prop(cible, speed, world_delta)
+			return
 
 	_advance_along_path(speed, world_delta)
 
@@ -324,6 +359,29 @@ func _advance_along_path(speed: float, world_delta: float) -> void:
 		_path.clear()
 		_path_index = 0
 		_base_x = position.x
+
+
+## Marche vers un accessoire provocateur. Une fois au pied, il s arrete : les
+## degats sont portes par Battlefield, qui voit tous les monstres autour de
+## l arbre et n a pas besoin qu ils se marchent dessus pour cogner.
+##
+## Le sprite est retourne comme pour une descente normale (`_last_x` suffit, il est
+## relu plus bas dans advance() — mais advance() sort ici, alors on le fait nous).
+func _walk_to_prop(cible: TerrainProp, speed: float, world_delta: float) -> void:
+	var vers: Vector2 = cible.position - position
+	var d: float = vers.length()
+	var arret: float = cible.reach + radius() * 0.5
+	if d > arret:
+		var pas: float = minf(speed * world_delta, d - arret)
+		position += vers / d * pas
+	# Le chemin A* memorise vise le mage : il faut l oublier, sinon le monstre
+	# repart en arriere des que l arbre tombe.
+	_path.clear()
+	_path_index = 0
+	_base_x = position.x
+	if _anim != null and _anim.visible and absf(position.x - _last_x) > 0.5:
+		_anim.flip_h = position.x < _last_x
+	_last_x = position.x
 
 
 func _recompute_path() -> void:
@@ -459,6 +517,37 @@ func apply_slow(factor: float, duration: float) -> void:
 		return
 	_slow_factor = effectif
 	_slow_time = duration
+
+
+## Immobilise le monstre. Renvoie false s il y resiste, pour que le sort puisse
+## compter ses vraies victimes et que rien ne pretende avoir fige un golem.
+##
+## La resistance lue est celle du RALENTISSEMENT, et le seuil est binaire : sous
+## une resistance de 50 % le monstre ne se fige plus du tout. Un etourdissement
+## gradue n a aucun sens — on ne peut pas etre immobile a moitie — et laisser
+## passer le stun sur les monstres resistants au controle aurait vide cette
+## resistance de son interet, puisque le stun est la version extreme du meme
+## effet. C est le point que le brief du chantier soulevait : « un stun qui ignore
+## cette immunite la vide de son sens ».
+##
+## Le monstre le plus lourd du bestiaire garde donc une seule reponse : le tuer.
+const STUN_RESIST_THRESHOLD: float = 0.5
+
+
+func apply_stun(duration: float) -> bool:
+	if _dead or duration <= 0.0:
+		return false
+	if definition != null \
+			and definition.resistance_to(GameEnums.DamageTag.SLOW) <= STUN_RESIST_THRESHOLD:
+		return false
+	# Le plus LONG gagne : deux etourdissements qui se superposent ne doivent pas
+	# raccourcir le premier.
+	_stun_time = maxf(_stun_time, duration)
+	return true
+
+
+func is_stunned() -> bool:
+	return _stun_time > 0.0
 
 
 func kill() -> void:
@@ -600,6 +689,10 @@ func dispel() -> void:
 	_enrage_bonus = 0.0
 	_slow_factor = 1.0
 	_slow_time = 0.0
+	# L etourdissement est un effet SUBI, donc il part avec la dissipation. C est
+	# une perte pour le joueur, et c est coherent : Lumiere purifiante « efface les
+	# effets en cours », les siens compris — la carte ne peut pas etre gratuite.
+	_stun_time = 0.0
 	if _shield_up:
 		_shield_up = false
 		if _body != null:

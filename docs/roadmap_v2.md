@@ -127,13 +127,13 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 ### Campagne
 | Demande | Etat | Chantier |
 |---|---|---|
-| Carte de campagne sur les fonds de combat, points jaunes, fleches d'acte | PARTIEL (carte en iles existe) | E |
+| Carte de campagne sur les fonds de combat, points jaunes, fleches d'acte | **FAIT** (5 actes, une page par acte) | E |
 | 3 objectifs par niveau | FAIT (3 par niveau, 4 types) ; types a enrichir | H |
 | Histoire : prologue, 5 actes, plot twist de l'enfant | **FAIT** (docs/histoire.md) | D |
 | Sequences visual novel entre les niveaux | **FAIT** (systeme + 9 scenes : prologue et acte 1) | D |
 | Niveau 1 tutoriel, deck 9 cartes, 3 vagues ; niveau 2 en 4 vagues ; puis 6 | A FAIRE | H |
 | Pool de cartes qui grandit de 3 par niveau | A FAIRE | H |
-| Fin : deblocage du mode infini | A FAIRE | J |
+| Fin : deblocage du mode infini | **FAIT** (`SaveData.campaign_cleared()`) | — |
 
 ### Mode infini
 | Demande | Etat | Chantier |
@@ -148,7 +148,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | **FAIT** (14 passifs) | F |
 | Icone des passifs a cote de la barre de vitesse, a leur seuil | **FAIT** | F |
 | Amelioration des cartes en combat (XP par lancer, choix parmi 3) | A FAIRE | G |
-| Arbre qui attire les ennemis ; sort de stun ; arbre a zone de poison ; eau qui ralentit | A FAIRE (Tiny Swords, undead tileset) | H |
+| Arbre qui attire les ennemis ; sort de stun ; arbre a zone de poison ; eau qui ralentit | **FAIT** (4 cartes, 3 verbes d effet neufs) | H |
 | Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre) | B3 |
 
 ### Monstres
@@ -337,3 +337,42 @@ grosse que le defaut ; ramenee a une seule.
   portrait humain sur le disque.
 - `poison_ball` emprunte la feuille du slime teintee en vert.
 - Trois points de licence a regler avant une vente (section 1).
+
+
+---
+
+## 7. Mesure du 25 septembre : les boss se repetent
+
+Constat chiffre sur le contenu genere, pas une impression :
+
+| Niveau | Mini-boss | Boss |
+|---|---|---|
+| lvl_01 | — | — (tutoriel, voulu) |
+| lvl_02 | `warden` | `chronos` |
+| lvl_03 | `warden` | `chronos` |
+| lvl_04 | `warden` | `gravecaller` |
+| lvl_05 | `warden` | `forge_colossus` |
+| lvl_06 | `warden` | `chronos` |
+| lvl_07 | `warden` | `chronos` |
+
+**Sur six niveaux a boss, le joueur affronte DEUX adversaires uniques** : le meme
+Gardien six fois, et Chronos quatre fois — dont le premier et le dernier niveau
+de la campagne. C est exactement ce que le testeur voulait eviter en demandant
+des boss a mecaniques originales.
+
+**Le manque de monstres n est PAS la cause.** Quatre P10 existent (`chronos`,
+`gravecaller`, `forge_colossus`, `wraith_lord`) et plusieurs P3-P6 feraient des
+mini-boss (`warden`, `totem_guardian`, `glutton`, `behemoth`, `void_knight`,
+`berserker`, `golem`). Il y a de quoi donner un adversaire different a chaque
+niveau sans rien creer.
+
+**La cause est une compression.** `docs/histoire.md` decrit 21 niveaux sur
+5 actes ; le jeu en a 7. En repliant 21 en 7, chaque niveau a herite du meme
+gardien d acte. Le document prescrit d ailleurs l inverse de ce qui est
+genere : le Gardien doit mourir en `lvl_04` (l Enfant le reconnait, la scene en
+depend), et `chronos` doit devenir un monstre ORDINAIRE a l acte V.
+
+**A trancher** : soit on redistribue les boss sur les 7 niveaux existants, soit
+on ouvre les niveaux manquants. La premiere option est faisable aujourd hui, la
+seconde demande les packs absents. Le fichier a modifier est
+`tools/make_content.gd`, occupe par un chantier en cours au moment de ce constat.

@@ -902,6 +902,128 @@ func _cards() -> void:
 	_save(venom, "res://resources/cards/legendary/venom_mire.tres")
 
 
+	# --- Sorts de TERRAIN (chantier H) ---
+	#
+	# Demande du testeur : « Arbre qui attire les ennemis ; sort de stun ; arbre a
+	# zone de poison ; eau qui ralentit ». Quatre sorts qui POSENT quelque chose
+	# sur le terrain au lieu de retirer des PV. Le jeu n en avait qu un, le Mur de
+	# pierre, et il ne savait faire qu une chose : barrer un passage.
+	#
+	# Aucun des quatre n est une carte de degats. Ils repondent tous a la meme
+	# question — « ils arrivent trop bas » — mais par quatre chemins qui ne se
+	# remplacent pas : detourner, empoisonner sur pied, arreter net, faire reculer.
+
+	# L ARBRE QUI ATTIRE. C est une provocation, donc un achat de temps : les
+	# monstres a portee marchent sur l arbre au lieu de descendre et le tapent
+	# jusqu a l abattre.
+	#
+	# Les chiffres repondent a la question posee par le brief (« combien de temps
+	# tient-il ? S il est trop solide, le joueur n a plus rien a faire »). 90 PV,
+	# c est a peu pres deux secondes de trois monstres P2 au pied : assez pour
+	# reposer un sort, jamais assez pour se croiser les bras. Sa duree de 10 s le
+	# borne meme si personne ne vient le frapper, sinon un arbre plante loin de la
+	# trajectoire resterait plante toute la vague pour rien.
+	#
+	# Portee de 460 px : moins de la moitie de la largeur du terrain. Un arbre qui
+	# provoquerait tout l ecran serait un bouton « plus personne n avance ».
+	var totem := _card("heartwood_totem", "Totem de coeur-de-bois",
+		"Plante un arbre de 90 PV pendant 10 s. Les monstres a portee le prennent "
+		+ "pour cible au lieu du mage et s acharnent dessus.",
+		GameEnums.Rarity.RARE, 1.6, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.PHYSICAL],
+		[_spec("taunt_prop", 0.0, 10.0, 460.0,
+			{&"prop_hp": 90.0, &"kind": "tree"})])
+	totem.fx_key = &"spirit_gold"
+	totem.sfx_key = &"stone_shove"
+	_save(totem, "res://resources/cards/rare/heartwood_totem.tres")
+
+	# L ARBRE A ZONE DE POISON. Meme verbe, deux parametres de plus : il porte une
+	# mare qui vit et meurt AVEC lui. Abattre l arbre coupe le poison, ce qui donne
+	# aux monstres une vraie raison de s en prendre a lui — et au joueur une raison
+	# de le planter la ou ils ne l atteindront pas tout de suite.
+	#
+	# Element POISON : il subit donc la table de resistances du bestiaire. Les
+	# morts-vivants (Pretre goule, Releve, Appeleur, Seigneur Spectre) y sont
+	# immunises, les golems et totems aussi. C est voulu : c est l arbitrage que les
+	# resistances existent pour creer, et la carte annonce sa faiblesse dans son
+	# element.
+	#
+	# Epique et pas rare : la provocation ET la zone dans une seule carte, c est
+	# deux effets qui se renforcent — les monstres viennent se placer eux-memes dans
+	# le poison. 60 PV seulement, la moitie du totem : sa valeur est dans la mare,
+	# pas dans son bois.
+	var sapling := _card("blight_sapling", "Semis de fletrissure",
+		"Plante un arbre empoisonne de 60 PV pendant 12 s : il attire les monstres "
+		+ "et repand 9 degats de POISON par seconde autour de lui.",
+		GameEnums.Rarity.EPIC, 1.9, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.POISON],
+		[_spec("taunt_prop", 9.0, 12.0, 400.0,
+			{&"prop_hp": 60.0, &"kind": "tree", &"zone_radius": 230.0})])
+	sapling.fx_key = &"spirit_violet"
+	# `whoosh_deep` et non `spell_crackle` : ce dernier portait deja trois cartes,
+	# et le projet tient a ce qu un son soit partage entre deux ou trois au plus —
+	# c est ce qui evite que tous les sorts s entendent pareil. Un souffle grave
+	# convient de toute facon mieux a un arbre qui perce le sol qu un crepitement.
+	sapling.sfx_key = &"whoosh_deep"
+	_save(sapling, "res://resources/cards/epic/blight_sapling.tres")
+
+	# LE STUN. Immobiliser est la chose la plus forte qu on puisse faire dans un jeu
+	# en temps reel : la carte est donc chere et breve.
+	#
+	# 1,1 s d arret pour 1,9 s d incantation : le rapport est verrouille par un test
+	# (l etourdissement dure moins que l incantation qui le relance). Deux
+	# exemplaires en main ne peuvent donc pas figer la partie — il reste toujours un
+	# trou entre deux stuns, et le rapport tient a toutes les vitesses puisque la
+	# jauge divise les deux termes.
+	#
+	# Zone de 200 px, plus petite que la Pluie de givre : elle attrape un groupe
+	# serre, jamais la vague entiere.
+	#
+	# FOUDRE, et les monstres resistants au ralentissement (Golem, Behemoth, Colosse
+	# des forges, Chronos) y echappent completement : c est le point que le brief
+	# soulevait — un stun qui ignorerait cette immunite la viderait de son sens. Le
+	# poids lourd garde donc une seule reponse : le tuer.
+	var thunder := _card("thunder_root", "Racine de tonnerre",
+		"Etourdit 1,1 s les monstres d une petite zone : vitesse nulle, ils ne "
+		+ "tirent ni ne frappent. 14 degats de FOUDRE au passage. Sans effet sur "
+		+ "ce qui resiste au ralentissement.",
+		GameEnums.Rarity.EPIC, 1.9, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.LIGHTNING],
+		[_spec("stun_zone", 14.0, 1.1, 200.0)])
+	thunder.fx_key = &"lightning_fork"
+	thunder.sfx_key = &"zap_short"
+	_save(thunder, "res://resources/cards/epic/thunder_root.tres")
+
+	# L EAU QUI RALENTIT — et la question que le brief posait : en quoi differe-t-elle
+	# du Champ de givre ?
+	#
+	# Le givre est un FACTEUR de vitesse : il tend vers zero sans jamais renverser la
+	# marche, un monstre gele avance toujours, juste moins vite. L eau est un
+	# COURANT : elle s ajoute au deplacement avec le signe oppose, donc dans la nappe
+	# le monstre RECULE. Le joueur ne gagne plus du temps, il regagne du terrain, et
+	# c est la seule carte du jeu qui le fasse sur la duree — l Onde de repulsion
+	# pousse une fois puis s arrete.
+	#
+	# 45 px/s de remontee contre les ~31 px/s d un gnome a x1 (60 x
+	# ENEMY_SPEED_SCALE) : les petits monstres reculent vraiment, les gros freinent
+	# sans repartir en arriere. La resistance au ralentissement s applique au
+	# courant, donc le Golem la traverse comme si de rien n etait.
+	#
+	# AUCUN degat, expres : avec des degats elle serait strictement meilleure que le
+	# Champ de givre, qui n aurait plus aucune raison d exister. Elle est commune et
+	# rapide a lancer parce que son travail est de gagner trois secondes tout de
+	# suite, pas de remporter une vague.
+	var tide := _card("tidal_pool", "Nappe montante",
+		"Tres large nappe d eau pendant 7 s : le courant fait RECULER les monstres "
+		+ "au lieu de les ralentir. Aucun degat.",
+		GameEnums.Rarity.COMMON, 1.3, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
+		[_spec("water_flood", 45.0, 7.0, 300.0)], 2)
+	tide.fx_key = &"orb_cyan"
+	tide.sfx_key = &"drip_frost"
+	_save(tide, "res://resources/cards/common/tidal_pool.tres")
+
+
 ## Deck pre-etabli EXPLICITE : [[chemin, exemplaires], ...] -> une entree par exemplaire.
 ## Ne depend pas de copies_in_starter, ce qui permet d y placer des rares.
 func _deck(spec: Array) -> Array[SpellCard]:
@@ -1180,12 +1302,26 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# Le niveau 2 envoie le DOUBLE de PV du niveau 1 : son deck doit suivre, sinon
 	# le joueur affronte deux fois plus avec les memes outils. Plus de zones, qui
 	# sont la seule facon de traiter plusieurs monstres par sort.
+	# La Nappe montante entre ICI, au premier niveau qui envoie des groupes RAPIDES
+	# (sprites, nuees). Contre un monstre lent, faire reculer de 45 px/s ne se voit
+	# pas ; contre un sprite qui descend vite, la nappe rend au joueur les trois
+	# secondes qu il vient de perdre. Elle prend la place d un Trait arcanique : le
+	# deck reste a 15 cartes, et ce qu il perd en degats il le regagne en terrain —
+	# exactement l arbitrage que la carte existe pour poser.
+	#
+	# UN exemplaire et pas deux. Mesure au banc, 30 parties : a deux exemplaires le
+	# niveau 2 montait a 30 victoires sur 30, soit hors de la bande 60-95 % que le
+	# jeu vise. Ce n etait pas du bruit de mesure — c est le seul niveau qui bougeait
+	# de cette facon, et le seul ou la carte etait doublee. Avec un exemplaire la
+	# carte se joue encore une fois par partie sans transformer le niveau en
+	# promenade.
 	lvl2.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/arcane_bolt.tres", 1],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/frost_field.tres", 1],
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/fireball.tres", 3],
+		[C + "common/tidal_pool.tres", 1],
 		[C + "rare/stone_wall.tres", 1],
 		[C + "rare/temporal_drag.tres", 1],
 		[C + "rare/meteor.tres", 2],
@@ -1342,8 +1478,21 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# elle frappe d AUTRES monstres : l Ombre resiste au feu (0.90) mais craint
 	# l arcane (1.30), l Archer resiste au feu (0.80) et pas a l arcane. Le deck
 	# reste anti-nombre, mais il faut maintenant choisir QUELLE zone poser.
+	# Le Semis de fletrissure entre ICI parce que l Ossuaire envoie des nuees
+	# DISPERSEES : une zone seule y frappe un monstre a la fois. L arbre empoisonne
+	# resout les deux moities du probleme d un coup — il les rassemble a son pied,
+	# et son poison les use pendant qu ils tapent le bois.
+	#
+	# Il remplace une Boule de feu : le deck reste a 15 cartes et a 3 epiques, le
+	# plafond de DeckRules. La Spirale de sel reste a cote, et les deux se completent
+	# — aspirer PUIS provoquer tient un couloir entier.
+	#
+	# Reserve : les goules de ce niveau sont immunisees au poison. L arbre y garde sa
+	# provocation, mais sa mare ne mord que sur les gelees et les rats. C est
+	# volontaire : la carte gagne en valeur au niveau suivant, elle n est pas gratuite
+	# ici.
 	lvl3.exploration_deck = _deck([
-		[C + "common/fireball.tres", 3],
+		[C + "common/fireball.tres", 2],
 		[C + "common/ember_pool.tres", 1],
 		[C + "common/frost_rain.tres", 2],
 		[C + "common/arcane_bolt.tres", 1],
@@ -1351,6 +1500,7 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "rare/salt_spiral.tres", 2],
 		[C + "rare/purifying_light.tres", 1],
 		[C + "epic/resonance.tres", 2],
+		[C + "epic/blight_sapling.tres", 1],
 		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl3.objectives = [o1, o2, o3]
@@ -1483,11 +1633,20 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	# et Marque de faiblesse pour les deux P4 de la vague 5. Le Rappel d ossements
 	# repond au vrai probleme du niveau : c est le plus long de la campagne, on y
 	# manque de cartes avant d y manquer de PV.
+	# Le Totem de coeur-de-bois entre ICI, au niveau du GRAND APPEL : c est le plus
+	# long du jeu et son boss INVOQUE sans arret. Contre un flux, on ne gagne pas en
+	# tuant plus vite, on gagne en donnant au flux autre chose a faire. L arbre est
+	# la seule carte du jeu qui le permette.
+	#
+	# Deux exemplaires, contre une Boule de feu et une Fleche percante : 15 cartes,
+	# 2 epiques, la regle tient. Le deck perd deux sorts de degats et gagne vingt
+	# secondes cumulees de repit — a ce niveau-la, le temps vaut plus que les PV.
 	lvl4.exploration_deck = _deck([
-		[C + "common/fireball.tres", 2],
+		[C + "common/fireball.tres", 1],
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/piercing_arrow.tres", 1],
+		[C + "rare/heartwood_totem.tres", 2],
 		[C + "rare/bone_recall.tres", 1],
 		[C + "rare/meteor.tres", 2],
 		[C + "rare/salt_spiral.tres", 1],
@@ -1780,9 +1939,22 @@ cadran, et ils ignorent qui la passe."
 	# frappent tout un groupe, Brasier tient un couloir, et le Vide d emprise
 	# reste la carte signature — seule reponse au trio totem/berserker/chevalier
 	# qui se protege mutuellement.
+	# La Racine de tonnerre entre ICI et pas aux Forges, ce qui est contre-intuitif
+	# puisque les Forges sont le niveau des gros. C est justement la raison : les
+	# Forges alignent des Golems et un Colosse, tous IMMUNISES au ralentissement,
+	# donc a l etourdissement. Un stun y serait une carte morte, et la carte aurait
+	# menti au joueur.
+	#
+	# La Cour brisee, elle, empile des monstres a effets qui craignent tous d etre
+	# arretes une seconde : le Berserker qui s enrage, le Chevalier du vide, le
+	# Gardien-totem dont il faut couper l aura. Arreter le porteur d aura une
+	# seconde, c est la fenetre qui manquait pour tuer ce qu il protege.
+	#
+	# Elle prend la place d une Resonance : 15 cartes, 3 epiques, le plafond tenu.
 	lvl6.exploration_deck = _deck([
 		[C + "epic/void_grip.tres", 1],
-		[C + "epic/resonance.tres", 2],
+		[C + "epic/resonance.tres", 1],
+		[C + "epic/thunder_root.tres", 1],
 		[C + "common/fireball.tres", 3],
 		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 2],

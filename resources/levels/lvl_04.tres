@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=63 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=64 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_yn11s"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_th6to"]
@@ -22,6 +22,7 @@
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="19_hnn0k"]
 [ext_resource type="Resource" path="res://resources/cards/rare/bone_recall.tres" id="20_7yug6"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="21_1pqnj"]
+[ext_resource type="Resource" path="res://resources/cards/rare/heartwood_totem.tres" id="21_th6to"]
 [ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="22_3u6xu"]
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="23_d7imv"]
 [ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="24_w12a2"]
@@ -76,7 +77,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_yn11s"]
+[sub_resource type="Resource" id="Resource_th6to"]
 script = ExtResource("28_ke8ff")
 id = &"w4_1"
 duration = 26.0
@@ -106,7 +107,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_th6to"]
+[sub_resource type="Resource" id="Resource_nxc80"]
 script = ExtResource("28_ke8ff")
 id = &"w4_2"
 duration = 28.0
@@ -143,7 +144,7 @@ count = 4
 spawn_delay = 1.6
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_nxc80"]
+[sub_resource type="Resource" id="Resource_amgrg"]
 script = ExtResource("28_ke8ff")
 id = &"w4_3_miniboss"
 duration = 34.0
@@ -180,7 +181,7 @@ count = 1
 spawn_delay = 2.2
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_amgrg"]
+[sub_resource type="Resource" id="Resource_6lwi4"]
 script = ExtResource("28_ke8ff")
 id = &"w4_4"
 duration = 30.0
@@ -217,7 +218,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_6lwi4"]
+[sub_resource type="Resource" id="Resource_ujq15"]
 script = ExtResource("28_ke8ff")
 id = &"w4_5"
 duration = 32.0
@@ -240,7 +241,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_ujq15"]
+[sub_resource type="Resource" id="Resource_3c44l"]
 script = ExtResource("28_ke8ff")
 id = &"w4_6_boss"
 duration = 45.0
@@ -255,20 +256,15 @@ id = &"lvl_04"
 display_name = "Le Grand Appel"
 act = 2
 subtitle = "Le rituel reussit"
-intro_text = "Tu arrives trop tard : le cercle est deja trace et les 
-Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement 
-etre la quand la porte s ouvrira, pour voir ce qui en sortira."
-outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un 
-PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le 
-rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti 
-— puis t a montre la porte, encore ouverte."
+intro_text = "Tu arrives trop tard : le cercle est deja trace et les Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement etre la quand la porte s ouvrira, pour voir ce qui en sortira."
+outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti — puis t a montre la porte, encore ouverte."
 intro_story = &"lvl_04_intro"
 outro_story = &"lvl_04_outro"
 terrain = "sand"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("28_ke8ff")]([SubResource("Resource_yn11s"), SubResource("Resource_th6to"), SubResource("Resource_nxc80"), SubResource("Resource_amgrg"), SubResource("Resource_6lwi4"), SubResource("Resource_ujq15")])
+waves = Array[ExtResource("28_ke8ff")]([SubResource("Resource_th6to"), SubResource("Resource_nxc80"), SubResource("Resource_amgrg"), SubResource("Resource_6lwi4"), SubResource("Resource_ujq15"), SubResource("Resource_3c44l")])
 enemy_pool = Array[ExtResource("1_yn11s")]([ExtResource("2_th6to"), ExtResource("3_nxc80"), ExtResource("4_amgrg"), ExtResource("5_6lwi4"), ExtResource("6_ujq15"), ExtResource("7_3c44l"), ExtResource("8_1shp4"), ExtResource("9_nen0k"), ExtResource("10_sti6l"), ExtResource("11_n0k5c"), ExtResource("12_1ou2m"), ExtResource("13_qy046"), ExtResource("14_5lu5t"), ExtResource("15_yn11s")])
-exploration_deck = Array[ExtResource("15_2hq1a")]([ExtResource("16_3ggyh"), ExtResource("16_3ggyh"), ExtResource("17_4ad6v"), ExtResource("17_4ad6v"), ExtResource("18_c48fb"), ExtResource("18_c48fb"), ExtResource("19_hnn0k"), ExtResource("19_hnn0k"), ExtResource("20_7yug6"), ExtResource("21_1pqnj"), ExtResource("21_1pqnj"), ExtResource("22_3u6xu"), ExtResource("23_d7imv"), ExtResource("23_d7imv"), ExtResource("24_w12a2")])
+exploration_deck = Array[ExtResource("15_2hq1a")]([ExtResource("16_3ggyh"), ExtResource("17_4ad6v"), ExtResource("17_4ad6v"), ExtResource("18_c48fb"), ExtResource("18_c48fb"), ExtResource("19_hnn0k"), ExtResource("21_th6to"), ExtResource("21_th6to"), ExtResource("20_7yug6"), ExtResource("21_1pqnj"), ExtResource("21_1pqnj"), ExtResource("22_3u6xu"), ExtResource("23_d7imv"), ExtResource("23_d7imv"), ExtResource("24_w12a2")])
 objectives = Array[ExtResource("26_ju63x")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("25_43csu")
 next_levels = Array[StringName]([&"lvl_05", &"lvl_06"])

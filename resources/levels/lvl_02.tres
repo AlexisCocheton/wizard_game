@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=72 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=73 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_c0gve"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_5i0p2"]
@@ -34,6 +34,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_17akq"]
 [ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="22_krw0l"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="23_me4lm"]
+[ext_resource type="Resource" path="res://resources/cards/common/tidal_pool.tres" id="26_ktaj7"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="28_q8nio"]
 [ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="29_ktaj7"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="33_tbed1"]
@@ -80,7 +81,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_q8nio"]
+[sub_resource type="Resource" id="Resource_ktaj7"]
 script = ExtResource("20_vo2kc")
 id = &"w2_1"
 duration = 26.0
@@ -117,7 +118,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_ktaj7"]
+[sub_resource type="Resource" id="Resource_o0ilu"]
 script = ExtResource("20_vo2kc")
 id = &"w2_2"
 duration = 26.0
@@ -154,7 +155,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_o0ilu"]
+[sub_resource type="Resource" id="Resource_e17r0"]
 script = ExtResource("20_vo2kc")
 id = &"w2_3"
 duration = 28.0
@@ -184,7 +185,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_e17r0"]
+[sub_resource type="Resource" id="Resource_dnda2"]
 script = ExtResource("20_vo2kc")
 id = &"w2_4_miniboss"
 duration = 32.0
@@ -214,7 +215,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 15.0
 
-[sub_resource type="Resource" id="Resource_dnda2"]
+[sub_resource type="Resource" id="Resource_vo2kc"]
 script = ExtResource("20_vo2kc")
 id = &"w2_5"
 duration = 28.0
@@ -251,7 +252,7 @@ count = 5
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_vo2kc"]
+[sub_resource type="Resource" id="Resource_17akq"]
 script = ExtResource("20_vo2kc")
 id = &"w2_6"
 duration = 30.0
@@ -281,7 +282,7 @@ count = 4
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_17akq"]
+[sub_resource type="Resource" id="Resource_krw0l"]
 script = ExtResource("20_vo2kc")
 id = &"w2_7_boss"
 duration = 45.0
@@ -296,18 +297,15 @@ id = &"lvl_02"
 display_name = "La Tour des Sables"
 act = 1
 subtitle = "L ile qui a commence a tomber"
-intro_text = "La Tour des Sables se decroche : le temps y coule de travers, 
-et des creatures qui n ont rien a faire sur une ile volante s y entassent. Ombres, 
-Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
-outro_text = "Ils fuyaient le puits. Sous la tour s ouvre une descente vers 
-le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
+intro_text = "La Tour des Sables se decroche : le temps y coule de travers, et des creatures qui n ont rien a faire sur une ile volante s y entassent. Ombres, Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
+outro_text = "Ils fuyaient le puits. Sous la tour s ouvre une descente vers le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 intro_story = &"lvl_02_intro"
 outro_story = &"lvl_02_outro"
 terrain = "sand"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_q8nio"), SubResource("Resource_ktaj7"), SubResource("Resource_o0ilu"), SubResource("Resource_e17r0"), SubResource("Resource_dnda2"), SubResource("Resource_vo2kc"), SubResource("Resource_17akq")])
+waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_ktaj7"), SubResource("Resource_o0ilu"), SubResource("Resource_e17r0"), SubResource("Resource_dnda2"), SubResource("Resource_vo2kc"), SubResource("Resource_17akq"), SubResource("Resource_krw0l")])
 enemy_pool = Array[ExtResource("1_c0gve")]([ExtResource("2_5i0p2"), ExtResource("3_710or"), ExtResource("6_hu6pk"), ExtResource("5_f5biq"), ExtResource("8_fowiy"), ExtResource("7_jvhjg"), ExtResource("8_tbed1"), ExtResource("9_oiogm"), ExtResource("7_plo7r"), ExtResource("4_60b13"), ExtResource("12_q8nio"), ExtResource("13_ktaj7"), ExtResource("14_o0ilu"), ExtResource("15_e17r0"), ExtResource("16_dnda2"), ExtResource("17_vo2kc"), ExtResource("18_17akq"), ExtResource("19_krw0l")])
-exploration_deck = Array[ExtResource("9_5cwlv")]([ExtResource("10_00x07"), ExtResource("10_00x07"), ExtResource("11_nsuoj"), ExtResource("11_nsuoj"), ExtResource("12_jvhjg"), ExtResource("13_tbed1"), ExtResource("13_tbed1"), ExtResource("14_oiogm"), ExtResource("14_oiogm"), ExtResource("14_oiogm"), ExtResource("15_q8nio"), ExtResource("16_ktaj7"), ExtResource("28_q8nio"), ExtResource("28_q8nio"), ExtResource("29_ktaj7")])
+exploration_deck = Array[ExtResource("9_5cwlv")]([ExtResource("10_00x07"), ExtResource("11_nsuoj"), ExtResource("11_nsuoj"), ExtResource("12_jvhjg"), ExtResource("13_tbed1"), ExtResource("13_tbed1"), ExtResource("14_oiogm"), ExtResource("14_oiogm"), ExtResource("14_oiogm"), ExtResource("26_ktaj7"), ExtResource("15_q8nio"), ExtResource("16_ktaj7"), ExtResource("28_q8nio"), ExtResource("28_q8nio"), ExtResource("29_ktaj7")])
 objectives = Array[ExtResource("18_e17r0")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("17_o0ilu")
 next_levels = Array[StringName]([&"lvl_03"])

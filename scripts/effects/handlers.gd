@@ -347,3 +347,106 @@ class MeteorStorm extends EffectHandler:
 			var vie: float = maxf(spec.duration / float(n), 0.2)
 			ctx.battlefield.spawn_ground_zone(at, spec.radius, vie,
 				spec.magnitude * ctx.damage_mult / vie, 0.0, ctx.card)
+
+
+# --- Verbes de TERRAIN (chantier H) ---
+#
+# Le jeu n avait qu un seul sort de terrain, le Mur de pierre, et il ne savait que
+# barrer un passage. Ces trois verbes posent autre chose sur le sol : une cible
+# qu on prefere au mage, un courant qui renverse la descente, un etourdissement
+# qui l arrete net. Aucun ne vise les PV en premier — ils achetent de la PLACE, ce
+# qui est le levier que le joueur n avait pas.
+
+
+## Plante un accessoire de terrain qui PROVOQUE : les monstres a portee le visent
+## au lieu du mage et le frappent jusqu a l abattre.
+##
+## Il ne bloque AUCUNE cellule de navigation, contrairement au mur : un arbre
+## qu on contourne serait un mur en bois, alors qu un arbre qu on va frapper est
+## du temps achete. C est la difference qui justifie une carte de plus.
+##
+## params :
+##   prop_hp     PV de l accessoire (obligatoire : sans PV il serait eternel)
+##   kind        "tree" (defaut) ou "water"
+##   zone_radius > 0 : l accessoire porte une zone au sol de ce rayon, alimentee
+##               par `magnitude` degats/seconde et l element de la carte. La zone
+##               MEURT avec lui — abattre l arbre coupe le poison.
+##   slow_pct    ralentissement de la zone attachee, si elle existe
+class TauntProp extends EffectHandler:
+	func get_key() -> StringName:
+		return &"taunt_prop"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		var genre: int = TerrainProp.Kind.WATER \
+			if String(spec.get_param(&"kind", "tree")) == "water" \
+			else TerrainProp.Kind.TREE
+		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
+		var p: TerrainProp = ctx.battlefield.spawn_prop(
+			genre, ctx.target_position, spec.duration,
+			float(spec.get_param(&"prop_hp", 80.0)),
+			spec.radius, 0.0, 0.0, Fx.card_sheet(ctx.card), col)
+		if p == null:
+			return
+		# La zone attachee est posee APRES l accessoire et rangee dans `p.zone` :
+		# c est cette poignee qui permet a Battlefield de la couper quand l arbre
+		# tombe. Une zone posee independamment survivrait a son porteur, et le
+		# joueur aurait interet a abattre son propre arbre pour garder le poison.
+		var rayon_zone: float = float(spec.get_param(&"zone_radius", 0.0))
+		if rayon_zone > 0.0:
+			p.zone = ctx.battlefield.spawn_ground_zone(
+				p.position, rayon_zone, spec.duration,
+				spec.magnitude * ctx.damage_mult,
+				float(spec.get_param(&"slow_pct", 0.0)), ctx.card)
+
+
+## Etourdit les monstres d une zone : vitesse NULLE, pas un ralentissement fort.
+##
+## Immobiliser est la chose la plus forte qu on puisse faire dans un jeu en temps
+## reel, donc la duree est breve et la zone petite. Les monstres qui resistent au
+## ralentissement (golem, behemoth, colosse, Chronos) y echappent : sans cette
+## regle, leur immunite au controle ne voudrait plus rien dire.
+class StunZone extends EffectHandler:
+	func get_key() -> StringName:
+		return &"stun_zone"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
+		Fx.impact(ctx.battlefield, ctx.target_position, col, spec.radius,
+			Fx.card_sheet(ctx.card))
+		# Les degats d abord, l etourdissement ensuite : un monstre que le sort tue
+		# n a pas besoin d etre fige, et l ordre inverse aurait fait compter comme
+		# « figes » des monstres deja morts.
+		if spec.magnitude > 0.0:
+			for e in ctx.battlefield.enemies_in_radius(ctx.target_position, spec.radius):
+				ctx.battlefield.damage_enemy(e, spec.magnitude * ctx.damage_mult, ctx.card)
+		ctx.battlefield.stun_at(ctx.target_position, spec.radius, spec.duration)
+
+
+## Nappe d eau : un COURANT qui remonte les monstres vers le haut.
+##
+## Ce n est pas un champ de givre en bleu. Un ralentissement est un facteur : il
+## tend vers zero sans jamais renverser la marche, et un monstre dans le givre
+## avance toujours, juste moins vite. Le courant, lui, s ajoute au deplacement
+## avec le signe oppose : dans la nappe, le monstre RECULE. Le joueur ne gagne
+## plus du temps, il regagne du terrain — et c est la seule carte du jeu qui le
+## fasse sur la duree (l Onde de repulsion, elle, pousse une fois et s arrete).
+##
+## Elle ne fait aucun degat, expres : avec des degats elle serait strictement
+## meilleure que le Champ de givre, qui n aurait plus de raison d exister.
+## magnitude = vitesse du courant en px/s a x1.
+class WaterFlood extends EffectHandler:
+	func get_key() -> StringName:
+		return &"water_flood"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		# hp = 0 : une flaque ne se casse pas. Laisser les monstres la frapper leur
+		# donnerait une cible alors qu ils devraient simplement patauger.
+		ctx.battlefield.spawn_prop(TerrainProp.Kind.WATER, ctx.target_position,
+			spec.duration, 0.0, 0.0, spec.magnitude, spec.radius,
+			Fx.card_sheet(ctx.card), Fx.COL_FROST)

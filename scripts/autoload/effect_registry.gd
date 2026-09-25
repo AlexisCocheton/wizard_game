@@ -37,6 +37,13 @@ func register_defaults() -> void:
 		EffectHandlers.RetainNext.new(),
 		EffectHandlers.DoubleCast.new(),
 		EffectHandlers.MeteorStorm.new(),
+		# Chantier H — sorts de TERRAIN. Ils ne visent pas les PV : ils posent une
+		# cible qu on prefere au mage, un courant qui renverse la descente, un
+		# etourdissement qui l arrete net. Le Mur de pierre etait jusqu ici le seul
+		# sort de terrain du jeu, et il ne savait que barrer un passage.
+		EffectHandlers.TauntProp.new(),
+		EffectHandlers.StunZone.new(),
+		EffectHandlers.WaterFlood.new(),
 	]:
 		register(h)
 

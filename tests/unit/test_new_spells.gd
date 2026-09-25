@@ -66,6 +66,9 @@ func run() -> void:
 	_test_poison_field_est_une_zone_longue()
 	_test_les_cartes_existent_dans_le_pool()
 	_test_l_allie_invoque_est_visible()
+	# Chantier H : les quatre sorts de TERRAIN (arbre provocateur, arbre a poison,
+	# etourdissement, nappe d eau). Voir la section en bas de fichier.
+	run_terrain_spells()
 
 
 # --- 0. Enregistrement ---
@@ -431,3 +434,401 @@ func _test_l_allie_invoque_est_visible() -> void:
 	for i in 420:
 		bf.simulate(1.0 / 60.0)
 	eq(bf.allies.size(), 0, "il disparait quand sa duree est ecoulee")
+
+
+# =====================================================================
+# CHANTIER H — SORTS DE TERRAIN
+#
+# Demande du testeur, mot pour mot : « Arbre qui attire les ennemis ; sort de
+# stun ; arbre a zone de poison ; eau qui ralentit ».
+#
+# Ces quatre sorts ne retirent pas des PV : ils POSENT quelque chose sur le
+# terrain et changent la facon dont les monstres descendent. La seule carte de ce
+# genre etait le Mur de pierre, qui BLOQUE. Les nouvelles cartes attirent,
+# immobilisent, empoisonnent et renversent le courant — quatre reponses
+# differentes a la meme question « ils arrivent trop bas ».
+#
+# Ce qui est verifie ici, ce sont les REGLES, jamais les valeurs d equilibrage :
+# les chiffres se lisent contre GameConfig ou contre les cartes livrees, sinon le
+# harnais empecherait de regler le jeu au lieu de le proteger.
+
+
+func run_terrain_spells() -> void:
+	_test_h_handlers_enregistres()
+	_test_arbre_detourne_les_monstres()
+	_test_arbre_encaisse_et_tombe()
+	_test_arbre_expire_seul()
+	_test_arbre_hors_portee_ne_detourne_pas()
+	_test_arbre_poison_pose_une_zone_qui_le_suit()
+	_test_arbre_poison_respecte_les_resistances()
+	_test_stun_immobilise_puis_relache()
+	_test_stun_respecte_la_resistance_au_ralentissement()
+	_test_stun_coute_plus_quil_ne_dure()
+	_test_eau_remonte_le_courant()
+	_test_eau_se_distingue_du_champ_de_givre()
+	_test_eau_ne_fait_aucun_degat()
+	_test_les_quatre_cartes_sont_dans_le_pool()
+	_test_chaque_carte_de_terrain_a_sa_feuille_et_son_icone()
+
+
+# --- 0. Enregistrement des verbes ---
+
+func _test_h_handlers_enregistres() -> void:
+	for key in [&"taunt_prop", &"stun_zone", &"water_flood"]:
+		ok(EffectRegistry.has_key(key), "handler '%s' enregistre" % key)
+
+
+# --- 1. L arbre qui attire ---
+
+## La regle centrale : le monstre VISE l arbre au lieu du mage. Il ne descend donc
+## plus, et c est exactement le temps que la carte achete.
+func _test_arbre_detourne_les_monstres() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var arbre := Vector2(300.0, 900.0)
+	# Un monstre a la MEME hauteur que l arbre mais decale sur le cote, et DANS la
+	# portee de provocation : s il continuait vers le mage il descendrait tout
+	# droit sans bouger en x. C est donc le x qui prouve la regle.
+	var d := _dummy_def("t_taunt")
+	d.base_speed = 120.0
+	var e: Enemy = bf.spawn_enemy(d, 700.0, 1.0, Vector2(700.0, 900.0))
+	var x_avant: float = e.position.x
+	var loin_avant: float = e.position.distance_to(arbre)
+
+	var card := _card(&"taunt_prop", 0.0, 12.0, 520.0,
+		{&"prop_hp": 200.0, &"kind": "tree"})
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = arbre
+	EffectRegistry.cast(card, ctx)
+	eq(bf.prop_count(), 1, "un arbre est plante")
+
+	for i in 60:
+		bf.simulate(1.0 / 60.0)
+
+	ok(e.position.x < x_avant - 20.0,
+		"le monstre se detourne vers l arbre (x %.0f -> %.0f)" % [x_avant, e.position.x])
+	ok(e.position.distance_to(arbre) < loin_avant, "il s en rapproche vraiment")
+	detach(bf)
+
+
+## L arbre n est pas un mur : il se fait taper et il tombe. Sans cela le joueur
+## poserait un arbre et n aurait plus rien a faire.
+func _test_arbre_encaisse_et_tombe() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var arbre := Vector2(540.0, 900.0)
+	var card := _card(&"taunt_prop", 0.0, 60.0, 520.0,
+		{&"prop_hp": 40.0, &"kind": "tree"})
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = arbre
+	EffectRegistry.cast(card, ctx)
+
+	var pv_pleins: float = bf.prop_hp_at(arbre)
+	ok(pv_pleins > 0.0, "l arbre a des PV")
+	ok(bf.damage_prop_at(arbre, pv_pleins * 0.5), "il encaisse un coup")
+	ok(bf.prop_hp_at(arbre) < pv_pleins, "ses PV descendent")
+	eq(bf.prop_count(), 1, "il tient encore a mi-vie")
+	bf.damage_prop_at(arbre, pv_pleins)
+	eq(bf.prop_count(), 0, "il tombe quand ses PV sont epuises")
+	detach(bf)
+
+
+## Il ne dure pas eternellement : la carte achete un temps BORNE.
+func _test_arbre_expire_seul() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var card := _card(&"taunt_prop", 0.0, 2.0, 400.0,
+		{&"prop_hp": 9999.0, &"kind": "tree"})
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = Vector2(540.0, 900.0)
+	EffectRegistry.cast(card, ctx)
+	eq(bf.prop_count(), 1, "plante")
+	for i in 300:
+		bf.simulate(1.0 / 60.0)
+	eq(bf.prop_count(), 0, "un arbre intact disparait quand sa duree est ecoulee")
+	detach(bf)
+
+
+## Un monstre LOIN de l arbre continue sa descente : la provocation a une portee,
+## sinon la carte deviendrait un bouton « plus personne n avance ».
+func _test_arbre_hors_portee_ne_detourne_pas() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var d := _dummy_def("t_far")
+	d.base_speed = 120.0
+	var e: Enemy = bf.spawn_enemy(d, 900.0, 1.0, Vector2(900.0, 300.0))
+	var x_avant: float = e.position.x
+	var y_avant: float = e.position.y
+
+	var card := _card(&"taunt_prop", 0.0, 12.0, 200.0,
+		{&"prop_hp": 200.0, &"kind": "tree"})
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = Vector2(150.0, 1300.0)
+	EffectRegistry.cast(card, ctx)
+
+	for i in 60:
+		bf.simulate(1.0 / 60.0)
+	feq(e.position.x, x_avant, "hors portee, il ne se detourne pas", 1.0)
+	ok(e.position.y > y_avant, "et il continue de descendre")
+	detach(bf)
+
+
+# --- 2. L arbre a zone de poison ---
+
+## L arbre de poison est un arbre QUI PORTE UNE ZONE. La zone n est pas
+## independante : elle nait avec l arbre et doit mourir avec lui, sinon le joueur
+## abattrait son propre arbre et garderait le poison gratuitement.
+func _test_arbre_poison_pose_une_zone_qui_le_suit() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var arbre := Vector2(540.0, 900.0)
+	var card := _card(&"taunt_prop", 12.0, 60.0, 420.0,
+		{&"prop_hp": 30.0, &"kind": "tree", &"zone_radius": 220.0})
+	card.tags = [GameEnums.DamageTag.POISON]
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = arbre
+	EffectRegistry.cast(card, ctx)
+
+	eq(bf.prop_count(), 1, "l arbre empoisonne est plante")
+	ok(bf.zones.size() >= 1, "il porte une zone au sol")
+
+	var e: Enemy = bf.spawn_enemy(_dummy_def("t_poisoned"), 540.0, 1.0,
+		arbre + Vector2(60.0, 0.0))
+	var pv_avant: float = e.hp
+	for i in 60:
+		bf.simulate(1.0 / 60.0)
+	ok(e.hp < pv_avant, "un monstre dans la zone perd des PV")
+
+	# On abat l arbre : la zone doit partir avec lui.
+	bf.damage_prop_at(arbre, 1000.0)
+	eq(bf.prop_count(), 0, "l arbre est abattu")
+	eq(bf.zones.size(), 0, "sa zone de poison disparait avec lui")
+	detach(bf)
+
+
+## L element POISON doit mordre sur la table de resistances. Un monstre immunise
+## traverse la mare sans rien sentir : c est voulu, c est ce qui donne une raison
+## de recomposer son deck d un niveau a l autre.
+func _test_arbre_poison_respecte_les_resistances() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var arbre := Vector2(540.0, 900.0)
+
+	var immune := _dummy_def("t_undead")
+	immune.resistances = {GameEnums.DamageTag.POISON: 0.0}
+	var mort_vivant: Enemy = bf.spawn_enemy(immune, 540.0, 1.0, arbre + Vector2(40.0, 0.0))
+	var chair: Enemy = bf.spawn_enemy(_dummy_def("t_flesh"), 540.0, 1.0,
+		arbre - Vector2(40.0, 0.0))
+
+	var card := _card(&"taunt_prop", 20.0, 60.0, 420.0,
+		{&"prop_hp": 9999.0, &"kind": "tree", &"zone_radius": 220.0})
+	card.tags = [GameEnums.DamageTag.POISON]
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = arbre
+	EffectRegistry.cast(card, ctx)
+
+	var pv_immune: float = mort_vivant.hp
+	var pv_chair: float = chair.hp
+	for i in 90:
+		bf.simulate(1.0 / 60.0)
+	feq(mort_vivant.hp, pv_immune, "un immunise au poison ne perd rien", 0.001)
+	ok(chair.hp < pv_chair, "un monstre de chair, lui, fond")
+	detach(bf)
+
+
+# --- 3. Le stun ---
+
+## Immobiliser est la chose la plus forte qu on puisse faire dans un jeu en temps
+## reel : la regle est donc BINAIRE (vitesse nulle) et la duree, breve.
+func _test_stun_immobilise_puis_relache() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var centre := Vector2(540.0, 900.0)
+	var d := _dummy_def("t_stun")
+	d.base_speed = 200.0
+	var e: Enemy = bf.spawn_enemy(d, 540.0, 1.0, centre)
+
+	var card := _card(&"stun_zone", 0.0, 1.0, 220.0)
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = centre
+	EffectRegistry.cast(card, ctx)
+	ok(e.is_stunned(), "le monstre est immobilise")
+
+	var y_fige: float = e.position.y
+	for i in 30:
+		bf.simulate(1.0 / 60.0)
+	feq(e.position.y, y_fige,
+		"il n a pas avance d un pixel pendant l etourdissement", 0.5)
+
+	# Au-dela de la duree, il repart.
+	for i in 180:
+		bf.simulate(1.0 / 60.0)
+	not_ok(e.is_stunned(), "l etourdissement se dissipe")
+	ok(e.position.y > y_fige, "et il reprend sa descente")
+	detach(bf)
+
+
+## Un stun qui ignorerait l immunite au ralentissement viderait cette immunite de
+## son sens : le golem serait ralenti a 0 % et bloque a 100 %. Il passe donc par
+## la MEME table de resistances que les ralentissements.
+func _test_stun_respecte_la_resistance_au_ralentissement() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var centre := Vector2(540.0, 900.0)
+
+	var roc := _dummy_def("t_roc")
+	roc.resistances = {GameEnums.DamageTag.SLOW: 0.0}
+	roc.base_speed = 200.0
+	var golem: Enemy = bf.spawn_enemy(roc, 540.0, 1.0, centre)
+
+	var card := _card(&"stun_zone", 0.0, 1.5, 220.0)
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = centre
+	EffectRegistry.cast(card, ctx)
+	not_ok(golem.is_stunned(),
+		"un monstre immunise au ralentissement ne se fige pas")
+
+	var y_avant: float = golem.position.y
+	for i in 30:
+		bf.simulate(1.0 / 60.0)
+	ok(golem.position.y > y_avant, "il continue d avancer malgre le sort")
+	detach(bf)
+
+
+## Le prix du stun, exprime en RATIO et non en secondes : l etourdissement doit
+## etre plus court que l incantation qui le relance, sinon deux exemplaires
+## suffisent a figer la partie pour toujours. Le rapport se conserve a toute
+## vitesse, puisque la jauge divise les deux termes.
+func _test_stun_coute_plus_quil_ne_dure() -> void:
+	var stun: SpellCard = ContentDB.cards.get(&"thunder_root")
+	ok(stun != null, "la carte de stun existe")
+	if stun == null:
+		return
+	var duree: float = stun.effects[0].duration
+	ok(duree < stun.base_cast_time,
+		"l etourdissement (%.2f s) dure moins que son incantation (%.2f s)"
+		% [duree, stun.base_cast_time])
+	ok(stun.rarity >= GameEnums.Rarity.EPIC,
+		"immobiliser est reserve aux raretes hautes")
+	# Sa zone doit rester plus petite que la plus grande zone commune : un stun
+	# de la taille d une Pluie de givre couvrirait la vague entiere.
+	var pluie: SpellCard = ContentDB.cards.get(&"frost_rain")
+	if pluie != null:
+		ok(stun.effects[0].radius < pluie.effects[0].radius,
+			"la zone d etourdissement reste plus petite que la pluie de givre")
+
+
+# --- 4. L eau qui ralentit ---
+
+## Ce qui la distingue du Champ de givre : le givre ralentit la descente, l eau la
+## REMONTE. Un monstre pose dans la nappe recule au lieu d avancer lentement.
+func _test_eau_remonte_le_courant() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var centre := Vector2(540.0, 900.0)
+	var d := _dummy_def("t_wet")
+	d.base_speed = 60.0
+	var e: Enemy = bf.spawn_enemy(d, 540.0, 1.0, centre)
+	var y_avant: float = e.position.y
+
+	var card := _card(&"water_flood", 60.0, 6.0, 300.0)
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = centre
+	EffectRegistry.cast(card, ctx)
+	eq(bf.flood_count(), 1, "une nappe d eau est posee")
+
+	for i in 60:
+		bf.simulate(1.0 / 60.0)
+	ok(e.position.y < y_avant,
+		"le courant le fait REMONTER (%.0f -> %.0f)" % [y_avant, e.position.y])
+
+	for i in 600:
+		bf.simulate(1.0 / 60.0)
+	eq(bf.flood_count(), 0, "la nappe s evapore a expiration")
+	detach(bf)
+
+
+## Deux cartes qui font la meme chose en deux couleurs ne meritent pas d exister
+## toutes les deux. La difference doit se LIRE dans les donnees livrees.
+func _test_eau_se_distingue_du_champ_de_givre() -> void:
+	var eau: SpellCard = ContentDB.cards.get(&"tidal_pool")
+	var givre: SpellCard = ContentDB.cards.get(&"frost_field")
+	ok(eau != null, "la carte d eau existe")
+	if eau == null or givre == null:
+		return
+	eq(eau.effects[0].key, &"water_flood",
+		"l eau n est pas une zone au sol de plus : elle a son propre verbe")
+	eq(givre.effects[0].key, &"ground_zone", "le givre reste une zone au sol")
+	ok(eau.effects[0].radius > givre.effects[0].radius,
+		"la nappe couvre plus large que le champ de givre")
+
+
+## Aucun degat : l eau achete du terrain, elle ne le nettoie pas. Sans cette regle
+## elle serait un « champ de givre qui fait mal », donc strictement meilleure, et
+## le Champ de givre n aurait plus de raison d exister.
+func _test_eau_ne_fait_aucun_degat() -> void:
+	var bf := _field()
+	SpeedGauge.reset()
+	var centre := Vector2(540.0, 900.0)
+	var e: Enemy = bf.spawn_enemy(_dummy_def("t_dry"), 540.0, 1.0, centre)
+	var pv_avant: float = e.hp
+
+	var card := _card(&"water_flood", 60.0, 5.0, 300.0)
+	var ctx := CastContext.make(bf, card)
+	ctx.target_position = centre
+	EffectRegistry.cast(card, ctx)
+	for i in 180:
+		bf.simulate(1.0 / 60.0)
+	feq(e.hp, pv_avant, "la nappe ne retire pas un seul PV", 0.001)
+	detach(bf)
+
+
+# --- 5. Contenu branche ---
+
+## Une carte hors de tout pool est du contenu mort. L AUDIT le signale ; on le
+## verrouille ici pour que la regression soit ROUGE et non un avertissement.
+func _test_les_quatre_cartes_sont_dans_le_pool() -> void:
+	var ids: Array[StringName] = [&"heartwood_totem", &"blight_sapling",
+		&"thunder_root", &"tidal_pool"]
+	for id in ids:
+		ok(ContentDB.cards.has(id), "la carte '%s' est dans le pool" % id)
+
+	# Et elles doivent etre ATTEIGNABLES : plusieurs dans les decks de campagne,
+	# sinon le joueur ne les rencontre jamais dans l ordre normal du jeu.
+	var dans_un_deck: Dictionary = {}
+	for key in ContentDB.levels:
+		var lvl: LevelDef = ContentDB.levels[key]
+		for c in lvl.exploration_deck:
+			if c != null:
+				dans_un_deck[(c as SpellCard).id] = true
+	var trouvees: int = 0
+	for id in ids:
+		if dans_un_deck.has(id):
+			trouvees += 1
+	ok(trouvees >= 2,
+		"au moins deux sorts de terrain sont joues en campagne (%d)" % trouvees)
+
+
+## « Beaucoup trop de sorts utilisent les memes animations » : quatre sorts de
+## terrain qui partageraient la feuille du mur seraient refuses par l AUDIT. On le
+## verifie aussi ici, parce qu une carte meconnaissable est un defaut de JEU avant
+## d etre un defaut de contenu.
+func _test_chaque_carte_de_terrain_a_sa_feuille_et_son_icone() -> void:
+	var vues: Dictionary = {}
+	var signatures: Dictionary = {}
+	var mur: SpellCard = ContentDB.cards.get(&"stone_wall")
+	for id in [&"heartwood_totem", &"blight_sapling", &"thunder_root", &"tidal_pool"]:
+		var c: SpellCard = ContentDB.cards.get(id)
+		if c == null:
+			continue
+		ok(c.fx_key != &"", "%s porte une feuille d effet" % id)
+		ok(Fx.has_sheet(String(c.fx_key)), "%s : feuille '%s' connue" % [id, c.fx_key])
+		not_ok(vues.has(c.fx_key),
+			"%s : feuille '%s' pas deja prise par %s" % [id, c.fx_key, vues.get(c.fx_key, "")])
+		vues[c.fx_key] = id
+		var sig: String = CardIcons.signature(c)
+		not_ok(signatures.has(sig),
+			"%s : icone distincte de %s" % [id, signatures.get(sig, "")])
+		signatures[sig] = id
+		if mur != null:
+			ok(c.fx_key != mur.fx_key, "%s ne reutilise pas l effet du mur" % id)

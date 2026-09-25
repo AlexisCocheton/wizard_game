@@ -147,7 +147,12 @@ func _run_all() -> void:
 	# 3) Le mur doit bloquer puis liberer la navigation.
 	_check_wall_pathfinding()
 
-	# 4) Tous les ecrans du menu et de fin de niveau doivent se construire.
+	# 4) Le PREMIER LANCEMENT : ce que voit quelqu un qui ouvre le jeu pour la
+	#    premiere fois. Il passe AVANT les autres ecrans parce qu il exige un
+	#    profil vierge, et que tout ce qui suit en accorde un rempli.
+	await _check_premier_lancement()
+
+	# 5) Tous les ecrans du menu et de fin de niveau doivent se construire.
 	await _check_menu_screens()
 	await _check_briefing()
 	await _check_story()
@@ -232,6 +237,68 @@ func _showcase_effects() -> void:
 	for k in 6:
 		bf.simulate(FIXED_DELTA)
 	await _shot("vitrine_sorts")
+
+	g.queue_free()
+	await get_tree().process_frame
+	await _showcase_terrain()
+
+
+## SECONDE PLANCHE : les sorts de TERRAIN, sur un champ NEUF.
+##
+## Pourquoi une planche a part, et pas quatre lancers de plus dans la premiere :
+## ces sorts posent un objet qui DURE et occupe de la place (un arbre de 460 px
+## de portee, une nappe de 300 px de rayon). Les melanger aux cinq autres donnait
+## une bouillie ou plus rien ne se distinguait — c est deja le defaut de
+## `shot_03_effets`, qui lance les 49 cartes au meme point et ne permet d en
+## juger aucune.
+##
+## Une scene neuve plutot qu un nettoyage de la premiere : Battlefield n expose
+## aucun retrait de monstre, et en inventer un pour le confort d un test ferait
+## porter au code de production une contrainte que seul le test demande.
+func _showcase_terrain() -> void:
+	if not _visual:
+		return
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = false
+	g.backdrop.setup("grass")
+	var bf: Battlefield = g.battlefield
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	# Les monstres sont poses DANS la portee des accessoires, sinon la vitrine
+	# ment : au premier essai ils etaient a 482 px d un arbre qui attire a 460,
+	# donc tous juste hors de portee. La capture montrait six gnomes immobiles
+	# et donnait a croire que l attraction ne marchait pas.
+	for k in 6:
+		bf.spawn_enemy(gnome, 220.0 + k * 130.0, 1.0,
+			Vector2(220.0 + k * 130.0, 640.0))
+	var terrain: Array = [
+		[&"heartwood_totem", Vector2(300.0, 900.0)],
+		[&"blight_sapling", Vector2(820.0, 900.0)],
+		[&"thunder_root", Vector2(300.0, 1300.0)],
+		[&"tidal_pool", Vector2(820.0, 1300.0)],
+	]
+	for c in terrain:
+		var card2: SpellCard = ContentDB.cards.get(c[0])
+		if card2 == null:
+			_fail("vitrine terrain : carte %s introuvable" % c[0])
+			continue
+		var ctx2 := CastContext.make(bf, card2)
+		ctx2.caster = g
+		ctx2.target_position = c[1]
+		ctx2.direction = (c[1] - Vector2(540.0, GameConfig.MAGE_LINE_Y)).normalized()
+		ctx2.target_enemy = bf.enemy_nearest_to(c[1])
+		EffectRegistry.cast(card2, ctx2)
+	# Assez de temps pour que les monstres REAGISSENT : qu ils marchent vers
+	# l arbre, qu ils reculent dans le courant. 40 pas ne faisaient que 0,67 s —
+	# la capture montrait six gnomes encore alignes et donnait a croire que
+	# l attraction ne marchait pas. 150 pas valent 2,5 s, de quoi voir un
+	# deplacement franc sans que les arbres aient deja expire (10 et 12 s).
+	for k in 150:
+		bf.simulate(FIXED_DELTA)
+	await _shot("vitrine_terrain")
+
 	g.queue_free()
 	await get_tree().process_frame
 
@@ -296,6 +363,63 @@ func _autoplay_for(g: GameController) -> void:
 
 ## Instancie le menu et passe par chaque onglet : attrape les chemins de noeuds
 ## casses et les panneaux qui plantent a la construction.
+## PREMIER LANCEMENT — le seul etat que personne ne regarde jamais.
+##
+## Tous les autres controles tournent apres une partie, donc avec des cartes
+## decouvertes, de l XP de compte et des niveaux finis. L ecran d accueil d un
+## joueur qui vient d installer le jeu n etait verifie NULLE PART : un panneau
+## qui plante sur une liste vide, un compteur a "0 / 0", un bouton actif qui ne
+## mene nulle part passeraient tous le harnais.
+##
+## Ce que ce controle exige :
+##   - les quatre onglets se construisent sur un profil vierge ;
+##   - la campagne n ouvre QUE le premier niveau ;
+##   - le Massacre est ferme (il se merite en finissant la campagne) ;
+##   - le deck de depart est jouable tel quel, sans que le joueur touche a rien.
+func _check_premier_lancement() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+	# La campagne s ouvre sur le premier niveau, et lui seul.
+	var ouverts: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		if SaveData.is_level_unlocked(lv.id):
+			ouverts += 1
+	if ouverts != 1:
+		_fail("premier lancement : %d niveaux ouverts au lieu d un seul" % ouverts)
+	if not SaveData.is_level_unlocked(&"lvl_01"):
+		_fail("premier lancement : le niveau 1 n est pas ouvert")
+
+	# Le mode sans fin est une recompense, pas une porte ouverte.
+	if SaveData.campaign_cleared():
+		_fail("premier lancement : le Massacre est deja ouvert")
+
+	# Le deck de depart doit etre JOUABLE sans rien toucher : un joueur neuf qui
+	# tombe sur "Ajoute 7 cartes" avant sa premiere partie ne comprend pas.
+	var depart: Array = DeckRules.default_deck_ids()
+	if not DeckRules.is_valid(depart):
+		_fail("premier lancement : le deck de depart est invalide (%s)"
+			% DeckRules.validation_message(depart))
+
+	# Les quatre onglets se construisent sur ce profil vierge.
+	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
+	if packed == null:
+		_fail("MainMenu.tscn introuvable")
+		return
+	var menu: Control = packed.instantiate()
+	add_child(menu)
+	var tabs: Array = menu.get("TABS")
+	for i in tabs.size():
+		menu.select_tab(i)
+		if menu.current_tab() != i:
+			_fail("premier lancement : l onglet %s ne s active pas" % String(tabs[i]))
+	# Une capture de l accueil tel qu on le decouvre.
+	menu.select_tab(0)
+	await _shot("premier_lancement")
+	menu.queue_free()
+	await get_tree().process_frame
+
+
 func _check_menu_screens() -> void:
 	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
 	if packed == null:

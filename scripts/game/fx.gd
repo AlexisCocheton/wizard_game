@@ -464,6 +464,108 @@ static func heal_effect(parent: Node2D, at: Vector2) -> void:
 	sprite(parent, "heal_effect", at, 140.0, false)
 
 
+## ACCESSOIRE DE TERRAIN (chantier H) : un arbre plante ou une nappe d eau.
+##
+## Le corps de l objet vient des assets du pack Tiny Swords deja extraits
+## (`terrain/tree1.png`, bande de 192x256 qui ondule au vent ; `terrain/water.png`,
+## texture carrelable), exactement comme les decore le fond de bataille. Rien n est
+## dessine par le code : un arbre trace au polygone se lirait comme un bug a cote
+## des sprites peints du reste du terrain.
+##
+## Par-dessus, `sheet` est la feuille PROPRE a la carte. C est elle qui distingue le
+## totem de l arbre empoisonne : le corps est le meme arbre du pack, l aura qui
+## l entoure ne l est pas. Sans cela deux cartes de terrain seraient rigoureusement
+## identiques a l ecran, ce que l AUDIT refuse et ce dont le testeur s est plaint.
+static func prop_visual(parent: Node2D, at: Vector2, kind: int, duration: float,
+		sheet: String = "", tint: Color = Color.WHITE, area: float = 0.0) -> Node:
+	if not enabled() or parent == null:
+		return null
+	var root := Node2D.new()
+	root.position = at
+	# Au-dessus du decor et du sol, sous les monstres : un arbre qui masquerait le
+	# monstre en train de le frapper cacherait justement ce qu on veut montrer.
+	root.z_index = -2
+	parent.add_child(root)
+
+	if kind == TerrainProp.Kind.WATER:
+		# La nappe est un DISQUE, pas un carre.
+		#
+		# Premiere version : `assets/terrain/water.png` carrelee dans un
+		# TextureRect. La capture l a montree comme un rectangle bleu a bords nets
+		# pose sur l herbe — ca ne se lisait pas comme une flaque mais comme un
+		# panneau d interface oublie sur le terrain. Le fichier du pack ne fait que
+		# 222 octets : c est un aplat, il n a aucune texture a carreler, et
+		# l etirer ne pouvait donner qu un rectangle.
+		#
+		# ZoneRing, lui, TRACE un anneau au rayon exact : c est deja ce que les
+		# zones au sol utilisent, le joueur en connait la lecture, et le contour
+		# rond dit la portee sans mentir d un pixel.
+		#
+		# Il est empile a rayons DECROISSANTS. Un seul anneau ne remplit son
+		# interieur qu a 10 % d opacite — reglage juste pour une zone de degats,
+		# qu on ne doit pas confondre avec le decor, mais qui donnait ici un simple
+		# cercle vide sur l herbe : la capture ne montrait aucune eau. Trois
+		# disques concentriques additionnent leur remplissage vers le centre, ce
+		# qui donne une nappe plus profonde au milieu qu au bord — la lecture
+		# exacte d une flaque — sans toucher a ZoneRing, dont toutes les autres
+		# zones du jeu dependent.
+		var rayon: float = area if area > 0.0 else PROP_WATER_PX * 0.5
+		for part in PROP_WATER_LAYERS:
+			var anneau := ZoneRing.new()
+			anneau.setup(rayon * part, COL_FROST)
+			root.add_child(anneau)
+	else:
+		var sf: SpriteFrames = SheetLib.frames("decor:tree1",
+			{"sway": {"path": "res://assets/terrain/tree1.png", "frame": 192,
+				"frame_h": 256, "fps": 5, "loop": true}})
+		if sf != null:
+			var a := AnimatedSprite2D.new()
+			a.sprite_frames = sf
+			# A l echelle 1 la capture montrait un buisson, pas un repere : l arbre
+			# du pack fait 192x256 et les monstres, eux, sont dessines a 2,1 fois
+			# leur rayon logique. Un accessoire qu on plante pour que la vague le
+			# REMARQUE doit dominer ce qui vient le frapper.
+			a.scale = Vector2.ONE * PROP_TREE_SCALE
+			# Teinte de l element du sort : le semis empoisonne doit se lire VERT au
+			# premier coup d oeil, le totem dore non. `lightened` plutot qu une
+			# teinte pleine : l arbre garde son feuillage peint au lieu de devenir
+			# une silhouette monochrome.
+			a.modulate = Color(tint.r, tint.g, tint.b, 1.0).lightened(0.45)
+			root.add_child(a)
+			a.play("sway")
+
+	# L effet propre a la carte, en boucle sur toute la vie de l accessoire : c est
+	# le signe que l objet est ACTIF, et pas un morceau de decor.
+	if sheet != "":
+		sprite(root, sheet, Vector2.ZERO, PROP_AURA_PX, true, Color(1, 1, 1, 0.85))
+	# Clignotement de fin, comme pour le mur : le joueur doit voir venir la
+	# disparition pour ne pas compter sur une protection qui n existe plus.
+	if duration > 1.2 and duration < INF:
+		var blink: Tween = parent.create_tween()
+		blink.tween_interval(duration - 1.2)
+		for i in 3:
+			blink.tween_property(root, "modulate:a", 0.35, 0.2)
+			blink.tween_property(root, "modulate:a", 1.0, 0.2)
+	return root
+
+
+## Reglages visuels de la famille, nommes plutot qu eparpilles en nombres au
+## milieu du code : ce sont les trois seuls, et ils se relisent ensemble.
+##
+## PROP_TREE_SCALE : l arbre du pack fait 192x256 a l echelle 1, ce que la capture
+## a montre comme un buisson perdu dans l herbe. 1,6 le porte a ~410 px de haut,
+## au-dessus des monstres qui viennent le frapper — c est un repere, il doit se
+## voir de loin.
+## PROP_AURA_PX : taille de la feuille propre a la carte posee sur l accessoire.
+## PROP_WATER_PX : rayon de secours d une nappe dont personne n a donne l aire.
+const PROP_TREE_SCALE: float = 1.6
+const PROP_AURA_PX: float = 180.0
+const PROP_WATER_PX: float = 560.0
+## Rayons relatifs des disques empiles qui font la nappe. Le premier porte la
+## portee exacte : c est lui que le joueur lit, les autres ne font qu epaissir.
+const PROP_WATER_LAYERS: Array[float] = [1.0, 0.74, 0.46]
+
+
 ## Halo persistant (bouclier du premier coup, aura protectrice).
 ## Le halo doit couvrir EXACTEMENT la zone protegee : le joueur s en sert pour juger
 ## s il est dans la portee. Un facteur cosmetique mentirait sur la regle.

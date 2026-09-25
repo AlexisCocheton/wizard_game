@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_cbjeo"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1gy7k"]
+
+[sub_resource type="Resource" id="Resource_cbjeo"]
+script = ExtResource("1_cbjeo")
+key = &"stun_zone"
+magnitude = 14.0
+duration = 1.1
+radius = 200.0
+params = {}
+
+[resource]
+script = ExtResource("2_1gy7k")
+id = &"thunder_root"
+display_name = "Racine de tonnerre"
+description = "Etourdit 1,1 s les monstres d une petite zone : vitesse nulle, ils ne tirent ni ne frappent. 14 degats de FOUDRE au passage. Sans effet sur ce qui resiste au ralentissement."
+rarity = 2
+base_cast_time = 1.9
+targeting = 1
+tags = Array[int]([7])
+effects = Array[ExtResource("1_cbjeo")]([SubResource("Resource_cbjeo")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"lightning_fork"
+sfx_key = &"zap_short"

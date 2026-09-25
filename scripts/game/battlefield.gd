@@ -21,6 +21,13 @@ var shots: Array[Dictionary] = []
 ## une zone agit sur les PV, un vortex agit sur la POSITION, et le joueur doit
 ## pouvoir superposer les deux (aspirer dans une mare de venin).
 var vortices: Array[Dictionary] = []
+## Accessoires PLANTES : arbres provocateurs, semis empoisonnes, nappes d eau.
+## Voir TerrainProp. Separes des murs, qui BLOQUENT un passage et se contournent :
+## un accessoire ne bloque rien, il change ce que les monstres VEULENT faire —
+## viser l arbre, ou patauger contre le courant. C est la famille de sorts que le
+## testeur demandait (« arbre qui attire », « eau qui ralentit ») et qui manquait
+## completement : le Mur de pierre etait le seul sort de terrain du jeu.
+var props: Array[TerrainProp] = []
 
 ## Grille de navigation partagee : les monstres la consultent pour contourner
 ## les murs. Sans mur pose, ils descendent tout droit.
@@ -58,6 +65,10 @@ func simulate(delta: float) -> void:
 
 	_simulate_zones(wd)
 	_simulate_vortices(wd)
+	# AVANT les monstres : un accessoire qui vient d expirer ne doit pas attirer
+	# une derniere fois pendant la meme frame, sinon un arbre mort detournerait un
+	# monstre vers un point ou il n y a plus rien.
+	_simulate_props(wd)
 	_simulate_allies(wd)
 	_simulate_walls(wd)
 	_simulate_shots(wd)
@@ -70,6 +81,11 @@ func simulate(delta: float) -> void:
 			continue
 		e.speed_scale = _global_slow_factor * buff
 		e.advance(wd)
+		# COURANT : applique APRES le deplacement, et pas comme un facteur de
+		# vitesse. Un facteur ne peut que freiner (il tend vers zero) ; le
+		# courant, lui, doit pouvoir RENVERSER la descente, ce qui est toute la
+		# difference entre la nappe d eau et le Champ de givre.
+		_apply_current(e, wd)
 
 
 func is_reversed() -> bool:
@@ -404,6 +420,12 @@ func clear_all() -> void:
 		if node != null and is_instance_valid(node):
 			node.queue_free()
 	walls.clear()
+	# Les accessoires plantes doivent partir avec la partie : un arbre oublie
+	# resterait a l ecran d une vague a la suivante et continuerait a provoquer.
+	for p in props:
+		if p.node != null and is_instance_valid(p.node):
+			p.node.queue_free()
+	props.clear()
 	for s in shots:
 		var node: Node = s.get("node")
 		if node != null and is_instance_valid(node):
@@ -505,14 +527,17 @@ func enemies_in_radius(center: Vector2, radius: float) -> Array:
 	return out
 
 
+## Renvoie la zone posee. Les appelants historiques ignorent le retour ; l arbre
+## empoisonne, lui, en a besoin pour ACCROCHER la zone a sa propre vie (voir
+## TerrainProp.zone) : sans cette poignee, abattre l arbre laisserait le poison.
 func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
-		dps: float, slow_pct: float, card: SpellCard, vuln_mult: float = 1.0) -> void:
+		dps: float, slow_pct: float, card: SpellCard, vuln_mult: float = 1.0) -> Dictionary:
 	var col: Color = Fx.color_for(card.tags if card != null else [])
 	if vuln_mult > 1.0:
 		col = Fx.COL_VULN
 	var vis: Node = Fx.zone_visual(self, pos, maxf(radius, 10.0), duration, col,
 		Fx.card_sheet(card))
-	zones.append({
+	var z: Dictionary = {
 		"pos": pos,
 		"radius": maxf(radius, 10.0),
 		"time": maxf(duration, 0.1),
@@ -521,7 +546,9 @@ func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
 		"vuln_mult": vuln_mult,
 		"tags": (card.tags if card != null else []) as Array,
 		"node": vis,
-	})
+	}
+	zones.append(z)
+	return z
 
 
 func apply_global_enemy_slow(slow_pct: float, duration: float) -> void:
@@ -738,3 +765,206 @@ func enemy_strikes_wall(e: Enemy, world_delta: float) -> void:
 		return
 	var devant: Vector2 = e.position + Vector2(0.0, e.radius() + 20.0)
 	damage_wall_at(devant, float(e.definition.contact_hit()) * 4.0 * world_delta)
+
+
+# =====================================================================
+# CHANTIER H — ACCESSOIRES DE TERRAIN (arbre provocateur, semis, nappe d eau)
+#
+# Le jeu n avait qu UN sort de terrain, le Mur de pierre, et il ne savait faire
+# qu une chose : barrer un passage. Ces accessoires en font trois autres —
+# attirer, empoisonner sur pied, renverser le courant — et se distinguent du mur
+# sur le point qui compte : ils ne touchent PAS a la grille de navigation. Un
+# arbre qu on contourne serait un mur en bois ; un arbre qu on va frapper est une
+# provocation, donc du temps achete.
+
+
+## Plante un accessoire. Renvoie l objet pose, pour que le handler puisse encore
+## lui accrocher une zone sans que Battlefield ait a connaitre le poison.
+func spawn_prop(kind: int, center: Vector2, duration: float, hp: float,
+		taunt_radius: float = 0.0, current: float = 0.0, area: float = 0.0,
+		sheet: String = "", tint: Color = Color.WHITE) -> TerrainProp:
+	var p := TerrainProp.new()
+	p.kind = kind
+	# Jamais sur la ligne du mage ni hors terrain : un arbre plante sous le mage
+	# attirerait les monstres exactement la ou on veut qu ils n aillent pas, et un
+	# arbre hors cadre serait invisible et increvable.
+	p.position = Vector2(
+		clampf(center.x, 60.0, GameConfig.BATTLEFIELD_WIDTH - 60.0),
+		clampf(center.y, GameConfig.SPAWN_LINE_Y + 60.0, GameConfig.MAGE_LINE_Y - 80.0))
+	p.time_left = maxf(duration, 0.1)
+	p.hp = maxf(hp, 0.0)
+	p.max_hp = p.hp
+	p.taunt_radius = maxf(taunt_radius, 0.0)
+	p.current = current
+	p.area = maxf(area, 0.0)
+	p.reach = 70.0 if kind == TerrainProp.Kind.TREE else 40.0
+	# L aire est transmise au visuel : c est elle que l anneau de la nappe trace,
+	# et un anneau qui mentirait sur la portee serait pire que pas d anneau du tout
+	# — le joueur s en sert pour decider ou poser le sort suivant.
+	p.node = Fx.prop_visual(self, p.position, kind, p.time_left, sheet, tint, p.area)
+	AudioBus.play_sfx(&"wall" if kind == TerrainProp.Kind.TREE else &"drip_frost")
+	props.append(p)
+	return p
+
+
+func prop_count() -> int:
+	return props.size()
+
+
+## PV restants de l accessoire qui couvre `point`, 0.0 s il n y en a aucun.
+func prop_hp_at(point: Vector2) -> float:
+	for p in props:
+		if p.is_breakable() and p.covers(point):
+			return p.hp
+	return 0.0
+
+
+## Frappe l accessoire qui couvre `point`. Renvoie true s il a encaisse.
+##
+## Meme forme que `damage_wall_at()` volontairement : c est ce que les monstres
+## bloques appellent deja, et un joueur ne distingue pas « frapper un mur » de
+## « frapper un arbre » — seul le resultat change.
+func damage_prop_at(point: Vector2, amount: float) -> bool:
+	for i in range(props.size() - 1, -1, -1):
+		var p: TerrainProp = props[i]
+		if not p.is_breakable() or not p.covers(point):
+			continue
+		if p.take_damage(amount):
+			_destroy_prop(i, true)
+		return true
+	return false
+
+
+## L accessoire que ce monstre doit viser, ou null s il continue vers le mage.
+##
+## Le PLUS PROCHE gagne : deux arbres plantes cote a cote ne doivent pas se
+## disputer un monstre a chaque frame, ce qui le ferait osciller entre les deux
+## sans jamais frapper ni l un ni l autre.
+func taunt_target_for(point: Vector2) -> TerrainProp:
+	var best: TerrainProp = null
+	var best_d: float = INF
+	for p in props:
+		if not p.attracts(point) or not p.is_alive():
+			continue
+		var d: float = p.position.distance_to(point)
+		if d < best_d:
+			best_d = d
+			best = p
+	return best
+
+
+func flood_count() -> int:
+	var n: int = 0
+	for p in props:
+		if p.current != 0.0:
+			n += 1
+	return n
+
+
+## Le courant, applique apres le deplacement du monstre. Positif = vers le HAUT.
+##
+## Il passe par `world_delta`, donc il s accelere avec le multiplicateur comme
+## tout le reste du monde : sinon a 500 % les monstres traverseraient la nappe
+## comme si elle n existait pas.
+##
+## La resistance au RALENTISSEMENT s applique ici aussi : une nappe qui repousse
+## un golem de pierre aussi fort qu un lutin viderait la table de resistances de
+## son sens du cote ou elle compte le plus, le controle.
+func _apply_current(e: Enemy, world_delta: float) -> void:
+	if props.is_empty() or e.is_spawning():
+		return
+	var poussee: float = 0.0
+	for p in props:
+		if p.floods(e.position):
+			poussee += p.current
+	if poussee == 0.0:
+		return
+	if e.definition != null:
+		poussee *= e.definition.resistance_to(GameEnums.DamageTag.SLOW)
+	if poussee == 0.0:
+		return
+	# Jamais au-dessus de la ligne d apparition : repousse plus haut, le monstre
+	# sortirait du cadre et redescendrait ensuite gratuitement.
+	var avant: float = e.position.y
+	e.position.y = maxf(e.position.y - poussee * world_delta, GameConfig.SPAWN_LINE_Y)
+	# `repath()` SEULEMENT si le monstre a vraiment recule, et seulement quand un
+	# mur est pose. Appele a chaque frame il relancerait un A* complet par monstre
+	# et par image des qu un Mur de pierre est en jeu — le courant coute alors plus
+	# cher que toute la vague. Sans mur, `_recompute_path` sort immediatement, mais
+	# on ne paie meme pas l appel.
+	if nav != null and nav.blocked_count() > 0 and e.position.y < avant - 0.5:
+		e.repath()
+
+
+func _simulate_props(wd: float) -> void:
+	for i in range(props.size() - 1, -1, -1):
+		var p: TerrainProp = props[i]
+		p.time_left -= wd
+		# La zone attachee suit la VIE de l accessoire, pas sa propre duree : on la
+		# maintient en vie tant que l arbre tient, et `_destroy_prop` la coupe.
+		# Sans cela une zone de 60 s survivrait a un arbre abattu en 3 s.
+		if not p.zone.is_empty() and p.is_alive():
+			p.zone["time"] = maxf(float(p.zone["time"]), wd * 2.0)
+		if not p.is_alive():
+			_destroy_prop(i, p.max_hp > 0.0 and p.hp <= 0.0)
+			continue
+		_props_take_hits(p, wd)
+
+
+## Les monstres a portee frappent l accessoire. C est le pendant de
+## `enemy_strikes_wall()`, mais sans condition d enfermement : un monstre provoque
+## n a pas besoin d etre bloque pour taper, il a CHOISI cette cible.
+func _props_take_hits(p: TerrainProp, wd: float) -> void:
+	if not p.is_breakable():
+		return
+	for e in enemies:
+		if not _targetable(e) or e.definition == null:
+			continue
+		if e.is_stunned():
+			continue  # etourdi : il ne frappe pas plus qu il n avance
+		if e.position.distance_to(p.position) > p.reach + e.radius():
+			continue
+		# Meme bareme que le mur : les degats de contact, appliques en continu.
+		if p.take_damage(float(e.definition.contact_hit()) * 4.0 * wd):
+			var idx: int = props.find(p)
+			if idx >= 0:
+				_destroy_prop(idx, true)
+			return
+
+
+## Retire l accessoire, sa zone et son visuel. `brise` distingue l abattage (un
+## eclat, un son) de l expiration tranquille : le joueur doit voir la difference
+## entre « mon arbre est tombe » et « mon arbre a fini son temps ».
+func _destroy_prop(index: int, brise: bool) -> void:
+	if index < 0 or index >= props.size():
+		return
+	var p: TerrainProp = props[index]
+	# La zone attachee part avec lui : c est la regle qui empeche de garder le
+	# poison apres avoir perdu l arbre qui le porte.
+	if not p.zone.is_empty():
+		var vn: Node = p.zone.get("node")
+		if vn != null and is_instance_valid(vn):
+			vn.queue_free()
+		zones.erase(p.zone)
+		p.zone = {}
+	if p.node != null and is_instance_valid(p.node):
+		p.node.queue_free()
+	if brise:
+		Fx.impact(self, p.position, Fx.COL_WALL, maxf(p.reach, 60.0))
+		AudioBus.play_sfx(&"wall")
+	props.remove_at(index)
+
+
+## Etourdit les monstres d une zone. Renvoie le nombre de monstres figes.
+##
+## L immobilisation est la chose la plus forte qu on puisse faire dans un jeu en
+## temps reel : elle passe donc par `Enemy.apply_stun()`, qui la refuse aux
+## monstres resistants au ralentissement. Un stun qui ignorerait cette table la
+## viderait de tout sens — le golem serait insensible au givre et fige par la
+## foudre, ce que le joueur lirait comme une incoherence.
+func stun_at(center: Vector2, radius: float, duration: float) -> int:
+	var n: int = 0
+	for e in enemies_in_radius(center, radius):
+		if (e as Enemy).apply_stun(duration):
+			n += 1
+	return n
