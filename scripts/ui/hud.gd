@@ -192,15 +192,41 @@ func _build_passive_rail() -> void:
 	_passive_icons.clear()
 
 	var etendue: float = float(GameConfig.SPEED_MAX_PERCENT - 100)
+	# Trie par seuil CROISSANT : le rail se lit de bas en haut, et deux passifs
+	# proches doivent s ecarter dans le bon ordre, jamais se croiser.
+	var equipes: Array[SpellCard] = []
 	for p: SpellCard in RunState.equipped_passives:
-		if p == null:
-			continue
+		if p != null:
+			equipes.append(p)
+	equipes.sort_custom(func(a: SpellCard, b: SpellCard) -> bool:
+		return a.speed_threshold < b.speed_threshold)
+
+	# Hauteur du dernier pose, pour ecarter ce qui se chevauche.
+	var precedent_y: float = INF
+	for p: SpellCard in equipes:
 		var t: float = clampf(float(p.speed_threshold - 100) / maxf(etendue, 1.0), 0.0, 1.0)
 		# Marge d une demi-pastille en haut ET en bas : un passif a 110 % tombait
 		# pile sur le bord bas de la barre, derriere le mage et la main, donc
 		# invisible — alors que c est justement le passif le plus souvent allume.
 		var y: float = clampf(RAIL_BAS - t * (RAIL_BAS - RAIL_HAUT),
 			RAIL_HAUT + ICONE * 0.5, RAIL_BAS - ICONE * 0.7)
+		# ECARTEMENT MINIMAL. Deux passifs a 140 % et 150 % tombent a 5 px l un de
+		# l autre sur une echelle de 100 a 500 : les pastilles se chevauchaient et
+		# les deux seuils se superposaient en un pate illisible (vu sur capture).
+		# On pousse le suivant VERS LE HAUT, donc dans le sens de son seuil : la
+		# hauteur reste approximativement juste et l ordre, lui, est exact.
+		# L ecart doit tenir la PASTILLE **et** son etiquette. A 66 px les
+		# pastilles se separaient mais les nombres "150 %" et "140 %" se
+		# touchaient encore (vu sur capture) : le seuil est la seule information
+		# chiffree du rail, deux nombres colles n en font aucun de lisible.
+		var ecart: float = ICONE + UiTheme.FONT_SMALL + 14.0
+		if precedent_y - y < ecart:
+			y = precedent_y - ecart
+		# RE-BORNER apres le decalage, sinon une pastille poussee vers le haut
+		# sort du rail : sur la capture, celle du seuil 300 avait disparu et
+		# seule son etiquette restait, ce qui se lit comme un bug d affichage.
+		y = clampf(y, RAIL_HAUT + ICONE * 0.5, RAIL_BAS - ICONE * 0.7)
+		precedent_y = y
 		var pastille := Panel.new()
 		# IGNORE par defaut : hors echange, le rail ne doit rien avaler du geste de
 		# glisser-deposer qui commence souvent a gauche de l ecran. Il ne redevient
