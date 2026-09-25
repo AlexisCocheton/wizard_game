@@ -52,6 +52,11 @@ keeps_distance_at = 0.0
 summon_interval = 0.0
 summon_count = 1
 summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0
 
 [sub_resource type="Resource" id="Resource_h7kpq"]
 script = ExtResource("1_h7kpq")
@@ -104,6 +109,11 @@ keeps_distance_at = 0.0
 summon_interval = 0.0
 summon_count = 1
 summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0
 
 [resource]
 script = ExtResource("1_h7kpq")
@@ -156,3 +166,8 @@ keeps_distance_at = 0.0
 summon_interval = 0.0
 summon_count = 1
 summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0

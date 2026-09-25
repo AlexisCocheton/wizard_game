@@ -54,7 +54,17 @@ func run() -> void:
 	_test_invocateur_fabrique_des_monstres()
 	_test_invocateur_mort_cesse_d_invoquer()
 	_test_invocateur_ne_noie_pas_l_ecran()
+	_test_ressuscite_se_releve_une_fois()
+	_test_ressuscite_ne_se_releve_qu_une_fois()
+	_test_ressuscite_ne_donne_pas_deux_fois_l_xp()
+	_test_ressuscite_se_voit()
+	_test_immunise_n_coups_ignore_la_puissance()
+	_test_immunise_n_coups_ne_bloque_pas_le_ralentissement()
+	_test_renvoi_retourne_les_degats_au_mage()
+	_test_renvoi_ne_renvoie_rien_hors_fenetre()
+	_test_renvoi_n_empeche_pas_de_le_tuer()
 	_test_les_boss_livres_ont_bien_leurs_mecaniques()
+	_test_les_trois_nouvelles_mecaniques_sont_livrees()
 	_test_chaque_niveau_a_son_propre_adversaire()
 	if _bf != null:
 		detach(_bf)
@@ -227,6 +237,224 @@ func _test_invocateur_ne_noie_pas_l_ecran() -> void:
 	ok(_bf.alive_count() >= 3, "mais il invoque quand meme")
 
 
+# --- 4. Boss qui RESSUSCITE --------------------------------------------------
+#
+# Ce que la mecanique change : le sens du mot « tuer ». Le joueur voit la barre
+# se vider, entend la mort, et repart sur la cible suivante — puis le boss se
+# releve derriere lui. Aucune autre mecanique du jeu ne lui demande de GARDER
+# des cartes en reserve apres avoir cru le combat fini.
+
+## Il tombe, et il se releve avec une FRACTION de ses PV. Il n a pas disparu du
+## terrain : c est la difference entre ressusciter et invoquer un second boss.
+func _test_ressuscite_se_releve_une_fois() -> void:
+	_fresh()
+	var d := _def("phenix", 100.0, 0.0, 10)
+	d.revive_hp_pct = 40.0
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+
+	eq(_bf.alive_count(), 1, "un seul boss sur le terrain")
+	boss.take_damage(150.0, [])
+	not_ok(boss.is_dead(), "il ne meurt pas au premier zero : il se releve")
+	eq(_bf.alive_count(), 1, "et c est le MEME monstre, pas un second boss")
+	feq(boss.hp, 40.0, "il revient avec 40 % de ses PV d origine")
+	ok(boss.has_revived(), "le releve est memorise")
+
+
+## La resurrection est UNIQUE. Sans plafond, un joueur qui n a pas le bon deck
+## ne finirait jamais le combat : ce ne serait plus une surprise, ce serait un
+## mur de PV deguise.
+func _test_ressuscite_ne_se_releve_qu_une_fois() -> void:
+	_fresh()
+	var d := _def("phenix2", 100.0, 0.0, 10)
+	d.revive_hp_pct = 50.0
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+	boss.take_damage(100.0, [])
+	not_ok(boss.is_dead(), "premier releve")
+	# Le repit de releve doit s ecouler : tant qu il tient, le boss est
+	# intouchable — c est ce qui rend le releve visible a l ecran, et c est aussi
+	# ce qui interdit au sort qui vient de le tuer de le retuer dans la meme frame.
+	ok(not boss.take_damage(999.0, []),
+		"pendant le repit du releve, il est intouchable")
+	_sim(1.5)
+	boss.take_damage(999.0, [])
+	ok(boss.is_dead(), "le repit passe, la deuxieme mort est definitive")
+	_sim(0.1)
+	eq(_bf.alive_count(), 0, "et il quitte bien le terrain")
+
+
+## L XP et le compteur de chasse ne doivent tomber QU A la mort definitive.
+## Un boss qui paierait deux fois serait la meilleure ferme d XP du jeu, et le
+## compteur d objectifs ("tuer N boss") compterait un adversaire pour deux.
+var _tues: int = 0
+
+
+func _compte_mort(_def: EnemyDef) -> void:
+	_tues += 1
+
+
+func _test_ressuscite_ne_donne_pas_deux_fois_l_xp() -> void:
+	_fresh()
+	var d := _def("phenix3", 60.0, 0.0, 10)
+	d.revive_hp_pct = 50.0
+	d.base_xp = 30
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+	_tues = 0
+	if not _bf.enemy_killed.is_connected(_compte_mort):
+		_bf.enemy_killed.connect(_compte_mort)
+	boss.take_damage(60.0, [])
+	eq(_tues, 0, "un releve ne compte pas comme une mort : ni XP ni statistique")
+	_sim(1.5)
+	boss.take_damage(999.0, [])
+	eq(_tues, 1, "la mort definitive, elle, compte une fois")
+
+
+## Une mecanique qu on ne VOIT pas n existe pas pour le joueur. Le releve doit
+## etre lisible : PV visibles a l ecran (barre reaffichee) et la barre ne doit
+## pas rester a zero derriere un boss qui marche encore.
+func _test_ressuscite_se_voit() -> void:
+	_fresh()
+	var d := _def("phenix4", 100.0, 0.0, 10)
+	d.revive_hp_pct = 35.0
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+	boss.take_damage(200.0, [])
+	ok(boss.hp > 0.0, "il porte des PV : la barre a de quoi se remplir")
+	ok(boss.hp < boss.max_hp(),
+		"mais pas pleins : le joueur doit voir qu il l a deja entame")
+
+
+# --- 5. Boss IMMUNISE aux N premiers coups -----------------------------------
+#
+# Ce que la mecanique change : la MONNAIE des degats. Partout ailleurs le joueur
+# paie en points de degats ; ici il paie en NOMBRE DE COUPS. Le spam de petites
+# cartes devient le pire choix possible, et le gros sort charge le meilleur —
+# l inverse exact du reflexe que tout le reste du jeu encourage.
+
+## Le coeur de la regle : la PUISSANCE du coup n entre pas en ligne de compte.
+func _test_immunise_n_coups_ignore_la_puissance() -> void:
+	_fresh()
+	var d := _def("intouchable", 100.0, 0.0, 10)
+	d.hits_immune = 3
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+
+	eq(boss.hits_immune_left(), 3, "il entre avec trois coups d avance")
+	not_ok(boss.take_damage(9999.0, []),
+		"un coup ENORME ne passe pas mieux qu un petit : c est un COMPTEUR")
+	feq(boss.hp, 100.0, "aucun degat")
+	eq(boss.hits_immune_left(), 2, "mais le coup a bien ete consomme")
+
+	not_ok(boss.take_damage(1.0, []), "deuxieme coup consomme")
+	not_ok(boss.take_damage(1.0, []), "troisieme coup consomme")
+	eq(boss.hits_immune_left(), 0, "le compteur est vide")
+
+	ok(boss.take_damage(30.0, []), "le quatrieme coup, lui, mord")
+	feq(boss.hp, 70.0, "et il encaisse normalement ensuite")
+
+
+## Un compteur de COUPS ne doit pas rendre le boss insensible au CONTROLE :
+## sinon la mecanique cesse d etre « depense tes coups » pour devenir « cinq
+## secondes d invulnerabilite totale », ce que le joueur ne peut pas jouer.
+func _test_immunise_n_coups_ne_bloque_pas_le_ralentissement() -> void:
+	_fresh()
+	var d := _def("intouchable2", 100.0, 60.0, 10)
+	d.hits_immune = 5
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 300.0))
+	# Reference : ce qu il parcourt en une seconde sans rien subir.
+	var ref0: float = boss.position.y
+	boss.advance(1.0)
+	var libre: float = boss.position.y - ref0
+
+	ok(boss.apply_stun(1.0), "il se fige comme n importe qui")
+	eq(boss.hits_immune_left(), 5,
+		"et un etourdissement ne consomme AUCUN coup : ce n est pas un degat")
+	var y_stun: float = boss.position.y
+	boss.advance(0.5)
+	ok(absf(boss.position.y - y_stun) < 1.0, "etourdi, il n avance pas du tout")
+
+	boss.apply_slow(0.5, 5.0)
+	_sim(0.6)  # le reste de l etourdissement s ecoule
+	var y1: float = boss.position.y
+	boss.advance(1.0)
+	var ralenti: float = boss.position.y - y1
+	ok(ralenti > 0.0, "il repart apres l etourdissement")
+	ok(ralenti < libre * 0.7,
+		"et il est ralenti : %.1f px contre %.1f px libre" % [ralenti, libre])
+	eq(boss.hits_immune_left(), 5, "le controle n a toujours mange aucun coup")
+
+
+# --- 6. Boss a BOUCLIER DE RENVOI --------------------------------------------
+#
+# Ce que la mecanique change : le MOMENT du lancement. Tout le reste du jeu
+# recompense le joueur qui lance des qu une carte est prete ; ici lancer au
+# mauvais moment lui coute ses propres PV. C est la seule mecanique du jeu ou
+# regarder le boss vaut mieux que regarder sa main.
+
+## Pendant la fenetre de renvoi, les degats reviennent au mage. Ils passent par
+## le meme chemin bouclier-puis-PV qu un contact : le renvoi n est pas une
+## exception a la mecanique signature.
+func _test_renvoi_retourne_les_degats_au_mage() -> void:
+	_fresh()
+	var d := _def("miroir", 200.0, 0.0, 10)
+	d.reflect_interval = 4.0
+	d.reflect_window = 2.0
+	d.reflect_pct = 50.0
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+
+	# On force la fenetre plutot que d attendre : le test verrouille la REGLE du
+	# renvoi, pas la cadence, qui est un reglage d equilibrage.
+	boss.force_reflect_window(2.0)
+	ok(boss.is_reflecting(), "la fenetre est ouverte")
+
+	SpeedGauge.set_speed_percent(100)
+	var pv0: int = SpeedGauge.hp
+	var tags: Array = []
+	_bf.damage_enemy(boss, 40.0, null)
+	ok(SpeedGauge.hp < pv0, "le mage encaisse son propre sort")
+	ok(boss.hp < 200.0, "le boss encaisse quand meme : le renvoi n est pas un mur")
+
+
+## Hors fenetre, il se comporte comme n importe quel boss. Sans cette respiration
+## le joueur ne pourrait JAMAIS lancer, et la mecanique deviendrait une interdiction
+## au lieu d un choix de timing.
+func _test_renvoi_ne_renvoie_rien_hors_fenetre() -> void:
+	_fresh()
+	var d := _def("miroir2", 200.0, 0.0, 10)
+	d.reflect_interval = 6.0
+	d.reflect_window = 1.0
+	d.reflect_pct = 100.0
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+	not_ok(boss.is_reflecting(), "il n entre pas la garde levee")
+
+	SpeedGauge.set_speed_percent(100)
+	var pv0: int = SpeedGauge.hp
+	_bf.damage_enemy(boss, 40.0, null)
+	eq(SpeedGauge.hp, pv0, "hors fenetre, rien ne revient")
+	feq(boss.hp, 160.0, "et le sort porte pleinement")
+
+
+## Le renvoi ne doit pas rendre le boss increvable : on peut le tuer PENDANT sa
+## garde, en acceptant le prix. Sinon ce n est plus un choix, c est une attente.
+func _test_renvoi_n_empeche_pas_de_le_tuer() -> void:
+	_fresh()
+	var d := _def("miroir3", 30.0, 0.0, 10)
+	d.reflect_interval = 5.0
+	d.reflect_window = 3.0
+	d.reflect_pct = 50.0
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
+	boss.force_reflect_window(3.0)
+	SpeedGauge.set_speed_percent(100)
+	var pv0: int = SpeedGauge.hp
+	_bf.damage_enemy(boss, 99.0, null)
+	ok(boss.is_dead(), "garde levee ou non, il meurt quand les PV tombent")
+	# ET LE COUP FATAL SE PAIE QUAND MEME. C est la regle la plus fragile des
+	# trois : la part renvoyee doit etre relevee AVANT d appliquer les degats,
+	# parce que le coup ferme la garde en tuant son porteur. La lire apres rendrait
+	# le coup mortel GRATUIT — le joueur apprendrait a tout garder pour la garde,
+	# soit l inverse exact de ce que la mecanique demande.
+	ok(SpeedGauge.hp < pv0,
+		"le coup qui le tue pendant sa garde est renvoye lui aussi")
+	not_ok(boss.is_reflecting(), "et sa garde tombe avec lui")
+
+
 # --- Le contenu livre --------------------------------------------------------
 
 ## Les trois mecaniques doivent exister DANS LE JEU, pas seulement dans le
@@ -254,6 +482,113 @@ func _test_les_boss_livres_ont_bien_leurs_mecaniques() -> void:
 	ok(morcele >= 1, "au moins un boss en plusieurs morceaux est livre")
 	ok(distant >= 1, "au moins un boss qui campe et harcele est livre")
 	ok(invocateur >= 1, "au moins un boss qui invoque est livre")
+
+
+## Les trois mecaniques du chantier I doivent exister DANS LE JEU, et surtout
+## etre RENCONTRABLES : le piege mesure le 25 septembre est qu un monstre cree
+## mais absent de toute vague ecrite n appartient a aucun monde, donc le mode
+## infini ne le propose JAMAIS et l audit ne voit rien.
+##
+## Ce test ne se contente donc pas de l existence du .tres : il sonde les deux
+## chemins reels par lesquels le joueur peut le croiser.
+func _test_les_trois_nouvelles_mecaniques_sont_livrees() -> void:
+	var ressuscite: Array[EnemyDef] = []
+	var compteur: Array[EnemyDef] = []
+	var renvoi: Array[EnemyDef] = []
+	for def: EnemyDef in ContentDB.enemies.values():
+		if def.revive_hp_pct > 0.0:
+			ressuscite.append(def)
+			ok(def.revive_hp_pct < 100.0,
+				"%s : revenir a PV pleins serait deux combats, pas un releve" % def.id)
+		if def.hits_immune > 0:
+			compteur.append(def)
+			ok(def.hits_immune <= 12,
+				"%s : au-dela d une dizaine de coups le joueur ne peut plus payer" % def.id)
+		if def.reflect_pct > 0.0:
+			renvoi.append(def)
+			ok(def.reflect_interval > 0.0 and def.reflect_window > 0.0,
+				"%s : un renvoi sans cadence ne s ouvre jamais" % def.id)
+			ok(def.reflect_window < def.reflect_interval,
+				"%s : une fenetre plus longue que son cycle = garde permanente" % def.id)
+	ok(ressuscite.size() >= 1, "au moins un boss qui ressuscite est livre")
+	ok(compteur.size() >= 1, "au moins un boss immunise aux N premiers coups est livre")
+	ok(renvoi.size() >= 1, "au moins un boss a bouclier de renvoi est livre")
+
+	# SONDE 1 — la CAMPAGNE. Le boss doit mener une vague ecrite.
+	var en_campagne: Dictionary = {}
+	for lv: LevelDef in ContentDB.levels.values():
+		for w: WaveDef in lv.waves:
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					en_campagne[e.enemy.id] = lv.id
+	for def in ressuscite + compteur + renvoi:
+		ok(en_campagne.has(def.id),
+			"%s n apparait dans AUCUNE vague de campagne : injouable" % def.id)
+
+	# SONDE 2 — le MASSACRE. L appartenance a un monde se DEDUIT de la densite
+	# dans les vagues ecrites : un boss absent des vagues n a pas de monde, donc
+	# pick_boss() ne le choisira jamais pour son palier.
+	var membership: Dictionary = WaveSpawner.build_membership()
+	for def in ressuscite + compteur + renvoi:
+		ok(membership.has(def.id),
+			"%s n est rattache a aucun monde : le Massacre ne le proposera jamais"
+			% def.id)
+
+	# SONDE 3 — il est bien TIRE par le mode infini. On genere assez de vagues pour
+	# couvrir plusieurs tours de mondes et on releve les TETES de palier.
+	#
+	# CE QUE CETTE SONDE A MESURE, et qui est un DEFAUT DU MOTEUR, pas du contenu :
+	# `WaveBudget.pick_boss()` renvoie le PREMIER boss du pool dont le monde
+	# correspond, et le pool arrive dans l ordre de lecture du disque, donc
+	# ALPHABETIQUE. Des qu un monde compte deux boss du meme `kind`, le second
+	# n est JAMAIS tire — quel que soit le contenu ecrit pour lui.
+	#
+	# Releve du 25 septembre sur 300 vagues, AVANT toute modification du chantier I :
+	# `gravecaller`, `warden` et `wraith_lord` etaient deja injoignables en
+	# Massacre pour cette raison — trois boss sur les neuf d alors. `glass_mirror`
+	# s ajoute a la liste, derriere `emberlord` dans le monde demoniaque.
+	#
+	# Le correctif vit dans `scripts/game/wave_budget.gd` (tirer au hasard parmi
+	# les candidats du monde, au lieu du premier) et ce fichier est HORS du
+	# perimetre du chantier I. Le test verrouille donc ce qu il peut verrouiller
+	# sans mentir : qu au moins une des mecaniques neuves sort en Massacre, et que
+	# le nombre de boss starves ne GRANDIT pas. Il rougira au prochain boss ajoute
+	# dans un monde deja servi, ce qui est exactement le moment ou il faut ouvrir
+	# wave_budget.gd.
+	var bosses: Array[EnemyDef] = []
+	var pool: Array[EnemyDef] = []
+	for def: EnemyDef in ContentDB.enemies.values():
+		if def.is_boss():
+			bosses.append(def)
+		elif not def.projectile:
+			pool.append(def)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12345
+	var tetes: Dictionary = {}
+	for n in range(1, 301):
+		var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
+		if (w.is_boss or w.is_miniboss) and not w.entries.is_empty() \
+				and w.entries[0].enemy != null:
+			tetes[w.entries[0].enemy.id] = true
+
+	# Les deux boss (kind BOSS) du chantier menent chacun leur monde : eux doivent
+	# sortir, sans exception.
+	for def in ressuscite + compteur:
+		ok(tetes.has(def.id),
+			"%s n est jamais tire sur 300 vagues de Massacre" % def.id)
+
+	# Le compte de boss starves ne doit pas grandir. 4 est le releve du jour, dont
+	# 3 anterieurs au chantier I.
+	var prives: Array[String] = []
+	for def in bosses:
+		if not tetes.has(def.id):
+			prives.append(String(def.id))
+	prives.sort()
+	ok(prives.size() <= 4,
+		("%d boss ne sont jamais tires en Massacre (%s) : pick_boss() rend le"
+		+ " PREMIER candidat du monde, donc le premier par ordre alphabetique."
+		+ " Le correctif est dans wave_budget.gd.")
+		% [prives.size(), ", ".join(prives)])
 
 
 ## Un niveau doit avoir SON adversaire, pas celui du voisin.

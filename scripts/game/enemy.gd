@@ -62,6 +62,28 @@ var _summon_timer: float = 0.0
 ## deux invocateurs ne doivent pas se voler leur plafond.
 var _summoned: Array[Enemy] = []
 
+## RESSUSCITE : vrai des qu il s est releve. Une seule fois — sans ce drapeau un
+## joueur sans le bon deck ne finirait jamais le combat, et la surprise du
+## premier releve deviendrait un mur de PV deguise.
+var _revived: bool = false
+## Secondes restantes d IMMUNITE de releve. Sans ce court repit, le sort qui
+## vient de le tuer (un Meteore a degats de zone, ou simplement la deuxieme
+## cible d une chaine) le retuait dans la meme frame et le joueur ne voyait
+## JAMAIS le releve : la mecanique n aurait existe que dans le code.
+var _revive_grace: float = 0.0
+const REVIVE_GRACE: float = 0.7
+
+## IMMUNISE AUX N PREMIERS COUPS : coups qu il peut encore ignorer.
+var _hits_immune_left: int = 0
+
+## BOUCLIER DE RENVOI : temps avant la prochaine garde, et temps de garde restant.
+var _reflect_timer: float = 0.0
+var _reflect_left: float = 0.0
+## Halo de la garde de renvoi. Distinct de `_shield_fx`, qui ne se leve jamais et
+## ne se baisse qu une fois : celui-ci clignote au rythme du cycle, et le joueur
+## doit pouvoir lire les deux en meme temps sur un boss qui porterait les deux.
+var _reflect_fx: Node = null
+
 const HP_BAR_WIDTH: float = 62.0
 
 @onready var _body: EnemyBody = $Body
@@ -85,6 +107,14 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 	# Premiere invocation a l intervalle PLEIN : le joueur a le temps de voir le
 	# boss entrer avant que l ecran se remplisse.
 	_summon_timer = def.summon_interval
+	_hits_immune_left = def.hits_immune
+	# Premiere garde de renvoi a l intervalle PLEIN : le boss entre a decouvert,
+	# pour que le joueur ait le temps de le voir lever sa garde une premiere fois
+	# et de comprendre le cycle avant d etre puni par lui.
+	_reflect_timer = def.reflect_interval
+	_reflect_left = 0.0
+	_revived = false
+	_revive_grace = 0.0
 	_parts.clear()
 	if def.parts_count > 0 and def.part_hp > 0.0:
 		for i in def.parts_count:
@@ -95,7 +125,9 @@ func _ready() -> void:
 	_base_x = position.x
 	_last_x = position.x
 	if definition != null and _body != null:
-		_body.setup(definition, _shield_up)
+		# Les sceaux du boss immunise se lisent comme un bouclier : c est la meme
+		# chose pour le joueur — quelque chose devant la creature.
+		_body.setup(definition, _shield_up or _hits_immune_left > 0)
 		_setup_visual()
 		_place_hp_bar()
 	_refresh_hp_bar()
@@ -126,10 +158,12 @@ func _setup_visual() -> void:
 	if Fx.enabled():
 		if definition.aura_shield_radius > 0.0:
 			_aura_fx = Fx.halo(self, definition.aura_shield_radius, Color(1.0, 0.92, 0.6, 0.55))
-		if _shield_up or not _parts.is_empty():
-			# Le meme halo sert au bouclier de premier coup et a l armure du boss
-			# morcele : dans les deux cas il signifie « ce que tu frappes n est
-			# pas encore la creature ».
+		if _shield_up or not _parts.is_empty() or _hits_immune_left > 0:
+			# Le meme halo sert au bouclier de premier coup, a l armure du boss
+			# morcele et aux sceaux du boss immunise aux N premiers coups : dans
+			# les trois cas il signifie « ce que tu frappes n est pas encore la
+			# creature ». Sans lui, le joueur du Reliquaire voit six sorts ne rien
+			# faire et conclut que son deck est casse.
 			_shield_fx = Fx.halo(self, visual_radius() * 1.05, Color(0.85, 0.9, 1.0, 0.9))
 
 
@@ -201,6 +235,16 @@ func advance(world_delta: float) -> void:
 			return
 		_spawn_fade = 0.0
 		modulate.a = 1.0
+	# IMMUNITE DE RELEVE : le repit qui rend le releve VISIBLE. Suit le temps du
+	# monde comme le reste, donc il se raccourcit avec le multiplicateur.
+	if _revive_grace > 0.0:
+		_revive_grace = maxf(0.0, _revive_grace - world_delta)
+	# CYCLE DE RENVOI. Place AVANT le retour d etourdissement, volontairement :
+	# si un stun figeait le cycle, etourdir le boss pendant sa garde la
+	# verrouillerait ouverte a jamais et le joueur serait puni d avoir joue la
+	# bonne carte. Le cycle tourne donc toujours, et etourdir la garde reste une
+	# reponse valable — on attend qu elle retombe sans encaisser de renvoi.
+	_tick_reflect(world_delta)
 	# ETOURDISSEMENT : il ne bouge pas, il ne tire pas, il ne frappe rien. Le
 	# compteur suit le temps du MONDE comme tout le reste, donc a 500 % de vitesse
 	# une seconde d etourdissement ne dure qu un cinquieme de seconde reelle —
@@ -409,6 +453,11 @@ func take_damage(amount: float, tags: Array) -> bool:
 	# pas encore commence a avancer, revient a frapper un fantome.
 	if _spawn_fade > 0.0:
 		return false
+	# REPIT DE RELEVE : il vient de se relever, il est intouchable une fraction de
+	# seconde. Sans ce repit, le sort qui l a tue (zone, chaine, deuxieme cible)
+	# le retuait dans la meme frame et le joueur ne voyait JAMAIS la resurrection.
+	if _revive_grace > 0.0:
+		return false
 	# Resistance TOTALE (0 %) a l un des elements du sort : rien ne passe, et
 	# `false` coupe aussi l eclair et le son de coup — le joueur voit que son
 	# sort n a pas mordu. La graduation entre 0 et 1 est appliquee en amont par
@@ -424,6 +473,29 @@ func take_damage(amount: float, tags: Array) -> bool:
 		amount *= PHASE_DAMAGE_FACTOR
 	if definition.dodge_chance > 0.0 and randf() < definition.dodge_chance:
 		return false
+
+	# IMMUNISE AUX N PREMIERS COUPS. On teste ICI, apres l esquive et avant tout
+	# calcul de PV : la PUISSANCE du coup n entre pas en ligne de compte, c est un
+	# COMPTEUR. Un Meteore charge et une fleche de lutin coutent exactement un
+	# coup chacun — c est tout le renversement de la mecanique.
+	#
+	# `false` est renvoye pour que le joueur ne voie ni eclair ni son de coup :
+	# il doit LIRE que son sort n a pas mordu, sinon il croit son deck en panne.
+	if _hits_immune_left > 0:
+		_hits_immune_left -= 1
+		AudioBus.play_sfx(&"shield_break")
+		# Le halo tombe au DERNIER coup absorbe : le joueur voit a l ecran que le
+		# compteur est vide et que le combat vrai commence. Sans ce signal il ne
+		# saurait pas quand cesser de gaspiller ses petites cartes.
+		if _hits_immune_left == 0:
+			if _body != null:
+				_body.set_shield(false)
+			if _shield_fx != null and is_instance_valid(_shield_fx):
+				_shield_fx.queue_free()
+				_shield_fx = null
+		_refresh_hp_bar()
+		return false
+
 	if _shield_up:
 		_shield_up = false
 		if _body != null:
@@ -553,8 +625,54 @@ func is_stunned() -> bool:
 func kill() -> void:
 	if _dead:
 		return
+	# RESURRECTION. Interceptee dans kill() et non dans take_damage() parce que
+	# kill() est le point de passage UNIQUE de la mort : une carte d execution, un
+	# effet de terrain ou un gobage futur passeraient par la aussi, et un releve
+	# qui ne fonctionnerait que contre les degats directs mentirait au joueur sur
+	# la regle. `absorb()` est le seul retrait qui l ignore, et c est voulu : etre
+	# gobe n est pas mourir.
+	if _try_revive():
+		return
 	_dead = true
+	# Un boss mort ne tient plus sa garde : le halo ambre doit partir avec lui,
+	# sinon il reste a l ecran accroche a un monstre qui n existe plus.
+	#
+	# C est aussi ce qui rend LOAD-BEARING l ordre choisi dans
+	# Battlefield._hit() : la part renvoyee y est relevee AVANT d appliquer les
+	# degats, parce que le coup peut tuer. La lire apres rendrait gratuit le fait
+	# de tuer le boss pendant sa garde, ce qui est exactement le contraire de la
+	# mecanique — elle doit faire payer le lancement mal choisi, surtout celui-la.
+	_close_reflect()
 	died.emit(self)
+
+
+## Tente le releve unique. Renvoie true s il s est releve : l appelant ne doit
+## alors PAS le considerer comme mort (ni XP, ni division, ni retrait du terrain).
+func _try_revive() -> bool:
+	if definition == null or definition.revive_hp_pct <= 0.0 or _revived:
+		return false
+	_revived = true
+	hp = maxf(_max_hp * definition.revive_hp_pct * 0.01, 1.0)
+	# Un boss qui se releve repart a decouvert : ses parties, son bouclier et son
+	# compteur de coups ont ete payes une fois, les rendre serait deux combats.
+	# Ce qu il RECUPERE est sa garde de renvoi, qui est un cycle et non une reserve.
+	_revive_grace = REVIVE_GRACE
+	_refresh_hp_bar()
+	# LE JOUEUR DOIT LE VOIR. La barre reapparait (elle etait a zero), le monstre
+	# pulse en blanc, un souffle part de lui et le son monte : quatre canaux,
+	# parce que le releve arrive exactement au moment ou le joueur regarde
+	# AILLEURS — il vient de croire le combat gagne.
+	if Fx.enabled():
+		Fx.impact(self, position, Color(1.0, 0.95, 0.65), visual_radius() * 1.8)
+	AudioBus.play_sfx(&"spell_rise")
+	modulate = Color(1.6, 1.5, 1.1)
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "modulate", Color.WHITE, REVIVE_GRACE)
+	if _anim != null and _anim.visible and AnimCatalog.has_anim(definition.anim_key, "hurt"):
+		_anim.play("hurt")
+		if not _anim.animation_finished.is_connected(_back_to_walk):
+			_anim.animation_finished.connect(_back_to_walk)
+	return true
 
 
 ## Retire du terrain sans mort (gobe par un Glouton) : ni XP ni division.
@@ -573,6 +691,102 @@ func is_hidden() -> bool:
 
 func has_shield() -> bool:
 	return _shield_up
+
+
+# --- Boss a MECANIQUE : releve, compteur de coups, garde de renvoi -----------
+
+## Coups que le boss peut encore ignorer (0 pour un monstre ordinaire).
+func hits_immune_left() -> int:
+	return _hits_immune_left
+
+
+## Vrai apres son unique resurrection. Sert a l affichage comme au test.
+func has_revived() -> bool:
+	return _revived
+
+
+## Garde de renvoi levee ? Le HUD et les FX s y raccrochent, et c est la question
+## que le joueur se pose avant de lancer.
+func is_reflecting() -> bool:
+	return _reflect_left > 0.0
+
+
+## Ouvre la garde tout de suite, pour la duree demandee. Sert aux TESTS, qui
+## doivent verrouiller la REGLE du renvoi sans figer sa cadence — un test qui
+## attendrait le cycle figerait un reglage d equilibrage (voir gotchas.md).
+func force_reflect_window(duration: float) -> void:
+	if definition == null or definition.reflect_pct <= 0.0:
+		return
+	_open_reflect(duration)
+
+
+## Cadence de la garde : elle se leve, elle retombe, et le joueur apprend le
+## rythme. Un renvoi permanent serait une interdiction de jouer, pas un choix.
+func _tick_reflect(world_delta: float) -> void:
+	if definition == null or definition.reflect_pct <= 0.0 \
+			or definition.reflect_interval <= 0.0 or definition.reflect_window <= 0.0:
+		return
+	if _reflect_left > 0.0:
+		_reflect_left -= world_delta
+		if _reflect_left <= 0.0:
+			_close_reflect()
+		return
+	_reflect_timer -= world_delta
+	if _reflect_timer <= 0.0:
+		_reflect_timer = definition.reflect_interval
+		_open_reflect(definition.reflect_window)
+
+
+func _open_reflect(duration: float) -> void:
+	_reflect_left = maxf(duration, 0.05)
+	# LE JOUEUR DOIT LE VOIR : sans retour visuel, le renvoi n est qu une punition
+	# arbitraire et la mecanique n existe pas pour lui. Halo ambre (la teinte du
+	# renvoi, distincte du bleu du bouclier) + pose de garde quand la feuille en a
+	# une + son de ward : trois canaux, parce qu un seul se rate.
+	# FACTEUR 2,0 ET PAS 1,25, et z_index force DEVANT. Mesure sur capture
+	# (.testout/boss_07_miroir_garde_levee, premier jet) : le halo EXISTAIT dans
+	# l arbre — la sonde le listait — mais il etait invisible, parce que le sprite
+	# du monstre est mis a l echelle du rayon VISUEL et le recouvrait entierement.
+	# Une garde qu on ne voit pas ne punit pas le joueur, elle le trahit : il perd
+	# des PV en lancant une carte, sans aucune cause lisible a l ecran.
+	if Fx.enabled() and _reflect_fx == null:
+		# UNE AUTRE FEUILLE, pas seulement une autre teinte. Verifie sur capture :
+		# la feuille `shield_hex` (celle de Fx.halo) porte sa propre couleur verte
+		# et l ecrase le modulate — a 0,95 comme a 2,2 de saturation, la garde de
+		# renvoi restait visuellement identique aux sceaux du Reliquaire. Or les
+		# deux demandent au joueur des reactions OPPOSEES : continuer a frapper
+		# pour user les sceaux, s ARRETER de frapper devant la garde. Deux regles
+		# contraires derriere le meme halo, c est un piege, pas un signal.
+		#
+		# `hex_sigil` est un sigle tournant, de forme nettement differente, et il
+		# remplit toute sa case (occupancy 1,00) donc il se lit a pleine taille.
+		_reflect_fx = Fx.sprite(self, "hex_sigil", Vector2.ZERO,
+			visual_radius() * 2.2, true, Color(1.0, 0.72, 0.25, 0.95))
+		if _reflect_fx is CanvasItem:
+			(_reflect_fx as CanvasItem).z_index = 5
+	if _anim != null and _anim.visible and definition != null \
+			and AnimCatalog.has_anim(definition.anim_key, "guard"):
+		_anim.play("guard")
+	AudioBus.play_sfx(&"ward_deep")
+
+
+func _close_reflect() -> void:
+	_reflect_left = 0.0
+	if _reflect_fx != null and is_instance_valid(_reflect_fx):
+		_reflect_fx.queue_free()
+	_reflect_fx = null
+	if _anim != null and _anim.visible and not _dead and _anim.animation != "walk":
+		_anim.play("walk")
+
+
+## Part des degats renvoyee au mage a cet instant. 0 hors fenetre. Lue par
+## Battlefield._hit(), qui est le SEUL point de passage des degats : le renvoi
+## doit donc etre resolu la et nulle part ailleurs, sinon une source de degats
+## qui l oublierait offrirait au joueur un contournement gratuit.
+func reflect_share() -> float:
+	if _reflect_left <= 0.0 or definition == null:
+		return 0.0
+	return clampf(definition.reflect_pct * 0.01, 0.0, 1.0)
 
 
 func enrage_bonus() -> float:
@@ -653,6 +867,17 @@ func _refresh_hp_bar() -> void:
 		_hp_bar.visible = true
 		_hp_bar.value = clampf(reste / maxf(total, 0.001), 0.0, 1.0) * 100.0
 		# Teinte distincte : le joueur doit lire « armure » et non « PV ».
+		_hp_bar.tint_progress = Color(0.70, 0.80, 1.0)
+		return
+	# SCEAUX RESTANTS. Tant qu ils tiennent, les PV du boss ne bougent pas : une
+	# barre pleine et immobile pendant six sorts ferait croire au joueur que ses
+	# cartes ne portent pas. La barre montre donc le COMPTEUR, et elle se vide
+	# coup par coup — un retour immediat a chaque sort lance.
+	if _hits_immune_left > 0 and definition != null and definition.hits_immune > 0:
+		_hp_bar.visible = true
+		_hp_bar.value = float(_hits_immune_left) / float(definition.hits_immune) * 100.0
+		# Meme teinte bleue que l armure du boss morcele : c est le meme message,
+		# « ce que tu vides n est pas encore sa vie ».
 		_hp_bar.tint_progress = Color(0.70, 0.80, 1.0)
 		return
 	var intact: bool = ratio >= 0.999

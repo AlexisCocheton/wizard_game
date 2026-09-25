@@ -1,42 +1,43 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=69 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=70 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_c0gve"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_ktaj7"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_5i0p2"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_710or"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="4_60b13"]
-[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="5_f5biq"]
-[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="6_hu6pk"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_o0ilu"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="5_e17r0"]
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="7_jvhjg"]
 [ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="7_plo7r"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="8_fowiy"]
 [ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="8_tbed1"]
-[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="9_5cwlv"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="9_oiogm"]
-[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="10_00x07"]
-[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="11_nsuoj"]
-[ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="12_jvhjg"]
-[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="12_q8nio"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="12_dnda2"]
 [ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="13_ktaj7"]
-[ext_resource type="Resource" path="res://resources/cards/common/ember_pool.tres" id="13_tbed1"]
-[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="14_o0ilu"]
-[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="14_oiogm"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="14_vo2kc"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="15_e17r0"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="15_q8nio"]
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="16_dnda2"]
-[ext_resource type="Resource" path="res://resources/cards/rare/temporal_drag.tres" id="16_ktaj7"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="17_o0ilu"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="17_vo2kc"]
 [ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="18_17akq"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_e17r0"]
-[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_dnda2"]
-[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="19_krw0l"]
+[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="19_17akq"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="20_krw0l"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_vo2kc"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_17akq"]
-[ext_resource type="Resource" path="res://resources/cards/common/tidal_pool.tres" id="26_ktaj7"]
-[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="28_q8nio"]
-[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="29_ktaj7"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="21_me4lm"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="22_1dx4t"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="23_wfytj"]
+[ext_resource type="Resource" path="res://resources/cards/common/ember_pool.tres" id="24_y12dx"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="25_uyova"]
+[ext_resource type="Resource" path="res://resources/cards/common/tidal_pool.tres" id="26_78ho8"]
+[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="27_ehu58"]
+[ext_resource type="Resource" path="res://resources/cards/rare/temporal_drag.tres" id="28_iwmy6"]
+[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="29_ylptl"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="30_aq2yf"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="31_hpxsi"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="33_8pshf"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="33_tbed1"]
 [ext_resource type="Resource" path="res://resources/enemies/skyreaver.tres" id="37_q8nio"]
+[ext_resource type="Resource" path="res://resources/enemies/blood_coagulum.tres" id="38_g7smm"]
 
 [sub_resource type="Resource" id="Resource_6vmxt"]
 script = ExtResource("18_e17r0")
@@ -80,7 +81,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_q8nio"]
+[sub_resource type="Resource" id="Resource_ktaj7"]
 script = ExtResource("20_vo2kc")
 id = &"w2_1"
 duration = 26.0
@@ -117,7 +118,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_ktaj7"]
+[sub_resource type="Resource" id="Resource_o0ilu"]
 script = ExtResource("20_vo2kc")
 id = &"w2_3"
 duration = 28.0
@@ -154,7 +155,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_o0ilu"]
+[sub_resource type="Resource" id="Resource_e17r0"]
 script = ExtResource("20_vo2kc")
 id = &"w2_4_miniboss"
 duration = 32.0
@@ -184,7 +185,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 15.0
 
-[sub_resource type="Resource" id="Resource_e17r0"]
+[sub_resource type="Resource" id="Resource_dnda2"]
 script = ExtResource("20_vo2kc")
 id = &"w2_5"
 duration = 28.0
@@ -228,7 +229,7 @@ count = 5
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_dnda2"]
+[sub_resource type="Resource" id="Resource_vo2kc"]
 script = ExtResource("20_vo2kc")
 id = &"w2_6"
 duration = 30.0
@@ -239,7 +240,7 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_ilf2d"]
 script = ExtResource("21_17akq")
-enemy = ExtResource("17_vo2kc")
+enemy = ExtResource("38_g7smm")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -249,16 +250,16 @@ script = ExtResource("21_17akq")
 enemy = ExtResource("9_oiogm")
 count = 4
 spawn_delay = 2.0
-start_offset = 10.0
+start_offset = 8.0
 
 [sub_resource type="Resource" id="Resource_n7kso"]
 script = ExtResource("21_17akq")
 enemy = ExtResource("3_710or")
 count = 4
 spawn_delay = 2.0
-start_offset = 22.0
+start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_vo2kc"]
+[sub_resource type="Resource" id="Resource_17akq"]
 script = ExtResource("20_vo2kc")
 id = &"w2_7_boss"
 duration = 45.0
@@ -268,7 +269,7 @@ is_miniboss = false
 is_boss = true
 
 [resource]
-script = ExtResource("19_dnda2")
+script = ExtResource("33_8pshf")
 id = &"lvl_02"
 display_name = "La Tour des Sables"
 act = 1
@@ -282,9 +283,9 @@ intro_story = &"lvl_02_intro"
 outro_story = &"lvl_02_outro"
 terrain = "sand"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_q8nio"), SubResource("Resource_ktaj7"), SubResource("Resource_o0ilu"), SubResource("Resource_e17r0"), SubResource("Resource_dnda2"), SubResource("Resource_vo2kc")])
-enemy_pool = Array[ExtResource("1_c0gve")]([ExtResource("2_5i0p2"), ExtResource("3_710or"), ExtResource("6_hu6pk"), ExtResource("5_f5biq"), ExtResource("8_fowiy"), ExtResource("7_jvhjg"), ExtResource("8_tbed1"), ExtResource("9_oiogm"), ExtResource("7_plo7r"), ExtResource("4_60b13"), ExtResource("12_q8nio"), ExtResource("13_ktaj7"), ExtResource("14_o0ilu"), ExtResource("15_e17r0"), ExtResource("16_dnda2"), ExtResource("17_vo2kc"), ExtResource("18_17akq"), ExtResource("19_krw0l")])
-exploration_deck = Array[ExtResource("9_5cwlv")]([ExtResource("10_00x07"), ExtResource("11_nsuoj"), ExtResource("11_nsuoj"), ExtResource("12_jvhjg"), ExtResource("13_tbed1"), ExtResource("13_tbed1"), ExtResource("14_oiogm"), ExtResource("14_oiogm"), ExtResource("14_oiogm"), ExtResource("26_ktaj7"), ExtResource("15_q8nio"), ExtResource("16_ktaj7"), ExtResource("28_q8nio"), ExtResource("28_q8nio"), ExtResource("29_ktaj7")])
+waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_ktaj7"), SubResource("Resource_o0ilu"), SubResource("Resource_e17r0"), SubResource("Resource_dnda2"), SubResource("Resource_vo2kc"), SubResource("Resource_17akq")])
+enemy_pool = Array[ExtResource("1_ktaj7")]([ExtResource("2_5i0p2"), ExtResource("3_710or"), ExtResource("4_o0ilu"), ExtResource("5_e17r0"), ExtResource("8_fowiy"), ExtResource("7_jvhjg"), ExtResource("8_tbed1"), ExtResource("9_oiogm"), ExtResource("7_plo7r"), ExtResource("4_60b13"), ExtResource("12_dnda2"), ExtResource("13_ktaj7"), ExtResource("14_vo2kc"), ExtResource("15_e17r0"), ExtResource("16_dnda2"), ExtResource("17_vo2kc"), ExtResource("18_17akq"), ExtResource("19_17akq")])
+exploration_deck = Array[ExtResource("20_krw0l")]([ExtResource("21_me4lm"), ExtResource("22_1dx4t"), ExtResource("22_1dx4t"), ExtResource("23_wfytj"), ExtResource("24_y12dx"), ExtResource("24_y12dx"), ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("26_78ho8"), ExtResource("27_ehu58"), ExtResource("28_iwmy6"), ExtResource("29_ylptl"), ExtResource("29_ylptl"), ExtResource("30_aq2yf")])
 objectives = Array[ExtResource("18_e17r0")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
-legendary_reward = ExtResource("17_o0ilu")
+legendary_reward = ExtResource("31_hpxsi")
 next_levels = Array[StringName]([&"lvl_03"])

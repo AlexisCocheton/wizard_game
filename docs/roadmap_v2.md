@@ -158,7 +158,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Apparition plus bas + fondu de 0,5 s | **FAIT** | B1 |
 | Feu follet -> Planogo, vole par-dessus les murs, boule de poison 10 PV | **FAIT** | B1 |
 | Nuee de rats -> Oiseau mirage, sprite qui ne tourne plus | **FAIT** | B1 |
-| Boss a mecaniques originales (revient 3 fois, ressuscite, bouclier renvoi, 10 coups immunises, slime enorme qui se divise, 3 mages a resistances, renard qui dort, mecha laser, executeur onde de choc, demon slime immunise au feu) | PARTIEL (3 boss a mecanique) ; la plupart BLOQUES par les packs absents | I |
+| Boss a mecaniques originales (...) | **PARTIEL** (6 boss a mecanique : 3 anciens + ressuscite, N coups immunises, bouclier renvoi) ; le reste BLOQUE par les packs absents | I |
 | Boss d'un acte devenant monstre courant ensuite | **PARTIEL** (`totem_guardian` : boss en lvl_02, mini-boss en lvl_05) | I |
 
 ### Combat
@@ -494,3 +494,35 @@ le jeu va encore beaucoup changer. Les chiffres du banc de cette section sont
 donc des CONSTATS, pas des cibles atteintes. Le banc et ses garde-fous restent
 en place pour attraper les ruptures franches (un saut de PV qui double, une
 vague qui vide la barre de vie d un coup).
+
+
+---
+
+## 10. Boss a mecaniques et tirage du mode infini — 26 septembre
+
+**Trois mecaniques de plus**, chacune changeant une question differente :
+- **Le Coagule** (`lvl_02`) se releve une fois a 40 % de ses PV — il change le
+  sens du mot "tuer" ;
+- **Le Reliquaire** (`lvl_03`) ignore ses 6 premiers coups QUELLE QUE SOIT leur
+  puissance — il change la monnaie : on paie en coups, pas en points ;
+- **Le Miroir de Forge** (`lvl_05`) leve une garde qui renvoie 45 % des degats —
+  il change le MOMENT du lancement.
+
+**Le defaut le plus grave de la journee, et aucun audit ne pouvait le voir.**
+`WaveBudget.pick_boss()` rendait le PREMIER boss dont le monde correspondait, et
+le pool arrive dans l ordre de lecture du disque, donc alphabetique. Des qu un
+monde comptait deux boss du meme genre, **le second n etait JAMAIS tire** en
+Massacre. Releve sur 300 vagues : quatre sur douze etaient injoignables, dont le
+Gardien, mini-boss du tout premier niveau.
+
+Le monstre existe, il est rattache a un monde, son contenu est ecrit, et il ne
+sort jamais. Rien ne plante, rien ne rougit. La correction tient en trois
+lignes — tirer au hasard parmi les candidats du monde — et `test_wave_budget`
+verifie desormais que chaque boss rattache SORT REELLEMENT, en jouant
+720 vagues. Sabotage verifie : 4 echecs nommes.
+
+**Ecarte, et c est le bon choix** : le "renard qui dort". La mecanique est
+triviale, mais son interet tient a ce que le joueur DECIDE quand commencer —
+donc a un geste de reveil, qui passe par le ciblage. Livree sans ce geste, elle
+se reduit a "un monstre qui demarre en retard", ce qui n est pas une question
+posee au joueur.

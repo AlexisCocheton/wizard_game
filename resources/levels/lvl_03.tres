@@ -29,7 +29,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="25_4wdce"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="26_sfosm"]
 [ext_resource type="Resource" path="res://resources/enemies/bonewarden.tres" id="29_0sax4"]
-[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="29_7sh5u"]
+[ext_resource type="Resource" path="res://resources/enemies/bone_reliquary.tres" id="30_0sax4"]
 
 [sub_resource type="Resource" id="Resource_6vmxt"]
 script = ExtResource("22_wfffn")
@@ -211,7 +211,7 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_eiqf0"]
 script = ExtResource("25_4wdce")
-enemy = ExtResource("29_7sh5u")
+enemy = ExtResource("30_0sax4")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0

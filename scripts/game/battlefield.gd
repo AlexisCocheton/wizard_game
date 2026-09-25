@@ -371,6 +371,38 @@ func _passive_death_blast(where: Vector2, rayon_mort: float) -> void:
 	_chain_depth -= 1
 
 
+## RENVOI : conversion des degats de SORT en degats de MAGE, et plafond par coup.
+##
+## Les deux echelles n ont RIEN a voir : un sort fait des dizaines a des centaines
+## de points sur un monstre de 200 PV, alors que le mage a 100 PV et qu un contact
+## de boss lui en coute 50. Renvoyer les degats bruts tuerait le joueur d un seul
+## Meteore, ce qui n est pas une punition mais une interdiction de jouer.
+##
+## On divise donc, puis on PLAFONNE a hauteur d un contact de mini-boss : le
+## renvoi le plus cher du jeu coute autant que se faire toucher par un gros
+## monstre. C est la seule echelle que le joueur connaisse deja, et elle garantit
+## qu un renvoi ne peut jamais le tuer a lui seul depuis la pleine sante.
+const REFLECT_TO_MAGE_SCALE: float = 0.10
+const REFLECT_MAX_PER_HIT: int = 20
+
+
+## Renvoie une part des degats sur le mage. Passe par SpeedGauge.take_hit(), donc
+## par le chemin BOUCLIER PUIS PV : un renvoi fait d abord retomber la jauge, il
+## n entame les PV qu a x1. La mecanique signature n a pas d exception.
+func _reflect_to_mage(source: Enemy, raw: float) -> void:
+	var degats: int = clampi(int(round(raw * REFLECT_TO_MAGE_SCALE)), 1, REFLECT_MAX_PER_HIT)
+	speed_before_hit = SpeedGauge.speed_percent
+	SpeedGauge.take_hit(degats)
+	# L ecran de defaite doit pouvoir dire "tue par son propre sort renvoye par le
+	# Miroir" : on nomme le boss, pas le sort, parce que c est lui la lecon.
+	mage_hit.emit(degats, source.definition if source != null else null)
+	# LE JOUEUR DOIT LE VOIR : un eclat part du boss, la ou son sort a rebondi.
+	# Sans ce retour, perdre des PV en lancant une carte est incomprehensible.
+	if Fx.enabled() and source != null and is_instance_valid(source):
+		Fx.impact(self, source.position, Color(1.0, 0.78, 0.35), source.radius() * 1.6)
+	AudioBus.play_sfx(&"hp_lost")
+
+
 ## Vitesse relevee juste avant le dernier coup encaisse (passif "Verrou temporel").
 var speed_before_hit: int = 100
 
@@ -479,8 +511,21 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	# COMPENSE la resistance, elle ne l ecrase pas.
 	if e.definition != null:
 		total *= e.definition.resistance_to_tags(tags)
+	# BOUCLIER DE RENVOI. Releve AVANT d appliquer les degats, parce que le coup
+	# peut tuer le boss et refermer sa garde : un renvoi resolu apres coup serait
+	# annule par la mort de celui qui renvoie, et tuer le boss pendant sa garde
+	# deviendrait gratuit — exactement le contraire de la mecanique, qui doit
+	# faire PAYER le lancement mal choisi.
+	var part_renvoyee: float = e.reflect_share()
+
 	var applied: bool = e.take_damage(total, tags)
 	if applied:
+		# Le renvoi ne part que si le coup a reellement mordu : un sort esquive,
+		# absorbe par un bouclier ou avale par le compteur de coups n a rien a
+		# renvoyer. Sinon le joueur serait puni deux fois pour un sort qui n a
+		# meme pas fonctionne.
+		if part_renvoyee > 0.0:
+			_reflect_to_mage(e, total * part_renvoyee)
 		Fx.hit_flash(e)
 		AudioBus.play_sfx(&"hit")
 		# PASSIF "Morsure de givre" : TOUT degat ralentit, quel que soit l element

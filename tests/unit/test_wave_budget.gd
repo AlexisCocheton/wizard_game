@@ -39,6 +39,7 @@ func run() -> void:
 	_test_budget_laisse_place_au_boss()
 	_test_chaque_monde_a_une_famille_reelle()
 	_test_chaque_monde_a_son_mini_boss()
+	_test_aucun_boss_n_est_affame()
 
 
 func _test_budget_progressif() -> void:
@@ -390,3 +391,50 @@ func _test_chaque_monde_a_son_mini_boss() -> void:
 	ok(tires.size() >= attendus,
 		"chaque monde propose reellement son mini-boss (%d tires sur %d attendus)"
 		% [tires.size(), attendus])
+
+
+## AUCUN boss ne doit etre injoignable en mode infini.
+##
+## Le defaut mesure : `pick_boss()` rendait le PREMIER candidat dont le monde
+## correspondait, et le pool arrive dans l ordre de lecture du disque, donc
+## alphabetique. Des qu un monde comptait deux boss du meme genre, le second
+## n etait JAMAIS tire — releve sur 300 vagues, quatre sur douze etaient
+## injoignables, dont le Gardien, mini-boss du tout premier niveau.
+##
+## C est un defaut qu aucun audit ne peut voir : le monstre existe, il est
+## rattache a un monde, son contenu est ecrit, et il ne sort jamais. Seule une
+## sonde qui JOUE des vagues le montre, d ou ce test.
+func _test_aucun_boss_n_est_affame() -> void:
+	var membership: Dictionary = WaveSpawner.build_membership()
+	var pool: Array[EnemyDef] = []
+	var tetes: Array[EnemyDef] = []
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e == null or e.projectile:
+			continue
+		pool.append(e)
+		if e.kind == GameEnums.EnemyKind.BOSS 				or e.kind == GameEnums.EnemyKind.MINIBOSS:
+			tetes.append(e)
+	ok(tetes.size() >= 8, "le jeu a au moins 8 boss et mini-boss (%d)" % tetes.size())
+
+	var vus: Dictionary = {}
+	var rng := RandomNumberGenerator.new()
+	for graine in 24:
+		rng.seed = graine
+		for vague in range(1, 31):
+			var w: WaveDef = WaveBudget.build_wave(vague, pool, rng, pool, membership)
+			if w == null:
+				continue
+			for entree: WaveEntry in w.entries:
+				if entree == null or entree.enemy == null:
+					continue
+				if entree.enemy.kind == GameEnums.EnemyKind.BOSS 						or entree.enemy.kind == GameEnums.EnemyKind.MINIBOSS:
+					vus[entree.enemy.id] = true
+
+	# Un boss rattache a un monde DOIT sortir. Celui qui n est rattache a rien
+	# est un cas connu et accepte (aucun niveau ne le porte) : on ne le compte
+	# pas, sinon le test rougirait pour du contenu de campagne pure.
+	for e in tetes:
+		if int(membership.get(e.id, -1)) < 0:
+			continue
+		ok(vus.has(e.id),
+			"%s est rattache a un monde mais n est JAMAIS tire" % e.id)

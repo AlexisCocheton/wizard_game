@@ -453,6 +453,108 @@ func _enemies() -> void:
 	_resist(wraith_lord, {&"phys": 0.6, &"feu": 0.95, &"givre": 1.05, &"arcane": 1.3, &"poison": 0, &"foudre": 1.15})
 	_save(wraith_lord, E + "wraith_lord.tres")
 
+	# --- CHANTIER I : trois boss de plus, trois QUESTIONS de plus -------------
+	#
+	# Les trois premiers boss a mecanique changeaient OU frapper (morcele), QUAND
+	# aller le chercher (canonnier) et QUOI tuer d abord (invocateur). Les trois
+	# qui suivent changent trois choses qu aucun boss du jeu ne touchait :
+	#
+	#   ce que « tuer » veut dire   -> il se releve une fois (Coagule)
+	#   la MONNAIE des degats       -> il compte les coups, pas les points (Reliquaire)
+	#   le MOMENT du lancement      -> il renvoie ce qu on lui envoie (Miroir)
+	#
+	# Aucune ne demande un asset absent : ce sont trois regles, pas trois dessins.
+	# Les silhouettes sont des feuilles du catalogue qu AUCUN monstre n utilisait
+	# (`blood`, `lancer_red`, `monk_blue`) — rien n est dessine par le code.
+
+	# RESSUSCITE — lvl_02, La Tour des Sables. Le gardien de la tour n est pas une
+	# creature : c est du SABLE tenu en forme. On peut l abattre, il se remet
+	# debout, une fois. Le joueur voit la barre se vider, entend la mort, se
+	# retourne vers la vague — et il se releve derriere lui.
+	#
+	# PV volontairement BAS pour un boss (185 contre 320 a Chronos) : la mecanique
+	# ajoute deja 40 % de PV, et un boss a 320 PV qui ressuscite en pesserait 450,
+	# ce qui aurait fait de lui le plus gros sac de PV du jeu au niveau 2 — donc
+	# exactement ce qu un boss a mecanique NE doit pas etre. 185 + 74 = 259, sous
+	# Chronos : le releve est une surprise, pas un mur.
+	# LE NOM SUIT LE SPRITE, jamais l inverse. Premier jet : "Le Sablier", une
+	# creature de sable pour La Tour des Sables. Verifie sur capture
+	# (.testout/boss_04_sablier_intact) : la feuille `blood` montre une masse
+	# rouge sombre et coagulee, qui ne se lit a aucun moment comme du sable — le
+	# joueur aurait lu un nom et vu autre chose. On garde la feuille, qui est une
+	# excellente silhouette de boss, et on nomme la creature pour ce qu elle
+	# MONTRE : une chose qui se recoagule apres qu on l a defaite. Le lieu y
+	# gagne meme — quelque chose de vivant enterre sous la tour.
+	var coagule := _enemy("blood_coagulum", "Le Coagule", K.BOSS, 10, 185.0, 40.0, 30,
+		S.DIAMOND, Color(0.72, 0.18, 0.22), 72.0)
+	coagule.anim_key = &"blood"
+	# Le blood monster n occupe que 20 % de sa case (voir assets.md) : sans
+	# correction il entrerait a la taille d un lutin.
+	coagule.sprite_scale = 1.25
+	coagule.revive_hp_pct = 40.0
+	# Le Coagule : une masse sans organes. Rien a trancher, rien a empoisonner ;
+	# le givre la prend en bloc et le feu la cautérise. Ce sont les deux reponses,
+	# et le joueur qui les trouve n a pas a lui rendre deux combats.
+	_resist(coagule, {&"phys": 0.7, &"feu": 1.3, &"givre": 1.25, &"arcane": 1.0, &"poison": 0, &"foudre": 0.9})
+	_save(coagule, E + "blood_coagulum.tres")
+
+	# IMMUNISE AUX N PREMIERS COUPS — lvl_03, Ossuaire des Marees. Un reliquaire
+	# scelle par six sceaux : chaque sort en brise UN, quelle que soit sa
+	# puissance. Six fleches de lutin et six Meteores coutent exactement pareil.
+	#
+	# SIX et non dix : le joueur du niveau 3 tire une carte toutes les ~6 s et sa
+	# main fait 5 cartes. Six coups, c est une main entiere depensee avant de
+	# toucher le boss — assez pour que la lecon porte, pas assez pour que le boss
+	# traverse l ecran pendant qu il paie.
+	#
+	# PV BAS (135) : la mecanique EST la difficulte. Un boss qui coute six cartes
+	# ET 300 PV serait deux boss.
+	var reliquary := _enemy("bone_reliquary", "Le Reliquaire", K.BOSS, 10, 135.0, 32.0, 30,
+		S.HEXAGON, Color(0.85, 0.82, 0.72), 76.0)
+	reliquary.anim_key = &"lancer_red"
+	# SPRITE_SCALE 1,7 — mesure sur capture (.testout/boss_01_reliquaire_6_sceaux).
+	# L occupancy 0,45 de la feuille `lancer_red` est calculee LANCE COMPRISE :
+	# la hampe occupe la moitie de la case, donc le CORPS entre a la taille d un
+	# monstre de puissance 3. C est sans consequence pour le Chevalier du vide
+	# (P3, meme famille de feuille), mais un boss de puissance 10 qui se lit plus
+	# petit que son escorte annule tout le travail de mise en scene.
+	reliquary.sprite_scale = 1.7
+	reliquary.hits_immune = 6
+	# Le Reliquaire : ossements et metal sacre. Mort-vivant, donc insensible au
+	# venin ; le feu consume l os et l arcane defait le sceau. Mais on ne le
+	# ralentit pas : une procession ne s arrete pas.
+	_resist(reliquary, {&"phys": 0.85, &"feu": 1.25, &"givre": 0.9, &"arcane": 1.2, &"poison": 0, &"lent": 0})
+	_save(reliquary, E + "bone_reliquary.tres")
+
+	# BOUCLIER DE RENVOI — lvl_05, Forges du Mauvais Temps (mini-boss). Une plaque
+	# de verre coulee aux forges : toutes les 7 s elle leve sa face polie pendant
+	# 2,5 s, et ce qu on lui envoie repart. Le joueur doit REGARDER le boss avant
+	# de lancer, ce qu aucune autre vague du jeu ne lui demande.
+	#
+	# MINI-BOSS et non BOSS : la mecanique punit le lancement, donc elle doit etre
+	# ENSEIGNEE avant d etre appliquee a un boss de fin de niveau. Un mini-boss
+	# arrive au tiers du niveau, avec une escorte legere, et le joueur a le temps
+	# de voir la garde se lever deux ou trois fois avant de la payer.
+	#
+	# 2,5 s de garde pour 7 s de cycle : la garde est levee un tiers du temps.
+	# Assez pour attraper le joueur qui lance sans regarder, assez rare pour que
+	# celui qui regarde ne soit jamais bloque plus de deux secondes et demie.
+	var mirror := _enemy("glass_mirror", "Le Miroir de Forge", K.MINIBOSS, 6, 130.0, 34.0, 13,
+		S.STAR, Color(0.70, 0.88, 0.95), 62.0)
+	mirror.anim_key = &"monk_blue"
+	mirror.reflect_interval = 7.0
+	mirror.reflect_window = 2.5
+	# 45 % : la moitie de ce que le joueur envoie, pas la totalite. A 100 % le
+	# renvoi n est plus un prix, c est une interdiction — et le plafond par coup
+	# (Battlefield.REFLECT_MAX_PER_HIT) fait le reste du travail.
+	mirror.reflect_pct = 45.0
+	# Le Miroir : du verre. Le physique le FEND (+30 %, la plus grosse faiblesse
+	# physique du bestiaire) et c est voulu — le sort le plus banal du jeu est la
+	# bonne reponse, a condition de le lancer au bon moment. Toute la difficulte
+	# est dans le TIMING, jamais dans le choix de l element.
+	_resist(mirror, {&"phys": 1.3, &"feu": 0.85, &"givre": 1.15, &"arcane": 0.75, &"poison": 0, &"foudre": 0.8})
+	_save(mirror, E + "glass_mirror.tres")
+
 
 func _spec(key: String, magnitude: float, duration: float = 0.0,
 		radius: float = 0.0, params: Dictionary = {}) -> EffectSpec:
@@ -1376,13 +1478,23 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# banalise — et le garde-fou d equilibrage l a attrape (294 PV apres 94, le
 	# saut depassait x2).
 	#
-	# LE GARDIEN-TOTEM : present dans le niveau sans y avoir jamais mene, il
-	# resiste au physique et protege ce qui l entoure. Le joueur doit le percer
-	# avant de nettoyer le reste, ce que la vague 5 ne lui a pas demande.
+	# LE SABLIER (chantier I), et non plus le Gardien-totem. Le Gardien-totem
+	# tenait la place faute de mieux : il n a aucune mecanique de boss, il apparait
+	# DEJA comme monstre ordinaire dans quatre niveaux, et mener une vague de boss
+	# ne changeait rien a ce qu il demandait au joueur.
+	#
+	# Le Coagule, lui, change la condition de VICTOIRE : il se releve une fois avec
+	# 40 % de ses PV. C est la bonne place pour l apprendre — au deuxieme niveau,
+	# avec une escorte legere et sans autre mecanique a gerer en meme temps. Le
+	# joueur qui a garde une carte en reserve gagne ; celui qui a tout vide au
+	# moment ou la barre touchait zero paie sa lecon sans perdre la partie.
+	#
+	# L escorte est volontairement CLAIRSEMEE et arrive TOT : le releve doit tomber
+	# dans un moment calme, sinon le joueur regarde ailleurs et ne voit rien.
 	v7.entries = [
-		_entry(E + "totem_guardian.tres", 1, 1.0),
-		_entry(E + "hopper.tres", 4, 2.0, 10.0),
-		_entry(E + "sprite.tres", 4, 2.0, 22.0),
+		_entry(E + "blood_coagulum.tres", 1, 1.0),
+		_entry(E + "hopper.tres", 4, 2.0, 8.0),
+		_entry(E + "sprite.tres", 4, 2.0, 18.0),
 	]
 	_save(v7, "res://resources/waves/w2_7_boss.tres")
 
@@ -1554,12 +1666,22 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# le multiplier reviendrait a empiler deux sauts dans la meme vague.
 	a6.difficulty = 1.1
 	a6.is_boss = true
-	# LE BEHEMOTH, et non Chronos (qui fermait quatre niveaux sur sept) ni
-	# l Ensevelisseur (qui garde `lvl_04`, ou sa mecanique d invocation EST la
-	# lecon du niveau). Une masse lente et enorme dans un ossuaire : le joueur
-	# doit tenir la distance pendant que les Pretres arrivent par-dessus.
+	# LE RELIQUAIRE (chantier I), et non plus le Behemoth. Le Behemoth tenait la
+	# place sans rien demander de neuf : c est un TANK, donc "plus de PV", et il
+	# descend DEJA comme monstre ordinaire dans lvl_04 et lvl_07 — le joueur ne
+	# voyait pas la difference entre le boss et l escorte.
+	#
+	# Le Reliquaire change la MONNAIE : ses six sceaux avalent les six premiers
+	# coups, quelle que soit leur puissance. Dans un ossuaire ou tout le reste se
+	# nettoie a la petite carte rapide (les nuees, les Pretres), il est le SEUL
+	# adversaire du niveau contre lequel ce reflexe est le pire choix possible —
+	# c est exactement le contraste qu on veut dans une vague de boss.
+	#
+	# L escorte est maintenue : elle est le piege. Le joueur tente de nettoyer les
+	# Pretres avec ses petites cartes pendant que les sceaux tiennent, et il doit
+	# decider laquelle des deux menaces il paie d abord.
 	a6.entries = [
-		_entry(E + "behemoth.tres", 1, 1.0),
+		_entry(E + "bone_reliquary.tres", 1, 1.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 8.0),
 		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
 	]
@@ -1849,13 +1971,29 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	c3.duration = 34.0
 	c3.difficulty = 1.1
 	c3.is_miniboss = true
-	# LE GARDIEN-TOTEM, pas le Gardien de la foret (mort en `lvl_04`). Aux
-	# Forges, un gardien de pierre et de metal est a sa place ; il resiste au
-	# physique et craint l arcane, ce qui punit un deck de fleches.
+	# LE MIROIR DE FORGE (chantier I), et non plus le Gardien-totem. Le
+	# Gardien-totem menait ce palier sans rien demander de neuf (il resistait au
+	# physique, comme la moitie du bestiaire) et il descend DEJA comme monstre
+	# ordinaire dans les vagues 4 et 5 du meme niveau : le mini-boss ressemblait a
+	# son escorte.
+	#
+	# Le Miroir change le MOMENT du lancement : toutes les 7 s il leve sa face
+	# polie pendant 2,5 s, et 45 % de ce qu on lui envoie repart sur le mage.
+	#
+	# POURQUOI EN MINI-BOSS ET POURQUOI ICI. La mecanique punit le joueur qui
+	# lance ; elle doit donc etre ENSEIGNEE dans un moment ou une erreur ne coute
+	# pas le niveau. Un mini-boss arrive au tiers de la vague, avec une escorte
+	# legere, et laisse voir la garde se lever deux ou trois fois avant de la
+	# payer. Aux Forges elle est de plus a sa place : lvl_05 est le niveau du deck
+	# MONO-CIBLE lourd (Meteore, Trait), donc celui ou lancer un gros sort au
+	# mauvais moment coute le plus cher — la lecon mord immediatement.
+	#
+	# L escorte est ALLEGEE (deux golems, plus de nuee de lutins) : apprendre a
+	# regarder le boss demande de pouvoir le regarder.
 	c3.entries = [
-		_entry(E + "totem_guardian.tres", 1, 1.0),
+		_entry(E + "glass_mirror.tres", 1, 1.0),
 		_entry(E + "golem.tres", 2, 3.0, 10.0),
-		_entry(E + "sprite.tres", 4, 1.6, 22.0),
+		_entry(E + "sprite.tres", 3, 1.8, 22.0),
 	]
 	_save(c3, "res://resources/waves/w5_3_miniboss.tres")
 

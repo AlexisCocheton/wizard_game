@@ -1,25 +1,29 @@
 [gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_lqsei"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_v8obk"]
 
 [resource]
-script = ExtResource("1_lqsei")
-id = &"gnome"
-display_name = "Gnome"
-kind = 0
-power = 1
-max_hp = 12.0
-base_speed = 70.0
-base_xp = 1
+script = ExtResource("1_v8obk")
+id = &"blood_coagulum"
+display_name = "Le Coagule"
+kind = 8
+power = 10
+max_hp = 185.0
+base_speed = 40.0
+base_xp = 30
 contact_damage = 0
-anim_key = &"pawn_red"
-sprite_scale = 1.0
-shape = 0
-color = Color(0.62, 0.42, 0.28, 1)
-base_radius = 26.0
+anim_key = &"blood"
+sprite_scale = 1.25
+shape = 3
+color = Color(0.72, 0.18, 0.22, 1)
+base_radius = 72.0
 resistances = {
-0: 0.9,
-1: 1.15
+0: 0.7,
+1: 1.3,
+2: 1.25,
+3: 1.0,
+6: 0.0,
+7: 0.9
 }
 immune_tags = Array[int]([])
 dodge_chance = 0.0
@@ -50,7 +54,7 @@ keeps_distance_at = 0.0
 summon_interval = 0.0
 summon_count = 1
 summon_max_alive = 6
-revive_hp_pct = 0.0
+revive_hp_pct = 40.0
 hits_immune = 0
 reflect_interval = 0.0
 reflect_window = 0.0

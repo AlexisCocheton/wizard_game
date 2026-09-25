@@ -158,6 +158,24 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 			out.append("Engendre %d %s a sa mort" % [def.split_count, child_name])
 	if def.first_hit_shield:
 		out.append("Encaisse le premier coup sans aucun degat")
+	# LES TROIS MECANIQUES DU CHANTIER I, en TETE des lignes de comportement : ce
+	# sont les seules du jeu qui changent une REGLE (la condition de mort, la
+	# monnaie des degats, le moment ou lancer). Un joueur qui les decouvre en
+	# combat sans les avoir lues croit que ses sorts sont casses.
+	if def.revive_hp_pct > 0.0:
+		out.append("Se releve UNE fois apres sa mort, avec %d %% de ses points de vie"
+			% int(round(def.revive_hp_pct)))
+	if def.hits_immune > 0:
+		# On dit "quelle que soit leur puissance", et c est la phrase qui compte :
+		# sans elle, le joueur lit "immunise a 6 coups" et en deduit qu il faut
+		# frapper PLUS FORT, ce qui est exactement l inverse de la bonne reponse.
+		out.append(("Ignore ses %d premiers coups recus, quelle que soit leur puissance"
+			+ " : ce sont les COUPS qu il compte, pas les degats") % def.hits_immune)
+	if def.reflect_pct > 0.0 and def.reflect_window > 0.0:
+		out.append(("Leve une garde toutes les %s s pendant %s s : %d %% des degats"
+			+ " recus y sont renvoyes sur le mage")
+			% [_num(def.reflect_interval), _num(def.reflect_window),
+				int(round(def.reflect_pct))])
 	if def.aura_shield_radius > 0.0:
 		# Pas de pixels dans une fiche de joueur : "240 px" ne veut rien dire
 		# manette en main. On qualifie la portee par rapport a la largeur de

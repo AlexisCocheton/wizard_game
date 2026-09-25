@@ -125,6 +125,57 @@ extends Resource
 ## perd par accumulation mecanique, ce qui n est plus une decision de jeu.
 @export var summon_max_alive: int = 6
 
+## RESSUSCITE — a zero PV il ne meurt pas : il se releve UNE fois avec ce
+## pourcentage de ses PV d origine. 0 = il meurt normalement.
+##
+## Ce que la mecanique change : le sens du mot « tuer ». Toutes les autres
+## mecaniques de boss modifient OU frapper ou QUAND ; celle-ci modifie la
+## condition de victoire elle-meme. Le joueur voit la barre se vider, entend la
+## mort, se retourne vers la vague — et le boss se releve derriere lui. C est la
+## seule vague du jeu ou garder une carte en reserve APRES avoir cru gagner est
+## la bonne decision.
+##
+## Strictement sous 100 : revenir a PV pleins ne serait pas un releve, ce serait
+## deux combats colles, donc deux fois plus de PV sous un nom different.
+## UNE seule fois : sans plafond, un joueur sans le bon deck ne finirait jamais.
+@export_range(0.0, 95.0) var revive_hp_pct: float = 0.0
+
+## IMMUNISE AUX N PREMIERS COUPS — les `hits_immune` premiers coups recus ne lui
+## font RIEN, quelle que soit leur puissance. 0 = aucune immunite.
+##
+## Ce que la mecanique change : la MONNAIE des degats. Partout ailleurs le joueur
+## paie en points de degats ; ici il paie en NOMBRE DE COUPS. Le spam de petites
+## cartes, qui est le reflexe encourage par tout le reste du jeu, devient le pire
+## choix possible, et le gros sort charge le meilleur.
+##
+## DISTINCT de `first_hit_shield`, qui absorbe UN coup et sert de decor a un
+## monstre ordinaire : ici le compteur EST le combat, et la fiche du bestiaire le
+## dit en toutes lettres — sinon le joueur croit que ses sorts ne fonctionnent pas.
+##
+## Le compteur ne mange QUE des degats : un etourdissement ou un ralentissement
+## n en consomme aucun. Sinon la mecanique cesserait d etre « depense tes coups »
+## pour devenir « N secondes d invulnerabilite totale », ce qui ne se joue pas.
+@export_range(0, 12) var hits_immune: int = 0
+
+## BOUCLIER DE RENVOI — toutes les `reflect_interval` secondes il leve une garde
+## de `reflect_window` secondes, pendant laquelle `reflect_pct` % des degats
+## recus repartent sur le MAGE. 0 = pas de renvoi.
+##
+## Ce que la mecanique change : le MOMENT du lancement. Tout le reste du jeu
+## recompense le joueur qui lance des qu une carte est prete ; ici lancer au
+## mauvais moment lui coute ses propres PV. C est la seule mecanique du jeu ou
+## regarder le BOSS vaut mieux que regarder sa main.
+##
+## Le boss encaisse quand meme pendant sa garde : le renvoi est un PRIX, pas un
+## mur. Un mur transformerait la mecanique en attente passive, et on peut tuer le
+## boss pendant sa garde en acceptant de payer — c est le choix qu on veut offrir.
+##
+## `reflect_window` doit rester STRICTEMENT sous `reflect_interval`, sinon la
+## garde ne retombe jamais et le joueur n a plus de fenetre pour jouer.
+@export var reflect_interval: float = 0.0
+@export var reflect_window: float = 0.0
+@export_range(0.0, 100.0) var reflect_pct: float = 0.0
+
 
 ## Multiplicateur de degats subis pour UN tag. 1.0 si rien n est declare.
 func resistance_to(tag: int) -> float:

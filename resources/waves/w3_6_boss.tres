@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_eiqf0"]
-[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="2_eiqf0"]
+[ext_resource type="Resource" path="res://resources/enemies/bone_reliquary.tres" id="2_eiqf0"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="3_5p1dr"]
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_438tv"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_lpbrc"]

@@ -231,8 +231,23 @@ static func total_power(defs: Array[EnemyDef]) -> int:
 ## Boss (ou mini-boss) du lieu. On prend celui du monde quand il en a un, sinon
 ## n importe lequel : un monde sans boss attitre ne doit pas SAUTER son palier,
 ## sinon la vague 6 du cinquieme monde serait une vague ordinaire.
+## `rng` est FACULTATIF pour ne pas casser les appelants anciens, mais sans lui
+## le tirage retombe sur le premier candidat — voir ci-dessous pourquoi c est un
+## defaut et non une simplification.
 static func pick_boss(bosses: Array[EnemyDef], kind: GameEnums.EnemyKind,
-		world: int = -1, membership: Dictionary = {}) -> EnemyDef:
+		world: int = -1, membership: Dictionary = {},
+		rng: RandomNumberGenerator = null) -> EnemyDef:
+	# TOUS les candidats du monde, pas le premier.
+	#
+	# Le defaut que ceci repare : la fonction rendait le PREMIER boss dont le
+	# monde correspondait, et le pool arrive dans l ordre de lecture du disque,
+	# donc alphabetique. Des qu un monde comptait deux boss du meme genre, le
+	# second n etait JAMAIS tire en Massacre, quel que soit le contenu ecrit
+	# pour lui. Releve sur 300 vagues : quatre boss sur douze etaient
+	# injoignables, dont le Gardien, mini-boss du tout premier niveau. Aucun
+	# audit ne le voyait — un monstre existe, il est rattache a un monde, et il
+	# ne sort jamais.
+	var candidats: Array[EnemyDef] = []
 	var repli: EnemyDef = null
 	for d in bosses:
 		if d == null or d.kind != kind:
@@ -240,8 +255,12 @@ static func pick_boss(bosses: Array[EnemyDef], kind: GameEnums.EnemyKind,
 		if repli == null:
 			repli = d
 		if world >= 0 and int(membership.get(d.id, -1)) == world:
-			return d
-	return repli
+			candidats.append(d)
+	if candidats.is_empty():
+		return repli
+	if rng == null or candidats.size() == 1:
+		return candidats[0]
+	return candidats[rng.randi() % candidats.size()]
 
 
 ## Construit une WaveDef jouable pour la vague n.
@@ -283,10 +302,10 @@ static func build_wave(wave_number: int, pool: Array[EnemyDef],
 	if not bosses.is_empty():
 		var boss: EnemyDef = null
 		if is_boss_wave(wave_number):
-			boss = pick_boss(bosses, GameEnums.EnemyKind.BOSS, world, membership)
+			boss = pick_boss(bosses, GameEnums.EnemyKind.BOSS, world, membership, rng)
 			w.is_boss = boss != null
 		elif is_miniboss_wave(wave_number):
-			boss = pick_boss(bosses, GameEnums.EnemyKind.MINIBOSS, world, membership)
+			boss = pick_boss(bosses, GameEnums.EnemyKind.MINIBOSS, world, membership, rng)
 			w.is_miniboss = boss != null
 		if boss != null:
 			var be := WaveEntry.new()
