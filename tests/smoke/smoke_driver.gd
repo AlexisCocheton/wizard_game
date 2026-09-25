@@ -414,8 +414,14 @@ func _check_premier_lancement() -> void:
 		menu.select_tab(i)
 		if menu.current_tab() != i:
 			_fail("premier lancement : l onglet %s ne s active pas" % String(tabs[i]))
-	# Une capture de l accueil tel qu on le decouvre.
-	menu.select_tab(0)
+	# L onglet d ACCUEIL, celui sur lequel le menu s ouvre vraiment. Forcer
+	# l onglet 0 photographiait la galerie et donnait a croire qu un joueur neuf
+	# tombe sur un catalogue de cartes avant d avoir joue — c est faux, le menu
+	# ouvre sur la campagne.
+	var accueil: int = int(menu.get("HOME_TAB"))
+	menu.select_tab(accueil)
+	if menu.current_tab() != accueil:
+		_fail("premier lancement : l onglet d accueil ne s ouvre pas")
 	await _shot("premier_lancement")
 	menu.queue_free()
 	await get_tree().process_frame
