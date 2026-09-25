@@ -19,9 +19,12 @@ MAP = {
 
 # Le suffixe 9 est OBLIGATOIRE cote sortie : l AUDIT prend toute texture d UI
 # sans ce suffixe pour une planche brute non decoupee.
-SORTIE = {"bar_fill9": "bar_fill_gold9", "bar_fill": "bar_fill_gold"}
+SORTIE = {"bar_fill9": "bar_fill_gold9", "bar_fill": "bar_fill_gold",
+          "smallbar_fill9": "smallbar_fill_gold9"}
 
-for nom in ("bar_fill9", "bar_fill"):
+MAP[(255, 62, 62, 255)] = (240, 196, 72, 255)
+
+for nom in ("bar_fill9", "bar_fill", "smallbar_fill9"):
     im = Image.open("assets/ui/%s.png" % nom).convert("RGBA")
     px = im.load()
     w, h = im.size

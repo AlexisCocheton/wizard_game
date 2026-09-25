@@ -93,6 +93,11 @@ const NINE: Dictionary = {
 	"paper_special9": [55, 44, 55, 43],
 	"smallbar_base9": [15, 0, 15, 0],
 	"smallbar_fill9": [15, 0, 15, 0],
+	# Meme barre, reteintee en OR par remplacement exact
+	# (tools/assets/make_gold_bar.py). Un modulate ne suffit PAS : multiplier
+	# le rouge (255,62,62) par de l or (0.94,0.78,0.28) rend (240,48,17), du
+	# rouge orange — mesure a l ecran. C est le meme piege que la barre de vie.
+	"smallbar_fill_gold9": [15, 0, 15, 0],
 	"wood9": [84, 85, 84, 103],
 }
 
@@ -418,8 +423,13 @@ static func make() -> Theme:
 	# Curseurs : petite barre du pack en rail, remplissage en zone parcourue,
 	# bouton rond rouge reduit en poignee.
 	t.set_stylebox(&"slider", &"HSlider", tex_box("smallbar_base", 0, 10.0))
+	# OR et non rouge. `smallbar_fill9` est un aplat ROUGE uni — la couleur de la
+	# VIE dans tout le reste du jeu — et les curseurs de volume s affichaient
+	# donc comme des barres de vie. Ici une simple teinte suffit, contrairement
+	# a la barre d avancement du profil : cette texture n a pas d ombrage a
+	# preserver, une seule couleur la remplit (verifie, 1 seule valeur de pixel).
 	t.set_stylebox(&"grabber_area", &"HSlider", slider_fill(Color.WHITE))
-	t.set_stylebox(&"grabber_area_highlight", &"HSlider", slider_fill(Color(1.15, 1.15, 1.0)))
+	t.set_stylebox(&"grabber_area_highlight", &"HSlider", slider_fill(Color(1.12, 1.08, 0.95)))
 	var knob: Texture2D = scaled_tex("btn_round_red9", 52)
 	if knob != null:
 		t.set_icon(&"grabber", &"HSlider", knob)
@@ -431,7 +441,11 @@ static func make() -> Theme:
 ## Zone parcourue d un curseur : la bande coloree de la petite barre du pack, etiree
 ## sur la hauteur du rail (la feuille de remplissage ne fait que 3 px de haut).
 static func slider_fill(tint: Color) -> StyleBox:
-	var t: Texture2D = tex("smallbar_fill9")
+	# La planche DOREE : la version d origine est un aplat rouge, la couleur de
+	# la vie, et les curseurs de volume se lisaient comme des barres de vie.
+	var t: Texture2D = tex("smallbar_fill_gold9")
+	if t == null:
+		t = tex("smallbar_fill9")
 	if t == null:
 		return flat_box(RED, 4, 0.0)
 	var sb := StyleBoxTexture.new()
