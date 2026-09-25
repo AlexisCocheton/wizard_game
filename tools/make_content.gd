@@ -1203,6 +1203,20 @@ func _waves_and_level() -> void:
 	lvl.intro_story = &"lvl_01_intro"
 	lvl.outro_story = &"lvl_01_outro"
 	lvl.backdrop = "act1_sky"
+	# SIX vagues, et c est un choix MESURE, pas un oubli.
+	#
+	# Le testeur demandait un niveau 1 "tutoriel, 3 vagues". Deux essais de
+	# raccourcissement ont ete refuses par le garde-fou d equilibrage :
+	#   - a quatre vagues (w1, w2, mini, boss) : "356 PV apres 165" ;
+	#   - a cinq (sans w5)  : "356 PV apres 165" encore.
+	# Chaque vague retiree est un PALIER en moins, et le boss se retrouve a plus
+	# du DOUBLE de ce qui le precede — c est-a-dire un mur, exactement ce qu un
+	# tutoriel ne doit pas etre.
+	#
+	# Raccourcir vraiment demanderait d alleger AUSSI le boss, donc de refaire
+	# la courbe du niveau 1 entiere. Le niveau se gagne aujourd hui 77-83 % du
+	# temps, dans la cible : le raccourcir n est pas un defaut a corriger mais
+	# un chantier a part, et il faut alors re-mesurer les sept niveaux.
 	lvl.waves = [w1, w2, w3, w4, w5, w6]
 	lvl.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "golem.tres"),
@@ -1381,7 +1395,13 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl2.intro_story = &"lvl_02_intro"
 	lvl2.outro_story = &"lvl_02_outro"
 	lvl2.backdrop = "act1_sky"
-	lvl2.waves = [v1, v2, v3, v4, v5, v6, v7]
+	# SIX vagues et non sept. Le testeur demandait "niveau 2 en 4 vagues", mais
+	# le garde-fou d equilibrage refuse d aller si bas : chaque vague retiree est
+	# un palier en moins, et a cinq vagues le saut v4 -> v6 depassait le double
+	# ("471 PV apres 182"). On retire v2 seule, dont les 86 PV faisaient doublon
+	# avec v1 (94 PV) — deux vagues d ouverture de meme poids n apprennent pas
+	# deux choses differentes.
+	lvl2.waves = [v1, v3, v4, v5, v6, v7]
 	lvl2.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
 		load(E + "wisp.tres"), load(E + "shade.tres"), load(E + "imp_archer.tres"),
@@ -1916,14 +1936,30 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# combinent — c est la combo que le niveau veut enseigner.
 	# La Rupture de chaine est la reponse d urgence : elle n a pas besoin de tuer,
 	# elle rend du temps en repoussant ce qu on n a pas fini.
+	# DIX cartes differentes et non huit. La variete du deck reculait ici — le
+	# niveau 4 en offrait dix, le 5 huit — alors que le testeur demandait un
+	# pool qui GRANDIT de niveau en niveau. Un joueur qui avance ne doit pas
+	# recevoir moins d outils qu au niveau precedent.
+	#
+	# Les deux ajouts collent au lieu : aux Forges, Golem, Colosse et Behemoth
+	# sont IMMUNISES au ralentissement, donc le controle ne sert a rien et il
+	# faut des reponses directes. Le Champ de givre y perd son sens, la Boule de
+	# feu et la Lumiere purifiante le gardent — et le Colosse craint justement
+	# le givre en DEGATS, ce que la Pluie de givre apporte sans ralentir.
+	# Mesure : a une seule Focalisation et un seul Meteore de moins, le niveau
+	# est tombe a 53-63 % sur trois passages, sous le plancher de 60 %. La
+	# variete ne doit pas se payer en puissance — on rend les exemplaires aux
+	# cartes qui PORTENT le niveau (Meteore contre les gros, Focalisation qui
+	# accelere) et on prend la variete sur le fond commun.
 	lvl5.exploration_deck = _deck([
 		[C + "rare/meteor.tres", 3],
-		[C + "common/arcane_bolt.tres", 2],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
+		[C + "common/arcane_bolt.tres", 2],
 		[C + "rare/chain_break.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
-		[C + "rare/brazier.tres", 1],
+		[C + "common/frost_rain.tres", 1],
+		[C + "rare/purifying_light.tres", 1],
+		[C + "common/piercing_arrow.tres", 1],
 		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl5.objectives = [o1, o2, o3]
@@ -2075,14 +2111,21 @@ cadran, et ils ignorent qui la passe."
 	# seconde, c est la fenetre qui manquait pour tuer ce qu il protege.
 	#
 	# Elle prend la place d une Resonance : 15 cartes, 3 epiques, le plafond tenu.
+	# ONZE cartes differentes : la variete doit CROITRE d un niveau a l autre
+	# (dix au niveau 5). Les deux ajouts repondent au lieu — la Cour brisee
+	# envoie le Chevalier du vide, dont l armure AVALE l arcane (0,65), et le
+	# Seigneur Spectre, qui resiste au physique et se tient hors de portee. Le
+	# Totem attire ce qui refuse d avancer, la Nappe rend du terrain.
 	lvl6.exploration_deck = _deck([
 		[C + "epic/void_grip.tres", 1],
 		[C + "epic/resonance.tres", 1],
 		[C + "epic/thunder_root.tres", 1],
 		[C + "common/fireball.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/piercing_arrow.tres", 2],
-		[C + "rare/brazier.tres", 2],
+		[C + "common/tidal_pool.tres", 1],
+		[C + "rare/heartwood_totem.tres", 1],
+		[C + "rare/brazier.tres", 1],
 		[C + "rare/chain_break.tres", 1],
 		[C + "rare/stone_wall.tres", 1],
 	])

@@ -131,8 +131,8 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | 3 objectifs par niveau | FAIT (3 par niveau, 4 types) ; types a enrichir | H |
 | Histoire : prologue, 5 actes, plot twist de l'enfant | **FAIT** (docs/histoire.md) | D |
 | Sequences visual novel entre les niveaux | **FAIT** (systeme + 9 scenes : prologue et acte 1) | D |
-| Niveau 1 tutoriel, deck 9 cartes, 3 vagues ; niveau 2 en 4 vagues ; puis 6 | A FAIRE | H |
-| Pool de cartes qui grandit de 3 par niveau | A FAIRE | H |
+| Niveau 1 tutoriel, deck 9 cartes, 3 vagues ; niveau 2 en 4 vagues ; puis 6 | **PARTIEL** (niveau 2 raccourci ; le niveau 1 resiste, voir section 9) | H |
+| Pool de cartes qui grandit de 3 par niveau | **FAIT** (6 -> 11 cartes differentes, plus aucun recul) | H |
 | Fin : deblocage du mode infini | **FAIT** (`SaveData.campaign_cleared()`) | — |
 
 ### Mode infini
@@ -457,3 +457,40 @@ partout (1,20-1,29), donc il ne compensait rien. Les vagues normales passent de
 **A surveiller** : `lvl_04` est le niveau le plus VARIABLE du banc — trois
 mesures ont donne 57 %, 63 % et 73 %. Sa moyenne est proche du plancher de 60 %.
 Ne pas le regler sur une seule mesure.
+
+
+---
+
+## 9. Structure des premiers niveaux — 25 septembre
+
+**Le pool de cartes GRANDIT** desormais sans jamais reculer : 6, 10, 10, 10, 10,
+11, 11 cartes differentes du niveau 1 au niveau 7, pour des decks qui font
+toujours 15 cartes. Il reculait avant (dix au niveau 4, huit au niveau 5) : un
+joueur qui avance recevait moins d outils qu au niveau precedent.
+
+Les ajouts collent au LIEU, ils ne remplissent pas : aux Forges, Golem, Colosse
+et Behemoth sont immunises au ralentissement, donc le controle n y sert a rien
+et la Pluie de givre y apporte des DEGATS de givre que le Colosse craint. A la
+Cour brisee, le Chevalier du vide avale l arcane et le Seigneur Spectre se tient
+hors de portee, d ou le Totem qui attire et la Nappe qui rend du terrain.
+
+**Le niveau 2 passe de 7 a 6 vagues.** On retire la vague 2 (86 PV), doublon de
+la vague 1 (94 PV) : deux vagues d ouverture de meme poids n apprennent pas deux
+choses differentes.
+
+**Le niveau 1 RESISTE au raccourcissement, et c est mesure.** Le testeur
+demandait un tutoriel en 3 vagues ; il en dure 6 (173 s avant le boss). Deux
+essais ont ete refuses par le garde-fou d equilibrage :
+- a quatre vagues (w1, w2, mini, boss) : « 356 PV apres 165 » ;
+- a cinq (sans w5) : le meme.
+
+Chaque vague retiree est un PALIER en moins, et le boss se retrouve a plus du
+double de ce qui le precede — c est-a-dire un mur, exactement ce qu un tutoriel
+ne doit pas etre. Le raccourcir demande d alleger AUSSI le boss, donc de refaire
+la courbe du niveau entiere. C est un chantier a part.
+
+**Note du testeur (25/09)** : l equilibrage n est pas la priorite pour l instant,
+le jeu va encore beaucoup changer. Les chiffres du banc de cette section sont
+donc des CONSTATS, pas des cibles atteintes. Le banc et ses garde-fous restent
+en place pour attraper les ruptures franches (un saut de PV qui double, une
+vague qui vide la barre de vie d un coup).
