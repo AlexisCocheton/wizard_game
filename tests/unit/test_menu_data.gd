@@ -12,6 +12,7 @@ func run() -> void:
 	_test_persistance_coupee()
 	_test_cartes_de_depart_decouvertes()
 	_test_deck_massacre()
+	_test_le_massacre_s_ouvre_a_la_fin_de_la_campagne()
 	_test_plusieurs_decks()
 	_test_migration_ancien_deck_unique()
 	_test_reglages()
@@ -318,3 +319,38 @@ func _test_profil_en_superposition() -> void:
 	menu.select_tab(0)
 	not_ok(menu.call("profile_open"), "changer d onglet referme le profil")
 	detach(menu)
+
+
+## Le Massacre est une RECOMPENSE, pas une alternative offerte des la premiere
+## seconde. Sans ce verrou, un joueur pouvait passer a cote de toute l histoire
+## sans s en apercevoir — le mode sans fin etant juste a cote, des le depart.
+##
+## Le test porte sur la DONNEE (`campaign_cleared()`) et non sur l etat du
+## bouton : une regle qui ne vit que dans un ecran disparait avec lui. C est la
+## lecon des decks de campagne, qui violaient la regle des 15 cartes parce que
+## seul le mode Massacre passait par la validation.
+func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
+	SaveData.reset_profile()
+	not_ok(SaveData.campaign_cleared(),
+		"un profil neuf n a pas fini la campagne")
+	var p: Array = SaveData.campaign_progress()
+	eq(int(p[0]), 0, "aucun niveau fini au depart")
+	ok(int(p[1]) >= 7, "la campagne compte au moins 7 niveaux (%d)" % int(p[1]))
+
+	# On finit TOUS les niveaux sauf un : le verrou doit tenir jusqu au dernier.
+	var niveaux: Array = ContentDB.levels.values()
+	for i in niveaux.size():
+		var lv: LevelDef = niveaux[i]
+		if i == niveaux.size() - 1:
+			continue
+		SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, {}, 6)
+	not_ok(SaveData.campaign_cleared(),
+		"il reste un niveau : le Massacre est encore ferme")
+	eq(int(SaveData.campaign_progress()[0]), niveaux.size() - 1,
+		"tous les niveaux sauf un sont finis")
+
+	SaveData.record_victory(niveaux[niveaux.size() - 1],
+		GameEnums.Mode.EXPLORATION, {}, 6)
+	ok(SaveData.campaign_cleared(),
+		"le dernier niveau fini ouvre le Massacre")
+	SaveData.reset_profile()

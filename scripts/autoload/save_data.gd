@@ -445,6 +445,31 @@ func is_level_cleared(level_id: StringName) -> bool:
 	return bool(rec.get("cleared_exploration", false)) or bool(rec.get("cleared_massacre", false))
 
 
+## Combien de niveaux de CAMPAGNE sont finis, et combien il y en a.
+## Rend [finis, total]. Un seul endroit qui compte, parce que trois ecrans
+## posent la question (le deblocage du Massacre, le profil, les succes) et que
+## trois comptages separes finiraient par diverger.
+func campaign_progress() -> Array:
+	var finis: int = 0
+	var total: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		total += 1
+		if is_level_cleared(lv.id):
+			finis += 1
+	return [finis, total]
+
+
+## La campagne est-elle terminee ? C est ce qui OUVRE le mode Massacre.
+##
+## Pourquoi verrouiller : le Massacre etait accessible des la premiere seconde,
+## donc le mode sans fin n etait pas une recompense mais une alternative a la
+## campagne — un joueur pouvait passer a cote de toute l histoire sans s en
+## rendre compte. Le testeur a tranche : "Fin : deblocage du mode infini".
+func campaign_cleared() -> bool:
+	var p: Array = campaign_progress()
+	return int(p[1]) > 0 and int(p[0]) >= int(p[1])
+
+
 ## Un objectif precis est-il acquis ? (cumule sur toutes les parties du niveau)
 func is_objective_done(level_id: StringName, objective_id: StringName) -> bool:
 	var objs: Dictionary = level_record(level_id).get("objectives", {})

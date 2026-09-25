@@ -90,6 +90,10 @@ func _build() -> void:
 	_massacre_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_massacre_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.MASSACRE))
 	modes.add_child(_massacre_btn)
+	# Le Massacre est une RECOMPENSE de fin de campagne, pas une alternative
+	# offerte des la premiere seconde (demande du testeur : "Fin : deblocage du
+	# mode infini"). L etat reel est pose dans refresh(), qui connait
+	# l avancement ; ici on ne fait que le declarer verrouillable.
 
 	_hint = UiTheme.label("", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
 	_detail.add_child(_hint)
@@ -193,13 +197,26 @@ func _render_detail() -> void:
 		_card_body.add_child(UiTheme.label(level.subtitle, UiTheme.FONT_SMALL,
 			UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
 
-	# Les memes etoiles que sur la carte : le joueur retrouve ce qu il a touche.
+	# LES MEMES PASTILLES que sur la carte, et pas des caracteres "*" et "." :
+	# le commentaire promettait deja "les memes etoiles", mais la fiche affichait
+	# du TEXTE en corps 40 — une taille litterale, qui echappe donc au theme, et
+	# un rendu qui n avait rien a voir avec la carte. Le joueur ne retrouvait pas
+	# ce qu il venait de toucher.
 	var stars: int = SaveData.objectives_done_count(level)
-	var star_text: String = ""
+	var rangee := HBoxContainer.new()
+	rangee.alignment = BoxContainer.ALIGNMENT_CENTER
+	rangee.add_theme_constant_override(&"separation", 20)
+	_card_body.add_child(rangee)
 	for i in level.objectives.size():
-		star_text += "*" if i < stars else "."
-	_card_body.add_child(UiTheme.label(star_text, 40,
-		UiTheme.GOLD if stars > 0 else Color(0.55, 0.50, 0.45), HORIZONTAL_ALIGNMENT_CENTER))
+		var acquise: bool = i < stars
+		# Meme regle qu ailleurs : acquise = pleine, doree et GRANDE ;
+		# manquante = un creux sombre et reduit. La forme porte l information
+		# autant que la couleur.
+		var s: TextureRect = UiTheme.icon(CampaignMap.STAR_ICON,
+			72.0 if acquise else 52.0)
+		s.modulate = Color(1.0, 0.88, 0.35) if acquise 			else Color(0.30, 0.26, 0.22, 0.45)
+		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		rangee.add_child(s)
 
 	# Apercu du boss : ce qui attend le joueur en fin de niveau.
 	var boss: WaveDef = level.boss_wave()
@@ -209,10 +226,11 @@ func _render_detail() -> void:
 	_card_body.add_child(UiTheme.label("%d vagues   -   Boss : %s" % [level.waves.size(), boss_name],
 		UiTheme.FONT_BODY, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
 
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_card_body.add_child(spacer)
-
+	# PAS de separateur extensible ici. Il collait l avancement et les objectifs
+	# tout en bas de la fiche, avec un trou de 250 px au milieu : les trois
+	# objectifs d un niveau sont ce qu on vient lire, ils doivent suivre le
+	# niveau qu ils decrivent. Le vide va APRES le dernier bloc, pas entre deux
+	# blocs lies.
 	if not unlocked:
 		_card_body.add_child(UiTheme.label("VERROUILLE\nTermine le niveau precedent",
 			UiTheme.FONT_BODY, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
@@ -242,6 +260,21 @@ func _render_detail() -> void:
 			box.add_child(UiTheme.label("Recompense : %s%s" % [level.legendary_reward.display_name,
 				"  (obtenue)" if got else ""], UiTheme.FONT_SMALL, UiTheme.rarity_ink(GameEnums.Rarity.LEGENDARY)))
 
+	# Le vide restant se met en BAS, une fois tout dit.
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_card_body.add_child(spacer)
+
+	# Le Massacre s ouvre a la FIN de la campagne.
+	var infini_ouvert: bool = SaveData.campaign_cleared()
+	_massacre_btn.disabled = not infini_ouvert
+	if not infini_ouvert and _mode == GameEnums.Mode.MASSACRE:
+		# Un mode verrouille ne doit pas rester selectionne : sinon le joueur
+		# voit un bouton JOUER mort sans comprendre pourquoi.
+		_mode = GameEnums.Mode.EXPLORATION
+		_explore_btn.button_pressed = true
+		_massacre_btn.button_pressed = false
+
 	# Bouton JOUER et message d aide selon le mode.
 	var reason: String = ""
 	if not unlocked:
@@ -252,7 +285,14 @@ func _render_detail() -> void:
 	if reason != "":
 		_hint.text = reason
 	elif _mode == GameEnums.Mode.EXPLORATION:
-		_hint.text = "Deck pre-etabli du niveau (%d cartes)" % level.exploration_deck.size()
+		if not infini_ouvert:
+			# On annonce le Massacre AVANT de l avoir : un verrou muet se lit
+			# comme un bug, un verrou qui dit son prix se lit comme un but.
+			var p: Array = SaveData.campaign_progress()
+			_hint.text = "Deck pre-etabli (%d cartes)  -  Massacre a %d / %d niveaux" % [
+				level.exploration_deck.size(), int(p[0]), int(p[1])]
+		else:
+			_hint.text = "Deck pre-etabli du niveau (%d cartes)" % level.exploration_deck.size()
 	else:
 		_hint.text = "Vagues INFINIES avec ton deck (%d cartes)  -  un sort a choisir toutes les %d vagues" % [
 			SaveData.massacre_deck().size(), GameController.WAVES_PER_CHOICE]

@@ -111,18 +111,18 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Niveau du joueur + cartes en haut, profil en haut a droite | **FAIT** | C |
 | Fusionner bestiaire et galerie (onglets Sorts / Passifs / Bestiaire) | **FAIT** | C |
 | Livre a pages (asset magic book), fleches gauche/droite | **FAIT** | C |
-| Detail avec nb d'utilisations, monstres tues, ameliorations | **FAIT** (ameliorations en attente du chantier G) | C |
+| Detail avec nb d'utilisations, monstres tues, ameliorations | **FAIT** (le crochet des ameliorations attend G) | C |
 | Inconnu = grise | FAIT | — |
 | Icones de sort partout | FAIT (45 feuilles propres) ; a re-choisir dans les packs d'icones quand ils arriveront | C |
 | Police plus lisible, tout un peu plus grand | **FAIT** (la cause etait le contour de 6 px, pas la taille) | C |
 | Vraies icones de menu (pas un steak) | **FAIT** | C |
 | Titre stylise, nom "Time Wizard" | **FAIT** | C |
-| Deck : 15 cartes exactement, 0-3 passifs, ≤3 legendaires, ≤3 epiques | A FAIRE (regles actuelles : 8-20 cartes) | K |
-| Plusieurs onglets de deck | A FAIRE | K |
-| Profil : succes par rarete au lieu des defis | PARTIEL (10 defis + niveau de compte existent) | L |
-| Contour de couleur par rarete (cartes, monstres, succes) | A FAIRE | L |
-| Cosmetiques : couleur du mage, chapeau, tour ; onglet dedie | PARTIEL (titres et avatars) | L |
-| Fond de la barre de titre selon le niveau | A FAIRE | L |
+| Deck : 15 cartes exactement, 0-3 passifs, ≤3 legendaires, ≤3 epiques | **FAIT** (verifie aussi sur les 7 decks de campagne) | K |
+| Plusieurs onglets de deck | **FAIT** | K |
+| Profil : succes par rarete au lieu des defis | **FAIT** (16 succes, XP deduite de la rarete) | L |
+| Contour de couleur par rarete (cartes, monstres, succes) | **FAIT** (epaisseur croissante en plus de la couleur) | L |
+| Cosmetiques : couleur du mage, chapeau, tour ; onglet dedie | **FAIT** (11 pieces, avec apercu) | L |
+| Fond de la barre de titre selon le niveau | **FAIT** (bois / argent / or / cristal) | L |
 
 ### Campagne
 | Demande | Etat | Chantier |
@@ -143,13 +143,13 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 ### Sorts et passifs
 | Demande | Etat | Chantier |
 |---|---|---|
-| Passifs hors du deck, actifs des le debut, 3 emplacements, echange au 4e | A FAIRE (aujourd'hui : cartes jouees) | F |
-| Passif actif seulement au-dela d'une vitesse (ex. 140 %) | A FAIRE | F |
-| Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | A FAIRE (3 passifs) | F |
-| Icone des passifs a cote de la barre de vitesse, a leur seuil | A FAIRE | F |
+| Passifs hors du deck, actifs des le debut, 3 emplacements, echange au 4e | **FAIT** | F |
+| Passif actif seulement au-dela d'une vitesse (ex. 140 %) | **FAIT** | F |
+| Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | **FAIT** (14 passifs) | F |
+| Icone des passifs a cote de la barre de vitesse, a leur seuil | **FAIT** | F |
 | Amelioration des cartes en combat (XP par lancer, choix parmi 3) | A FAIRE | G |
 | Arbre qui attire les ennemis ; sort de stun ; arbre a zone de poison ; eau qui ralentit | A FAIRE (Tiny Swords, undead tileset) | H |
-| Element sur chaque sort de degats + resistances en % par monstre | PARTIEL (tags d'element, immunites binaires) | B3 |
+| Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre) | B3 |
 
 ### Monstres
 | Demande | Etat | Chantier |
