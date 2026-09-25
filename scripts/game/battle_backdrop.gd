@@ -23,6 +23,32 @@ var backdrop: String = ""
 var _rng := RandomNumberGenerator.new()
 
 
+## Le decor SUIT le mode infini tout seul.
+##
+## En Massacre, le lieu change toutes les WaveBudget.WORLD_EVERY vagues. Plutot
+## que de faire connaitre le fond au chef d orchestre, le fond va chercher le
+## spawner — son NOEUD FRERE dans Game.tscn — et s abonne a `world_changed`.
+## GameController n a donc pas une ligne a ajouter, et la campagne, qui n emet
+## jamais ce signal, ne change pas de comportement.
+##
+## `_ready()` suffit : le signal est emis a chaque `start_next()`, y compris la
+## premiere, donc un abonnement pose avant la premiere vague ne rate rien.
+func _ready() -> void:
+	var spawner: Node = get_node_or_null("../WaveSpawner")
+	if spawner == null or not spawner.has_signal("world_changed"):
+		return
+	if not spawner.world_changed.is_connected(_on_world_changed):
+		spawner.world_changed.connect(_on_world_changed)
+
+
+## Nouveau monde : on repose le decor avec sa cle. La graine suit l index de
+## monde pour que deux passages dans le meme lieu se ressemblent.
+func _on_world_changed(world_index: int, backdrop_key: String, _world_name: String) -> void:
+	if backdrop_key.is_empty() or backdrop_key == backdrop:
+		return
+	setup(terrain, backdrop_key, 7 + world_index)
+
+
 ## `backdrop_key` est FACULTATIF. Omis, on lit `RunState.current_level_def.backdrop` :
 ## `GameController` le renseigne avant d appeler `setup()`, et il n a pas a connaitre
 ## le decor. Un appelant de test peut toujours imposer une cle a la main.

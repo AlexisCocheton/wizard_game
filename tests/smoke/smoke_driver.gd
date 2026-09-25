@@ -578,6 +578,27 @@ func _check_upgrade_panel() -> void:
 		_fail("ecran d amelioration : ember_pool introuvable")
 		g.queue_free()
 		return
+
+	# LE LISERE DE PROGRESSION sur les cartes en main. On force des lancers sur
+	# une carte que la main porte, sinon la capture est prise avant qu un seul
+	# sort ait ete joue et la jauge n a rien a montrer. C est ce qui m a d abord
+	# fait croire qu elle ne s affichait pas.
+	var suivie: SpellCard = null
+	for c: SpellCard in RunState.hand:
+		if c != null and not c.is_passive:
+			suivie = c
+			break
+	if suivie != null:
+		var moitie: int = maxi(1, GameConfig.CARD_UPGRADE_CASTS / 2)
+		for i in moitie:
+			RunState.note_cast(suivie)
+		var avance: float = RunState.upgrade_progress(suivie)
+		if avance < 0.4 or avance > 0.7:
+			_fail("liseré d amelioration : %d lancers sur %d donnent %.2f, attendu ~0,5"
+				% [moitie, GameConfig.CARD_UPGRADE_CASTS, avance])
+		RunState.hand_changed.emit()
+		await get_tree().process_frame
+		await _shot("main_progression")
 	var voies: Array = RunState.upgrade_paths_for(carte)
 	if voies.size() != 3:
 		_fail("ecran d amelioration : %d voies au lieu de 3" % voies.size())

@@ -99,7 +99,10 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 		% [level_id, level.display_name, wins, runs, moy, pv_moy])
 
 
-func _run_massacre_many(runs: int) -> void:
+## `plafond_vagues` borne la partie : une partie qui l atteint n est PAS morte,
+## elle a survecu a la mesure. Les compter a part evite de lire "vague 30" comme
+## une difficulte alors que c est une absence de difficulte.
+func _run_massacre_many(runs: int, plafond_vagues: int = 30) -> void:
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
 	if level == null:
 		return
@@ -108,10 +111,11 @@ func _run_massacre_many(runs: int) -> void:
 		var g: GameController = _make_game()
 		RunState.set_seed(2000 + i * 53)
 		g.start_level(level, GameEnums.Mode.MASSACRE)
-		var st: Dictionary = _play(g, 30)
+		var st: Dictionary = _play(g, plafond_vagues)
 		vagues.append(st["vague"])
 		_drop_game(g)
 		await get_tree().process_frame
+	var brut: Array[int] = vagues.duplicate()
 	vagues.sort()
 	var moy: float = 0.0
 	for v in vagues:
@@ -120,6 +124,35 @@ func _run_massacre_many(runs: int) -> void:
 	print("
   Massacre : vague %.1f en moyenne (min %d, max %d) sur %d parties"
 		% [moy, vagues[0], vagues[-1], runs])
+	# OU la partie s arrete, pas seulement quand. Le mode infini est decoupe en
+	# blocs de monde termines par un boss : savoir si les parties meurent SUR le
+	# palier ou entre deux paliers est ce qui dit si le boss est trop dur.
+	var sur_boss: int = 0
+	var sur_mini: int = 0
+	var ordinaire: int = 0
+	var plafond: int = 0
+	var par_monde: Dictionary = {}
+	for v in brut:
+		if v >= plafond_vagues:
+			plafond += 1
+			continue
+		if WaveBudget.is_boss_wave(v):
+			sur_boss += 1
+		elif WaveBudget.is_miniboss_wave(v):
+			sur_mini += 1
+		else:
+			ordinaire += 1
+		var m: int = WaveBudget.world_index_for(maxi(1, v))
+		par_monde[m] = int(par_monde.get(m, 0)) + 1
+	print("    fins : %d sur un boss, %d sur un mini-boss, %d sur une vague ordinaire, %d au plafond (%d vagues)"
+		% [sur_boss, sur_mini, ordinaire, plafond, plafond_vagues])
+	var cles: Array = par_monde.keys()
+	cles.sort()
+	var parts: Array[String] = []
+	for m in cles:
+		parts.append("%s x%d" % [WaveBudget.backdrop_for(m * WaveBudget.WORLD_EVERY + 1),
+			int(par_monde[m])])
+	print("    monde ou ca s arrete : " + ", ".join(parts))
 
 
 func _run_level(level_id: StringName) -> void:

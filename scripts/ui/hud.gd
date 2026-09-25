@@ -351,6 +351,69 @@ func _refresh_hand() -> void:
 		cv.setup_hand(card, width, 230.0)
 		cv.gui_input.connect(_on_card_input.bind(card))
 		_hand.add_child(cv)
+		_ajouter_jauge_amelioration(cv, card, width)
+
+
+## Le liseré de PROGRESSION VERS L AMELIORATION, en bas de la carte en main.
+##
+## Sans lui, le palier des 8 lancers tombe comme une surprise : le joueur voit
+## surgir un ecran modal sans avoir rien vu venir, et il ne peut pas decider de
+## rejouer un sort plutot qu un autre pour le faire murir. Le systeme d amelioration
+## n a de sens que si sa progression se voit.
+##
+## Pose PAR-DESSUS la carte plutot qu integre a `CardView` : ce script est
+## partage par le grimoire, le deck et l ecran de choix, ou la notion de
+## "lancers dans la partie en cours" n existe pas.
+##
+## Un LISERE et non un texte : la main descend a 118 px de large quand elle est
+## pleine, un "5/8" y serait illisible, alors qu une barre qui se remplit se lit
+## du coin de l oeil pendant qu on joue.
+func _ajouter_jauge_amelioration(cv: Control, card: SpellCard, width: float) -> void:
+	if card == null or card.is_passive:
+		return
+	var avance: float = RunState.upgrade_progress(card)
+	if avance <= 0.0:
+		return
+	var acquise: bool = RunState.upgrade_of(card) != &""
+	var jauge := ProgressBar.new()
+	jauge.show_percentage = false
+	jauge.value = avance * 100.0
+	# La jauge est INSEREE dans la colonne de la carte, en dernier enfant : c est
+	# ce qui la pose au bas quelle que soit la hauteur reelle. Deux tentatives
+	# ont echoue avant, toutes deux vues en capture :
+	#   - une position en dur ("230 - 14") la collait EN HAUT, parce que
+	#     `setup_hand` pose une taille MINIMALE et que le conteneur donne a la
+	#     carte une autre hauteur ;
+	#   - un `set_anchors_preset` la reduisait a un trait, le conteneur
+	#     redimensionnant l enfant par-dessus les marges.
+	jauge.custom_minimum_size = Vector2(0, 10.0)
+	jauge.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	jauge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var fond := StyleBoxFlat.new()
+	fond.bg_color = Color(0.20, 0.17, 0.14, 0.55)
+	fond.set_corner_radius_all(4)
+	var plein := StyleBoxFlat.new()
+	# DOREE quand l amelioration est prise, TEAL tant qu elle mûrit : le joueur
+	# distingue d un coup d oeil un sort fini d un sort en cours.
+	plein.bg_color = UiTheme.GOLD if acquise else UiTheme.TEAL
+	plein.set_corner_radius_all(4)
+	jauge.add_theme_stylebox_override(&"background", fond)
+	jauge.add_theme_stylebox_override(&"fill", plein)
+	# La colonne interne de CardView, pas la carte elle-meme.
+	var colonne: Node = null
+	for enfant in cv.get_children():
+		if enfant is VBoxContainer:
+			colonne = enfant
+			break
+	if colonne == null:
+		return
+	var marge := MarginContainer.new()
+	marge.add_theme_constant_override(&"margin_left", 6)
+	marge.add_theme_constant_override(&"margin_right", 6)
+	marge.add_theme_constant_override(&"margin_bottom", 4)
+	marge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	marge.add_child(jauge)
+	colonne.add_child(marge)
 
 
 func _needs_aim(card: SpellCard) -> bool:
