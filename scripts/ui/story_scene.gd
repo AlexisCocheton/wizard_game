@@ -22,6 +22,41 @@ const PORTRAITS: String = "res://assets/portraits/"
 ## Le personnage qui parle est en pleine lumiere, l autre recule dans l ombre.
 const DIM: Color = Color(0.45, 0.42, 0.52)
 
+## Le pack fournit AUSSI les 32 visages en gros plan, ranges par
+## `extract_portraits.py` dans une grille unique : 8 lignes (un personnage) x 4
+## colonnes (une expression). Ils n avaient jamais ete branches.
+##
+## POURQUOI LE VISAGE PLUTOT QUE LE CORPS ENTIER. Compare a la taille reelle
+## d affichage (620 x 960 px) : le corps entier montre des PATTES D ARAIGNEE et
+## un visage de 40 px perdu tout en haut — c est ce qui faisait dire que "le mage
+## est un demon cornu". Le meme personnage en gros plan remplit le cadre, son
+## expression se lit, et les pattes sortent du champ. La tete de 64 px agrandie
+## ~10x reste NETTE en pixel art, la ou un filtrage lisse l aurait floutee
+## (le projet est en filtre "nearest", verifie en capture).
+const HEADS: String = PORTRAITS + "demon_heads.png"
+const HEAD_PX: int = 64
+const HEAD_COLS: int = 4
+
+## Cle de portrait -> [personnage 1..8, expression 1..4] dans la grille.
+## Meme casting que FACES ci-dessous, et il doit le RESTER : les deux tables
+## decrivent les memes personnages, l une en gros plan, l autre en repli.
+## LES QUATRE EXPRESSIONS DU PACK, verifiees sur planche : 1 neutre, 2 colere,
+## 3 grand sourire, 4 sourire leger. Le casting les suit — la premiere capture
+## montrait le mage SOURIANT LARGEMENT en disant "je n ai pas su les arreter",
+## ce qui rendait la scene absurde. Une expression qui contredit la replique est
+## pire que pas de portrait du tout.
+const HEAD_FACES: Dictionary = {
+	&"mage": [6, 1],          # neutre : il raconte, il ne joue pas
+	&"mage_grave": [6, 2],    # colere : les moments ou il s en veut
+	&"child": [5, 4],         # sourire leger : un enfant, pas un rictus
+	&"child_god": [5, 2],     # colere : le retournement de l acte V
+	&"rat": [3, 1],
+	&"mayor": [2, 1],
+	&"skeleton_king": [7, 2], # colere : un roi mort qui ordonne
+	&"guardian": [8, 2],      # colere : il se bat
+	&"demon": [4, 2],         # colere : c est un demon
+}
+
 ## Cles de portrait -> fichier. Les personnages du pack craftpix "demons" servent
 ## de bustes de PNJ : ce sont les seuls corps entiers humanoides disponibles
 ## (voir assets.md). Un personnage garde TOUJOURS le meme corps et sa palette
@@ -170,12 +205,37 @@ func _set_portrait(rect: TextureRect, key: StringName) -> void:
 ## du jeu. Null quand la cle est inconnue : le personnage parle sans visage
 ## plutot que de faire planter la scene.
 func _portrait_texture(key: StringName) -> Texture2D:
+	# Le VISAGE d abord : c est ce que le joueur doit lire.
+	var tete: Texture2D = _head_texture(key)
+	if tete != null:
+		return tete
+	# Repli sur le corps entier du meme personnage. Il vaut mieux un buste
+	# maladroit que pas de personnage du tout.
 	var path: String = String(FACES.get(key, ""))
 	if path != "" and ResourceLoader.exists(path):
 		return load(path)
 	if SHEET_FACES.has(key):
 		return _sheet_frame(SHEET_FACES[key])
 	return null
+
+
+## Une case de la grille des visages. Null si la cle est inconnue ou si la
+## planche manque — l appelant retombe alors sur le corps entier.
+func _head_texture(key: StringName) -> Texture2D:
+	if not HEAD_FACES.has(key) or not ResourceLoader.exists(HEADS):
+		return null
+	var grille: Texture2D = load(HEADS)
+	if grille == null:
+		return null
+	var rc: Array = HEAD_FACES[key]
+	var ligne: int = int(rc[0]) - 1
+	var colonne: int = int(rc[1]) - 1
+	if ligne < 0 or colonne < 0 or colonne >= HEAD_COLS:
+		return null
+	var at := AtlasTexture.new()
+	at.atlas = grille
+	at.region = Rect2(colonne * HEAD_PX, ligne * HEAD_PX, HEAD_PX, HEAD_PX)
+	return at
 
 
 ## Premiere case d "idle" d une feuille d AnimCatalog, RECADREE sur le personnage.

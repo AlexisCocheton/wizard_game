@@ -21,6 +21,7 @@ func run() -> void:
 	_test_le_prologue_precede_le_premier_niveau()
 	_test_rien_ne_se_joue_en_headless()
 	_test_le_massacre_na_pas_dhistoire()
+	_test_chaque_personnage_a_un_visage()
 	SaveData.reset_profile()
 
 
@@ -185,3 +186,75 @@ func _test_le_massacre_na_pas_dhistoire() -> void:
 		"le Massacre ne joue aucune outro")
 	SceneRouter.stories_enabled = avant
 	SaveData.reset_profile()
+
+
+## Chaque personnage qui parle doit avoir un VISAGE, et ce visage doit venir de
+## la grille de gros plans, pas du corps entier.
+##
+## Le defaut que ce test empeche de revenir : les scenes affichaient le CORPS
+## ENTIER du pack, ou le visage fait 40 px tout en haut d une silhouette a
+## pattes d araignee. Le personnage etait illisible, et on parlait du "mage
+## demon cornu" comme d une fatalite alors que le pack fournissait les 32 gros
+## plans depuis le debut — extraits, jamais branches.
+func _test_chaque_personnage_a_un_visage() -> void:
+	var scene: PackedScene = load("res://scenes/story/StoryScene.tscn")
+	ok(scene != null, "la scene d histoire se charge")
+	if scene == null:
+		return
+	var vue: Node = scene.instantiate()
+	attach(vue)
+	# On lit les constantes SUR L INSTANCE : le script n a pas de `class_name`,
+	# et en ajouter un pour le confort du test ferait porter au code de
+	# production une contrainte que seul le test demande.
+	var sc: Script = vue.get_script()
+	var head_px: int = int(sc.get_script_constant_map()["HEAD_PX"])
+	var head_cols: int = int(sc.get_script_constant_map()["HEAD_COLS"])
+	var head_faces: Dictionary = sc.get_script_constant_map()["HEAD_FACES"]
+	var faces: Dictionary = sc.get_script_constant_map()["FACES"]
+
+	# 1. Toute cle citee par une replique a un visage en gros plan.
+	# Les dialogues vivent dans un DOSSIER, pas dans ContentDB : on les parcourt
+	# comme le fait _test_chaque_replique_est_bien_formee().
+	var citees: Dictionary = {}
+	var dir: DirAccess = DirAccess.open(DialogueDef.DIR)
+	if dir != null:
+		for file in dir.get_files():
+			if not file.ends_with(".tres"):
+				continue
+			var d: DialogueDef = load(DialogueDef.DIR + file) as DialogueDef
+			if d == null:
+				continue
+			for i in d.line_count():
+				var k: StringName = StringName(d.line(i).get("portrait", ""))
+				if k != &"":
+					citees[k] = true
+	ok(not citees.is_empty(), "des repliques citent des portraits (%d cles)"
+		% citees.size())
+	for k in citees:
+		var tex: Texture2D = vue.call(&"_portrait_texture", k)
+		ok(tex != null, "%s a un portrait" % k)
+		# Un AtlasTexture prouve que ca vient de la GRILLE de visages. Un
+		# ImageTexture voudrait dire qu on est retombe sur le corps entier.
+		ok(tex is AtlasTexture,
+			"%s est un gros plan, pas un corps entier" % k)
+		if tex is AtlasTexture:
+			var r: Rect2 = (tex as AtlasTexture).region
+			eq(int(r.size.x), head_px, "%s : largeur d une case" % k)
+			eq(int(r.size.y), head_px, "%s : hauteur d une case" % k)
+
+	# 2. Les deux tables decrivent les MEMES personnages. Si l une gagne une cle
+	#    que l autre n a pas, le repli renverrait quelqu un d autre a l ecran.
+	for k in head_faces:
+		ok(faces.has(k),
+			"%s a aussi un corps entier en repli" % k)
+
+	# 3. Les expressions existent dans la grille (4 colonnes, 8 lignes).
+	for k in head_faces:
+		var rc: Array = head_faces[k]
+		var ligne: int = int(rc[0])
+		var colonne: int = int(rc[1])
+		ok(ligne >= 1 and ligne <= 8, "%s : personnage %d dans la grille" % [k, ligne])
+		ok(colonne >= 1 and colonne <= head_cols,
+			"%s : expression %d dans la grille" % [k, colonne])
+
+	detach(vue)
