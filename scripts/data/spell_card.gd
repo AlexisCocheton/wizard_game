@@ -51,3 +51,46 @@ func effect_keys() -> Array[StringName]:
 		if e != null:
 			out.append(e.key)
 	return out
+
+
+## --- AMELIORATION EN COMBAT ---
+##
+## Les trois voies d amelioration de ce sort, sous la forme attendue par le
+## grimoire : [{text: String, unlocked: bool}]. Le contrat a ete fixe AVANT ce
+## chantier par GalleryPanel.upgrades_of() ; il est verrouille par
+## tests/unit/test_upgrades.gd (_test_le_contrat_du_grimoire_est_respecte).
+##
+## POURQUOI UNE PROPRIETE CALCULEE ET NON UN @export
+## -------------------------------------------------
+## Un @export serait ecrit dans le .tres, donc PARTAGE : les Resources sont
+## mises en cache par Godot, le meme SpellCard sert la main du joueur, la fiche
+## du grimoire et la partie suivante. Marquer `unlocked = true` dedans ferait
+## fuir l amelioration hors de la partie — exactement ce que la regle
+## "l amelioration vaut pour la partie en cours" interdit.
+##
+## L etat vit donc dans RunState (efface par reset() a chaque niveau) et cette
+## propriete ne fait que le presenter. Le grimoire lit `card.upgrades` sans rien
+## savoir de tout cela.
+var upgrades: Array:
+	get:
+		return RunState.upgrade_lines_for(self)
+
+
+## Vrai si ce sort peut etre elargi : seul un effet qui a un RAYON gagne quelque
+## chose a etre "plus ample". Sur un trait a cible unique, la voie AMPLEUR
+## n aurait rien a agrandir et mentirait au joueur — RunState.upgrade_paths_for()
+## lui substitue alors une autre voie.
+func has_area() -> bool:
+	for e in effects:
+		if e != null and e.radius > 0.0:
+			return true
+	return false
+
+
+## Vrai si ce sort inflige des degats chiffres. Un sort utilitaire (pioche,
+## reduction de cout, mur) n a pas de degats a augmenter.
+func has_damage() -> bool:
+	for e in effects:
+		if e != null and e.magnitude > 0.0:
+			return true
+	return false

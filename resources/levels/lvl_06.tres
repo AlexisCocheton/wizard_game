@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=59 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=58 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_hygvp"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="2_7juvv"]
@@ -28,7 +28,6 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="26_h4335"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="27_ytel0"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="28_m7eiq"]
-[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="29_yvkmi"]
 [ext_resource type="Resource" path="res://resources/enemies/wraith_lord.tres" id="30_hygvp"]
 
 [sub_resource type="Resource" id="Resource_6vmxt"]
@@ -73,7 +72,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_hygvp"]
+[sub_resource type="Resource" id="Resource_w6e1i"]
 script = ExtResource("27_ytel0")
 id = &"w6_1"
 duration = 27.0
@@ -103,7 +102,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 15.0
 
-[sub_resource type="Resource" id="Resource_7juvv"]
+[sub_resource type="Resource" id="Resource_hygvp"]
 script = ExtResource("27_ytel0")
 id = &"w6_2"
 duration = 28.0
@@ -114,7 +113,7 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_bhffe"]
 script = ExtResource("28_m7eiq")
-enemy = ExtResource("29_yvkmi")
+enemy = ExtResource("10_rfvss")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -133,7 +132,7 @@ count = 2
 spawn_delay = 3.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_qoior"]
+[sub_resource type="Resource" id="Resource_7juvv"]
 script = ExtResource("27_ytel0")
 id = &"w6_3_miniboss"
 duration = 34.0
@@ -170,7 +169,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_ydw5w"]
+[sub_resource type="Resource" id="Resource_qoior"]
 script = ExtResource("27_ytel0")
 id = &"w6_4"
 duration = 30.0
@@ -200,7 +199,7 @@ count = 3
 spawn_delay = 1.8
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_itjfv"]
+[sub_resource type="Resource" id="Resource_ydw5w"]
 script = ExtResource("27_ytel0")
 id = &"w6_5"
 duration = 32.0
@@ -230,7 +229,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_o6g41"]
+[sub_resource type="Resource" id="Resource_itjfv"]
 script = ExtResource("27_ytel0")
 id = &"w6_6_boss"
 duration = 48.0
@@ -245,13 +244,17 @@ id = &"lvl_06"
 display_name = "La Cour brisee"
 act = 3
 subtitle = "Une guerre civile ou tu n es qu un passant"
-intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera quand meme, en passant."
-outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur le cadran, tu as lu une adresse."
+intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui 
+portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera 
+quand meme, en passant."
+outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a 
+enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur 
+le cadran, tu as lu une adresse."
 intro_story = &""
 outro_story = &""
 terrain = "sand"
 backdrop = "act3_demon"
-waves = Array[ExtResource("27_ytel0")]([SubResource("Resource_hygvp"), SubResource("Resource_7juvv"), SubResource("Resource_qoior"), SubResource("Resource_ydw5w"), SubResource("Resource_itjfv"), SubResource("Resource_o6g41")])
+waves = Array[ExtResource("27_ytel0")]([SubResource("Resource_w6e1i"), SubResource("Resource_hygvp"), SubResource("Resource_7juvv"), SubResource("Resource_qoior"), SubResource("Resource_ydw5w"), SubResource("Resource_itjfv")])
 enemy_pool = Array[ExtResource("1_hygvp")]([ExtResource("2_7juvv"), ExtResource("3_qoior"), ExtResource("4_ydw5w"), ExtResource("5_itjfv"), ExtResource("6_o6g41"), ExtResource("7_eptgm"), ExtResource("8_rtf0f"), ExtResource("9_2b56q"), ExtResource("10_rfvss"), ExtResource("11_kbq1b"), ExtResource("12_wn3dd"), ExtResource("13_h5pqb")])
 exploration_deck = Array[ExtResource("14_5hav6")]([ExtResource("15_pkiwx"), ExtResource("16_hvxva"), ExtResource("17_hygvp"), ExtResource("17_cnoig"), ExtResource("17_cnoig"), ExtResource("17_cnoig"), ExtResource("18_v36rt"), ExtResource("18_v36rt"), ExtResource("18_v36rt"), ExtResource("19_v2fyw"), ExtResource("19_v2fyw"), ExtResource("20_hygvp"), ExtResource("20_hygvp"), ExtResource("21_is78b"), ExtResource("23_bcmnx")])
 objectives = Array[ExtResource("25_o1m5h")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])

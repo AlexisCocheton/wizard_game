@@ -76,6 +76,10 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	_connect_once(battlefield.mage_hit, _on_mage_hit)
 	_connect_once(battlefield.enemy_killed, _on_enemy_killed_for_challenges)
 	_connect_once(RunState.level_up, _on_level_up)
+	# L amelioration d un sort est proposee par RunState au huitieme lancer : on
+	# ecoute le signal plutot que de compter ici, pour que le comptage reste au
+	# point de passage unique des sorts (EffectRegistry.cast).
+	_connect_once(RunState.upgrade_ready, _on_upgrade_ready)
 
 	var hud: Node = get_node_or_null("HUD")
 	if hud != null and hud.has_method("bind"):
@@ -151,6 +155,12 @@ func _process(delta: float) -> void:
 func simulate(delta: float) -> void:
 	if not RunState.pending_offer.is_empty():
 		return
+	# AMELIORATION DE CARTE en attente : meme regle que le choix de carte, et pour
+	# la meme raison. Le joueur a trois compromis a LIRE, chacun avec un gain et un
+	# prix ; les lire pendant que les monstres descendent, c est soit choisir au
+	# hasard, soit prendre un coup en lisant.
+	if RunState.pending_upgrade_card != null:
+		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
 	# La mort (ou la victoire) declenche un CHANGEMENT DE SCENE depuis ce tick :
 	# le champ de bataille est alors en cours de liberation. Continuer a le
@@ -186,6 +196,8 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 	if not running or card == null:
 		return false
 	if not RunState.pending_offer.is_empty():
+		return false
+	if RunState.pending_upgrade_card != null:
 		return false
 	# Une carte a viser exige un point : sans lui, on refuse plutot que de
 	# lancer le sort a un endroit arbitraire.
@@ -271,6 +283,62 @@ func burn_card(i: int) -> SpellCard:
 	ctx.target_enemy = battlefield.enemy_nearest_to(cible) if battlefield != null else null
 	EffectRegistry.cast(card, ctx)
 	return card
+
+
+# --- Amelioration des cartes en combat ---
+
+## L ecran de choix d amelioration, cree a la premiere occasion et reutilise.
+## Cree par CODE et non pose dans Game.tscn : il n existe que quelques secondes
+## par partie, et le construire a la demande evite un noeud invisible qui
+## traverserait toutes les scenes du jeu.
+var _upgrade_panel: CardUpgradePanel = null
+
+
+func _on_upgrade_ready(card: SpellCard, paths: Array) -> void:
+	AudioBus.play_sfx(&"level_up")
+	if headless_mode:
+		# EN TEST HEADLESS, PERSONNE NE PEUT TOUCHER L ECRAN. Laisser l offre en
+		# attente bloque `simulate()` pour toujours : le banc a rendu 0 victoire
+		# sur 30 aux SEPT niveaux, toutes les parties mourant sur le garde-fou de
+		# 900 s. Le choix doit donc etre tranche ici, tout de suite.
+		#
+		# On prend la voie que prendrait un joueur qui ne veut pas reflechir :
+		# LA PREMIERE. Ce n est pas un choix optimal, et c est voulu — le banc
+		# doit mesurer ce que le systeme donne a un joueur ordinaire, pas ce
+		# qu un joueur parfait en tirerait.
+		RunState.pick_upgrade(0)
+		return
+	var panel: CardUpgradePanel = _ensure_upgrade_panel()
+	panel.show_paths(card, paths)
+
+
+func _ensure_upgrade_panel() -> CardUpgradePanel:
+	if _upgrade_panel != null and is_instance_valid(_upgrade_panel):
+		return _upgrade_panel
+	_upgrade_panel = CardUpgradePanel.new()
+	_upgrade_panel.name = "CardUpgradePanel"
+	_upgrade_panel.path_chosen.connect(_on_upgrade_path_chosen)
+	_upgrade_panel.declined.connect(_on_upgrade_declined)
+	# DANS le CanvasLayer du HUD : pose sur le Node2D de la partie, un Control
+	# suivrait la camera et les coordonnees du terrain au lieu de l ecran.
+	var hud: Node = get_node_or_null("HUD")
+	if hud != null:
+		hud.add_child(_upgrade_panel)
+	else:
+		add_child(_upgrade_panel)
+	return _upgrade_panel
+
+
+func _on_upgrade_path_chosen(index: int) -> void:
+	RunState.pick_upgrade(index)
+	if _upgrade_panel != null and is_instance_valid(_upgrade_panel):
+		_upgrade_panel.visible = false
+
+
+func _on_upgrade_declined() -> void:
+	RunState.decline_upgrade()
+	if _upgrade_panel != null and is_instance_valid(_upgrade_panel):
+		_upgrade_panel.visible = false
 
 
 func _on_level_up(_new_level: int) -> void:

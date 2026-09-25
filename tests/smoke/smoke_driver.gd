@@ -158,6 +158,7 @@ func _run_all() -> void:
 	await _check_story()
 	await _check_boss_reward()
 	await _check_precast()
+	await _check_upgrade_panel()
 	await _check_end_screens()
 	await _check_cosmetics_in_battle()
 	_check_massacre_deck()
@@ -543,6 +544,61 @@ func _check_menu_screens() -> void:
 
 ## Pre-cast : un second sort doit pouvoir etre prepare pendant le chargement du
 ## premier, et un troisieme remplacer celui qui attendait.
+## L ecran d AMELIORATION, pose sur un vrai combat.
+##
+## Pourquoi il faut le forcer : en headless `GameController` tranche tout de
+## suite (`pick_upgrade(0)`) pour ne pas bloquer le banc, donc le panneau ne
+## s affiche JAMAIS dans une partie de test. Sans ce controle, le seul regard
+## porte sur lui venait de `tools/make_upgrades`, qui le pose sur un fond neutre
+## — on ne pouvait donc pas juger ce que le joueur voit reellement : un voile
+## semi-transparent par-dessus des monstres qui descendent.
+func _check_upgrade_panel() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	# PAS headless : c est tout l objet du controle.
+	add_child(g)
+	g.running = false
+	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if level == null:
+		_fail("ecran d amelioration : lvl_01 introuvable")
+		g.queue_free()
+		return
+	g.start_level(level, GameEnums.Mode.EXPLORATION)
+	# Des monstres a l ecran : le voile doit laisser voir ce qui descend.
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	if gnome != null:
+		for k in 5:
+			g.battlefield.spawn_enemy(gnome, 220.0 + k * 150.0, 1.0,
+				Vector2(220.0 + k * 150.0, 500.0))
+	for k in 10:
+		g.battlefield.simulate(FIXED_DELTA)
+
+	var carte: SpellCard = ContentDB.cards.get(&"ember_pool")
+	if carte == null:
+		_fail("ecran d amelioration : ember_pool introuvable")
+		g.queue_free()
+		return
+	var voies: Array = RunState.upgrade_paths_for(carte)
+	if voies.size() != 3:
+		_fail("ecran d amelioration : %d voies au lieu de 3" % voies.size())
+	var panel: CardUpgradePanel = g.call(&"_ensure_upgrade_panel")
+	if panel == null:
+		_fail("ecran d amelioration : le panneau ne se construit pas")
+		g.queue_free()
+		return
+	panel.show_paths(carte, voies)
+	await get_tree().process_frame
+	# Le panneau doit COUVRIR l ecran. Un `set_anchors_preset` sans offsets rend
+	# une taille (0,0) et tout se dessine dans le coin : rien ne plante, aucun
+	# etage ne le voit, seule une capture le montre.
+	if panel.size.x < 900.0 or panel.size.y < 1600.0:
+		_fail("ecran d amelioration : panneau de %s, il ne couvre pas l ecran"
+			% panel.size)
+	await _shot("amelioration")
+	g.queue_free()
+	await get_tree().process_frame
+
+
 func _check_precast() -> void:
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()

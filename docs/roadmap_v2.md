@@ -147,7 +147,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Passif actif seulement au-dela d'une vitesse (ex. 140 %) | **FAIT** | F |
 | Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | **FAIT** (14 passifs) | F |
 | Icone des passifs a cote de la barre de vitesse, a leur seuil | **FAIT** | F |
-| Amelioration des cartes en combat (XP par lancer, choix parmi 3) | A FAIRE | G |
+| Amelioration des cartes en combat (XP par lancer, choix parmi 3) | **FAIT** (8 lancers, 3 pactes, per-partie) | G |
 | Arbre qui attire les ennemis ; sort de stun ; arbre a zone de poison ; eau qui ralentit | **FAIT** (4 cartes, 3 verbes d effet neufs) | H |
 | Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre) | B3 |
 
@@ -159,7 +159,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Feu follet -> Planogo, vole par-dessus les murs, boule de poison 10 PV | **FAIT** | B1 |
 | Nuee de rats -> Oiseau mirage, sprite qui ne tourne plus | **FAIT** | B1 |
 | Boss a mecaniques originales (revient 3 fois, ressuscite, bouclier renvoi, 10 coups immunises, slime enorme qui se divise, 3 mages a resistances, renard qui dort, mecha laser, executeur onde de choc, demon slime immunise au feu) | PARTIEL (3 boss a mecanique) ; la plupart BLOQUES par les packs absents | I |
-| Boss d'un acte devenant monstre courant ensuite | A FAIRE | I |
+| Boss d'un acte devenant monstre courant ensuite | **PARTIEL** (`totem_guardian` : boss en lvl_02, mini-boss en lvl_05) | I |
 
 ### Combat
 | Demande | Etat | Chantier |
@@ -376,3 +376,41 @@ depend), et `chronos` doit devenir un monstre ORDINAIRE a l acte V.
 on ouvre les niveaux manquants. La premiere option est faisable aujourd hui, la
 seconde demande les packs absents. Le fichier a modifier est
 `tools/make_content.gd`, occupe par un chantier en cours au moment de ce constat.
+
+
+### Boss redistribues — mesure du 25 septembre corrigee
+
+Onze adversaires uniques au lieu de deux :
+
+| Niveau | Mini-boss | Boss |
+|---|---|---|
+| lvl_01 | — | — (tutoriel) |
+| lvl_02 | Corniste | Gardien-totem |
+| lvl_03 | Pretre goule | Behemoth |
+| lvl_04 | Ombre | L Ensevelisseur |
+| lvl_05 | Gardien-totem | Colosse des Forges |
+| lvl_06 | Chevalier du vide | Seigneur Spectre |
+| lvl_07 | Glouton | **Chronos** |
+
+La seule repetition restante est **voulue** : Chronos ferme `lvl_06` et `lvl_07`,
+c est la boucle narrative de `docs/histoire.md` — "l huissier du niveau 1
+revient". `test_bosses` l autorise NOMMEMENT, donc une deuxieme repetition, elle,
+fait rougir le harnais.
+
+Le **Gardien de la foret** ne reapparait plus apres `lvl_04`, ou l histoire le
+fait mourir : "il s effondre en un tas de bois mort", et la plaque de metal dans
+sa poitrine lance toute l intrigue. Le voir vivant ensuite contredisait la scene
+que le joueur venait de lire.
+
+Deux corrections faites en cours de route, toutes deux attrapees par un test :
+1. le Pretre goule menait `lvl_03` ET `lvl_04` — collision creee par ma propre
+   redistribution, rattrapee par le test que je venais d ecrire ;
+2. remplacer le Gardien (94 PV) par le Corniste (18 PV) a vide la vague 4 de
+   `lvl_02` et cree un saut de x3,1 vers la vague 5. Le garde-fou
+   d equilibrage l a vu ("294 PV apres 94"). Le poids est rendu par le NOMBRE,
+   ce qui colle au role du Corniste : il presse, il ne cogne pas.
+
+**Taux mesures apres coup** : 70 / 83 / 77 / 77 / 77 / 80 / 93 %. Les sept sont
+dans la fenetre, mais la courbe est PLATE et `lvl_07` est le plus facile des
+sept. A regarder : un dernier niveau qui se gagne 9 fois sur 10 ne cloture pas
+une campagne.

@@ -86,6 +86,12 @@ func reset() -> void:
 	_retain_charges = 0
 	_double_cast_time = 0.0
 	pending_offer.clear()
+	# L amelioration des cartes vaut pour LA PARTIE EN COURS : sans cet effacement
+	# elle franchirait la fin du niveau et l equilibrage mesure au banc ne
+	# decrirait plus aucune partie reelle (voir la section AMELIORATION plus bas).
+	casts_by_card.clear()
+	upgrades_taken.clear()
+	pending_upgrade_card = null
 
 
 ## Fixe la graine pour rendre les tirages deterministes (tests, replays).
@@ -169,6 +175,11 @@ func effective_cast_time(card: SpellCard) -> float:
 	# s eteint avec la vitesse, il n y a donc rien a memoriser au moment ou on
 	# l equipe. Un cache ici rendrait le seuil inoperant.
 	var base: float = maxf(0.1, card.base_cast_time - cost_reduction - passive_cast_cut())
+	# AMELIORATION de cette carte (Puissance ralentit, Celerite accelere). Elle
+	# entre AVANT le plancher de 0,1 s applique par SpeedGauge : une Celerite ne
+	# doit pas pouvoir rendre un sort instantane, la barre de charge n aurait
+	# plus rien a montrer.
+	base = maxf(0.1, base * upgrade_cast_factor(card))
 	return SpeedGauge.effective_cast_time(base) * passive_cast_factor()
 
 
@@ -743,3 +754,253 @@ func allow_double_cast(duration: float) -> void:
 
 func double_cast_active() -> bool:
 	return _double_cast_time > 0.0
+
+
+## --- AMELIORATION DES CARTES EN COMBAT ---
+##
+## "Amelioration des cartes en combat (XP par lancer, choix parmi 3)".
+##
+## Un sort que le joueur LANCE souvent gagne de l experience ; au palier
+## (GameConfig.CARD_UPGRADE_CASTS lancers) il propose trois voies, et la voie
+## choisie vaut POUR LA PARTIE EN COURS.
+##
+## POURQUOI PAS PERMANENT
+## ----------------------
+## Tout l equilibrage du jeu est mesure au banc (tools/sim_balance.gd) sur un
+## depart connu : les sept niveaux sont rejoues depuis un deck de base. Si les
+## ameliorations s accumulaient d une partie a l autre, la dixieme partie
+## partirait avec un deck bien plus fort que la premiere et les taux mesures ne
+## decriraient plus aucune partie reelle. Le joueur qui reprend au niveau 6
+## apres dix parties n y trouverait pas la difficulte annoncee. C est la meme
+## raison qui garde les passifs hors de la sauvegarde pendant un combat.
+##
+## OU L AMELIORATION MORD
+## ----------------------
+## Les EffectSpec sont des Resources PARTAGEES et mises en cache : le meme objet
+## sert la carte en main, la fiche du grimoire et la partie suivante. On n ecrit
+## donc JAMAIS dedans. `cast_specs()` rend des COPIES modifiees, relues a chaque
+## lancement — c est le seul point par ou les valeurs d un sort sortent vers les
+## handlers (voir EffectRegistry.cast).
+
+## Lancers par carte SUR LA PARTIE : {id de carte -> nombre}.
+## Indexe par `id` et non par l objet : la meme carte peut avoir plusieurs
+## exemplaires dans le deck, et ce sont bien tous « le meme sort » aux yeux du
+## joueur — trois copies de Boule de feu progressent ensemble.
+var casts_by_card: Dictionary = {}
+## Voie retenue par carte SUR LA PARTIE : {id de carte -> id de voie}.
+var upgrades_taken: Dictionary = {}
+## Carte dont l amelioration attend un choix. Null si aucune.
+var pending_upgrade_card: SpellCard = null
+
+signal upgrade_ready(card: SpellCard, paths: Array)
+signal upgrade_taken(card: SpellCard, path: Dictionary)
+
+
+## Un sort vient d etre RESOLU. Appele depuis EffectRegistry.cast(), le point de
+## passage unique de tout sort reellement lance : compter ailleurs (dans la main,
+## dans le Caster) laisserait des chemins ou le compteur n avancerait pas, et le
+## joueur verrait son sort favori ne jamais progresser sans comprendre pourquoi.
+func note_cast(card: SpellCard) -> void:
+	if card == null or card.is_passive:
+		return
+	var cle: StringName = card.id
+	casts_by_card[cle] = int(casts_by_card.get(cle, 0)) + 1
+	# Une carte DEJA amelioree ne redemande rien : sans ce garde, le sort favori
+	# ouvrirait un ecran modal toutes les huit incantations jusqu a la fin de la
+	# partie. Une seule amelioration par sort et par partie.
+	if upgrades_taken.has(cle):
+		return
+	# Une seule offre a la fois : deux ecrans modaux empiles laisseraient le
+	# second sans moyen d etre ferme, et la partie resterait en pause pour de bon.
+	if pending_upgrade_card != null:
+		return
+	if int(casts_by_card[cle]) < GameConfig.CARD_UPGRADE_CASTS:
+		return
+	var voies: Array = upgrade_paths_for(card)
+	if voies.is_empty():
+		return
+	pending_upgrade_card = card
+	upgrade_ready.emit(card, voies.duplicate())
+
+
+func casts_of(card: SpellCard) -> int:
+	if card == null:
+		return 0
+	return int(casts_by_card.get(card.id, 0))
+
+
+## Avancement vers l amelioration, de 0 a 1. Lu par l interface pour poser une
+## pastille sur la carte : sans ce retour, le joueur ne sait pas qu un sort
+## progresse et le palier tombe comme une surprise.
+func upgrade_progress(card: SpellCard) -> float:
+	if card == null:
+		return 0.0
+	if upgrades_taken.has(card.id):
+		return 1.0
+	var seuil: int = maxi(1, GameConfig.CARD_UPGRADE_CASTS)
+	return clampf(float(casts_of(card)) / float(seuil), 0.0, 1.0)
+
+
+func upgrade_of(card: SpellCard) -> StringName:
+	if card == null:
+		return &""
+	return StringName(upgrades_taken.get(card.id, &""))
+
+
+## Les trois voies proposees pour ce sort.
+##
+## Elles sont DERIVEES des effets de la carte, pas ecrites a la main dans chaque
+## .tres. Trois raisons :
+##   - 45 cartes x 3 voies = 135 entrees a maintenir, et chaque nouveau sort
+##     ajoute par un autre chantier arriverait SANS amelioration : le systeme
+##     mentirait au joueur sur la moitie du catalogue.
+##   - une voie ecrite a la main peut contredire l effet reel du sort ; derivee,
+##     elle ne peut pas.
+##   - le libelle affiche les vrais pourcentages de reglage, donc il reste juste
+##     quand l equilibrage bouge.
+##
+## La voie AMPLEUR n a de sens que sur un sort qui a un RAYON. Sans rayon, elle
+## est remplacee par ENDURANCE (l effet dure plus longtemps) : la promesse reste
+## vraie, seul son nom change.
+func upgrade_paths_for(card: SpellCard) -> Array:
+	if card == null:
+		return []
+	var out: Array = []
+
+	# PUISSANCE — frappe plus fort, se charge plus lentement.
+	# Sur un sort utilitaire (pioche, mur, reduction de cout) c est son EFFET qui
+	# grossit : la magnitude est ce que sa carte promet, secondes ou cartes.
+	var titre_puissance: String = "Puissance" if card.has_damage() else "Ferveur"
+	var quoi: String = "de degats" if card.has_damage() else "d effet"
+	out.append({
+		"id": &"power",
+		"text": "%s : +%s %s, incantation +%s" % [titre_puissance,
+			_pct(GameConfig.UPGRADE_POWER_GAIN), quoi,
+			_pct(GameConfig.UPGRADE_POWER_COST)],
+		"damage": 1.0 + GameConfig.UPGRADE_POWER_GAIN,
+		"cast": 1.0 + GameConfig.UPGRADE_POWER_COST,
+		"area": 1.0,
+	})
+
+	# CELERITE — part vite, tape moins. La seule voie qui RACCOURCIT
+	# l incantation : aux hautes vitesses, c est elle qui permet de repondre.
+	out.append({
+		"id": &"haste",
+		"text": "Celerite : incantation -%s, -%s %s" % [
+			_pct(GameConfig.UPGRADE_HASTE_GAIN),
+			_pct(GameConfig.UPGRADE_HASTE_COST), quoi],
+		"damage": 1.0 - GameConfig.UPGRADE_HASTE_COST,
+		"cast": 1.0 - GameConfig.UPGRADE_HASTE_GAIN,
+		"area": 1.0,
+	})
+
+	# AMPLEUR — couvre large, un peu plus lentement. Sans rayon a elargir, la
+	# voie serait un mensonge : on lui substitue ENDURANCE (l effet dure plus).
+	var titre_ampleur: String = "Ampleur" if card.has_area() else "Endurance"
+	var gagne: String = "rayon et duree" if card.has_area() else "duree"
+	out.append({
+		"id": &"area",
+		"text": "%s : +%s de %s, incantation +%s" % [titre_ampleur,
+			_pct(GameConfig.UPGRADE_AREA_GAIN), gagne,
+			_pct(GameConfig.UPGRADE_AREA_COST)],
+		"damage": 1.0,
+		"cast": 1.0 + GameConfig.UPGRADE_AREA_COST,
+		"area": 1.0 + GameConfig.UPGRADE_AREA_GAIN,
+	})
+	return out
+
+
+## Un pourcentage PRET A AFFICHER, signe compris. Le caractere pourcent n est
+## ecrit qu ici : dans une chaine de format il devrait etre double, et un seul
+## oubli afficherait "+45 d" au joueur.
+func _pct(f: float) -> String:
+	return "%d%%" % int(round(f * 100.0))
+
+
+## Les voies telles que le GRIMOIRE les affiche : [{text, unlocked}].
+## Contrat fixe par GalleryPanel.upgrades_of(), ecrit AVANT ce chantier pour que
+## la fiche du grimoire n ait pas a etre retouchee. Ne pas le rompre.
+func upgrade_lines_for(card: SpellCard) -> Array:
+	var prise: StringName = upgrade_of(card)
+	var out: Array = []
+	for v in upgrade_paths_for(card):
+		out.append({
+			"text": String(v.get("text", "")),
+			"unlocked": prise != &"" and StringName(v.get("id", &"")) == prise,
+		})
+	return out
+
+
+## Le joueur retient la voie `i` pour la carte en attente.
+func pick_upgrade(i: int) -> Dictionary:
+	var card: SpellCard = pending_upgrade_card
+	if card == null:
+		return {}
+	var voies: Array = upgrade_paths_for(card)
+	if i < 0 or i >= voies.size():
+		return {}
+	var voie: Dictionary = voies[i]
+	# On vide l attente AVANT d emettre : un ecouteur qui relance un sort dans la
+	# foulee ne doit pas retomber sur une offre deja consommee.
+	pending_upgrade_card = null
+	upgrades_taken[card.id] = StringName(voie.get("id", &""))
+	upgrade_taken.emit(card, voie.duplicate())
+	return voie.duplicate()
+
+
+## Le joueur renonce : le sort reste tel quel.
+## Renoncer DOIT fermer la porte (voie "none"), sinon l ecran se rouvrirait au
+## lancer suivant et le refus ne servirait a rien.
+func decline_upgrade() -> void:
+	if pending_upgrade_card == null:
+		return
+	upgrades_taken[pending_upgrade_card.id] = &"none"
+	pending_upgrade_card = null
+
+
+## Les EffectSpec a appliquer POUR CE LANCEMENT, amelioration comprise.
+##
+## Rend des COPIES des que l amelioration change quelque chose : les EffectSpec
+## du .tres sont partages et mis en cache par Godot (meme objet pour la main, le
+## grimoire et la partie suivante). Ecrire dedans ferait fuir l amelioration hors
+## de la partie et jusque dans le catalogue du menu principal. Verrouille par
+## test_upgrades.gd/_test_l_amelioration_ne_modifie_jamais_la_ressource_partagee.
+func cast_specs(card: SpellCard) -> Array[EffectSpec]:
+	var out: Array[EffectSpec] = []
+	if card == null:
+		return out
+	var d_mult: float = 1.0
+	var a_mult: float = 1.0
+	match upgrade_of(card):
+		&"power":
+			d_mult = 1.0 + GameConfig.UPGRADE_POWER_GAIN
+		&"haste":
+			d_mult = 1.0 - GameConfig.UPGRADE_HASTE_COST
+		&"area":
+			a_mult = 1.0 + GameConfig.UPGRADE_AREA_GAIN
+	for spec in card.effects:
+		if spec == null:
+			continue
+		if is_equal_approx(d_mult, 1.0) and is_equal_approx(a_mult, 1.0):
+			out.append(spec)
+			continue
+		var c: EffectSpec = spec.duplicate() as EffectSpec
+		c.magnitude = spec.magnitude * d_mult
+		c.radius = spec.radius * a_mult
+		c.duration = spec.duration * a_mult
+		out.append(c)
+	return out
+
+
+## Facteur de temps d incantation venant de l amelioration de CETTE carte.
+## Applique dans effective_cast_time() : c est le seul endroit que lisent le
+## Caster et le HUD, donc la barre de charge et le sort partent toujours d accord.
+func upgrade_cast_factor(card: SpellCard) -> float:
+	match upgrade_of(card):
+		&"power":
+			return 1.0 + GameConfig.UPGRADE_POWER_COST
+		&"haste":
+			return 1.0 - GameConfig.UPGRADE_HASTE_GAIN
+		&"area":
+			return 1.0 + GameConfig.UPGRADE_AREA_COST
+	return 1.0

@@ -55,6 +55,7 @@ func run() -> void:
 	_test_invocateur_mort_cesse_d_invoquer()
 	_test_invocateur_ne_noie_pas_l_ecran()
 	_test_les_boss_livres_ont_bien_leurs_mecaniques()
+	_test_chaque_niveau_a_son_propre_adversaire()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -253,3 +254,65 @@ func _test_les_boss_livres_ont_bien_leurs_mecaniques() -> void:
 	ok(morcele >= 1, "au moins un boss en plusieurs morceaux est livre")
 	ok(distant >= 1, "au moins un boss qui campe et harcele est livre")
 	ok(invocateur >= 1, "au moins un boss qui invoque est livre")
+
+
+## Un niveau doit avoir SON adversaire, pas celui du voisin.
+##
+## Le defaut mesure le 25 septembre : sur six niveaux a boss, le joueur
+## affrontait DEUX adversaires uniques — le meme Gardien six fois en mini-boss,
+## et Chronos quatre fois en boss, dont le premier et le dernier niveau. Le
+## manque de monstres n y etait pour rien (quatre P10 et sept candidats
+## mini-boss existaient) : c etait une compression de 21 niveaux en 7.
+##
+## La seule repetition tolere est CHRONOS en `lvl_07`, et elle est voulue :
+## docs/histoire.md fait revenir "l huissier du niveau 1" pour fermer la boucle.
+## Le test l autorise nommement plutot que de compter large, pour qu une
+## deuxieme repetition, elle, fasse rougir.
+func _test_chaque_niveau_a_son_propre_adversaire() -> void:
+	var vus_mini: Dictionary = {}
+	var vus_boss: Dictionary = {}
+	var niveaux: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		niveaux += 1
+		for w: WaveDef in lv.waves:
+			if w == null or w.entries.is_empty():
+				continue
+			var tete: WaveEntry = w.entries[0]
+			if tete == null or tete.enemy == null:
+				continue
+			var id: StringName = tete.enemy.id
+			if w.is_boss:
+				if vus_boss.has(id):
+					# La seule exception, nommee : la boucle narrative.
+					ok(id == &"chronos",
+						"%s ferme %s ET %s — un seul boss peut revenir, Chronos"
+						% [id, vus_boss[id], lv.id])
+				else:
+					vus_boss[id] = lv.id
+			elif w.is_miniboss:
+				not_ok(vus_mini.has(id),
+					"%s mene le mini-boss de %s ET de %s"
+					% [id, vus_mini.get(id, &"?"), lv.id])
+				vus_mini[id] = lv.id
+	ok(niveaux >= 7, "la campagne compte au moins 7 niveaux (%d)" % niveaux)
+	# Le compte prouve la VARIETE, pas seulement l absence de doublon : sans lui,
+	# supprimer tous les boss ferait passer le test.
+	ok(vus_boss.size() >= 5,
+		"au moins 5 boss differents sur la campagne (%d)" % vus_boss.size())
+	ok(vus_mini.size() >= 5,
+		"au moins 5 mini-boss differents (%d)" % vus_mini.size())
+
+	# Le Gardien de la foret MEURT en lvl_04 (docs/histoire.md : "il s effondre
+	# en un tas de bois mort", et la plaque de metal dans sa poitrine lance
+	# l intrigue). Il ne doit reapparaitre dans aucun niveau suivant.
+	for lv: LevelDef in ContentDB.levels.values():
+		if String(lv.id) <= "lvl_04":
+			continue
+		for w: WaveDef in lv.waves:
+			if w == null or not (w.is_boss or w.is_miniboss):
+				continue
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					not_ok(e.enemy.id == &"warden",
+						"%s : le Gardien est mort en lvl_04, il ne revient pas"
+						% lv.id)

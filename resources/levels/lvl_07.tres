@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=65 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=64 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_xuvbo"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_lyna4"]
@@ -33,7 +33,6 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="31_ksdft"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="32_raevg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="33_tka0t"]
-[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="34_ucmr1"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="35_n2no6"]
 
 [sub_resource type="Resource" id="Resource_6vmxt"]
@@ -78,7 +77,7 @@ count = 2
 spawn_delay = 2.5
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_xuvbo"]
+[sub_resource type="Resource" id="Resource_dfx8a"]
 script = ExtResource("32_raevg")
 id = &"w7_1"
 duration = 28.0
@@ -108,7 +107,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_lyna4"]
+[sub_resource type="Resource" id="Resource_xuvbo"]
 script = ExtResource("32_raevg")
 id = &"w7_2"
 duration = 29.0
@@ -119,7 +118,7 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_cyq0y"]
 script = ExtResource("33_tka0t")
-enemy = ExtResource("34_ucmr1")
+enemy = ExtResource("13_p6aea")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -138,7 +137,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_2enmq"]
+[sub_resource type="Resource" id="Resource_lyna4"]
 script = ExtResource("32_raevg")
 id = &"w7_3_miniboss"
 duration = 36.0
@@ -168,7 +167,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_qnhb2"]
+[sub_resource type="Resource" id="Resource_2enmq"]
 script = ExtResource("32_raevg")
 id = &"w7_4"
 duration = 32.0
@@ -205,7 +204,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 27.0
 
-[sub_resource type="Resource" id="Resource_u1eb3"]
+[sub_resource type="Resource" id="Resource_qnhb2"]
 script = ExtResource("32_raevg")
 id = &"w7_5"
 duration = 34.0
@@ -242,7 +241,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 38.0
 
-[sub_resource type="Resource" id="Resource_63ls2"]
+[sub_resource type="Resource" id="Resource_u1eb3"]
 script = ExtResource("32_raevg")
 id = &"w7_6_boss"
 duration = 55.0
@@ -257,13 +256,19 @@ id = &"lvl_07"
 display_name = "Le Metier du Monde"
 act = 4
 subtitle = "Ce n est pas un monde, c est une matrice"
-intro_text = "Une grille de fils tendus entre des etoiles, ou des divinites tissent les evenements. Elles ne sont ni bonnes ni mauvaises : elles sont OCCUPEES. L herbe sous tes pieds est le meme motif qu au premier matin, repete."
-outro_text = "Il n y a pas de coupable, il y a un calcul. Ton royaume generait trop de futurs possibles : on l a coupe pour simplifier le motif. Et en remontant le temps, tu es devenu exactement ce que la machine voulait supprimer — le fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu laisses la boucle ouverte."
+intro_text = "Une grille de fils tendus entre des etoiles, ou des divinites 
+tissent les evenements. Elles ne sont ni bonnes ni mauvaises : elles sont OCCUPEES. 
+L herbe sous tes pieds est le meme motif qu au premier matin, repete."
+outro_text = "Il n y a pas de coupable, il y a un calcul. Ton royaume 
+generait trop de futurs possibles : on l a coupe pour simplifier le motif. Et en 
+remontant le temps, tu es devenu exactement ce que la machine voulait supprimer — le 
+fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu 
+laisses la boucle ouverte."
 intro_story = &""
 outro_story = &""
 terrain = "grass"
 backdrop = "act4_origin"
-waves = Array[ExtResource("32_raevg")]([SubResource("Resource_xuvbo"), SubResource("Resource_lyna4"), SubResource("Resource_2enmq"), SubResource("Resource_qnhb2"), SubResource("Resource_u1eb3"), SubResource("Resource_63ls2")])
+waves = Array[ExtResource("32_raevg")]([SubResource("Resource_dfx8a"), SubResource("Resource_xuvbo"), SubResource("Resource_lyna4"), SubResource("Resource_2enmq"), SubResource("Resource_qnhb2"), SubResource("Resource_u1eb3")])
 enemy_pool = Array[ExtResource("1_xuvbo")]([ExtResource("2_lyna4"), ExtResource("3_2enmq"), ExtResource("4_qnhb2"), ExtResource("5_u1eb3"), ExtResource("6_63ls2"), ExtResource("7_wlt05"), ExtResource("8_ov2ma"), ExtResource("9_a43ve"), ExtResource("10_x6hq0"), ExtResource("11_vewni"), ExtResource("12_sc3o3"), ExtResource("13_p6aea"), ExtResource("14_55kjb"), ExtResource("15_ibebx"), ExtResource("16_uvtgg")])
 exploration_deck = Array[ExtResource("17_muspt")]([ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("19_a5r0e"), ExtResource("19_a5r0e"), ExtResource("20_ij338"), ExtResource("20_ij338"), ExtResource("21_jnc4j"), ExtResource("22_6xcos"), ExtResource("23_rewrk"), ExtResource("24_6volu"), ExtResource("25_jwiqm"), ExtResource("26_yim71"), ExtResource("27_808q8"), ExtResource("28_780l5")])
 objectives = Array[ExtResource("30_0hr58")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])

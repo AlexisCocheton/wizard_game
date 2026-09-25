@@ -1,14 +1,14 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_wo4iu"]
-[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_hme0u"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_wo4iu"]
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="3_hdme6"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_hjcnb"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_eftlb"]
 
 [sub_resource type="Resource" id="Resource_wo4iu"]
 script = ExtResource("1_wo4iu")
-enemy = ExtResource("2_hme0u")
+enemy = ExtResource("2_wo4iu")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0

@@ -31,6 +31,7 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_campaign_map.gd",
 	"res://tests/unit/test_story.gd",
 	"res://tests/unit/test_elements.gd",
+	"res://tests/unit/test_upgrades.gd",
 ]
 
 var _total_checks: int = 0

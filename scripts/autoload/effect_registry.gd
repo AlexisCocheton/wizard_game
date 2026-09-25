@@ -95,6 +95,10 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 	# non dans l interface de la main : c est le SEUL point par ou passe un sort
 	# reellement lance, quel que soit l ecran qui l a declenche.
 	ChallengeTracker.bump(StringName("card_uses:%s" % card.id))
+	# Compteur de lancers DE LA PARTIE, qui mene a l amelioration du sort
+	# (chantier G). Distinct du compteur ci-dessus, qui est un total de carriere
+	# affiche au grimoire : celui-la est remis a zero a chaque niveau.
+	RunState.note_cast(card)
 	ctx.card = card
 	# Le son PROPRE au sort. Trois sons generiques couvraient 45 cartes : a
 	# l oreille, tous les sorts etaient le meme.
@@ -102,7 +106,13 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 		AudioBus.play_sfx(card.sfx_key)
 	# Focalisation : le multiplicateur est consomme par le sort suivant, quel qu il soit.
 	ctx.damage_mult = RunState.take_next_spell_multiplier()
-	for spec in card.effects:
+	# AMELIORATION DE LA CARTE (chantier G) : les valeurs appliquees ne sortent
+	# plus de `card.effects` mais de RunState.cast_specs(), qui rend des COPIES
+	# portant la voie retenue dans cette partie. Les EffectSpec du .tres sont des
+	# Resources partagees et mises en cache par Godot : les modifier ferait fuir
+	# l amelioration dans le grimoire et dans la partie suivante.
+	var specs: Array[EffectSpec] = RunState.cast_specs(card)
+	for spec in specs:
 		dispatch(spec, ctx)
 	# PASSIF "Debordement" (legendaire) : chaque sort est RESOLU DEUX FOIS. La
 	# regle change ici, au point unique par ou passe tout sort reellement lance —
@@ -110,7 +120,7 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 	# seconde resolution de se dedoubler a son tour (2 sorts, pas 4).
 	if not _resolving and RunState.has_passive(&"passive_twin_cast"):
 		_resolving = true
-		for spec2 in card.effects:
+		for spec2 in specs:
 			dispatch(spec2, ctx)
 		_resolving = false
 

@@ -1236,10 +1236,24 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	v4.duration = 32.0
 	v4.difficulty = 1.2
 	v4.is_miniboss = true
+	# LE CORNISTE, et non le Gardien. Le meme Gardien menait SIX mini-boss sur
+	# sept, alors que docs/histoire.md le fait mourir en `lvl_04` — sa poitrine
+	# ouverte revele la plaque de metal qui lance toute l intrigue. Le voir
+	# revenir vivant ensuite contredisait la scene que le joueur venait de lire.
+	# Le Corniste etait deja son escorte ici : il PRESSE les autres, donc en
+	# faire la tete de vague change la nature du probleme, pas seulement sa
+	# taille.
+	#
+	# Escorte RENFORCEE, et ce n est pas un reglage a vue : le Corniste ne pese
+	# que 18 PV la ou le Gardien en pesait 94. Le garde-fou d equilibrage a
+	# attrape le trou ("lvl_02 / w2_5 : 294 PV apres 94") — la vague 5 devenait
+	# plus de trois fois la vague 4. On rend le poids par le NOMBRE, ce qui
+	# colle au role du Corniste : il presse les autres, il ne cogne pas.
 	v4.entries = [
-		_entry(E + "warden.tres", 1, 1.0),
-		_entry(E + "sprite.tres", 5, 1.8, 6.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 16.0),
+		_entry(E + "hornblower.tres", 2, 4.0),
+		_entry(E + "sprite.tres", 6, 1.5, 6.0),
+		_entry(E + "hopper.tres", 4, 1.6, 14.0),
+		_entry(E + "sand_serpent.tres", 2, 2.0, 22.0),
 	]
 	_save(v4, "res://resources/waves/w2_4_miniboss.tres")
 
@@ -1271,10 +1285,23 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	v7.duration = 45.0
 	v7.difficulty = 1.25
 	v7.is_boss = true
-	# Chronos ET Behemoth ensemble, c etait les deux plus gros monstres du jeu dans
-	# la meme vague : l escorte suffit a rendre le boss difficile.
+	# LE GOLEM DE PIERRE, et non Chronos. Chronos fermait QUATRE niveaux sur
+	# sept, dont le premier et le dernier : le joueur affrontait deux adversaires
+	# uniques sur toute la campagne. Son retour en `lvl_07` reste voulu — c est
+	# la boucle narrative, "l huissier du niveau 1 revient" — mais il doit se
+	# meriter, donc il ne ferme plus les niveaux du milieu.
+	#
+	# Pas le Seigneur Spectre non plus : il ferme deja `lvl_06`, ou sa portee de
+	# 620 px EST la lecon du niveau. Pas le Golem non plus : il arrive DEJA par
+	# deux a la vague 5 du meme niveau, en faire la tete de la vague 7 l aurait
+	# banalise — et le garde-fou d equilibrage l a attrape (294 PV apres 94, le
+	# saut depassait x2).
+	#
+	# LE GARDIEN-TOTEM : present dans le niveau sans y avoir jamais mene, il
+	# resiste au physique et protege ce qui l entoure. Le joueur doit le percer
+	# avant de nettoyer le reste, ce que la vague 5 ne lui a pas demande.
 	v7.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "hopper.tres", 4, 2.0, 10.0),
 		_entry(E + "sprite.tres", 4, 2.0, 22.0),
 	]
@@ -1409,8 +1436,11 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# Le mini-boss EST le saut : son escorte reste legere, comme au niveau 1.
 	a4.difficulty = 1.05
 	a4.is_miniboss = true
+	# LE PRETRE GOULE, et non le Gardien (mort en `lvl_04`, voir lvl_02).
+	# L Ossuaire est plein de morts-vivants : son immunite au poison y rend la
+	# Mare de venin inutile, ce qui force a changer de sort au pire moment.
 	a4.entries = [
-		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "ghoul_priest.tres", 1, 1.0),
 		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
 		_entry(E + "hopper.tres", 3, 1.8, 18.0),
 	]
@@ -1432,12 +1462,16 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	var a6 := WaveDef.new()
 	a6.id = &"w3_6_boss"
 	a6.duration = 42.0
-	# Difficulte basse sur la vague de boss : Chronos apporte deja 320 PV bruts,
+	# Difficulte basse sur la vague de boss : le boss apporte deja ses PV bruts,
 	# le multiplier reviendrait a empiler deux sauts dans la meme vague.
 	a6.difficulty = 1.1
 	a6.is_boss = true
+	# LE BEHEMOTH, et non Chronos (qui fermait quatre niveaux sur sept) ni
+	# l Ensevelisseur (qui garde `lvl_04`, ou sa mecanique d invocation EST la
+	# lecon du niveau). Une masse lente et enorme dans un ossuaire : le joueur
+	# doit tenir la distance pendant que les Pretres arrivent par-dessus.
 	a6.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "behemoth.tres", 1, 1.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 8.0),
 		_entry(E + "rat_swarm.tres", 3, 2.0, 20.0),
 	]
@@ -1555,10 +1589,17 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	b3.duration = 34.0
 	b3.difficulty = 1.1
 	b3.is_miniboss = true
-	# Le Gardien du seuil : il tient la porte pendant que le rituel s acheve.
+	# L OMBRE, et non le Pretre goule (qui mene deja le mini-boss de `lvl_03`) ni
+	# le Gardien : docs/histoire.md le fait mourir a la fin de CE niveau, "il
+	# s effondre en un tas de bois mort", et la plaque de metal dans sa poitrine
+	# lance toute l intrigue. Le montrer en mini-boss avant de le tuer en boss
+	# affaiblirait la scene.
+	#
+	# L Ombre disparait la moitie du temps : un mini-boss qu on ne peut pas
+	# frapper en continu oblige a garder un sort pret plutot qu a tout lancer.
 	b3.entries = [
-		_entry(E + "warden.tres", 1, 1.0),
-		_entry(E + "ghoul_priest.tres", 1, 1.0, 7.0),
+		_entry(E + "shade.tres", 1, 1.0),
+		_entry(E + "ghoul_priest.tres", 2, 2.0, 7.0),
 		_entry(E + "jelly.tres", 1, 2.0, 15.0),
 		_entry(E + "sprite.tres", 4, 1.6, 24.0),
 	]
@@ -1714,8 +1755,11 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	c3.duration = 34.0
 	c3.difficulty = 1.1
 	c3.is_miniboss = true
+	# LE GARDIEN-TOTEM, pas le Gardien de la foret (mort en `lvl_04`). Aux
+	# Forges, un gardien de pierre et de metal est a sa place ; il resiste au
+	# physique et craint l arcane, ce qui punit un deck de fleches.
 	c3.entries = [
-		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "golem.tres", 2, 3.0, 10.0),
 		_entry(E + "sprite.tres", 4, 1.6, 22.0),
 	]
@@ -1860,8 +1904,12 @@ cadran, et ils ignorent qui la passe."
 	# Mesure au banc : les nuees de rats causaient la moitie des coups recus. Une
 	# nuee compte pour PLUSIEURS corps (swarm_count) et arrivait pendant que le
 	# mini-boss monopolisait l attention. Deux entrees, plus espacees.
+	# LE CHEVALIER DU VIDE, et non le Gardien (mort en `lvl_04`, voir lvl_02).
+	# Son armure AVALE la magie (arcane 0,65) : c est l inverse exact du Golem,
+	# et un deck regle pour l un est faux pour l autre. Place ici, il oblige a
+	# repenser un deck qui a fonctionne pendant cinq niveaux.
 	d3.entries = [
-		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "void_knight.tres", 1, 1.0),
 		_entry(E + "berserker.tres", 2, 2.5, 9.0),
 		_entry(E + "rat_swarm.tres", 2, 3.0, 22.0),
 	]
@@ -2014,8 +2062,12 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	f3.duration = 36.0
 	f3.difficulty = 1.1
 	f3.is_miniboss = true
+	# LE GLOUTON, pas le Gardien (mort en `lvl_04`). Il craint le poison a
+	# +35 % : c est le seul mini-boss de la campagne contre lequel la Mare de
+	# venin et le Semis de fletrissure sont le bon choix, ce qui donne enfin une
+	# cible a cette famille de cartes.
 	f3.entries = [
-		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "glutton.tres", 1, 1.0),
 		_entry(E + "berserker.tres", 2, 2.5, 9.0),
 		_entry(E + "hopper.tres", 4, 1.8, 20.0),
 	]

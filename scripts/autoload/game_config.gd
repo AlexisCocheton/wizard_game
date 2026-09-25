@@ -82,6 +82,58 @@ const PASSIVE_SLOTS: int = 3
 ## Ancien nom, garde le temps que les ecrans de menu migrent. Meme valeur.
 const STARTING_PASSIVES: int = PASSIVE_SLOTS
 
+## --- Amelioration des cartes en combat ---
+## Nombre de LANCERS d une meme carte avant qu elle propose son amelioration.
+##
+## "XP par lancer, choix parmi 3" (demande du testeur). Le compteur suit les
+## incantations REELLEMENT resolues, pas les pioches : c est le sort dont on se
+## sert qui progresse, pas celui qui dort en main.
+##
+## 8 et non 4 ni 12, mesure sur 30 parties (sonde jetable, 3 niveaux x 10) :
+##   seuil  4 -> 6,6 a 11,8 ameliorations par partie
+##   seuil  8 -> 4,7 a  6,4 ameliorations par partie
+##   seuil 12 -> 1,6 a  3,0 ameliorations par partie
+## Une partie dure environ 160 s. A 4, un ecran modal s ouvre toutes les 15 s :
+## le joueur passe son temps dans des menus au lieu de jouer. A 12, le niveau 4
+## en voit MOINS que le niveau 1 (1,6 contre 3,0) parce que ses cartes tournent
+## plus : le palier devient illisible. A 8 la cadence (un choix toutes les 25 a
+## 35 s) colle a celle des montees de niveau, et les trois niveaux mesures
+## restent dans la meme fourchette.
+const CARD_UPGRADE_CASTS: int = 8
+
+## Ce que chaque voie d amelioration donne, et ce qu elle coute. Un seul jeu de
+## trois nombres pour tout le catalogue : les voies sont DERIVEES des effets de
+## la carte (voir RunState.upgrade_paths_for), pas ecrites carte par carte.
+##
+## POURQUOI DES PACTES ET NON DES BONUS
+## ------------------------------------
+## Trois lignes de "+10 %" ne sont pas un choix, c est un classement : le joueur
+## prend la plus grosse et l ecran ne sert a rien. Chaque voie DONNE et PREND,
+## sur des axes differents, pour que le sort change d IDENTITE :
+##   PUISSANCE : il frappe fort mais se charge lentement
+##   CELERITE  : il part vite mais tape moins
+##   AMPLEUR   : il couvre large, un peu plus lentement
+## Aucune ne domine les autres sur les trois axes a la fois — c est ce que
+## verrouille test_upgrades.gd (_test_les_trois_voies_sont_des_choix_pas_un_classement).
+##
+## REGLAGE MESURE AU BANC (30 parties par niveau, sept niveaux)
+## -----------------------------------------------------------
+## Le banc a une variance LARGE par niveau : deux passages du meme contenu ont
+## rendu 96,7 % puis 83,3 % au niveau 2. On ne regle donc PAS sur un niveau, mais
+## sur la MOYENNE des sept, qui s est revelee stable a 0,1 point pres.
+##   sans amelioration            : moyenne 80,9 %
+##   gains 45/35/40, prix 30/20/10 : moyenne 87,7 % puis 87,6 % — trop fort, et
+##                                   le niveau 2 sortait de la bande par le haut
+##   gains 30/25/28, prix 35/25/15 : moyenne 81,9 % puis 82,4 % — retenu
+## L amelioration reste un vrai gain (le joueur sent son sort changer) mais elle
+## se paie assez cher pour que la difficulte mesuree ne bouge pas.
+const UPGRADE_POWER_GAIN: float = 0.30    # +30 % de degats
+const UPGRADE_POWER_COST: float = 0.35    # +35 % de temps d incantation
+const UPGRADE_HASTE_GAIN: float = 0.25    # -25 % de temps d incantation
+const UPGRADE_HASTE_COST: float = 0.25    # -25 % de degats
+const UPGRADE_AREA_GAIN: float = 0.28     # +28 % de rayon et de duree
+const UPGRADE_AREA_COST: float = 0.15     # +15 % de temps d incantation
+
 ## Part de PASSIFS dans les cartes proposees a la montee de niveau.
 ## "Les passifs sont plus rares que les cartes : 20 pourcent de passifs."
 const PASSIVE_OFFER_CHANCE: float = 0.20
