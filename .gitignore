@@ -24,3 +24,8 @@ export/
 *.log
 Thumbs.db
 .DS_Store
+
+# Profil Chrome du projet : il porte le COOKIE DE SESSION craftpix, pose a la
+# main par le testeur (tools/assets/fetch_craftpix.py). Un cookie de session
+# dans un depot pousse sur GitHub, c est exactement ce qui fuit.
+.browser_profile/
