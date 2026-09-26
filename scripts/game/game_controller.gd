@@ -367,6 +367,7 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 			battlefield.spawn_wall(au_milieu, 170.0, 14.0)
 	if wave != null and (wave.is_boss or wave.is_miniboss):
 		AudioBus.play_sfx(&"boss")
+		AudioBus.play_voice(&"attack")
 		if wave.is_boss:
 			AudioBus.play_music(&"boss")
 	else:
@@ -375,6 +376,10 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 
 func _on_hp_changed(_hp: int) -> void:
 	AudioBus.play_sfx(&"hp_lost")
+	# La VOIX en plus du bruitage : le bruitage dit "quelque chose a frappe",
+	# la voix dit "c est MOI qui ai pris". A 400 % de vitesse, ou tout va vite,
+	# c est la difference entre un bruit de fond et une information.
+	AudioBus.play_voice(&"hurt")
 
 
 func _on_shield_collapsed() -> void:
@@ -438,6 +443,7 @@ func _on_all_cleared() -> void:
 	level_won.emit()
 	AudioBus.play_music(&"victory", false)
 	AudioBus.play_sfx(&"victory")
+	AudioBus.play_voice(&"victory")
 	if not headless_mode:
 		SceneRouter.goto(SceneRouter.VICTORY, {"level_id": level_def.id})
 
@@ -463,6 +469,7 @@ func _on_died() -> void:
 	level_lost.emit()
 	AudioBus.play_music(&"defeat", false)
 	AudioBus.play_sfx(&"defeat")
+	AudioBus.play_voice(&"death")
 	if not headless_mode:
 		SceneRouter.goto(SceneRouter.DEFEAT, {"level_id": level_def.id,
 			"waves": RunState.wave_index})

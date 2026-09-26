@@ -1,10 +1,26 @@
 extends Node
-## Audio : effets (400 Sounds Pack, FreeSFX) et musiques (16-bit RPG Music,
-## xDeviruchi), charges depuis assets/. Inerte en headless.
+## Audio : effets (400 Sounds Pack, FreeSFX), musiques (16-bit RPG Music,
+## xDeviruchi) et VOIX DU MAGE (Mage Voice Pack), charges depuis assets/.
+## Inerte en headless.
 
 const SFX_DIR := "res://assets/sfx/"
 const MUSIC_DIR := "res://assets/music/"
+const VOICE_DIR := "res://assets/voice/"
 const POOL_SIZE: int = 10
+
+## La voix a SON lecteur, pas la reserve des bruitages.
+##
+## Deux raisons, et la seconde compte plus que la premiere :
+##   - une replique dure une seconde ou deux, la ou un bruitage dure 200 ms :
+##     elle monopoliserait un lecteur de la reserve a chaque fois ;
+##   - surtout, deux repliques qui se SUPERPOSENT donnent un mage qui se parle
+##     par-dessus. Un seul lecteur garantit qu une voix en interrompt une autre
+##     au lieu de s y ajouter.
+var _voice: AudioStreamPlayer = null
+## Secondes avant qu une nouvelle replique soit permise. Sans ce repit, un sort
+## lance toutes les 1,5 s a 400 % de vitesse fait parler le mage en continu.
+const VOICE_COOLDOWN: float = 2.5
+var _voice_libre_a: float = 0.0
 
 var _muted: bool = false
 var _pool: Array[AudioStreamPlayer] = []
@@ -26,6 +42,9 @@ func _ready() -> void:
 	_music = AudioStreamPlayer.new()
 	_music.bus = "Master"
 	add_child(_music)
+	_voice = AudioStreamPlayer.new()
+	_voice.bus = "Master"
+	add_child(_voice)
 	apply_settings()
 
 
@@ -65,6 +84,41 @@ func play_sfx(key: StringName) -> void:
 	p.stream = s
 	p.volume_db = linear_to_db(clampf(float(SaveData.get_setting("sfx_volume", 1.0)), 0.0001, 1.0))
 	p.play()
+
+
+## Une REPLIQUE du mage, tiree au hasard parmi les variantes du moment.
+##
+## `moment` est un moment de JEU (cast, hurt, death, victory...), pas un nom de
+## fichier du pack : voir tools/assets/extract_voice.py, qui fait la traduction
+## une fois pour toutes a l extraction.
+##
+## Silencieux quand la voix precedente n est pas finie ou que le repit n est pas
+## ecoule — une voix qui se coupe elle-meme est pire que pas de voix.
+func play_voice(moment: StringName) -> void:
+	if _muted or _voice == null:
+		return
+	if _voice.playing:
+		return
+	var maintenant: float = float(Time.get_ticks_msec()) * 0.001
+	if maintenant < _voice_libre_a:
+		return
+	# Les variantes sont numerotees a partir de 1 ; on tire jusqu a en trouver
+	# une, ce qui evite de coder en dur combien il y en a par moment.
+	var dispo: Array[AudioStream] = []
+	for i in range(1, 6):
+		var s: AudioStream = _stream(VOICE_DIR,
+			StringName("voice_%s_%d" % [moment, i]), ".wav")
+		if s != null:
+			dispo.append(s)
+	if dispo.is_empty():
+		return
+	_voice.stream = dispo[randi() % dispo.size()]
+	# Un peu en retrait des bruitages : la voix commente l action, elle ne la
+	# remplace pas.
+	_voice.volume_db = linear_to_db(clampf(
+		float(SaveData.get_setting("sfx_volume", 1.0)) * 0.75, 0.0001, 1.0))
+	_voice.play()
+	_voice_libre_a = maintenant + VOICE_COOLDOWN
 
 
 func play_music(key: StringName, loop: bool = true) -> void:

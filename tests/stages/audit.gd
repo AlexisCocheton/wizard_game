@@ -21,6 +21,7 @@ func run_stage() -> void:
 	_check_assets()
 	_check_raw_sheets()
 	_check_gauge_tints()
+	_check_voice_keys()
 	for w in _soft:
 		print("  [AVERTISSEMENT] %s" % w)
 	print("[AUDIT] %d avertissement(s)" % _soft.size())
@@ -185,6 +186,40 @@ func _check_gauge_tints() -> void:
 	if b > r:
 		fail("%s : la barre de VIE est teintee en bleu (r=%.2f, b=%.2f) — la"
 			% [path, r, b] + " texture du pack est rouge, le produit rend du violet")
+
+
+## Toute replique demandee par le code doit EXISTER dans assets/voice/.
+##
+## Le defaut que ceci empeche : `AudioBus.play_voice()` est SILENCIEUX quand le
+## fichier manque — c est voulu, un son absent ne doit pas faire planter une
+## partie. Mais cela veut dire qu un moment mal orthographie, ou invente, ne se
+## remarque jamais. J ai ecrit `play_voice(&"surprised")` alors que ce moment
+## n a pas ete extrait : rien n a rougi, la voix ne se serait simplement jamais
+## fait entendre.
+func _check_voice_keys() -> void:
+	var files: Array[String] = []
+	_scan_text("res://scripts", files)
+	var vus: Dictionary = {}
+	for path in files:
+		var text: String = FileAccess.get_file_as_string(path)
+		var depuis: int = 0
+		while true:
+			var i: int = text.find("play_voice(&\"", depuis)
+			if i < 0:
+				break
+			var debut: int = i + 13
+			var fin: int = text.find("\"", debut)
+			if fin < 0:
+				break
+			vus[text.substr(debut, fin - debut)] = path
+			depuis = fin
+	for moment in vus:
+		# La variante 1 suffit : l extraction les produit par familles, une
+		# famille sans variante 1 n existe pas.
+		var attendu: String = "res://assets/voice/voice_%s_1.wav" % moment
+		if not ResourceLoader.exists(attendu):
+			fail("%s : play_voice(\"%s\") mais %s est absent"
+				% [vus[moment], moment, attendu])
 
 
 func _scan_text(dir_path: String, out: Array[String]) -> void:
