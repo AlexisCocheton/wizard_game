@@ -60,6 +60,12 @@ func _defaults() -> Dictionary:
 			"music_volume": 0.6,
 			"haptics": true,
 			"language": "fr",
+			## MODE TESTEUR — voir la section en bas de ce fichier.
+			## Il est range dans les REGLAGES et non dans le profil, parce qu il
+			## n est pas une progression : c est une facon de regarder le profil.
+			## Consequence voulue : reset_profile() le remet a false, puisqu il
+			## recree les reglages par defaut.
+			"tester_mode": false,
 		},
 	}
 
@@ -169,14 +175,23 @@ func discover_card(card_id: StringName) -> void:
 
 
 func is_discovered(card_id: StringName) -> bool:
+	if tester_mode():
+		return ContentDB.cards.has(card_id)
 	return profile().get("discovered_cards", []).has(String(card_id))
 
 
 func discovered_count() -> int:
+	if tester_mode():
+		return ContentDB.cards.size()
 	return profile().get("discovered_cards", []).size()
 
 
 func unlocked_legendaries() -> Array:
+	if tester_mode():
+		var tout: Array = []
+		for c: SpellCard in ContentDB.cards_of_rarity(GameEnums.Rarity.LEGENDARY):
+			tout.append(String(c.id))
+		return tout
 	return profile().get("unlocked_legendaries", [])
 
 
@@ -200,16 +215,25 @@ func discover_enemy(enemy_id: StringName) -> void:
 
 
 func is_enemy_discovered(enemy_id: StringName) -> bool:
+	if tester_mode():
+		return ContentDB.enemies.has(enemy_id)
 	return profile().get("discovered_enemies", []).has(String(enemy_id))
 
 
 ## Copie : l'appelant ne doit jamais pouvoir vider la liste du profil en la
 ## triant ou en la modifiant (piege deja rencontre avec offer_choices()).
 func discovered_enemies() -> Array:
+	if tester_mode():
+		var tout: Array = []
+		for id in ContentDB.enemies.keys():
+			tout.append(String(id))
+		return tout
 	return profile().get("discovered_enemies", []).duplicate()
 
 
 func discovered_enemies_count() -> int:
+	if tester_mode():
+		return ContentDB.enemies.size()
 	return profile().get("discovered_enemies", []).size()
 
 
@@ -387,7 +411,15 @@ func set_equipped_passives(ids: Array) -> void:
 
 # --- Campagne ---
 
+## Les niveaux ouverts. En mode testeur, TOUT le catalogue — deduit de
+## ContentDB et jamais recopie : la campagne passe de 7 a 21 niveaux, une liste
+## ecrite a la main serait fausse au chantier suivant.
 func unlocked_levels() -> Array:
+	if tester_mode():
+		var tout: Array = []
+		for id in ContentDB.levels.keys():
+			tout.append(String(id))
+		return tout
 	return profile().get("campaign", {}).get("unlocked_levels", [])
 
 
@@ -441,6 +473,12 @@ func level_record(level_id: StringName) -> Dictionary:
 
 
 func is_level_cleared(level_id: StringName) -> bool:
+	# En mode testeur tout niveau du catalogue compte comme fini : c est ce qui
+	# ouvre le Massacre, via campaign_cleared(). Un seul point de verite plutot
+	# qu un second test dans campaign_cleared(), sinon le compteur affiche par
+	# le profil ("3 / 7") contredirait le bouton Massacre deverrouille.
+	if tester_mode():
+		return ContentDB.levels.has(level_id)
 	var rec: Dictionary = level_record(level_id)
 	return bool(rec.get("cleared_exploration", false)) or bool(rec.get("cleared_massacre", false))
 
@@ -554,6 +592,8 @@ func _account() -> Dictionary:
 
 
 func account_level() -> int:
+	if tester_mode():
+		return tester_account_level()
 	return int(_account().get("level", 1))
 
 
@@ -604,16 +644,27 @@ func set_challenge_stats(stats: Dictionary) -> void:
 
 
 func completed_challenges() -> Array:
+	if tester_mode():
+		var tout: Array = []
+		for id in ContentDB.challenges.keys():
+			tout.append(String(id))
+		return tout
 	return (_account().get("challenges", []) as Array).duplicate()
 
 
 func is_challenge_done(challenge_id: StringName) -> bool:
+	if tester_mode():
+		return ContentDB.challenges.has(challenge_id)
 	return (_account().get("challenges", []) as Array).has(String(challenge_id))
 
 
 ## Valide un defi. Rend false s il etait deja accompli : un defi ne paie qu une
 ## fois, sinon ce serait une source d XP infinie.
 func complete_challenge(challenge_id: StringName) -> bool:
+	# En mode testeur, is_challenge_done() rend deja true pour tout le
+	# catalogue : on sort donc ici sans rien ecrire dans le profil. C est voulu —
+	# le mode ne doit pas graver de succes ni verser d XP dans la progression
+	# reelle, sinon l eteindre ne la rendrait plus intacte.
 	if is_challenge_done(challenge_id):
 		return false
 	var d: ChallengeDef = ContentDB.challenges.get(challenge_id)
@@ -723,3 +774,62 @@ func load_from_dictionary(raw: Dictionary) -> void:
 func reset_profile() -> void:
 	_data = _defaults()
 	profile_changed.emit()
+
+
+## --- MODE TESTEUR ---
+##
+## LE BESOIN. Le controle qualite doit juger une carte legendaire, un niveau
+## tardif ou un cosmetique sans rejouer toute la campagne. C est l attente qui
+## l empeche de tester ce qu on lui demande de tester.
+##
+## UN INTERRUPTEUR, PAS UN BOUTON "TOUT DEBLOQUER". Un bouton ecrirait les
+## deblocages DANS le profil : le testeur y perdrait sa progression reelle, de
+## facon irreversible, et l on ne saurait plus distinguer ce qu il a gagne de ce
+## qu on lui a donne. Ici rien n est ecrit : les accesseurs de deblocage
+## consultent d abord ce drapeau et repondent "tout est ouvert" tant qu il est
+## leve. L eteindre rend la progression reelle a l identique, octet pour octet.
+## C est verrouille par tests/unit/test_tester_mode.gd.
+##
+## TOUT EST DEDUIT DE ContentDB. Aucune liste d ids n est ecrite ici. Le nombre
+## de niveaux, de cartes, de monstres, de succes et de paliers de compte change a
+## chaque chantier ; un mode testeur qui ouvrirait six niveaux sur vingt-et-un
+## serait pire qu inutile, parce qu il donnerait l illusion d avoir tout ouvert.
+##
+## CE QUE LE MODE N OUVRE PAS. Il ne touche ni aux decks du joueur, ni aux
+## cosmetiques EQUIPES, ni au meilleur score de vague : ce sont des choix et des
+## mesures, pas des verrous. Il ne rend pas non plus le mage plus fort — la regle
+## qui protege l equilibrage mesure des sept niveaux tient aussi ici.
+##
+## RANGE DANS LES REGLAGES ET NON DANS LE PROFIL. Le mode n est pas une
+## progression, c est une facon de regarder le profil. Consequence voulue et
+## testee : reset_profile() recree les reglages par defaut, donc il ETEINT le
+## mode. Un profil debloque puis remis a zero redevient vraiment neuf.
+
+const TESTER_MODE_KEY: String = "tester_mode"
+
+
+func tester_mode() -> bool:
+	return bool(settings().get(TESTER_MODE_KEY, false))
+
+
+## Allume ou eteint le mode. N ECRIT RIEN dans le profil : c est tout l interet.
+## Emet profile_changed pour que les ecrans ouverts se reconstruisent — galerie,
+## deck, campagne et profil lisent tous leurs verrous dans les accesseurs
+## ci-dessus, donc un seul signal suffit a les faire basculer.
+func set_tester_mode(on: bool) -> void:
+	if tester_mode() == on:
+		return
+	settings()[TESTER_MODE_KEY] = on
+	profile_changed.emit()
+
+
+## Le niveau de compte que le mode accorde : le palier le plus haut EXIGE par une
+## recompense du catalogue, jamais un nombre en dur. Sans cela, la moitie des
+## cosmetiques resterait injugeable, puisque equip_cosmetic() refuse une
+## recompense dont at_level depasse le niveau.
+func tester_account_level() -> int:
+	var palier: int = 1
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null:
+			palier = maxi(palier, r.at_level)
+	return palier
