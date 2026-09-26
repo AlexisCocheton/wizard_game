@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ret5e"]
+[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_qqroc"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_yc6bl"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_g1h77"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_a83jj"]
+
+[sub_resource type="Resource" id="Resource_ret5e"]
+script = ExtResource("1_ret5e")
+enemy = ExtResource("2_qqroc")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_qqroc"]
+script = ExtResource("1_ret5e")
+enemy = ExtResource("3_yc6bl")
+count = 5
+spawn_delay = 1.8
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_yc6bl"]
+script = ExtResource("1_ret5e")
+enemy = ExtResource("4_g1h77")
+count = 5
+spawn_delay = 1.5
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_a83jj")
+id = &"w9_5_boss"
+duration = 42.0
+entries = Array[ExtResource("1_ret5e")]([SubResource("Resource_ret5e"), SubResource("Resource_qqroc"), SubResource("Resource_yc6bl")])
+difficulty = 1.1
+is_miniboss = false
+is_boss = true

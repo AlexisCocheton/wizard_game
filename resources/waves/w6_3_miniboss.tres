@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_xrtyu"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_00wcg"]
 
-[sub_resource type="Resource" id="Resource_m4fgc"]
+[sub_resource type="Resource" id="Resource_tkamp"]
 script = ExtResource("1_bhffe")
 enemy = ExtResource("2_tkamp")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_xrtyu"]
+[sub_resource type="Resource" id="Resource_m4fgc"]
 script = ExtResource("1_bhffe")
 enemy = ExtResource("2_bhffe")
 count = 1
 spawn_delay = 1.0
 start_offset = 7.0
 
-[sub_resource type="Resource" id="Resource_00wcg"]
+[sub_resource type="Resource" id="Resource_xrtyu"]
 script = ExtResource("1_bhffe")
 enemy = ExtResource("3_m4fgc")
 count = 1
 spawn_delay = 2.5
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_yv7ur"]
+[sub_resource type="Resource" id="Resource_00wcg"]
 script = ExtResource("1_bhffe")
 enemy = ExtResource("4_xrtyu")
 count = 1
@@ -39,7 +39,7 @@ start_offset = 24.0
 script = ExtResource("5_00wcg")
 id = &"w6_3_miniboss"
 duration = 34.0
-entries = Array[ExtResource("1_bhffe")]([SubResource("Resource_m4fgc"), SubResource("Resource_xrtyu"), SubResource("Resource_00wcg"), SubResource("Resource_yv7ur")])
+entries = Array[ExtResource("1_bhffe")]([SubResource("Resource_tkamp"), SubResource("Resource_m4fgc"), SubResource("Resource_xrtyu"), SubResource("Resource_00wcg")])
 difficulty = 1.1
 is_miniboss = true
 is_boss = false

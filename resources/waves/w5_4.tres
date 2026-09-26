@@ -9,42 +9,42 @@
 [ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="5_nho4u"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_t6rs3"]
 
-[sub_resource type="Resource" id="Resource_t6rs3"]
+[sub_resource type="Resource" id="Resource_7h7f2"]
 script = ExtResource("1_x8bun")
 enemy = ExtResource("2_nho4u")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_wb221"]
+[sub_resource type="Resource" id="Resource_t6rs3"]
 script = ExtResource("1_x8bun")
 enemy = ExtResource("3_7h7f2")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_omf55"]
+[sub_resource type="Resource" id="Resource_wb221"]
 script = ExtResource("1_x8bun")
 enemy = ExtResource("3_4mf5q")
 count = 2
 spawn_delay = 2.5
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_lc46y"]
+[sub_resource type="Resource" id="Resource_omf55"]
 script = ExtResource("1_x8bun")
 enemy = ExtResource("4_7h7f2")
 count = 1
 spawn_delay = 2.5
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_0qy3w"]
+[sub_resource type="Resource" id="Resource_lc46y"]
 script = ExtResource("1_x8bun")
 enemy = ExtResource("5_4mf5q")
 count = 1
 spawn_delay = 2.4
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_nufx1"]
+[sub_resource type="Resource" id="Resource_0qy3w"]
 script = ExtResource("1_x8bun")
 enemy = ExtResource("5_nho4u")
 count = 1
@@ -55,7 +55,7 @@ start_offset = 26.0
 script = ExtResource("5_t6rs3")
 id = &"w5_4"
 duration = 30.0
-entries = Array[ExtResource("1_x8bun")]([SubResource("Resource_t6rs3"), SubResource("Resource_wb221"), SubResource("Resource_omf55"), SubResource("Resource_lc46y"), SubResource("Resource_0qy3w"), SubResource("Resource_nufx1")])
+entries = Array[ExtResource("1_x8bun")]([SubResource("Resource_7h7f2"), SubResource("Resource_t6rs3"), SubResource("Resource_wb221"), SubResource("Resource_omf55"), SubResource("Resource_lc46y"), SubResource("Resource_0qy3w")])
 difficulty = 1.3
 is_miniboss = false
 is_boss = false

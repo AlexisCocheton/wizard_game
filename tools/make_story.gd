@@ -10,10 +10,16 @@ extends Node
 ## A relancer apres toute modification du texte :
 ##   godot --headless --path . tools/make_story.tscn
 ##
-## COUVERTURE : prologue + acte 1 (lvl_01..lvl_04), c est-a-dire tout ce qui est
-## jouable aujourd hui. Les actes 2 a 5 sont ecrits dans docs/histoire.md et
-## attendent que leurs niveaux existent — une scene sans niveau ne se jouerait
-## jamais et l etage AUDIT la refuserait.
+## COUVERTURE : prologue + acte 1 COMPLET, ses quatre niveaux. Attention, les
+## quatre niveaux de l acte 1 sont `lvl_01`, `lvl_02`, `lvl_08` et `lvl_09` :
+## le chantier N a choisi de NE PAS renumeroter la campagne pour ne pas casser
+## les sauvegardes, donc c est `LevelDef.act` qui porte le plan de
+## docs/histoire.md, pas le numero du niveau. La route du maire et le dirigeable
+## sont bien les 3e et 4e etapes de l acte, quel que soit leur identifiant.
+##
+## Les actes 2 a 5 sont ecrits dans docs/histoire.md et attendent que leurs
+## niveaux existent — une scene sans niveau ne se jouerait jamais et l etage
+## AUDIT la refuserait.
 
 const DIR: String = "res://resources/story/"
 
@@ -99,8 +105,8 @@ func _prologue() -> void:
 func _acte1() -> void:
 	_lvl_01()
 	_lvl_02()
-	_lvl_03()
-	_lvl_04()
+	_lvl_08()
+	_lvl_09()
 
 
 ## Niveau 1 — tutoriel. L intro pose le lieu et la faiblesse ; l outro fait
@@ -146,8 +152,8 @@ func _lvl_02() -> void:
 ## Niveau 3 — la route. Le maire elargit l echelle : ce n est pas un village, ce
 ## n est meme pas une foret, c est toute l ile, et ca vient d en haut. C est le
 ## niveau qui transforme une defense en VOYAGE.
-func _lvl_03() -> void:
-	_scene("lvl_03_intro", "talk_path", [
+func _lvl_08() -> void:
+	_scene("lvl_08_intro", "talk_path", [
 		_say("Le Maire", MAYOR, "Je n ai rien cache. J ai... attendu."),
 		_say("Le Mage", MAGE, "Vous avez attendu quoi, exactement ?", R),
 		_say("Le Maire", MAYOR, "Que ca s arrete tout seul. Ca arrivait par le ciel, mage. Tous les mois, un peu plus bas."),
@@ -158,7 +164,7 @@ func _lvl_03() -> void:
 		_say("Le Mage", MAGE, "Non.", R),
 		_say("L Enfant", CHILD, "Mon village est derriere moi et il n y a plus rien dedans. Je viens.", R),
 	])
-	_scene("lvl_03_outro", "talk_path", [
+	_scene("lvl_08_outro", "talk_path", [
 		_narr("Au bout de la route, une carcasse de dirigeable coincee dans les arbres comme une baleine echouee. Elle fume encore."),
 		_say("L Enfant", CHILD, "Il y a quelqu un dedans. Ca tape.", R),
 		_say("Le Mage", MAGE, "Ca tape avec un outil. Ce n est pas un monstre, c est un mecanicien."),
@@ -169,8 +175,8 @@ func _lvl_03() -> void:
 ## Niveau 4 — proteger le dirigeable. Fin de l acte : le Gardien de la foret,
 ## l esprit PROTECTEUR de Nuri, attaque. L outro donne la preuve materielle — on
 ## lui a mis quelque chose dans la poitrine — et ouvre l acte 2.
-func _lvl_04() -> void:
-	_scene("lvl_04_intro", "talk_greattree", [
+func _lvl_09() -> void:
+	_scene("lvl_09_intro", "talk_greattree", [
 		_say("Le Rat pilote", RAT, "Bougez pas, touchez a rien, et surtout ne montez pas. Il manque une valve, deux ailerons et ma patience.", R),
 		_say("Le Mage", MAGE, "Combien de temps ?"),
 		_say("Le Rat pilote", RAT, "Le temps qu il faut. Vous, dehors. Moi, dessous.", R),
@@ -178,7 +184,7 @@ func _lvl_04() -> void:
 		_say("L Enfant", CHILD, "C est le Gardien ! C est lui qui protege la foret, il va nous aider !", R),
 		_say("Le Mage", MAGE_GRAVE, "Petit... il marche sur les arbres, pas entre."),
 	])
-	_scene("lvl_04_outro", "talk_greattree", [
+	_scene("lvl_09_outro", "talk_greattree", [
 		_narr("Le Gardien s effondre en un tas de bois mort. Dans sa poitrine ouverte, plantee la comme une echarde, une plaque de metal noir que personne n a taillee ici."),
 		_say("Le Gardien", GUARDIAN, "... pas... voulu...", R),
 		_say("Le Mage", MAGE, "Il n est pas devenu fou. On lui a mis quelque chose dedans."),

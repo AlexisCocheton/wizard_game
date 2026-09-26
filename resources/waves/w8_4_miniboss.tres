@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_oopgf"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_elder.tres" id="2_8vgpx"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="3_wlh2a"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_nntsg"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_s8t15"]
+
+[sub_resource type="Resource" id="Resource_oopgf"]
+script = ExtResource("1_oopgf")
+enemy = ExtResource("2_8vgpx")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8vgpx"]
+script = ExtResource("1_oopgf")
+enemy = ExtResource("3_wlh2a")
+count = 3
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_wlh2a"]
+script = ExtResource("1_oopgf")
+enemy = ExtResource("4_nntsg")
+count = 4
+spawn_delay = 1.6
+start_offset = 17.0
+
+[resource]
+script = ExtResource("5_s8t15")
+id = &"w8_4_miniboss"
+duration = 32.0
+entries = Array[ExtResource("1_oopgf")]([SubResource("Resource_oopgf"), SubResource("Resource_8vgpx"), SubResource("Resource_wlh2a")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

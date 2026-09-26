@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_i4dit"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="2_8pbfh"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_6lerx"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="4_ukbdo"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="5_wxyrk"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_gv58i"]
+
+[sub_resource type="Resource" id="Resource_i4dit"]
+script = ExtResource("1_i4dit")
+enemy = ExtResource("2_8pbfh")
+count = 2
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8pbfh"]
+script = ExtResource("1_i4dit")
+enemy = ExtResource("3_6lerx")
+count = 4
+spawn_delay = 1.5
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_6lerx"]
+script = ExtResource("1_i4dit")
+enemy = ExtResource("4_ukbdo")
+count = 1
+spawn_delay = 1.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_ukbdo"]
+script = ExtResource("1_i4dit")
+enemy = ExtResource("5_wxyrk")
+count = 2
+spawn_delay = 2.5
+start_offset = 18.0
+
+[resource]
+script = ExtResource("6_gv58i")
+id = &"w9_2"
+duration = 27.0
+entries = Array[ExtResource("1_i4dit")]([SubResource("Resource_i4dit"), SubResource("Resource_8pbfh"), SubResource("Resource_6lerx"), SubResource("Resource_ukbdo")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false

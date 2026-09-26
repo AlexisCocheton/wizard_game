@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="4_4tjmr"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_1kv7x"]
 
-[sub_resource type="Resource" id="Resource_fvbxj"]
+[sub_resource type="Resource" id="Resource_4tjmr"]
 script = ExtResource("1_bn875")
 enemy = ExtResource("2_bn875")
 count = 1
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_d42uv"]
+[sub_resource type="Resource" id="Resource_fvbxj"]
 script = ExtResource("1_bn875")
 enemy = ExtResource("3_4tjmr")
 count = 2
 spawn_delay = 3.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_1kv7x"]
+[sub_resource type="Resource" id="Resource_d42uv"]
 script = ExtResource("1_bn875")
 enemy = ExtResource("3_fvbxj")
 count = 1
 spawn_delay = 2.5
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_bot5c"]
+[sub_resource type="Resource" id="Resource_1kv7x"]
 script = ExtResource("1_bn875")
 enemy = ExtResource("4_4tjmr")
 count = 3
@@ -39,7 +39,7 @@ start_offset = 18.0
 script = ExtResource("5_1kv7x")
 id = &"w2_5"
 duration = 28.0
-entries = Array[ExtResource("1_bn875")]([SubResource("Resource_fvbxj"), SubResource("Resource_d42uv"), SubResource("Resource_1kv7x"), SubResource("Resource_bot5c")])
+entries = Array[ExtResource("1_bn875")]([SubResource("Resource_4tjmr"), SubResource("Resource_fvbxj"), SubResource("Resource_d42uv"), SubResource("Resource_1kv7x")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false

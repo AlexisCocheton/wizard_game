@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_r4va7"]
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_i1l8r"]
 
 [resource]
-script = ExtResource("1_r4va7")
-id = &"lvl_03_outro"
+script = ExtResource("1_i1l8r")
+id = &"lvl_08_outro"
 scene_background = "talk_path"
 lines = Array[Dictionary]([{
 "portrait": &"",

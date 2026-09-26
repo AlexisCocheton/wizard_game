@@ -7,28 +7,28 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_b8hxl"]
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="5_sppjr"]
 
-[sub_resource type="Resource" id="Resource_n7kso"]
+[sub_resource type="Resource" id="Resource_sppjr"]
 script = ExtResource("1_ilf2d")
 enemy = ExtResource("2_ilf2d")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_b8hxl"]
+[sub_resource type="Resource" id="Resource_n7kso"]
 script = ExtResource("1_ilf2d")
 enemy = ExtResource("3_sppjr")
 count = 4
 spawn_delay = 2.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_8be87"]
+[sub_resource type="Resource" id="Resource_b8hxl"]
 script = ExtResource("1_ilf2d")
 enemy = ExtResource("4_n7kso")
 count = 3
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_o48g5"]
+[sub_resource type="Resource" id="Resource_8be87"]
 script = ExtResource("1_ilf2d")
 enemy = ExtResource("5_sppjr")
 count = 1
@@ -39,7 +39,7 @@ start_offset = 30.0
 script = ExtResource("5_b8hxl")
 id = &"w2_7_boss"
 duration = 45.0
-entries = Array[ExtResource("1_ilf2d")]([SubResource("Resource_n7kso"), SubResource("Resource_b8hxl"), SubResource("Resource_8be87"), SubResource("Resource_o48g5")])
+entries = Array[ExtResource("1_ilf2d")]([SubResource("Resource_sppjr"), SubResource("Resource_n7kso"), SubResource("Resource_b8hxl"), SubResource("Resource_8be87")])
 difficulty = 1.25
 is_miniboss = false
 is_boss = true

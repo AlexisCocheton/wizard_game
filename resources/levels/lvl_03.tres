@@ -251,8 +251,8 @@ n ont pas efface ton royaume par haine. Ils l ont fait pour le STOCK."
 outro_text = "Une Gelee prisonniere d un cercle de sel t a regarde la 
 liberer, puis t a montre comment un corps se separe et se rassemble. Les registres, 
 eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
-intro_story = &"lvl_03_intro"
-outro_story = &"lvl_03_outro"
+intro_story = &""
+outro_story = &""
 terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("24_8xb40")]([SubResource("Resource_0sax4"), SubResource("Resource_76r2s"), SubResource("Resource_ufmgy"), SubResource("Resource_4ljjb"), SubResource("Resource_keyfv"), SubResource("Resource_eqdet")])

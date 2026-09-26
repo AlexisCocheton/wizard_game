@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_3j0if"]
+[ext_resource type="Resource" path="res://resources/enemies/emberlord.tres" id="2_uuewf"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="3_hh4py"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="4_rj3og"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_rembt"]
+
+[sub_resource type="Resource" id="Resource_3j0if"]
+script = ExtResource("1_3j0if")
+enemy = ExtResource("2_uuewf")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_uuewf"]
+script = ExtResource("1_3j0if")
+enemy = ExtResource("3_hh4py")
+count = 3
+spawn_delay = 2.0
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_hh4py"]
+script = ExtResource("1_3j0if")
+enemy = ExtResource("4_rj3og")
+count = 4
+spawn_delay = 1.6
+start_offset = 18.0
+
+[resource]
+script = ExtResource("5_rembt")
+id = &"w9_3_miniboss"
+duration = 30.0
+entries = Array[ExtResource("1_3j0if")]([SubResource("Resource_3j0if"), SubResource("Resource_uuewf"), SubResource("Resource_hh4py")])
+difficulty = 1.15
+is_miniboss = true
+is_boss = false

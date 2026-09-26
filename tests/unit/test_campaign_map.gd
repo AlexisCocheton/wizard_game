@@ -38,6 +38,7 @@ func run() -> void:
 	_test_seuls_les_debloques_sont_cliquables()
 	_test_l_ouverture_se_cale_sur_l_acte_en_cours()
 	_test_le_panneau_bascule_carte_detail()
+	_test_les_noms_d_actes_suivent_le_document()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 
@@ -279,3 +280,64 @@ func _test_le_panneau_bascule_carte_detail() -> void:
 	detach(p)
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
+
+
+## Le nom d un acte affiche a l ecran doit etre celui de `docs/histoire.md`.
+##
+## Le defaut que ceci empeche de revenir : `ACT_NAMES` datait d une
+## nomenclature en QUATRE actes abandonnee depuis. La carte annoncait
+## "Le Monde volant" devant la foret de Nuri et "Le Grand Cimetiere" devant les
+## Sky Lands — trois noms sur cinq nommaient le MAUVAIS LIEU. Rien ne plantait,
+## aucun test ne comparait l interface au document : un joueur qui lisait
+## l histoire et jouait la campagne voyait deux jeux differents.
+##
+## Le test lit le DOCUMENT, il ne recopie pas les noms : recopier les figerait
+## une seconde fois, et la prochaine reecriture du document les separerait de
+## nouveau sans que rien ne rougisse.
+func _test_les_noms_d_actes_suivent_le_document() -> void:
+	var f := FileAccess.open("res://docs/histoire.md", FileAccess.READ)
+	ok(f != null, "docs/histoire.md est lisible")
+	if f == null:
+		return
+	var texte: String = f.get_as_text()
+	f.close()
+
+	# Les titres de section : "## 3. ACTE 1 — La foret de Nuri"
+	var lieux: Dictionary = {}
+	for ligne in texte.split("
+"):
+		var l: String = ligne.strip_edges()
+		if not l.begins_with("##"):
+			continue
+		var i: int = l.find("ACTE ")
+		if i < 0:
+			continue
+		var reste: String = l.substr(i + 5)
+		var num: int = int(reste)
+		var tiret: int = reste.find("—")
+		if tiret < 0:
+			tiret = reste.find("-")
+		if num <= 0 or tiret < 0:
+			continue
+		lieux[num] = reste.substr(tiret + 1).strip_edges()
+
+	ok(lieux.size() >= 5, "le document decrit au moins 5 actes (%d)" % lieux.size())
+	for acte in lieux:
+		var attendu: String = String(lieux[acte])
+		var affiche: String = String(CampaignMap.ACT_NAMES.get(acte, ""))
+		ok(affiche != "", "l acte %d a un nom a l ecran" % acte)
+		# On compare sur les MOTS SIGNIFIANTS : le document ecrit des accents et
+		# l ecran n en a pas, et la ponctuation differe. Ce qui doit coincider,
+		# c est le LIEU nomme.
+		var mots: PackedStringArray = attendu.to_lower().split(" ", false)
+		for mot in mots:
+			# Les mots outils ne prouvent rien.
+			if mot.length() < 4:
+				continue
+			var sans_accent: String = mot
+			for paire in [["é", "e"], ["è", "e"], ["ê", "e"], ["à", "a"],
+					["î", "i"], ["ô", "o"], ["û", "u"], ["ç", "c"]]:
+				sans_accent = sans_accent.replace(paire[0], paire[1])
+			ok(affiche.to_lower().contains(sans_accent),
+				"l acte %d affiche \"%s\" et le document dit \"%s\" (mot manquant : %s)"
+				% [acte, affiche, attendu, sans_accent])

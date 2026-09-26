@@ -530,10 +530,39 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
 - **Aucun nouveau type de monstre.** Les 21 existants portent les 5 actes : la
   narration re-contextualise (le Gardien devient un conscrit retourne, Chronos devient
   de la vermine a l acte 5).
-- **Etat actuel du code** : 7 niveaux existent (`lvl_01`..`lvl_07`) sur les 21 que
-  decrit ce document. Les actes 2 a 5 sont la **cible** ; le chantier H produit les
-  niveaux manquants. Les scenes generees aujourd hui couvrent le prologue et
-  l acte 1 (`lvl_01`..`lvl_04`), qui sont jouables.
+- **Etat actuel du code** (chantier N) : **9 niveaux** existent sur les 21 que decrit
+  ce document. L **acte 1 est complet** — ses quatre etapes sont livrees, testees et
+  capturees. Les actes 2 a 5 restent la **cible** : 12 niveaux a ecrire.
+
+- **LES IDENTIFIANTS NE SUIVENT PAS L ORDRE DE JEU, ET C EST VOULU.** Le chantier N a
+  choisi de ne PAS renumeroter la campagne : les identifiants `lvl_01`..`lvl_07` sont
+  graves dans les sauvegardes des joueurs (`levels_done`, `current_level`,
+  `stories_seen`). Les renumeroter pour coller aux lieux de ce document aurait casse la
+  progression de quiconque a deja joue, pour un gain que le joueur ne voit jamais — il
+  lit le NOM du niveau et l ACTE, pas l identifiant. C est donc `LevelDef.act` qui porte
+  le plan de ce document.
+
+  | Acte | Etapes du document | Niveaux livres, dans l ordre de jeu |
+  |---|---|---|
+  | 1 — La foret de Nuri | 4 | `lvl_01`, `lvl_02`, `lvl_08`, `lvl_09` — **complet** |
+  | 2 — Les Sky Lands | 4 | `lvl_03`, `lvl_04` (2 manquants) |
+  | 3 — Le cimetiere de Tombol | 5 | `lvl_05`, `lvl_06` (3 manquants) |
+  | 4 — Le monde demoniaque | 5 | `lvl_07` (4 manquants) |
+  | 5 — L espace divin | 3 | aucun (3 manquants) |
+
+  `tests/unit/test_campaign_acts.gd` verrouille ce tableau : sa table `ACTES_LIVRES`
+  dit quels actes sont declares finis, et le compte doit alors tomber juste.
+
+- **Un boss de campagne n est pas obligatoire a chaque niveau.** Le catalogue compte
+  7 boss et 8 mini-boss pour 21 niveaux vises, et `test_bosses` refuse qu un adversaire
+  mene deux niveaux. On reserve donc `is_boss` aux **fins d acte** — ce que ce document
+  decrit deja : l acte 1 se ferme sur le Gardien, il n aligne pas quatre boss.
+  Les niveaux intermediaires culminent sur un mini-boss.
+
+- Les scenes generees couvrent le prologue et l acte 1 entier. Attention : la route du
+  maire et le dirigeable sont les scenes `lvl_08_*` et `lvl_09_*`, pas `lvl_03_*` /
+  `lvl_04_*` — ces dernieres ont ete supprimees, elles faisaient parler le maire du
+  dirigeable devant l ossuaire de l acte 2.
 - Les scenes de visual novel sont des `DialogueDef` dans `resources/story/`, generees
   par `tools/make_story.gd`. Un niveau les nomme par `intro_story` / `outro_story`.
 - `SceneRouter` seul sait qu une scene s intercale : ni le menu, ni `GameController`,

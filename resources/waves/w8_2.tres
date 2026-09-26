@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ogruq"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="2_o10ju"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_iqckg"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_2oqww"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_6w6c6"]
+
+[sub_resource type="Resource" id="Resource_ogruq"]
+script = ExtResource("1_ogruq")
+enemy = ExtResource("2_o10ju")
+count = 2
+spawn_delay = 4.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_o10ju"]
+script = ExtResource("1_ogruq")
+enemy = ExtResource("3_iqckg")
+count = 4
+spawn_delay = 1.6
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_iqckg"]
+script = ExtResource("1_ogruq")
+enemy = ExtResource("4_2oqww")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[resource]
+script = ExtResource("5_6w6c6")
+id = &"w8_2"
+duration = 26.0
+entries = Array[ExtResource("1_ogruq")]([SubResource("Resource_ogruq"), SubResource("Resource_o10ju"), SubResource("Resource_iqckg")])
+difficulty = 1.25
+is_miniboss = false
+is_boss = false

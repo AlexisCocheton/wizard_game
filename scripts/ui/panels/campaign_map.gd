@@ -83,11 +83,17 @@ const STAR_ICON: int = 3
 const DOT_OPEN: Color = Color(0.95, 0.80, 0.35)
 const DOT_LOCKED: Color = Color(0.42, 0.42, 0.46)
 
+## Les noms viennent de `docs/histoire.md`, sections 3 a 7, et doivent le rester.
+##
+## Ils dataient d une nomenclature en QUATRE actes abandonnee depuis : la carte
+## annoncait "Le Monde volant" devant la foret de Nuri, et "Le Grand Cimetiere"
+## devant les Sky Lands. Trois noms sur cinq nommaient le mauvais lieu — un
+## joueur qui lit le document et joue le jeu voyait deux campagnes differentes.
 const ACT_NAMES: Dictionary = {
-	1: "ACTE I  -  Le Monde volant",
-	2: "ACTE II  -  Le Grand Cimetiere",
-	3: "ACTE III  -  Le Monde demoniaque",
-	4: "ACTE IV  -  Le Monde d origine",
+	1: "ACTE I  -  La foret de Nuri",
+	2: "ACTE II  -  Les Sky Lands",
+	3: "ACTE III  -  Le cimetiere de Tombol",
+	4: "ACTE IV  -  Le monde demoniaque",
 	5: "ACTE V  -  L espace divin",
 }
 

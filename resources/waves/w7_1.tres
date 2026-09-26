@@ -8,35 +8,35 @@
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="4_dd0vv"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_7jwqh"]
 
-[sub_resource type="Resource" id="Resource_5kdi7"]
+[sub_resource type="Resource" id="Resource_gxc5x"]
 script = ExtResource("1_3r836")
 enemy = ExtResource("2_hihiq")
 count = 4
 spawn_delay = 1.8
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_5hhe2"]
+[sub_resource type="Resource" id="Resource_dd0vv"]
 script = ExtResource("1_3r836")
 enemy = ExtResource("3_dd0vv")
 count = 3
 spawn_delay = 2.2
 start_offset = 5.0
 
-[sub_resource type="Resource" id="Resource_uvsyy"]
+[sub_resource type="Resource" id="Resource_7jwqh"]
 script = ExtResource("1_3r836")
 enemy = ExtResource("4_7jwqh")
 count = 3
 spawn_delay = 1.8
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_hkqix"]
+[sub_resource type="Resource" id="Resource_5kdi7"]
 script = ExtResource("1_3r836")
 enemy = ExtResource("3_gxc5x")
 count = 4
 spawn_delay = 1.5
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_4b646"]
+[sub_resource type="Resource" id="Resource_5hhe2"]
 script = ExtResource("1_3r836")
 enemy = ExtResource("4_dd0vv")
 count = 1
@@ -47,7 +47,7 @@ start_offset = 24.0
 script = ExtResource("5_7jwqh")
 id = &"w7_1"
 duration = 28.0
-entries = Array[ExtResource("1_3r836")]([SubResource("Resource_5kdi7"), SubResource("Resource_5hhe2"), SubResource("Resource_uvsyy"), SubResource("Resource_hkqix"), SubResource("Resource_4b646")])
+entries = Array[ExtResource("1_3r836")]([SubResource("Resource_gxc5x"), SubResource("Resource_dd0vv"), SubResource("Resource_7jwqh"), SubResource("Resource_5kdi7"), SubResource("Resource_5hhe2")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false

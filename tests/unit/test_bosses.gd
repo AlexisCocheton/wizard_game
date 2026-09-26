@@ -673,11 +673,24 @@ func _test_chaque_niveau_a_son_propre_adversaire() -> void:
 	ok(vus_mini.size() >= 5,
 		"au moins 5 mini-boss differents (%d)" % vus_mini.size())
 
-	# Le Gardien de la foret MEURT en lvl_04 (docs/histoire.md : "il s effondre
-	# en un tas de bois mort", et la plaque de metal dans sa poitrine lance
-	# l intrigue). Il ne doit reapparaitre dans aucun niveau suivant.
+	# Le Gardien de la foret MEURT A LA FIN DE L ACTE 1 (docs/histoire.md
+	# section 3 : "il s effondre en un tas de bois mort", et la plaque de metal
+	# dans sa poitrine lance toute l intrigue). Il ne doit reapparaitre dans
+	# aucun acte suivant.
+	#
+	# CHANTIER N — la regle porte desormais sur l ACTE et non sur le NUMERO du
+	# niveau. Elle comparait `String(lv.id) <= "lvl_04"`, ce qui ne marchait que
+	# tant que l ordre des identifiants etait l ordre de jeu. Depuis que l acte 1
+	# compte quatre niveaux (`lvl_01`, `lvl_02`, `lvl_08`, `lvl_09` — on n a pas
+	# renumerote pour ne pas casser les sauvegardes), cette comparaison
+	# lexicographique aurait interdit au Gardien de fermer son propre acte tout
+	# en le laissant passer dans les actes 2 a 4. Elle disait donc EXACTEMENT
+	# l inverse de la regle qu elle pretendait tenir.
+	#
+	# `lv.act > 1` est la formulation juste, et elle est aussi plus SEVERE :
+	# aucun identifiant ne peut la contourner.
 	for lv: LevelDef in ContentDB.levels.values():
-		if String(lv.id) <= "lvl_04":
+		if lv.act <= 1:
 			continue
 		for w: WaveDef in lv.waves:
 			if w == null or not (w.is_boss or w.is_miniboss):
@@ -685,8 +698,8 @@ func _test_chaque_niveau_a_son_propre_adversaire() -> void:
 			for e: WaveEntry in w.entries:
 				if e != null and e.enemy != null:
 					not_ok(e.enemy.id == &"warden",
-						"%s : le Gardien est mort en lvl_04, il ne revient pas"
-						% lv.id)
+						"%s (acte %d) : le Gardien est mort a la fin de l acte 1,"
+						% [lv.id, lv.act] + " il ne revient pas")
 
 
 # --- CHANTIER I2 : les monstres du 26 septembre sont-ils RENCONTRES ? ------

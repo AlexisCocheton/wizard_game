@@ -835,8 +835,26 @@ func _cards() -> void:
 	ember.sfx_key = &"fire_ignite"
 	_save(ember, "res://resources/cards/common/ember_pool.tres")
 
+	# LA DESCRIPTION DISAIT UN TOTAL, LE CODE LIT UN DEBIT.
+	#
+	# Pour la cle `ground_zone`, la magnitude est des degats PAR SECONDE :
+	# `battlefield.gd` fait `_hit(e, z["dps"] * wd, ...)`. Sur 0,6 s, 26 par
+	# seconde ne font donc que ~16 degats reels, alors que la carte annoncait
+	# « Explosion de 26 degats ». Les six autres cartes de zone ecrivent bien
+	# « par seconde » (voir `ember_pool` juste au-dessus) : la Boule de feu etait
+	# la seule a annoncer un total sec, et c est une COMMUNE — l une des
+	# premieres cartes que le joueur rencontre, donc celle sur laquelle il
+	# apprend a evaluer ses sorts.
+	#
+	# ON CORRIGE LE TEXTE, PAS LE CHIFFRE. Porter la magnitude a 43 pour honorer
+	# les 26 degats annonces aurait rendu la carte ~65 % plus forte dans les six
+	# decks qui la portent : c est de l equilibrage, et le testeur l a
+	# explicitement garde pour lui. Le texte, lui, peut dire la verite sans rien
+	# deplacer. Si quelqu un veut ensuite faire de cette carte une vraie
+	# explosion en coup unique, c est une decision d equilibrage a mesurer au
+	# banc, pas une correction de libelle.
 	var fireball := _card("fireball", "Boule de feu",
-		"Explosion de 26 degats de FEU dans une zone visee.", GameEnums.Rarity.COMMON, 1.4,
+		"Zone infligeant 26 degats de FEU par seconde pendant 0.6 s.", GameEnums.Rarity.COMMON, 1.4,
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
 		[_spec("ground_zone", 26.0, 0.6, 170.0)], 2)
 	fireball.fx_key = &"fireball_hit"
@@ -1832,7 +1850,12 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	])
 	lvl2.objectives = [o1, o2, o3]
 	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
-	lvl2.next_levels = [&"lvl_03"]
+	# CHANTIER N — le village mene maintenant a LA ROUTE DU MAIRE (`lvl_08`), qui
+	# est le troisieme niveau de l acte 1 dans docs/histoire.md. C est `lvl_09`,
+	# fin de l acte, qui rendra la main a l acte 2 en `lvl_03`. Le numero ne suit
+	# plus l ordre de jeu — c est le prix assume de ne pas renumeroter, et il se
+	# paie ici, sur deux lignes, plutot que dans les sauvegardes des joueurs.
+	lvl2.next_levels = [&"lvl_08"]
 	lvl2.act = 1
 	lvl2.subtitle = "L ile qui a commence a tomber"
 	lvl2.intro_text = "La Tour des Sables se decroche : le temps y coule de travers, \
@@ -1842,6 +1865,10 @@ Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
 le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 	_save(lvl2, "res://resources/levels/lvl_02.tres")
 
+	# CHANTIER N — l acte 1 compte QUATRE niveaux (docs/histoire.md section 3),
+	# pas deux. `lvl_08` et `lvl_09` le completent ; ils portent `act = 1` et se
+	# chainent derriere `lvl_02`, puis rendent la main a l acte 2 en `lvl_03`.
+	_acte_1_suite(o1, o2, o3, C, E)
 	_acte_2(o1, o2, o3, C, E)
 	_acte_3(o1, o2, o3, C, E)
 	_acte_final(o1, o2, o3, C, E)
@@ -1970,10 +1997,18 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	lvl3.id = &"lvl_03"
 	lvl3.display_name = "Ossuaire des Marees"
 	lvl3.terrain = "sand"
-	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
-	# acte 1). Generees par tools/make_story.gd.
-	lvl3.intro_story = &"lvl_03_intro"
-	lvl3.outro_story = &"lvl_03_outro"
+	# CHANTIER N — PAS DE SCENE POUR L INSTANT, et c est un correctif, pas un
+	# oubli. Ce niveau portait `lvl_03_intro` / `lvl_03_outro`, c est-a-dire LA
+	# ROUTE DU MAIRE de l acte 1 : le maire y parlait du dirigeable devant un
+	# ossuaire de l acte 2. Les deux contenus se contredisaient depuis que
+	# docs/histoire.md a ete reecrit en 5 actes, et personne ne le voyait parce
+	# qu aucun test ne comparait le LIEU de la scene au lieu du niveau.
+	#
+	# Ces scenes appartiennent desormais a `lvl_08` / `lvl_09`, qui sont bien la
+	# route et le dirigeable. Ce niveau attend les dialogues de l acte 2, ecrits
+	# dans docs/histoire.md section 4 mais pas encore mis en scene. Un niveau
+	# sans texte reste parfaitement jouable (voir `LevelDef`), alors qu un niveau
+	# qui raconte le mauvais acte ment au joueur.
 	lvl3.backdrop = "act2_graveyard"
 	lvl3.waves = [a1, a2, a3, a4, a5, a6]
 	lvl3.enemy_pool = [
@@ -2150,10 +2185,18 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	lvl4.id = &"lvl_04"
 	lvl4.display_name = "Le Grand Appel"
 	lvl4.terrain = "sand"
-	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
-	# acte 1). Generees par tools/make_story.gd.
-	lvl4.intro_story = &"lvl_04_intro"
-	lvl4.outro_story = &"lvl_04_outro"
+	# CHANTIER N — PAS DE SCENE POUR L INSTANT, et c est un correctif, pas un
+	# oubli. Ce niveau portait `lvl_03_intro` / `lvl_03_outro`, c est-a-dire LA
+	# ROUTE DU MAIRE de l acte 1 : le maire y parlait du dirigeable devant un
+	# ossuaire de l acte 2. Les deux contenus se contredisaient depuis que
+	# docs/histoire.md a ete reecrit en 5 actes, et personne ne le voyait parce
+	# qu aucun test ne comparait le LIEU de la scene au lieu du niveau.
+	#
+	# Ces scenes appartiennent desormais a `lvl_08` / `lvl_09`, qui sont bien la
+	# route et le dirigeable. Ce niveau attend les dialogues de l acte 2, ecrits
+	# dans docs/histoire.md section 4 mais pas encore mis en scene. Un niveau
+	# sans texte reste parfaitement jouable (voir `LevelDef`), alors qu un niveau
+	# qui raconte le mauvais acte ment au joueur.
 	lvl4.backdrop = "act2_graveyard"
 	lvl4.waves = [b1, b2, b3, b4, b5, b6]
 	lvl4.enemy_pool = [
@@ -2774,3 +2817,286 @@ remontant le temps, tu es devenu exactement ce que la machine voulait supprimer 
 fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu \
 laisses la boucle ouverte."
 	_save(lvl7, "res://resources/levels/lvl_07.tres")
+
+
+## =====================================================================
+## ACTE I, SUITE — LA FORET DE NURI  (chantier N)
+##
+## `docs/histoire.md` section 3 decrit QUATRE niveaux pour l acte 1. Le jeu n en
+## avait que deux : une compression, pas un plan. Ces deux niveaux la completent
+## et ferment l acte sur la mort du Gardien, comme le document l exige.
+##
+## POURQUOI `lvl_08` ET `lvl_09` ET NON `lvl_03` / `lvl_04` : les identifiants
+## `lvl_01..lvl_07` sont graves dans les sauvegardes des joueurs
+## (`levels_done`, `current_level`, `stories_seen`). Renumeroter pour coller aux
+## LIEUX du document aurait casse la progression de quiconque a deja joue, pour
+## un gain purement cosmetique — le joueur ne lit jamais l identifiant, il lit
+## le NOM du niveau et l ACTE qui le porte. Les niveaux neufs s ajoutent donc a
+## la suite, et c est `LevelDef.act` qui raconte le plan. Voir
+## `tests/unit/test_campaign_acts.gd` pour l argumentaire complet.
+##
+## POURQUOI PAS DE VAGUE `is_boss` SUR `lvl_08` : `test_bosses` exige que chaque
+## niveau ait SON adversaire, et le catalogue ne compte que 7 boss et 8
+## mini-boss pour 21 niveaux vises. Un boss de campagne n est PAS obligatoire
+## (`LevelDef.boss_wave()` rend null sans broncher, et le panneau de campagne
+## l affiche « ? »). On reserve donc `is_boss` aux FINS D ACTE — ce que le
+## document decrit deja : l acte 1 se ferme sur le Gardien, pas sur quatre boss
+## d affilee. `lvl_08` culmine sur un mini-boss, `lvl_09` porte le boss d acte.
+## =====================================================================
+func _acte_1_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
+		C: String, E: String) -> void:
+
+	# ---------- lvl_08 : La route du maire ----------
+	#
+	# Document, section 3 : « La pression est le NOMBRE : premiere vraie lecon de
+	# zone. » Tout le niveau est construit sur ce seul enonce — la Gelee qui se
+	# divise, la Ruche qui explose en lutins, les nuees de rats. Aucun gros
+	# monstre : un joueur qui repond au mono-cible perd du temps a chaque corps,
+	# et c est exactement la lecon.
+	#
+	# La difficulte reprend la courbe LA OU LE NIVEAU 2 LA LAISSE. Le garde-fou
+	# `test_balance` ne surveille que lvl_01 et lvl_02, mais le principe vaut
+	# partout : aucune vague ne double la precedente.
+
+	var n1 := WaveDef.new()
+	n1.id = &"w8_1"
+	n1.duration = 24.0
+	n1.difficulty = 1.15
+	# Ouverture douce et DEJA divisible : la premiere Gelee tombe seule, pour que
+	# le joueur voie la division se produire sans rien d autre a l ecran.
+	n1.entries = [
+		_entry(E + "jelly.tres", 2, 3.0),
+		_entry(E + "rat_swarm.tres", 2, 2.4, 8.0),
+	]
+	_save(n1, "res://resources/waves/w8_1.tres")
+
+	var n2 := WaveDef.new()
+	n2.id = &"w8_2"
+	n2.duration = 26.0
+	n2.difficulty = 1.25
+	# La Ruche entre ici : elle EXPLOSE en lutins a la mort. Le joueur qui la tue
+	# de loin voit apparaitre le probleme qu il croyait resoudre.
+	n2.entries = [
+		_entry(E + "hive.tres", 2, 4.0),
+		_entry(E + "sprite.tres", 4, 1.6, 7.0),
+		_entry(E + "hopper.tres", 2, 2.0, 16.0),
+	]
+	_save(n2, "res://resources/waves/w8_2.tres")
+
+	var n3 := WaveDef.new()
+	n3.id = &"w8_3"
+	n3.duration = 27.0
+	n3.difficulty = 1.35
+	# Les trois sources de nombre EN MEME TEMPS. C est le pic de la lecon, et
+	# c est volontairement avant le mini-boss : la vague suivante change de
+	# nature, elle ne surencherit pas.
+	n3.entries = [
+		_entry(E + "jelly.tres", 2, 3.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 7.0),
+		_entry(E + "hive.tres", 1, 1.0, 15.0),
+		_entry(E + "gnome.tres", 4, 1.6, 19.0),
+	]
+	_save(n3, "res://resources/waves/w8_3.tres")
+
+	var n4 := WaveDef.new()
+	n4.id = &"w8_4_miniboss"
+	n4.duration = 32.0
+	n4.difficulty = 1.1
+	n4.is_miniboss = true
+	# L ANCIEN DU TOTEM ferme le niveau. C est le seul mini-boss encore libre qui
+	# reponde a la lecon du niveau par son CONTRAIRE : il porte une aura qui rend
+	# ses voisins invulnerables. Apres trois vagues ou il fallait frapper large,
+	# le joueur doit soudain frapper PRECIS, sur le porteur d aura, avant de
+	# pouvoir toucher quoi que ce soit d autre.
+	#
+	# `emberlord` et `skyreaver` etaient les deux autres candidats libres :
+	# l Ecumeur appartient deja aux vagues du niveau 2 (il y gagne son monde pour
+	# le Massacre) et le Seigneur des braises ferme le niveau suivant.
+	#
+	# Escorte LEGERE et divisible : elle donne a l aura quelque chose a proteger
+	# sans doubler les PV de la vague precedente.
+	n4.entries = [
+		_entry(E + "totem_elder.tres", 1, 1.0),
+		_entry(E + "jelly_mid.tres", 3, 2.0, 8.0),
+		_entry(E + "sprite.tres", 4, 1.6, 17.0),
+	]
+	_save(n4, "res://resources/waves/w8_4_miniboss.tres")
+
+	var lvl8 := LevelDef.new()
+	lvl8.id = &"lvl_08"
+	lvl8.display_name = "La route du maire"
+	lvl8.terrain = "grass"
+	lvl8.backdrop = "act1_sky"
+	lvl8.intro_story = &"lvl_08_intro"
+	lvl8.outro_story = &"lvl_08_outro"
+	lvl8.waves = [n1, n2, n3, n4]
+	# Le pool sert la generation procedurale ET `build_membership()` : tout ce
+	# qui descend dans les vagues ecrites doit s y retrouver, sinon le monstre
+	# n appartient a aucun monde du Massacre.
+	lvl8.enemy_pool = [
+		load(E + "jelly.tres"), load(E + "jelly_mid.tres"), load(E + "jelly_small.tres"),
+		load(E + "hive.tres"), load(E + "rat_swarm.tres"), load(E + "sprite.tres"),
+		load(E + "hopper.tres"), load(E + "gnome.tres"),
+		load(E + "totem_elder.tres"),
+	]
+	# Le deck du niveau du NOMBRE est un deck de ZONES. Il compte 15 cartes, au
+	# plus 3 epiques et 3 legendaires (DeckRules) : ici 2 epiques, 0 legendaire —
+	# la legendaire se GAGNE aux objectifs, elle n est pas offerte au depart.
+	lvl8.exploration_deck = _deck([
+		[C + "common/arcane_bolt.tres", 1],
+		[C + "common/frost_field.tres", 2],
+		[C + "common/ember_pool.tres", 2],
+		[C + "common/fireball.tres", 3],
+		[C + "common/frost_rain.tres", 2],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/brazier.tres", 1],
+		[C + "epic/maelstrom.tres", 2],
+	])
+	lvl8.objectives = [o1, o2, o3]
+	lvl8.legendary_reward = load(C + "legendary/hourglass_shard.tres")
+	lvl8.next_levels = [&"lvl_09"]
+	lvl8.act = 1
+	lvl8.subtitle = "Ce n est pas la foret qui est attaquee"
+	lvl8.intro_text = "Le maire s est tu pendant des mois. Ce n est pas Nuri qui \
+tombe, c est toute l ile, et ca vient d en haut. Entre la grange et la clairiere, la \
+route grouille : des gelees qui se coupent en deux, des ruches qui eclatent. Frappe \
+large ou ne frappe pas."
+	lvl8.outro_text = "Au bout de la route, une carcasse de dirigeable coincee dans \
+les arbres. Elle fume encore, et quelque chose tape dedans avec un outil. Loin \
+derriere, dans la foret, quelque chose de tres grand se met debout."
+	_save(lvl8, "res://resources/levels/lvl_08.tres")
+
+	# ---------- lvl_09 : Proteger le dirigeable ----------
+	#
+	# Document, section 3 : « Le joueur TIENT UNE POSITION pendant un compte a
+	# rebours narratif », puis le Gardien de la foret arrive. C est la fin de
+	# l acte 1 et la premiere preuve dure de l intrigue : on ne devient pas fou
+	# en six jours, on est RETOURNE.
+	#
+	# LE GARDIEN REVIENT ICI, ET C EST SA SEULE PLACE. `test_bosses` interdit
+	# nommement qu il reapparaisse APRES `lvl_04` — la regle etait ecrite quand
+	# `lvl_04` fermait l acte 1. Ce niveau EST desormais cette fin : l assertion
+	# est mise a jour dans le meme changement, et le Gardien ne figure dans aucun
+	# niveau d un acte ulterieur.
+
+	var m1 := WaveDef.new()
+	m1.id = &"w9_1"
+	m1.duration = 25.0
+	m1.difficulty = 1.25
+	# On tient une position : les vagues arrivent en PAQUETS espaces, pas en
+	# flux continu. Chaque paquet laisse au rat le temps de « reparer ».
+	m1.entries = [
+		_entry(E + "gnome.tres", 5, 1.8),
+		_entry(E + "hopper.tres", 3, 2.0, 11.0),
+	]
+	_save(m1, "res://resources/waves/w9_1.tres")
+
+	var m2 := WaveDef.new()
+	m2.id = &"w9_2"
+	m2.duration = 27.0
+	m2.difficulty = 1.35
+	# Le Corniste revient PRESSER : c est le rappel de la lecon du niveau 2, au
+	# moment ou le joueur a autre chose a surveiller.
+	m2.entries = [
+		_entry(E + "rat_swarm.tres", 2, 2.2),
+		_entry(E + "sprite.tres", 4, 1.5, 7.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 14.0),
+		_entry(E + "jelly.tres", 2, 2.5, 18.0),
+	]
+	_save(m2, "res://resources/waves/w9_2.tres")
+
+	var m3 := WaveDef.new()
+	m3.id = &"w9_3_miniboss"
+	m3.duration = 30.0
+	m3.difficulty = 1.15
+	m3.is_miniboss = true
+	# LE SEIGNEUR DES BRAISES. Dernier mini-boss libre du catalogue, et le seul
+	# qui annonce le Gardien sans le doubler : il BRULE le terrain, donc il prive
+	# le joueur de la position qu on lui demande justement de tenir. C est la
+	# meme question que le boss posera en plus gros.
+	m3.entries = [
+		_entry(E + "emberlord.tres", 1, 1.0),
+		_entry(E + "hopper.tres", 3, 2.0, 9.0),
+		_entry(E + "gnome.tres", 4, 1.6, 18.0),
+	]
+	_save(m3, "res://resources/waves/w9_3_miniboss.tres")
+
+	var m4 := WaveDef.new()
+	m4.id = &"w9_4"
+	m4.duration = 28.0
+	m4.difficulty = 1.45
+	# Le dernier palier avant le Gardien. Il monte SANS doubler : le boss est
+	# deja un saut, il ne faut pas deux sauts d affilee.
+	m4.entries = [
+		_entry(E + "hive.tres", 2, 3.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 15.0),
+		_entry(E + "hopper.tres", 3, 1.8, 20.0),
+	]
+	_save(m4, "res://resources/waves/w9_4.tres")
+
+	var m5 := WaveDef.new()
+	m5.id = &"w9_5_boss"
+	m5.duration = 42.0
+	m5.difficulty = 1.1
+	m5.is_boss = true
+	# LE GARDIEN DE LA FORET ferme l acte 1, comme le document l ecrit. Il ne
+	# menait plus aucune vague depuis qu on l avait retire des six mini-boss ou
+	# il faisait doublon : il retrouve ici la SEULE apparition que l histoire lui
+	# accorde, et il y meurt.
+	#
+	# Escorte de gnomes et de lutins, c est-a-dire la vermine du tout premier
+	# niveau : l acte se referme sur ce par quoi il a commence, et le contraste
+	# de taille fait tout le travail de mise en scene.
+	m5.entries = [
+		_entry(E + "warden.tres", 1, 1.0),
+		_entry(E + "gnome.tres", 5, 1.8, 7.0),
+		_entry(E + "sprite.tres", 5, 1.5, 20.0),
+	]
+	_save(m5, "res://resources/waves/w9_5_boss.tres")
+
+	var lvl9 := LevelDef.new()
+	lvl9.id = &"lvl_09"
+	lvl9.display_name = "Proteger le dirigeable"
+	lvl9.terrain = "grass"
+	lvl9.backdrop = "act1_sky"
+	lvl9.intro_story = &"lvl_09_intro"
+	lvl9.outro_story = &"lvl_09_outro"
+	lvl9.waves = [m1, m2, m3, m4, m5]
+	lvl9.enemy_pool = [
+		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "hopper.tres"),
+		load(E + "rat_swarm.tres"), load(E + "jelly.tres"), load(E + "hive.tres"),
+		load(E + "hornblower.tres"),
+		load(E + "emberlord.tres"), load(E + "warden.tres"),
+	]
+	# Le deck de la fin d acte : il garde les zones du niveau precedent mais
+	# rend du MONO-CIBLE lourd, parce qu un boss de 140 PV ne tombe pas a la
+	# nappe de givre. 15 cartes, 2 epiques, 1 legendaire.
+	lvl9.exploration_deck = _deck([
+		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/fireball.tres", 3],
+		[C + "common/ember_pool.tres", 1],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
+		[C + "rare/focus.tres", 1],
+		[C + "epic/deep_focus.tres", 2],
+		[C + "legendary/hourglass_shard.tres", 1],
+	])
+	lvl9.objectives = [o1, o2, o3]
+	lvl9.legendary_reward = load(C + "legendary/time_rift.tres")
+	# L acte 1 debouche sur l acte 2, qui commence a `lvl_03` (Ossuaire des
+	# Marees). Le chainage suit les ACTES, pas les numeros : c est exactement le
+	# prix de la decision de ne pas renumeroter, et il est paye ici, en un
+	# endroit, plutot que dans toutes les sauvegardes des joueurs.
+	lvl9.next_levels = [&"lvl_03"]
+	lvl9.act = 1
+	lvl9.subtitle = "On ne devient pas fou en six jours"
+	lvl9.intro_text = "Le rat pilote repare sous la carcasse et ne veut voir \
+personne. Tiens la clairiere le temps qu il faut. Au fond, les arbres s ecartent \
+d eux-memes : le Gardien de la foret vient, et il ne marche pas entre les arbres."
+	lvl9.outro_text = "Le Gardien s effondre en un tas de bois mort. Dans sa poitrine \
+ouverte, plantee comme une echarde, une plaque de metal noir que personne n a taillee \
+ici. Il n est pas devenu fou : on lui a mis quelque chose dedans, et la soudure vient \
+d en haut."
+	_save(lvl9, "res://resources/levels/lvl_09.tres")

@@ -218,13 +218,34 @@ func _render_detail() -> void:
 		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		rangee.add_child(s)
 
-	# Apercu du boss : ce qui attend le joueur en fin de niveau.
+	# APERCU DE LA TETE DE NIVEAU : ce qui attend le joueur a la fin.
+	#
+	# Tous les niveaux n ont PAS de vague de boss, et c est voulu : le catalogue
+	# compte 7 boss et 8 mini-boss pour 21 niveaux prevus, et `test_bosses`
+	# exige un adversaire unique par niveau. Les boss sont donc reserves aux
+	# FINS D ACTE, les niveaux intermediaires culminent sur un mini-boss.
+	#
+	# L ecran affichait "Boss : ?" dans ce cas — un point d interrogation se lit
+	# comme une donnee manquante, donc comme un bug, alors que c est une regle
+	# de conception. On nomme desormais ce qu il y a vraiment.
+	var tete: String = ""
+	var etiquette: String = "Boss"
 	var boss: WaveDef = level.boss_wave()
-	var boss_name: String = "?"
 	if boss != null and not boss.enemy_defs().is_empty():
-		boss_name = boss.enemy_defs()[0].display_name
-	_card_body.add_child(UiTheme.label("%d vagues   -   Boss : %s" % [level.waves.size(), boss_name],
-		UiTheme.FONT_BODY, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+		tete = boss.enemy_defs()[0].display_name
+	else:
+		etiquette = "Mini-boss"
+		for w: WaveDef in level.waves:
+			if w != null and w.is_miniboss and not w.enemy_defs().is_empty():
+				tete = w.enemy_defs()[0].display_name
+	if tete == "":
+		# Ni boss ni mini-boss : on ne promet rien plutot que d afficher un vide.
+		_card_body.add_child(UiTheme.label("%d vagues" % level.waves.size(),
+			UiTheme.FONT_BODY, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+	else:
+		_card_body.add_child(UiTheme.label("%d vagues   -   %s : %s"
+			% [level.waves.size(), etiquette, tete],
+			UiTheme.FONT_BODY, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
 
 	# PAS de separateur extensible ici. Il collait l avancement et les objectifs
 	# tout en bas de la fiche, avec un trou de 250 px au milieu : les trois
