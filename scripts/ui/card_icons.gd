@@ -216,8 +216,16 @@ static func _cell_of(sheet: String, tex: Texture2D) -> int:
 ## (voir Fx.OCC). Elle manquait ici, ce qui rendait les icones de cartes
 ## systematiquement deux a trois fois trop petites.
 static func make_rect(card: SpellCard, size: float) -> TextureRect:
-	var sheet: String = for_card(card)
-	var tex: Texture2D = texture(sheet)
+	# L ICONE DEDIEE D ABORD : c est une image dessinee pour etre lue petite.
+	# La feuille d effet ne sert de repli que pour une carte qui n a pas encore
+	# la sienne — cas que test_card_icons.gd interdit de laisser passer.
+	var tex: Texture2D = art(card)
+	# Une icone dediee porte DEJA la couleur de son element : la teinter
+	# par-dessus brouillerait justement ce que le testeur veut distinguer.
+	var teinte: Color = Color.WHITE
+	if tex == null:
+		tex = texture(for_card(card))
+		teinte = tint_for(card)
 	if tex == null:
 		return null
 	var tr := TextureRect.new()
@@ -226,6 +234,54 @@ static func make_rect(card: SpellCard, size: float) -> TextureRect:
 	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tr.modulate = tint_for(card)
+	tr.modulate = teinte
 	return tr
 
+
+
+## ---------------------------------------------------------------------------
+## ICONE DEDIEE — l image que le joueur lit sur la carte.
+##
+## Ce qui precede (BY_CARD, TINTS, texture()) choisit une FEUILLE D EFFET et la
+## recadre. C est ce que le testeur a vu et refuse : "Braises" donnait trois
+## silhouettes orange indistinctes, "Fleche percante" un objet gris allonge,
+## "Champ de givre" un carre bleu clair. Une feuille d effet est dessinee pour
+## BOUGER en grand sur le terrain ; elle n est pas dessinee pour etre LUE fixe
+## dans les 118 px que mesure une carte quand la main est pleine.
+##
+## On pose donc, A COTE, une vraie icone de competence issue des packs. Les deux
+## images coexistent et ne se marchent pas dessus :
+##   - fx_key  -> la feuille qui s ANIME sur le terrain (unicite garantie par l AUDIT) ;
+##   - art_path -> l icone FIXE qui s affiche sur la carte.
+##
+## POURQUOI UNE TABLE ICI ET NON UN CHAMP SUR SpellCard
+## L icone est une affaire de PRESENTATION, et CardIcons est deja le seul endroit
+## qui repond a "quelle image pour cette carte". La mettre dans le .tres
+## eclaterait la reponse sur 60 fichiers, obligerait a tout regenerer pour un
+## simple changement d image, et rendrait impossible le test "toutes les cartes
+## en ont une" en une seule boucle. Le champ `icon` de SpellCard reste donc
+## inutilise, comme avant.
+##
+## La convention est volontairement sans table : le fichier porte l IDENTIFIANT
+## de la carte. Ajouter une carte sans son icone est alors detecte par
+## test_card_icons.gd, qui parcourt ContentDB — pas decouvert en capture.
+const ART := "res://assets/icons/"
+
+
+## Chemin de l icone dediee, "" si la carte n en a pas.
+static func art_path(card: SpellCard) -> String:
+	if card == null or card.id == &"":
+		return ""
+	var p: String = ART + String(card.id) + ".png"
+	if not ResourceLoader.exists(p):
+		return ""
+	return p
+
+
+## L icone dediee, ou null. Pas d AtlasTexture ni de recadrage : ces images sont
+## deja des icones carrees, rognees sur leur contenu a l export.
+static func art(card: SpellCard) -> Texture2D:
+	var p: String = art_path(card)
+	if p == "":
+		return null
+	return SheetLib.texture(p)
