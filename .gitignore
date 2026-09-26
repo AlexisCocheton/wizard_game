@@ -29,3 +29,4 @@ Thumbs.db
 # main par le testeur (tools/assets/fetch_craftpix.py). Un cookie de session
 # dans un depot pousse sur GitHub, c est exactement ce qui fuit.
 .browser_profile/
+__pycache__/
