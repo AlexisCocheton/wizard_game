@@ -64,6 +64,20 @@ func _shot(label: String) -> void:
 	print("[SMOKE] capture : %s" % path.get_file())
 
 
+## Laisse s ecouler du temps REEL, pour que les AnimatedSprite2D avancent.
+## `simulate()` ne les touche pas : ils suivent l horloge du moteur. Sans cette
+## attente, toute vitrine capture la premiere image de chaque feuille.
+func _laisser_jouer(secondes: float) -> void:
+	var t: float = 0.0
+	while t < secondes:
+		t += await _frame_delta()
+
+
+func _frame_delta() -> float:
+	await get_tree().process_frame
+	return get_process_delta_time()
+
+
 func _run_all() -> void:
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
 	if level == null:
@@ -301,6 +315,141 @@ func _showcase_terrain() -> void:
 	await _shot("vitrine_terrain")
 
 	g.queue_free()
+	await get_tree().process_frame
+	await _showcase_ombre_et_temps()
+
+
+## TROISIEME PLANCHE (chantier F2) : les cinq feuilles des packs du 26/09.
+##
+## Une planche a part, pour la meme raison que la precedente : `shot_04_effets`
+## lance les 43 cartes au MEME point et ne permet d en juger aucune — c est la
+## bouillie qu on voit sur la capture. Un effet visuel ne se verifie qu a l oeil,
+## et l oeil a besoin d un effet a la fois.
+##
+## Deux planches et non une : `timemagic` est joue par `screen_tint`, donc etire
+## sur 1400 px de large. Il recouvre tout. Lance avec les quatre autres, il les
+## cacherait tous — c est d ailleurs ce qui rendait `shot_04` illisible.
+func _showcase_ombre_et_temps() -> void:
+	if not _visual:
+		return
+	# a) Les quatre feuilles LOCALES, une par quadrant.
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = false
+	g.backdrop.setup("grass")
+	var bf: Battlefield = g.battlefield
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	# Des monstres VIVANTS sous chaque effet : la Lumiere purifiante ne dissipe
+	# que ce qu elle touche, et une planche sans cible ne prouverait rien.
+	# Les deux sorts d OMBRE qui agissent sur la main (Rappel d ossements,
+	# Epuration) s affichent sur le MAGE et non au point vise : c est la regle de
+	# `self_aura`, et la premiere capture l a rappelee en posant leurs deux auras
+	# l une sur l autre en bas de l ecran pendant que leurs etiquettes montraient
+	# un coin de pelouse vide. On ne les met donc pas cote a cote : une seule des
+	# deux ici, l autre sur la planche du temps, et l etiquette dit ou regarder.
+	var postes: Array = [
+		[&"purifying_light", Vector2(300.0, 560.0), "lightpillar"],
+		[&"venom_mire", Vector2(800.0, 560.0), "dark_swirl"],
+		[&"bone_recall", Vector2(540.0, 1180.0), "dark_soul -> sur le mage"],
+	]
+	for poste in postes:
+		var at: Vector2 = poste[1]
+		bf.spawn_enemy(gnome, at.x, 1.0, at + Vector2(0.0, -70.0))
+	for poste in postes:
+		var card: SpellCard = ContentDB.cards.get(poste[0])
+		if card == null:
+			_fail("vitrine ombre : carte %s introuvable" % poste[0])
+			continue
+		var ctx := CastContext.make(bf, card)
+		ctx.caster = g
+		ctx.target_position = poste[1]
+		ctx.direction = Vector2(0.0, -1.0)
+		ctx.target_enemy = bf.enemy_nearest_to(poste[1])
+		EffectRegistry.cast(card, ctx)
+		# Etiquette : sans elle, impossible de dire QUELLE feuille on regarde.
+		var l := Label.new()
+		l.text = "%s\n%s" % [poste[0], poste[2]]
+		l.add_theme_font_size_override(&"font_size", 24)
+		l.add_theme_color_override(&"font_color", Color(0.05, 0.05, 0.08))
+		l.position = poste[1] + Vector2(-150.0, 120.0)
+		l.size = Vector2(300.0, 60.0)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		bf.add_child(l)
+	for k in 6:
+		bf.simulate(FIXED_DELTA)
+	# Puis on laisse passer du temps REEL.
+	#
+	# Piege verifie sur cette vitrine : `simulate()` ne fait PAS avancer les
+	# animations. Un AnimatedSprite2D avance sur l horloge du moteur, pas sur le
+	# delta qu on passe a la logique de jeu — ajouter des pas de simulation ne
+	# changeait donc rien a l image capturee. Et `_shot` n attend que deux frames
+	# rendues, soit ~33 ms : toutes les vitrines capturent le DEBUT des
+	# animations.
+	#
+	# 0,22 s est un COMPROMIS mesure sur trois captures successives, entre deux
+	# feuilles qui ne durent pas pareil :
+	#   - `dark_swirl` boucle sur la mare : ses spectres ne se sont leves qu au
+	#     bout de ~0,2 s, avant quoi on ne voit qu une tache ;
+	#   - `dark_soul` ne boucle PAS et se libere seule apres 0,71 s. A 0,35 s la
+	#     capture arrivait apres sa disparition — la planche montrait un gnome
+	#     seul sous son etiquette.
+	# Un seul instant doit servir les deux : on se place juste apres la levee des
+	# spectres, bien avant la fin de l ame.
+	await _laisser_jouer(0.22)
+	await _shot("vitrine_ombre")
+	g.queue_free()
+	await get_tree().process_frame
+
+	# b) L HORLOGE seule, puisqu elle occupe tout l ecran.
+	var packed2: PackedScene = load("res://scenes/game/Game.tscn")
+	var g2: GameController = packed2.instantiate()
+	g2.headless_mode = true
+	add_child(g2)
+	g2.running = false
+	g2.backdrop.setup("sand")
+	var bf2: Battlefield = g2.battlefield
+	for k in 5:
+		bf2.spawn_enemy(gnome, 220.0 + k * 150.0, 1.0,
+			Vector2(220.0 + k * 150.0, 620.0))
+	var drag: SpellCard = ContentDB.cards.get(&"temporal_drag")
+	if drag == null:
+		_fail("vitrine temps : carte temporal_drag introuvable")
+	else:
+		var ctx2 := CastContext.make(bf2, drag)
+		ctx2.caster = g2
+		ctx2.target_position = Vector2(540.0, 700.0)
+		ctx2.direction = Vector2(0.0, -1.0)
+		ctx2.target_enemy = bf2.enemy_nearest_to(ctx2.target_position)
+		EffectRegistry.cast(drag, ctx2)
+	# `dark_vanish` partage cette planche : c est aussi une aura sur le mage, et
+	# elle se lit mieux seule sous l horloge que collee a `dark_soul`.
+	var purge: SpellCard = ContentDB.cards.get(&"deck_purge")
+	if purge != null:
+		var ctx3 := CastContext.make(bf2, purge)
+		ctx3.caster = g2
+		ctx3.target_position = Vector2(540.0, 700.0)
+		ctx3.direction = Vector2(0.0, -1.0)
+		EffectRegistry.cast(purge, ctx3)
+	var l2 := Label.new()
+	l2.text = "temporal_drag -> timemagic (plein ecran)\ndeck_purge -> dark_vanish (sur le mage)"
+	l2.add_theme_font_size_override(&"font_size", 22)
+	l2.add_theme_color_override(&"font_color", Color(0.05, 0.05, 0.08))
+	l2.position = Vector2(70.0, 1420.0)
+	l2.size = Vector2(940.0, 70.0)
+	l2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bf2.add_child(l2)
+	for k in 6:
+		bf2.simulate(FIXED_DELTA)
+	# L horloge s OUVRE : ses deux premieres images ne sont qu un point, le cadran
+	# et les aiguilles ne se deploient qu au tiers de la feuille. Capturee des la
+	# premiere frame rendue, elle ressemblerait a un decoupage rate. 0,45 s sur
+	# les 0,83 s de la feuille : le cadran est grand ouvert et les aiguilles se
+	# lisent.
+	await _laisser_jouer(0.45)
+	await _shot("vitrine_temps")
+	g2.queue_free()
 	await get_tree().process_frame
 
 

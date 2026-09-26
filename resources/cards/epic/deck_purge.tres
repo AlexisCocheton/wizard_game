@@ -27,5 +27,5 @@ copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
-fx_key = &"orb_shatter"
+fx_key = &"dark_vanish"
 sfx_key = &"ward_light"

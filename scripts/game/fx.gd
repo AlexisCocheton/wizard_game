@@ -102,7 +102,88 @@ const STRIPS: Dictionary = {
 	"lightning_fork": ["lightning_fork", 64, 64, 16],
 	"flame_gust": ["flame_gust", 64, 64, 16],
 	## --- fin du pack Effect and FX ---
+	##
+	## --- Packs du 26/09 (chantier F2), tools/assets/extract_packs_2026_09_26.py ---
+	##
+	## Deux feuilles de 192 px et trois d OMBRE. Les 192 px sont la reponse au
+	## testeur — « si tu veux faire des gros effet qui prend une grande partie de
+	## l ecran utilise plutot des animation qui on une grosse resolution » : ce
+	## sont les seules du jeu, avec explosion_e, a tenir un agrandissement plein
+	## ecran. `timemagic` est une HORLOGE verte, et le jeu s appelle Time Wizard :
+	## sa mecanique signature n avait aucun visuel a elle.
+	"timemagic": ["timemagic", 192, 192, 18],
+	"lightpillar": ["lightpillar", 192, 192, 14],
+	## Les trois feuilles d OMBRE : le premier element visuel sombre du jeu. 40 px
+	## de case, donc reservees aux effets PROCHES du joueur (impact, aura sur le
+	## mage), jamais a une nappe ou a un plein ecran.
+	"dark_soul": ["dark_soul", 40, 32, 14],
+	"dark_vanish": ["dark_vanish", 40, 32, 12],
+	"dark_swirl": ["dark_swirl", 48, 64, 16],
 }
+
+
+## Feuilles jouees a PLEINE LARGEUR (screen_tint, 1400 px). Elles sont nommees
+## ici plutot que devinees : c est la liste que test_card_fx.gd confronte a la
+## taille de case, pour qu une feuille de 64 px ne revienne jamais s etirer sur
+## tout l ecran.
+## `midnight` n y figure PAS, bien que `screen_tint` puisse encore l afficher en
+## dernier recours : c est une grille de 100 px, donc agrandie 25 fois a cette
+## taille. Elle est le repli d un sort qui n a pas de feuille a lui, et le jeu
+## n en compte plus aucun — toute carte de ralentissement porte desormais la
+## sienne. La lister ici reviendrait a declarer bonne une resolution qu on juge
+## mauvaise.
+const PLEIN_ECRAN: Array[String] = ["vortex_hd", "timemagic"]
+
+
+static func plein_ecran_sheets() -> Array[String]:
+	return PLEIN_ECRAN.duplicate()
+
+
+## Cote de la case d une feuille, en pixels. 100 pour les grilles.
+static func cell_size(name: String) -> int:
+	if STRIPS.has(name):
+		return int(STRIPS[name][1])
+	if GRIDS.has(name):
+		return 100
+	return 0
+
+
+## ---------------------------------------------------------------------------
+## MOUCHARD DE RENDU (tests seulement)
+##
+## `test_card_fx.gd` verifie qu une carte affiche bien SA feuille. Sans ce
+## crochet, le test devrait reimplementer le choix de feuille et ne prouverait
+## que sa propre coherence. Ici il observe le vrai `sprite()`, c est-a-dire le
+## seul point par ou passe tout ce qui s affiche.
+##
+## Inerte en dehors d un trace : un booleen teste par appel, et rien de plus.
+static var _trace_on: bool = false
+static var _traced: Array[String] = []
+
+
+static func begin_trace() -> void:
+	_trace_on = true
+	_traced = []
+
+
+## Declare au mouchard une feuille qu on s apprete a jouer.
+##
+## `sprite()` note deja tout ce qui passe par lui, mais les helpers composites
+## (`zone_visual`, `projectile`, `prop_visual`) sortent AVANT sur le garde
+## headless : le sort est bien branche, il n y a simplement pas d ecran. Sans
+## cette annonce, le test verrait une zone parfaitement cablee comme muette.
+static func _note(name: String) -> void:
+	if _trace_on and name != "":
+		_traced.append(name)
+
+
+static func end_trace() -> Array[String]:
+	_trace_on = false
+	# Copie : rendre le tableau interne laisserait l appelant le vider a notre
+	# insu (le gotcha `offer_choices` du projet, deja paye une fois).
+	var out: Array[String] = _traced.duplicate()
+	_traced = []
+	return out
 
 
 ## Part de la case reellement occupee par l effet (mesuree sur les feuilles).
@@ -115,6 +196,9 @@ const OCC: Dictionary = {
 	"clock_spiral": 0.69,
 	"crystal_field": 0.97,
 	"cycle_swirl": 0.83,
+	"dark_soul": 0.70,
+	"dark_swirl": 0.77,
+	"dark_vanish": 0.88,
 	"diamond_mark": 0.84,
 	"dome_bastion": 0.77,
 	"echo_rings": 0.88,
@@ -137,6 +221,7 @@ const OCC: Dictionary = {
 	"hex_sigil": 1.00,
 	"hex_summon": 0.80,
 	"lightning_fork": 1.00,
+	"lightpillar": 0.97,
 	"lightning_web": 1.00,
 	"lotus_bloom": 1.00,
 	"magic8": 0.59,
@@ -175,6 +260,7 @@ const OCC: Dictionary = {
 	"stone_peak": 0.67,
 	"sun_burst": 0.89,
 	"tide_waves": 0.88,
+	"timemagic": 0.83,
 	"ts_dust_01": 0.55,
 	"ts_explosion_01": 0.33,
 	"ts_fire_02": 0.56,
@@ -246,6 +332,10 @@ static func sheet_names() -> Array:
 ## loop = false : se libere seul en fin d animation.
 static func sprite(parent: Node2D, name: String, at: Vector2, size_px: float,
 		loop: bool = false, tint: Color = Color.WHITE) -> AnimatedSprite2D:
+	# Le mouchard note la feuille DEMANDEE, avant le retour headless : les tests
+	# unitaires tournent sans serveur d affichage, et un trace qui s arreterait
+	# ici ne verrait jamais rien.
+	_note(name)
 	if not enabled() or parent == null:
 		return null
 	var sf: SpriteFrames = frames_of(name)
@@ -291,6 +381,7 @@ static func card_sheet(card: SpellCard) -> String:
 ## `sheet` : feuille propre a la carte pour l impact, sinon celle de l element.
 static func projectile(parent: Node2D, from: Vector2, to: Vector2, col: Color,
 		sheet: String = "") -> void:
+	_note(sheet if sheet != "" else impact_sheet(col))
 	if not enabled() or parent == null:
 		return
 	var dot: AnimatedSprite2D = sprite(parent, "magic8", from, 90.0, true, col.lightened(0.3))
@@ -338,6 +429,7 @@ static func beam(parent: Node2D, from: Vector2, direction: Vector2,
 ## et l effet elementaire au centre a taille contenue pour rester net.
 static func zone_visual(parent: Node2D, at: Vector2, radius: float,
 		_duration: float, col: Color, sheet: String = "") -> Node:
+	_note(sheet if sheet != "" else zone_sheet(col))
 	if not enabled() or parent == null:
 		return null
 	var root := Node2D.new()
@@ -351,8 +443,27 @@ static func zone_visual(parent: Node2D, at: Vector2, radius: float,
 	# L effet elementaire reste une feuille, a taille contenue pour rester net.
 	# Au centre, l effet PROPRE a la carte quand elle en a un : deux zones de feu
 	# ne doivent pas se ressembler.
-	sprite(root, sheet if sheet != "" else zone_sheet(col), Vector2.ZERO,
-		clampf(radius * 1.2, 110.0, 200.0), true, Color(1, 1, 1, 0.9))
+	var feuille: String = sheet if sheet != "" else zone_sheet(col)
+	var taille: float = clampf(radius * 1.2, 110.0, 200.0)
+	sprite(root, feuille, Vector2.ZERO, taille, true, Color(1, 1, 1, 0.9))
+
+	# PLUSIEURS exemplaires quand la zone est LARGE. Un seul sprite plafonne a
+	# 200 px laissait un anneau de 230 px de rayon vide sur les trois quarts :
+	# la portee etait tracee, mais rien ne l OCCUPAIT, et le joueur lisait un
+	# cercle dessine plutot qu un terrain empoisonne (vu sur capture de la Mare
+	# de venin).
+	#
+	# On ne les disperse pas au hasard : ils sont poses en couronne a mi-rayon,
+	# plus petits et plus pales que celui du centre, pour que la zone garde un
+	# CENTRE lisible. Trois suffisent — au-dela, une zone animee devient une
+	# bouillie a haute vitesse.
+	if radius > taille * 0.9:
+		var n: int = 3
+		var r: float = radius * 0.55
+		for i in n:
+			var a: float = TAU * float(i) / float(n) - PI * 0.5
+			sprite(root, feuille, Vector2(cos(a) * r, sin(a) * r),
+				taille * 0.62, true, Color(1, 1, 1, 0.55))
 	return root
 
 
@@ -423,18 +534,65 @@ static func death(parent: Node2D, at: Vector2, radius: float) -> void:
 
 
 ## Aura sur le mage : sorts qui agissent sur soi.
-static func self_aura(parent: Node2D, col: Color) -> void:
+##
+## `sheet` est la feuille PROPRE de la carte. Sans elle, les onze sorts qui
+## agissent sur le mage (Focalisation, Precipitation, Flux de mana, Intuition,
+## Echo de la main, Canalisation jumelle...) affichaient tous le meme cercle de
+## protection : le joueur ne pouvait pas voir LEQUEL il venait de lancer, alors
+## que leur `fx_key` etait deja unique et verifiee par l AUDIT. Le champ existait,
+## personne ne le lisait.
+##
+## LA TAILLE SUIT LA RESOLUTION DE LA FEUILLE.
+## Premiere capture de la vitrine : les deux feuilles d ombre (cases de 40 px)
+## affichees a 260 px etaient agrandies 6,5 fois et donnaient une tache violette
+## carree sur le mage, ou l on ne reconnaissait ni le crane ni le fantome. C est
+## le defaut exact que le testeur decrit en demandant une « grosse resolution »
+## pour les gros effets — ici pris par l autre bout : une PETITE feuille doit
+## rester petite. `max_px_for` borne l agrandissement a 4x la case, ce qui rend
+## les feuilles d ombre a ~160 px : assez grandes pour se lire au-dessus du mage,
+## assez fines pour qu on distingue encore le dessin.
+static func self_aura(parent: Node2D, col: Color, sheet: String = "") -> void:
 	var at := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)
-	sprite(parent, "protectioncircle", at, 260.0, false, col.lightened(0.2))
+	var nom: String = sheet if sheet != "" else "protectioncircle"
+	sprite(parent, nom, at, max_px_for(nom, 260.0),
+		false, col.lightened(0.2) if sheet == "" else Color(1, 1, 1, 0.95))
+
+
+## Taille d affichage d une feuille, bornee par sa propre definition.
+##
+## Le facteur 4 est un compromis mesure sur les captures : en deca, les feuilles
+## de 64 px du gros pack (deja la moitie du catalogue) deviendraient trop petites
+## pour se voir ; au-dela, les feuilles de 40 px repassent en gros carres.
+const AGRANDISSEMENT_MAX: float = 4.0
+
+
+static func max_px_for(name: String, voulue: float) -> float:
+	var cote: int = cell_size(name)
+	if cote <= 0:
+		return voulue
+	# On raisonne sur la partie VISIBLE de la case, comme `sprite()` : une case a
+	# moitie vide n offre que la moitie des pixels.
+	var file: String = str(STRIPS[name][0]) if STRIPS.has(name) else name
+	var occ: float = float(OCC.get(file, OCC.get(name, 1.0)))
+	return minf(voulue, float(cote) * maxf(occ, 0.05) * AGRANDISSEMENT_MAX)
 
 
 ## Effet plein ecran bref (ralentissement, volte-face).
-static func screen_tint(parent: Node2D, col: Color) -> void:
+##
+## Meme correction que `self_aura`, et le meme piege en plus gros : cet effet est
+## etire a 1400 px de large. `midnight` est une grille de 100 px — a cette taille
+## elle est agrandie 25 fois et ne montre plus qu une tache. C est exactement ce
+## que le testeur decrivait en demandant « une grosse resolution » pour les gros
+## effets. Les feuilles admises ici sont listees dans PLEIN_ECRAN et leur taille
+## de case est verrouillee par test_card_fx.gd.
+static func screen_tint(parent: Node2D, col: Color, sheet: String = "") -> void:
 	var at := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y * 0.5)
 	# `vortex_hd` (VFX Free Pack, cases de 160 px) plutot que la grille de 100 px :
 	# cet effet est affiche a 1400 px de large, la ou l ancienne feuille pixelisait.
-	var sheet: String = "vortex_hd" if col == COL_ARCANE else "midnight"
-	sprite(parent, sheet, at, 1400.0, false, Color(1, 1, 1, 0.6))
+	var choisie: String = sheet
+	if choisie == "":
+		choisie = "vortex_hd" if col == COL_ARCANE else "midnight"
+	sprite(parent, choisie, at, 1400.0, false, Color(1, 1, 1, 0.6))
 
 
 ## Projectile ennemi : fleche du pack pointee vers le bas, deplacee par Battlefield.
@@ -478,6 +636,7 @@ static func heal_effect(parent: Node2D, at: Vector2) -> void:
 ## identiques a l ecran, ce que l AUDIT refuse et ce dont le testeur s est plaint.
 static func prop_visual(parent: Node2D, at: Vector2, kind: int, duration: float,
 		sheet: String = "", tint: Color = Color.WHITE, area: float = 0.0) -> Node:
+	_note(sheet)
 	if not enabled() or parent == null:
 		return null
 	var root := Node2D.new()

@@ -37,6 +37,12 @@ class PierceLine extends EffectHandler:
 		var origin: Vector2 = ctx.caster_position()
 		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
 		Fx.beam(ctx.battlefield, origin, ctx.direction, spec.radius, col)
+		# La fleche du pack est la meme pour tous les sorts en ligne. L eclat de
+		# DEPART, lui, porte la feuille de la carte : c est ce qui distingue la
+		# Fleche percante de la Faille temporelle, qui partent du meme point dans
+		# la meme direction.
+		Fx.impact(ctx.battlefield, origin, col, maxf(spec.radius, 60.0) * 0.5,
+			Fx.card_sheet(ctx.card))
 		var hit: Array = ctx.battlefield.enemies_in_line(origin, ctx.direction, spec.radius, max_targets)
 		for e in hit:
 			ctx.battlefield.damage_enemy(e, spec.magnitude * ctx.damage_mult, ctx.card)
@@ -82,7 +88,7 @@ class SlowEnemyGauge extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
-		Fx.screen_tint(ctx.battlefield, Fx.COL_FROST)
+		Fx.screen_tint(ctx.battlefield, Fx.COL_FROST, Fx.card_sheet(ctx.card))
 		ctx.battlefield.apply_global_enemy_slow(spec.magnitude, spec.duration)
 
 
@@ -94,7 +100,7 @@ class ReverseEnemies extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
-		Fx.screen_tint(ctx.battlefield, Fx.COL_ARCANE)
+		Fx.screen_tint(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
 		ctx.battlefield.apply_reverse(spec.duration)
 
 
@@ -105,7 +111,7 @@ class EmpowerNext extends EffectHandler:
 
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield != null:
-			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE)
+			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
 		RunState.empower_next(maxf(1.0, spec.magnitude))
 
 
@@ -117,7 +123,7 @@ class SelfHaste extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
-		Fx.self_aura(ctx.battlefield, Fx.COL_HASTE)
+		Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
 		ctx.battlefield.apply_cast_haste(spec.magnitude, spec.duration)
 
 
@@ -126,8 +132,10 @@ class CostReduction extends EffectHandler:
 	func get_key() -> StringName:
 		return &"cost_reduction"
 
-	func apply(spec: EffectSpec, _ctx: CastContext) -> void:
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		RunState.apply_cost_reduction(spec.magnitude, spec.duration)
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
 
 
 ## Accelere la pioche pour une duree. magnitude = facteur (2 = deux fois plus vite).
@@ -138,7 +146,7 @@ class DrawBoost extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		RunState.boost_draw(spec.magnitude, spec.duration)
 		if ctx.battlefield != null:
-			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE)
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
 
 
 ## Invoque un allie qui combat quelques secondes.
@@ -149,7 +157,7 @@ class SummonAlly extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
-		Fx.self_aura(ctx.battlefield, Fx.COL_SUMMON)
+		Fx.self_aura(ctx.battlefield, Fx.COL_SUMMON, Fx.card_sheet(ctx.card))
 		ctx.battlefield.spawn_ally(spec.duration, spec.magnitude * ctx.damage_mult)
 
 
@@ -158,10 +166,15 @@ class DiscardDraw extends EffectHandler:
 	func get_key() -> StringName:
 		return &"discard_draw"
 
-	func apply(spec: EffectSpec, _ctx: CastContext) -> void:
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		var n: int = int(spec.get_param(&"count", 2))
 		RunState.discard_random(n)
 		RunState.draw(n)
+		# Ces sorts ne touchent que la MAIN : sans aura sur le mage, la carte
+		# partait sans rien afficher et rien ne distinguait « elle a ete lancee »
+		# de « elle n est pas partie ».
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
 
 
 ## Accelere les ennemis en echange d un avantage immediat.
@@ -171,6 +184,9 @@ class HasteEnemiesBoon extends EffectHandler:
 
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield != null:
+			# Accelerer TOUS les monstres est l effet le plus dangereux du jeu :
+			# il doit se voir en grand, comme son symetrique le ralentissement.
+			Fx.screen_tint(ctx.battlefield, Fx.COL_LIGHTNING, Fx.card_sheet(ctx.card))
 			ctx.battlefield.apply_global_enemy_slow(-spec.magnitude, spec.duration)
 		RunState.draw(int(spec.get_param(&"draw", 2)))
 
@@ -180,8 +196,10 @@ class RemoveCards extends EffectHandler:
 	func get_key() -> StringName:
 		return &"remove_cards"
 
-	func apply(spec: EffectSpec, _ctx: CastContext) -> void:
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		RunState.exile_from_deck(int(spec.get_param(&"count", 1)))
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
 
 
 ## Erige un mur qui bloque le pathfinding des monstres pendant une duree.
@@ -194,6 +212,11 @@ class BuildWall extends EffectHandler:
 			return
 		var half: float = maxf(spec.radius, 60.0)
 		var thickness: float = float(spec.get_param(&"thickness", 60.0))
+		# Les rochers du pack sont les memes pour les deux murs : c est le meme
+		# verbe. La feuille de la carte les distingue — le Bastion ne se batit pas
+		# comme un Mur de pierre.
+		Fx.impact(ctx.battlefield, ctx.target_position, Fx.COL_WALL, half * 0.6,
+			Fx.card_sheet(ctx.card))
 		# Mur PERMANENT : il ne s efface pas au bout de N secondes, il tombe quand
 		# les monstres enfermes l ont casse. Meme cle d effet, meme carte-donnee :
 		# c est un parametre, pas un second handler.
@@ -209,10 +232,12 @@ class DiscardHandForSpeed extends EffectHandler:
 	func get_key() -> StringName:
 		return &"discard_hand_for_speed"
 
-	func apply(spec: EffectSpec, _ctx: CastContext) -> void:
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		var discarded: int = RunState.discard_hand()
 		var per_card: float = float(spec.get_param(&"seconds_per_card", 1.0))
 		RunState.apply_cost_reduction(discarded * per_card, spec.duration)
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
 
 
 # --- Verbes demandes par le testeur ---
@@ -246,6 +271,10 @@ class VortexPull extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
+		# `spawn_vortex` pose un anneau generique : Spirale de sel et Maelstrom
+		# aspiraient a l identique. La feuille de la carte est jouee au centre.
+		Fx.impact(ctx.battlefield, ctx.target_position, Fx.COL_ARCANE,
+			spec.radius * 0.5, Fx.card_sheet(ctx.card))
 		ctx.battlefield.spawn_vortex(ctx.target_position, spec.radius,
 			spec.duration, spec.magnitude)
 
@@ -263,6 +292,15 @@ class DispelZone extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
+		# L effet est joue ICI et pas dans `dispel_at` pour deux raisons. D abord
+		# le sort doit se voir meme quand il ne dissipe RIEN : `dispel_at` ne
+		# dessine que s il a touche quelqu un, donc une Lumiere purifiante lancee
+		# a cote laissait le joueur sans aucun retour — il ne pouvait pas savoir
+		# si la carte etait partie. Ensuite c est le handler qui connait la carte,
+		# donc sa feuille propre : sans elle, Vide d emprise et Lumiere purifiante
+		# s affichaient d un seul et meme eclat arcanique.
+		Fx.impact(ctx.battlefield, ctx.target_position, Fx.COL_ARCANE,
+			spec.radius, Fx.card_sheet(ctx.card))
 		ctx.battlefield.dispel_at(ctx.target_position, spec.radius)
 
 
@@ -275,7 +313,7 @@ class DrawCards extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		RunState.draw(int(spec.get_param(&"count", 2)))
 		if ctx.battlefield != null:
-			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE)
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
 
 
 ## Les prochaines cartes lancees reviennent en main au lieu de partir.
@@ -287,7 +325,7 @@ class RetainNext extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		RunState.retain_next(int(maxf(spec.magnitude, 1.0)))
 		if ctx.battlefield != null:
-			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE)
+			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
 
 
 ## Deux sorts chargent en meme temps pendant `duration` secondes.
@@ -298,7 +336,7 @@ class DoubleCast extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		RunState.allow_double_cast(spec.duration)
 		if ctx.battlefield != null:
-			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE)
+			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
 
 
 ## Pluie de meteorites sur TOUTE la carte : `impacts` zones breves reparties au

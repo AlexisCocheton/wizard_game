@@ -25,5 +25,5 @@ copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
-fx_key = &"halo_ring"
+fx_key = &"lightpillar"
 sfx_key = &"ward_light"
