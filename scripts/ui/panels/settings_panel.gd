@@ -66,6 +66,10 @@ func _build() -> void:
 		SaveData.save_profile())
 	_body.add_child(haptics)
 
+	_body.add_child(UiTheme.label("CREDITS", UiTheme.FONT_BODY,
+		Color(0.20, 0.13, 0.02)))
+	_credits()
+
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body.add_child(spacer)
@@ -85,6 +89,47 @@ func _build() -> void:
 	# sombre, il disparait sur le papier creme.
 	_body.add_child(UiTheme.label("Time Wizard  -  prototype", UiTheme.FONT_SMALL,
 		Color(0.18, 0.14, 0.08), HORIZONTAL_ALIGNMENT_CENTER))
+
+
+## LES CREDITS OBLIGATOIRES.
+##
+## Ce ne sont pas des remerciements : deux licences EXIGENT ces lignes, et le
+## jeu ne peut pas etre publie sans elles (voir docs/assets_index.md, audit du
+## 26 septembre).
+##
+## La formulation de xDeviruchi est IMPOSEE MOT POUR MOT par le
+## "DOCUMENTATION & LICENSE.pdf" embarque dans le pack — la reformuler, meme en
+## francais, ne respecterait pas la clause. Les resumes qui trainent sur le web
+## disent "credit non obligatoire" ; c est faux pour la version 2025, celle que
+## le projet utilise.
+##
+## La liste est DANS LE CODE et non dans un fichier de donnees : un ecran de
+## credits qui depend d un .tres peut se retrouver vide si le fichier manque, et
+## un ecran de credits vide est un manquement a une licence, pas un defaut
+## d affichage.
+const CREDITS: Array[Array] = [
+	["Musiques", "Original music by Marllon Silva (xDeviruchi)"],
+	["Personnages", "Ddant1100 - ddant1100.itch.io"],
+	["Voix du mage", "John Carroll - johncarroll.itch.io"],
+	["Decors, monstres et effets", "craftpix.net, Pixel Frog, luizmelo,"],
+	["", "elthen, Pipoya, chierit, darkpixel-kronovi,"],
+	["", "creativekind, lornn, cogabushi, batareya"],
+]
+
+
+func _credits() -> void:
+	for ligne in CREDITS:
+		var titre: String = String(ligne[0])
+		var texte: String = String(ligne[1])
+		if titre != "":
+			_body.add_child(UiTheme.label(titre, UiTheme.FONT_SMALL,
+				Color(0.42, 0.30, 0.10)))
+		# Encre sombre : meme calcul que le reste de l ecran, le papier a une
+		# luminance de 0,84 donc il faut passer sous 0,147 pour etre lisible.
+		var l: Label = UiTheme.label(texte, UiTheme.FONT_SMALL,
+			Color(0.20, 0.15, 0.09))
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_body.add_child(l)
 
 
 func _on_reset() -> void:

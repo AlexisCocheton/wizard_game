@@ -16,6 +16,7 @@ func run() -> void:
 	_test_plusieurs_decks()
 	_test_migration_ancien_deck_unique()
 	_test_reglages()
+	_test_les_credits_obligatoires_sont_affiches()
 	_test_victoire_debloque_le_niveau_suivant()
 	_test_legendaire_cumulative()
 	_test_niveau_courant()
@@ -354,3 +355,45 @@ func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
 	ok(SaveData.campaign_cleared(),
 		"le dernier niveau fini ouvre le Massacre")
 	SaveData.reset_profile()
+
+
+## Les credits exiges par les LICENCES doivent etre a l ecran.
+##
+## Ce n est pas une question de politesse : deux licences les imposent, et le
+## jeu ne peut pas etre publie sans elles.
+##   - xDeviruchi (musiques) : le PDF embarque dans le pack impose la
+##     formulation EXACTE "Original music by Marllon Silva (xDeviruchi)". La
+##     reformuler, meme en francais, ne respecte pas la clause — d ou le test
+##     sur la chaine litterale et non sur le seul nom.
+##   - Ddant1100 (personnages) : "Please Credit Me with [Ddant1100]".
+##
+## Un ecran de credits vide ne fait rien planter et ne se voit pas au harnais :
+## c est exactement le genre de manquement qui passe jusqu a la publication.
+func _test_les_credits_obligatoires_sont_affiches() -> void:
+	var panel := SettingsPanel.new()
+	attach(panel)
+	# On lit le TEXTE REELLEMENT AFFICHE, pas la constante : une liste correcte
+	# qu un bug d affichage n accroche pas ne credite personne.
+	var vu: String = ""
+	for n in _tous(panel):
+		if n is Label:
+			vu += (n as Label).text + "
+"
+	ok(vu.contains("Original music by Marllon Silva (xDeviruchi)"),
+		"la mention de xDeviruchi est affichee MOT POUR MOT (imposee par sa licence)")
+	ok(vu.contains("Ddant1100"),
+		"Ddant1100 est credite (impose par sa licence)")
+	ok(vu.contains("John Carroll"),
+		"John Carroll est credite (voix du mage)")
+	ok(vu.to_upper().contains("CREDITS"),
+		"la section porte un titre, sinon ces lignes se lisent comme du hasard")
+	detach(panel)
+
+
+## Tous les descendants, a plat.
+func _tous(racine: Node) -> Array[Node]:
+	var out: Array[Node] = []
+	for c in racine.get_children():
+		out.append(c)
+		out.append_array(_tous(c))
+	return out
