@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_tfhs8")
 id = &"lvl_02_intro"
-scene_background = "act1_sky"
+scene_background = "talk_village"
 lines = Array[Dictionary]([{
 "portrait": &"child",
 "side": "right",

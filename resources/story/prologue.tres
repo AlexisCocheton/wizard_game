@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_han4h")
 id = &"prologue"
-scene_background = "act1_sky"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",

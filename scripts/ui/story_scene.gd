@@ -22,62 +22,76 @@ const PORTRAITS: String = "res://assets/portraits/"
 ## Le personnage qui parle est en pleine lumiere, l autre recule dans l ombre.
 const DIM: Color = Color(0.45, 0.42, 0.52)
 
-## Le pack fournit AUSSI les 32 visages en gros plan, ranges par
-## `extract_portraits.py` dans une grille unique : 8 lignes (un personnage) x 4
-## colonnes (une expression). Ils n avaient jamais ete branches.
+## LA PLANCHE DU CASTING. Un seul fichier, une case par personnage, decoupe en
+## AtlasTexture a l affichage.
+##
+## POURQUOI UNE PLANCHE ET PAS HUIT FICHIERS : un personnage doit etre CADRE de
+## la meme facon que les autres, sinon l un remplit la boite et son voisin flotte
+## au milieu. La planche est generee hors jeu, chaque source est detouree puis
+## mise a l echelle dans une case carree identique — le cadrage est decide une
+## fois, a la fabrication, pas a chaque affichage.
 ##
 ## POURQUOI LE VISAGE PLUTOT QUE LE CORPS ENTIER. Compare a la taille reelle
-## d affichage (620 x 960 px) : le corps entier montre des PATTES D ARAIGNEE et
-## un visage de 40 px perdu tout en haut — c est ce qui faisait dire que "le mage
-## est un demon cornu". Le meme personnage en gros plan remplit le cadre, son
-## expression se lit, et les pattes sortent du champ. La tete de 64 px agrandie
-## ~10x reste NETTE en pixel art, la ou un filtrage lisse l aurait floutee
-## (le projet est en filtre "nearest", verifie en capture).
-const HEADS: String = PORTRAITS + "demon_heads.png"
-const HEAD_PX: int = 64
-const HEAD_COLS: int = 4
-
-## Cle de portrait -> [personnage 1..8, expression 1..4] dans la grille.
-## Meme casting que FACES ci-dessous, et il doit le RESTER : les deux tables
-## decrivent les memes personnages, l une en gros plan, l autre en repli.
-## LES QUATRE EXPRESSIONS DU PACK, verifiees sur planche : 1 neutre, 2 colere,
-## 3 grand sourire, 4 sourire leger. Le casting les suit — la premiere capture
-## montrait le mage SOURIANT LARGEMENT en disant "je n ai pas su les arreter",
-## ce qui rendait la scene absurde. Une expression qui contredit la replique est
-## pire que pas de portrait du tout.
-const HEAD_FACES: Dictionary = {
-	&"mage": [6, 1],          # neutre : il raconte, il ne joue pas
-	&"mage_grave": [6, 2],    # colere : les moments ou il s en veut
-	&"child": [5, 4],         # sourire leger : un enfant, pas un rictus
-	&"child_god": [5, 2],     # colere : le retournement de l acte V
-	&"rat": [3, 1],
-	&"mayor": [2, 1],
-	&"skeleton_king": [7, 2], # colere : un roi mort qui ordonne
-	&"guardian": [8, 2],      # colere : il se bat
-	&"demon": [4, 2],         # colere : c est un demon
-}
-
-## Cles de portrait -> fichier. Les personnages du pack craftpix "demons" servent
-## de bustes de PNJ : ce sont les seuls corps entiers humanoides disponibles
-## (voir assets.md). Un personnage garde TOUJOURS le meme corps et sa palette
-## d expressions (_1 neutre .. _4 marquee) : c est ce qui le rend reconnaissable
-## alors qu aucun n a ete dessine pour lui.
+## d affichage (620 x 960 px), un corps entier montre un visage de 40 px perdu au
+## sommet d une silhouette a pattes. Les sources retenues sont donc des BUSTES
+## (dossier `Faceset` du pack TTRPG), pas des corps entiers ; le seul corps entier
+## du lot, le rat, est recadre sur sa tete a la fabrication.
 ##
-## Casting : le mage sur demon6 — silhouette maigre, crane nu, robe bleue, bras
-## croises : le seul du pack qui lit comme un vieil homme use, ce que le prologue
-## demande. Le maire en robe et lance (demon2, le plus "notable"), le rat pilote
-## en fourrure (demon3, le seul velu), le roi squelette en cape et flamme (demon7,
-## le seul couronne), le Gardien (demon8), l enfant sur demon5, le plus maigre.
-const FACES: Dictionary = {
-	&"mage": PORTRAITS + "demon6_1.png",
-	&"mage_grave": PORTRAITS + "demon6_3.png",
-	&"child": PORTRAITS + "demon5_1.png",
-	&"child_god": PORTRAITS + "demon5_4.png",
-	&"rat": PORTRAITS + "demon3_1.png",
-	&"mayor": PORTRAITS + "demon2_1.png",
-	&"skeleton_king": PORTRAITS + "demon7_1.png",
-	&"guardian": PORTRAITS + "demon8_1.png",
-	&"demon": PORTRAITS + "demon4_1.png",
+## D OU VIENNENT LES VISAGES. Le defaut corrige ici a survecu a trois vagues de
+## travail : le seul pack de portraits disponible ne contenait que HUIT GUERRIERS
+## DEMONS, et le heros du jeu — un vieux mage humain chauve — etait affiche en
+## demon cornu a peau orange et yeux bleus. Le pack `TTRPG LEGEND [TOO MANY
+## CHARACTERS]` (Ddant1100, itch.io) fournit 100 personnages nommes par classe et
+## par race : il y a enfin de VRAIS humains, et un mage qui ressemble a un mage.
+## `demon_heads.png` reste sur le disque mais n est plus la source de personne.
+const CAST_SHEET: String = PORTRAITS + "story_cast.png"
+const CAST_PX: int = 512
+
+## Cle de portrait -> sa case dans la planche, et la source dont elle vient.
+##
+## `sheet` n est pas decoratif : c est ce que `test_story.gd` lit pour verifier
+## qu aucun personnage humain n est redescendu sur la planche de demons. Une
+## table qui documente sa provenance est une table qu une machine peut auditer.
+##
+## L EXPRESSION DOIT COLLER A LA REPLIQUE. La premiere version du casting
+## montrait le mage SOURIANT LARGEMENT en disant "je n ai pas su les arreter",
+## ce qui rendait la scene absurde. Le pack ne donne qu UNE expression par
+## personnage : on a donc choisi des visages dont l expression ne contredit
+## AUCUNE de leurs repliques. Le mage est las et neutre — il raconte, il ne joue
+## pas ; c est pour ca que `mage_grave` partage sa case au lieu de sourire.
+const CAST: Dictionary = {
+	# Le heros. Chauve, vieux, col de mage : docs/histoire.md dit que ses
+	# cheveux sont partis avec ses pouvoirs. Le seul du pack qui soit a la fois
+	# chauve, age et manifestement mage. Paupieres lourdes, bouche fermee :
+	# l expression tient aussi bien sur un aveu que sur une consigne.
+	&"mage": {"cell": [1, 1], "sheet": CAST_SHEET, "from": "wizard_human_man_04"},
+	# Meme homme, memes traits : le pack ne fournit pas de seconde expression et
+	# lui en preter le visage d un AUTRE ferait deux mages a l ecran. On assume
+	# un seul visage plutot qu un contresens.
+	&"mage_grave": {"cell": [1, 1], "sheet": CAST_SHEET, "from": "wizard_human_man_04"},
+	# L enfant : le seul jeune garcon du pack (le pack le nomme "boy"). Grands
+	# yeux, chemise usee, aucune arme.
+	&"child": {"cell": [1, 2], "sheet": CAST_SHEET, "from": "unknow_darkelve_boy_01"},
+	# Le retournement de l acte V : l enfant est une divinite. Un masque de
+	# dragon d or, rien d humain dedans — c est la meme creature, vue enfin.
+	&"child_god": {"cell": [1, 3], "sheet": CAST_SHEET, "from": "deity_man_01"},
+	# Le rat pilote, mecanicien : un rat debout, capuche, besace d outils et de
+	# fioles. C est le SEUL vrai rat de tous les packs ; il vient d un autre
+	# pack et d un autre style, ce qui se voit — mais un nain etiquete "Le Rat
+	# pilote" serait un contresens, et un contresens se voit davantage.
+	&"rat": {"cell": [1, 4], "sheet": CAST_SHEET, "from": "cogabushi_A_18"},
+	# Le maire : couronne, lorgnons, fraise de notable et un document a la main.
+	# Un homme de papiers — exactement celui qui "savait depuis des mois".
+	&"mayor": {"cell": [2, 1], "sheet": CAST_SHEET, "from": "noble_human_man_02"},
+	# Le roi squelette : crane decharne, chair grise recousue, yeux jaunes. Un
+	# mort qui parle encore, pas un squelette de dessin anime.
+	&"skeleton_king": {"cell": [2, 2], "sheet": CAST_SHEET, "from": "demon_human_man_01"},
+	# Le Gardien de la foret : un heaume vert et or SANS VISAGE dedans, plumet
+	# sombre. Le pack le nomme "raceless" — sans race. Un colosse mu par autre
+	# chose que lui-meme : c est exactement ce que l acte 1 revele de lui.
+	&"guardian": {"cell": [2, 3], "sheet": CAST_SHEET, "from": "knight_raceless_man_01"},
+	# Le demon, lui, a le droit d avoir une tete de demon.
+	&"demon": {"cell": [2, 4], "sheet": CAST_SHEET, "from": "demon_elve_man_01"},
 }
 
 ## Portraits pris sur une FEUILLE animee du jeu plutot que sur un fichier.
@@ -85,12 +99,6 @@ const FACES: Dictionary = {
 ## combattre, sinon la scene parle d un autre. Le pack de portraits ne contient
 ## aucun monstre, mais le jeu a deja leurs feuilles. On y decoupe la premiere case
 ## d "idle" — pas une pose de plus a dessiner ni a maintenir.
-## Le mage, lui, reste sur un portrait dessine : sa feuille de combat est une vue
-## de DESSUS, illisible en buste. REVERIFIE le 21 septembre sur les sept feuilles
-## de cosmetique ajoutees depuis (monk_blue/black/purple et les quatre chapeaux) :
-## toutes montrent le SOMMET du chapeau et aucun visage. Aucune ne peut donc
-## remplacer le portrait, et le mage reste un demon cornu dans les scenes tant
-## qu un vrai buste humain n est pas sur le disque.
 const SHEET_FACES: Dictionary = {
 	&"guardian_beast": &"chaosknight",
 }
@@ -134,15 +142,27 @@ func _ready() -> void:
 	_show_line()
 
 
-## Le fond de l acte, etire en "couvrir" : les fonds sont en paysage, l ecran est
-## en portrait, un KEEP_ASPECT_CENTERED laisserait deux bandes noires.
+## Le decor de la scene, etire en "couvrir" : les decors sont en paysage
+## (1792 x 1024), l ecran est en portrait, un KEEP_ASPECT_CENTERED laisserait
+## deux bandes noires.
+##
+## POURQUOI UN DECOR ET PAS LE FOND DE COMBAT. Les scenes reutilisaient la
+## texture que le champ de bataille affiche derriere les monstres, assombrie de
+## moitie pour qu elle ne mange pas les portraits. Resultat : chaque dialogue se
+## jouait devant la meme pelouse verte delavee, et le joueur ne pouvait pas dire
+## ou il se trouvait. Le pack `Wood Elves` fournit des decors PEINTS, un par
+## lieu de l acte 1 — le prologue a son sanctuaire, le village a ses maisons,
+## le Gardien a son arbre.
+##
+## Ils sont a peine assombris (0.78 et pas 0.48) : un decor peint qu on eteint
+## de moitie redevient la bouillie qu on voulait quitter. Ce qui protege la
+## lisibilite du texte, c est la boite papier opaque, pas l obscurcissement.
 func _apply_backdrop() -> void:
 	var path: String = BACKDROPS + _def.scene_background + ".png"
 	if ResourceLoader.exists(path):
 		_backdrop.texture = load(path)
 	_backdrop.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	# Le fond est un decor de combat : assombri, il ne mange pas les portraits.
-	_backdrop.modulate = Color(0.48, 0.46, 0.58)
+	_backdrop.modulate = Color(0.78, 0.78, 0.82)
 
 
 func _style_text() -> void:
@@ -201,40 +221,47 @@ func _set_portrait(rect: TextureRect, key: StringName) -> void:
 	rect.flip_h = rect == _right
 
 
-## Un fichier de `assets/portraits/`, ou la premiere case d une feuille animee
-## du jeu. Null quand la cle est inconnue : le personnage parle sans visage
-## plutot que de faire planter la scene.
+## Le visage d un personnage du casting, ou la premiere case d une feuille
+## animee du jeu. Null quand la cle est inconnue : le personnage parle sans
+## visage plutot que de faire planter la scene.
 func _portrait_texture(key: StringName) -> Texture2D:
-	# Le VISAGE d abord : c est ce que le joueur doit lire.
-	var tete: Texture2D = _head_texture(key)
-	if tete != null:
-		return tete
-	# Repli sur le corps entier du meme personnage. Il vaut mieux un buste
-	# maladroit que pas de personnage du tout.
-	var path: String = String(FACES.get(key, ""))
-	if path != "" and ResourceLoader.exists(path):
-		return load(path)
+	var visage: Texture2D = _cast_texture(key)
+	if visage != null:
+		return visage
 	if SHEET_FACES.has(key):
 		return _sheet_frame(SHEET_FACES[key])
 	return null
 
 
-## Une case de la grille des visages. Null si la cle est inconnue ou si la
-## planche manque — l appelant retombe alors sur le corps entier.
-func _head_texture(key: StringName) -> Texture2D:
-	if not HEAD_FACES.has(key) or not ResourceLoader.exists(HEADS):
+## Une case de la planche du casting. Null si la cle est inconnue ou si la
+## planche manque — l appelant essaie alors les feuilles animees du jeu.
+func _cast_texture(key: StringName) -> Texture2D:
+	if not CAST.has(key):
 		return null
-	var grille: Texture2D = load(HEADS)
-	if grille == null:
+	var fiche: Dictionary = CAST[key]
+	var chemin: String = String(fiche.get("sheet", ""))
+	if chemin == "" or not ResourceLoader.exists(chemin):
 		return null
-	var rc: Array = HEAD_FACES[key]
+	var planche: Texture2D = load(chemin)
+	if planche == null:
+		return null
+	var rc: Array = fiche.get("cell", [])
+	if rc.size() < 2:
+		return null
 	var ligne: int = int(rc[0]) - 1
 	var colonne: int = int(rc[1]) - 1
-	if ligne < 0 or colonne < 0 or colonne >= HEAD_COLS:
+	if ligne < 0 or colonne < 0:
+		return null
+	# Une case hors planche donnerait un rectangle vide a l ecran, ce qui se lit
+	# comme "ce personnage n a pas de portrait" alors que c est une faute de
+	# frappe dans la table. On refuse plutot que d afficher du vide.
+	if (colonne + 1) * CAST_PX > planche.get_width():
+		return null
+	if (ligne + 1) * CAST_PX > planche.get_height():
 		return null
 	var at := AtlasTexture.new()
-	at.atlas = grille
-	at.region = Rect2(colonne * HEAD_PX, ligne * HEAD_PX, HEAD_PX, HEAD_PX)
+	at.atlas = planche
+	at.region = Rect2(colonne * CAST_PX, ligne * CAST_PX, CAST_PX, CAST_PX)
 	return at
 
 

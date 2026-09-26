@@ -22,6 +22,8 @@ func run() -> void:
 	_test_rien_ne_se_joue_en_headless()
 	_test_le_massacre_na_pas_dhistoire()
 	_test_chaque_personnage_a_un_visage()
+	_test_le_mage_nest_plus_un_demon()
+	_test_les_fonds_de_dialogue_sont_des_decors()
 	SaveData.reset_profile()
 
 
@@ -188,14 +190,19 @@ func _test_le_massacre_na_pas_dhistoire() -> void:
 	SaveData.reset_profile()
 
 
-## Chaque personnage qui parle doit avoir un VISAGE, et ce visage doit venir de
-## la grille de gros plans, pas du corps entier.
+## Chaque personnage qui parle doit avoir un VISAGE, et ce visage doit venir
+## d une planche de portraits recadree, pas d un corps entier.
 ##
-## Le defaut que ce test empeche de revenir : les scenes affichaient le CORPS
-## ENTIER du pack, ou le visage fait 40 px tout en haut d une silhouette a
-## pattes d araignee. Le personnage etait illisible, et on parlait du "mage
-## demon cornu" comme d une fatalite alors que le pack fournissait les 32 gros
-## plans depuis le debut — extraits, jamais branches.
+## Le defaut que ce test empeche de revenir, en deux temps.
+##
+## 1. Les scenes affichaient le CORPS ENTIER du pack, ou le visage fait 40 px
+##    tout en haut d une silhouette a pattes d araignee. On corrige en exigeant
+##    un AtlasTexture : la preuve qu on a recadre sur le visage.
+## 2. Le seul pack disponible ne contenait que des GUERRIERS DEMONS. Le heros du
+##    jeu, un vieux mage humain, etait affiche en demon cornu a peau orange. Un
+##    AtlasTexture ne suffit donc pas : il faut aussi que le portrait vienne du
+##    pack de PERSONNAGES et pas de la planche de demons. C est le role de
+##    `_test_le_mage_nest_plus_un_demon` ci-dessous.
 func _test_chaque_personnage_a_un_visage() -> void:
 	var scene: PackedScene = load("res://scenes/story/StoryScene.tscn")
 	ok(scene != null, "la scene d histoire se charge")
@@ -207,54 +214,117 @@ func _test_chaque_personnage_a_un_visage() -> void:
 	# et en ajouter un pour le confort du test ferait porter au code de
 	# production une contrainte que seul le test demande.
 	var sc: Script = vue.get_script()
-	var head_px: int = int(sc.get_script_constant_map()["HEAD_PX"])
-	var head_cols: int = int(sc.get_script_constant_map()["HEAD_COLS"])
-	var head_faces: Dictionary = sc.get_script_constant_map()["HEAD_FACES"]
-	var faces: Dictionary = sc.get_script_constant_map()["FACES"]
+	var cartes: Dictionary = sc.get_script_constant_map()["CAST"]
 
-	# 1. Toute cle citee par une replique a un visage en gros plan.
+	# 1. Toute cle citee par une replique a un visage.
 	# Les dialogues vivent dans un DOSSIER, pas dans ContentDB : on les parcourt
 	# comme le fait _test_chaque_replique_est_bien_formee().
-	var citees: Dictionary = {}
-	var dir: DirAccess = DirAccess.open(DialogueDef.DIR)
-	if dir != null:
-		for file in dir.get_files():
-			if not file.ends_with(".tres"):
-				continue
-			var d: DialogueDef = load(DialogueDef.DIR + file) as DialogueDef
-			if d == null:
-				continue
-			for i in d.line_count():
-				var k: StringName = StringName(d.line(i).get("portrait", ""))
-				if k != &"":
-					citees[k] = true
+	var citees: Dictionary = _portraits_cites()
 	ok(not citees.is_empty(), "des repliques citent des portraits (%d cles)"
 		% citees.size())
 	for k in citees:
+		ok(cartes.has(k), "%s est dans le casting" % k)
 		var tex: Texture2D = vue.call(&"_portrait_texture", k)
 		ok(tex != null, "%s a un portrait" % k)
-		# Un AtlasTexture prouve que ca vient de la GRILLE de visages. Un
-		# ImageTexture voudrait dire qu on est retombe sur le corps entier.
+		# Un AtlasTexture prouve qu on a RECADRE sur le visage. Un ImageTexture
+		# voudrait dire qu on affiche la planche ou le corps entier tel quel.
 		ok(tex is AtlasTexture,
 			"%s est un gros plan, pas un corps entier" % k)
 		if tex is AtlasTexture:
 			var r: Rect2 = (tex as AtlasTexture).region
-			eq(int(r.size.x), head_px, "%s : largeur d une case" % k)
-			eq(int(r.size.y), head_px, "%s : hauteur d une case" % k)
+			ok(r.size.x > 0.0 and r.size.y > 0.0,
+				"%s : la decoupe n est pas vide" % k)
 
-	# 2. Les deux tables decrivent les MEMES personnages. Si l une gagne une cle
-	#    que l autre n a pas, le repli renverrait quelqu un d autre a l ecran.
-	for k in head_faces:
-		ok(faces.has(k),
-			"%s a aussi un corps entier en repli" % k)
-
-	# 3. Les expressions existent dans la grille (4 colonnes, 8 lignes).
-	for k in head_faces:
-		var rc: Array = head_faces[k]
-		var ligne: int = int(rc[0])
-		var colonne: int = int(rc[1])
-		ok(ligne >= 1 and ligne <= 8, "%s : personnage %d dans la grille" % [k, ligne])
-		ok(colonne >= 1 and colonne <= head_cols,
-			"%s : expression %d dans la grille" % [k, colonne])
+	# 2. Tout le casting se resout, pas seulement ce que l acte 1 cite : les
+	#    actes 2 a 5 de docs/histoire.md citeront le reste, et une cle morte ne
+	#    se verrait qu au moment ou la scene s afficherait devant un joueur.
+	for k in cartes:
+		ok(vue.call(&"_portrait_texture", k) != null,
+			"%s (casting complet) se resout en portrait" % k)
 
 	detach(vue)
+
+
+## LE defaut principal, celui qui a survecu a trois vagues de travail : le mage
+## etait un DEMON CORNU. Le pack de portraits ne contenait que huit guerriers
+## demons, alors le heros du jeu — un vieux mage humain chauve (docs/histoire.md)
+## — empruntait le visage d une creature a cornes, peau orange et yeux bleus.
+##
+## Ce test est la garde : les personnages HUMAINS de l histoire ne doivent PAS
+## venir de la planche de demons. On le verifie sur la source du portrait, pas
+## sur son allure : c est la seule chose qu une machine sache lire.
+func _test_le_mage_nest_plus_un_demon() -> void:
+	var scene: PackedScene = load("res://scenes/story/StoryScene.tscn")
+	if scene == null:
+		return
+	var vue: Node = scene.instantiate()
+	attach(vue)
+	var sc: Script = vue.get_script()
+	var cartes: Dictionary = sc.get_script_constant_map()["CAST"]
+
+	# Les personnages que docs/histoire.md decrit comme humains ou humanoides
+	# non demoniaques. Le jour ou un acte ajoute un vrai demon qui parle, il ne
+	# sera pas dans cette liste et pourra garder une tete de demon.
+	var humains: Array[StringName] = [
+		&"mage", &"mage_grave", &"child", &"rat", &"mayor",
+		&"skeleton_king", &"guardian",
+	]
+	for k: StringName in humains:
+		ok(cartes.has(k), "%s fait partie du casting" % k)
+		var src: String = String(cartes.get(k, {}).get("sheet", ""))
+		not_ok(src.contains("demon_heads"),
+			"%s ne vient PAS de la planche de demons (source : %s)" % [k, src])
+
+	# Et le mage en particulier vient bien du pack de personnages.
+	var mage: Texture2D = vue.call(&"_portrait_texture", &"mage")
+	ok(mage is AtlasTexture, "le mage a un portrait recadre")
+	if mage is AtlasTexture:
+		var atlas: Texture2D = (mage as AtlasTexture).atlas
+		ok(atlas != null, "le portrait du mage a une planche source")
+		if atlas != null:
+			not_ok(atlas.resource_path.contains("demon"),
+				"la planche du mage n est pas celle des demons (%s)"
+				% atlas.resource_path)
+	detach(vue)
+
+
+## Les scenes de dialogue ne doivent plus reutiliser les fonds de COMBAT
+## assombris : le testeur a fourni un pack de decors peints pour ca.
+func _test_les_fonds_de_dialogue_sont_des_decors() -> void:
+	var dir: DirAccess = DirAccess.open(DialogueDef.DIR)
+	if dir == null:
+		return
+	var vus: int = 0
+	for file: String in dir.get_files():
+		if not file.ends_with(".tres"):
+			continue
+		var d: DialogueDef = load(DialogueDef.DIR + file) as DialogueDef
+		if d == null:
+			continue
+		vus += 1
+		# Un fond de combat s appelle `actN_*` : c est la texture que le
+		# champ de bataille affiche derriere les monstres. Une scene de
+		# dialogue merite son propre decor.
+		not_ok(d.scene_background.begins_with("act"),
+			"%s : fond de dialogue dedie, pas un fond de combat (%s)"
+			% [file, d.scene_background])
+	ok(vus > 0, "des scenes ont ete relues (%d)" % vus)
+
+
+## Les cles de portrait citees par toutes les scenes du disque.
+func _portraits_cites() -> Dictionary:
+	var citees: Dictionary = {}
+	var dir: DirAccess = DirAccess.open(DialogueDef.DIR)
+	if dir == null:
+		return citees
+	for file: String in dir.get_files():
+		if not file.ends_with(".tres"):
+			continue
+		var d: DialogueDef = load(DialogueDef.DIR + file) as DialogueDef
+		if d == null:
+			continue
+		for i: int in d.line_count():
+			var k: StringName = StringName(d.line(i).get("portrait", ""))
+			if k != &"":
+				citees[k] = true
+	return citees

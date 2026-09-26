@@ -29,6 +29,46 @@ Conventions :
 | **Le Maire** | Maire du village de l enfant, acte 1 | Il sait depuis des mois que l attaque vient d une autre ile, et il s est tu pour ne pas affoler |
 | **Le Gardien de la foret** | L esprit protecteur de Nuri. Un colosse de bois et de pierre | Il n est pas devenu fou : il a ete **retourne**. Premiere preuve que quelqu un commande aux monstres |
 
+### Les visages
+
+Les portraits des scenes de dialogue viennent du pack **TTRPG LEGEND [TOO MANY
+CHARACTERS]** (Ddant1100, itch.io — commercial autorise, credit demande), dossier
+`Faceset` : 100 personnages nommes par classe et par race, deja cadres en buste.
+Le rat, absent de ce pack, vient de **free_character_1_20** (cogabushi).
+
+La planche `assets/portraits/story_cast.png` est fabriquee par
+`tools/story/build_cast.py` ; la table `CAST` de `scripts/ui/story_scene.gd` dit
+quelle case revient a qui.
+
+| Personnage | Source | Pourquoi celui-la |
+|---|---|---|
+| Le Mage | `wizard_human_man_04` | **Chauve**, age, col de mage : le seul du pack a reunir les trois. Paupieres lourdes, bouche fermee — une expression qui ne contredit aucune de ses repliques |
+| L Enfant | `unknow_darkelve_boy_01` | Le seul jeune garcon du pack. Grands yeux, chemise usee, aucune arme |
+| L Enfant (divinite) | `deity_man_01` | Un masque de dragon d or, rien d humain dedans : la meme creature, vue enfin |
+| Le Rat pilote | `cogabushi A_18` | Un rat debout, capuche, besace d outils et de fioles. Autre pack, autre style — mais un nain etiquete "Le Rat pilote" serait un contresens |
+| Le Maire | `noble_human_man_02` | Couronne, lorgnons, fraise de notable, un document a la main : un homme de papiers, celui qui "savait depuis des mois" |
+| Le Roi squelette | `demon_human_man_01` | Crane decharne, chair grise recousue, yeux jaunes : un mort qui parle encore |
+| Le Gardien | `knight_raceless_man_01` | Un heaume vert et or **sans visage dedans**. Le pack le nomme "raceless" — un colosse mu par autre chose que lui-meme, ce que l acte 1 revele de lui |
+
+**Une expression par personnage.** Ce pack ne fournit qu un seul visage par
+personnage, la ou l ancien en donnait quatre. On a donc choisi des visages dont
+l expression ne contredit AUCUNE replique, plutot que de faire sourire le mage
+en disant "je n ai pas su les arreter". `mage_grave` partage la case de `mage`.
+
+### Les lieux des scenes
+
+Les dialogues ne se jouent plus devant le fond de COMBAT de l acte assombri de
+moitie — neuf scenes devant la meme pelouse. Chaque scene a son decor peint, pris
+dans le pack **Wood Elves**, copie par `tools/story/build_backdrops.py` :
+
+| Scene | Decor | Le lieu |
+|---|---|---|
+| `prologue` | `talk_shrine` | Un sanctuaire en ruine sous la lune : ce que le mage a deja perdu |
+| `lvl_01_*` | `talk_glade` | La clairiere au petit matin, la lumiere entre les racines |
+| `lvl_02_*` | `talk_village` | Le village de l enfant, ses maisons de bois eclairees |
+| `lvl_03_*` | `talk_path` | Le sentier et la maison isolee : la grange du maire |
+| `lvl_04_*` | `talk_greattree` | L arbre que le Gardien protege, et sous lequel il tombe |
+
 ---
 
 ## 2. PROLOGUE — Ce que le mage a deja perdu

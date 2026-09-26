@@ -97,6 +97,42 @@ const UNITS: Dictionary = {
 		"death": ["wraith_death", 14, false]},
 	## Le totem est un batiment : texture fixe.
 	"totem_tower": {"static": "totem_tower", "occupancy": 0.72},
+	## --- PACKS DU 26 SEPTEMBRE ---
+	## Quatorze silhouettes neuves, extraites par
+	## tools/assets/extract_packs_2026_09_26.py. Geometrie et occupation
+	## MESUREES sur les feuilles livrees, jamais reprises d un readme :
+	## les cases de ces packs sont souvent plus petites que la planche
+	## ne le laisse croire, et une occupation supposee donne un monstre
+	## minuscule ou geant. `walk` et `idle` bouclent, le reste joue une
+	## fois.
+	"flyingeye": {"frame": 56, "frame_h": 56, "occupancy": 0.73,
+		"walk": ["flyingeye_walk", 8], "attack": ["flyingeye_attack", 8, false], "hurt": ["flyingeye_hurt", 4, false], "death": ["flyingeye_death", 4, false]},
+	"goblin2": {"frame": 88, "frame_h": 88, "occupancy": 0.41,
+		"walk": ["goblin2_walk", 8], "idle": ["goblin2_idle", 4], "attack": ["goblin2_attack", 8, false], "hurt": ["goblin2_hurt", 4, false], "death": ["goblin2_death", 4, false]},
+	"mushroom": {"frame": 71, "frame_h": 71, "occupancy": 0.52,
+		"walk": ["mushroom_walk", 8], "idle": ["mushroom_idle", 4], "attack": ["mushroom_attack", 8, false], "hurt": ["mushroom_hurt", 4, false], "death": ["mushroom_death", 4, false]},
+	"skeleton2": {"frame": 98, "frame_h": 98, "occupancy": 0.52,
+		"walk": ["skeleton2_walk", 4], "idle": ["skeleton2_idle", 4], "attack": ["skeleton2_attack", 8, false], "hurt": ["skeleton2_hurt", 4, false], "death": ["skeleton2_death", 4, false], "shield": ["skeleton2_shield", 4, false]},
+	"evilwizard": {"frame": 94, "frame_h": 94, "occupancy": 0.59,
+		"walk": ["evilwizard_walk", 8], "idle": ["evilwizard_idle", 8], "attack": ["evilwizard_attack", 8, false], "hurt": ["evilwizard_hurt", 4, false], "death": ["evilwizard_death", 5, false]},
+	"fireworm": {"frame": 77, "frame_h": 77, "occupancy": 0.66,
+		"walk": ["fireworm_walk", 9], "idle": ["fireworm_idle", 9], "attack": ["fireworm_attack", 16, false], "hurt": ["fireworm_hurt", 3, false], "death": ["fireworm_death", 8, false]},
+	"ghoul": {"frame": 45, "frame_h": 45, "occupancy": 0.51,
+		"walk": ["ghoul_walk", 6], "idle": ["ghoul_idle", 10], "attack": ["ghoul_attack", 10, false], "hurt": ["ghoul_hurt", 5, false], "death": ["ghoul_death", 7, false]},
+	"gorgon": {"frame": 128, "frame_h": 128, "occupancy": 0.60,
+		"walk": ["gorgon_walk", 13], "idle": ["gorgon_idle", 7], "attack": ["gorgon_attack", 16, false], "hurt": ["gorgon_hurt", 3, false], "death": ["gorgon_death", 3, false]},
+	"bluewitch": {"frame": 48, "frame_h": 48, "occupancy": 0.79,
+		"walk": ["bluewitch_walk", 8], "idle": ["bluewitch_idle", 6], "attack": ["bluewitch_attack", 5, false], "hurt": ["bluewitch_hurt", 3, false], "death": ["bluewitch_death", 10, false]},
+	"smallmonster": {"frame": 81, "frame_h": 81, "occupancy": 0.35,
+		"walk": ["smallmonster_walk", 6], "idle": ["smallmonster_idle", 6], "attack": ["smallmonster_attack", 13, false], "death": ["smallmonster_death", 8, false]},
+	"mageguardian": {"frame": 58, "frame_h": 58, "occupancy": 0.97,
+		"idle": ["mageguardian_idle", 4], "attack": ["mageguardian_attack", 6, false], "death": ["mageguardian_death", 4, false]},
+	"demonslime": {"frame": 210, "frame_h": 210, "occupancy": 0.50,
+		"walk": ["demonslime_walk", 12], "idle": ["demonslime_idle", 6], "attack": ["demonslime_attack", 15, false], "hurt": ["demonslime_hurt", 5, false], "death": ["demonslime_death", 22, false]},
+	"nightborne": {"frame": 77, "frame_h": 77, "occupancy": 0.45,
+		"walk": ["nightborne_walk", 6], "idle": ["nightborne_idle", 9], "attack": ["nightborne_attack", 12, false], "hurt": ["nightborne_hurt", 5, false], "death": ["nightborne_death", 23, false]},
+	"executioner": {"frame": 84, "frame_h": 84, "occupancy": 0.74,
+		"idle": ["executioner_idle", 8], "attack": ["executioner_attack", 12, false], "death": ["executioner_death", 18, false], "summon": ["executioner_summon", 5, false]},
 }
 
 ## Teintes legeres pour distinguer deux familles qui partagent une feuille.
@@ -111,6 +147,7 @@ const MODULATE: Dictionary = {
 	## plus acide que celui de la Gelee, pour qu on ne confonde pas une munition
 	## avec un monstre qu il vaut la peine de tuer.
 	"poison_ball": Color(0.45, 1.00, 0.30),
+
 }
 
 

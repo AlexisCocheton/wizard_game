@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_b0wf5")
 id = &"lvl_04_outro"
-scene_background = "act1_sky"
+scene_background = "talk_greattree"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
