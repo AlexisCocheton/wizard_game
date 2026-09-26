@@ -160,19 +160,20 @@ func _passives() -> void:
 	# Renversent une regle CENTRALE du jeu. Seuils 300+ : il faut avoir survecu
 	# assez longtemps sans etre touche pour y arriver, ce qui est deja l exploit.
 
-	# S attaque a la punition centrale du jeu : un coup ne remet plus la jauge au
-	# plancher. Le bouclier reste consomme et les PV restent entames — seul le
-	# retour a zero de la vitesse est adouci.
+	# S attaque a la punition centrale du jeu. Depuis que la vitesse EST la vie,
+	# "perdre moitie moins de vitesse" veut dire "encaisser moitie moins de
+	# degats" : le passif n a pas change de code, il a change de portee — il est
+	# devenu la seule reduction de degats du jeu, ce qui justifie son rang.
 	_emit(_passive("pass_timelock", "Verrou temporel",
-		"Au-dela de 300 % de vitesse : un coup encaisse ne fait plus perdre que"
-		+ " la moitie de la vitesse au lieu de la faire retomber.",
+		"Au-dela de 300 % de vitesse : un coup encaisse ne coute que la moitie"
+		+ " de la vitesse qu il devrait.",
 		GameEnums.Rarity.LEGENDARY, 300, "passive_shield_keeper", 1.0))
 
 	_emit(_passive("pass_overflow", "Debordement",
 		"Au-dela de 350 % de vitesse : chaque sort lance se resout DEUX FOIS.",
 		GameEnums.Rarity.LEGENDARY, 350, "passive_twin_cast", 1.0))
 
-	# La vitesse multipliait l XP et donnait du bouclier ; ici elle multiplie
+	# La vitesse multiplie deja l XP et porte la vie du mage ; ici elle multiplie
 	# aussi les DEGATS. A 400 % le mage frappe quatre fois plus fort — c est le
 	# passif le plus bouleversant du catalogue, donc le seuil le plus haut.
 	_emit(_passive("pass_apotheosis", "Apotheose",

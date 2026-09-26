@@ -556,6 +556,209 @@ func _enemies() -> void:
 	_save(mirror, E + "glass_mirror.tres")
 
 
+	# --- CHANTIER I2 : les silhouettes du 26 septembre entrent en jeu --------
+	#
+	# Quatorze feuilles avaient ete extraites et inscrites dans AnimCatalog sans
+	# qu AUCUN monstre ne les porte : du travail sur le disque, invisible en jeu.
+	# Sept entrent ici, choisies parce qu elles debloquent une demande NOMMEE du
+	# testeur, pas parce qu il restait des feuilles a caser.
+	#
+	# Ce qui est ECARTE et pourquoi, pour que le choix soit relisible :
+	#   flyingeye, goblin2, skeleton2, evilwizard, fireworm, ghoul, bluewitch,
+	#   nightborne, mageguardian — neuf silhouettes sans mecanique a servir. Le
+	#   bestiaire compte deja 21 types et cinq familles de comportement par
+	#   monde ; en ajouter neuf qui descendent tout droit avec d autres PV
+	#   diluerait chaque monde sans rien apprendre au joueur, et le garde-fou de
+	#   densite (build_membership) les repartirait au hasard des vagues ou on les
+	#   aurait glissees. Une silhouette merite un monstre quand elle porte une
+	#   REPONSE nouvelle, jamais quand elle est disponible.
+
+	# LE REGARD, palier 1 — monstre COMMUN qui gele UNE carte.
+	#
+	# Demande du testeur, mot pour mot : « Creer un monstre normal qui en bloque
+	# 1, un mini bosse qui en bloque 2 et un bosse qui en bloque 3. »
+	#
+	# P3 et non P2 : geler une carte de la main est plus cher pour le joueur que
+	# n importe quel comportement de puissance 2 du bestiaire — il perd un sixieme
+	# de ses options tant qu elle vit, quel que soit le reste de la vague. Les PV
+	# sont en revanche VOLONTAIREMENT BAS pour un P3 (26 contre 55 au golem) : la
+	# reponse est « tue-la vite », et un P3 blinde qui gele une carte serait une
+	# taxe de vingt secondes au lieu d une cible prioritaire.
+	#
+	# LENTE (38 px/s) : il faut qu elle vive assez longtemps pour que le joueur
+	# VOIE sa main se figer et comprenne d ou ca vient. Une gorgone rapide serait
+	# morte ou au contact avant qu il ait lu la cause.
+	var gorgon := _enemy("gorgon_gazer", "Gorgone", K.NORMAL, 3, 26.0, 38.0, 5,
+		S.DIAMOND, Color(0.55, 0.80, 0.50), 30.0)
+	gorgon.anim_key = &"gorgon"
+	gorgon.blocks_cards = 1
+	# Chair ecailleuse de serpent : le froid l engourdit, le venin ne mord pas sur
+	# ce qui en est fait. Le physique la fend — la reponse est la carte la plus
+	# banale du deck, et c est voulu : geler une carte ne doit pas geler la REPONSE.
+	_resist(gorgon, {&"phys": 1.25, &"feu": 1.0, &"givre": 1.2, &"arcane": 0.85, &"poison": 0.6})
+	_save(gorgon, E + "gorgon_gazer.tres")
+
+	# LE REGARD, palier 2 — MINI-BOSS qui gele DEUX cartes.
+	#
+	# Elle prend la tete du mini-boss de `lvl_02`, ou descendait le Corniste : un
+	# monstre ORDINAIRE de puissance 3 menait ce palier, ce qui n en faisait pas
+	# un palier. Le Corniste reste dans la vague, comme escorte — son buff de
+	# vitesse a enfin un sens sous une tete qui, elle, mutile la main.
+	#
+	# C est le palier PEDAGOGIQUE : deux cartes gelees au niveau 2, avec une main
+	# de 5 ou 6 cartes, cout reel et lisible, sans jamais approcher le plafond.
+	# Le joueur apprend la mecanique ici pour la payer a trois plus tard.
+	var gorgon_mini := _enemy("gorgon_matron", "Matrone gorgone", K.MINIBOSS, 6,
+		120.0, 32.0, 12, S.DIAMOND, Color(0.40, 0.70, 0.45), 56.0)
+	gorgon_mini.anim_key = &"gorgon"
+	gorgon_mini.blocks_cards = 2
+	# 120 PV, le plus BAS des mini-boss du jeu (contre 165 au Gardien d ossements).
+	# Deux cartes gelees valent deja des PV : un mini-boss qui gele la main ET
+	# encaisse comme les autres serait deux mini-boss.
+	_resist(gorgon_mini, {&"phys": 1.2, &"feu": 1.1, &"givre": 1.15, &"arcane": 0.8, &"poison": 0.55})
+	_save(gorgon_mini, E + "gorgon_matron.tres")
+
+	# LE REGARD, palier 3 — BOSS qui gele TROIS cartes.
+	#
+	# POURQUOI ELLE N A PAS DE NIVEAU DE CAMPAGNE. Les sept niveaux ont chacun
+	# leur boss, et six portent une mecanique ecrite pour eux (morcele,
+	# canonnier, invocateur, ressuscite, compteur de coups, renvoi). Lui faire de
+	# la place voulait dire en deplacer un, donc casser le chantier I et la
+	# narration de docs/histoire.md. Elle regne donc sur le MASSACRE : c est la
+	# ou le joueur va chercher les combats que la campagne ne contient pas, et
+	# `pick_boss()` tire au hasard parmi les boss du monde — elle sort vraiment,
+	# la sonde de test_bosses le verifie sur 300 vagues.
+	#
+	# Elle descend AUSSI comme escorte d une vague de campagne (`w2_5`), ce qui
+	# lui donne son monde et la rend rencontrable avant le Massacre.
+	#
+	# TROIS cartes, jamais plus : le plafond de la main (5 sur 6) la borne deja,
+	# mais un seul monstre a 4 regards y arriverait tout seul, et la mecanique
+	# cesserait d etre un cout pour devenir une interdiction de jouer.
+	var gorgon_boss := _enemy("gorgon_queen", "Reine gorgone", K.BOSS, 10,
+		230.0, 28.0, 30, S.DIAMOND, Color(0.30, 0.60, 0.38), 74.0)
+	gorgon_boss.anim_key = &"gorgon"
+	# La feuille gorgon occupe 60 % de sa case : correct pour un monstre commun,
+	# trop petit pour une tete de Massacre a cote d un Behemoth.
+	gorgon_boss.sprite_scale = 1.3
+	gorgon_boss.blocks_cards = 3
+	# 230 PV, sous Chronos (320) : la mecanique coute deja au joueur la moitie de
+	# ses options. Le physique reste sa faille, comme chez ses filles : la reponse
+	# a toute la lignee est la meme, et le joueur qui l a trouvee sur la Gorgone
+	# commune la garde jusqu a la Reine.
+	_resist(gorgon_boss, {&"phys": 1.2, &"feu": 1.05, &"givre": 1.1, &"arcane": 0.8, &"poison": 0.5, &"lent": 0.5})
+	_save(gorgon_boss, E + "gorgon_queen.tres")
+
+	# LE SLIME DEMONIAQUE. Demande du testeur : « toujours le meme concept de
+	# slime mais dans le monde demon et immunise au feu ».
+	#
+	# CE QUE L IMMUNITE AU FEU CHANGE, et c est tout l interet de la demande : la
+	# Gelee est LE monstre qu on brule, c est ecrit dans sa table (+15 % au feu)
+	# et le joueur l apprend des le premier niveau. Le slime demoniaque a la meme
+	# silhouette de masse molle, la meme division a la mort — et le reflexe
+	# acquis ne fait RIEN. C est la meilleure facon d enseigner qu il faut lire le
+	# bestiaire plutot que reconnaitre une forme.
+	#
+	# Il se divise en Gelees MOYENNES existantes plutot qu en enfants dedies :
+	# deux raisons. Ses enfants n heritent PAS de son immunite, donc le joueur qui
+	# a insiste au feu est recompense a la seconde moitie du combat — la mecanique
+	# a une sortie. Et la silhouette des enfants est celle qu il connait deja, donc
+	# il lit tout de suite ce qui vient de tomber.
+	var demon_slime := _enemy("demon_slime", "Slime demoniaque", K.SPLITTER, 4,
+		78.0, 44.0, 9, S.CIRCLE, Color(0.85, 0.25, 0.30), 42.0)
+	demon_slime.anim_key = &"demonslime"
+	# La feuille demonslime fait 210 px de case pour 50 % d occupation : c est la
+	# plus grande du catalogue. Sans reduction il ecraserait un Behemoth alors
+	# qu il n est qu un P4.
+	demon_slime.sprite_scale = 0.85
+	demon_slime.split_into = jelly_mid
+	demon_slime.split_count = 2
+	# IMMUNISE AU FEU (0.0), mot pour mot la demande. Le givre en revanche le
+	# prend en bloc : le choc thermique est la reponse du monde demoniaque, deja
+	# celle du Colosse des Forges et du Seigneur de braise — le joueur qui a
+	# compris l acte III sait quoi emporter.
+	_resist(demon_slime, {&"phys": 0.8, &"feu": 0.0, &"givre": 1.35, &"arcane": 1.1, &"poison": 0.6, &"foudre": 1.1})
+	_save(demon_slime, E + "demon_slime.tres")
+
+	# LE BOURREAU. Demande du testeur : « peut etre un bosse qui n avance pas qui
+	# tape le sol pour faire une onde de choque qui fait des degats ».
+	#
+	# CE QUE LA MECANIQUE CHANGE. Le Seigneur Spectre campe deja, mais il TIRE :
+	# le joueur sort de sa ligne et il est tranquille. Une onde BALAIE un cercle,
+	# donc il n y a plus de ligne a quitter, il y a une DISTANCE a tenir — et son
+	# decor (murs, arbres provocateurs, semis) doit la tenir aussi. C est la
+	# premiere zone interdite FIXE du jeu.
+	#
+	# VITESSE NULLE, mot pour mot la demande. C est ce qui rend l onde jouable :
+	# une zone interdite qui se deplacerait en frappant ne laisserait aucun
+	# endroit sur, il suffirait d attendre et il n y aurait plus de decision.
+	# Consequence a assumer : il ne peut pas atteindre le mage tout seul, donc son
+	# escorte EST la moitie du combat.
+	var executioner := _enemy("executioner", "Le Bourreau", K.MINIBOSS, 6,
+		145.0, 0.0, 14, S.HEXAGON, Color(0.45, 0.30, 0.35), 60.0)
+	executioner.anim_key = &"executioner"
+	# 3,2 s entre deux coups : le temps de traverser son cercle, de lancer un sort
+	# et de ressortir. A 2 s le joueur n avait plus le temps d incanter dedans,
+	# donc plus de choix a prendre ; a 5 s l onde devenait un decor.
+	executioner.shockwave_interval = 3.2
+	# 340 px, soit moins d un tiers de la largeur du terrain (1080) : large assez
+	# pour interdire un couloir, serre assez pour qu il reste de la place a cote.
+	executioner.shockwave_radius = 340.0
+	# 6 degats : entre la fleche du lutin (2) et le contact d un P4. Elle doit
+	# USER le joueur qui reste dedans, jamais le tuer d un coup — sinon la seule
+	# strategie serait de ne jamais entrer, et il n y aurait plus rien a decider.
+	executioner.shockwave_damage = 6
+	# Il porte aussi une feuille `summon` : il appelle ses condamnes. Deux raisons
+	# de jeu — un boss qui n avance pas ne peut pas menacer le mage seul, et le
+	# joueur doit avoir une raison de venir a lui plutot que d ignorer un pilier.
+	executioner.summon_def = load(E + "risen_ghoul.tres")
+	executioner.summon_interval = 6.0
+	executioner.summon_count = 1
+	executioner.summon_max_alive = 3
+	# Bourreau de metier : cuir et acier, insensible au venin comme au
+	# ralentissement (on ne retient pas une masse qui ne bouge deja pas). L arcane
+	# et la foudre passent son tablier. C est un boss qu on tue a la magie, pas a
+	# l usure.
+	_resist(executioner, {&"phys": 0.7, &"feu": 0.9, &"givre": 0.95, &"arcane": 1.3, &"poison": 0.0, &"foudre": 1.25, &"lent": 0.0})
+	_save(executioner, E + "executioner.tres")
+
+	# LE CHAMPIGNON ET LA PLANTE. Le testeur a telecharge EXPRES `Free Tank_
+	# Mushroom_Idle` et le pack de champignons : deux silhouettes demandees sans
+	# mecanique attachee. Elles entrent donc comme ce qu elles sont — de la
+	# BIOMASSE du monde d origine, la famille qui manquait a l acte IV.
+	#
+	# Elles ne portent pas de comportement neuf, et c est assume : un monde a
+	# besoin de figurants qui se lisent au premier regard, sinon chaque vague est
+	# une somme de cas particuliers et le joueur ne peut plus lire la menace. Ce
+	# qu elles apportent est dans leur TABLE : ce sont les deux seuls monstres du
+	# jeu franchement vulnerables au FEU sans etre ni gelee ni mort-vivant, donc
+	# les premieres cibles ou le deck de feu du monde d origine sert a quelque chose.
+
+	# Tank de bas etage : lent, trapu, il encaisse. Le mot du pack est « Tank » et
+	# le monstre doit le tenir — 34 PV pour un P2, contre 10 a la Sauterelle.
+	var mushroom := _enemy("mushroom", "Champignon cuirasse", K.TANK, 2, 34.0, 34.0, 3,
+		S.CIRCLE, Color(0.80, 0.55, 0.45), 26.0)
+	mushroom.anim_key = &"mushroom"
+	# Chapeau spongieux : les coups s y enfoncent, le feu le racornit d un coup.
+	# Il baigne dans ses propres spores, donc le venin ne lui fait rien.
+	_resist(mushroom, {&"phys": 0.75, &"feu": 1.35, &"givre": 1.05, &"arcane": 1.0, &"poison": 0.6})
+	_save(mushroom, E + "mushroom.tres")
+
+	# La plante carnivore : l inverse du champignon. Elle ne tient rien, elle
+	# MORD — 12 PV pour 88 px/s. La feuille porte une attaque de 13 images, la
+	# plus longue morsure du pack.
+	var carnivore := _enemy("carnivore_plant", "Plante carnivore", K.FAST, 2, 12.0, 88.0, 3,
+		S.TRIANGLE, Color(0.35, 0.70, 0.35), 22.0)
+	carnivore.anim_key = &"smallmonster"
+	# La feuille smallmonster n occupe que 35 % de sa case : sans correction elle
+	# entrerait a la taille d un gnome alors qu elle doit se lire comme une gueule.
+	carnivore.sprite_scale = 1.2
+	# Tige et sap : le feu la consume, le givre la casse net. Rien a empoisonner
+	# dans une plante, et le physique glisse sur des fibres souples.
+	_resist(carnivore, {&"phys": 0.85, &"feu": 1.35, &"givre": 1.25, &"arcane": 0.9, &"poison": 0.5})
+	_save(carnivore, E + "carnivore_plant.tres")
+
+
 func _spec(key: String, magnitude: float, duration: float = 0.0,
 		radius: float = 0.0, params: Dictionary = {}) -> EffectSpec:
 	var s := EffectSpec.new()
@@ -653,7 +856,20 @@ func _cards() -> void:
 		"Ralentit tous les ennemis de 40 pourcent pendant 5 s.", GameEnums.Rarity.RARE, 1.4,
 		GameEnums.Targeting.NONE, [GameEnums.DamageTag.SLOW],
 		[_spec("slow_enemy_gauge", 40.0, 5.0)])
-	drag.fx_key = &"clock_spiral"
+	# L HORLOGE, sur le sort de temps le plus pur du jeu.
+	#
+	# `slow_enemy_gauge` passe par `screen_tint`, donc la feuille est etiree sur
+	# 1400 px de large : c est LE plus gros effet du jeu, et il affichait jusqu ici
+	# `midnight`, une grille de 100 px agrandie 25 fois. `timemagic` a des cases de
+	# 192 px et tient l agrandissement — c est precisement la « grosse resolution »
+	# que le testeur demandait pour les effets plein ecran.
+	#
+	# Pourquoi cette carte et pas une autre des cinq sorts de temps : l AUDIT
+	# interdit de partager une feuille, il fallait donc choisir. Entrave temporelle
+	# est la seule dont l effet est le ralentissement ET RIEN D AUTRE. Le Sablier et
+	# le Metier du monde ralentissent aussi, mais melangent hate et double lancer :
+	# l horloge y dirait la moitie du sort. Ici elle le dit en entier.
+	drag.fx_key = &"timemagic"
 	drag.sfx_key = &"zap_long"
 	_save(drag, "res://resources/cards/rare/temporal_drag.tres")
 
@@ -714,7 +930,12 @@ func _cards() -> void:
 		"Retire 2 cartes du deck.", GameEnums.Rarity.EPIC, 1.0,
 		GameEnums.Targeting.NONE, [],
 		[_spec("remove_cards", 0.0, 0.0, 0.0, {&"count": 2})])
-	purge.fx_key = &"orb_shatter"
+	# LE FANTOME QUI SE DISSOUT. La feuille part d une silhouette blanche nette et
+	# la reduit en poussiere de pixels en six images. Epuration RETIRE deux cartes du
+	# deck definitivement : c est une disparition, pas un eclat. `orb_shatter`
+	# montrait une sphere qui se brise — une casse, donc un contresens pour une carte
+	# qui efface.
+	purge.fx_key = &"dark_vanish"
 	purge.sfx_key = &"ward_light"
 	_save(purge, "res://resources/cards/epic/deck_purge.tres")
 
@@ -836,7 +1057,12 @@ func _cards() -> void:
 		"Les 2 prochains sorts lances reviennent en main au lieu d etre defausses.",
 		GameEnums.Rarity.RARE, 0.9, GameEnums.Targeting.NONE, [],
 		[_spec("retain_next", 2.0)])
-	recall.fx_key = &"bone_shards"
+	# L AME QUI S ENVOLE. La feuille montre un crane violet qui file en laissant une
+	# trainee : une ame qu on rappelle. C est le verbe meme de la carte, qui fait
+	# REVENIR les sorts en main au lieu de les laisser partir a la defausse.
+	# Premiere des trois feuilles d OMBRE du jeu, et la carte vient de l Ossuaire :
+	# l element colle au lieu autant qu a l effet.
+	recall.fx_key = &"dark_soul"
 	recall.sfx_key = &"ward_deep"
 	_save(recall, "res://resources/cards/rare/bone_recall.tres")
 
@@ -970,7 +1196,11 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 1.0, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.ARCANE],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
-	purify.fx_key = &"halo_ring"
+	# LA COLONNE DE LUMIERE, sur la carte qui s appelle Lumiere purifiante.
+	# Cases de 192 px, et une forme VERTICALE qui tombe du ciel sur un point precis :
+	# c est la lecture exacte d une dissipation ponctuelle. `halo_ring` etait un
+	# anneau de 64 px, invisible au milieu du cercle de portee.
+	purify.fx_key = &"lightpillar"
 	purify.sfx_key = &"ward_light"
 	_save(purify, "res://resources/cards/rare/purifying_light.tres")
 
@@ -1048,7 +1278,12 @@ func _cards() -> void:
 		# — exactement le genre d arbitrage que les resistances doivent creer.
 		[GameEnums.DamageTag.POISON, GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 10.0, 20.0, 340.0, {&"slow_pct": 25.0})])
-	venom.fx_key = &"skull_burst"
+	# LES SPECTRES QUI MONTENT DU SOL. Quinze images de silhouettes sombres qui
+	# s elevent d un nuage : jouee en BOUCLE au centre d une mare qui dure 20 s,
+	# c est une zone qui respire au lieu d une image figee. La feuille est sombre et
+	# la mare est un poison de mort-vivant : la teinte du pack sert le sort sans
+	# qu on ait a la forcer.
+	venom.fx_key = &"dark_swirl"
 	venom.sfx_key = &"spell_crackle"
 	_save(venom, "res://resources/cards/legendary/venom_mire.tres")
 
@@ -1409,16 +1644,35 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# faire la tete de vague change la nature du probleme, pas seulement sa
 	# taille.
 	#
-	# Escorte RENFORCEE, et ce n est pas un reglage a vue : le Corniste ne pese
-	# que 18 PV la ou le Gardien en pesait 94. Le garde-fou d equilibrage a
-	# attrape le trou ("lvl_02 / w2_5 : 294 PV apres 94") — la vague 5 devenait
-	# plus de trois fois la vague 4. On rend le poids par le NOMBRE, ce qui
-	# colle au role du Corniste : il presse les autres, il ne cogne pas.
+	# CHANTIER I2 — LA MATRONE GORGONE PREND LA TETE, le Corniste redevient son
+	# escorte. Pourquoi ce remplacement et pas une vague de plus :
+	#
+	# Le Corniste est un monstre ORDINAIRE de puissance 3 (18 PV). Il menait ce
+	# palier par defaut, faute de mini-boss disponible au moment ou le Gardien a
+	# ete retire — c etait le moins mauvais choix, pas un bon. Un mini-boss doit
+	# poser une QUESTION que la vague normale ne pose pas, et « il presse les
+	# autres » est une question d intensite, pas de nature.
+	#
+	# La Matrone, elle, gele DEUX cartes de la main : le joueur decouvre ici, au
+	# niveau 2, que sa main peut etre mutilee et que la reponse est sur le
+	# terrain. C est le palier pedagogique de la mecanique, avant la Reine a
+	# trois cartes dans le Massacre.
+	#
+	# Le Corniste RESTE dans la vague et y gagne son role : son buff de vitesse
+	# accelere l escorte pendant que le joueur a deux cartes en moins. Deux
+	# problemes qui se multiplient, la ou ils s additionnaient.
+	#
+	# L escorte est ALLEGEE en consequence (six lutins au lieu de six plus deux
+	# serpents) : la Matrone pese 120 PV la ou le Corniste en pesait 18, et le
+	# garde-fou d equilibrage refuse qu une vague double la precedente. C est
+	# exactement le trou inverse de celui mesure en septembre — il fallait alors
+	# du nombre pour compenser une tete legere, il faut maintenant en retirer
+	# pour compenser une tete lourde.
 	v4.entries = [
-		_entry(E + "hornblower.tres", 2, 4.0),
-		_entry(E + "sprite.tres", 6, 1.5, 6.0),
-		_entry(E + "hopper.tres", 4, 1.6, 14.0),
-		_entry(E + "sand_serpent.tres", 2, 2.0, 22.0),
+		_entry(E + "gorgon_matron.tres", 1, 1.0),
+		_entry(E + "hornblower.tres", 1, 4.0, 5.0),
+		_entry(E + "sprite.tres", 5, 1.5, 9.0),
+		_entry(E + "hopper.tres", 3, 1.6, 18.0),
 	]
 	_save(v4, "res://resources/waves/w2_4_miniboss.tres")
 
@@ -1432,10 +1686,17 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# aucune vague n appartient a aucun monde, donc le mode infini ne le
 	# proposera JAMAIS — verifie par sonde, les quatre nouveaux etaient
 	# invisibles. Le creer ne suffisait pas, il faut le montrer une fois.
+	# CHANTIER I2 — LA GORGONE COMMUNE descend ici, apres sa Matrone. L ordre est
+	# volontairement INVERSE de l habitude : le joueur voit d abord la mecanique
+	# sur une tete de vague annoncee, puis la retrouve sur un monstre ordinaire
+	# qu il n attendait pas. C est ce second temps qui la lui apprend vraiment —
+	# une carte gelee au milieu d une vague banale, et il sait deja quoi chercher
+	# a l ecran.
 	v5.entries = [
 		_entry(E + "hive.tres", 1, 3.0),
-		_entry(E + "golem.tres", 2, 2.5, 7.0),
-		_entry(E + "sand_serpent.tres", 3, 2.0, 15.0),
+		_entry(E + "gorgon_gazer.tres", 2, 3.0, 6.0),
+		_entry(E + "golem.tres", 1, 2.5, 12.0),
+		_entry(E + "sand_serpent.tres", 3, 2.0, 18.0),
 	]
 	_save(v5, "res://resources/waves/w2_5.tres")
 
@@ -1491,10 +1752,26 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	#
 	# L escorte est volontairement CLAIRSEMEE et arrive TOT : le releve doit tomber
 	# dans un moment calme, sinon le joueur regarde ailleurs et ne voit rien.
+	#
+	# CHANTIER I2 — LA REINE GORGONE entre ici comme ESCORTE, tard dans la vague.
+	# Ce n est pas un habillage, c est la condition de son existence : elle n a
+	# pas de niveau de campagne (les sept boss sont pris), donc elle regne sur le
+	# Massacre — et `build_membership()` deduit le monde d un monstre de sa
+	# DENSITE dans les vagues ECRITES. Sans cette apparition, elle n appartient a
+	# aucun monde, `pick_boss()` ne la considere jamais, et le joueur ne la
+	# rencontre nulle part. Le piege exact mesure en septembre sur quatre
+	# mini-boss : le .tres existait, le joueur ne les voyait pas.
+	#
+	# A 30 s, donc APRES le releve du Coagule (il tombe vers la 20e seconde) :
+	# trois cartes gelees pendant le releve rendrait la scene illisible, alors que
+	# trois cartes gelees APRES, quand le joueur croit la vague finie, est
+	# exactement la surprise qu on veut. Une seule, et elle est lente (28 px/s) :
+	# elle ferme la vague, elle ne la double pas.
 	v7.entries = [
 		_entry(E + "blood_coagulum.tres", 1, 1.0),
 		_entry(E + "hopper.tres", 4, 2.0, 8.0),
-		_entry(E + "sprite.tres", 4, 2.0, 18.0),
+		_entry(E + "sprite.tres", 3, 2.0, 18.0),
+		_entry(E + "gorgon_queen.tres", 1, 1.0, 30.0),
 	]
 	_save(v7, "res://resources/waves/w2_7_boss.tres")
 
@@ -1522,6 +1799,8 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 		load(E + "void_knight.tres"), load(E + "jelly.tres"), load(E + "ghoul_priest.tres"),
 		load(E + "hive.tres"), load(E + "totem_guardian.tres"), load(E + "glutton.tres"),
 		load(E + "behemoth.tres"),
+		# CHANTIER I2 — la lignee gorgone, rencontree dans ce niveau.
+		load(E + "gorgon_gazer.tres"),
 	]
 	# Le niveau 2 envoie le DOUBLE de PV du niveau 1 : son deck doit suivre, sinon
 	# le joueur affronte deux fois plus avec les memes outils. Plus de zones, qui
@@ -2005,12 +2284,23 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# Lent, donc traitable ; mais il faut y consacrer plusieurs sorts d affilee.
 	# Meme cause : 6 corps, tous mono-cible. Une nuee oblige a sortir une zone au
 	# milieu du duel contre le behemoth.
+	# CHANTIER I2 — LE SLIME DEMONIAQUE entre ici, dans le monde demoniaque comme
+	# le testeur l a demande. Place juste apres le Behemoth, et c est le point :
+	# les Forges sont LE niveau du deck mono-cible lourd, et le joueur y a appris
+	# a bruler ce qui est mou. Le slime a la silhouette d une gelee, la division
+	# d une gelee — et il est IMMUNISE au feu. Son reflexe ne fait rien, et ses
+	# enfants, eux, brulent : la lecon a une sortie dans le meme combat.
+	#
+	# Un seul exemplaire : il pese 78 PV plus deux Gelees moyennes a la mort
+	# (28 PV), soit 106 PV a traiter avec le mauvais element. En mettre deux
+	# aurait fait sauter le garde-fou d equilibrage sur une vague deja lourde.
 	c4.entries = [
 		_entry(E + "behemoth.tres", 1, 1.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 8.0),
-		_entry(E + "berserker.tres", 2, 2.5, 18.0),
-		_entry(E + "rat_swarm.tres", 1, 2.4, 20.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 24.0),
+		_entry(E + "demon_slime.tres", 1, 1.0, 6.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 12.0),
+		_entry(E + "berserker.tres", 1, 2.5, 19.0),
+		_entry(E + "rat_swarm.tres", 1, 2.4, 22.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 26.0),
 	]
 	_save(c4, "res://resources/waves/w5_4.tres")
 
@@ -2067,6 +2357,8 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "berserker.tres"), load(E + "void_knight.tres"),
 		load(E + "behemoth.tres"), load(E + "totem_guardian.tres"),
 		load(E + "hornblower.tres"), load(E + "imp_archer.tres"),
+		# CHANTIER I2 — le slime demoniaque, la gelee du monde demon.
+		load(E + "demon_slime.tres"),
 	]
 	# DECK ANTI-BLINDAGE. Contre 55 a 130 PV par corps, une zone a 8 degats/s est
 	# du gaspillage : il faut des paquets de degats. Meteore (60 d un coup),
@@ -2154,14 +2446,31 @@ cadran, et ils ignorent qui la passe."
 	# Mesure au banc : les nuees de rats causaient la moitie des coups recus. Une
 	# nuee compte pour PLUSIEURS corps (swarm_count) et arrivait pendant que le
 	# mini-boss monopolisait l attention. Deux entrees, plus espacees.
-	# LE CHEVALIER DU VIDE, et non le Gardien (mort en `lvl_04`, voir lvl_02).
-	# Son armure AVALE la magie (arcane 0,65) : c est l inverse exact du Golem,
-	# et un deck regle pour l un est faux pour l autre. Place ici, il oblige a
-	# repenser un deck qui a fonctionne pendant cinq niveaux.
+	# CHANTIER I2 — LE BOURREAU prend la tete, le Chevalier du vide redevient son
+	# escorte. Meme raison que pour la Matrone en `lvl_02` : le Chevalier est un
+	# monstre ORDINAIRE de puissance 3 et il menait ce palier faute de mini-boss
+	# disponible. Son armure qui avale la magie est une bonne QUESTION D ELEMENT,
+	# mais elle ne change pas la facon de se placer, et c est ce qu un palier doit
+	# faire.
+	#
+	# Le Bourreau, lui, N AVANCE PAS et frappe le sol : la premiere zone interdite
+	# FIXE du jeu. La Cour brisee est le bon endroit — c est deja le niveau ou le
+	# Seigneur Spectre campe a 430 px, donc celui ou le joueur apprend que tout ne
+	# vient pas a lui. Le mini-boss lui enseigne le cercle, le boss la distance :
+	# deux facons de refuser le contact, dans l ordre.
+	#
+	# Il invoque une Goule levee toutes les 6 s (plafond 3) : un boss immobile ne
+	# peut pas menacer le mage seul, et sans ce flux le joueur pourrait simplement
+	# l ignorer jusqu a la fin de la vague. C est ce qui l oblige a entrer dans le
+	# cercle.
+	#
+	# Escorte allegee : le Bourreau pese 145 PV la ou le Chevalier en pesait 34,
+	# plus ses goules. Le garde-fou d equilibrage refuse le doublement.
 	d3.entries = [
-		_entry(E + "void_knight.tres", 1, 1.0),
-		_entry(E + "berserker.tres", 2, 2.5, 9.0),
-		_entry(E + "rat_swarm.tres", 2, 3.0, 22.0),
+		_entry(E + "executioner.tres", 1, 1.0),
+		_entry(E + "void_knight.tres", 1, 1.0, 7.0),
+		_entry(E + "berserker.tres", 1, 2.5, 14.0),
+		_entry(E + "rat_swarm.tres", 1, 3.0, 24.0),
 	]
 	_save(d3, "res://resources/waves/w6_3_miniboss.tres")
 
@@ -2226,6 +2535,8 @@ cadran, et ils ignorent qui la passe."
 		load(E + "berserker.tres"), load(E + "void_knight.tres"),
 		load(E + "hive.tres"), load(E + "glutton.tres"),
 		load(E + "totem_guardian.tres"),
+		# CHANTIER I2 — le Bourreau, mini-boss de la Cour brisee.
+		load(E + "executioner.tres"),
 	]
 	# DECK DE DEGATS + DISSIPATION. Deux hypotheses testees au banc et rejetees :
 	#  - "il faut du cast court" (Etincelle + Givre) -> 13 % de victoires. Une
@@ -2306,10 +2617,24 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	f1.difficulty = 1.40
 	# Ouverture en citation du niveau 1 : gnomes et lutins, le motif que la
 	# machine repete. Sauf qu ils arrivent deux fois plus vite et accompagnes.
+	# CHANTIER I2 — LE CHAMPIGNON ET LA PLANTE, la biomasse du monde d origine.
+	# Deux silhouettes que le testeur avait telechargees expres.
+	#
+	# Elles entrent au PREMIER contact de l acte final, et ce n est pas un hasard :
+	# le niveau 7 rejoue le decor du niveau 1 en teinte fausse, et le joueur doit
+	# sentir que quelque chose cloche. De la vegetation qui marche dans l herbe du
+	# premier matin dit cela mieux qu un dialogue.
+	#
+	# La paire se lit en opposition, ce qui est toute leur utilite en vague : le
+	# champignon encaisse et n avance pas vite (34 PV, 34 px/s), la plante ne tient
+	# rien et fonce (12 PV, 88 px/s). Le joueur doit arbitrer dans la meme vague
+	# entre une cible qui demande du temps et une qui n en laisse pas.
 	f1.entries = [
-		_entry(E + "gnome.tres", 5, 1.8),
-		_entry(E + "sprite.tres", 5, 1.5, 8.0),
-		_entry(E + "golem.tres", 2, 2.5, 17.0),
+		_entry(E + "gnome.tres", 4, 1.8),
+		_entry(E + "mushroom.tres", 3, 2.2, 5.0),
+		_entry(E + "carnivore_plant.tres", 3, 1.8, 12.0),
+		_entry(E + "sprite.tres", 4, 1.5, 18.0),
+		_entry(E + "golem.tres", 1, 2.5, 24.0),
 	]
 	_save(f1, "res://resources/waves/w7_1.tres")
 
@@ -2367,11 +2692,17 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	f5.difficulty = 1.45
 	# Avant-derniere vague : totem + glouton + jelly, les trois monstres qui
 	# fabriquent du probleme si on les laisse vivre.
+	# CHANTIER I2 — la biomasse revient, et le Glouton la GOBE : le champignon est
+	# un P2, donc une proie valide. Le joueur voit le devoreur grossir sur le
+	# decor vegetal du niveau, ce qui est la meilleure demonstration possible de ce
+	# que fait ce monstre.
 	f5.entries = [
 		_entry(E + "totem_guardian.tres", 1, 1.0),
 		_entry(E + "glutton.tres", 1, 1.0, 9.0),
-		_entry(E + "jelly.tres", 2, 2.5, 18.0),
-		_entry(E + "sprite.tres", 4, 1.5, 27.0),
+		_entry(E + "mushroom.tres", 2, 2.2, 14.0),
+		_entry(E + "jelly.tres", 1, 2.5, 20.0),
+		_entry(E + "carnivore_plant.tres", 2, 1.8, 26.0),
+		_entry(E + "sprite.tres", 3, 1.5, 30.0),
 	]
 	_save(f5, "res://resources/waves/w7_5.tres")
 
@@ -2409,6 +2740,8 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "ghoul_priest.tres"), load(E + "hive.tres"), load(E + "jelly.tres"),
 		load(E + "glutton.tres"), load(E + "totem_guardian.tres"),
 		load(E + "behemoth.tres"), load(E + "shade.tres"),
+		# CHANTIER I2 — la biomasse du monde d origine.
+		load(E + "mushroom.tres"), load(E + "carnivore_plant.tres"),
 	]
 	# DECK DE SYNTHESE. Le final envoie les DEUX registres, donc le deck porte les
 	# deux : Meteore et Trait pour le blindage, Boule de feu et Resonance pour le

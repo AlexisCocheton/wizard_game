@@ -14,6 +14,16 @@ signal offer_taken(card: SpellCard)
 
 var deck: Array[SpellCard] = []
 var hand: Array[SpellCard] = []
+
+## REGARD PETRIFIANT — les cartes de la main rendues injouables par les gorgones
+## vivantes sur le terrain. Le ledger vit ICI et non dans Battlefield parce que
+## c est la MAIN qui est petrifiee : le terrain ne fait que nommer un nombre.
+##
+## Une liste de cartes et non un compte : le joueur doit voir LESQUELLES sont
+## gelees, et elles doivent rester les MEMES d une image a l autre. Un compte
+## obligerait a re-tirer les victimes a chaque rafraichissement, la petrification
+## sauterait de carte en carte et plus rien ne serait planifiable.
+var _blocked: Array[SpellCard] = []
 var discard: Array[SpellCard] = []
 var exiled: Array[SpellCard] = []
 
@@ -86,6 +96,7 @@ func reset() -> void:
 	_retain_charges = 0
 	_double_cast_time = 0.0
 	pending_offer.clear()
+	_blocked.clear()
 	# L amelioration des cartes vaut pour LA PARTIE EN COURS : sans cet effacement
 	# elle franchirait la fin du niveau et l equilibrage mesure au banc ne
 	# decrirait plus aucune partie reelle (voir la section AMELIORATION plus bas).
@@ -187,6 +198,14 @@ func play_card(card: SpellCard) -> bool:
 	var idx: int = hand.find(card)
 	if idx == -1:
 		return false
+	# REGARD PETRIFIANT : une carte gelee ne part pas et ne quitte pas la main.
+	# Le garde est pose ICI plutot que dans le HUD parce que TOUS les chemins de
+	# lancement passent par cette fonction — clic, glisser, pre-cast, double
+	# lancement, effets qui rejouent une carte. Un garde cote interface laisserait
+	# au moins un de ces chemins ouvert, et le joueur lancerait une carte que son
+	# ecran lui montre comme petrifiee.
+	if _blocked.has(card):
+		return false
 	hand.remove_at(idx)
 	if card.rarity == GameEnums.Rarity.LEGENDARY:
 		used_legendary = true
@@ -223,6 +242,71 @@ func play_card(card: SpellCard) -> bool:
 		discard.append(card)
 	hand_changed.emit()
 	return true
+
+
+# --- REGARD PETRIFIANT ------------------------------------------------------
+#
+# LE PLAFOND. Une main fait MAX_HAND_SIZE (6) cartes ; on en gele au plus 5.
+# Le testeur l a demande mot pour mot : « Fait en sorte que l on puisse pas
+# avoir plus de 5 carte sur 6 bloquer. » La raison est la meme que celle du
+# plafond d invocation : un joueur qui ne peut RIEN lancer ne perd plus sur une
+# erreur de jeu, il perd mecaniquement en regardant l ecran. Une carte jouable
+# de reste, c est toujours une decision — laquelle, et sur quelle cible.
+#
+# Exprime comme un ecart a la main REELLE et non comme le nombre 5 : avec trois
+# cartes en main et trois regards, geler « 5 au plus » gelerait la main entiere.
+# La regle est donc « il en reste toujours une », ce qui donne 5 sur 6 et 2 sur 3.
+const MIN_PLAYABLE_CARDS: int = 1
+
+
+## Les cartes actuellement petrifiees. Copie defensive : l appelant (le HUD) ne
+## doit pas pouvoir degeler une carte en modifiant le tableau qu il affiche.
+func blocked_cards() -> Array[SpellCard]:
+	return _blocked.duplicate()
+
+
+func is_card_blocked(card: SpellCard) -> bool:
+	return card != null and _blocked.has(card)
+
+
+func blocked_count() -> int:
+	return _blocked.size()
+
+
+## Regle le nombre de cartes petrifiees sur `wanted` regards. Appele par
+## Battlefield a chaque image avec le total des gorgones VIVANTES : zero gorgone
+## vivante donne zero regard, donc la main se degele d elle-meme quand la source
+## tombe — il n y a aucun chemin ou un blocage survivrait a son monstre.
+##
+## STABILITE : on ne reconstruit pas la liste, on l AJUSTE. Les cartes deja
+## gelees le restent tant qu elles sont en main et que le nombre de regards ne
+## baisse pas. C est ce qui permet au joueur de planifier autour de sa main
+## mutilee au lieu de voir la petrification danser d une carte a l autre.
+func set_card_block_count(wanted: int) -> void:
+	var avant: int = _blocked.size()
+	# Une carte qui a quitte la main (defausse, echange, fin de vague) ne peut
+	# plus etre gelee : sinon le ledger retiendrait des cartes fantomes et le
+	# plafond compterait des blocages que le joueur ne voit pas.
+	for i in range(_blocked.size() - 1, -1, -1):
+		if not hand.has(_blocked[i]):
+			_blocked.remove_at(i)
+	var plafond: int = maxi(0, hand.size() - MIN_PLAYABLE_CARDS)
+	var cible: int = clampi(wanted, 0, plafond)
+	while _blocked.size() > cible:
+		_blocked.pop_back()
+	if _blocked.size() < cible:
+		# On gele en partant de la FIN de la main : la carte la plus a droite,
+		# donc la plus recemment piochee. Geler la premiere carte volerait au
+		# joueur celle qu il avait deja decide de lancer, ce qui se lit comme une
+		# triche ; lui prendre sa derniere pioche se lit comme un cout.
+		for i in range(hand.size() - 1, -1, -1):
+			if _blocked.size() >= cible:
+				break
+			var c: SpellCard = hand[i]
+			if c != null and not _blocked.has(c):
+				_blocked.append(c)
+	if _blocked.size() != avant:
+		hand_changed.emit()
 
 
 func discard_random(count: int) -> int:
@@ -272,6 +356,17 @@ func apply_cost_reduction(seconds: float, duration: float) -> void:
 
 
 ## XP d'un ennemi, deja multipliee par la vitesse. Peut declencher une montee.
+##
+## DOUBLE PEINE ASSUMEE (26 septembre). Depuis que la vitesse EST la vie, un
+## mage blesse est un mage lent, donc un mage qui gagne MOINS d XP. Se faire
+## toucher coute maintenant de la vie, du temps d incantation, des passifs
+## eteints ET de la progression. C est beaucoup pour un seul contact.
+##
+## Ce n est PAS corrige ici, et c est un choix : corriger demanderait de figer
+## un multiplicateur d XP separe de la vitesse, ce qui recreerait exactement la
+## seconde reserve qu on vient de supprimer. La spirale est reelle mais elle est
+## lisible — le joueur voit le meme nombre porter tout — et son reglage
+## (SPEED_RISE_PER_SECOND, degats de contact) appartient au testeur.
 func gain_xp(base_xp: int) -> void:
 	# Passif "Erudition" : l XP est deja multipliee par la vitesse, ce passif la
 	# multiplie une seconde fois. Il s applique APRES pour que les deux gains se
@@ -375,8 +470,11 @@ func boost_draw(factor: float, duration: float) -> void:
 ## moment ou il en a besoin.
 ##
 ## Consequence voulue : un coup recu fait retomber la vitesse, donc il ETEINT les
-## passifs. Le prix d un contact devient visible sur la barre de vitesse, pas
-## seulement dans la barre de PV.
+## passifs. Depuis que la vitesse EST la vie (26 septembre), les seuils ont pris
+## un sens nouveau : un passif a 400 % ne s allume plus que quand le mage est en
+## PLEINE FORME, et se faire toucher les eteint un par un en descendant le rail.
+## Le joueur blesse perd donc ses regles en meme temps que sa vie — c est le
+## prix du contact, et il se lit sur une seule barre.
 
 ## Les passifs equipes, dans l ordre des emplacements. Taille <= PASSIVE_SLOTS.
 var equipped_passives: Array[SpellCard] = []
@@ -399,7 +497,7 @@ const PASSIVE_KEYS: Array[StringName] = [
 	&"passive_double_cast",     # deux sorts chargent ensemble
 	&"passive_echo_cast",       # les sorts lances reviennent en main
 	&"passive_chain_blast",     # l explosion de mort en declenche d autres
-	&"passive_shield_keeper",   # un coup ne ramene plus la vitesse a 100 %
+	&"passive_shield_keeper",   # un coup coute moitie moins de vitesse
 	&"passive_twin_cast",       # chaque sort est resolu deux fois
 	&"passive_speed_damage",    # la vitesse multiplie aussi les degats
 	&"passive_kill_speed",      # chaque mort repousse la jauge de vitesse
@@ -716,7 +814,7 @@ func note_damage_taken(source: EnemyDef = null) -> void:
 	hits_by_source[nom] = int(hits_by_source.get(nom, 0)) + 1
 
 
-## Le monstre qui a le plus coute de PV sur la partie, "" si aucun coup recu.
+## Le monstre qui a le plus coute de vitesse sur la partie, "" si aucun coup recu.
 func worst_threat() -> String:
 	var pire: String = ""
 	var n: int = 0

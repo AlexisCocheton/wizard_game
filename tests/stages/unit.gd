@@ -4,6 +4,7 @@ extends StageRunner
 
 const SUITES: Array[String] = [
 	"res://tests/unit/test_speed_gauge.gd",
+	"res://tests/unit/test_speed_is_life.gd",
 	"res://tests/unit/test_deck.gd",
 	"res://tests/unit/test_progression.gd",
 	"res://tests/unit/test_objectives.gd",

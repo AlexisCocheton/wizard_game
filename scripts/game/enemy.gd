@@ -58,6 +58,8 @@ var _flash_tween: Tween = null
 ## ses degats d un coup a l autre — sinon le joueur devrait la tuer en une fois.
 var _parts: Array[float] = []
 var _summon_timer: float = 0.0
+## ONDE DE CHOC : compte a rebours jusqu au prochain coup de sol.
+var _shockwave_timer: float = 0.0
 ## Sbires vivants issus de CE boss. Comptes ici plutot que sur le terrain :
 ## deux invocateurs ne doivent pas se voler leur plafond.
 var _summoned: Array[Enemy] = []
@@ -107,6 +109,10 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 	# Premiere invocation a l intervalle PLEIN : le joueur a le temps de voir le
 	# boss entrer avant que l ecran se remplisse.
 	_summon_timer = def.summon_interval
+	# Premiere onde a l intervalle PLEIN, comme l invocation : le joueur doit voir
+	# le boss se planter et lever ses bras avant que le sol tremble. Un premier
+	# coup anticipe le frapperait avant qu il ait compris d ou il vient.
+	_shockwave_timer = def.shockwave_interval
 	_hits_immune_left = def.hits_immune
 	# Premiere garde de renvoi a l intervalle PLEIN : le boss entre a decouvert,
 	# pour que le joueur ait le temps de le voir lever sa garde une premiere fois
@@ -133,6 +139,32 @@ func _ready() -> void:
 	_refresh_hp_bar()
 
 
+## L animation de REPOS d une feuille : ce que le monstre joue quand il ne fait
+## rien de particulier.
+##
+## LE DEFAUT QUE CECI REPARE, attrape par l etage `visual` et par lui seul :
+## le code jouait `"walk"` en dur a trois endroits (mise en place, retour de coup
+## recu, retour d attaque). Godot le refusait a voix haute — « There is no
+## animation with name 'walk' » — pour toute feuille sans marche, et le monstre
+## restait fige sur une image.
+##
+## Or une feuille SANS marche n est pas une feuille incomplete : le Bourreau
+## n avance pas, c est sa mecanique, et sa planche porte idle / attack / death /
+## summon parce qu il n a aucune raison de marcher. Le Gardien-totem flottant est
+## dans le meme cas. Le repli n est donc pas un rattrapage d erreur, c est la
+## regle correcte : un monstre qui ne marche pas RESPIRE sur place.
+##
+## On prefere `walk` quand elle existe (c est l etat permanent d un monstre qui
+## descend), `idle` sinon. Statique en plus d etre publique : les tests doivent
+## pouvoir verifier le choix sans instancier une scene.
+static func resting_anim(key: StringName) -> String:
+	if AnimCatalog.has_anim(key, "walk"):
+		return "walk"
+	if AnimCatalog.has_anim(key, "idle"):
+		return "idle"
+	return ""
+
+
 ## Feuille animee du pack si le monstre en a une ; sinon la forme de secours.
 func _setup_visual() -> void:
 	var key: StringName = definition.anim_key
@@ -154,7 +186,9 @@ func _setup_visual() -> void:
 	else:
 		_anim.sprite_frames = AnimCatalog.frames(key)
 		_apply_scale(_anim, float(AnimCatalog.frame_px(key)))
-		_anim.play("walk")
+		var repos: String = resting_anim(key)
+		if repos != "":
+			_anim.play(repos)
 	if Fx.enabled():
 		if definition.aura_shield_radius > 0.0:
 			_aura_fx = Fx.halo(self, definition.aura_shield_radius, Color(1.0, 0.92, 0.6, 0.55))
@@ -289,6 +323,21 @@ func advance(world_delta: float) -> void:
 		if _summon_timer <= 0.0:
 			_summon_timer = definition.summon_interval
 			_do_summon()
+
+	# ONDE DE CHOC : il frappe le sol. Elle suit `world_delta` comme l invocation,
+	# donc la cadence s accelere avec le multiplicateur — a x4 le sol tremble
+	# quatre fois plus souvent, ce qui est le prix de la mecanique signature et
+	# doit rester visible plutot que dissimule dans un temps reel.
+	#
+	# Elle part meme si le boss est immobile : c est TOUT le principe. Elle ne part
+	# pas s il est cache (Ombre en phase) ni etourdi — le retour d etourdissement
+	# plus haut a deja coupe la fonction, donc il n y a rien a ajouter ici.
+	if definition.shockwave_interval > 0.0 and definition.shockwave_radius > 0.0 			and battlefield != null and not _hidden:
+		_shockwave_timer -= world_delta
+		if _shockwave_timer <= 0.0:
+			_shockwave_timer = definition.shockwave_interval
+			battlefield.enemy_shockwave(self, definition.shockwave_radius,
+				definition.shockwave_damage)
 
 	# A-coups : fonce, puis marque une pause.
 	if definition.burst_move:
@@ -539,9 +588,16 @@ func take_damage(amount: float, tags: Array) -> bool:
 	return true
 
 
+## Retour a l etat permanent apres un coup recu ou une attaque. Le nom garde le
+## mot « walk » parce que c est le cas general et que tous les appelants le
+## nomment ainsi ; ce qu il joue, en revanche, est l animation de repos REELLE de
+## la feuille — voir `resting_anim()`.
 func _back_to_walk() -> void:
-	if _anim != null and not _dead and _anim.animation != "walk":
-		_anim.play("walk")
+	if _anim == null or _dead or definition == null:
+		return
+	var repos: String = resting_anim(definition.anim_key)
+	if repos != "" and _anim.animation != StringName(repos):
+		_anim.play(repos)
 
 
 ## Animation d attaque (tir de l archer, coup du berserker).
@@ -775,8 +831,10 @@ func _close_reflect() -> void:
 	if _reflect_fx != null and is_instance_valid(_reflect_fx):
 		_reflect_fx.queue_free()
 	_reflect_fx = null
-	if _anim != null and _anim.visible and not _dead and _anim.animation != "walk":
-		_anim.play("walk")
+	# Meme regle qu au retour de coup : on rejoue le repos REEL de la feuille, pas
+	# un « walk » suppose. Le Miroir de Forge a une marche, mais rien ne garantit
+	# que le prochain monstre a renvoi en aura une.
+	_back_to_walk()
 
 
 ## Part des degats renvoyee au mage a cet instant. 0 hors fenetre. Lue par

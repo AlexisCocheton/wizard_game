@@ -106,7 +106,7 @@ func _test_knockback_repousse_et_blesse() -> void:
 
 func _test_vortex_attire_vers_le_centre() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var centre := Vector2(540.0, 900.0)
 	var e: Enemy = bf.spawn_enemy(_dummy_def(), 540.0, 1.0, centre + Vector2(300.0, 0.0))
 	var distance_avant: float = e.position.distance_to(centre)
@@ -127,7 +127,7 @@ func _test_vortex_attire_vers_le_centre() -> void:
 
 func _test_vortex_expire() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var card := _card(&"vortex_pull", 300.0, 1.0, 400.0)
 	var ctx := CastContext.make(bf, card)
 	ctx.target_position = Vector2(540.0, 900.0)
@@ -216,7 +216,7 @@ func _test_draw_cards_pioche_sans_defausser() -> void:
 
 func _test_mur_permanent_ne_disparait_pas() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var card := _card(&"build_wall", 0.0, 0.0, 200.0,
 		{&"thickness": 60.0, &"permanent": true, &"wall_hp": 60.0})
 	var ctx := CastContext.make(bf, card)
@@ -234,7 +234,7 @@ func _test_mur_permanent_ne_disparait_pas() -> void:
 
 func _test_mur_permanent_casse_sous_les_coups() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var centre := Vector2(540.0, 800.0)
 	var card := _card(&"build_wall", 0.0, 0.0, 200.0,
 		{&"thickness": 60.0, &"permanent": true, &"wall_hp": 30.0})
@@ -346,7 +346,7 @@ func _test_double_cast_expire() -> void:
 
 func _test_meteor_storm_frappe_toute_la_carte() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	# Trois monstres aux quatre coins du terrain JOUABLE. Le but de la carte est
 	# qu aucun d eux ne soit epargne : c est ce qui la distingue d une grosse zone.
 	var gauche: Enemy = bf.spawn_enemy(_dummy_def("m1"), 0.0, 1.0, Vector2(150.0, 200.0))
@@ -484,7 +484,7 @@ func _test_h_handlers_enregistres() -> void:
 ## plus, et c est exactement le temps que la carte achete.
 func _test_arbre_detourne_les_monstres() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var arbre := Vector2(300.0, 900.0)
 	# Un monstre a la MEME hauteur que l arbre mais decale sur le cote, et DANS la
 	# portee de provocation : s il continuait vers le mage il descendrait tout
@@ -515,7 +515,7 @@ func _test_arbre_detourne_les_monstres() -> void:
 ## poserait un arbre et n aurait plus rien a faire.
 func _test_arbre_encaisse_et_tombe() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var arbre := Vector2(540.0, 900.0)
 	var card := _card(&"taunt_prop", 0.0, 60.0, 520.0,
 		{&"prop_hp": 40.0, &"kind": "tree"})
@@ -536,7 +536,7 @@ func _test_arbre_encaisse_et_tombe() -> void:
 ## Il ne dure pas eternellement : la carte achete un temps BORNE.
 func _test_arbre_expire_seul() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var card := _card(&"taunt_prop", 0.0, 2.0, 400.0,
 		{&"prop_hp": 9999.0, &"kind": "tree"})
 	var ctx := CastContext.make(bf, card)
@@ -553,7 +553,7 @@ func _test_arbre_expire_seul() -> void:
 ## sinon la carte deviendrait un bouton « plus personne n avance ».
 func _test_arbre_hors_portee_ne_detourne_pas() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var d := _dummy_def("t_far")
 	d.base_speed = 120.0
 	var e: Enemy = bf.spawn_enemy(d, 900.0, 1.0, Vector2(900.0, 300.0))
@@ -580,7 +580,7 @@ func _test_arbre_hors_portee_ne_detourne_pas() -> void:
 ## abattrait son propre arbre et garderait le poison gratuitement.
 func _test_arbre_poison_pose_une_zone_qui_le_suit() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var arbre := Vector2(540.0, 900.0)
 	var card := _card(&"taunt_prop", 12.0, 60.0, 420.0,
 		{&"prop_hp": 30.0, &"kind": "tree", &"zone_radius": 220.0})
@@ -611,7 +611,7 @@ func _test_arbre_poison_pose_une_zone_qui_le_suit() -> void:
 ## de recomposer son deck d un niveau a l autre.
 func _test_arbre_poison_respecte_les_resistances() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var arbre := Vector2(540.0, 900.0)
 
 	var immune := _dummy_def("t_undead")
@@ -642,7 +642,7 @@ func _test_arbre_poison_respecte_les_resistances() -> void:
 ## reel : la regle est donc BINAIRE (vitesse nulle) et la duree, breve.
 func _test_stun_immobilise_puis_relache() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var centre := Vector2(540.0, 900.0)
 	var d := _dummy_def("t_stun")
 	d.base_speed = 200.0
@@ -673,7 +673,7 @@ func _test_stun_immobilise_puis_relache() -> void:
 ## la MEME table de resistances que les ralentissements.
 func _test_stun_respecte_la_resistance_au_ralentissement() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var centre := Vector2(540.0, 900.0)
 
 	var roc := _dummy_def("t_roc")
@@ -724,7 +724,7 @@ func _test_stun_coute_plus_quil_ne_dure() -> void:
 ## REMONTE. Un monstre pose dans la nappe recule au lieu d avancer lentement.
 func _test_eau_remonte_le_courant() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var centre := Vector2(540.0, 900.0)
 	var d := _dummy_def("t_wet")
 	d.base_speed = 60.0
@@ -768,7 +768,7 @@ func _test_eau_se_distingue_du_champ_de_givre() -> void:
 ## le Champ de givre n aurait plus de raison d exister.
 func _test_eau_ne_fait_aucun_degat() -> void:
 	var bf := _field()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var centre := Vector2(540.0, 900.0)
 	var e: Enemy = bf.spawn_enemy(_dummy_def("t_dry"), 540.0, 1.0, centre)
 	var pv_avant: float = e.hp

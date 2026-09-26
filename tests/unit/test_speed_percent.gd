@@ -6,9 +6,11 @@ extends TestCase
 ## naturellement progressivement, 1 % par 0,5 seconde."
 ##
 ## Ce qui est garde des demandes precedentes : "la barre va jusqu a 500 %",
-## "quand on augmente la vitesse ca augmente le bouclier", "quand on prend des
-## degats la vitesse diminue" et "on ne peut pas accelerer pendant 3 s apres un
-## coup" — le verrou retient desormais la montee naturelle.
+## "quand on prend des degats la vitesse diminue" et "on ne peut pas accelerer
+## juste apres un coup" — le verrou retient la montee naturelle.
+##
+## Le bouclier a DISPARU le 26 septembre avec les PV : la vitesse est la seule
+## reserve. Ce que cette suppression garantit vit dans test_speed_is_life.gd.
 ##
 ## Les regles s expriment contre les constantes de GameConfig, jamais contre une
 ## valeur d equilibrage gravee ici (voir gotchas : un test qui fige un reglage
@@ -23,7 +25,6 @@ func run() -> void:
 	_test_plus_aucune_commande_manuelle()
 	_test_la_montee_est_continue_par_pas_de_un()
 	_test_la_montee_plafonne_sans_reboucler()
-	_test_le_bouclier_suit_la_vitesse()
 	_test_un_coup_fait_tomber_la_vitesse()
 	_test_le_verrou_retient_la_montee_apres_un_coup()
 	_test_pas_de_montee_pendant_l_agonie()
@@ -38,7 +39,9 @@ func _seconds_per_point() -> float:
 ## 100 % au depart, 500 % au maximum ; le reglage interne reste borne.
 func _test_bornes() -> void:
 	SpeedGauge.reset()
-	eq(SpeedGauge.speed_percent, 100, "on demarre a 100 %")
+	eq(SpeedGauge.speed_percent, GameConfig.SPEED_START_PERCENT,
+		"on demarre a SPEED_START_PERCENT, jamais au plancher : a 100 % on est mort")
+	SpeedGauge.set_speed_percent(100)
 	feq(SpeedGauge.multiplier(), 1.0, "100 % = vitesse normale")
 	SpeedGauge.set_speed_percent(50)
 	eq(SpeedGauge.speed_percent, 100, "jamais sous 100 %")
@@ -62,6 +65,9 @@ func _test_plus_aucune_commande_manuelle() -> void:
 ## pourcentage affiche n avance que par pas entiers de 1.
 func _test_la_montee_est_continue_par_pas_de_un() -> void:
 	SpeedGauge.reset()
+	# On repart du plancher pour que les nombres du test restent lisibles :
+	# ce qu on mesure ici est le RYTHME, pas le point de depart d une partie.
+	SpeedGauge.set_speed_percent(100)
 	var pas: float = _seconds_per_point()
 
 	# Une moitie de pas ne donne rien : le pourcentage reste entier.
@@ -77,6 +83,7 @@ func _test_la_montee_est_continue_par_pas_de_un() -> void:
 
 	# Sur une seconde, on gagne SPEED_RISE_PER_SECOND points.
 	SpeedGauge.reset()
+	SpeedGauge.set_speed_percent(100)
 	for i in 60:
 		SpeedGauge.tick(1.0 / 60.0)
 	eq(SpeedGauge.speed_percent, 100 + int(round(GameConfig.SPEED_RISE_PER_SECOND)),
@@ -85,6 +92,7 @@ func _test_la_montee_est_continue_par_pas_de_un() -> void:
 	# Un gros delta (chute d images) ne fait pas sauter la regle : il vaut
 	# exactement le nombre de points que ce temps represente.
 	SpeedGauge.reset()
+	SpeedGauge.set_speed_percent(100)
 	SpeedGauge.tick(10.0)
 	eq(SpeedGauge.speed_percent, 100 + int(floor(10.0 * GameConfig.SPEED_RISE_PER_SECOND)),
 		"10 s d un coup valent 10 s de montee, ni plus ni moins")
@@ -107,31 +115,19 @@ func _test_la_montee_plafonne_sans_reboucler() -> void:
 		"au maximum, le temps qui passe ne remet pas a 100 %")
 
 
-## Le bouclier vient de la vitesse : plus on va vite, plus on encaisse.
-func _test_le_bouclier_suit_la_vitesse() -> void:
-	SpeedGauge.reset()
-	eq(SpeedGauge.shield(), 0, "aucun bouclier a 100 %")
-	SpeedGauge.set_speed_percent(300)
-	ok(SpeedGauge.shield() > 0, "a 300 % le mage a du bouclier")
-	var a_300: int = SpeedGauge.shield()
-	SpeedGauge.set_speed_percent(500)
-	ok(SpeedGauge.shield() > a_300, "a 500 % il en a davantage")
-
-
-## Un coup consomme le bouclier ET fait retomber la vitesse de SPEED_DROP_ON_HIT.
+## Un coup fait tomber la vitesse d EXACTEMENT ses degats : il n y a plus de
+## forfait par-dessus (voir test_speed_is_life.gd pour la regle complete).
 func _test_un_coup_fait_tomber_la_vitesse() -> void:
 	SpeedGauge.reset()
 	SpeedGauge.set_speed_percent(400)
-	var pv_avant: int = SpeedGauge.hp
 	SpeedGauge.take_hit(10)
-	eq(SpeedGauge.speed_percent, 400 - GameConfig.SPEED_DROP_ON_HIT,
-		"la vitesse retombe de SPEED_DROP_ON_HIT")
-	ok(SpeedGauge.hp >= pv_avant - 10, "le bouclier a absorbe une partie du coup")
-	# Pres du plancher, la chute s arrete a 100 %.
+	eq(SpeedGauge.speed_percent, 390, "la vitesse retombe de la valeur du coup")
+	# Le plancher est un plancher : la chute s y arrete.
 	SpeedGauge.reset()
 	SpeedGauge.set_speed_percent(120)
-	SpeedGauge.take_hit(1)
+	SpeedGauge.take_hit(90)
 	eq(SpeedGauge.speed_percent, 100, "la chute ne descend jamais sous 100 %")
+	SpeedGauge.reset()
 
 
 ## Pendant SPEED_LOCK_AFTER_HIT secondes apres un coup, la montee naturelle est
@@ -162,10 +158,11 @@ func _test_le_verrou_retient_la_montee_apres_un_coup() -> void:
 		"apres le verrou, 20 pas redonnent 20 points")
 
 
-## Une fois les PV a zero, la jauge se vide : elle ne monte plus.
+## Une fois le plancher atteint, la jauge d agonie se vide : la vitesse ne
+## remonte plus. On ne se soigne pas en mourant.
 func _test_pas_de_montee_pendant_l_agonie() -> void:
 	SpeedGauge.reset()
-	SpeedGauge.take_hit(GameConfig.MAGE_MAX_HP)
+	SpeedGauge.take_hit(SpeedGauge.max_reserve())
 	ok(SpeedGauge.is_dying, "le mage agonise")
 	var avant: int = SpeedGauge.speed_percent
 	SpeedGauge.tick(1.0)

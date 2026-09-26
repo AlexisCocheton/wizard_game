@@ -34,14 +34,34 @@ func _fresh() -> void:
 	_bf = Battlefield.new()
 	_bf.nav = NavGrid.new()
 	attach(_bf)
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	RunState.reset()
 
 
+## Simule `seconds` de MONDE A x1, en maintenant le mage en vie.
+##
+## Depuis que la vitesse EST la vie (26 septembre), ces deux exigences sont la
+## meme : le monde tourne a x1 quand le mage est a 100 %, et 100 % est le
+## plancher mortel. Un boss qui tire tuait donc le mage en quelques secondes, et
+## TOUT le reste de la simulation basculait au ralenti d agonie (x0,25) — le
+## symptome etant un boss qui "n arrive jamais a sa ligne de tir", trois etages
+## en aval de la vraie cause.
+##
+## Ces suites mesurent des deplacements, des cadences et des portees ; la survie
+## du mage n y est jamais le sujet. On la lui rend donc image par image, ce qui
+## tient l horloge du monde exactement a x1. Les tests qui veulent au contraire
+## VERIFIER qu un coup coute quelque chose relevent la vitesse avant et apres,
+## et ils la lisent dans la meme image que le coup.
 func _sim(seconds: float) -> void:
 	var t: float = 0.0
 	while t < seconds:
 		_bf.simulate(1.0 / 60.0)
+		# `is_dying` ne se leve pas tout seul : le remettre a 100 % sans sortir
+		# de l agonie laisserait world_delta() au ralenti pour toujours, et le
+		# test mesurerait un monde au quart de sa vitesse sans rien signaler.
+		if SpeedGauge.is_dying:
+			SpeedGauge.reset()
+		SpeedGauge.set_speed_percent(100)
 		t += 1.0 / 60.0
 
 
@@ -66,6 +86,11 @@ func run() -> void:
 	_test_les_boss_livres_ont_bien_leurs_mecaniques()
 	_test_les_trois_nouvelles_mecaniques_sont_livrees()
 	_test_chaque_niveau_a_son_propre_adversaire()
+	_test_les_silhouettes_du_26_septembre_portent_des_monstres()
+	_test_les_monstres_neufs_apparaissent_en_campagne()
+	_test_les_monstres_neufs_sont_rattaches_a_un_monde()
+	_test_les_monstres_neufs_sortent_vraiment_en_massacre()
+	_test_les_paliers_de_la_gorgone_sont_des_paliers()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -175,10 +200,12 @@ func _test_tireur_a_distance_harcele_depuis_sa_ligne() -> void:
 	d.shoot_interval = 0.4
 	d.shot_damage = 1
 	_bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 900.0))
-	var pv0: int = SpeedGauge.hp
-	SpeedGauge.set_speed_percent(100)
+	# De la marge, sans emballer le monde : le tir doit BLESSER le mage pendant
+	# les 12 s simulees, pas le tuer au premier projectile.
+	SpeedGauge.heal(60)
+	var pv0: int = SpeedGauge.speed_percent
 	_sim(12.0)
-	ok(SpeedGauge.hp < pv0, "camper loin n empeche pas de faire mal")
+	ok(SpeedGauge.speed_percent < pv0, "camper loin n empeche pas de faire mal")
 
 
 # --- 3. Boss qui invoque ----------------------------------------------------
@@ -404,11 +431,14 @@ func _test_renvoi_retourne_les_degats_au_mage() -> void:
 	boss.force_reflect_window(2.0)
 	ok(boss.is_reflecting(), "la fenetre est ouverte")
 
-	SpeedGauge.set_speed_percent(100)
-	var pv0: int = SpeedGauge.hp
+	# De la marge : au plancher, le mage mourrait au lieu d encaisser. Ces
+	# trois tests ne chronometrent rien (ils appellent damage_enemy directement),
+	# la vitesse du monde n y change donc rien.
+	SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)
+	var pv0: int = SpeedGauge.speed_percent
 	var tags: Array = []
 	_bf.damage_enemy(boss, 40.0, null)
-	ok(SpeedGauge.hp < pv0, "le mage encaisse son propre sort")
+	ok(SpeedGauge.speed_percent < pv0, "le mage encaisse son propre sort")
 	ok(boss.hp < 200.0, "le boss encaisse quand meme : le renvoi n est pas un mur")
 
 
@@ -424,10 +454,13 @@ func _test_renvoi_ne_renvoie_rien_hors_fenetre() -> void:
 	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
 	not_ok(boss.is_reflecting(), "il n entre pas la garde levee")
 
-	SpeedGauge.set_speed_percent(100)
-	var pv0: int = SpeedGauge.hp
+	# De la marge : au plancher, le mage mourrait au lieu d encaisser. Ces
+	# trois tests ne chronometrent rien (ils appellent damage_enemy directement),
+	# la vitesse du monde n y change donc rien.
+	SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)
+	var pv0: int = SpeedGauge.speed_percent
 	_bf.damage_enemy(boss, 40.0, null)
-	eq(SpeedGauge.hp, pv0, "hors fenetre, rien ne revient")
+	eq(SpeedGauge.speed_percent, pv0, "hors fenetre, rien ne revient")
 	feq(boss.hp, 160.0, "et le sort porte pleinement")
 
 
@@ -441,8 +474,11 @@ func _test_renvoi_n_empeche_pas_de_le_tuer() -> void:
 	d.reflect_pct = 50.0
 	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 500.0))
 	boss.force_reflect_window(3.0)
-	SpeedGauge.set_speed_percent(100)
-	var pv0: int = SpeedGauge.hp
+	# De la marge : au plancher, le mage mourrait au lieu d encaisser. Ces
+	# trois tests ne chronometrent rien (ils appellent damage_enemy directement),
+	# la vitesse du monde n y change donc rien.
+	SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)
+	var pv0: int = SpeedGauge.speed_percent
 	_bf.damage_enemy(boss, 99.0, null)
 	ok(boss.is_dead(), "garde levee ou non, il meurt quand les PV tombent")
 	# ET LE COUP FATAL SE PAIE QUAND MEME. C est la regle la plus fragile des
@@ -450,7 +486,7 @@ func _test_renvoi_n_empeche_pas_de_le_tuer() -> void:
 	# parce que le coup ferme la garde en tuant son porteur. La lire apres rendrait
 	# le coup mortel GRATUIT — le joueur apprendrait a tout garder pour la garde,
 	# soit l inverse exact de ce que la mecanique demande.
-	ok(SpeedGauge.hp < pv0,
+	ok(SpeedGauge.speed_percent < pv0,
 		"le coup qui le tue pendant sa garde est renvoye lui aussi")
 	not_ok(boss.is_reflecting(), "et sa garde tombe avec lui")
 
@@ -651,3 +687,211 @@ func _test_chaque_niveau_a_son_propre_adversaire() -> void:
 					not_ok(e.enemy.id == &"warden",
 						"%s : le Gardien est mort en lvl_04, il ne revient pas"
 						% lv.id)
+
+
+# --- CHANTIER I2 : les monstres du 26 septembre sont-ils RENCONTRES ? ------
+#
+# LE PIEGE QUI A COUTE LE PLUS CHER sur ce projet, et qu aucun autre etage ne
+# voit : creer un monstre ne suffit pas a le rendre atteignable. Le .tres
+# existe, l audit le trouve dans un pool, et le joueur ne le croise jamais.
+#
+# Deux chemins mènent au joueur, et il faut sonder LES DEUX :
+#   1. la CAMPAGNE — il doit apparaitre dans une WaveDef ecrite ;
+#   2. le MASSACRE — `build_membership()` deduit le monde d un monstre de sa
+#      DENSITE dans les vagues ecrites. Un monstre absent des vagues n a pas de
+#      monde, donc le tirage pondere ne le propose jamais.
+#
+# Ce test verifie les deux pour CHAQUE monstre portant une silhouette du pack du
+# 26 septembre, en les trouvant par leur `anim_key` plutot que par une liste
+# d ids en dur : ainsi il mordra aussi pour le prochain monstre ajoute sur une
+# de ces feuilles sans etre branche dans une vague.
+const SILHOUETTES_2026_09_26: Array[StringName] = [
+	&"flyingeye", &"goblin2", &"mushroom", &"skeleton2", &"evilwizard",
+	&"fireworm", &"ghoul", &"gorgon", &"bluewitch", &"smallmonster",
+	&"mageguardian", &"demonslime", &"nightborne", &"executioner",
+]
+
+
+func _test_les_silhouettes_du_26_septembre_portent_des_monstres() -> void:
+	var portees: Dictionary = {}
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d != null and d.anim_key in SILHOUETTES_2026_09_26:
+			portees[d.anim_key] = true
+	# On n exige pas les quatorze : mieux vaut cinq monstres soignes que
+	# quatorze batacles. On exige que le travail d extraction ne soit pas MORT.
+	ok(portees.size() >= 5,
+		("seulement %d des 14 silhouettes du 26 septembre portent un monstre :"
+		+ " le reste est du travail extrait qui ne sert a rien")
+		% portees.size())
+
+
+## SONDE 1 — la CAMPAGNE. Chaque monstre neuf doit mener ou peupler une vague
+## ecrite, sinon il est invisible en campagne ET sans monde en Massacre.
+func _test_les_monstres_neufs_apparaissent_en_campagne() -> void:
+	var en_campagne: Dictionary = {}
+	for lv: LevelDef in ContentDB.levels.values():
+		for w: WaveDef in lv.waves:
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					en_campagne[e.enemy.id] = lv.id
+	var muets: Array[String] = []
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.projectile or not (d.anim_key in SILHOUETTES_2026_09_26):
+			continue
+		# Un sbire invoque par un boss est atteignable par son invocateur : il n a
+		# pas besoin de sa propre vague. On verifie donc qu il a une SOURCE.
+		if _est_invoque(d.id):
+			continue
+		if not en_campagne.has(d.id):
+			muets.append(String(d.id))
+	muets.sort()
+	ok(muets.is_empty(),
+		("ces monstres neufs n apparaissent dans AUCUNE vague de campagne et ne"
+		+ " sont invoques par personne : injouables — %s") % ", ".join(muets))
+
+
+func _est_invoque(id: StringName) -> bool:
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d != null and d.summon_def != null and d.summon_def.id == id:
+			return true
+	return false
+
+
+## SONDE 2 — le MASSACRE. Le monde se DEDUIT des vagues ecrites ; sans monde,
+## pick_boss() et le tirage pondere ignorent le monstre pour toujours.
+func _test_les_monstres_neufs_sont_rattaches_a_un_monde() -> void:
+	var membership: Dictionary = WaveSpawner.build_membership()
+	var orphelins: Array[String] = []
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.projectile or not (d.anim_key in SILHOUETTES_2026_09_26):
+			continue
+		if _est_invoque(d.id):
+			continue
+		if not membership.has(d.id):
+			orphelins.append(String(d.id))
+	orphelins.sort()
+	ok(orphelins.is_empty(),
+		("ces monstres neufs ne sont rattaches a AUCUN monde : le Massacre ne les"
+		+ " proposera jamais — %s") % ", ".join(orphelins))
+
+
+## SONDE 3 — ils sortent VRAIMENT. On joue des vagues et on releve ce qui tombe.
+## C est la seule sonde qui attrape un `pick_boss()` qui affame un candidat, et
+## un poids de monde qui etouffe une famille entiere.
+func _test_les_monstres_neufs_sortent_vraiment_en_massacre() -> void:
+	var membership: Dictionary = WaveSpawner.build_membership()
+	var pool: Array[EnemyDef] = []
+	var bosses: Array[EnemyDef] = []
+	var neufs: Array[EnemyDef] = []
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.projectile:
+			continue
+		if d.is_boss():
+			bosses.append(d)
+		else:
+			pool.append(d)
+		if (d.anim_key in SILHOUETTES_2026_09_26) and not _est_invoque(d.id):
+			neufs.append(d)
+
+	var vus: Dictionary = {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4242
+	for n in range(1, 301):
+		var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
+		if w == null:
+			continue
+		for e: WaveEntry in w.entries:
+			if e != null and e.enemy != null:
+				vus[e.enemy.id] = true
+
+	var jamais: Array[String] = []
+	for d in neufs:
+		if not vus.has(d.id):
+			jamais.append(String(d.id))
+	jamais.sort()
+	ok(jamais.is_empty(),
+		("sur 300 vagues de Massacre ces monstres neufs ne sortent JAMAIS : le"
+		+ " .tres existe, le joueur ne les verra pas — %s") % ", ".join(jamais))
+
+
+## LES TROIS PALIERS DE LA GORGONE DOIVENT ETRE DES PALIERS, donc rencontres
+## dans l ordre de puissance croissante et non au hasard.
+##
+## CE QUE CE TEST N EXIGE PAS, et pourquoi. Un premier jet exigeait que la
+## gorgone de BOSS mene une vague de boss de campagne. Verifie sur le contenu
+## reel : les sept niveaux ont chacun SON boss et SON mini-boss, et six des sept
+## boss portent une mecanique unique ecrite pour leur niveau (morcele, canonnier,
+## invocateur, ressuscite, compteur de coups, renvoi). Lui faire de la place
+## aurait voulu dire en DEPLACER un, donc casser le travail du chantier I et la
+## narration de docs/histoire.md. Le test aurait ete vert au prix du contenu, ce
+## qui est exactement l inverse de son role.
+##
+## Ce qu il exige a la place, et qui est la VRAIE condition de jouabilite :
+##   - le palier 1 (monstre commun) descend dans des vagues ecrites ;
+##   - le palier 2 (mini-boss) MENE une vague de mini-boss de campagne, donc le
+##     joueur rencontre la mecanique a un palier avant de l affronter a trois ;
+##   - le palier 3 (boss) est rattache a un monde et TIRE par le Massacre, qui
+##     est le chemin reel par lequel un boss sans niveau se rencontre.
+func _test_les_paliers_de_la_gorgone_sont_des_paliers() -> void:
+	var par_regard: Dictionary = {}
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d != null and d.blocks_cards > 0:
+			par_regard[d.blocks_cards] = d
+	eq(par_regard.size(), 3, "les trois paliers 1 / 2 / 3 existent")
+	if par_regard.size() < 3:
+		return
+
+	# La puissance doit MONTER avec le nombre de regards : un monstre commun qui
+	# gelerait plus de cartes qu un boss rendrait les paliers illisibles.
+	var p1: EnemyDef = par_regard[1]
+	var p2: EnemyDef = par_regard[2]
+	var p3: EnemyDef = par_regard[3]
+	ok(p1.power < p2.power and p2.power <= p3.power,
+		"plus le monstre gele de cartes, plus il est puissant (%d / %d / %d)"
+		% [p1.power, p2.power, p3.power])
+
+	# Palier 1 : il descend dans des vagues ecrites.
+	var corps: Dictionary = {}
+	var mene_mini: Dictionary = {}
+	for lv: LevelDef in ContentDB.levels.values():
+		for w: WaveDef in lv.waves:
+			if w == null or w.entries.is_empty():
+				continue
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					corps[e.enemy.id] = true
+			if w.is_miniboss and w.entries[0] != null and w.entries[0].enemy != null:
+				mene_mini[w.entries[0].enemy.id] = lv.id
+	ok(corps.has(p1.id), "%s (1 regard) descend dans des vagues de campagne" % p1.id)
+
+	# Palier 2 : il MENE une vague de mini-boss. C est le palier pedagogique — la
+	# mecanique doit etre enseignee a 2 cartes avant d etre payee a 3.
+	ok(mene_mini.has(p2.id),
+		"%s (2 regards) doit MENER une vague de mini-boss : c est la ou le joueur"
+		% p2.id + " apprend la mecanique avant de la subir a trois cartes")
+
+	# Palier 3 : rattache a un monde ET reellement tire par le Massacre.
+	var membership: Dictionary = WaveSpawner.build_membership()
+	ok(membership.has(p3.id),
+		"%s (3 regards) doit etre rattache a un monde, sinon le Massacre l ignore"
+		% p3.id)
+	var pool: Array[EnemyDef] = []
+	var bosses: Array[EnemyDef] = []
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.projectile:
+			continue
+		if d.is_boss():
+			bosses.append(d)
+		else:
+			pool.append(d)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 777
+	var sorti: bool = false
+	for n in range(1, 301):
+		var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
+		if w == null:
+			continue
+		for e: WaveEntry in w.entries:
+			if e != null and e.enemy != null and e.enemy.id == p3.id:
+				sorti = true
+	ok(sorti, "%s (3 regards) sort reellement sur 300 vagues de Massacre" % p3.id)

@@ -17,6 +17,12 @@ var zones: Array[Dictionary] = []
 var allies: Array[Dictionary] = []
 var walls: Array[Dictionary] = []
 var shots: Array[Dictionary] = []
+## ONDES DE CHOC en cours d expansion. Separees des tirs : un tir est un corps
+## qui voyage vers un point et disparait a l impact, une onde est un CERCLE qui
+## grandit depuis un centre fixe et frappe tout ce qu il traverse, une seule fois
+## chacun. Les deux ne se rangent pas dans la meme liste sans mentir sur l un ou
+## l autre.
+var shockwaves: Array[Dictionary] = []
 ## Spirales qui aspirent les monstres vers un point. Separees des zones au sol :
 ## une zone agit sur les PV, un vortex agit sur la POSITION, et le joueur doit
 ## pouvoir superposer les deux (aspirer dans une mare de venin).
@@ -72,6 +78,7 @@ func simulate(delta: float) -> void:
 	_simulate_allies(wd)
 	_simulate_walls(wd)
 	_simulate_shots(wd)
+	_simulate_shockwaves(wd)
 	_simulate_support(wd)
 
 	var buff: float = _buff_multiplier()
@@ -86,6 +93,31 @@ func simulate(delta: float) -> void:
 		# courant, lui, doit pouvoir RENVERSER la descente, ce qui est toute la
 		# difference entre la nappe d eau et le Champ de givre.
 		_apply_current(e, wd)
+
+	# REGARD PETRIFIANT : releve APRES le tour des monstres, donc une gorgone
+	# morte pendant cette image a deja relache la main quand le HUD se
+	# rafraichit. Releve a chaque image plutot que sur les signaux de mort et
+	# d apparition : une gorgone peut aussi disparaitre en etant gobee par le
+	# Glouton, absorbee, ou emportee par la fin de vague, et chacun de ces
+	# chemins aurait demande son propre branchement — donc chacun aurait pu etre
+	# oublie, laissant une main petrifiee par un monstre qui n existe plus.
+	_refresh_card_block()
+
+
+## Total des regards des gorgones VIVANTES, pousse dans RunState. Zero gorgone
+## vivante donne zero regard : la main se degele d elle-meme, il n existe aucun
+## chemin ou un blocage survit a son monstre.
+func _refresh_card_block() -> void:
+	var regards: int = 0
+	for e in enemies:
+		if _alive(e) and e.definition != null and e.definition.blocks_cards > 0:
+			# Un monstre qui APPARAIT encore ne petrifie pas : le joueur ne l a pas
+			# vu arriver, et perdre une carte avant meme de voir la cause se lit
+			# comme un bug. Un monstre CACHE (Ombre en phase) non plus.
+			if e.is_spawning() or e.is_hidden():
+				continue
+			regards += e.definition.blocks_cards
+	RunState.set_card_block_count(regards)
 
 
 func is_reversed() -> bool:
@@ -221,9 +253,110 @@ func _simulate_shots(wd: float) -> void:
 			if node != null and is_instance_valid(node):
 				node.queue_free()
 			shots.remove_at(i)
-			# BOUCLIER PUIS PV, comme un contact.
+			# Une fleche coute de la VITESSE, comme un contact : depuis le
+			# 26 septembre c est la seule reserve du mage.
 			SpeedGauge.take_hit(int(s["damage"]))
 			mage_hit.emit(int(s["damage"]), s.get("shooter"))
+
+
+# --- ONDE DE CHOC ----------------------------------------------------------
+#
+# Le boss qui « n avance pas et tape le sol », demande par le testeur. Une onde
+# n est pas un tir : elle part d un centre FIXE et son cercle grandit, frappant
+# chaque chose une seule fois au passage du front.
+#
+# POURQUOI UN FRONT QUI GRANDIT et non un cercle instantane. Un cercle
+# instantane est un de : au moment ou le boss frappe, on est dedans ou dehors, et
+# le joueur n a rien a decider. Un front qui s etend donne une DEMI-SECONDE pour
+# reagir — sortir du cercle, ou accepter le coup pour finir son incantation. La
+# vitesse du front est donc un reglage de jouabilite, pas de mise en scene.
+const SHOCKWAVE_SPEED: float = 620.0
+
+
+## Le boss frappe le sol : une onde part de sa position.
+func enemy_shockwave(from: Enemy, radius: float, damage: int) -> void:
+	if from == null or radius <= 0.0 or damage <= 0:
+		return
+	shockwaves.append({
+		"center": from.position,
+		"radius": 0.0,
+		"max": radius,
+		"damage": damage,
+		"source": from.definition,
+		# Ce que le front a DEJA frappe. Sans cette memoire, un monstre lent reste
+		# dans l epaisseur du front plusieurs images et encaisse dix fois la meme
+		# onde : le boss deviendrait une tondeuse.
+		"hit_mage": false,
+		"hit": [],
+	})
+	shockwaves_fired += 1
+	from.play_attack()
+	AudioBus.play_sfx(&"wall")
+
+
+func _simulate_shockwaves(wd: float) -> void:
+	for i in range(shockwaves.size() - 1, -1, -1):
+		var w: Dictionary = shockwaves[i]
+		var avant: float = float(w["radius"])
+		var apres: float = avant + SHOCKWAVE_SPEED * wd
+		w["radius"] = apres
+		var centre: Vector2 = w["center"]
+		var degats: int = int(w["damage"])
+
+		# LE MAGE. Sa ligne est horizontale : l onde l atteint quand son front
+		# depasse la distance verticale au centre. On le frappe UNE fois.
+		if not bool(w["hit_mage"]):
+			var d_mage: float = absf(GameConfig.MAGE_LINE_Y - centre.y)
+			if apres >= d_mage and avant < d_mage and d_mage <= float(w["max"]):
+				w["hit_mage"] = true
+				speed_before_hit = SpeedGauge.speed_percent
+				# Une onde paie le meme peage que tout le reste : elle coute de
+				# la vitesse, donc de la vie. La regle entiere vit dans
+				# SpeedGauge.take_hit() et n a aucune raison d etre recopiee ici.
+				SpeedGauge.take_hit(degats)
+				mage_hit.emit(degats, w.get("source"))
+
+		# LE DECOR DU JOUEUR. C est ce qui distingue l onde du tir : elle abat les
+		# arbres et fend les murs poses dans son cercle. Un boss immobile qu on
+		# enfermerait derriere un mur ne serait pas un combat.
+		var deja: Array = w["hit"]
+		for j in range(props.size() - 1, -1, -1):
+			if j >= props.size():
+				continue
+			var pr: TerrainProp = props[j]
+			if pr == null or deja.has(pr):
+				continue
+			var dp: float = centre.distance_to(pr.position)
+			if apres >= dp and avant < dp and dp <= float(w["max"]):
+				deja.append(pr)
+				if pr.is_breakable() and pr.take_damage(float(degats) * 6.0):
+					_destroy_prop(j, true)
+
+		# Le visuel du front, pose aux paliers : une seule image d impact etiree a
+		# la taille du front suffit a le lire, et on ne fabrique pas un noeud par
+		# image. Les feuilles viennent du pack d effets — rien n est dessine.
+		var palier: int = int(apres / 110.0)
+		if palier > int(avant / 110.0) and Fx.enabled():
+			Fx.impact(self, centre, Fx.COL_PHYSICAL, minf(apres, float(w["max"])))
+
+		if apres >= float(w["max"]):
+			shockwaves.remove_at(i)
+
+
+## Nombre d ondes EN COURS d expansion (transitoire, une demi-seconde chacune).
+func shockwave_count() -> int:
+	return shockwaves.size()
+
+
+## Nombre total de coups de sol depuis le debut de la partie. C est ce compteur
+## que les tests interrogent : `shockwave_count()` est transitoire — une onde de
+## 300 px vit un peu moins d une demi-seconde, donc une sonde qui tombe entre
+## deux coups lirait zero et le test serait faux une fois sur deux.
+var shockwaves_fired: int = 0
+
+
+func shockwave_strike_count() -> int:
+	return shockwaves_fired
 
 
 ## Le point est-il dans un mur ? Les murs sont peu nombreux (un ou deux), une
@@ -375,20 +508,21 @@ func _passive_death_blast(where: Vector2, rayon_mort: float) -> void:
 ##
 ## Les deux echelles n ont RIEN a voir : un sort fait des dizaines a des centaines
 ## de points sur un monstre de 200 PV, alors que le mage a 100 PV et qu un contact
-## de boss lui en coute 50. Renvoyer les degats bruts tuerait le joueur d un seul
-## Meteore, ce qui n est pas une punition mais une interdiction de jouer.
+## de boss lui en coute 50 POINTS DE VITESSE. Renvoyer les degats bruts tuerait
+## le joueur d un seul Meteore, ce qui n est pas une punition mais une
+## interdiction de jouer.
 ##
 ## On divise donc, puis on PLAFONNE a hauteur d un contact de mini-boss : le
 ## renvoi le plus cher du jeu coute autant que se faire toucher par un gros
 ## monstre. C est la seule echelle que le joueur connaisse deja, et elle garantit
-## qu un renvoi ne peut jamais le tuer a lui seul depuis la pleine sante.
+## qu un renvoi ne peut jamais le tuer a lui seul depuis la pleine vitesse.
 const REFLECT_TO_MAGE_SCALE: float = 0.10
 const REFLECT_MAX_PER_HIT: int = 20
 
 
-## Renvoie une part des degats sur le mage. Passe par SpeedGauge.take_hit(), donc
-## par le chemin BOUCLIER PUIS PV : un renvoi fait d abord retomber la jauge, il
-## n entame les PV qu a x1. La mecanique signature n a pas d exception.
+## Renvoie une part des degats sur le mage. Passe par SpeedGauge.take_hit() :
+## un renvoi coute de la VITESSE, comme n importe quel coup. La mecanique
+## signature n a pas d exception.
 func _reflect_to_mage(source: Enemy, raw: float) -> void:
 	var degats: int = clampi(int(round(raw * REFLECT_TO_MAGE_SCALE)), 1, REFLECT_MAX_PER_HIT)
 	speed_before_hit = SpeedGauge.speed_percent
@@ -411,12 +545,14 @@ func _on_enemy_reached_mage(e: Enemy) -> void:
 	var dmg: int = e.definition.contact_hit() if e.definition != null else 5
 	enemies.erase(e)
 	e.queue_free()
-	# Photo de la vitesse AVANT l encaissement : le passif legendaire "Verrou
-	# temporel" en a besoin pour savoir combien la jauge a perdu. On la prend ici
-	# plutot que de toucher a SpeedGauge.take_hit(), dont le chemin bouclier-puis-PV
-	# doit rester le seul et rester intact (voir memoire).
+	# Photo de la vitesse AVANT l encaissement. Le passif legendaire "Verrou
+	# temporel" en a besoin deux fois : pour savoir combien la jauge a perdu, ET
+	# pour juger son propre seuil — apres le coup la vitesse est deja tombee,
+	# souvent sous le seuil que le passif etait cense couvrir (voir
+	# GameController::_passive_equipped_at).
 	speed_before_hit = SpeedGauge.speed_percent
-	# BOUCLIER PUIS PV : toute la regle vit dans SpeedGauge.take_hit().
+	# Toute la regle vit dans SpeedGauge.take_hit() : un coup coute de la
+	# vitesse, et le plancher de 100 % est la mort.
 	SpeedGauge.take_hit(dmg)
 	mage_hit.emit(dmg, e.definition)
 

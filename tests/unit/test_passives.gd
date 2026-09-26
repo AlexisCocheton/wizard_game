@@ -52,7 +52,7 @@ func _passive(id: String, key: String, magnitude: float = 0.0,
 ## plus de carte a piocher. C est tout l objet du changement.
 func _test_un_passif_equipe_est_actif_des_le_debut() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var p := _passive("t_haste", "passive_cast_haste", 0.3, 100)
 	ok(RunState.equip_passive(p), "le passif s equipe")
 	eq(RunState.equipped_passives.size(), 1, "il occupe un emplacement")
@@ -62,7 +62,7 @@ func _test_un_passif_equipe_est_actif_des_le_debut() -> void:
 ## LA regle du testeur : "le passif n a lieu qu a partir de 140 % de speed".
 func _test_le_seuil_de_vitesse_commande_l_effet() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var boom := _passive("t_boom", "passive_death_blast", 5.0, 140)
 	RunState.equip_passive(boom)
 
@@ -82,14 +82,14 @@ func _test_le_seuil_de_vitesse_commande_l_effet() -> void:
 	SpeedGauge.set_speed_percent(100)
 	not_ok(RunState.passive_active(boom), "la vitesse retombe, le passif s eteint")
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 
 ## "Si on obtient un quatrieme passif en jeu il ne peut pas se cumuler : on doit
 ## selectionner un des trois passifs a changer."
 func _test_trois_emplacements_et_echange_au_quatrieme() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var a := _passive("t_a", "passive_cast_haste", 0.1, 110)
 	var b := _passive("t_b", "passive_wave_ally", 1.0, 150)
 	var c := _passive("t_c", "passive_death_blast", 5.0, 140)
@@ -147,7 +147,7 @@ func _test_les_passifs_ne_sont_plus_dans_le_deck() -> void:
 ## seulement au-dessus de son seuil.
 func _test_reduction_du_temps_de_charge() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var c := SpellCard.new()
 	c.id = &"t_spell"
 	c.base_cast_time = 2.0
@@ -167,13 +167,13 @@ func _test_reduction_du_temps_de_charge() -> void:
 	court.base_cast_time = 0.2
 	ok(RunState.effective_cast_time(court) >= 0.1 / 5.0, "un sort tres court reste lisible")
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 
 ## Double cast : deux sorts a la fois, mais chacun 50 % plus lent.
 func _test_double_cast_ralentit_les_sorts() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var dual := _passive("t_double", "passive_double_cast", 1.0, 200)
 	RunState.equip_passive(dual)
 	eq(RunState.cast_slots(), 1, "sous le seuil, la seconde place reste fermee")
@@ -188,14 +188,14 @@ func _test_double_cast_ralentit_les_sorts() -> void:
 	feq(RunState.effective_cast_time(c), seul * 1.5, "mais chacun prend 50 % de plus")
 	RunState.set_casting_count(1)
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 
 ## Le malus de Double incantation ne se paie QUE si la seconde place sert.
 ## Mesure au banc : applique en permanence, le mage passait 85 % du temps a incanter.
 func _test_le_malus_de_double_cast_se_merite() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	SpeedGauge.set_speed_percent(200)
 	var c := SpellCard.new()
 	c.id = &"t_spell"
@@ -209,7 +209,7 @@ func _test_le_malus_de_double_cast_se_merite() -> void:
 	RunState.set_casting_count(1)
 	feq(RunState.effective_cast_time(c), sans, "retour a la normale ensuite")
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 
 func _test_les_passifs_repartent_a_zero_entre_les_parties() -> void:
@@ -286,11 +286,11 @@ func _test_chaque_passif_a_un_effet_connu() -> void:
 ## rendrait un passif actif a 100 %.
 func _test_has_passive_respecte_le_seuil() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var ally := _passive("t_ally", "passive_wave_ally", 1.0, 150)
 	RunState.equip_passive(ally)
 	not_ok(RunState.has_passive(&"passive_wave_ally"), "a 100 %, pas d allie")
 	SpeedGauge.set_speed_percent(150)
 	ok(RunState.has_passive(&"passive_wave_ally"), "a 150 %, l allie arrive")
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()

@@ -72,7 +72,6 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	_connect_once(spawner.wave_cleared, _on_wave_cleared)
 	_connect_once(spawner.all_waves_cleared, _on_all_cleared)
 	_connect_once(SpeedGauge.died, _on_died)
-	_connect_once(SpeedGauge.shield_collapsed, _on_shield_collapsed)
 	_connect_once(battlefield.mage_hit, _on_mage_hit)
 	_connect_once(battlefield.enemy_killed, _on_enemy_killed_for_challenges)
 	_connect_once(RunState.level_up, _on_level_up)
@@ -89,7 +88,7 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	if mage != null:
 		mage.bind(caster)
 	_connect_once(spawner.wave_started, _on_wave_started)
-	_connect_once(SpeedGauge.hp_changed, _on_hp_changed)
+	_connect_once(SpeedGauge.speed_lost, _on_speed_lost)
 	AudioBus.play_music(&"battle")
 
 	spawner.start_next()
@@ -374,33 +373,64 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 		AudioBus.play_sfx(&"wave_start")
 
 
-func _on_hp_changed(_hp: int) -> void:
+## Le mage vient de perdre de la vitesse, c est-a-dire de la VIE : depuis le
+## 26 septembre c est la meme chose. Ce crochet remplace l ancien _on_hp_changed
+## ET l ancien _on_shield_collapsed, qui annoncaient deux evenements distincts
+## d un systeme a deux reserves. Il n y en a plus qu un.
+func _on_speed_lost(_amount: int, _percent: int) -> void:
 	AudioBus.play_sfx(&"hp_lost")
 	# La VOIX en plus du bruitage : le bruitage dit "quelque chose a frappe",
 	# la voix dit "c est MOI qui ai pris". A 400 % de vitesse, ou tout va vite,
 	# c est la difference entre un bruit de fond et une information.
 	AudioBus.play_voice(&"hurt")
-
-
-func _on_shield_collapsed() -> void:
+	# L objectif "ne jamais laisser retomber la jauge" se juge ici : toute perte
+	# de vitesse est desormais une perte de vie, les deux objectifs se lisent au
+	# meme endroit (voir objective_checker.gd, qui les distingue toujours).
 	RunState.note_speed_drop()
 
 
 func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
 	RunState.note_damage_taken(source)
-	# PASSIF "Verrou temporel" (legendaire) : un coup ne ramene plus la vitesse
-	# au plancher, il n en fait perdre que la moitie. C est la regle la plus
-	# bouleversante du jeu — elle s attaque a la punition centrale — d ou son
-	# seuil tres haut : il faut deja avoir tenu 300 % pour en profiter.
+	# PASSIF "Verrou temporel" (legendaire) : un coup ne coute que la moitie de
+	# la vitesse qu il devrait. Depuis que la vitesse EST la vie, c est la seule
+	# reduction de DEGATS du jeu — d ou son seuil tres haut : il faut deja avoir
+	# tenu 300 % pour en profiter.
 	#
 	# On RE-POUSSE la jauge apres coup au lieu de modifier SpeedGauge.take_hit() :
-	# le chemin du bouclier reste unique et intouche (voir memoire), et le passif
-	# se lit comme ce qu il est, une exception rendue au joueur.
+	# le chemin du coup reste unique et intouche, et le passif se lit comme ce
+	# qu il est, une exception rendue au joueur.
+	#
+	# `heal()` et non `set_speed_percent()` : si le coup vient de tuer le mage,
+	# heal() refuse — on ne ressuscite pas avec un passif, meme legendaire. Et
+	# le passif ne peut donc pas annuler un coup mortel, seulement adoucir ceux
+	# qu on survit.
+	#
+	# LE SEUIL SE JUGE SUR LA VITESSE D AVANT LE COUP. On ne peut pas passer par
+	# has_passive(), qui lit la vitesse COURANTE : a cet instant le coup est deja
+	# encaisse, et un contact de 24 points recu a 310 % laisse le mage a 286 %,
+	# sous le seuil de 300. Le passif ne se serait donc JAMAIS declenche sur les
+	# coups qu il est precisement cense adoucir. Le defaut existait deja avant le
+	# passage a la vitesse-vie, mais il y etait invisible : la chute forfaitaire
+	# de 60 points sautait le seuil d un bloc et le joueur mettait l absence
+	# d effet sur le compte de la punition. Verrouille par test_speed_is_life.
 	var avant: int = battlefield.speed_before_hit if battlefield != null else 100
-	if avant > 100 and RunState.has_passive(&"passive_shield_keeper"):
+	if avant > 100 and _passive_equipped_at(&"passive_shield_keeper", avant):
 		var perdu: int = avant - SpeedGauge.speed_percent
 		if perdu > 0:
-			SpeedGauge.set_speed_percent(SpeedGauge.speed_percent + perdu / 2)
+			SpeedGauge.heal(perdu / 2)
+
+
+## Un passif de cette cle serait-il actif A `percent` % de vitesse ? Meme regle
+## que RunState.has_passive(), mais sur une vitesse DONNEE au lieu de la vitesse
+## courante. Sert aux crochets qui s executent APRES que la jauge a bouge.
+func _passive_equipped_at(key: StringName, percent: int) -> bool:
+	for c: SpellCard in RunState.equipped_passives:
+		if c == null or percent < c.speed_threshold:
+			continue
+		for spec in c.effects:
+			if spec != null and spec.key == key:
+				return true
+	return false
 
 
 func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:

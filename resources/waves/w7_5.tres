@@ -1,45 +1,61 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5u8xy"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_2yk30"]
 [ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="3_umyvd"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="4_l3gob"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="4_umyvd"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_afdpw"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="6_l3gob"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_lthrt"]
 
-[sub_resource type="Resource" id="Resource_5u8xy"]
+[sub_resource type="Resource" id="Resource_afdpw"]
 script = ExtResource("1_5u8xy")
 enemy = ExtResource("2_2yk30")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_2yk30"]
+[sub_resource type="Resource" id="Resource_lthrt"]
 script = ExtResource("1_5u8xy")
 enemy = ExtResource("3_umyvd")
 count = 1
 spawn_delay = 1.0
 start_offset = 9.0
 
-[sub_resource type="Resource" id="Resource_umyvd"]
+[sub_resource type="Resource" id="Resource_t83s7"]
+script = ExtResource("1_5u8xy")
+enemy = ExtResource("4_umyvd")
+count = 2
+spawn_delay = 2.2
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_l6gqu"]
 script = ExtResource("1_5u8xy")
 enemy = ExtResource("4_l3gob")
-count = 2
+count = 1
 spawn_delay = 2.5
-start_offset = 18.0
+start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_l3gob"]
+[sub_resource type="Resource" id="Resource_4y1sx"]
+script = ExtResource("1_5u8xy")
+enemy = ExtResource("6_l3gob")
+count = 2
+spawn_delay = 1.8
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_um3ov"]
 script = ExtResource("1_5u8xy")
 enemy = ExtResource("5_afdpw")
-count = 4
+count = 3
 spawn_delay = 1.5
-start_offset = 27.0
+start_offset = 30.0
 
 [resource]
 script = ExtResource("6_lthrt")
 id = &"w7_5"
 duration = 34.0
-entries = Array[ExtResource("1_5u8xy")]([SubResource("Resource_5u8xy"), SubResource("Resource_2yk30"), SubResource("Resource_umyvd"), SubResource("Resource_l3gob")])
+entries = Array[ExtResource("1_5u8xy")]([SubResource("Resource_afdpw"), SubResource("Resource_lthrt"), SubResource("Resource_t83s7"), SubResource("Resource_l6gqu"), SubResource("Resource_4y1sx"), SubResource("Resource_um3ov")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

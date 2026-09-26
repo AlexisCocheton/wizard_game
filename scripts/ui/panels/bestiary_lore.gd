@@ -176,6 +176,29 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 			+ " recus y sont renvoyes sur le mage")
 			% [_num(def.reflect_interval), _num(def.reflect_window),
 				int(round(def.reflect_pct))])
+	# LE REGARD PETRIFIANT, en tete avec les autres mecaniques qui changent une
+	# REGLE. C est la seule du jeu qui touche la MAIN : un joueur dont les cartes
+	# se figent sans explication en conclut que le jeu est casse, pas qu un
+	# monstre le regarde. La fiche doit donc dire la CAUSE et la REPONSE dans la
+	# meme phrase, parce que la reponse n est pas dans son deck, elle est sur le
+	# terrain — tuer celui-la.
+	if def.blocks_cards > 0:
+		var quoi: String = "une carte" if def.blocks_cards == 1 			else "%d cartes" % def.blocks_cards
+		out.append(("Son regard petrifie %s de votre main : elles restent en main"
+			+ " mais refusent de partir. Le tuer les libere aussitot") % quoi)
+	# L ONDE DE CHOC. On dit qu elle part du BOSS et non du mage : c est ce qui
+	# fait comprendre qu il y a un endroit sur, et donc qu il y a une decision.
+	if def.shockwave_interval > 0.0 and def.shockwave_radius > 0.0:
+		var part: float = def.shockwave_radius / float(GameConfig.BATTLEFIELD_WIDTH)
+		var cercle: String = "large" if part >= 0.45 else ("moyen" if part >= 0.25 else "serre")
+		out.append(("Frappe le sol toutes les %s s : une onde part de lui dans un"
+			+ " cercle %s et inflige %d degats a tout ce qu elle traverse,"
+			+ " le mage et votre decor compris")
+			% [_num(def.shockwave_interval), cercle, def.shockwave_damage])
+	# Un boss qui N AVANCE PAS doit le dire : sans cette ligne, le joueur
+	# l attend sur sa ligne de defense et ne comprend pas pourquoi rien n arrive.
+	if def.base_speed <= 0.0:
+		out.append("N avance jamais : il faut aller le chercher")
 	if def.aura_shield_radius > 0.0:
 		# Pas de pixels dans une fiche de joueur : "240 px" ne veut rien dire
 		# manette en main. On qualifie la portee par rapport a la largeur de
@@ -183,6 +206,20 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 		var part: float = def.aura_shield_radius / float(GameConfig.BATTLEFIELD_WIDTH)
 		var portee: String = "large" if part >= 0.25 else ("moyenne" if part >= 0.12 else "courte")
 		out.append("Protege de tout degat les monstres autour de lui (aura %s)" % portee)
+	# L INVOCATION. Defaut PRE-EXISTANT trouve en relisant la fiche du Bourreau :
+	# onze comportements etaient traduits et pas celui-la, alors que pour
+	# l Ensevelisseur invoquer EST tout le combat. La reponse a un invocateur est
+	# « tue la source d abord », et c est precisement ce que le joueur ne peut PAS
+	# deviner a l ecran : il voit des sbires arriver, pas qui les envoie.
+	#
+	# On nomme le sbire et on donne le plafond : sans le plafond, le joueur croit
+	# que l ecran va se remplir sans fin et joue la panique au lieu de la priorite.
+	if def.summon_interval > 0.0 and def.summon_def != null:
+		var combien: String = "" if def.summon_count <= 1 			else "%d " % def.summon_count
+		out.append(("Appelle %s%s toutes les %s s (%d au plus a la fois) :"
+			+ " tuez-le pour couper le flux")
+			% [combien, def.summon_def.display_name,
+				_num(def.summon_interval), def.summon_max_alive])
 	if def.heal_per_second > 0.0:
 		out.append("Soigne tous les autres monstres (%s PV par seconde)"
 			% _num(def.heal_per_second))

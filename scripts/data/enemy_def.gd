@@ -15,7 +15,9 @@ extends Resource
 @export var base_speed: float = 60.0
 ## XP de base ; multipliee par le multiplicateur de vitesse a la mort.
 @export var base_xp: int = 1
-## Degats infliges au mage au contact (passe par le bouclier avant les PV).
+## Degats infliges au mage au contact, EN POINTS DE POURCENTAGE DE VITESSE :
+## depuis le 26 septembre la vitesse est la seule reserve du mage, et 24 de
+## contact lui coutent 24 points de vitesse (voir speed_gauge.gd).
 ## 0 = deduit de la puissance (voir GameConfig.CONTACT_DAMAGE_BY_POWER).
 ## Une valeur explicite l emporte, pour un monstre volontairement hors bareme.
 @export var contact_damage: int = 0
@@ -97,6 +99,44 @@ extends Resource
 ## fait aussi mal qu une charge rend la distance plus dangereuse que le contact.
 @export var shot_damage: int = 2
 
+## REGARD PETRIFIANT — tant qu il est vivant, `blocks_cards` cartes de la MAIN
+## du joueur deviennent injouables. 0 = aucune.
+##
+## Ce que la mecanique change : la MAIN. Toutes les autres mecaniques de monstre
+## agissent sur le TERRAIN — ou frapper (morcele), quand (renvoi), quoi d abord
+## (invocateur), avec quel element (resistances). Celle-ci est la premiere a
+## toucher les cartes elles-memes, donc la premiere ou la reponse n est pas
+## « choisis mieux ta cible » mais « tue CELUI-LA pour recuperer ton deck ».
+##
+## La petrification se LEVE a sa mort : c est ce qui en fait une decision et non
+## une punition. Un blocage definitif transformerait le monstre en taxe.
+##
+## TROIS PALIERS, comme demande : 1 pour un monstre commun, 2 pour un mini-boss,
+## 3 pour un boss. Au-dela, un seul monstre viderait la main a lui tout seul.
+##
+## LE PLAFOND vit dans RunState (GameConfig.MAX_BLOCKED_CARDS) et non ici : il
+## porte sur la MAIN, pas sur le monstre. Deux gorgones de boss totalisent six
+## regards pour une main de six cartes ; sans plafond global le joueur regarderait
+## son ecran sans pouvoir rien lancer, ce qui n est plus un jeu. Le testeur l a
+## demande en ces termes : « pas plus de 5 carte sur 6 bloquer ».
+@export_range(0, 3) var blocks_cards: int = 0
+
+## ONDE DE CHOC — toutes les `shockwave_interval` secondes il frappe le sol et
+## un cercle de `shockwave_radius` px inflige `shockwave_damage`. 0 = jamais.
+##
+## Ce que la mecanique change par rapport au tir du canonnier : un tir VISE le
+## mage, une onde BALAIE un rayon. Le joueur ne peut plus se contenter de sortir
+## d une ligne — il doit tenir ses invocations, ses murs et ses arbres hors du
+## cercle. Couplee a un boss qui n avance pas, elle cree une zone interdite
+## FIXE : la premiere du jeu.
+##
+## Un boss a onde doit rester EN PLACE (`base_speed` nulle ou `keeps_distance_at`
+## pose) : une zone interdite qui se deplace en frappant ne laisse aucun endroit
+## sur, il suffirait d attendre et le combat n aurait plus de decision.
+@export var shockwave_interval: float = 0.0
+@export var shockwave_radius: float = 0.0
+@export var shockwave_damage: int = 0
+
 @export_group("Mecaniques de boss")
 ## MORCELE — le boss porte `parts_count` parties a detruire separement. Tant
 ## qu une partie tient, le coeur n encaisse RIEN : le joueur doit changer de
@@ -157,7 +197,7 @@ extends Resource
 ## pour devenir « N secondes d invulnerabilite totale », ce qui ne se joue pas.
 @export_range(0, 12) var hits_immune: int = 0
 
-## BOUCLIER DE RENVOI — toutes les `reflect_interval` secondes il leve une garde
+## GARDE DE RENVOI — toutes les `reflect_interval` secondes il leve une garde
 ## de `reflect_window` secondes, pendant laquelle `reflect_pct` % des degats
 ## recus repartent sur le MAGE. 0 = pas de renvoi.
 ##

@@ -73,41 +73,6 @@ texture_under = ExtResource("3")
 texture_progress = ExtResource("4")
 tint_progress = Color(0.95, 0.5, 0.3, 1)
 
-[node name="SpellBar" type="TextureProgressBar" parent="Root"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 996.0
-offset_top = 1420.0
-offset_right = 2246.0
-offset_bottom = 1484.0
-rotation = -1.5708
-pivot_offset = Vector2(0, 0)
-value = 0.0
-nine_patch_stretch = true
-stretch_margin_left = 24
-stretch_margin_top = 0
-stretch_margin_right = 24
-stretch_margin_bottom = 0
-texture_under = ExtResource("3")
-texture_progress = ExtResource("4")
-tint_progress = Color(1, 1, 1, 1)
-
-[node name="HpLabel" type="Label" parent="Root"]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -360.0
-offset_top = -436.0
-offset_right = -24.0
-offset_bottom = -376.0
-text = "PV 3/3"
-horizontal_alignment = 2
-vertical_alignment = 1
-
 [node name="CastBar" type="TextureProgressBar" parent="Root"]
 unique_name_in_owner = true
 visible = false

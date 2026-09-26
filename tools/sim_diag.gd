@@ -83,7 +83,7 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 		var st: Dictionary = _play(g)
 		if not st["mort"]:
 			wins += 1
-			pv.append(st["pv"])
+			pv.append(st["vitesse"])
 		vagues.append(st["vague"])
 		g.queue_free()
 		await get_tree().process_frame
@@ -96,7 +96,7 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 		pv_moy += p
 	pv_moy /= maxf(pv.size(), 1)
 	print("
-  %s (%s) : %d victoires sur %d, vague atteinte %.1f en moyenne, %.1f PV restants quand ca passe"
+  %s (%s) : %d victoires sur %d, vague atteinte %.1f en moyenne, %.0f %% de vitesse restants quand ca passe (plancher 100)"
 		% [level_id, level.display_name, wins, runs, moy, pv_moy])
 
 
@@ -173,7 +173,6 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 		g.battlefield.mage_hit.connect(_on_mage_hit)
 	_watch = g
 	var hits: int = 0
-	var shield_breaks: int = 0
 	var cards_played: int = 0
 	var cards_missed: int = 0      # main pleine, rien de jouable
 	var max_enemies: int = 0
@@ -182,20 +181,20 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 
 	while t < MAX_SECONDS:
 		t += FIXED_DELTA
-		var before_hp: int = SpeedGauge.hp
-		var before_idx: int = SpeedGauge.speed_percent
+		# La VITESSE est la seule reserve du mage depuis le 26 septembre : ce
+		# qu on mesurait comme "PV restants" est desormais "vitesse restante",
+		# et c est le meme nombre qui dit sa vie et sa puissance.
+		var before_hp: int = SpeedGauge.speed_percent
 		g.simulate(FIXED_DELTA)
 
-		if SpeedGauge.hp < before_hp:
+		if SpeedGauge.speed_percent < before_hp:
 			hits += 1
-		if SpeedGauge.speed_percent < before_idx and before_idx > 100:
-			shield_breaks += 1
 		max_enemies = maxi(max_enemies, g.battlefield.enemies.size())
 		_alive_sum += g.battlefield.enemies.size()
 		_samples += 1
 		if RunState.wave_index != wave_reached:
 			wave_reached = RunState.wave_index
-			hp_at[wave_reached] = SpeedGauge.hp
+			hp_at[wave_reached] = SpeedGauge.speed_percent
 
 		if g.caster.is_busy():
 			_cast_time += FIXED_DELTA
@@ -218,11 +217,11 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 		"degats_infliges": _total_damage, "temps_incantation": _cast_time,
 		"monstres_moyen": _alive_sum / maxf(_samples, 1.0),
 		"passes": _passed, "tues": _killed,
-		"par_source": _by_enemy, "temps": t, "coups_recus": hits, "boucliers_brises": shield_breaks,
+		"par_source": _by_enemy, "temps": t, "coups_recus": hits,
 		"cartes_jouees": cards_played, "cartes_bloquees": cards_missed,
 		"monstres_max": max_enemies, "vague": wave_reached,
-		"pv": SpeedGauge.hp, "mort": (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0),
-		"pv_par_vague": hp_at,
+		"vitesse": SpeedGauge.speed_percent, "mort": (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0),
+		"vitesse_par_vague": hp_at,
 	}
 
 
@@ -301,8 +300,10 @@ func _best_cluster(g: GameController, radius: float, defaut: Vector2) -> Vector2
 func _print_stats(nom: String, s: Dictionary) -> void:
 	var issue: String = "MORT" if s["mort"] else "survit"
 	print("  %s : %s a la vague %d apres %.0f s" % [nom, issue, s["vague"], s["temps"]])
-	print("    PV restants %d/%d, boucliers brises %d, coups encaisses %d"
-		% [s["pv"], GameConfig.MAGE_MAX_HP, s["boucliers_brises"], s["coups_recus"]])
+	# "vitesse restante" et non "PV restants" : c est la MEME reserve, et c est
+	# ce que le testeur regle. 100 % est le plancher mortel, pas un zero.
+	print("    vitesse restante %d %% (plancher 100, max %d), coups encaisses %d"
+		% [s["vitesse"], GameConfig.SPEED_MAX_PERCENT, s["coups_recus"]])
 	print("    cartes jouees %d, tours sans carte jouable (main pleine) %d, pic de monstres %d"
 		% [s["cartes_jouees"], s["cartes_bloquees"], s["monstres_max"]])
 	print("    monstres tues %d, monstres passes %d (taux d interception %.0f %%)"
@@ -317,11 +318,11 @@ func _print_stats(nom: String, s: Dictionary) -> void:
 		for k in src:
 			parts.append("%s x%d" % [k, src[k]])
 		print("    coups par source : " + ", ".join(parts))
-	var par_vague: Dictionary = s["pv_par_vague"]
+	var par_vague: Dictionary = s["vitesse_par_vague"]
 	var keys: Array = par_vague.keys()
 	keys.sort()
 	var line: String = ""
 	for k in keys:
-		line += "v%d:%dPV  " % [k, par_vague[k]]
+		line += "v%d:%d%%  " % [k, par_vague[k]]
 	if line != "":
 		print("    " + line)

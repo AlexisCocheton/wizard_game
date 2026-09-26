@@ -2,20 +2,38 @@ extends Node
 ## Constantes et reglages d'equilibrage. Aucun etat, aucune dependance.
 ## Premier autoload charge : tous les autres peuvent le lire dans leur _ready().
 
-## --- Vitesse / bouclier ---
-## Vitesse en POURCENTAGE : 100 % normal, 500 % maximum.
-## Les quatre paliers fixes d origine (x1/x1.5/x2/x4) ne laissaient aucune nuance.
-## Le pas de 10 % a disparu avec le bouton d acceleration : la vitesse monte
-## desormais en continu (SPEED_RISE_PER_SECOND) et ne se commande plus.
+## --- Vitesse : LA SEULE RESERVE DU MAGE ---
+## Vitesse en POURCENTAGE : 100 % est le PLANCHER, et le plancher c est la mort.
+## 500 % est le maximum, la pleine forme.
+##
+## Depuis le 26 septembre la vitesse EST la vie : le mage n a plus de PV ni de
+## bouclier, et un coup de N degats lui retire N points de pourcentage. La
+## reserve de vie du mage vaut donc SPEED_MAX_PERCENT - 100 points, et elle est
+## la meme chose que sa puissance. Voir speed_gauge.gd pour la regle complete.
 const SPEED_MAX_PERCENT: int = 500
-## Bouclier gagne par point de pourcentage au-dessus de 100 : a 500 % le mage
-## encaisse 40 PV de plus, soit une bonne moitie de sa vie. Aller vite est un pari
-## payant, mais a 0,2 le bouclier rendait le mage quasi invulnerable au banc.
-const SHIELD_PER_PERCENT: float = 0.1
-## Ce qu un coup fait perdre en vitesse, et le temps pendant lequel on ne peut
-## plus accelerer : on ne relance pas la machine dans la seconde ou l on est touche.
-const SPEED_DROP_ON_HIT: int = 60
-const SPEED_LOCK_AFTER_HIT: float = 3.0
+## Vitesse de DEPART d une partie. Elle ne peut pas valoir 100 : a 100 % le mage
+## est mort. C est son capital de vie initial (250 - 100 = 150 points), et c est
+## aussi la vitesse a laquelle le jeu commence — les deux sont le meme nombre,
+## c est tout le sujet de la mecanique.
+##
+## 250 et non 100 : sous l ancien systeme le mage partait a 100 % avec 100 PV a
+## cote, soit une reserve confortable des la premiere seconde. Le faire partir
+## au plancher l aurait tue au premier gnome. 250 lui donne 150 points de marge,
+## soit une poignee de contacts, et la montee naturelle fait le reste.
+## L EQUILIBRAGE FIN DE CETTE VALEUR APPARTIENT AU TESTEUR.
+const SPEED_START_PERCENT: int = 250
+## Le temps pendant lequel la montee naturelle est retenue apres un coup.
+##
+## Ce verrou a CHANGE DE NATURE avec la nouvelle regle. Avant, il empechait de
+## regagner de la puissance trop vite apres un contact. Maintenant que la montee
+## naturelle est la seule facon de se SOIGNER, il empeche de se soigner — et
+## trois secondes sous le feu, c est long. Il est donc raccourci a 1,2 s : le
+## coup se sent toujours (la barre se fige une seconde, on le voit), mais il
+## n enchaine plus deux punitions sur le meme contact.
+##
+## Il n a PAS ete supprime : sans lui, se faire toucher a 40 points du plancher
+## serait sans consequence visible, la barre repartant dans l image suivante.
+const SPEED_LOCK_AFTER_HIT: float = 1.2
 ## Points de pourcentage gagnes par seconde, tout seuls.
 ##
 ## Retour du testeur (21 septembre) : "La barre de vitesse n est plus accelerable
@@ -26,22 +44,36 @@ const SPEED_LOCK_AFTER_HIT: float = 3.0
 ## flottant et ne fait avancer le pourcentage affiche que par pas entiers de 1.
 ## Les paliers de 10 % toutes les 8 s se voyaient comme des a-coups — le monde
 ## changeait de vitesse d un coup au milieu d une vague, sans que le joueur ait
-## rien fait. A 2 points/s, l echelle complete (100 -> 500) prend 200 s, soit la
-## duree d une partie : la montee se sent sans jamais se remarquer.
+## rien fait.
+##
+## C est AUSSI, desormais, le rythme auquel le mage se regenere : 2 points de
+## vie par seconde. Le seul soin permanent du jeu est de tenir sans etre touche.
 const SPEED_RISE_PER_SECOND: float = 2.0
 ## Vitesse a laquelle le monde tourne pendant l'agonie (25 %).
+##
+## Le ralenti garde tout son sens avec la nouvelle regle : on meurt PARCE QU ON
+## EST LENT, et le ralenti est l image litterale de cette mort. C est meme la
+## seule mise en scene du jeu qui dise exactement ce qui vient de se passer.
 const DEATH_SLOWMO: float = 0.25
 ## Fraction de jauge d'agonie perdue par seconde reelle -> 4 s avant la defaite.
 const DEATH_DRAIN_RATE: float = 0.25
-## Echelle de 100 PV : avec 8 PV, tout coup valait 12,5 % de la vie et les degats
-## ne pouvaient pas etre nuances. Ici un gnome egratigne, un boss fait vraiment mal,
-## et la fleche d un archer se distingue d une charge de behemoth.
-const MAGE_MAX_HP: int = 100
 
 ## Degats de contact par puissance de monstre (P1 a P4), puis mini-boss et boss.
 ## Un monstre sans valeur explicite prend celle de sa puissance.
-## Mesure au banc : a 4/7/12/18 le mage finissait a 83 PV sur 100, il n y avait
-## plus aucune tension. Ces valeurs laissent environ 10 erreurs avant la defaite.
+##
+## CES VALEURS SONT DESORMAIS DES POINTS DE POURCENTAGE DE VITESSE, pas des PV :
+## un gnome (P1) fait perdre 9 points de vitesse, un boss 50. Elles n ont PAS
+## ete retouchees lors du passage a la vitesse-vie, volontairement :
+## l equilibrage appartient au testeur, et changer l echelle en meme temps que
+## la regle aurait rendu impossible de dire lequel des deux a bouge.
+##
+## Ce qu il faut savoir pour les regler : l ancienne reserve valait 100 PV plus
+## un bouclier d au plus 40 points, soit 140 au mieux et 100 le plus souvent.
+## La nouvelle vaut SPEED_MAX_PERCENT - 100 = 400 points au maximum, et
+## SPEED_START_PERCENT - 100 = 150 au depart. A degats egaux le mage encaisse
+## donc PLUS de coups en pleine forme qu avant, et a peu pres autant au debut de
+## la partie — mais chaque coup le RALENTIT, ce que l ancienne barre de PV ne
+## faisait pas. Les chiffres du banc sont dans le rapport du chantier.
 const CONTACT_DAMAGE_BY_POWER: Dictionary = {
 	1: 9, 2: 15, 3: 24, 4: 36,
 }

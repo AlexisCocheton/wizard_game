@@ -49,7 +49,7 @@ func _pv_apres(def: EnemyDef, degats: float, tags: Array[GameEnums.DamageTag]) -
 	var bf := Battlefield.new()
 	bf.nav = NavGrid.new()
 	attach(bf)
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	RunState.reset()
 	var e: Enemy = bf.spawn_enemy(def, 1.0, 1.0, Vector2(540.0, 600.0))
 	# Le fondu d apparition rend le monstre intouchable : on l epuise avant de

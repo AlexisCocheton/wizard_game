@@ -107,11 +107,11 @@ func _test_le_mur_arrete_les_projectiles() -> void:
 	# Une fleche juste au-dessus du mur, dans sa largeur.
 	bf.shots.append({"pos": Vector2(540.0, 880.0), "damage": 2, "node": null,
 		"shooter": null})
-	var pv_avant: int = SpeedGauge.hp
+	var vitesse_avant: int = SpeedGauge.speed_percent
 	for i in 30:
 		bf.simulate(1.0 / 60.0)
 	eq(bf.shots.size(), 0, "la fleche a ete arretee")
-	eq(SpeedGauge.hp, pv_avant, "elle n a pas touche le mage")
+	eq(SpeedGauge.speed_percent, vitesse_avant, "elle n a pas touche le mage")
 
 	# Une fleche a cote du mur passe normalement.
 	bf.shots.append({"pos": Vector2(100.0, 880.0), "damage": 2, "node": null,
@@ -120,5 +120,5 @@ func _test_le_mur_arrete_les_projectiles() -> void:
 		bf.simulate(1.0 / 60.0)
 		if bf.shots.is_empty():
 			break
-	ok(SpeedGauge.hp < pv_avant, "une fleche hors du mur touche bien le mage")
+	ok(SpeedGauge.speed_percent < vitesse_avant, "une fleche hors du mur touche bien le mage")
 	SpeedGauge.reset()

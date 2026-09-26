@@ -65,7 +65,7 @@ func _test_montee_de_niveau_propose() -> void:
 	eq(RunState.pending_offer.size(), 0, "plus d offre en attente")
 	detach(g)
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 
 func _test_cadence_massacre() -> void:
@@ -189,7 +189,7 @@ func _test_un_cinquieme_de_passifs_a_la_montee_de_niveau() -> void:
 ## deck le rendrait piochable, et tout le chantier serait annule en un appel.
 func _test_un_passif_choisi_s_equipe_au_lieu_d_aller_dans_le_deck() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var p: SpellCard = null
 	for c: SpellCard in ContentDB.cards.values():
 		if c != null and c.is_passive:
@@ -212,7 +212,7 @@ func _test_un_passif_choisi_s_equipe_au_lieu_d_aller_dans_le_deck() -> void:
 ## l equipe pas en douce : il reste EN ATTENTE d un echange decide par le joueur.
 func _test_un_quatrieme_passif_choisi_attend_un_echange() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var tous: Array[SpellCard] = []
 	for c: SpellCard in ContentDB.cards.values():
 		if c != null and c.is_passive:

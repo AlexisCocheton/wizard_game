@@ -173,6 +173,7 @@ func _run_all() -> void:
 	await _check_boss_reward()
 	await _check_precast()
 	await _check_upgrade_panel()
+	await _check_cartes_petrifiees()
 	await _check_end_screens()
 	await _check_cosmetics_in_battle()
 	_check_massacre_deck()
@@ -707,6 +708,49 @@ func _check_menu_screens() -> void:
 ## porte sur lui venait de `tools/make_upgrades`, qui le pose sur un fond neutre
 ## — on ne pouvait donc pas juger ce que le joueur voit reellement : un voile
 ## semi-transparent par-dessus des monstres qui descendent.
+## LA MAIN PETRIFIEE par le regard d une gorgone.
+##
+## Pourquoi il faut la forcer : aucune partie de test ne croise une gorgone au
+## bon moment, donc le rendu des cartes bloquees n etait verifie NULLE PART. Le
+## moteur refusait bien de les jouer — et le joueur voyait six cartes
+## identiques, appuyait dans le vide, sans rien comprendre. Une regle qu on
+## subit sans la voir se lit comme un bug.
+func _check_cartes_petrifiees() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	add_child(g)
+	g.running = false
+	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if level == null:
+		_fail("cartes petrifiees : lvl_01 introuvable")
+		g.queue_free()
+		return
+	g.start_level(level, GameEnums.Mode.EXPLORATION)
+	for k in 6:
+		g.battlefield.simulate(FIXED_DELTA)
+
+	if RunState.hand.size() < 3:
+		_fail("cartes petrifiees : main trop courte (%d)" % RunState.hand.size())
+		g.queue_free()
+		return
+	# Deux regards : la Matrone en gele deux.
+	RunState.set_card_block_count(2)
+	var bloquees: int = RunState.blocked_count()
+	if bloquees != 2:
+		_fail("cartes petrifiees : %d gelees au lieu de 2" % bloquees)
+	# LE PLAFOND : il doit toujours rester une carte jouable, quoi qu il arrive.
+	RunState.set_card_block_count(99)
+	var restantes: int = RunState.hand.size() - RunState.blocked_count()
+	if restantes < RunState.MIN_PLAYABLE_CARDS:
+		_fail("cartes petrifiees : %d carte(s) jouable(s), le plafond ne tient pas"
+			% restantes)
+	RunState.hand_changed.emit()
+	await get_tree().process_frame
+	await _shot("main_petrifiee")
+	g.queue_free()
+	await get_tree().process_frame
+
+
 func _check_upgrade_panel() -> void:
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()
@@ -1009,8 +1053,9 @@ func _check_defeat_path() -> void:
 	var cb := func() -> void: died[0] = true
 	SpeedGauge.died.connect(cb)
 	# Un seul coup de la valeur des PV : compter des coups de 1 dependait de
-	# l ancienne echelle (8 PV) et cassait des que MAGE_MAX_HP changeait.
-	SpeedGauge.take_hit(GameConfig.MAGE_MAX_HP)
+	# l ancienne echelle (8 PV) et cassait des que le maximum changeait. Depuis
+	# le 26 septembre la reserve EST la vitesse : on la vide d un coup.
+	SpeedGauge.take_hit(SpeedGauge.max_reserve())
 	var guard: int = 0
 	while not died[0] and guard < 6000:
 		SpeedGauge.tick(FIXED_DELTA)

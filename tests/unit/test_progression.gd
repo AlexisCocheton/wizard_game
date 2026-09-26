@@ -15,7 +15,7 @@ func run() -> void:
 
 func _test_xp_scales_with_speed() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var got: Array[int] = [0]
 	var on_xp := func(amount: int) -> void: got[0] = amount
 	RunState.xp_gained.connect(on_xp)
@@ -32,7 +32,7 @@ func _test_xp_scales_with_speed() -> void:
 
 func _test_level_up() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var levels: Array[int] = []
 	var on_level := func(n: int) -> void: levels.append(n)
 	RunState.level_up.connect(on_level)
@@ -80,7 +80,7 @@ func _test_rarity_distribution() -> void:
 
 func _test_cost_reduction() -> void:
 	RunState.reset()
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	var card := SpellCard.new()
 	card.base_cast_time = 4.0
 

@@ -1,15 +1,24 @@
 extends CanvasLayer
 ## HUD portrait 1080x1920, dispose selon le cahier des charges :
 ##
-##   [x2]        Vague 3/6  Niv.4          [||]
+##   [285%]      Vague 3/6  Niv.4          [||]
 ##   +--------------------------------------+
-##   | jauge |                      | jauge |
-##   | ennemi|    champ de bataille | sorts |
-##   | (gauche)                     |(droite
-##   |       |                      | = PV) |
+##   |vitesse|                              |
+##   |  =    |      champ de bataille       |
+##   |  vie  |                              |
+##   |       |                              |
 ##   +--------------------------------------+
 ##            [carte][carte][carte]
 ##   ================ XP ====================
+##
+## UNE SEULE BARRE VERTICALE depuis le 26 septembre. La barre de vie de droite a
+## ete SUPPRIMEE : le mage n a plus de PV, sa vitesse est sa vie. La barre de
+## gauche porte donc les deux lectures a la fois, et sa couleur passe de l or au
+## rouge a mesure qu elle descend vers le plancher mortel de 100 %.
+##
+## On a retire la barre plutot que de la laisser pleine en permanence : une
+## jauge qui ne bouge jamais apprend au joueur a ne plus la regarder, et il
+## aurait cherche sa vie du mauvais cote de l ecran.
 ##
 ## Les cartes sont des CardView (nom, effet, rarete) ; on les glisse sur le
 ## terrain pour viser. Un choix de 3 cartes se superpose au jeu quand il y a lieu.
@@ -20,9 +29,10 @@ var game: GameController = null
 @onready var _speed_btn: Button = %SpeedButton
 @onready var _pause_btn: Button = %PauseButton
 @onready var _wave_label: Label = %WaveLabel
+## La barre de VITESSE, qui est aussi la barre de VIE. Son nom de noeud
+## (EnemyBar) est historique : renommer le noeud casserait la scene et toutes
+## les captures de reference pour un gain nul.
 @onready var _enemy_bar: TextureProgressBar = %EnemyBar
-@onready var _spell_bar: TextureProgressBar = %SpellBar
-@onready var _hp_label: Label = %HpLabel
 @onready var _xp_bar: TextureProgressBar = %XpBar
 @onready var _hand: HBoxContainer = %Hand
 @onready var _cast_bar: TextureProgressBar = %CastBar
@@ -33,6 +43,12 @@ var game: GameController = null
 ## scene figee ne pourrait pas les suivre.
 var _passive_rail: Control = null
 var _passive_icons: Array[Control] = []
+## Tout ce que le rail a POSE et qui doit disparaitre a la reconstruction —
+## pastilles ET etiquettes. Distincte de `_passive_icons`, qui ne contient que
+## les pastilles parce que deux autres fonctions les parcourent en attendant
+## un `meta` de carte. Melanger les deux roles faisait chercher ce meta sur une
+## etiquette.
+var _passive_nodes: Array[Control] = []
 
 ## Carte en cours de glissement (null si aucun geste en cours).
 var _dragging: SpellCard = null
@@ -57,7 +73,6 @@ func _ready() -> void:
 	_pause_btn.pressed.connect(_on_pause_pressed)
 	RunState.card_drawn.connect(func(_c: SpellCard) -> void: AudioBus.play_sfx(&"card_draw"))
 	SpeedGauge.multiplier_changed.connect(_on_multiplier_changed)
-	SpeedGauge.hp_changed.connect(_on_hp_changed)
 	RunState.hand_changed.connect(_refresh_hand)
 	RunState.wave_changed.connect(_on_wave_changed)
 	# Le choix peut etre pris ailleurs que par un clic (tests, reprise) : on suit l etat.
@@ -80,15 +95,13 @@ func _ready() -> void:
 ## Un contour sombre epais les detache de n importe quel fond, et une taille
 ## fixee ici evite qu ils heritent d une valeur choisie pour un panneau.
 func _style_hud_labels() -> void:
-	for l: Label in [_wave_label, _hp_label, _draw_label]:
+	for l: Label in [_wave_label, _draw_label]:
 		l.add_theme_font_override(&"font", UiTheme.font())
 		l.add_theme_color_override(&"font_outline_color", Color(0.04, 0.03, 0.06, 0.95))
 		l.add_theme_constant_override(&"outline_size", 10)
 		l.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_wave_label.add_theme_font_size_override(&"font_size", 32)
 	_wave_label.add_theme_color_override(&"font_color", UiTheme.TEXT)
-	_hp_label.add_theme_font_size_override(&"font_size", 34)
-	_hp_label.add_theme_color_override(&"font_color", UiTheme.RED.lightened(0.35))
 
 
 func bind(controller: GameController) -> void:
@@ -112,15 +125,20 @@ func _refresh_all() -> void:
 	_refresh_gauges()
 	_refresh_hand()
 	_on_wave_changed(RunState.wave_index)
-	_on_hp_changed(SpeedGauge.hp)
 
 
 func _refresh_gauges() -> void:
-	# Gauche : la vitesse, de 100 a 500 %. Droite : les PV du mage, bouclier inclus.
-	_enemy_bar.value = SpeedGauge.speed_ratio() * 100.0
-	var pv_max: float = float(maxi(1, SpeedGauge.max_hp))
-	_spell_bar.value = 100.0 * float(SpeedGauge.hp) / pv_max
+	# UNE SEULE barre : la vitesse, de 100 % (mort) a 500 % (pleine forme).
+	# speed_ratio() est a la fois la position sur l echelle de vitesse et la
+	# fraction de vie restante — c est le meme nombre, c est la mecanique.
+	var part: float = SpeedGauge.speed_ratio()
+	_enemy_bar.value = part * 100.0
+	# LA COULEUR PORTE LE DANGER. Une barre qui descend sans changer de teinte
+	# se lit comme un compteur ; le joueur doit voir qu il s approche du
+	# plancher mortel sans avoir a lire le nombre au milieu d une vague.
+	_enemy_bar.tint_progress = _speed_color(part)
 	_speed_btn.text = "%d%%" % SpeedGauge.speed_percent
+	_speed_btn.add_theme_color_override(&"font_color", _speed_color(part))
 	# Simple afficheur : il reste `disabled` en permanence (regle une fois dans
 	# _ready), et sa teinte dit seulement si la montee est retenue par un coup
 	# recu — la seule chose que le joueur peut encore lire sur la vitesse.
@@ -148,8 +166,9 @@ func _refresh_gauges() -> void:
 	var need: int = GameConfig.xp_required(RunState.level)
 	_xp_bar.value = 100.0 * float(RunState.xp) / float(maxi(1, need))
 
-	if SpeedGauge.is_dying:
-		_spell_bar.modulate = Color(1, 1, 1, 0.4 + 0.6 * SpeedGauge.death_gauge)
+	# AGONIE : la barre unique s eteint au rythme de la jauge de mort. C est le
+	# dernier retour visuel de la partie, il doit etre sur la barre qui reste.
+	_enemy_bar.modulate = Color(1, 1, 1, 0.4 + 0.6 * SpeedGauge.death_gauge) 		if SpeedGauge.is_dying else Color.WHITE
 
 	_refresh_passive_rail()
 
@@ -186,9 +205,10 @@ func _build_passive_rail() -> void:
 		_passive_rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_passive_rail.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_root.add_child(_passive_rail)
-	for c in _passive_icons:
+	for c in _passive_nodes:
 		if is_instance_valid(c):
 			c.queue_free()
+	_passive_nodes.clear()
 	_passive_icons.clear()
 
 	var etendue: float = float(GameConfig.SPEED_MAX_PERCENT - 100)
@@ -201,32 +221,60 @@ func _build_passive_rail() -> void:
 	equipes.sort_custom(func(a: SpellCard, b: SpellCard) -> bool:
 		return a.speed_threshold < b.speed_threshold)
 
-	# Hauteur du dernier pose, pour ecarter ce qui se chevauche.
-	var precedent_y: float = INF
+	# PLACEMENT EN DEUX PASSES, et c est la seule facon correcte.
+	#
+	# Ma premiere version ecartait les pastilles a la volee, puis re-bornait
+	# chacune dans les limites du rail. Avec deux ou trois passifs ca marchait ;
+	# a cinq, plusieurs se faisaient pousser au-dela du haut et le bornage les
+	# ECRASAIT TOUTES A LA MEME HAUTEUR — deux etiquettes superposees et
+	# illisibles, vu sur capture. Corriger apres coup ne peut pas marcher :
+	# l espace disponible est une contrainte GLOBALE, pas locale.
+	#
+	# Passe 1 : la hauteur ideale de chacun, d apres son seuil.
+	# Passe 2 : si l ensemble ne tient pas, on repartit REGULIEREMENT sur toute
+	# la hauteur du rail. On perd alors la correspondance exacte entre hauteur
+	# et seuil, mais le nombre reste ecrit a cote de chaque pastille : mieux
+	# vaut un rail lisible et approximatif qu un rail exact et illisible.
+	var bas: float = RAIL_BAS - ICONE * 0.7
+	var haut: float = RAIL_HAUT + ICONE * 0.5
+	var ecart: float = ICONE + UiTheme.FONT_SMALL + 14.0
+	var ys: Array[float] = []
 	for p: SpellCard in equipes:
 		var t: float = clampf(float(p.speed_threshold - 100) / maxf(etendue, 1.0), 0.0, 1.0)
 		# Marge d une demi-pastille en haut ET en bas : un passif a 110 % tombait
 		# pile sur le bord bas de la barre, derriere le mage et la main, donc
 		# invisible — alors que c est justement le passif le plus souvent allume.
-		var y: float = clampf(RAIL_BAS - t * (RAIL_BAS - RAIL_HAUT),
-			RAIL_HAUT + ICONE * 0.5, RAIL_BAS - ICONE * 0.7)
-		# ECARTEMENT MINIMAL. Deux passifs a 140 % et 150 % tombent a 5 px l un de
-		# l autre sur une echelle de 100 a 500 : les pastilles se chevauchaient et
-		# les deux seuils se superposaient en un pate illisible (vu sur capture).
-		# On pousse le suivant VERS LE HAUT, donc dans le sens de son seuil : la
-		# hauteur reste approximativement juste et l ordre, lui, est exact.
-		# L ecart doit tenir la PASTILLE **et** son etiquette. A 66 px les
-		# pastilles se separaient mais les nombres "150 %" et "140 %" se
-		# touchaient encore (vu sur capture) : le seuil est la seule information
-		# chiffree du rail, deux nombres colles n en font aucun de lisible.
-		var ecart: float = ICONE + UiTheme.FONT_SMALL + 14.0
-		if precedent_y - y < ecart:
-			y = precedent_y - ecart
-		# RE-BORNER apres le decalage, sinon une pastille poussee vers le haut
-		# sort du rail : sur la capture, celle du seuil 300 avait disparu et
-		# seule son etiquette restait, ce qui se lit comme un bug d affichage.
-		y = clampf(y, RAIL_HAUT + ICONE * 0.5, RAIL_BAS - ICONE * 0.7)
-		precedent_y = y
+		ys.append(clampf(RAIL_BAS - t * (RAIL_BAS - RAIL_HAUT), haut, bas))
+
+	# AUCUN PASSIF EQUIPE : il n y a rien a placer, et la suite lit `ys[size-1]`,
+	# donc l indice -1. C est le cas du debut de partie, le plus courant de
+	# tous — et il faisait planter l affichage a chaque image.
+	if ys.is_empty():
+		return
+
+	var place_requise: float = ecart * float(maxi(0, ys.size() - 1))
+	if place_requise > bas - haut:
+		# Trop de passifs pour la hauteur : repartition reguliere, du bas vers
+		# le haut, dans l ordre des seuils (la liste est deja triee).
+		var pas: float = (bas - haut) / float(maxi(1, ys.size() - 1))
+		for i in ys.size():
+			ys[i] = bas - pas * float(i)
+	else:
+		# Assez de place : on garde la hauteur du seuil et on ne pousse que ce
+		# qui se chevauche, vers le HAUT, donc dans le sens du seuil croissant.
+		for i in range(1, ys.size()):
+			if ys[i - 1] - ys[i] < ecart:
+				ys[i] = ys[i - 1] - ecart
+		# Si le dernier deborde, on redescend tout le paquet d un bloc plutot
+		# que d ecraser les derniers les uns sur les autres.
+		if ys[ys.size() - 1] < haut:
+			var recul: float = haut - ys[ys.size() - 1]
+			for i in ys.size():
+				ys[i] = minf(bas, ys[i] + recul)
+
+	for idx in equipes.size():
+		var p: SpellCard = equipes[idx]
+		var y: float = ys[idx]
 		var pastille := Panel.new()
 		# IGNORE par defaut : hors echange, le rail ne doit rien avaler du geste de
 		# glisser-deposer qui commence souvent a gauche de l ecran. Il ne redevient
@@ -274,6 +322,17 @@ func _build_passive_rail() -> void:
 		_passive_rail.add_child(pastille)
 		_passive_rail.add_child(seuil)
 		_passive_icons.append(pastille)
+		_passive_nodes.append(pastille)
+		# L ETIQUETTE AUSSI, sinon elle survit a la reconstruction du rail.
+		#
+		# Le defaut, vu sur capture : deux "150 %" a l ecran, dont un sans
+		# pastille. Le nettoyage ne vidait que `_passive_icons`, ou seules les
+		# pastilles etaient inscrites ; les etiquettes, ajoutees au rail mais
+		# jamais suivies, s accumulaient a chaque `_build_passive_rail()` — et
+		# le rail se reconstruit a chaque gain ou echange de passif. Au bout de
+		# quelques vagues, le bord de l ecran se couvre de nombres fantomes que
+		# plus rien ne relie a un passif.
+		_passive_nodes.append(seuil)
 
 
 func _refresh_passive_rail() -> void:
@@ -378,6 +437,37 @@ func _refresh_hand() -> void:
 		cv.gui_input.connect(_on_card_input.bind(card))
 		_hand.add_child(cv)
 		_ajouter_jauge_amelioration(cv, card, width)
+		_marquer_si_petrifiee(cv, card)
+
+
+## Une carte PETRIFIEE par le regard d une gorgone doit SE VOIR.
+##
+## Le moteur refuse deja de la jouer (`RunState.play_card`), et les tests le
+## prouvent — mais le joueur, lui, voyait six cartes identiques et appuyait dans
+## le vide sans comprendre pourquoi rien ne partait. Une regle qu on subit sans
+## la voir se lit comme un bug, pas comme un adversaire.
+##
+## GRISEE ET PLUS PALE, pas seulement teintee : a 118 px de large dans une main
+## pleine, une nuance de couleur ne se distingue pas. La carte doit sortir du
+## rang par sa LUMINOSITE, ce qui se voit du coin de l oeil pendant qu on joue.
+func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
+	if card == null or not RunState.is_card_blocked(card):
+		return
+	cv.modulate = Color(0.46, 0.46, 0.56, 0.85)
+	# Le mot en clair par-dessus : la couleur dit "quelque chose ne va pas",
+	# le mot dit QUOI. Un joueur daltonien ne lit que le mot.
+	var bandeau := Label.new()
+	bandeau.text = "PETRIFIEE"
+	bandeau.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bandeau.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bandeau.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bandeau.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bandeau.add_theme_font_override(&"font", UiTheme.font())
+	bandeau.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+	bandeau.add_theme_color_override(&"font_color", Color(0.94, 0.92, 0.98))
+	bandeau.add_theme_color_override(&"font_outline_color", Color(0.10, 0.08, 0.16))
+	bandeau.add_theme_constant_override(&"outline_size", 10)
+	cv.add_child(bandeau)
 
 
 ## Le liseré de PROGRESSION VERS L AMELIORATION, en bas de la carte en main.
@@ -806,8 +896,15 @@ func _on_multiplier_changed(_old: int, _new: int) -> void:
 	_refresh_gauges()
 
 
-func _on_hp_changed(hp: int) -> void:
-	_hp_label.text = "PV %d/%d" % [hp, SpeedGauge.max_hp]
+## Teinte de la barre selon ce qu il reste : or en pleine forme, orange a
+## mi-course, rouge pres du plancher. Les seuils sont des FRACTIONS de la
+## reserve, jamais des pourcentages en dur : SPEED_MAX_PERCENT peut bouger.
+func _speed_color(part: float) -> Color:
+	if part <= 0.25:
+		return UiTheme.RED.lightened(0.25)
+	if part <= 0.5:
+		return Color(0.95, 0.5, 0.3)
+	return UiTheme.GOLD
 
 
 func _on_wave_changed(index: int) -> void:

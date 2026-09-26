@@ -63,7 +63,7 @@ func _test_le_sort_en_attente_part_a_la_fin_du_premier() -> void:
 	attach(c)
 	var a := _card("a", 1.0)
 	var b := _card("b", 2.0)
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 	c.begin(a, CastContext.make(null, a))
 	c.queue_next(b, CastContext.make(null, b))

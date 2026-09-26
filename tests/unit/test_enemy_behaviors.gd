@@ -23,14 +23,34 @@ func _fresh() -> void:
 	_bf = Battlefield.new()
 	_bf.nav = NavGrid.new()
 	attach(_bf)
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 	RunState.reset()
 
 
+## Simule `seconds` de MONDE A x1, en maintenant le mage en vie.
+##
+## Depuis que la vitesse EST la vie (26 septembre), ces deux exigences sont la
+## meme : le monde tourne a x1 quand le mage est a 100 %, et 100 % est le
+## plancher mortel. Un boss qui tire tuait donc le mage en quelques secondes, et
+## TOUT le reste de la simulation basculait au ralenti d agonie (x0,25) — le
+## symptome etant un boss qui "n arrive jamais a sa ligne de tir", trois etages
+## en aval de la vraie cause.
+##
+## Ces suites mesurent des deplacements, des cadences et des portees ; la survie
+## du mage n y est jamais le sujet. On la lui rend donc image par image, ce qui
+## tient l horloge du monde exactement a x1. Les tests qui veulent au contraire
+## VERIFIER qu un coup coute quelque chose relevent la vitesse avant et apres,
+## et ils la lisent dans la meme image que le coup.
 func _sim(seconds: float) -> void:
 	var t: float = 0.0
 	while t < seconds:
 		_bf.simulate(1.0 / 60.0)
+		# `is_dying` ne se leve pas tout seul : le remettre a 100 % sans sortir
+		# de l agonie laisserait world_delta() au ralenti pour toujours, et le
+		# test mesurerait un monde au quart de sa vitesse sans rien signaler.
+		if SpeedGauge.is_dying:
+			SpeedGauge.reset()
+		SpeedGauge.set_speed_percent(100)
 		t += 1.0 / 60.0
 
 
@@ -66,6 +86,18 @@ func run() -> void:
 	_test_l_oiseau_mirage_ne_tourne_plus()
 	_test_les_monstres_sont_un_peu_plus_grands()
 	_test_la_resistance_change_les_degats_recus()
+	_test_la_gorgone_petrifie_une_carte_de_la_main()
+	_test_tuer_la_gorgone_degele_la_main()
+	_test_jamais_plus_de_cinq_cartes_sur_six_petrifiees()
+	_test_le_plafond_suit_la_main_reelle()
+	_test_la_petrification_est_stable()
+	_test_les_trois_gorgones_sont_livrees()
+	_test_l_onde_de_choc_frappe_le_mage_et_le_terrain()
+	_test_l_onde_de_choc_a_une_portee()
+	_test_le_bourreau_livre_n_avance_pas()
+	_test_le_slime_demoniaque_est_un_slime_immunise_au_feu()
+	_test_un_monstre_sans_marche_a_une_animation_de_repos()
+	_test_l_invocation_est_ecrite_sur_la_fiche()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -303,9 +335,9 @@ func _test_les_degats_varient_selon_le_monstre() -> void:
 		"une fleche pique moins qu un contact de gnome")
 
 	# Le mage encaisse plusieurs coups : la partie ne se joue pas sur une erreur.
-	ok(GameConfig.MAGE_MAX_HP / maxi(chronos.contact_hit(), 1) >= 2,
+	ok(SpeedGauge.max_reserve() / maxi(chronos.contact_hit(), 1) >= 2,
 		"meme le boss ne tue pas en un coup")
-	ok(GameConfig.MAGE_MAX_HP / maxi(gnome.contact_hit(), 1) >= 10,
+	ok(SpeedGauge.max_reserve() / maxi(gnome.contact_hit(), 1) >= 10,
 		"les petits monstres laissent une vraie marge")
 
 
@@ -495,3 +527,311 @@ func _test_la_resistance_change_les_degats_recus() -> void:
 		ok(golem.resistance_to(GameEnums.DamageTag.ARCANE)
 			> gelee.resistance_to(GameEnums.DamageTag.ARCANE),
 			"et l inverse sur l arcane : chaque element a sa bonne cible")
+
+
+# --- CHANTIER I2 : LE REGARD DE LA GORGONE -------------------------------
+#
+# La mecanique demandee par le testeur : « Bosse qui a la capacite de bloquer
+# des cartes de ta main en les rendant injouable. Creer un monstre normal qui
+# en bloque 1, un mini bosse qui en bloque 2 et un bosse qui en bloque 3. Fait
+# en sorte que l on puisse pas avoir plus de 5 carte sur 6 bloquer. »
+#
+# Ce qu elle change dans le jeu, et pourquoi elle merite son champ plutot qu un
+# effet : toutes les autres mecaniques de monstre agissent sur le TERRAIN (ou
+# frapper, quand, avec quoi). Celle-ci agit sur la MAIN. C est la premiere fois
+# qu un monstre touche les cartes du joueur, donc la premiere fois que la
+# reponse est « tue-le pour recuperer ton deck » et non « choisis mieux ta
+# cible ». Un joueur dont la main est petrifiee doit pouvoir la degeler en
+# tuant la source, sans quoi la mecanique est une punition et pas une decision.
+
+func _gorgone(blocks: int, hp: float = 60.0) -> EnemyDef:
+	var d := _def("g%d" % blocks, hp, 40.0, 3)
+	d.blocks_cards = blocks
+	return d
+
+
+func _main_de(n: int) -> void:
+	RunState.hand.clear()
+	for i in n:
+		var c := SpellCard.new()
+		c.id = StringName("main_%d" % i)
+		c.display_name = "Carte %d" % i
+		RunState.hand.append(c)
+
+
+## UNE gorgone normale petrifie UNE carte, et cette carte-la refuse de partir.
+func _test_la_gorgone_petrifie_une_carte_de_la_main() -> void:
+	_fresh()
+	_main_de(5)
+	_bf.spawn_enemy(_gorgone(1), 500.0, 1.0, Vector2(500.0, 400.0))
+	_sim(0.6)
+	eq(RunState.blocked_cards().size(), 1,
+		"une gorgone a 1 regard petrifie exactement 1 carte")
+	var gelee: SpellCard = RunState.blocked_cards()[0]
+	ok(RunState.is_card_blocked(gelee), "la carte visee se sait petrifiee")
+	not_ok(RunState.play_card(gelee), "une carte petrifiee ne se lance pas")
+	eq(RunState.hand.size(), 5, "et elle reste en main : elle est gelee, pas defaussee")
+	# Les autres, elles, partent normalement.
+	var libre: SpellCard = null
+	for c: SpellCard in RunState.hand:
+		if not RunState.is_card_blocked(c):
+			libre = c
+			break
+	ok(libre != null, "quatre cartes sur cinq restent jouables")
+	ok(RunState.play_card(libre), "une carte libre se lance toujours")
+
+
+## TUER la gorgone rend la main. C est la reponse que la mecanique doit avoir :
+## sans elle le joueur subit, il ne joue pas.
+func _test_tuer_la_gorgone_degele_la_main() -> void:
+	_fresh()
+	_main_de(5)
+	var g: Enemy = _bf.spawn_enemy(_gorgone(2), 500.0, 1.0, Vector2(500.0, 400.0))
+	_sim(0.6)
+	eq(RunState.blocked_cards().size(), 2, "deux regards, deux cartes petrifiees")
+	g.kill()
+	_sim(0.2)
+	eq(RunState.blocked_cards().size(), 0,
+		"la gorgone morte, la main est rendue — tuer la source EST la reponse")
+	for c: SpellCard in RunState.hand:
+		ok(RunState.play_card(c), "toutes les cartes repartent apres sa mort")
+		break
+
+
+## LE PLAFOND EXIGE PAR LE TESTEUR : jamais plus de 5 cartes sur 6. Deux
+## gorgones de boss (3 chacune) totalisent 6 regards ; le plafond doit en
+## laisser une jouable, sinon le joueur regarde son ecran sans rien pouvoir
+## faire et ce n est plus un jeu.
+func _test_jamais_plus_de_cinq_cartes_sur_six_petrifiees() -> void:
+	_fresh()
+	_main_de(6)
+	_bf.spawn_enemy(_gorgone(3), 300.0, 1.0, Vector2(300.0, 400.0))
+	_bf.spawn_enemy(_gorgone(3), 700.0, 1.0, Vector2(700.0, 400.0))
+	_sim(0.6)
+	eq(RunState.blocked_cards().size(), 5,
+		"six regards, mais le plafond s arrete a 5 : une carte reste toujours jouable")
+	var libres: int = 0
+	for c: SpellCard in RunState.hand:
+		if not RunState.is_card_blocked(c):
+			libres += 1
+	eq(libres, 1, "il reste EXACTEMENT une carte jouable, jamais zero")
+
+
+## Une main plus PETITE que le nombre de regards : le plafond est relatif a la
+## main reelle, pas au maximum theorique. Avec 3 cartes en main et 3 regards,
+## le joueur doit encore pouvoir en jouer une.
+func _test_le_plafond_suit_la_main_reelle() -> void:
+	_fresh()
+	_main_de(3)
+	_bf.spawn_enemy(_gorgone(3), 500.0, 1.0, Vector2(500.0, 400.0))
+	_sim(0.6)
+	eq(RunState.blocked_cards().size(), 2,
+		"3 cartes en main : au plus 2 petrifiees, jamais la main entiere")
+
+
+## La carte petrifiee ne change pas a chaque image. Sans stabilite, le joueur
+## voit la petrification sauter de carte en carte et ne peut rien planifier.
+func _test_la_petrification_est_stable() -> void:
+	_fresh()
+	_main_de(5)
+	_bf.spawn_enemy(_gorgone(2), 500.0, 1.0, Vector2(500.0, 400.0))
+	_sim(0.6)
+	var avant: Array[SpellCard] = RunState.blocked_cards().duplicate()
+	_sim(2.0)
+	var apres: Array[SpellCard] = RunState.blocked_cards()
+	eq(apres.size(), avant.size(), "le nombre de cartes gelees ne bouge pas")
+	for c in avant:
+		ok(apres.has(c), "la MEME carte reste gelee : le joueur peut planifier")
+
+
+## LE CONTENU LIVRE. Trois gorgones, un par palier, exactement comme demande.
+func _test_les_trois_gorgones_sont_livrees() -> void:
+	var par_regard: Dictionary = {}
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d != null and d.blocks_cards > 0:
+			par_regard[d.blocks_cards] = d
+			ok(d.blocks_cards <= 3,
+				"%s : au-dela de 3 regards un seul monstre viderait la main" % d.id)
+	ok(par_regard.has(1), "un monstre NORMAL qui bloque 1 carte est livre")
+	ok(par_regard.has(2), "un MINI-BOSS qui bloque 2 cartes est livre")
+	ok(par_regard.has(3), "un BOSS qui bloque 3 cartes est livre")
+	if par_regard.has(1):
+		eq((par_regard[1] as EnemyDef).kind, GameEnums.EnemyKind.NORMAL,
+			"celui a 1 regard est bien un monstre commun")
+	if par_regard.has(2):
+		eq((par_regard[2] as EnemyDef).kind, GameEnums.EnemyKind.MINIBOSS,
+			"celui a 2 regards est bien un mini-boss")
+	if par_regard.has(3):
+		eq((par_regard[3] as EnemyDef).kind, GameEnums.EnemyKind.BOSS,
+			"celui a 3 regards est bien un boss")
+	# La fiche du bestiaire doit le DIRE : une main qui se gele sans explication
+	# se lit comme un bug, pas comme un monstre.
+	for regard in par_regard:
+		var lignes: Array[String] = BestiaryLore.behaviours(par_regard[regard])
+		var dit: bool = false
+		for l in lignes:
+			if l.to_lower().contains("carte"):
+				dit = true
+		ok(dit, "%s : sa fiche explique qu il petrifie des cartes"
+			% (par_regard[regard] as EnemyDef).id)
+
+
+# --- CHANTIER I2 : L ONDE DE CHOC DU BOURREAU ----------------------------
+#
+# Demande du testeur : « peut etre un bosse qui n avance pas qui tape le sol
+# pour faire une onde de choque qui fait des degats ».
+#
+# Le boss immobile existait deja a moitie (`keeps_distance_at` fait camper le
+# Seigneur Spectre), mais camper en TIRANT et camper en FRAPPANT LE SOL ne se
+# jouent pas pareil : un tir vise le mage, une onde balaie un RAYON. Le joueur
+# ne peut donc plus se contenter de rester hors de la ligne de tir, il doit
+# tenir ses invocations et ses murs hors du cercle.
+
+func _test_l_onde_de_choc_frappe_le_mage_et_le_terrain() -> void:
+	_fresh()
+	var b := _def("bourreau", 300.0, 0.0, 10)
+	b.kind = GameEnums.EnemyKind.BOSS
+	b.shockwave_interval = 1.0
+	b.shockwave_radius = 300.0
+	b.shockwave_damage = 7
+	# De la marge, sans emballer le monde : l onde doit BLESSER le mage, pas le
+	# tuer, et le test chronometre aussi son intervalle de frappe.
+	SpeedGauge.heal(40)
+	var pv_avant: int = SpeedGauge.speed_percent
+	# Une victime dans le cercle : l onde n epargne pas le decor du joueur.
+	_bf.spawn_enemy(b, 540.0, 1.0, Vector2(540.0, GameConfig.MAGE_LINE_Y - 150.0))
+	_sim(0.6)
+	eq(_bf.shockwave_strike_count(), 0, "avant son heure, aucune onde")
+	_sim(1.2)
+	ok(_bf.shockwave_strike_count() >= 1, "le bourreau a frappe le sol au moins une fois")
+	ok(SpeedGauge.speed_percent < pv_avant,
+		"l onde coute de la vitesse au mage, c est-a-dire de la vie")
+
+
+## Hors du cercle, rien. Une onde qui porterait a l ecran entier ne serait plus
+## une position a tenir, ce serait une taxe.
+func _test_l_onde_de_choc_a_une_portee() -> void:
+	_fresh()
+	var b := _def("bourreau_loin", 300.0, 0.0, 10)
+	b.kind = GameEnums.EnemyKind.BOSS
+	b.shockwave_interval = 1.0
+	b.shockwave_radius = 120.0
+	b.shockwave_damage = 7
+	# Pose TRES haut : le mage est hors de portee de son cercle.
+	_bf.spawn_enemy(b, 540.0, 1.0, Vector2(540.0, 200.0))
+	reset_gauge_at_normal_speed()
+	var pv: int = SpeedGauge.speed_percent
+	var vitesse: int = SpeedGauge.speed_percent
+	_sim(2.5)
+	ok(_bf.shockwave_strike_count() >= 1, "il frappe le sol quand meme")
+	eq(SpeedGauge.speed_percent, pv, "mais hors de portee le mage n encaisse rien")
+	eq(SpeedGauge.speed_percent, vitesse, "et son bouclier de vitesse ne tombe pas")
+
+
+## Le bourreau N AVANCE PAS. C est le mot exact du testeur, et c est ce qui
+## rend l onde jouable : un boss qui avancerait EN frappant le sol ne laisserait
+## aucun endroit sur : il suffirait d attendre.
+func _test_le_bourreau_livre_n_avance_pas() -> void:
+	var trouve: int = 0
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.shockwave_interval <= 0.0:
+			continue
+		trouve += 1
+		ok(d.shockwave_radius > 0.0,
+			"%s : une onde sans rayon ne touche jamais rien" % d.id)
+		ok(d.shockwave_damage > 0, "%s : une onde sans degats n est qu un bruit" % d.id)
+		ok(d.base_speed <= 0.0 or d.keeps_distance_at > 0.0,
+			"%s : il doit rester en place, c est la demande" % d.id)
+	ok(trouve >= 1, "un boss a onde de choc est livre")
+
+
+## LE SLIME DEMONIAQUE. Demande du testeur : « toujours le meme concept de slime
+## mais dans le monde demon et immunise au feu ». Un slime immunise au feu
+## retourne exactement la lecon du bestiaire — la Gelee ordinaire est le monstre
+## qu on brule — donc le joueur qui applique son reflexe se fait punir.
+func _test_le_slime_demoniaque_est_un_slime_immunise_au_feu() -> void:
+	var ds: EnemyDef = ContentDB.enemies.get(&"demon_slime")
+	ok(ds != null, "le slime demoniaque est livre")
+	if ds == null:
+		return
+	eq(ds.resistance_to(GameEnums.DamageTag.FIRE), 0.0,
+		"immunise au feu, mot pour mot la demande du testeur")
+	ok(ds.split_into != null and ds.split_count > 0,
+		"c est bien un SLIME : il se divise, sinon ce n est qu un gros monstre rouge")
+	# Et le reflexe appris sur la Gelee doit vraiment se retourner.
+	var gelee: EnemyDef = ContentDB.enemies.get(&"jelly")
+	if gelee != null:
+		ok(gelee.resistance_to(GameEnums.DamageTag.FIRE)
+			> ds.resistance_to(GameEnums.DamageTag.FIRE),
+			"la Gelee brule, le slime demoniaque non : le meme deck ne marche plus")
+
+
+## UN MONSTRE QUI NE MARCHE PAS DOIT QUAND MEME S ANIMER.
+##
+## LE DEFAUT MESURE, et c est l etage `visual` qui l a attrape, pas l unite :
+## « ERROR: There is no animation with name 'walk'. » Le code de sprite jouait
+## `walk` en dur a la mise en place, au retour de coup et au retour d attaque. Or
+## une feuille n a pas forcement de marche : le Bourreau n avance pas, sa planche
+## porte idle / attack / death / summon et RIEN d autre. Le Gardien-totem flottant
+## est dans le meme cas.
+##
+## C etait invisible en headless (le code de sprite ne s execute pas) et invisible
+## a l audit (la feuille existe, le monstre est dans un pool). Seule une fenetre
+## reelle le montre — exactement ce que l etage `visual` est fait pour attraper.
+##
+## Le repli est le REPOS : un monstre immobile doit respirer sur place, pas figer
+## sur une image. Ce test verrouille la regle sur le catalogue livre.
+func _test_un_monstre_sans_marche_a_une_animation_de_repos() -> void:
+	var sans_marche: Array[String] = []
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or String(d.anim_key) == "" or not AnimCatalog.has(d.anim_key):
+			continue
+		if AnimCatalog.is_static(d.anim_key):
+			continue
+		if AnimCatalog.has_anim(d.anim_key, "walk"):
+			continue
+		# Pas de marche : il DOIT avoir un repos, sinon Enemy n a rien a jouer.
+		if not AnimCatalog.has_anim(d.anim_key, "idle"):
+			sans_marche.append("%s (%s)" % [d.id, d.anim_key])
+	ok(sans_marche.is_empty(),
+		("ces monstres n ont ni marche ni repos : le lecteur d animation n a rien"
+		+ " a jouer et l etage visual rougit — %s") % ", ".join(sans_marche))
+
+	# Et la fonction qui CHOISIT l animation de repos doit rendre quelque chose
+	# de jouable pour chaque monstre livre : c est elle que le bug contournait.
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or String(d.anim_key) == "" or not AnimCatalog.has(d.anim_key) \
+				or AnimCatalog.is_static(d.anim_key):
+			continue
+		var choisie: String = Enemy.resting_anim(d.anim_key)
+		ok(choisie != "", "%s : aucune animation de repos trouvable" % d.id)
+		ok(AnimCatalog.has_anim(d.anim_key, choisie),
+			"%s : l animation de repos choisie (%s) n existe pas sur sa feuille"
+			% [d.id, choisie])
+
+
+## L INVOCATION DOIT ETRE ECRITE SUR LA FICHE.
+##
+## Defaut PRE-EXISTANT trouve par la sonde du chantier I2, en relisant la fiche du
+## Bourreau : `BestiaryLore.behaviours()` traduisait onze comportements et PAS
+## l invocation. L Ensevelisseur (dont invoquer EST tout le combat), le Planogo et
+## le Bourreau avaient donc une fiche qui ne disait rien de ce qu ils font.
+##
+## Ce n est pas cosmetique : la reponse a un invocateur est « tue la source
+## d abord », et c est la seule chose que le joueur ne peut pas deviner en
+## regardant l ecran — il voit des sbires arriver, pas qui les envoie.
+func _test_l_invocation_est_ecrite_sur_la_fiche() -> void:
+	var invocateurs: int = 0
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.summon_interval <= 0.0 or d.summon_def == null:
+			continue
+		invocateurs += 1
+		var dit: bool = false
+		for l in BestiaryLore.behaviours(d):
+			var bas: String = l.to_lower()
+			if bas.contains("invoque") or bas.contains("appelle"):
+				dit = true
+		ok(dit, "%s invoque des %s et sa fiche ne le dit pas : le joueur ne peut"
+			% [d.id, d.summon_def.display_name]
+			+ " pas deviner qu il faut tuer la source")
+	ok(invocateurs >= 2, "le jeu a plusieurs invocateurs (%d)" % invocateurs)

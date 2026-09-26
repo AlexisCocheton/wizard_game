@@ -149,43 +149,49 @@ func _check_raw_sheets() -> void:
 				fail("%s : planche brute '%s' referencee (utiliser %s9.png / tex_box)" % [path, name, name])
 
 
-## La VIE doit rester ROUGE dans le HUD.
+## La VIE doit rester LISIBLE dans le HUD — et depuis le 26 septembre, la barre
+## de vie EST la barre de vitesse : il n y en a plus qu une.
 ##
-## Le defaut reel qui justifie ce controle : SpellBar portait encore
-## tint_progress bleu de son ancien role (la barre d incantation). La texture du
-## pack etant deja rouge, la multiplication donnait un VIOLET sombre, impossible
-## a lire comme une barre de vie — elle paraissait vide a 100 / 100. Rien ne
-## plantait, aucun test ne rougissait : seule une capture le montrait.
+## Le defaut reel qui justifie ce controle : la barre portait autrefois une
+## teinte posee dans la scene, la texture du pack etant deja rouge, et la
+## multiplication donnait un VIOLET sombre, impossible a lire comme une barre de
+## vie — elle paraissait vide a 100 / 100. Rien ne plantait, aucun test ne
+## rougissait : seule une capture le montrait.
 ##
-## On verifie donc la teinte dans la scene, parce qu un passage dans l editeur
-## Godot peut la reecrire en silence — c est deja arrive au fond du menu.
+## Ce que le controle surveille A CHANGE DE PLACE avec la regle. La teinte de la
+## barre unique est desormais calculee en CODE (hud.gd::_speed_color) pour
+## passer de l or au rouge a mesure qu on approche du plancher mortel : une
+## valeur figee dans la scene serait maintenant le bug, pas la protection. On
+## verifie donc les deux bouts :
+##   1. la barre existe toujours dans la scene, et elle est SEULE ;
+##   2. le code sait encore la peindre en rouge quand il ne reste presque rien.
 func _check_gauge_tints() -> void:
 	var path: String = "res://scenes/hud/HUD.tscn"
 	var text: String = FileAccess.get_file_as_string(path)
 	if text == "":
 		fail("%s : illisible" % path)
 		return
-	var bloc: int = text.find("[node name=\"SpellBar\"")
-	if bloc < 0:
-		fail("%s : SpellBar (la barre de VIE) est introuvable" % path)
+	if text.find("[node name=\"EnemyBar\"") < 0:
+		fail("%s : EnemyBar (la barre de VITESSE, qui est la barre de VIE)"
+			% path + " est introuvable")
 		return
-	var fin: int = text.find("[node ", bloc + 10)
-	if fin < 0:
-		fin = text.length()
-	var corps: String = text.substr(bloc, fin - bloc)
-	var i: int = corps.find("tint_progress = Color(")
-	if i < 0:
-		return  # pas de teinte : la texture rouge du pack passe telle quelle
-	var reste: String = corps.substr(i + 22)
-	var args: PackedStringArray = reste.substr(0, reste.find(")")).split(",")
-	if args.size() < 3:
-		fail("%s : tint_progress de SpellBar illisible" % path)
+	# UNE SEULE barre verticale. L ancienne barre de PV a ete supprimee avec les
+	# PV eux-memes ; la voir revenir voudrait dire qu une reserve fantome a ete
+	# reintroduite quelque part, et le joueur chercherait sa vie a deux endroits.
+	if text.find("[node name=\"SpellBar\"") >= 0:
+		fail("%s : SpellBar (l ancienne barre de PV) est revenue — le mage n a"
+			% path + " plus qu une seule reserve, sa vitesse")
+
+	var hud: String = FileAccess.get_file_as_string("res://scripts/ui/hud.gd")
+	if hud == "":
+		fail("res://scripts/ui/hud.gd : illisible")
 		return
-	var r: float = float(args[0])
-	var b: float = float(args[2])
-	if b > r:
-		fail("%s : la barre de VIE est teintee en bleu (r=%.2f, b=%.2f) — la"
-			% [path, r, b] + " texture du pack est rouge, le produit rend du violet")
+	if not hud.contains("_speed_color"):
+		fail("res://scripts/ui/hud.gd : la barre unique n a plus de degrade de"
+			+ " danger — rien ne dira au joueur qu il approche du plancher")
+	if not hud.contains("tint_progress = _speed_color"):
+		fail("res://scripts/ui/hud.gd : _speed_color n est plus appliquee a la"
+			+ " teinte de la barre")
 
 
 ## Toute replique demandee par le code doit EXISTER dans assets/voice/.

@@ -104,7 +104,7 @@ func _test_pioche_suit_la_vitesse() -> void:
 	RunState.reset()
 	RunState.set_seed(7)
 	RunState.build_starter_deck([_card("spark", 40)])
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 	# A x1 : une echeance apres DRAW_INTERVAL secondes reelles.
 	RunState.tick(SpeedGauge.world_delta(GameConfig.DRAW_INTERVAL))
@@ -123,7 +123,7 @@ func _test_pioche_suit_la_vitesse() -> void:
 	var attendu: int = mini(GameConfig.DRAW_COUNT * 4, GameConfig.MAX_HAND_SIZE)
 	eq(RunState.hand.size(), attendu,
 		"x4 : quatre pioches dans le meme temps reel, dans la limite de la main")
-	SpeedGauge.reset()
+	reset_gauge_at_normal_speed()
 
 
 ## Le cahier des charges promet une pioche "ameliorable" : aucune carte ne
