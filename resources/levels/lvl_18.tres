@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=39 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_il855"]
 [ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="2_323wf"]
@@ -13,8 +13,6 @@
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="11_y4skc"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_a7q5d"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="13_hxfeh"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="14_qaf3n"]
-[ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="15_4uhm5"]
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="16_pk01i"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="17_nshsb"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_jfkqu"]
@@ -57,7 +55,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_il855"]
+[sub_resource type="Resource" id="Resource_mtblo"]
 script = ExtResource("20_4hem6")
 id = &"w18_1"
 duration = 25.0
@@ -87,7 +85,7 @@ count = 3
 spawn_delay = 1.8
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_323wf"]
+[sub_resource type="Resource" id="Resource_2cptc"]
 script = ExtResource("20_4hem6")
 id = &"w18_2"
 duration = 27.0
@@ -124,7 +122,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 21.0
 
-[sub_resource type="Resource" id="Resource_ysblc"]
+[sub_resource type="Resource" id="Resource_il855"]
 script = ExtResource("20_4hem6")
 id = &"w18_3"
 duration = 28.0
@@ -154,7 +152,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_71fqq"]
+[sub_resource type="Resource" id="Resource_323wf"]
 script = ExtResource("20_4hem6")
 id = &"w18_4_miniboss"
 duration = 34.0
@@ -175,9 +173,9 @@ intro_story = &"lvl_18_intro"
 outro_story = &"lvl_18_outro"
 terrain = "sand"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_4hem6")]([SubResource("Resource_il855"), SubResource("Resource_323wf"), SubResource("Resource_ysblc"), SubResource("Resource_71fqq")])
+waves = Array[ExtResource("20_4hem6")]([SubResource("Resource_mtblo"), SubResource("Resource_2cptc"), SubResource("Resource_il855"), SubResource("Resource_323wf")])
 enemy_pool = Array[ExtResource("1_il855")]([ExtResource("2_323wf"), ExtResource("3_ysblc"), ExtResource("4_71fqq"), ExtResource("5_oi32p"), ExtResource("6_dkopx"), ExtResource("7_1stm8")])
-exploration_deck = Array[ExtResource("8_dc1bl")]([ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("10_wgl7e"), ExtResource("10_wgl7e"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("12_a7q5d"), ExtResource("12_a7q5d"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("14_qaf3n"), ExtResource("15_4uhm5"), ExtResource("16_pk01i"), ExtResource("16_pk01i")])
+exploration_deck = Array[ExtResource("8_dc1bl")]([ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("10_wgl7e"), ExtResource("10_wgl7e"), ExtResource("12_a7q5d"), ExtResource("12_a7q5d"), ExtResource("16_pk01i"), ExtResource("16_pk01i")])
 objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("17_nshsb")
 next_levels = Array[StringName]([&"lvl_03"])
