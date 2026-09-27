@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_epvnf"]
+
+[resource]
+script = ExtResource("1_epvnf")
+id = &"obj_same_card_casts_25"
+description = "Lancer 25 fois le meme sort"
+check_key = &"same_card_casts"
+params = {
+"count": 25
+}

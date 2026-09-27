@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_axbru"]
+
+[resource]
+script = ExtResource("1_axbru")
+id = &"obj_max_distinct_cast_5"
+description = "Gagner avec 5 sorts differents au plus"
+check_key = &"max_distinct_cast"
+params = {
+"count": 5
+}

@@ -28,24 +28,31 @@
 
 [sub_resource type="Resource" id="Resource_6vmxt"]
 script = ExtResource("15_01qir")
-id = &"obj_max_speed"
-description = "Gagner en gardant la vitesse au maximum des la vague 1"
-check_key = &"never_dropped_speed"
-params = {}
+id = &"obj_kill_flying_3"
+description = "Abattre 3 monstres volants"
+check_key = &"kill_flying"
+params = {
+"count": 3
+}
 
 [sub_resource type="Resource" id="Resource_07mnm"]
 script = ExtResource("15_01qir")
-id = &"obj_no_legendary"
-description = "Gagner sans utiliser de carte legendaire"
-check_key = &"no_legendary_used"
-params = {}
+id = &"obj_multi_kill_5_2"
+description = "Tuer 5 monstres en moins de 2 s"
+check_key = &"multi_kill"
+params = {
+"count": 5,
+"window": 2
+}
 
 [sub_resource type="Resource" id="Resource_hb77b"]
 script = ExtResource("15_01qir")
-id = &"obj_untouched"
-description = "Gagner sans subir de degats"
-check_key = &"no_damage_taken"
-params = {}
+id = &"obj_no_card_key_build_wall"
+description = "Gagner sans poser de mur"
+check_key = &"no_card_key"
+params = {
+"key": "build_wall"
+}
 
 [sub_resource type="Resource" id="Resource_i4yhr"]
 script = ExtResource("18_d8uqj")

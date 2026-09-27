@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_4e058"]
+
+[resource]
+script = ExtResource("1_4e058")
+id = &"obj_kill_flying_5"
+description = "Abattre 5 monstres volants"
+check_key = &"kill_flying"
+params = {
+"count": 5
+}

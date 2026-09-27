@@ -2688,23 +2688,11 @@ func _waves_and_level() -> void:
 	_save(w6, "res://resources/waves/w6_boss.tres")
 
 	# --- Objectifs ---
-	var o1 := ObjectiveDef.new()
-	o1.id = &"obj_max_speed"
-	o1.description = "Gagner en gardant la vitesse au maximum des la vague 1"
-	o1.check_key = &"never_dropped_speed"
-	_save(o1, "res://resources/objectives/obj_max_speed.tres")
-
-	var o2 := ObjectiveDef.new()
-	o2.id = &"obj_no_legendary"
-	o2.description = "Gagner sans utiliser de carte legendaire"
-	o2.check_key = &"no_legendary_used"
-	_save(o2, "res://resources/objectives/obj_no_legendary.tres")
-
-	var o3 := ObjectiveDef.new()
-	o3.id = &"obj_untouched"
-	o3.description = "Gagner sans subir de degats"
-	o3.check_key = &"no_damage_taken"
-	_save(o3, "res://resources/objectives/obj_untouched.tres")
+	# Chaque niveau porte SES trois objectifs, poses par _objectifs_de() en fin
+	# de fichier (table unique, dans l ordre de jeu). Le dossier est vide ici
+	# avant d etre rempli : un objectif retire de la table ne doit pas survivre
+	# en .tres orphelin que ContentDB continuerait d indexer.
+	_purger_objectifs()
 
 	# --- Niveau ---
 	var lvl := LevelDef.new()
@@ -2757,7 +2745,7 @@ lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne.
 	lvl.outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette \
 guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher \
 qu obeir. Chronos n etait qu un huissier venu verifier les delais."
-	lvl.objectives = [o1, o2, o3]
+	lvl.objectives = _objectifs_de(lvl.id)
 	lvl.legendary_reward = load("res://resources/cards/legendary/time_rift.tres")
 	_save(lvl, "res://resources/levels/lvl_01.tres")
 
@@ -3005,7 +2993,7 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 		[C + "rare/meteor.tres", 2],
 		[C + "common/tidal_pool.tres", 1],
 	])
-	lvl2.objectives = [o1, o2, o3]
+	lvl2.objectives = _objectifs_de(lvl2.id)
 	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
 	# CHANTIER N — le village mene maintenant a LA ROUTE DU MAIRE (`lvl_08`), qui
 	# est le troisieme niveau de l acte 1 dans docs/histoire.md. C est `lvl_09`,
@@ -3025,16 +3013,16 @@ le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 	# CHANTIER N — l acte 1 compte QUATRE niveaux (docs/histoire.md section 3),
 	# pas deux. `lvl_08` et `lvl_09` le completent ; ils portent `act = 1` et se
 	# chainent derriere `lvl_02`, puis rendent la main a l acte 2 en `lvl_03`.
-	_acte_1_suite(o1, o2, o3, C, E)
-	_acte_2(o1, o2, o3, C, E)
-	_acte_3(o1, o2, o3, C, E)
-	_acte_final(o1, o2, o3, C, E)
+	_acte_1_suite(C, E)
+	_acte_2(C, E)
+	_acte_3(C, E)
+	_acte_final(C, E)
 	# CHANTIER N2 — les actes 2 et 3 comptent quatre et cinq niveaux
 	# (docs/histoire.md sections 4 et 5). Ces deux fonctions les completent :
 	# les Sky Lands (`lvl_17`, `lvl_18`) et la poursuite du Roi squelette dans
 	# le cimetiere de Tombol (`lvl_19`, `lvl_20`, `lvl_21`).
-	_acte_2_suite(o1, o2, o3, C, E)
-	_acte_3_suite(o1, o2, o3, C, E)
+	_acte_2_suite(C, E)
+	_acte_3_suite(C, E)
 	# CHANTIER N3 — LA FIN DU JEU. L acte 4 compte cinq niveaux et l acte 5 trois
 	# (docs/histoire.md sections 6 et 7).
 	#
@@ -3046,8 +3034,8 @@ le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 	# `_acte_5` ouvre l espace divin (`lvl_14`, `lvl_15`, `lvl_16`), qui n avait
 	# aucun niveau et dont le fond n avait jamais ete affiche. `lvl_16` est le
 	# dernier niveau de la campagne : le finir ouvre le Massacre.
-	_acte_4_suite(o1, o2, o3, C, E)
-	_acte_5(o1, o2, o3, C, E)
+	_acte_4_suite(C, E)
+	_acte_5(C, E)
 
 
 ## =====================================================================
@@ -3058,8 +3046,7 @@ le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 ## volontaire : le joueur qui a appris a concentrer ses degats doit desapprendre.
 ## Les decks suivent — beaucoup de zones, peu de mono-cible.
 ## =====================================================================
-func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_2(C: String, E: String) -> void:
 
 	# ---------- lvl_03 : Ossuaire des Marees ----------
 	# Les goules comptent les ames pendant que le mage traverse les fosses.
@@ -3234,7 +3221,7 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "epic/resonance.tres", 2],
 		[C + "epic/blight_sapling.tres", 1],
 	])
-	lvl3.objectives = [o1, o2, o3]
+	lvl3.objectives = _objectifs_de(lvl3.id)
 	lvl3.legendary_reward = load(C + "legendary/tide_ledger.tres")
 	lvl3.next_levels = [&"lvl_04"]
 	lvl3.act = 2
@@ -3397,7 +3384,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "rare/bone_recall.tres", 1],
 	])
-	lvl4.objectives = [o1, o2, o3]
+	lvl4.objectives = _objectifs_de(lvl4.id)
 	lvl4.legendary_reward = load(C + "legendary/summoners_key.tres")
 	# PREMIERE FOURCHE de la campagne : la porte s ouvre sur deux entrees du monde
 	# demoniaque, equivalentes en difficulte mais opposees en nature.
@@ -3426,8 +3413,7 @@ rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja 
 ## lvl_06 = beaucoup de monstres varies a effets (zones + dissipation).
 ## Le joueur choisit son epreuve ; les deux menent au final.
 ## =====================================================================
-func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_3(C: String, E: String) -> void:
 
 	# ---------- lvl_05 : Forges du Mauvais Temps ----------
 	# Peu de corps, enormement de PV. Les vagues sont COURTES en nombre : c est ce
@@ -3598,7 +3584,7 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "rare/chain_break.tres", 2],
 		[C + "common/frost_rain.tres", 2],
 	])
-	lvl5.objectives = [o1, o2, o3]
+	lvl5.objectives = _objectifs_de(lvl5.id)
 	lvl5.legendary_reward = load(C + "legendary/forge_dial.tres")
 	# CHANTIER N2 — la fourche retombe dans `lvl_21`, LE PENTACLE, qui ferme
 	# l acte 3 et ouvre seul les quatre grands demons de l acte 4. Elle sautait
@@ -3776,7 +3762,7 @@ cadran, et ils ignorent qui la passe."
 		[C + "epic/void_grip.tres", 1],
 		[C + "epic/thunder_root.tres", 1],
 	])
-	lvl6.objectives = [o1, o2, o3]
+	lvl6.objectives = _objectifs_de(lvl6.id)
 	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")
 	# Meme raison que pour `lvl_05` : les deux branches de la fourche se
 	# rejoignent devant le pentacle.
@@ -3798,8 +3784,7 @@ le cadran, tu as lu une adresse."
 ## Terrain `grass` a dessein : le joueur reconnait le decor du niveau 1, en faux.
 ## L histoire est circulaire, donc le premier ennemi est aussi le dernier.
 ## =====================================================================
-func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_final(C: String, E: String) -> void:
 
 	var f1 := WaveDef.new()
 	# DERNIER NIVEAU DE LA CAMPAGNE, et il se gagnait 93 fois sur 100 — le plus
@@ -4005,7 +3990,7 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "epic/void_grip.tres", 2],
 		[C + "epic/mirror_apprentice.tres", 2],
 	])
-	lvl7.objectives = [o1, o2, o3]
+	lvl7.objectives = _objectifs_de(lvl7.id)
 	lvl7.legendary_reward = load(C + "legendary/world_loom.tres")
 	# IL MENE AU PENTACLE, comme les trois autres grands demons, et a rien
 	# d autre. Ce niveau etait le cul-de-sac de la campagne ; il est desormais
@@ -4046,8 +4031,7 @@ Vharn se croyait le commanditaire. Il etait un outil de plus dans son propre ate
 ## document decrit deja : l acte 1 se ferme sur le Gardien, pas sur quatre boss
 ## d affilee. `lvl_08` culmine sur un mini-boss, `lvl_09` porte le boss d acte.
 ## =====================================================================
-func _acte_1_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_1_suite(C: String, E: String) -> void:
 
 	# ---------- lvl_08 : La route du maire ----------
 	#
@@ -4160,7 +4144,7 @@ func _acte_1_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "rare/meteor.tres", 2],
 		[C + "epic/maelstrom.tres", 2],
 	])
-	lvl8.objectives = [o1, o2, o3]
+	lvl8.objectives = _objectifs_de(lvl8.id)
 	lvl8.legendary_reward = load(C + "legendary/hourglass_shard.tres")
 	lvl8.next_levels = [&"lvl_09"]
 	lvl8.act = 1
@@ -4302,7 +4286,7 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 		[C + "epic/deep_focus.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
-	lvl9.objectives = [o1, o2, o3]
+	lvl9.objectives = _objectifs_de(lvl9.id)
 	lvl9.legendary_reward = load(C + "legendary/time_rift.tres")
 	# L acte 1 debouche sur l acte 2, qui commence a `lvl_03` (Ossuaire des
 	# Marees). Le chainage suit les ACTES, pas les numeros : c est exactement le
@@ -4351,8 +4335,7 @@ d en haut."
 ## culminent donc sur un mini-boss et l acte garde son seul boss, l Ensevelisseur
 ## de `lvl_04`. `LevelDef.boss_wave()` rend `null` sans broncher.
 ## =====================================================================
-func _acte_2_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_2_suite(C: String, E: String) -> void:
 
 	# ---------- lvl_17 : Les courants ----------
 	#
@@ -4468,7 +4451,7 @@ func _acte_2_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "epic/resonance.tres", 2],
 		[C + "rare/repulsion_wave.tres", 2],
 	])
-	lvl17.objectives = [o1, o2, o3]
+	lvl17.objectives = _objectifs_de(lvl17.id)
 	lvl17.legendary_reward = load(C + "legendary/twin_channeling.tres")
 	lvl17.next_levels = [&"lvl_18"]
 	lvl17.act = 2
@@ -4585,7 +4568,7 @@ atelier."
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
 	])
-	lvl18.objectives = [o1, o2, o3]
+	lvl18.objectives = _objectifs_de(lvl18.id)
 	lvl18.legendary_reward = load(C + "legendary/echo_of_the_hand.tres")
 	# Le port rend la main a `lvl_03`, l ossuaire de bordure : c est le moment ou
 	# le document fait passer le fond de `act1_sky` a `act2_graveyard`.
@@ -4627,8 +4610,7 @@ jamais venu ici. Personne ne releve."
 ## (section 6) veut que les quatre grands demons s ouvrent d un coup : c est le
 ## pentacle qui les ouvre, puisque c est par lui qu on descend.
 ## =====================================================================
-func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_3_suite(C: String, E: String) -> void:
 
 	# ---------- lvl_19 : Les fosses basses ----------
 	#
@@ -4771,7 +4753,7 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "rare/purifying_light.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
 	])
-	lvl19.objectives = [o1, o2, o3]
+	lvl19.objectives = _objectifs_de(lvl19.id)
 	lvl19.legendary_reward = load(C + "legendary/venom_mire.tres")
 	lvl19.next_levels = [&"lvl_20"]
 	lvl19.act = 3
@@ -4886,7 +4868,7 @@ laisse une GARDE, et une garde ne protege pas un fuyard, elle retarde un poursui
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "epic/void_grip.tres", 2],
 	])
-	lvl20.objectives = [o1, o2, o3]
+	lvl20.objectives = _objectifs_de(lvl20.id)
 	lvl20.legendary_reward = load(C + "legendary/meteor_storm.tres")
 	# LA FOURCHE EXISTANTE. `lvl_05` (les Forges, des blindes) et `lvl_06` (la
 	# Cour brisee, des monstres a effets) etaient deja une fourche equilibree au
@@ -5046,7 +5028,7 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 		[C + "epic/deep_focus.tres", 2],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
-	lvl21.objectives = [o1, o2, o3]
+	lvl21.objectives = _objectifs_de(lvl21.id)
 	lvl21.legendary_reward = load(C + "legendary/summoners_key.tres")
 	# LE PORTAIL DE L ACTE 4, et le seul. Le document (section 6) veut les quatre
 	# grands demons ouverts d emblee : c est le pentacle de Tombol qui les ouvre,
@@ -5119,8 +5101,7 @@ dans le groupe : il n a plus de royaume a perdre. On descend."
 ## d ouvrir cinq feuilles d animation — les neuf silhouettes orphelines du
 ## catalogue etant prises par le chantier des actes 2 et 3.
 ## =====================================================================
-func _acte_4_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_4_suite(C: String, E: String) -> void:
 
 	# ---------- lvl_10 : Sesh, la Faim ----------
 	#
@@ -5246,7 +5227,7 @@ func _acte_4_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "epic/maelstrom.tres", 1],
 		[C + "rare/about_face.tres", 1],
 	])
-	lvl10.objectives = [o1, o2, o3]
+	lvl10.objectives = _objectifs_de(lvl10.id)
 	lvl10.legendary_reward = load(C + "legendary/venom_mire.tres")
 	# CHACUN DES QUATRE DEMONS MENE AU PENTACLE, et a lui seul. Aucun ne cite un
 	# autre demon : c est ce qui rend l ordre libre.
@@ -5370,7 +5351,7 @@ Gardien. Il n a jamais donne d ordre a personne : il en a recu un."
 		[C + "rare/temporal_drag.tres", 2],
 		[C + "epic/deep_freeze.tres", 2],
 	])
-	lvl11.objectives = [o1, o2, o3]
+	lvl11.objectives = _objectifs_de(lvl11.id)
 	lvl11.legendary_reward = load(C + "legendary/forge_dial.tres")
 	lvl11.next_levels = [&"lvl_13"]
 	lvl11.act = 4
@@ -5521,7 +5502,7 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 		[C + "epic/deep_focus.tres", 2],
 		[C + "rare/arcane_insight.tres", 1],
 	])
-	lvl12.objectives = [o1, o2, o3]
+	lvl12.objectives = _objectifs_de(lvl12.id)
 	lvl12.legendary_reward = load(C + "legendary/twin_channeling.tres")
 	lvl12.next_levels = [&"lvl_13"]
 	lvl12.act = 4
@@ -5718,7 +5699,7 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
-	lvl13.objectives = [o1, o2, o3]
+	lvl13.objectives = _objectifs_de(lvl13.id)
 	lvl13.legendary_reward = load(C + "legendary/world_loom.tres")
 	# LA SORTIE DE L ACTE 4 : l espace divin. Un seul niveau de l acte 4 ouvre
 	# l acte 5, et c est celui-la.
@@ -5768,8 +5749,7 @@ vers le bas."
 ## ajout est la tete du boss final, parce qu un boss final ne peut pas etre un
 ## monstre commun agrandi.
 ## =====================================================================
-func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
-		C: String, E: String) -> void:
+func _acte_5(C: String, E: String) -> void:
 
 	# ---------- lvl_14 : La galerie des saisons ----------
 	#
@@ -5959,7 +5939,7 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		[C + "rare/mana_flow.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
-	lvl14.objectives = [o1, o2, o3]
+	lvl14.objectives = _objectifs_de(lvl14.id)
 	lvl14.legendary_reward = load(C + "legendary/echo_of_the_hand.tres")
 	lvl14.next_levels = [&"lvl_15"]
 	lvl14.act = 5
@@ -6155,7 +6135,7 @@ depuis le pentacle, et il marche devant."
 		[C + "rare/quickening.tres", 2],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
-	lvl15.objectives = [o1, o2, o3]
+	lvl15.objectives = _objectifs_de(lvl15.id)
 	lvl15.legendary_reward = load(C + "legendary/tide_ledger.tres")
 	lvl15.next_levels = [&"lvl_16"]
 	lvl15.act = 5
@@ -6336,7 +6316,7 @@ courir pour voir jusqu ou tu irais."
 		[C + "legendary/hourglass_shard.tres", 1],
 		[C + "legendary/world_loom.tres", 1],
 	])
-	lvl16.objectives = [o1, o2, o3]
+	lvl16.objectives = _objectifs_de(lvl16.id)
 	# LA DERNIERE RECOMPENSE DE LA CAMPAGNE. L Echo de la main : le sort qui
 	# rejoue ce qu on vient de lancer. Le mage scelle dans une boucle repart avec
 	# la carte qui repete — c est le seul cadeau que cette fin pouvait faire.
@@ -6363,3 +6343,301 @@ date — c est lui qui l avait posee. Nuri le sixieme jour, Nox la septieme nuit
 quand tu as recule, pour la premiere fois depuis tres longtemps, il n a pas su ce qui \
 allait arriver."
 	_save(lvl16, "res://resources/levels/lvl_16.tres")
+
+
+## =====================================================================
+## OBJECTIFS DE NIVEAU — trois par niveau, choisis POUR ce niveau.
+##
+## Jusqu au 27/09 les 21 niveaux portaient le MEME trio (vitesse au maximum,
+## sans legendaire, sans degats). Il ne disait rien du niveau, et l un des
+## trois etait hors d atteinte partout : la vitesse monte de 2 points par
+## seconde depuis 150 %, il faut donc 175 s SANS UN COUP pour toucher 500 %,
+## alors qu un niveau se gagne en 60 a 200 s. Mesure au banc sur les 21
+## niveaux : 0 partie sur 630. `never_dropped_speed` reste dans le moteur,
+## mais aucun niveau ne le porte tant qu un niveau ne dure pas assez longtemps
+## pour qu il soit jouable.
+##
+## LES TROIS REGLES DE LA TABLE
+## 1. Chaque objectif s appuie sur ce que le niveau CONTIENT : un volant pour
+##    kill_flying, un monstre qui se releve pour boss_quick_after_revive, une
+##    garde de renvoi pour never_hit_reflect, l element que le boss CRAINT et
+##    que le deck porte pour element_casts, une carte du deck pour les
+##    interdictions (sinon l interdiction est gratuite). L AUDIT refuse
+##    l impossible et signale le gratuit ; test_level_objectives refuse les deux.
+## 2. La difficulte monte dans l ORDRE DE JEU (lvl_17 se joue avant lvl_03) :
+##    l acte 1 apprend une mecanique par objectif, l acte 5 demande un combat
+##    propre. Chaque niveau garde au moins un objectif a la portee d un joueur
+##    correct : les trois ensemble debloquent la legendaire du niveau.
+## 3. Les SEUILS sont regles au banc (sonde de 30 parties par objectif, un bot
+##    qui VISE l objectif) : chaque objectif est reussi au moins une fois et
+##    rate au moins une fois sur 30. Les taux sont dans le rapport du chantier.
+## =====================================================================
+
+## Un objectif par CONTROLE (cle + parametres) : deux niveaux qui demandent la
+## meme chose partagent la meme ressource, et le meme identifiant.
+var _objectifs_faits: Dictionary = {}
+
+## Les trois objectifs historiques gardent leur identifiant : la sauvegarde
+## range les etoiles par id d objectif, un joueur qui avait « sans degats »
+## sur un niveau qui le porte encore le garde.
+const _IDS_HISTORIQUES: Dictionary = {
+	&"never_dropped_speed": &"obj_max_speed",
+	&"no_legendary_used": &"obj_no_legendary",
+	&"no_damage_taken": &"obj_untouched",
+}
+
+
+func _purger_objectifs() -> void:
+	_objectifs_faits.clear()
+	var dir := DirAccess.open("res://resources/objectives")
+	if dir == null:
+		return
+	for f in dir.get_files():
+		if f.ends_with(".tres"):
+			dir.remove(f)
+
+
+## Identifiant DEDUIT du controle : "obj_multi_kill_5_2" dit ce qu il demande.
+## Un reglage de seuil change donc l identifiant, et c est voulu : une etoile
+## gagnee a 20 lancers ne doit pas valoir pour un objectif passe a 30.
+func _id_objectif(key: StringName, params: Dictionary) -> StringName:
+	if params.is_empty() and _IDS_HISTORIQUES.has(key):
+		return _IDS_HISTORIQUES[key]
+	var noms: Array = params.keys()
+	noms.sort_custom(func(a, b) -> bool: return String(a) < String(b))
+	var id: String = "obj_" + String(key)
+	for n in noms:
+		id += "_" + str(params[n]).to_lower().replace(".", "_")
+	return StringName(id)
+
+
+func _objectif(key: StringName, params: Dictionary = {}) -> ObjectiveDef:
+	var id: StringName = _id_objectif(key, params)
+	if _objectifs_faits.has(id):
+		return _objectifs_faits[id]
+	var o := ObjectiveDef.new()
+	o.id = id
+	o.check_key = key
+	o.params = params.duplicate()
+	# La description est le libelle GENERE : elle ne sert que de repli, et un
+	# repli qui dirait autre chose que l ecran serait un second texte a tenir.
+	o.description = ObjectiveChecker.label(o)
+	for err in ObjectiveChecker.validate(o):
+		printerr("Objectif %s invalide : %s" % [id, err])
+	_save(o, "res://resources/objectives/%s.tres" % id)
+	_objectifs_faits[id] = o
+	return o
+
+
+## LA TABLE, dans l ordre de jeu de la campagne.
+func _objectifs_de(level_id: StringName) -> Array[ObjectiveDef]:
+	var out: Array[ObjectiveDef] = []
+	match level_id:
+		# ---------------- ACTE 1 : chaque objectif APPREND une mecanique ----
+		&"lvl_01":
+			# Tutoriel. Trois gestes du jeu, tous a la portee d un debutant :
+			# - les feux follets VOLENT (et esquivent) : il faut aller les viser ;
+			# - la nuee de rats de la vague 3 est faite pour une zone ;
+			# - le Mur est dans le deck, mais un mur retarde sans tuer :
+			#   gagner sans lui apprend que les degats sont la vraie defense.
+			out.assign([
+				_objectif(&"kill_flying", {"count": 3}),
+				_objectif(&"multi_kill", {"count": 5, "window": 2}),
+				_objectif(&"no_card_key", {"key": "build_wall"}),
+			])
+		&"lvl_02":
+			# Le Coagule se RELEVE une fois : c est la lecon du niveau. L Ecumeur
+			# du ciel est le premier volant a tenir tete. Le Coagule craint le
+			# feu, que le deck porte en majorite.
+			out.assign([
+				_objectif(&"boss_quick_after_revive", {"seconds": 6}),
+				_objectif(&"kill_flying", {"count": 1}),
+				_objectif(&"element_casts", {"element": "FIRE", "count": 50}),
+			])
+		&"lvl_08":
+			# Gelees qui se divisent et nuees de rats : le niveau des zones. Court
+			# (une minute), il se prete au chrono ; et sans tireur, finir sans
+			# une egratignure est a la portee d un joueur attentif.
+			out.assign([
+				_objectif(&"multi_kill", {"count": 12, "window": 1}),
+				_objectif(&"no_damage_taken"),
+				_objectif(&"win_under_time", {"seconds": 65}),
+			])
+		&"lvl_09":
+			# Fin d acte : le Sablier fendu est dans le deck — s en passer est un
+			# vrai choix. Le Gardien craint l arcane. Et le pari de fin de combat
+			# du co-auteur : finir sous 300 %, donc en ayant laisse passer.
+			out.assign([
+				_objectif(&"no_legendary_used"),
+				_objectif(&"element_casts", {"element": "ARCANE", "count": 25}),
+				_objectif(&"win_below_speed", {"pct": 300}),
+			])
+		# ---------------- ACTE 2 : les objectifs demandent un choix ---------
+		&"lvl_17":
+			# Les courants : vingt et un volants, les abattre TOUS. Ils ondulent
+			# et descendent vite : tenir la ligne haute. Le niveau est court (une
+			# minute et quart) : le chrono demande de ne pas laisser trainer.
+			# (« Sans repousser » a ete essaye : 30 victoires sur 30 sans l Onde
+			# de repulsion au banc, l interdiction ne coutait rien.)
+			out.assign([
+				_objectif(&"kill_flying", {"count": 21}),
+				_objectif(&"no_enemy_past", {"ratio": 0.75}),
+				_objectif(&"win_under_time", {"seconds": 75}),
+			])
+		&"lvl_18":
+			# Le port : pillards rapides par le cote, chevaliers du vide. Le deck
+			# a six sorts ; en jouer cinq au plus force a choisir ce qu on laisse.
+			# Sans passif et un sort favori : le niveau le plus dur de l acte
+			# garde deux objectifs de discipline plutot que d adresse.
+			out.assign([
+				_objectif(&"max_distinct_cast", {"count": 5}),
+				_objectif(&"no_passive"),
+				_objectif(&"same_card_casts", {"count": 15}),
+			])
+		&"lvl_03":
+			# L ossuaire : nuees, gelees, slimes qui se divisent — la serie de
+			# morts. La Pluie de givre et la Fleche percante (x4 chacune) peuvent
+			# porter 30 lancers, l objectif du co-auteur. Et quatre sorts
+			# differents au plus sur six : le deck le plus fourni de l acte se
+			# joue resserre. (« Sans vortex » ne coutait rien : 30/30 au banc.)
+			out.assign([
+				_objectif(&"multi_kill", {"count": 10, "window": 1}),
+				_objectif(&"same_card_casts", {"count": 30}),
+				_objectif(&"max_distinct_cast", {"count": 4}),
+			])
+		&"lvl_04":
+			# Le Grand Appel : l Ensevelisseur invoque sans fin, et seuls deux
+			# archers tirent — tenir le terrain et ne rien encaisser sont des
+			# objectifs d adresse. Le Totem de coeur-de-bois attire les
+			# monstres : gagner sans lui demande de tuer au lieu de detourner.
+			out.assign([
+				_objectif(&"no_enemy_past", {"ratio": 0.75}),
+				_objectif(&"no_card_key", {"key": "taunt_prop"}),
+				_objectif(&"no_damage_taken"),
+			])
+		# ---------------- ACTE 3 : les mecaniques des boss -------------------
+		&"lvl_19":
+			# Le trio : la sorciere de givre craint le feu (Meteore, Boule de feu).
+			# Les goules des fosses arrivent par trois, sans tireur : ne rien
+			# encaisser se merite. Deck de six sorts, en jouer cinq au plus.
+			out.assign([
+				_objectif(&"no_damage_taken"),
+				_objectif(&"element_casts", {"element": "FIRE", "count": 40}),
+				_objectif(&"max_distinct_cast", {"count": 5}),
+			])
+		&"lvl_20":
+			# La cour des rois morts, la ou la route bifurque : un niveau dur
+			# (totems, parades, spadassin rapide). Le pari des 250 %, un chrono
+			# et la discipline sans passif.
+			out.assign([
+				_objectif(&"win_below_speed", {"pct": 250}),
+				_objectif(&"no_passive"),
+				_objectif(&"win_under_time", {"seconds": 125}),
+			])
+		&"lvl_05":
+			# Le Miroir de forge RENVOIE les coups pendant sa garde : c est la
+			# mecanique du niveau. Le Colosse des Forges craint le GIVRE (choc
+			# thermique), la Pluie de givre est dans le deck.
+			out.assign([
+				_objectif(&"never_hit_reflect"),
+				_objectif(&"element_casts", {"element": "FROST", "count": 15}),
+				_objectif(&"win_under_time", {"seconds": 160}),
+			])
+		&"lvl_06":
+			# Le Seigneur spectre craint la foudre, et la Racine de tonnerre est
+			# a UN exemplaire : il faut la rejouer. Boule de feu et Fleche
+			# percante a quatre exemplaires : un sort favori a 25 lancers.
+			# (Les trois feux follets tombaient a chaque victoire : 30/30.)
+			out.assign([
+				_objectif(&"element_casts", {"element": "LIGHTNING", "count": 6}),
+				_objectif(&"win_under_time", {"seconds": 100}),
+				_objectif(&"same_card_casts", {"count": 25}),
+			])
+		&"lvl_21":
+			# Le pentacle : la Pluie de meteorites (legendaire) est dans le deck,
+			# et les vers de feu y sont IMMUNISES — gagner sans sort de feu est
+			# la bonne lecture du niveau, pas une contrainte gratuite. Les Oeils
+			# des courants reviennent voler.
+			out.assign([
+				_objectif(&"no_legendary_used"),
+				_objectif(&"no_card_tag", {"tag": "FIRE"}),
+				_objectif(&"kill_flying", {"count": 3}),
+			])
+		# ---------------- ACTE 4 : les quatre demons (ordre libre) -----------
+		&"lvl_07":
+			# La forge de Vharn : l Apprenti miroir est la carte du niveau ; s en
+			# passer est un vrai sacrifice. Nuees et plantes carnivores pour la
+			# serie, et un deck a six sorts qu on reduit a cinq.
+			out.assign([
+				_objectif(&"no_card_key", {"key": "summon_ally"}),
+				_objectif(&"multi_kill", {"count": 8, "window": 1}),
+				_objectif(&"max_distinct_cast", {"count": 5}),
+			])
+		&"lvl_10":
+			# Les fosses de Sesh : gelees et Slime demoniaque qui se divisent en
+			# cascade, donc les series les plus longues du jeu. Les deux
+			# cacodemons volent en fin de niveau. Pas de tireur : sans degats.
+			# (« Sans sort de feu », malgre l immunite du Slime demoniaque, ne
+			# coutait rien : 30 victoires sur 30 au banc.)
+			out.assign([
+				_objectif(&"multi_kill", {"count": 9, "window": 0.5}),
+				_objectif(&"kill_flying", {"count": 2}),
+				_objectif(&"no_damage_taken"),
+			])
+		&"lvl_11":
+			# L arene de Kaltek : l Ecumeur du ciel et quatre feux follets
+			# volent, Kaltek la Chaine craint le givre (le deck en est plein).
+			# Les berserkers accelerent : finir sous 200 % demande de le vouloir.
+			out.assign([
+				_objectif(&"kill_flying", {"count": 5}),
+				_objectif(&"element_casts", {"element": "FROST", "count": 30}),
+				_objectif(&"win_below_speed", {"pct": 200}),
+			])
+		&"lvl_12":
+			# Le temple d Ymoa : totems et cercle, peu de monstres mais solides —
+			# un sort favori a 30 lancers. Le Cercle tire et protege : finir
+			# sous 250 % est un pari sur le dernier assaut. Et sans passif.
+			# (« Sans piocher » ne coutait rien : l Intuition arcanique n y est
+			# qu a un exemplaire, 29 victoires sur 30 sans elle.)
+			out.assign([
+				_objectif(&"same_card_casts", {"count": 30}),
+				_objectif(&"win_below_speed", {"pct": 250}),
+				_objectif(&"no_passive"),
+			])
+		&"lvl_13":
+			# Le pentacle brise : les quatre demons reviennent, le Sablier fendu
+			# est dans le deck. Finir sous 300 % et une serie de 10.
+			out.assign([
+				_objectif(&"no_legendary_used"),
+				_objectif(&"win_below_speed", {"pct": 300}),
+				_objectif(&"multi_kill", {"count": 10, "window": 1}),
+			])
+		# ---------------- ACTE 5 : l espace divin, des combats propres -------
+		&"lvl_14":
+			# La galerie des saisons : les vagues les plus peuplees du jeu (20
+			# corps). Le Sablier fendu tente ; un sort favori a 40 lancers.
+			out.assign([
+				_objectif(&"multi_kill", {"count": 12, "window": 1}),
+				_objectif(&"same_card_casts", {"count": 40}),
+				_objectif(&"no_legendary_used"),
+			])
+		&"lvl_15":
+			# Le registre : les Eclats de miroir renvoient les coups, la Tempete
+			# de meteores est dans le deck, et le combat sans une egratignure
+			# est l epreuve de l avant-dernier niveau.
+			out.assign([
+				_objectif(&"never_hit_reflect"),
+				_objectif(&"no_damage_taken"),
+				_objectif(&"no_legendary_used"),
+			])
+		&"lvl_16":
+			# Le siege vide : l enfant se RELEVE, tient une garde de renvoi, et ne
+			# craint que l arcane. Ses trois mecaniques sont les trois objectifs.
+			out.assign([
+				_objectif(&"boss_quick_after_revive", {"seconds": 10}),
+				_objectif(&"never_hit_reflect"),
+				_objectif(&"element_casts", {"element": "ARCANE", "count": 70}),
+			])
+		_:
+			printerr("Niveau %s sans objectifs dans la table" % level_id)
+	return out

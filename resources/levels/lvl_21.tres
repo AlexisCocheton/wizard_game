@@ -24,26 +24,30 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_belrn"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_rf6lm"]
 
-[sub_resource type="Resource" id="Resource_6vmxt"]
-script = ExtResource("21_6gits")
-id = &"obj_max_speed"
-description = "Gagner en gardant la vitesse au maximum des la vague 1"
-check_key = &"never_dropped_speed"
-params = {}
-
-[sub_resource type="Resource" id="Resource_07mnm"]
+[sub_resource type="Resource" id="Resource_84rjn"]
 script = ExtResource("21_6gits")
 id = &"obj_no_legendary"
 description = "Gagner sans utiliser de carte legendaire"
 check_key = &"no_legendary_used"
 params = {}
 
-[sub_resource type="Resource" id="Resource_hb77b"]
+[sub_resource type="Resource" id="Resource_vpd72"]
 script = ExtResource("21_6gits")
-id = &"obj_untouched"
-description = "Gagner sans subir de degats"
-check_key = &"no_damage_taken"
-params = {}
+id = &"obj_no_card_tag_fire"
+description = "Gagner sans sort de feu"
+check_key = &"no_card_tag"
+params = {
+"tag": "FIRE"
+}
+
+[sub_resource type="Resource" id="Resource_6vmxt"]
+script = ExtResource("21_6gits")
+id = &"obj_kill_flying_3"
+description = "Abattre 3 monstres volants"
+check_key = &"kill_flying"
+params = {
+"count": 3
+}
 
 [sub_resource type="Resource" id="Resource_mfsqp"]
 script = ExtResource("24_rf6lm")
@@ -66,7 +70,7 @@ count = 2
 spawn_delay = 2.5
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_vpd72"]
+[sub_resource type="Resource" id="Resource_nrv4l"]
 script = ExtResource("23_belrn")
 id = &"w21_1"
 duration = 27.0
@@ -103,7 +107,7 @@ count = 1
 spawn_delay = 2.0
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_nrv4l"]
+[sub_resource type="Resource" id="Resource_qoti4"]
 script = ExtResource("23_belrn")
 id = &"w21_2_miniboss"
 duration = 28.0
@@ -140,7 +144,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 23.0
 
-[sub_resource type="Resource" id="Resource_qoti4"]
+[sub_resource type="Resource" id="Resource_e42nv"]
 script = ExtResource("23_belrn")
 id = &"w21_3"
 duration = 34.0
@@ -170,7 +174,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 28.0
 
-[sub_resource type="Resource" id="Resource_e42nv"]
+[sub_resource type="Resource" id="Resource_2bcqe"]
 script = ExtResource("23_belrn")
 id = &"w21_4_boss"
 duration = 45.0
@@ -191,9 +195,9 @@ intro_story = &"lvl_21_intro"
 outro_story = &"lvl_21_outro"
 terrain = "sand"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("23_belrn")]([SubResource("Resource_vpd72"), SubResource("Resource_nrv4l"), SubResource("Resource_qoti4"), SubResource("Resource_e42nv")])
+waves = Array[ExtResource("23_belrn")]([SubResource("Resource_nrv4l"), SubResource("Resource_qoti4"), SubResource("Resource_e42nv"), SubResource("Resource_2bcqe")])
 enemy_pool = Array[ExtResource("1_nrv4l")]([ExtResource("2_qoti4"), ExtResource("3_e42nv"), ExtResource("4_2bcqe"), ExtResource("5_sw1il"), ExtResource("6_ia684"), ExtResource("7_jxcgh"), ExtResource("8_1k6lh"), ExtResource("9_wosyd"), ExtResource("10_y52nd"), ExtResource("11_vpd72")])
 exploration_deck = Array[ExtResource("11_h3ov4")]([ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("16_bret4"), ExtResource("16_bret4"), ExtResource("18_vk0ai"), ExtResource("18_vk0ai"), ExtResource("19_cnvpr")])
-objectives = Array[ExtResource("21_6gits")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
+objectives = Array[ExtResource("21_6gits")]([SubResource("Resource_84rjn"), SubResource("Resource_vpd72"), SubResource("Resource_6vmxt")])
 legendary_reward = ExtResource("20_v0fir")
 next_levels = Array[StringName]([&"lvl_07", &"lvl_10", &"lvl_11", &"lvl_12"])
