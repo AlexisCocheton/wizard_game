@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/cacodaemon.tres" id="5_3m4m2"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_krrrs"]
 
-[sub_resource type="Resource" id="Resource_wjqa1"]
+[sub_resource type="Resource" id="Resource_3m4m2"]
 script = ExtResource("1_3m4m2")
 enemy = ExtResource("2_wjqa1")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_0untc"]
+[sub_resource type="Resource" id="Resource_wjqa1"]
 script = ExtResource("1_3m4m2")
 enemy = ExtResource("3_0untc")
 count = 1
 spawn_delay = 2.5
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_3i2ue"]
+[sub_resource type="Resource" id="Resource_0untc"]
 script = ExtResource("1_3m4m2")
 enemy = ExtResource("4_3i2ue")
 count = 2
 spawn_delay = 2.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_krc0q"]
+[sub_resource type="Resource" id="Resource_3i2ue"]
 script = ExtResource("1_3m4m2")
 enemy = ExtResource("5_3m4m2")
 count = 2
@@ -39,7 +39,7 @@ start_offset = 22.0
 script = ExtResource("6_krrrs")
 id = &"w10_4"
 duration = 30.0
-entries = Array[ExtResource("1_3m4m2")]([SubResource("Resource_wjqa1"), SubResource("Resource_0untc"), SubResource("Resource_3i2ue"), SubResource("Resource_krc0q")])
+entries = Array[ExtResource("1_3m4m2")]([SubResource("Resource_3m4m2"), SubResource("Resource_wjqa1"), SubResource("Resource_0untc"), SubResource("Resource_3i2ue")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

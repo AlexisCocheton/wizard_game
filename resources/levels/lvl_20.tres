@@ -175,12 +175,8 @@ id = &"lvl_20"
 display_name = "La cour des rois morts"
 act = 3
 subtitle = "La vague choisit ta cible"
-intro_text = "Une cour de statues, et sous chaque statue un Gardien-totem 
-qui rend ses voisins intouchables. Tu ne choisis plus ou frapper : il faut d abord 
-abattre celui qui protege, et il se protege lui-meme derriere ceux qu il protege."
-outro_text = "La derniere arriere-garde tombe sans un mot. Le Roi squelette 
-n a laisse ni message ni piege : il a laisse des gens a mourir pour gagner une heure. 
-On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creancier."
+intro_text = "Une cour de statues, et sous chaque statue un Gardien-totem qui rend ses voisins intouchables. Tu ne choisis plus ou frapper : il faut d abord abattre celui qui protege, et il se protege lui-meme derriere ceux qu il protege."
+outro_text = "La derniere arriere-garde tombe sans un mot. Le Roi squelette n a laisse ni message ni piege : il a laisse des gens a mourir pour gagner une heure. On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creancier."
 intro_story = &"lvl_20_intro"
 outro_story = &"lvl_20_outro"
 terrain = "sand"

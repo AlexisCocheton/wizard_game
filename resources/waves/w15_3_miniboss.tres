@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="5_f1cqg"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_xqe58"]
 
-[sub_resource type="Resource" id="Resource_bmvqr"]
+[sub_resource type="Resource" id="Resource_ewnsp"]
 script = ExtResource("1_ewnsp")
 enemy = ExtResource("2_ghrog")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_3280n"]
+[sub_resource type="Resource" id="Resource_ghrog"]
 script = ExtResource("1_ewnsp")
 enemy = ExtResource("3_15ia8")
 count = 1
 spawn_delay = 2.2
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_ieq2s"]
+[sub_resource type="Resource" id="Resource_15ia8"]
 script = ExtResource("1_ewnsp")
 enemy = ExtResource("4_68m3p")
 count = 2
 spawn_delay = 2.5
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_efqoq"]
+[sub_resource type="Resource" id="Resource_68m3p"]
 script = ExtResource("1_ewnsp")
 enemy = ExtResource("5_f1cqg")
 count = 1
@@ -39,7 +39,7 @@ start_offset = 24.0
 script = ExtResource("6_xqe58")
 id = &"w15_3_miniboss"
 duration = 36.0
-entries = Array[ExtResource("1_ewnsp")]([SubResource("Resource_bmvqr"), SubResource("Resource_3280n"), SubResource("Resource_ieq2s"), SubResource("Resource_efqoq")])
+entries = Array[ExtResource("1_ewnsp")]([SubResource("Resource_ewnsp"), SubResource("Resource_ghrog"), SubResource("Resource_15ia8"), SubResource("Resource_68m3p")])
 difficulty = 1.1
 is_miniboss = true
 is_boss = false

@@ -1360,7 +1360,10 @@ func _enemies_v3(E: String) -> void:
 	var slime_huge := _enemy("slime_huge", "Slime enorme", K.MINIBOSS, 6, 90.0, 36.0, 12,
 		S.CIRCLE, Color(0.30, 0.50, 0.90), 50.0)
 	slime_huge.anim_key = &"slime_big"
-	slime_huge.split_into = slime_mid
+	# Par CHEMIN et non par objet : un enfant embarque dans le .tres du parent
+	# serait une copie, et retoucher slime_mid.tres ne changerait plus rien aux
+	# slimes qui sortent du Slime enorme.
+	slime_huge.split_into = load(E + "slime_mid.tres")
 	slime_huge.split_count = 3
 	_resist(slime_huge, {&"phys": 0.85, &"feu": 1.0, &"givre": 0.85, &"arcane": 1.0,
 		&"poison": 0.6, &"foudre": 1.3})
@@ -1381,15 +1384,18 @@ func _enemies_v3(E: String) -> void:
 	# test_bestiaire_w2 (`_pv_de_chaine`), faute de quoi le colosse passerait pour
 	# plus leger que Chronos alors qu il envoie sept corps.
 	#
-	# TRES GRAND, ET ENTIER A L ECRAN. Rayon 100 et echelle 1,1 : 462 px de large
-	# sur un terrain de 1080, le plus gros sprite du jeu (l Enfant fait 396 px). La
+	# TRES GRAND, ET ENTIER A L ECRAN. Rayon 118 et echelle 1,2 : 595 px de large
+	# sur un terrain de 1080, le plus gros sprite du jeu (le Reliquaire en fait
+	# 542, le Sceau de Tombol 524). Plus de la moitie du terrain, jamais tout : la
 	# marge d apparition suit la taille affichee (WaveSpawner.spawn_margin), donc il
-	# nait entierement dans le cadre, et reste ciblable d un bord a l autre.
+	# nait entierement dans le cadre et reste ciblable d un bord a l autre. Le
+	# rayon logique grandit avec : un sprite de 600 px sur une hitbox de 100 se
+	# ferait toucher bien avant de sembler au contact.
 	var colossal := _enemy("slime_colossal", "Slime colossal", K.BOSS, 10, 150.0, 24.0, 30,
-		S.CIRCLE, Color(0.85, 0.40, 0.15), 100.0)
+		S.CIRCLE, Color(0.85, 0.40, 0.15), 118.0)
 	colossal.anim_key = &"slime_colossal"
-	colossal.sprite_scale = 1.1
-	colossal.split_into = slime_huge
+	colossal.sprite_scale = 1.2
+	colossal.split_into = load(E + "slime_huge.tres")
 	colossal.split_count = 2
 	# Lave : le feu le nourrit, le venin brule avant de mordre, le givre fend la
 	# croute. On ne ralentit pas une coulee a moitie.
@@ -1423,7 +1429,7 @@ func _enemies_v3(E: String) -> void:
 	var slime_ghost := _enemy("slime_ghost", "Slime fantome", K.NORMAL, 2, 10.0, 66.0, 3,
 		S.CIRCLE, Color(0.75, 0.80, 0.90), 22.0)
 	slime_ghost.anim_key = &"slime_ghost"
-	slime_ghost.rebirth_def = slime_skel
+	slime_ghost.rebirth_def = load(E + "slime_skeleton.tres")
 	slime_ghost.rebirth_count = 1
 	slime_ghost.rebirth_delay = 3.0
 	slime_ghost.move_pattern = EnemyDef.MovePattern.ZIGZAG
@@ -1441,7 +1447,7 @@ func _enemies_v3(E: String) -> void:
 	var ghost_big := _enemy("slime_ghost_big", "Gros slime fantome", K.NORMAL, 4, 34.0, 44.0, 6,
 		S.CIRCLE, Color(0.70, 0.75, 0.88), 34.0)
 	ghost_big.anim_key = &"slime_ghost"
-	ghost_big.rebirth_def = slime_skel
+	ghost_big.rebirth_def = load(E + "slime_skeleton.tres")
 	ghost_big.rebirth_count = 2
 	ghost_big.rebirth_delay = 3.0
 	_resist(ghost_big, {&"phys": 0.65, &"feu": 1.0, &"givre": 1.0, &"arcane": 1.3,
@@ -1561,7 +1567,7 @@ func _enemies_v3(E: String) -> void:
 	demon_lord.devours = true
 	demon_lord.devour_heal_pct = 60.0
 	demon_lord.devour_delay = 3.0
-	demon_lord.summon_def = caco
+	demon_lord.summon_def = load(E + "cacodaemon.tres")
 	demon_lord.summon_interval = 6.0
 	demon_lord.summon_count = 1
 	# Trois au plus : chaque Cacodemon vaut jusqu a 16 PV de soin, et trois a
@@ -1587,19 +1593,26 @@ func _enemies_v3(E: String) -> void:
 	# depenser des petits coups (magenta). Aucun deck ne repond aux trois, le joueur
 	# choisit l ordre — c est ce qui fait d un trio un combat et non trois PV.
 	#
-	# SEUL LE BLEU EST UN BOSS. Le rouge et le magenta sont des MINI-BOSS : en
-	# Massacre un palier tire UNE tete, et trois boss d un meme monde y auraient
-	# dilue les autres. Ainsi le bleu sort comme boss du Grand Cimetiere et ses deux
-	# freres comme paliers de mini-boss, chacun avec son pouvoir entier.
+	# SEUL LE ROUGE EST UN BOSS, et il mene la vague : c est lui que la demande
+	# decrit (« un boss qui revient a la vie trois fois depuis le haut »). Le bleu et
+	# le magenta sont des MINI-BOSS : en Massacre un palier tire UNE tete, et trois
+	# boss d un meme monde y auraient dilue les autres. Le rouge sort donc comme
+	# boss du Grand Cimetiere, ses deux freres comme paliers de mini-boss, chacun
+	# avec son pouvoir entier.
+	#
+	# Le rouge en tete a une seconde raison : la carte de campagne illustre chaque
+	# niveau par sa tete de boss, une silhouette par niveau. La feuille bleue est
+	# celle du Sceau de Tombol, qui ferme le meme acte ; en tete, le bleu lui volait
+	# son medaillon.
 	#
 	# LEURS FEUILLES RESTENT PURES : les trois couleurs du pack font le trio. C est
 	# le Sceau de Tombol, qui partageait la feuille bleue, qui prend une teinte
 	# (AnimCatalog.MODULATE) — il est seul, eux vont par trois.
 	#
-	# Chaine : 120 (bleu) + 70 x 4 vies a 60 % = 196 (rouge) + 90 (magenta) = 406
+	# Chaine : 100 (bleu) + 85 x (1 + 3 x 60 %) = 238 (rouge) + 85 (magenta) = 423
 	# PV, le poids de l Enfant releve. Chacun est leger ; c est le cumul qui pese.
-	var trio_frost := _enemy("trio_frost", "Mage du givre", K.BOSS, 10, 120.0, 30.0, 20,
-		S.STAR, Color(0.35, 0.65, 0.95), 56.0)
+	var trio_frost := _enemy("trio_frost", "Mage du givre", K.MINIBOSS, 6, 100.0, 30.0, 12,
+		S.STAR, Color(0.35, 0.65, 0.95), 52.0)
 	trio_frost.anim_key = &"mageguardian"
 	trio_frost.sprite_scale = 1.3
 	# Reference = la vitesse de depart du mage : au premier instant il avance a sa
@@ -1613,8 +1626,8 @@ func _enemies_v3(E: String) -> void:
 		&"poison": 0.8, &"foudre": 1.1})
 	_save(trio_frost, E + "trio_frost.tres")
 
-	var trio_ember := _enemy("trio_ember", "Mage de braise", K.MINIBOSS, 6, 70.0, 34.0, 12,
-		S.STAR, Color(0.95, 0.40, 0.25), 52.0)
+	var trio_ember := _enemy("trio_ember", "Mage de braise", K.BOSS, 10, 85.0, 34.0, 24,
+		S.STAR, Color(0.95, 0.40, 0.25), 56.0)
 	trio_ember.anim_key = &"mageguardian_red"
 	trio_ember.sprite_scale = 1.3
 	# TROIS VIES, mot pour mot la demande : il revient trois fois DEPUIS LE HAUT,
@@ -1627,7 +1640,7 @@ func _enemies_v3(E: String) -> void:
 		&"poison": 0.9, &"foudre": 1.0})
 	_save(trio_ember, E + "trio_ember.tres")
 
-	var trio_arcane := _enemy("trio_arcane", "Mage des arcanes", K.MINIBOSS, 6, 90.0, 32.0, 12,
+	var trio_arcane := _enemy("trio_arcane", "Mage des arcanes", K.MINIBOSS, 6, 85.0, 32.0, 12,
 		S.STAR, Color(0.80, 0.35, 0.90), 52.0)
 	trio_arcane.anim_key = &"mageguardian_magenta"
 	trio_arcane.sprite_scale = 1.3
@@ -4714,8 +4727,8 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	r5.difficulty = 1.0
 	r5.is_boss = true
 	r5.entries = [
-		_entry(E + "trio_frost.tres", 1, 1.0),
-		_entry(E + "trio_ember.tres", 1, 1.0, 0.6),
+		_entry(E + "trio_ember.tres", 1, 1.0),
+		_entry(E + "trio_frost.tres", 1, 1.0, 0.6),
 		_entry(E + "trio_arcane.tres", 1, 1.0, 1.2),
 		_entry(E + "pit_ghoul.tres", 2, 3.0, 20.0),
 	]

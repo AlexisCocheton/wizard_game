@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="5_5kkyx"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_lgufp"]
 
-[sub_resource type="Resource" id="Resource_1p4ke"]
+[sub_resource type="Resource" id="Resource_5kkyx"]
 script = ExtResource("1_5kkyx")
 enemy = ExtResource("2_1p4ke")
 count = 2
 spawn_delay = 2.2
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_8liur"]
+[sub_resource type="Resource" id="Resource_1p4ke"]
 script = ExtResource("1_5kkyx")
 enemy = ExtResource("3_8liur")
 count = 3
 spawn_delay = 2.2
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_5ks84"]
+[sub_resource type="Resource" id="Resource_8liur"]
 script = ExtResource("1_5kkyx")
 enemy = ExtResource("4_5ks84")
 count = 1
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_gpkhf"]
+[sub_resource type="Resource" id="Resource_5ks84"]
 script = ExtResource("1_5kkyx")
 enemy = ExtResource("5_5kkyx")
 count = 1
@@ -39,7 +39,7 @@ start_offset = 22.0
 script = ExtResource("6_lgufp")
 id = &"w19_3"
 duration = 28.0
-entries = Array[ExtResource("1_5kkyx")]([SubResource("Resource_1p4ke"), SubResource("Resource_8liur"), SubResource("Resource_5ks84"), SubResource("Resource_gpkhf")])
+entries = Array[ExtResource("1_5kkyx")]([SubResource("Resource_5kkyx"), SubResource("Resource_1p4ke"), SubResource("Resource_8liur"), SubResource("Resource_5ks84")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false

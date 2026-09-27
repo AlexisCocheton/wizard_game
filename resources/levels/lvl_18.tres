@@ -167,13 +167,8 @@ id = &"lvl_18"
 display_name = "Port de Haute-Nacelle"
 act = 2
 subtitle = "L ordre des cibles"
-intro_text = "Haute-Nacelle a ete videe par le haut, pas par le bas. Sur 
-les quais, trois facons de te tromper : le Chevalier du vide avale ton premier coup, 
-le Berserker accelere a chaque coup recu, et les Pillards n arrivent meme pas par la 
-ou tu regardes."
-outro_text = "Le mage noir tombe sur ses propres soudures. L enfant 
-traverse le quai sans hesiter, prend a droite et dit que la gauche est fermee. Il n est 
-jamais venu ici. Personne ne releve."
+intro_text = "Haute-Nacelle a ete videe par le haut, pas par le bas. Sur les quais, trois facons de te tromper : le Chevalier du vide avale ton premier coup, le Berserker accelere a chaque coup recu, et les Pillards n arrivent meme pas par la ou tu regardes."
+outro_text = "Le mage noir tombe sur ses propres soudures. L enfant traverse le quai sans hesiter, prend a droite et dit que la gauche est fermee. Il n est jamais venu ici. Personne ne releve."
 intro_story = &"lvl_18_intro"
 outro_story = &"lvl_18_outro"
 terrain = "sand"

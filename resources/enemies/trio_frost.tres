@@ -6,17 +6,17 @@
 script = ExtResource("1_2mpwp")
 id = &"trio_frost"
 display_name = "Mage du givre"
-kind = 8
-power = 10
-max_hp = 120.0
+kind = 7
+power = 6
+max_hp = 100.0
 base_speed = 30.0
-base_xp = 20
+base_xp = 12
 contact_damage = 0
 anim_key = &"mageguardian"
 sprite_scale = 1.3
 shape = 6
 color = Color(0.35, 0.65, 0.95, 1)
-base_radius = 56.0
+base_radius = 52.0
 resistances = {
 0: 1.0,
 1: 1.35,

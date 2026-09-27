@@ -167,14 +167,8 @@ id = &"lvl_17"
 display_name = "Les courants"
 act = 2
 subtitle = "Le mur ne sert plus a rien"
-intro_text = "Le dirigeable monte dans les courants et tout ce qui t y 
-attend vole. Les Planogos passent au-dessus des murs, les Oeils se laissent porter et 
-ne vont jamais droit, l Archer ne descend pas du tout. Couvre le ciel ou ne couvre 
-rien."
-outro_text = "L Ecumeur du ciel tombe a cote de la nacelle. Le rat le 
-retourne du pied et ne dit rien pendant un moment : sous l aile, la meme soudure noire 
-que dans la poitrine du Gardien. Les Sky Lands ne sont pas sauvages. Elles sont un 
-atelier."
+intro_text = "Le dirigeable monte dans les courants et tout ce qui t y attend vole. Les Planogos passent au-dessus des murs, les Oeils se laissent porter et ne vont jamais droit, l Archer ne descend pas du tout. Couvre le ciel ou ne couvre rien."
+outro_text = "L Ecumeur du ciel tombe a cote de la nacelle. Le rat le retourne du pied et ne dit rien pendant un moment : sous l aile, la meme soudure noire que dans la poitrine du Gardien. Les Sky Lands ne sont pas sauvages. Elles sont un atelier."
 intro_story = &"lvl_17_intro"
 outro_story = &"lvl_17_outro"
 terrain = "grass"

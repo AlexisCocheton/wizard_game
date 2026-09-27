@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_1c2yi"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6yf6x"]
 
-[sub_resource type="Resource" id="Resource_7dea0"]
-script = ExtResource("1_ipb8u")
-enemy = ExtResource("2_lbxlf")
-count = 1
-spawn_delay = 1.0
-start_offset = 0.0
-
-[sub_resource type="Resource" id="Resource_gsgvq"]
+[sub_resource type="Resource" id="Resource_ipb8u"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("3_bpgse")
 count = 1
 spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_lbxlf"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("2_lbxlf")
+count = 1
+spawn_delay = 1.0
 start_offset = 0.6
 
-[sub_resource type="Resource" id="Resource_btljk"]
+[sub_resource type="Resource" id="Resource_bpgse"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("4_jg3n8")
 count = 1
 spawn_delay = 1.0
 start_offset = 1.2
 
-[sub_resource type="Resource" id="Resource_r3nqk"]
+[sub_resource type="Resource" id="Resource_jg3n8"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("5_1c2yi")
 count = 2
@@ -39,7 +39,7 @@ start_offset = 20.0
 script = ExtResource("6_6yf6x")
 id = &"w19_5_boss"
 duration = 45.0
-entries = Array[ExtResource("1_ipb8u")]([SubResource("Resource_7dea0"), SubResource("Resource_gsgvq"), SubResource("Resource_btljk"), SubResource("Resource_r3nqk")])
+entries = Array[ExtResource("1_ipb8u")]([SubResource("Resource_ipb8u"), SubResource("Resource_lbxlf"), SubResource("Resource_bpgse"), SubResource("Resource_jg3n8")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true

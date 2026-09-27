@@ -170,13 +170,8 @@ id = &"lvl_08"
 display_name = "La route du maire"
 act = 1
 subtitle = "Ce n est pas la foret qui est attaquee"
-intro_text = "Le maire s est tu pendant des mois. Ce n est pas Nuri qui 
-tombe, c est toute l ile, et ca vient d en haut. Entre la grange et la clairiere, la 
-route grouille : des gelees qui se coupent en deux, des ruches qui eclatent. Frappe 
-large ou ne frappe pas."
-outro_text = "Au bout de la route, une carcasse de dirigeable coincee dans 
-les arbres. Elle fume encore, et quelque chose tape dedans avec un outil. Loin 
-derriere, dans la foret, quelque chose de tres grand se met debout."
+intro_text = "Le maire s est tu pendant des mois. Ce n est pas Nuri qui tombe, c est toute l ile, et ca vient d en haut. Entre la grange et la clairiere, la route grouille : des gelees qui se coupent en deux, des ruches qui eclatent. Frappe large ou ne frappe pas."
+outro_text = "Au bout de la route, une carcasse de dirigeable coincee dans les arbres. Elle fume encore, et quelque chose tape dedans avec un outil. Loin derriere, dans la foret, quelque chose de tres grand se met debout."
 intro_story = &"lvl_08_intro"
 outro_story = &"lvl_08_outro"
 terrain = "grass"
