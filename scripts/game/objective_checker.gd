@@ -326,6 +326,121 @@ static func evaluate(objective: ObjectiveDef) -> bool:
 	return false
 
 
+# --- Suivi EN COMBAT (HUD) ------------------------------------------------------
+#
+# Le bandeau d objectifs du HUD lit ces trois fonctions. Elles ne jugent pas la
+# victoire (c est evaluate()) : elles disent au joueur OU il en est, et quand un
+# objectif est DEJA perdu. Sans elles le joueur decouvrait a l ecran de victoire
+# qu il avait rate une etoile a la vague 1 — trop tard pour changer de jeu.
+
+## Libelle COURT pour le HUD, ou la place manque : le libelle complet (label())
+## fait jusqu a 45 caracteres, soit la moitie de l ecran a la plus petite police.
+static func short_label(o: ObjectiveDef) -> String:
+	if o == null or not validate(o).is_empty():
+		return o.description if o != null else ""
+	match o.check_key:
+		&"never_dropped_speed": return "Vitesse max"
+		&"no_legendary_used": return "Sans legendaire"
+		&"no_damage_taken": return "Sans degats"
+		&"same_card_casts": return "Meme sort"
+		&"win_below_speed": return "Sous %d %%" % _int(o, "pct")
+		&"multi_kill": return "Serie en %s" % _duration(_num(o, "window"))
+		&"no_card_key": return "Sans %s" % EFFECT_PHRASES[StringName(_param(o, "key"))]
+		&"no_card_tag":
+			return "Sans sort %s" % _of_tag(tag_from_name(_param(o, "tag")), false)
+		&"element_casts":
+			return "Sorts %s" % _of_tag(tag_from_name(_param(o, "element")), true)
+		&"kill_flying": return "Volants"
+		&"boss_quick_after_revive": return "Releve acheve"
+		&"never_hit_reflect": return "Sans renvoi"
+		&"no_enemy_past": return "Ligne tenue"
+		&"win_under_time": return "Chrono"
+		&"max_distinct_cast": return "Sorts differents"
+		&"no_passive": return "Sans passif"
+	return o.description
+
+
+## Avancement d un objectif QUI SE COMPTE : {"current", "target", "time"}.
+## Vide pour un objectif qui ne se compte pas (une interdiction, un etat final) :
+## il n a rien a afficher tant qu il n est pas perdu.
+##
+## `time` = vrai quand les deux valeurs sont des secondes (win_under_time) : le
+## HUD les ecrit en minutes, "83/180" ne se lit pas comme une duree.
+static func progress(o: ObjectiveDef) -> Dictionary:
+	if o == null or not validate(o).is_empty():
+		return {}
+	match o.check_key:
+		&"same_card_casts":
+			return {"current": RunState.max_same_card_casts(), "target": _int(o, "count"),
+				"time": false}
+		&"multi_kill":
+			# Le RECORD de la partie : une serie reussie reste acquise meme si les
+			# morts suivantes s etalent.
+			return {"current": RunState.best_kill_burst(_num(o, "window")),
+				"target": _int(o, "count"), "time": false}
+		&"element_casts":
+			return {"current": RunState.casts_with_tag(tag_from_name(_param(o, "element"))),
+				"target": _int(o, "count"), "time": false}
+		&"kill_flying":
+			return {"current": RunState.flying_kills, "target": _int(o, "count"),
+				"time": false}
+		&"max_distinct_cast":
+			# Un PLAFOND et non un but : le compte monte vers la limite a ne pas
+			# franchir. is_failed() le declare perdu des qu il la depasse.
+			return {"current": RunState.distinct_cards_cast(), "target": _int(o, "count"),
+				"time": false}
+		&"win_under_time":
+			return {"current": RunState.run_time, "target": _num(o, "seconds"), "time": true}
+	return {}
+
+
+## L objectif est-il DEJA perdu, quoi qu il arrive d ici la victoire ?
+##
+## LA REGLE : on ne declare perdu que sur un fait IRREVERSIBLE — un compteur qui
+## ne redescend jamais dans une partie. Annoncer « rate » puis voir l etoile
+## tomber a la victoire serait pire que ne rien dire : le joueur aurait lache
+## l objectif sur la foi d un faux signal. Donc, pour chaque cle ici,
+## is_failed() vrai IMPLIQUE evaluate() faux a la victoire (verrouille par
+## test_objective_progress.gd).
+##
+## Ne sont jamais declares perdus en cours de route : ce qui peut encore etre
+## atteint (compter plus, tuer plus) et ce qui se juge sur l etat FINAL
+## (win_below_speed : la vitesse peut encore baisser).
+static func is_failed(o: ObjectiveDef) -> bool:
+	if o == null or not validate(o).is_empty():
+		return false
+	match o.check_key:
+		&"never_dropped_speed":
+			return RunState.speed_dropped
+		&"no_legendary_used":
+			return RunState.used_legendary
+		&"no_damage_taken":
+			return RunState.took_any_damage
+		&"no_card_key":
+			return RunState.casts_with_effect(StringName(_param(o, "key"))) > 0
+		&"no_card_tag":
+			return RunState.casts_with_tag(tag_from_name(_param(o, "tag"))) > 0
+		&"boss_quick_after_revive":
+			# Un releve acheve trop tard, ou un releve encore debout depuis plus
+			# longtemps que le delai : dans les deux cas il ne peut plus l etre a temps.
+			var s: float = _num(o, "seconds")
+			for d: float in RunState.revive_kill_delays:
+				if d >= s:
+					return true
+			return RunState.revived_oldest_age() >= s
+		&"never_hit_reflect":
+			return RunState.reflect_hits > 0
+		&"no_enemy_past":
+			return RunState.enemy_depth_max > _num(o, "ratio")
+		&"win_under_time":
+			return RunState.run_time >= _num(o, "seconds")
+		&"max_distinct_cast":
+			return RunState.distinct_cards_cast() > _int(o, "count")
+		&"no_passive":
+			return not RunState.equipped_passives.is_empty()
+	return false
+
+
 # --- Libelle joueur -----------------------------------------------------------
 
 ## Le texte affiche au joueur (briefing, carte de campagne, victoire). Genere

@@ -174,6 +174,9 @@ func _run_all() -> void:
 	await _check_precast()
 	await _check_upgrade_panel()
 	await _check_cartes_petrifiees()
+	await _showcase_mecaniques_v3()
+	await _check_objectifs_en_combat()
+	await _showcase_miroir()
 	await _check_end_screens()
 	await _check_cosmetics_in_battle()
 	_check_massacre_deck()
@@ -1049,49 +1052,364 @@ func _check_cartes_petrifiees() -> void:
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()
 	add_child(g)
-	g.running = false
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
 	if level == null:
 		_fail("cartes petrifiees : lvl_01 introuvable")
 		g.queue_free()
 		return
 	g.start_level(level, GameEnums.Mode.EXPLORATION)
+	# APRES start_level, qui remet `running` a vrai. Pose avant, il etait ecrase :
+	# la partie tournait pendant les images d attente de la capture, et le terrain
+	# (sans gorgone) remettait le nombre de regards a zero a chaque image — la
+	# capture `main_petrifiee` ne montrait AUCUNE carte petrifiee.
+	g.running = false
 	for k in 6:
 		g.battlefield.simulate(FIXED_DELTA)
 
-	# La main de DEPART fait GameConfig.START_HAND_SIZE cartes, pas un nombre
-	# fixe : ce controle exigeait 3 cartes en dur et a rougi des que le testeur
-	# a ramene le depart a 2. On pioche donc de quoi travailler au lieu de
-	# supposer une taille — un test qui impose une valeur de reglage empeche
-	# justement de la regler.
-	var voulu: int = mini(3, GameConfig.MAX_HAND_SIZE)
-	if RunState.hand.size() < voulu:
-		RunState.draw(voulu - RunState.hand.size())
-	if RunState.hand.size() < 2:
-		_fail("cartes petrifiees : main trop courte (%d), le deck est-il vide ?"
-			% RunState.hand.size())
+	# UNE MAIN AVEC DOUBLONS : c est le cas que l ancien registre ratait. Les
+	# copies d une carte partagent la meme ressource ; geler « la carte » gelait
+	# toutes ses copies (deux regards, quatre cartes grises). Trois cartes
+	# distinctes du deck du niveau, reparties pour que les deux cartes gelees
+	# (les plus a droite) aient chacune une jumelle LIBRE plus a gauche.
+	var distinctes: Array[SpellCard] = []
+	for c: SpellCard in level.exploration_deck:
+		if c != null and not c.is_passive and not distinctes.has(c):
+			distinctes.append(c)
+	if distinctes.size() < 3:
+		_fail("cartes petrifiees : le deck de lvl_01 compte moins de 3 sorts differents")
 		g.queue_free()
 		return
-	# Deux regards : la Matrone en gele deux. Le plafond garde une carte
-	# jouable, donc sur une main de 2 une seule peut geler.
-	RunState.set_card_block_count(2)
-	var attendu_gel: int = mini(2, maxi(0,
-		RunState.hand.size() - RunState.MIN_PLAYABLE_CARDS))
-	var bloquees: int = RunState.blocked_count()
-	if bloquees != attendu_gel:
-		_fail("cartes petrifiees : %d gelees au lieu de %d (main de %d)"
-			% [bloquees, attendu_gel, RunState.hand.size()])
+	var a: SpellCard = distinctes[0]
+	var b: SpellCard = distinctes[1]
+	var c3: SpellCard = distinctes[2]
+	RunState.hand.clear()
+	for card: SpellCard in [a, b, c3, a, b, a]:
+		if RunState.hand.size() < GameConfig.MAX_HAND_SIZE:
+			RunState.hand.append(card)
+	RunState.hand_changed.emit()
+
 	# LE PLAFOND : il doit toujours rester une carte jouable, quoi qu il arrive.
 	RunState.set_card_block_count(99)
-	var restantes: int = RunState.hand.size() - RunState.blocked_count()
+	var restantes: int = 0
+	for i in RunState.hand.size():
+		if not RunState.is_slot_blocked(i):
+			restantes += 1
 	if restantes < RunState.MIN_PLAYABLE_CARDS:
 		_fail("cartes petrifiees : %d carte(s) jouable(s), le plafond ne tient pas"
 			% restantes)
-	RunState.hand_changed.emit()
+	# Deux regards : la Matrone en gele deux. EXEMPLAIRES, pas cartes.
+	RunState.set_card_block_count(2)
+	var attendu_gel: int = mini(2, maxi(0,
+		RunState.hand.size() - RunState.MIN_PLAYABLE_CARDS))
+	if RunState.blocked_count() != attendu_gel:
+		_fail("cartes petrifiees : %d gelees au lieu de %d (main de %d)"
+			% [RunState.blocked_count(), attendu_gel, RunState.hand.size()])
 	await get_tree().process_frame
+	# CE QUE L ECRAN MONTRE : autant de cartes marquees que d exemplaires geles.
+	# C est le controle qui rougit sur le defaut d origine (4 marquees pour 2).
+	var marquees: int = _cartes_marquees(g, "Petrifiee")
+	if marquees != attendu_gel:
+		_fail("cartes petrifiees : %d cartes marquees a l ecran pour %d exemplaires geles"
+			% [marquees, attendu_gel])
 	await _shot("main_petrifiee")
 	g.queue_free()
 	await get_tree().process_frame
+
+
+## Cartes de la main du HUD qui portent le bandeau `nom` ("Petrifiee", "Volee",
+## "Sommeil"). Les cartes en cours de liberation (reconstruction de la main dans
+## la meme image) ne comptent pas.
+func _cartes_marquees(g: GameController, nom: String) -> int:
+	var hud: Node = g.get_node_or_null("HUD")
+	if hud == null:
+		return -1
+	var main: Node = hud.get("_hand")
+	if main == null:
+		return -1
+	var n: int = 0
+	for cv in main.get_children():
+		if cv.is_queued_for_deletion():
+			continue
+		if cv.get_node_or_null(nom) != null:
+			n += 1
+	return n
+
+
+## VITRINE DES MECANIQUES v3 — ce que deux chantiers n avaient capture qu avec
+## des sondes jetables : la marque de renaissance, le Zzz du dormeur et la main
+## grisee qu il impose, le laser de riposte, le fantome de l Horloger, la carte
+## VOLEE. Une sonde jetable ne protege rien : le prochain changement de Fx ou du
+## HUD pouvait effacer l un de ces signaux sans qu aucun etage ne bronche.
+##
+## Des EnemyDef CONSTRUITS ICI plutot que ceux du contenu : le contenu de ces
+## monstres arrive en parallele, et une vitrine qui dependrait d un id de
+## contenu disparaitrait avec lui. Seules les feuilles (anim_key) viennent du
+## catalogue, pour que la capture montre de vrais monstres.
+##
+## Une partie COMPLETE (start_level) et non un terrain nu : la carte volee et la
+## main grisee vivent dans le HUD, que seul start_level branche.
+func _showcase_mecaniques_v3() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if level == null:
+		_fail("vitrine v3 : lvl_01 introuvable")
+		g.queue_free()
+		return
+	g.start_level(level, GameEnums.Mode.EXPLORATION)
+	g.running = false          # apres start_level, voir _check_cartes_petrifiees
+	var bf: Battlefield = g.battlefield
+	bf.clear_all()             # la vague 1 du niveau ne doit pas se meler a la planche
+	RunState.draw(GameConfig.MAX_HAND_SIZE)
+	# Le voleur vise la carte la plus LONGUE : on lui en garantit une, sinon sur
+	# une main de copies egales il prendrait la premiere et la capture ne dirait
+	# rien de sa regle.
+	if RunState.hand.size() < 3:
+		_fail("vitrine v3 : main de %d cartes, le voleur n aurait rien a prendre"
+			% RunState.hand.size())
+
+	# 1) RENAISSANCE : tue tout de suite, la marque reste au sol (delai long).
+	var ne := _def_v3("vitrine_ne", "slime_ghost", 20.0, 0.0)
+	var fantome := _def_v3("vitrine_renaissance", "slime_ghost", 20.0, 0.0)
+	fantome.rebirth_def = ne
+	fantome.rebirth_count = 2
+	fantome.rebirth_delay = 60.0
+	var f: Enemy = bf.spawn_enemy(fantome, 230.0, 1.0, Vector2(230.0, 380.0))
+	# L Horloger fixe la duree de la scene : on attend qu il approche de son
+	# retour (son fantome s allume a l approche) sans l atteindre.
+	# Il marche VITE : a allure normale, deux secondes de retour ne l ecartaient
+	# que d un demi-corps de son fantome, et la capture les confondait.
+	var horloger := _def_v3("vitrine_horloger", "demon", 400.0, 250.0)
+	horloger.rewind_interval = 6.0
+	horloger.rewind_seconds = 2.0
+	var attente: float = Enemy._rewind_period(horloger) * 0.8
+	# 2) SOMMEIL : s endort vers la FIN de l attente. Un sommeil est plafonne
+	#    (Enemy.SLEEP_MAX_DURATION) et suivi d une fenetre de magie garantie : endormi
+	#    trop tot, le renard etait deja reveille a la capture.
+	var dormeur := _def_v3("vitrine_sommeil", "fox", 400.0, 0.0)
+	dormeur.sleep_interval = attente * 0.8
+	dormeur.sleep_duration = Enemy.SLEEP_MAX_DURATION
+	bf.spawn_enemy(dormeur, 850.0, 1.0, Vector2(850.0, 380.0))
+	# 3) VOLEUR : prend une carte, et ne la lance pas avant la capture.
+	var voleur := _def_v3("vitrine_voleur", "mageguardian_magenta", 400.0, 0.0)
+	voleur.steal_interval = 0.4
+	voleur.steal_cast_delay = 60.0
+	voleur.steal_damage_per_cast_second = 1.0
+	var v: Enemy = bf.spawn_enemy(voleur, 540.0, 1.0, Vector2(540.0, 560.0))
+	# 4) HORLOGER : il marche ; son fantome reste la ou il reviendra.
+	var h: Enemy = bf.spawn_enemy(horloger, 820.0, 1.0, Vector2(820.0, 420.0))
+	# 5) LASER : un coup recu, un rayon vers le mage. Tire en DERNIER, juste
+	#    avant la capture : le rayon ne dure qu une fraction de seconde.
+	var golem := _def_v3("vitrine_laser", "mechagolem", 5000.0, 0.0)
+	golem.laser_damage = 1
+	golem.laser_cooldown = 1.0
+	var l: Enemy = bf.spawn_enemy(golem, 250.0, 1.0, Vector2(250.0, 900.0))
+	if f == null or v == null or h == null or l == null:
+		_fail("vitrine v3 : un monstre construit n a pas pu naitre")
+		g.queue_free()
+		return
+
+	f.take_damage(99999.0, [])
+	# Assez de temps de monde pour que le dormeur s endorme, que le voleur vole,
+	# et que l Horloger s approche de son retour sans l atteindre.
+	var t: float = 0.0
+	while t < attente:
+		bf.simulate(FIXED_DELTA)
+		t += SpeedGauge.world_delta(FIXED_DELTA)
+
+	# CONTROLES MOTEUR (valent aussi en headless).
+	if bf.pending_rebirth_count() != 1:
+		_fail("vitrine v3 : %d marque(s) de renaissance au sol au lieu de 1"
+			% bf.pending_rebirth_count())
+	if not RunState.is_silenced():
+		_fail("vitrine v3 : le dormeur ne coupe pas la magie")
+	if v.stolen_card() == null:
+		_fail("vitrine v3 : le voleur n a rien vole")
+	if h.rewinds_done() != 0:
+		_fail("vitrine v3 : l Horloger est deja revenu, le fantome ne se verrait plus")
+
+	_etiquette_v3(bf, Vector2(230.0, 380.0), "renaissance\n(marque au sol)")
+	_etiquette_v3(bf, Vector2(850.0, 380.0), "sommeil (Zzz)\nmain grisee")
+	_etiquette_v3(bf, Vector2(540.0, 560.0), "voleur\n(carte VOLEE)")
+	_etiquette_v3(bf, h.position, "Horloger\n(fantome = retour)")
+	_etiquette_v3(bf, Vector2(250.0, 900.0), "laser de riposte")
+
+	var tirs: int = bf.lasers_fired
+	bf._hit(l, 1.0, [])
+	if bf.lasers_fired != tirs + 1:
+		_fail("vitrine v3 : le coup n a pas declenche de laser")
+
+	if _visual:
+		await get_tree().process_frame
+		# CONTROLES D AFFICHAGE : chaque signal doit EXISTER, pas seulement sa regle.
+		var ghost: Node2D = h.get("_rewind_ghost")
+		if ghost == null:
+			_fail("vitrine v3 : l Horloger n a pas de fantome")
+		elif ghost.global_position.distance_to(h.global_position) < h.visual_radius():
+			_fail("vitrine v3 : le fantome de l Horloger se confond avec lui")
+		var zzz: bool = false
+		for e in bf.enemies:
+			if e != null and is_instance_valid(e) and e.is_sleeping() and e.get("_v3_zzz") != null:
+				zzz = true
+		if not zzz:
+			_fail("vitrine v3 : le dormeur ne porte pas de Zzz")
+		if _cartes_marquees(g, "Volee") != 1:
+			_fail("vitrine v3 : %d carte(s) marquee(s) VOLEE au lieu de 1"
+				% _cartes_marquees(g, "Volee"))
+		if _cartes_marquees(g, "Sommeil") < 1:
+			_fail("vitrine v3 : aucune carte marquee SOMMEIL dans la main")
+		await _shot("vitrine_mecaniques_v3")
+	g.queue_free()
+	await get_tree().process_frame
+	# Le laser a coute un point de vitesse au mage : les ecrans suivants
+	# repartent d une jauge neuve.
+	SpeedGauge.reset()
+
+
+## LE BANDEAU D OBJECTIFS EN COMBAT, sur un vrai HUD.
+##
+## Aucun niveau de la partie autoplay n a d objectif qui se compte (lvl_01 n a
+## que des interdictions, qui ne s affichent qu une fois perdues) : la capture
+## de bataille ne montrait donc jamais le bandeau. On pose ici un niveau aux
+## trois objectifs representatifs — deux comptes et une interdiction qu on fait
+## perdre — et on passe par le VRAI chemin : GameController.simulate ->
+## RunState.advance_clock -> objective_failed -> HUD.
+func _check_objectifs_en_combat() -> void:
+	var base: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if base == null:
+		_fail("objectifs en combat : lvl_01 introuvable")
+		return
+	var level: LevelDef = base.duplicate()
+	var meme := _objectif_vitrine(&"vitrine_meme_sort", &"same_card_casts", {"count": 30})
+	var vol := _objectif_vitrine(&"vitrine_volants", &"kill_flying", {"count": 5})
+	var intact := _objectif_vitrine(&"vitrine_intact", &"no_damage_taken", {})
+	var objs: Array[ObjectiveDef] = [meme, vol, intact]
+	level.objectives = objs
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	add_child(g)
+	g.start_level(level, GameEnums.Mode.EXPLORATION)
+	g.running = false          # apres start_level, voir _check_cartes_petrifiees
+	# Des monstres sous le bandeau : c est la qu ils apparaissent, la capture
+	# doit montrer que le texte ne les cache pas.
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	if gnome != null:
+		for k in 4:
+			g.battlefield.spawn_enemy(gnome, 600.0 + k * 130.0, 1.0,
+				Vector2(600.0 + k * 130.0, 230.0 + (k % 2) * 60.0))
+	var carte: SpellCard = RunState.hand[0] if not RunState.hand.is_empty() else null
+	# Un lancer de MOINS que le palier d amelioration : au palier, l ecran modal
+	# d amelioration s ouvre et recouvre la capture (vu au premier essai).
+	if carte != null:
+		for i in GameConfig.CARD_UPGRADE_CASTS - 1:
+			RunState.note_cast(carte)
+	var volant := EnemyDef.new()
+	volant.flying = true
+	for i in 3:
+		RunState.note_kill(volant)
+	RunState.note_damage_taken(gnome)
+	for k in 3:
+		g.simulate(FIXED_DELTA)
+	if not RunState.is_objective_failed(intact.id):
+		_fail("objectifs en combat : le coup recu n a pas fait perdre « sans degats »")
+	var hud: Node = g.get_node_or_null("HUD")
+	var lignes: Dictionary = hud.get("_obj_lines") if hud != null else {}
+	if lignes.size() != objs.size():
+		_fail("objectifs en combat : %d lignes au bandeau pour %d objectifs"
+			% [lignes.size(), objs.size()])
+	else:
+		var l_vol: Label = lignes[vol]
+		var l_int: Label = lignes[intact]
+		if not l_vol.visible or not l_vol.text.ends_with("3/5"):
+			_fail("objectifs en combat : volants affiches '%s'" % l_vol.text)
+		if not l_int.visible or not l_int.text.ends_with("rate"):
+			_fail("objectifs en combat : l echec ne s affiche pas ('%s')" % l_int.text)
+	await get_tree().process_frame
+	await _shot("objectifs_en_combat")
+	g.queue_free()
+	await get_tree().process_frame
+	SpeedGauge.reset()
+
+
+func _objectif_vitrine(id: StringName, key: StringName, params: Dictionary) -> ObjectiveDef:
+	var o := ObjectiveDef.new()
+	o.id = id
+	o.check_key = key
+	o.params = params
+	return o
+
+
+## LE MIROIR DE FORGE avec une APPRENTIE jouee : il doit etre son reflet, pas
+## celui du vieux mage. Le mage en bas de l ecran et le Miroir en haut doivent
+## porter la meme silhouette.
+func _showcase_miroir() -> void:
+	var miroir: EnemyDef = ContentDB.enemies.get(&"glass_mirror")
+	var apprentie: AccountRewardDef = null
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.is_apprentice():
+			apprentie = r
+			break
+	if miroir == null or apprentie == null:
+		_fail("vitrine miroir : Miroir de Forge ou apprentie introuvable")
+		return
+	# Le profil est rendu tel quel apres la vitrine : les controles suivants
+	# (cosmetiques du mage) supposent le mage equipe.
+	var profil: Dictionary = SaveData.to_dictionary()
+	SaveData.set_tester_mode(true)
+	if not SaveData.equip_cosmetic(apprentie.id):
+		_fail("vitrine miroir : %s ne s equipe pas" % apprentie.id)
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
+	g.start_level(level, GameEnums.Mode.EXPLORATION)
+	g.running = false
+	g.battlefield.clear_all()
+	var e: Enemy = g.battlefield.spawn_enemy(miroir, 540.0, 1.0, Vector2(540.0, 700.0))
+	if e == null:
+		_fail("vitrine miroir : le Miroir ne nait pas")
+	elif String(e.sheet_key()) != apprentie.texture_name:
+		_fail("vitrine miroir : le Miroir porte %s au lieu de %s"
+			% [e.sheet_key(), apprentie.texture_name])
+	elif _visual:
+		var anim: AnimatedSprite2D = e.get("_anim")
+		if anim == null or anim.sprite_frames != AnimCatalog.frames(StringName(apprentie.texture_name)):
+			_fail("vitrine miroir : le sprite du Miroir n est pas celui de l apprentie")
+	_etiquette_v3(g.battlefield, Vector2(540.0, 700.0),
+		"Miroir de Forge\nreflet de : %s" % apprentie.texture_name)
+	await _laisser_jouer(0.2)
+	await _shot("vitrine_miroir_apprentie")
+	g.queue_free()
+	await get_tree().process_frame
+	SaveData.load_from_dictionary(profil)
+	SaveData.set_tester_mode(false)
+
+
+func _def_v3(id: String, sheet: String, hp: float, speed: float) -> EnemyDef:
+	var d := EnemyDef.new()
+	d.id = StringName(id)
+	d.display_name = id
+	d.kind = GameEnums.EnemyKind.NORMAL
+	d.max_hp = hp
+	d.base_speed = speed
+	d.base_radius = 40.0
+	d.power = 2
+	d.anim_key = StringName(sheet)
+	return d
+
+
+func _etiquette_v3(bf: Node2D, at: Vector2, texte: String) -> void:
+	var l := Label.new()
+	l.text = texte
+	l.add_theme_font_size_override(&"font_size", 24)
+	l.add_theme_color_override(&"font_color", Color(0.05, 0.05, 0.08))
+	l.position = at + Vector2(-150.0, 70.0)
+	l.size = Vector2(300.0, 60.0)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bf.add_child(l)
 
 
 func _check_upgrade_panel() -> void:
