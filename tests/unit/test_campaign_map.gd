@@ -39,6 +39,11 @@ func run() -> void:
 	_test_l_ouverture_se_cale_sur_l_acte_en_cours()
 	_test_le_panneau_bascule_carte_detail()
 	_test_les_noms_d_actes_suivent_le_document()
+	_test_chaque_niveau_a_son_illustration()
+	_test_aucune_silhouette_ne_se_repete_sur_une_page()
+	_test_un_niveau_a_boss_montre_son_boss()
+	_test_le_verrouille_se_lit_verrouille()
+	_test_le_medaillon_se_lit_sur_un_telephone()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 
@@ -341,3 +346,128 @@ func _test_les_noms_d_actes_suivent_le_document() -> void:
 			ok(affiche.to_lower().contains(sans_accent),
 				"l acte %d affiche \"%s\" et le document dit \"%s\" (mot manquant : %s)"
 				% [acte, affiche, attendu, sans_accent])
+
+
+# --- UI-007 : l illustration de chaque niveau ---
+
+## Chaque niveau du catalogue porte une silhouette, et elle a une image. Un
+## medaillon vide sur 21 se lirait comme un niveau casse.
+func _test_chaque_niveau_a_son_illustration() -> void:
+	var m: CampaignMap = _map()
+	for id in ContentDB.levels.keys():
+		var sig: EnemyDef = m.signature_of(StringName(id))
+		ok(sig != null, "%s a un monstre signature" % id)
+		if sig == null:
+			continue
+		ok(AnimCatalog.has(sig.anim_key), "%s : la signature %s a une feuille" % [id, sig.id])
+		ok(CampaignMap.portrait(sig.anim_key) != null,
+			"%s : le portrait de %s se construit" % [id, sig.anim_key])
+	# Ce que le joueur VOIT : chaque medaillon de chaque page porte l image.
+	for a in m.acts():
+		m.show_act(a)
+		for id in m.levels_in_act(a):
+			var medal: Control = m.medallion_for(id)
+			ok(medal != null, "%s a un medaillon a l ecran" % id)
+			if medal == null:
+				continue
+			var art: TextureRect = medal.find_child("Silhouette", true, false) as TextureRect
+			ok(art != null and art.texture != null, "%s : le medaillon montre la silhouette" % id)
+	detach(m)
+
+
+## LA regle de distinction : une page = un acte, et sur une page deux niveaux
+## n ont jamais la meme silhouette. Sans elle l acte V montrait deux fois le
+## Juggernaut (deux de ses niveaux n ont pas de boss, et le monstre le plus fort
+## de leur pool est le boss du troisieme).
+func _test_aucune_silhouette_ne_se_repete_sur_une_page() -> void:
+	var m: CampaignMap = _map()
+	var distinctes: Dictionary = {}
+	for a in m.acts():
+		var vus: Dictionary = {}
+		for id in m.levels_in_act(a):
+			var sig: EnemyDef = m.signature_of(id)
+			if sig == null:
+				continue
+			var cle: String = String(sig.anim_key)
+			not_ok(vus.has(cle), "acte %d : %s reprend la silhouette %s de %s" % [
+				a, id, cle, vus.get(cle, "")])
+			vus[cle] = id
+			distinctes[cle] = true
+	# Plus de la moitie des niveaux doivent avoir une silhouette propre a TOUT
+	# le jeu : sans ce plancher, une regle qui ne garantirait que l unicite par
+	# page pourrait donner le meme boss a chaque acte sans rougir.
+	ok(distinctes.size() * 2 > ContentDB.levels.size(),
+		"%d silhouettes distinctes pour %d niveaux" % [distinctes.size(), ContentDB.levels.size()])
+	detach(m)
+
+
+## Un niveau qui a une vague de boss est illustre par CE boss, le plus puissant
+## de la vague. Eviter un doublon entre deux actes ne justifie jamais de lui
+## substituer un sbire : l illustration mentirait sur ce qu on va affronter.
+func _test_un_niveau_a_boss_montre_son_boss() -> void:
+	var m: CampaignMap = _map()
+	var controles: int = 0
+	for id in ContentDB.levels.keys():
+		var lv: LevelDef = ContentDB.levels[id]
+		var boss: Array[EnemyDef] = []
+		for w in lv.waves:
+			if w != null and w.is_boss:
+				for e in w.enemy_defs():
+					if e != null and not e.projectile and AnimCatalog.has(e.anim_key):
+						boss.append(e)
+		if boss.is_empty():
+			continue
+		var fort: int = 0
+		for e in boss:
+			fort = maxi(fort, e.power)
+		var sig: EnemyDef = m.signature_of(StringName(id))
+		ok(sig != null and boss.has(sig), "%s est illustre par un monstre de sa vague de boss" % id)
+		if sig != null:
+			eq(sig.power, fort, "%s : c est le plus puissant de la vague (%s)" % [id, sig.id])
+		controles += 1
+	ok(controles > 0, "au moins un niveau a boss a ete controle")
+	detach(m)
+
+
+## Verrouille = une OMBRE : la silhouette garde sa forme mais perd ses couleurs.
+## Jouable = la silhouette en couleurs. Mesure sur la teinte appliquee, pas sur
+## l intention : un modulate oublie rendrait tous les niveaux « ouverts ».
+func _test_le_verrouille_se_lit_verrouille() -> void:
+	SaveData.reset_profile()
+	var m: CampaignMap = _map()
+	m.show_act(1)
+	var ouvert: Control = m.medallion_for(&"lvl_01")
+	var ferme: Control = m.medallion_for(&"lvl_02")
+	ok(ouvert != null and ferme != null, "les deux medaillons de l acte I existent")
+	if ouvert != null and ferme != null:
+		var a_ouv: TextureRect = ouvert.find_child("Silhouette", true, false)
+		var a_fer: TextureRect = ferme.find_child("Silhouette", true, false)
+		# Bornes en dur : 0.2 est une ombre quelle que soit la feuille, 0.5 une
+		# image dont on voit les couleurs.
+		ok(a_fer.modulate.get_luminance() < 0.2,
+			"le niveau verrouille montre une ombre (luminance %.2f)" % a_fer.modulate.get_luminance())
+		ok(a_ouv.modulate.get_luminance() > 0.5,
+			"le niveau jouable montre ses couleurs (luminance %.2f)" % a_ouv.modulate.get_luminance())
+		ok(ouvert.find_child("IciHalo", true, false) != null,
+			"le niveau en cours porte le halo « tu es ici »")
+		ok(ferme.find_child("IciHalo", true, false) == null,
+			"un niveau verrouille ne porte jamais le halo")
+	detach(m)
+
+
+## Taille : une silhouette de boss doit se reconnaitre sur un telephone, et la
+## cible rester touchable au doigt. Bornes en dur, pas les constantes : un test
+## qui relit DOT_SIZE passerait quelle que soit sa valeur.
+func _test_le_medaillon_se_lit_sur_un_telephone() -> void:
+	var m: CampaignMap = _map()
+	m.show_act(1)
+	var medal: Control = m.medallion_for(&"lvl_01")
+	ok(medal != null, "le medaillon du niveau 1 existe")
+	if medal != null:
+		ok(medal.custom_minimum_size.x >= 130.0 and medal.custom_minimum_size.y >= 130.0,
+			"le medaillon fait au moins 130 px (%s)" % medal.custom_minimum_size)
+		var b: Control = medal.get_parent().get_parent() as Control
+		ok(b is Button, "le medaillon est porte par le bouton du niveau")
+		if b != null:
+			ok(b.size.x >= 90.0 and b.size.y >= 90.0, "la cible tactile depasse 90 px")
+	detach(m)

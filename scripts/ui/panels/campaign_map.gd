@@ -6,15 +6,25 @@ extends Control
 ##   |  ####  bande decoree du fond de l acte  ########  |
 ##   |                                                   |
 ##   |         ACTE II  -  Le Grand Cimetiere            |
-##   | +-+                                         +-+   |
-##   | |<|     (o) Ossuaire des Marees             |>|   |
-##   | +-+     * * .                               +-+   |
-##   |                                                   |
-##   |              (o) Le Grand Appel                   |
-##   |              . . .                                |
+##   | +-+    .----.                               +-+   |
+##   | |<|   ( BOSS ) Ossuaire des                 |>|   |
+##   | +-+    `----'  Marees   * * .               +-+   |
+##   |                     .----.                        |
+##   |                    ( BOSS ) Le Grand Appel        |
+##   |                     `----'  . . .                 |
 ##   |                                                   |
 ##   |  ####  premier plan du fond  ###################   |
 ##   +--------------------------------------------------+
+##
+## CHAQUE NIVEAU PORTE LA SILHOUETTE DE SON MONSTRE SIGNATURE (UI-007)
+## ------------------------------------------------------------------
+## Deux illustrations etaient possibles : un medaillon recadre dans le fond du
+## lieu, ou la silhouette du boss. Le fond est PAR ACTE (5 images pour 21
+## niveaux) : tous les medaillons d une meme page auraient montre le meme
+## decor, c est-a-dire exactement ce qu on cherche a distinguer. Le boss, lui,
+## est propre au niveau, c est ce que le joueur affronte et retient (« le niveau
+## de la gorgone »), et le jeu en a deja les feuilles animees. `signature_of`
+## garantit en plus qu aucune silhouette ne se repete SUR UNE PAGE.
 ##
 ## POURQUOI un ecran par acte et non plus un defilement vertical : demande du
 ## testeur, mot pour mot — « utilise les fonds de combat pour l image de fond de
@@ -33,12 +43,22 @@ extends Control
 
 signal level_pressed(level_id: StringName)
 
-## Un point de niveau. 96 px de diametre, mais la CIBLE TACTILE est le bouton qui
-## le porte (DOT_HIT), largement au-dessus des 90 px du cahier des charges : le
-## joueur vise le point ET son etiquette.
-const DOT_SIZE: float = 96.0
-const DOT_HIT_W: float = 420.0
-const DOT_HIT_H: float = 190.0
+## Un niveau = un MEDAILLON de 150 px qui porte la silhouette de son monstre
+## signature (voir `signature_of`). La CIBLE TACTILE est le bouton qui porte le
+## medaillon ET son etiquette (DOT_HIT), largement au-dessus des 90 px du cahier
+## des charges.
+##
+## Pourquoi 150 et plus 96 : a 96 px une silhouette de boss n est plus qu une
+## tache, on ne reconnait pas la gorgone du golem sur un telephone. 150 est le
+## plus grand medaillon qui laisse passer CINQ niveaux (actes III et IV) sur la
+## hauteur du sol sans que deux cibles se chevauchent : l etiquette passe donc
+## A COTE du medaillon et non plus dessous.
+const DOT_SIZE: float = 150.0
+const DOT_HIT_W: float = 500.0
+const DOT_HIT_H: float = 170.0
+## Part du medaillon occupee par la silhouette. Le reste est l anneau et un peu
+## d air : une silhouette qui touche le bord se lit comme rognee.
+const PORTRAIT_FILL: float = 0.74
 
 ## Bande utilisable du fond, en fraction de la hauteur de l ecran. Les fonds ont
 ## une bande DECOREE en haut (arbres, grilles, vitraux) et un PREMIER PLAN en bas
@@ -78,10 +98,23 @@ const FALLBACK_BACKDROP: String = "menu_space"
 ## n utiliser que les assets fournis (DEC-012).
 const STAR_ICON: int = 3
 
-## Jaune du point jouable — l or du cahier des charges, demande mot pour mot
+## Anneau du medaillon jouable — l or du cahier des charges, demande mot pour mot
 ## (« des points de couleur jaune, qui sont grises quand pas encore debloques »).
+## Le JAUNE reste le signal « jouable » : il est passe du disque a l anneau pour
+## laisser la place a l illustration.
 const DOT_OPEN: Color = Color(0.95, 0.80, 0.35)
 const DOT_LOCKED: Color = Color(0.42, 0.42, 0.46)
+## Fond du medaillon jouable : papier clair. Les boss Duelyst sont sombres et
+## desatures ; sur un fond sombre leur silhouette disparaissait (piege deja paye
+## sur les fonds de combat, voir la memoire « assets »). Le clair fait ressortir
+## aussi bien un boss noir qu un guerrier rouge de Tiny Swords.
+const MEDAL_FILL_OPEN: Color = Color(0.95, 0.90, 0.78)
+## Fond du medaillon verrouille : gris moyen, sous une silhouette NOIRE. C est
+## l idiome « ombre d un inconnu » : on devine la forme du boss (envie d y
+## aller) sans ses couleurs (on n y est pas encore). Aucun cadenas dans les
+## packs fournis, et un cadenas dessine par le code est interdit (DEC-012).
+const MEDAL_FILL_LOCKED: Color = Color(0.56, 0.56, 0.60)
+const SILHOUETTE_LOCKED: Color = Color(0.06, 0.05, 0.08)
 
 ## Les noms viennent de `docs/histoire.md`, sections 3 a 7, et doivent le rester.
 ##
@@ -114,6 +147,11 @@ var _layer: Control                   # porte les points ; vide a chaque changem
 var _prev_btn: Button
 var _next_btn: Button
 var _buttons: Dictionary = {}         # StringName -> Button
+var _signatures: Dictionary = {}      # StringName -> EnemyDef (ou absent)
+
+## Portraits recadres, partages entre toutes les cartes : le recadrage lit les
+## pixels de la feuille, inutile de le refaire a chaque changement d acte.
+static var _portrait_cache: Dictionary = {}   # String -> Texture2D
 
 
 func _ready() -> void:
@@ -255,6 +293,189 @@ func _compute() -> void:
 	for a in seen.keys():
 		_acts.append(int(a))
 	_acts.sort()
+
+	_assign_signatures(ids)
+
+
+# --------------------------------------------------------------------------
+# Le monstre signature de chaque niveau
+# --------------------------------------------------------------------------
+
+## Les candidats a l illustration d un niveau, du plus parlant au moins parlant :
+##   1. les monstres de la vague de BOSS, du plus puissant au plus faible ;
+##   2. a defaut, ceux des vagues de MINI-BOSS (niveaux d exploration) ;
+##   3. a defaut, le pool du niveau (l acte V a deux niveaux sans vague ecrite).
+## Seuls comptent les monstres qui ont une feuille : un projectile ou une cle
+## inconnue ne donneraient rien a montrer. Chaque silhouette n apparait qu une
+## fois (deux entrees du meme monstre dans la vague de boss ne sont pas deux
+## choix).
+static func signature_candidates(lv: LevelDef) -> Array[EnemyDef]:
+	var boss: Array[EnemyDef] = []
+	var mini: Array[EnemyDef] = []
+	for w in lv.waves:
+		if w == null:
+			continue
+		if w.is_boss:
+			boss.append_array(w.enemy_defs())
+		elif w.is_miniboss:
+			mini.append_array(w.enemy_defs())
+	var pool: Array[EnemyDef] = []
+	pool.append_array(lv.enemy_pool)
+	var out: Array[EnemyDef] = []
+	var vus: Dictionary = {}
+	for palier in [boss, mini, pool]:
+		var tri: Array[EnemyDef] = []
+		for e: EnemyDef in palier:
+			if not _montrable(e):
+				continue
+			if vus.has(e.id):
+				continue
+			vus[e.id] = true
+			tri.append(e)
+		# Tri STABLE a la main : `sort_custom` ne garantit pas l ordre des egaux,
+		# et deux boss de meme puissance (lvl_02 en a deux) doivent toujours
+		# rendre le meme, celui que l auteur a ecrit en premier.
+		for i in range(1, tri.size()):
+			var cle: EnemyDef = tri[i]
+			var j: int = i - 1
+			while j >= 0 and tri[j].power < cle.power:
+				tri[j + 1] = tri[j]
+				j -= 1
+			tri[j + 1] = cle
+		out.append_array(tri)
+	return out
+
+
+## Palier du meilleur candidat : 0 boss, 1 mini-boss, 2 pool, 3 rien.
+static func _signature_tier(lv: LevelDef) -> int:
+	for palier in 2:
+		for w in lv.waves:
+			if w == null:
+				continue
+			# Palier 0 : vagues de boss. Palier 1 : vagues de mini-boss seulement.
+			var vise: bool = w.is_boss if palier == 0 else (w.is_miniboss and not w.is_boss)
+			if not vise:
+				continue
+			for e in w.enemy_defs():
+				if _montrable(e):
+					return palier
+	for e in lv.enemy_pool:
+		if _montrable(e):
+			return 2
+	return 3
+
+
+static func _montrable(e: EnemyDef) -> bool:
+	return e != null and not e.projectile and AnimCatalog.has(e.anim_key)
+
+
+## Choisit le monstre de chaque niveau.
+##
+## La regle dure : DEUX NIVEAUX D UNE MEME PAGE N ONT JAMAIS LA MEME SILHOUETTE.
+## Une page ne montre qu un acte, et c est la qu on doit reconnaitre un niveau
+## d un coup d oeil. L acte V en a besoin : deux de ses niveaux n ont pas de
+## boss et leur monstre le plus fort est le Juggernaut du troisieme.
+##
+## La regle douce : eviter aussi de repeter une silhouette D UN ACTE A L AUTRE,
+## mais sans jamais retirer son boss a un niveau de boss. Le boss EST l identite
+## du niveau ; lui substituer un sbire pour eviter un doublon avec une autre page
+## (ou le fond et le titre different deja) ferait mentir l illustration.
+##
+## Ordre de choix : les niveaux a boss d abord, puis a mini-boss, puis les
+## autres — chacun dans l ordre de jeu. Ainsi un niveau sans boss s efface
+## devant le boss d un niveau voisin, jamais l inverse.
+func _assign_signatures(ordre: Array[StringName]) -> void:
+	_signatures.clear()
+	var file: Array[StringName] = []
+	for palier in 4:
+		for id in ordre:
+			if _signature_tier(_nodes[id]["level"]) == palier:
+				file.append(id)
+	var pris: Dictionary = {}          # anim_key -> true, tout le jeu
+	var pris_acte: Dictionary = {}     # acte -> {anim_key: true}
+	for id in file:
+		var lv: LevelDef = _nodes[id]["level"]
+		var cands: Array[EnemyDef] = signature_candidates(lv)
+		if cands.is_empty():
+			continue
+		var acte: int = int(_nodes[id]["act"])
+		if not pris_acte.has(acte):
+			pris_acte[acte] = {}
+		var deja: Dictionary = pris_acte[acte]
+		var choix: EnemyDef = null
+		# 1) Parmi les candidats de TETE (meme puissance que le meilleur, tous du
+		#    meme palier puisque la liste est rangee par palier), une silhouette
+		#    encore inedite dans tout le jeu.
+		var tete: int = cands[0].power
+		for c in cands:
+			if c.power != tete:
+				break
+			if not pris.has(String(c.anim_key)):
+				choix = c
+				break
+		# 2) Sinon le meilleur candidat absent de CETTE page. Un boss dont la
+		#    feuille sert deja sur un autre acte garde donc son boss.
+		if choix == null:
+			for c in cands:
+				if not deja.has(String(c.anim_key)):
+					choix = c
+					break
+		# 3) Contenu pathologique (tout est deja pris sur la page) : on montre
+		#    quand meme le boss plutot qu un medaillon vide.
+		if choix == null:
+			choix = cands[0]
+		_signatures[id] = choix
+		pris[String(choix.anim_key)] = true
+		deja[String(choix.anim_key)] = true
+
+
+## Le monstre dont la silhouette illustre ce niveau, ou null si le niveau n en
+## a aucun (le medaillon reste alors vide, mais present).
+func signature_of(level_id: StringName) -> EnemyDef:
+	return _signatures.get(level_id)
+
+
+## Premiere pose de la silhouette, RECADREE sur ses pixels opaques.
+##
+## Pourquoi recadrer : les cases des feuilles sont loin d etre pleines (Blood
+## Monster occupe 20 % de sa case, voir la memoire « assets »). Mettre la case
+## entiere dans le medaillon donnait un point au milieu d un disque. On mesure
+## le rectangle opaque de la pose AFFICHEE, pas l occupation moyenne du
+## catalogue, qui est mesuree sur la marche et deborderait ou rognerait ici.
+##
+## Pose : `idle` si la feuille en a une (le monstre au repos, de face ou de
+## profil selon le pack), sinon `walk`. Sans pixels lisibles (rendu factice en
+## headless), on rend la case brute : le medaillon reste construit et testable.
+static func portrait(anim_key: StringName) -> Texture2D:
+	var k: String = String(anim_key)
+	if _portrait_cache.has(k):
+		return _portrait_cache[k]
+	var brut: Texture2D = null
+	if AnimCatalog.is_static(anim_key):
+		brut = AnimCatalog.static_texture(anim_key)
+	else:
+		var sf: SpriteFrames = AnimCatalog.frames(anim_key)
+		if sf != null:
+			var anim: StringName = &"idle" if sf.has_animation(&"idle") else &"walk"
+			if not sf.has_animation(anim):
+				var noms: PackedStringArray = sf.get_animation_names()
+				anim = StringName(noms[0]) if not noms.is_empty() else &""
+			if anim != &"" and sf.get_frame_count(anim) > 0:
+				brut = sf.get_frame_texture(anim, 0)
+	var out: Texture2D = brut
+	if brut != null:
+		var img: Image = brut.get_image()
+		if img != null and not img.is_empty():
+			if img.is_compressed():
+				# Copie avant de decompresser : on ne touche jamais l image
+				# que le moteur partage avec la texture source.
+				img = img.duplicate()
+				img.decompress()
+			var r: Rect2i = img.get_used_rect()
+			if r.size.x > 0 and r.size.y > 0:
+				out = ImageTexture.create_from_image(img.get_region(r))
+	_portrait_cache[k] = out
+	return out
 
 
 func _act_of_current_level() -> int:
@@ -487,9 +708,14 @@ func _build_dots() -> void:
 	_layout_dots()
 
 
-## Un point = un Button transparent de 420x190 qui porte la pastille, le nom et
-## les etoiles. Le bouton est la racine pour que TOUTE l etiquette reponde au
-## doigt, pas seulement la pastille de 96 px.
+## Un niveau = un Button transparent de 500x170 qui porte le MEDAILLON, le nom
+## et les etoiles. Le bouton est la racine pour que TOUTE l etiquette reponde au
+## doigt, pas seulement le medaillon.
+##
+##   .------.
+##  ( boss   )  Nom du niveau
+##  (  en    )  sur deux lignes
+##   `------'   o o o            <- etoiles
 func _add_dot(id: StringName) -> void:
 	var data: Dictionary = _nodes[id]
 	var lv: LevelDef = data["level"]
@@ -507,43 +733,21 @@ func _add_dot(id: StringName) -> void:
 	_layer.add_child(b)
 	_buttons[id] = b
 
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	row.add_theme_constant_override(&"separation", 14)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(row)
+
+	row.add_child(_medallion(id, enabled))
+
 	var vb := VBoxContainer.new()
-	vb.set_anchors_preset(Control.PRESET_FULL_RECT)
 	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_theme_constant_override(&"separation", 4)
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	b.add_child(vb)
-
-	# LA PASTILLE. Jaune quand jouable, grise sinon : la demande litterale du
-	# testeur. Un Panel rond plutot qu une icone du pack : aucune icone ronde
-	# unie n existe dans les feuilles, et un point est une forme, pas un dessin.
-	var dot_row := HBoxContainer.new()
-	dot_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	dot_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vb.add_child(dot_row)
-	var dot := Panel.new()
-	dot.custom_minimum_size = Vector2(DOT_SIZE, DOT_SIZE)
-	# Bord sombre epais : sur le ciel clair de l acte I comme sur les dalles
-	# sombres de l acte III, c est le contour qui detache la pastille du fond.
-	dot.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
-		DOT_OPEN if enabled else DOT_LOCKED, int(DOT_SIZE * 0.5), 0.0,
-		Color(0.10, 0.07, 0.05, 0.95), 7))
-	dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dot_row.add_child(dot)
-
-	# Le niveau ou en est le joueur porte un halo : sur un acte de 3 points il
-	# faut un repere « tu es ici », sinon on cherche.
-	if enabled and id == SaveData.current_level():
-		var here := Panel.new()
-		here.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
-			Color.TRANSPARENT, int(DOT_SIZE * 0.62), 0.0, Color(1.0, 0.95, 0.6, 0.85), 5))
-		here.set_anchors_preset(Control.PRESET_FULL_RECT)
-		here.offset_left = -14.0
-		here.offset_top = -14.0
-		here.offset_right = 14.0
-		here.offset_bottom = 14.0
-		here.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		dot.add_child(here)
+	row.add_child(vb)
 
 	# LE NOM, en contour sombre : le fond est peint et sa couleur sous le texte
 	# n est pas maitrisee. Un texte clair sans contour disparait sur le ciel de
@@ -553,17 +757,23 @@ func _add_dot(id: StringName) -> void:
 	# « on voit les noms des etapes » : masquer en « ? ? ? » repondrait a la
 	# question inverse, et une carte dont les etapes n ont pas de nom ne donne
 	# plus envie d y aller.
+	#
+	# Retour a la ligne AUTORISE : a cote du medaillon il reste ~330 px, et
+	# « Proteger le dirigeable » n y tient pas sur une ligne. Le coupe-mot par
+	# lettre (piege connu de AUTOWRAP_WORD_SMART) ne mord pas ici : aucun mot de
+	# nom de niveau ne depasse la colonne.
 	var name_lbl: Label = UiTheme.label_hud(lv.display_name, UiTheme.FONT_SMALL,
 		Color(1.0, 0.97, 0.90) if enabled else Color(0.74, 0.74, 0.78),
-		HORIZONTAL_ALIGNMENT_CENTER)
+		HORIZONTAL_ALIGNMENT_LEFT, true)
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(name_lbl)
 
 	# LES ETOILES : une par objectif, en icones du pack (jamais du texte ASCII,
 	# qui ne se lit pas comme une note). Pleines = acquises, ternies = restantes.
 	var stars: int = int(data["stars"])
 	var star_row := HBoxContainer.new()
-	star_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	star_row.alignment = BoxContainer.ALIGNMENT_BEGIN
 	star_row.add_theme_constant_override(&"separation", 8)
 	star_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(star_row)
@@ -591,6 +801,84 @@ func _add_dot(id: StringName) -> void:
 		b.pressed.connect(func() -> void:
 			AudioBus.play_sfx(&"ui_tap")
 			level_pressed.emit(idx))
+
+
+## Le medaillon : un disque a anneau epais, la silhouette du monstre signature
+## dedans.
+##
+## JOUABLE : fond clair, anneau OR, silhouette en couleurs.
+## VERROUILLE : fond gris, anneau gris, silhouette NOIRE. Trois indices
+## redondants et non une seule teinte : un joueur daltonien lit l etat a la
+## silhouette pleine ou vide, pas a la couleur de l anneau.
+func _medallion(id: StringName, enabled: bool) -> Control:
+	var medal := Panel.new()
+	medal.name = "Medaillon"
+	medal.custom_minimum_size = Vector2(DOT_SIZE, DOT_SIZE)
+	medal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	medal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Bord sombre SOUS l anneau colore : sur le ciel clair de l acte I comme sur
+	# les dalles sombres de l acte III, c est le contour sombre qui detache le
+	# medaillon du fond peint. Deux StyleBox imbriquees : l anneau or (ou gris)
+	# dans un liseret sombre.
+	medal.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
+		Color(0.10, 0.07, 0.05, 0.95), int(DOT_SIZE * 0.5), 0.0))
+	var ring := Panel.new()
+	ring.set_anchors_preset(Control.PRESET_FULL_RECT)
+	ring.offset_left = 4.0
+	ring.offset_top = 4.0
+	ring.offset_right = -4.0
+	ring.offset_bottom = -4.0
+	ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ring.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
+		MEDAL_FILL_OPEN if enabled else MEDAL_FILL_LOCKED,
+		int(DOT_SIZE * 0.5), 0.0, DOT_OPEN if enabled else DOT_LOCKED, 8))
+	medal.add_child(ring)
+
+	var sig: EnemyDef = signature_of(id)
+	if sig != null:
+		var art := TextureRect.new()
+		art.name = "Silhouette"
+		art.texture = portrait(sig.anim_key)
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var marge: float = DOT_SIZE * (1.0 - PORTRAIT_FILL) * 0.5
+		art.set_anchors_preset(Control.PRESET_FULL_RECT)
+		art.offset_left = marge
+		art.offset_top = marge
+		art.offset_right = -marge
+		art.offset_bottom = -marge
+		# Jouable : la teinte du monstre en jeu (MODULATE du catalogue), pour
+		# que la silhouette du medaillon soit celle que le joueur affrontera.
+		# Verrouille : une ombre, qui garde la forme et tait les couleurs.
+		art.modulate = AnimCatalog.modulate_for(sig.id) if enabled else SILHOUETTE_LOCKED
+		medal.add_child(art)
+
+	# Le niveau ou en est le joueur porte un halo : sur un acte de 4 medaillons
+	# il faut un repere « tu es ici », sinon on cherche.
+	if enabled and id == SaveData.current_level():
+		var here := Panel.new()
+		here.name = "IciHalo"
+		here.add_theme_stylebox_override(&"panel", UiTheme.flat_box(
+			Color.TRANSPARENT, int(DOT_SIZE * 0.62), 0.0, Color(1.0, 0.95, 0.6, 0.85), 5))
+		here.set_anchors_preset(Control.PRESET_FULL_RECT)
+		here.offset_left = -10.0
+		here.offset_top = -10.0
+		here.offset_right = 10.0
+		here.offset_bottom = 10.0
+		here.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		medal.add_child(here)
+	return medal
+
+
+## Le medaillon affiche pour un niveau de l acte courant (null hors page).
+## Expose pour les tests : ils verifient ce que le joueur VOIT, pas seulement
+## le choix fait dans `_signatures`.
+func medallion_for(level_id: StringName) -> Control:
+	var b: Button = _buttons.get(level_id)
+	if b == null:
+		return null
+	return b.find_child("Medaillon", true, false) as Control
 
 
 # --------------------------------------------------------------------------
