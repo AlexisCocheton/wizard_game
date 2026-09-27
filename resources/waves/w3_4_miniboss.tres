@@ -1,29 +1,37 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_wo4iu"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_huge.tres" id="2_hme0u"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_wo4iu"]
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="3_hdme6"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_hjcnb"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_eftlb"]
 
-[sub_resource type="Resource" id="Resource_wo4iu"]
+[sub_resource type="Resource" id="Resource_hme0u"]
 script = ExtResource("1_wo4iu")
-enemy = ExtResource("2_wo4iu")
+enemy = ExtResource("2_hme0u")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_hme0u"]
+[sub_resource type="Resource" id="Resource_hdme6"]
+script = ExtResource("1_wo4iu")
+enemy = ExtResource("2_wo4iu")
+count = 1
+spawn_delay = 1.0
+start_offset = 4.0
+
+[sub_resource type="Resource" id="Resource_hjcnb"]
 script = ExtResource("1_wo4iu")
 enemy = ExtResource("3_hdme6")
 count = 2
 spawn_delay = 2.2
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_hdme6"]
+[sub_resource type="Resource" id="Resource_eftlb"]
 script = ExtResource("1_wo4iu")
 enemy = ExtResource("4_hjcnb")
-count = 3
+count = 2
 spawn_delay = 1.8
 start_offset = 18.0
 
@@ -31,7 +39,7 @@ start_offset = 18.0
 script = ExtResource("5_eftlb")
 id = &"w3_4_miniboss"
 duration = 32.0
-entries = Array[ExtResource("1_wo4iu")]([SubResource("Resource_wo4iu"), SubResource("Resource_hme0u"), SubResource("Resource_hdme6")])
+entries = Array[ExtResource("1_wo4iu")]([SubResource("Resource_hme0u"), SubResource("Resource_hdme6"), SubResource("Resource_hjcnb"), SubResource("Resource_eftlb")])
 difficulty = 1.05
 is_miniboss = true
 is_boss = false

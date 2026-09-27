@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_khwoo"]
 [ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_tqsjo"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_paodg"]
-[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_sw7qq"]
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="4_tqsjo"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_n2rm5"]
+[ext_resource type="Resource" path="res://resources/enemies/blood_clot.tres" id="5_tqsjo"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_8sjc0"]
 
 [sub_resource type="Resource" id="Resource_tqsjo"]
@@ -31,9 +31,9 @@ start_offset = 20.0
 
 [sub_resource type="Resource" id="Resource_n2rm5"]
 script = ExtResource("1_khwoo")
-enemy = ExtResource("4_sw7qq")
+enemy = ExtResource("5_tqsjo")
 count = 2
-spawn_delay = 2.2
+spawn_delay = 2.4
 start_offset = 26.0
 
 [sub_resource type="Resource" id="Resource_8sjc0"]

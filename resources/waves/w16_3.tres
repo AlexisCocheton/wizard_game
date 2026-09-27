@@ -1,50 +1,58 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_vtuoo"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_chain.tres" id="2_cjf5j"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_circle.tres" id="3_3caal"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="4_gxb4w"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_gsf6m"]
-[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="5_gxb4w"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_frost.tres" id="5_pffdu"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_arcane.tres" id="6_ejtl4"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="6_gsf6m"]
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="7_pffdu"]
 
-[sub_resource type="Resource" id="Resource_gxb4w"]
+[sub_resource type="Resource" id="Resource_gsf6m"]
 script = ExtResource("1_vtuoo")
 enemy = ExtResource("2_cjf5j")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_gsf6m"]
+[sub_resource type="Resource" id="Resource_pffdu"]
 script = ExtResource("1_vtuoo")
 enemy = ExtResource("3_3caal")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_pffdu"]
+[sub_resource type="Resource" id="Resource_ejtl4"]
 script = ExtResource("1_vtuoo")
 enemy = ExtResource("4_gxb4w")
 count = 1
 spawn_delay = 1.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_ejtl4"]
+[sub_resource type="Resource" id="Resource_hbjsi"]
 script = ExtResource("1_vtuoo")
-enemy = ExtResource("5_gxb4w")
-count = 2
+enemy = ExtResource("5_pffdu")
+count = 1
 spawn_delay = 2.5
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_hbjsi"]
+[sub_resource type="Resource" id="Resource_n17yc"]
+script = ExtResource("1_vtuoo")
+enemy = ExtResource("6_ejtl4")
+count = 1
+spawn_delay = 2.5
+start_offset = 10.5
+
+[sub_resource type="Resource" id="Resource_g665n"]
 script = ExtResource("1_vtuoo")
 enemy = ExtResource("6_gsf6m")
 count = 3
 spawn_delay = 2.2
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_n17yc"]
+[sub_resource type="Resource" id="Resource_egxo1"]
 script = ExtResource("1_vtuoo")
 enemy = ExtResource("7_pffdu")
 count = 1
@@ -55,7 +63,7 @@ start_offset = 26.0
 script = ExtResource("5_gsf6m")
 id = &"w16_3"
 duration = 31.0
-entries = Array[ExtResource("1_vtuoo")]([SubResource("Resource_gxb4w"), SubResource("Resource_gsf6m"), SubResource("Resource_pffdu"), SubResource("Resource_ejtl4"), SubResource("Resource_hbjsi"), SubResource("Resource_n17yc")])
+entries = Array[ExtResource("1_vtuoo")]([SubResource("Resource_gsf6m"), SubResource("Resource_pffdu"), SubResource("Resource_ejtl4"), SubResource("Resource_hbjsi"), SubResource("Resource_n17yc"), SubResource("Resource_g665n"), SubResource("Resource_egxo1")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false

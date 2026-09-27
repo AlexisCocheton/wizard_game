@@ -5,7 +5,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/demon_maw.tres" id="3_vxmca"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_c43ih"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_1f6tm"]
-[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="5_3x1tw"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_ember.tres" id="5_3x1tw"]
 
 [sub_resource type="Resource" id="Resource_3x1tw"]
 script = ExtResource("1_xsnvd")

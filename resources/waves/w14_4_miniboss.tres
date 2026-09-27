@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_o7d26"]
+[ext_resource type="Resource" path="res://resources/enemies/season_chameleon.tres" id="2_2ir0t"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="3_sy8ac"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_tq04t"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="5_1thku"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_2bhyo"]
+
+[sub_resource type="Resource" id="Resource_o7d26"]
+script = ExtResource("1_o7d26")
+enemy = ExtResource("2_2ir0t")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_2ir0t"]
+script = ExtResource("1_o7d26")
+enemy = ExtResource("3_sy8ac")
+count = 1
+spawn_delay = 1.0
+start_offset = 4.0
+
+[sub_resource type="Resource" id="Resource_sy8ac"]
+script = ExtResource("1_o7d26")
+enemy = ExtResource("4_tq04t")
+count = 3
+spawn_delay = 1.8
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_tq04t"]
+script = ExtResource("1_o7d26")
+enemy = ExtResource("5_1thku")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[resource]
+script = ExtResource("6_2bhyo")
+id = &"w14_4_miniboss"
+duration = 33.0
+entries = Array[ExtResource("1_o7d26")]([SubResource("Resource_o7d26"), SubResource("Resource_2ir0t"), SubResource("Resource_sy8ac"), SubResource("Resource_tq04t")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_4l325"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_ge78s"]
-[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_fx5b8"]
+[ext_resource type="Resource" path="res://resources/enemies/mirror_shard.tres" id="3_4l325"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_lso32"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_anydv"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_x5x0l"]
@@ -16,7 +16,7 @@ start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_ge78s"]
 script = ExtResource("1_4l325")
-enemy = ExtResource("3_fx5b8")
+enemy = ExtResource("3_4l325")
 count = 2
 spawn_delay = 2.5
 start_offset = 14.0

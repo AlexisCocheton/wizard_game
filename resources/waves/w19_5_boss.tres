@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ipb8u"]
+[ext_resource type="Resource" path="res://resources/enemies/trio_frost.tres" id="2_lbxlf"]
+[ext_resource type="Resource" path="res://resources/enemies/trio_ember.tres" id="3_bpgse"]
+[ext_resource type="Resource" path="res://resources/enemies/trio_arcane.tres" id="4_jg3n8"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_1c2yi"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6yf6x"]
+
+[sub_resource type="Resource" id="Resource_ipb8u"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("3_bpgse")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_lbxlf"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("2_lbxlf")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.6
+
+[sub_resource type="Resource" id="Resource_bpgse"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("4_jg3n8")
+count = 1
+spawn_delay = 1.0
+start_offset = 1.2
+
+[sub_resource type="Resource" id="Resource_jg3n8"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("5_1c2yi")
+count = 2
+spawn_delay = 3.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("6_6yf6x")
+id = &"w19_5_boss"
+duration = 45.0
+entries = Array[ExtResource("1_ipb8u")]([SubResource("Resource_ipb8u"), SubResource("Resource_lbxlf"), SubResource("Resource_bpgse"), SubResource("Resource_jg3n8")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

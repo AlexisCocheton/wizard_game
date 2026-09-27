@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_182om"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="2_68gn4"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="3_ymsec"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_f0q18"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="5_6f3b7"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_055el"]
+
+[sub_resource type="Resource" id="Resource_182om"]
+script = ExtResource("1_182om")
+enemy = ExtResource("2_68gn4")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_68gn4"]
+script = ExtResource("1_182om")
+enemy = ExtResource("3_ymsec")
+count = 1
+spawn_delay = 2.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_ymsec"]
+script = ExtResource("1_182om")
+enemy = ExtResource("4_f0q18")
+count = 2
+spawn_delay = 2.2
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_f0q18"]
+script = ExtResource("1_182om")
+enemy = ExtResource("5_6f3b7")
+count = 1
+spawn_delay = 2.5
+start_offset = 24.0
+
+[resource]
+script = ExtResource("6_055el")
+id = &"w13_3_miniboss"
+duration = 36.0
+entries = Array[ExtResource("1_182om")]([SubResource("Resource_182om"), SubResource("Resource_68gn4"), SubResource("Resource_ymsec"), SubResource("Resource_f0q18")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

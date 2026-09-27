@@ -1305,6 +1305,516 @@ func _enemies() -> void:
 		&"poison": 0, &"foudre": 0.9, &"lent": 0})
 	_save(child_god, E + "child_god.tres")
 
+	_enemies_v3(E)
+
+
+## =====================================================================
+## CHANTIER W2 — LE BESTIAIRE DU 27 SEPTEMBRE ENTRE EN JEU
+##
+## La vague 1 a livre douze mecaniques (champs d EnemyDef, groupes « v3 ») et
+## onze silhouettes (AnimCatalog, bestiaire du 27/09) sans qu AUCUN monstre ne
+## s en serve : du moteur et du dessin que le joueur ne voyait jamais. Ce bloc
+## les porte, et chaque monstre est une COMBINAISON de champs existants — pas
+## une ligne de script neuve, c est la regle du projet.
+##
+## POURQUOI LES NOUVELLES TETES SONT LA OU ELLES SONT. Quatre niveaux n avaient
+## pas de mini-boss (lvl_12 a lvl_15) et lvl_15 n avait pas de boss, faute de
+## tetes. Ils passent en premier. Viennent ensuite trois vagues de « mini-boss »
+## que menait un monstre ORDINAIRE (lvl_03 le Pretre goule, lvl_07 le Glouton,
+## lvl_21 aucun palier) : une tete de palier doit poser une question que la
+## vague ne pose pas, un P3 ou un P4 n en pose pas.
+##
+## LA REGLE DES LIGNEES, deja celle des gorgones et des gelees : une famille
+## partage une feuille et se lit par la TAILLE. Le Slime colossal se brise en
+## Slimes enormes qui se brisent en Slimes moyens ; le trio de mages revient en
+## adeptes plus petits. Le joueur reconnait la silhouette et sait deja quoi faire.
+## =====================================================================
+func _enemies_v3(E: String) -> void:
+	var K := GameEnums.EnemyKind
+	var S := GameEnums.Shape
+	var T := GameEnums.DamageTag
+
+	# --- LA LIGNEE DES SLIMES D EAU (acte 2, puis acte 5) ------------------
+	#
+	# Trois tailles d une meme creature, sur la feuille `slime_big` (un slime bleu
+	# vu de cote) : c est la division qui la fait lire, comme les gelees vertes de
+	# l acte 1. Une masse d EAU : le venin s y dilue, le froid la fige a peine en
+	# surface, et la FOUDRE la traverse de part en part. C est la reponse, et elle
+	# est l inverse de celle de la croute de lave du Colosse (voir plus bas) : un
+	# boss en deux phases dont la seconde demande un autre element que la premiere.
+	var slime_mid := _enemy("slime_mid", "Slime moyen", K.NORMAL, 1, 12.0, 72.0, 1,
+		S.CIRCLE, Color(0.35, 0.55, 0.92), 18.0)
+	slime_mid.anim_key = &"slime_big"
+	_resist(slime_mid, {&"phys": 0.85, &"feu": 1.0, &"givre": 0.85, &"arcane": 1.0,
+		&"poison": 0.6, &"foudre": 1.3})
+	_save(slime_mid, E + "slime_mid.tres")
+
+	# SLIME ENORME — MINI-BOSS de `lvl_03` (l Ossuaire des Marees, bati sur des
+	# monstres qui se multiplient). Il remplace le Pretre goule en tete du palier :
+	# un P3 qui soigne n etait pas un palier, c etait une vague de plus.
+	#
+	# 90 PV + trois Slimes moyens a 12 = 126 PV de chaine, dans la bande des
+	# mini-boss du jeu (96 a 175). Les PV sont BAS pour un mini-boss parce que sa
+	# difficulte est ailleurs : le tuer au mauvais moment lache trois corps rapides
+	# au milieu de la vague, et le sort de zone garde pour eux EST la bonne reponse.
+	var slime_huge := _enemy("slime_huge", "Slime enorme", K.MINIBOSS, 6, 90.0, 36.0, 12,
+		S.CIRCLE, Color(0.30, 0.50, 0.90), 50.0)
+	slime_huge.anim_key = &"slime_big"
+	# Par CHEMIN et non par objet : un enfant embarque dans le .tres du parent
+	# serait une copie, et retoucher slime_mid.tres ne changerait plus rien aux
+	# slimes qui sortent du Slime enorme.
+	slime_huge.split_into = load(E + "slime_mid.tres")
+	slime_huge.split_count = 3
+	_resist(slime_huge, {&"phys": 0.85, &"feu": 1.0, &"givre": 0.85, &"arcane": 1.0,
+		&"poison": 0.6, &"foudre": 1.3})
+	_save(slime_huge, E + "slime_huge.tres")
+
+	# SLIME COLOSSAL — BOSS de `lvl_14`, la galerie des saisons (melange des actes
+	# 1 et 2 : tout ce qui a deja ete efface revient, et les gelees d abord).
+	#
+	# UNE CROUTE DE LAVE autour d un slime d eau. La feuille `slime_colossal` est un
+	# slime de magma : il resiste au feu et le givre le fend (le choc thermique de
+	# tout le monde demoniaque). Quand la croute cede, DEUX Slimes enormes bleus en
+	# sortent, qui craignent la foudre et se brisent a leur tour. Le joueur qui a
+	# vide son givre sur la croute doit changer d element au milieu du combat.
+	#
+	# LA CHAINE COMPTE, PAS LE CORPS. 150 PV de croute + 2 x 126 de Slimes enormes
+	# = 402 PV, entre Chronos (320) et l Enfant releve (420). Un boss hors budget
+	# qui se divise pese sa chaine entiere : c est ce que verifie la suite
+	# test_bestiaire_w2 (`_pv_de_chaine`), faute de quoi le colosse passerait pour
+	# plus leger que Chronos alors qu il envoie sept corps.
+	#
+	# TRES GRAND, ET ENTIER A L ECRAN. Rayon 118 et echelle 1,2 : 595 px de large
+	# sur un terrain de 1080, le plus gros sprite du jeu (le Reliquaire en fait
+	# 542, le Sceau de Tombol 524). Plus de la moitie du terrain, jamais tout : la
+	# marge d apparition suit la taille affichee (WaveSpawner.spawn_margin), donc il
+	# nait entierement dans le cadre et reste ciblable d un bord a l autre. Le
+	# rayon logique grandit avec : un sprite de 600 px sur une hitbox de 100 se
+	# ferait toucher bien avant de sembler au contact.
+	var colossal := _enemy("slime_colossal", "Slime colossal", K.BOSS, 10, 150.0, 24.0, 30,
+		S.CIRCLE, Color(0.85, 0.40, 0.15), 118.0)
+	colossal.anim_key = &"slime_colossal"
+	colossal.sprite_scale = 1.2
+	colossal.split_into = load(E + "slime_huge.tres")
+	colossal.split_count = 2
+	# Lave : le feu le nourrit, le venin brule avant de mordre, le givre fend la
+	# croute. On ne ralentit pas une coulee a moitie.
+	_resist(colossal, {&"phys": 0.75, &"feu": 0.5, &"givre": 1.35, &"arcane": 1.0,
+		&"poison": 0.5, &"foudre": 0.85, &"lent": 0.5})
+	_save(colossal, E + "slime_colossal.tres")
+
+	# --- LES SLIMES DES TOMBES (acte 3, les fosses de Tombol) -------------
+
+	# SLIME SQUELETTE : ce qui reste d un slime fantome trois secondes apres sa
+	# mort. Il descend AUSSI seul dans les fosses, pour que le joueur connaisse la
+	# silhouette avant de la voir renaitre d une marque au sol.
+	var slime_skel := _enemy("slime_skeleton", "Slime squelette", K.NORMAL, 2, 16.0, 60.0, 2,
+		S.CIRCLE, Color(0.55, 0.65, 0.95), 22.0)
+	slime_skel.anim_key = &"slime_skeleton"
+	# Os et gelee : mort-vivant, donc sans rien a empoisonner ; le feu calcine les
+	# os et l arcane defait ce qui les tient. Le froid glisse sur une gelee morte.
+	_resist(slime_skel, {&"phys": 1.0, &"feu": 1.25, &"givre": 0.85, &"arcane": 1.15,
+		&"poison": 0.0})
+	_save(slime_skel, E + "slime_skeleton.tres")
+
+	# SLIME FANTOME — RENAISSANCE DIFFEREE. Tue, il laisse une marque au sol et un
+	# Slime squelette en sort 3 s plus tard. Le joueur voit le danger ARRIVER : un
+	# sort de zone pose sur la marque tue le squelette a sa naissance.
+	#
+	# Il ZIGZAGUE : un fantome ne marche pas, il derive. C est aussi ce qui le rend
+	# penible a viser pour un sort cible et facile pour une zone — la meme reponse
+	# que sa marque, donc une seule lecon.
+	#
+	# 10 PV + 16 de squelette = 26 PV de chaine, comme un Serpent des sables (P2).
+	var slime_ghost := _enemy("slime_ghost", "Slime fantome", K.NORMAL, 2, 10.0, 66.0, 3,
+		S.CIRCLE, Color(0.75, 0.80, 0.90), 22.0)
+	slime_ghost.anim_key = &"slime_ghost"
+	slime_ghost.rebirth_def = load(E + "slime_skeleton.tres")
+	slime_ghost.rebirth_count = 1
+	slime_ghost.rebirth_delay = 3.0
+	slime_ghost.move_pattern = EnemyDef.MovePattern.ZIGZAG
+	slime_ghost.pattern_width = 180.0
+	# Rien de solide : le physique le traverse, l arcane defait ce qui le tient
+	# ensemble. Comme l Ombre, et pour la meme raison.
+	_resist(slime_ghost, {&"phys": 0.65, &"feu": 1.0, &"givre": 1.0, &"arcane": 1.3,
+		&"poison": 0.0, &"foudre": 1.1})
+	_save(slime_ghost, E + "slime_ghost.tres")
+
+	# GROS SLIME FANTOME : la meme chose en plus gros, qui laisse DEUX squelettes.
+	# 34 + 2 x 16 = 66 PV de chaine pour un P4, au niveau du Gardien-totem (60) et
+	# du Glouton (70). Il ne zigzague pas : trop lourd pour deriver, et un P4 doit
+	# rester une cible qu on choisit, pas qu on poursuit.
+	var ghost_big := _enemy("slime_ghost_big", "Gros slime fantome", K.NORMAL, 4, 34.0, 44.0, 6,
+		S.CIRCLE, Color(0.70, 0.75, 0.88), 34.0)
+	ghost_big.anim_key = &"slime_ghost"
+	ghost_big.rebirth_def = load(E + "slime_skeleton.tres")
+	ghost_big.rebirth_count = 2
+	ghost_big.rebirth_delay = 3.0
+	_resist(ghost_big, {&"phys": 0.65, &"feu": 1.0, &"givre": 1.0, &"arcane": 1.3,
+		&"poison": 0.0, &"foudre": 1.1})
+	_save(ghost_big, E + "slime_ghost_big.tres")
+
+	# --- LE RENARD DORMEUR (acte 1, la foret de Nuri) ----------------------
+	#
+	# Toutes les 6 s d eveil il s arrete et dort 2 s, et PENDANT SON SOMMEIL LE
+	# JOUEUR NE PEUT LANCER AUCUN SORT. Le tuer rend la magie aussitot. La foret
+	# de Nuri est l acte des betes qui ne se comportent pas comme des betes : un
+	# renard qui endort le mage en est la meilleure preuve.
+	#
+	# FRAGILE (15 PV) : la reponse est de le tuer pendant qu il est eveille, avec
+	# le sort qu on vient de charger. Un dormeur blinde verrouillerait la main
+	# pendant tout le combat, ce qui n est plus une decision. Le plafond et la
+	# fenetre de magie garantie entre deux sommeils vivent dans Battlefield.
+	var fox := _enemy("sleepy_fox", "Renard dormeur", K.NORMAL, 2, 15.0, 78.0, 3,
+		S.TRIANGLE, Color(0.90, 0.50, 0.20), 22.0)
+	fox.anim_key = &"fox"
+	fox.sleep_interval = 6.0
+	fox.sleep_duration = 2.0
+	# Une bete a fourrure : le feu la prend, le froid la laisse de marbre. Le
+	# venin d un sous-bois, elle le connait.
+	_resist(fox, {&"phys": 1.1, &"feu": 1.25, &"givre": 0.8, &"arcane": 0.95,
+		&"poison": 0.8})
+	_save(fox, E + "sleepy_fox.tres")
+
+	# --- ACTE 4, LE MONDE DEMONIAQUE ---------------------------------------
+
+	# CACODEMON — le volant de l acte 4. Il REBONDIT d un bord a l autre en
+	# diagonale au lieu de descendre : ni le mur (il vole) ni le tir tendu (il ne
+	# reste pas dans sa colonne) ne le tiennent. Il est aussi le sbire du Seigneur
+	# demon, qui le mange pour se soigner.
+	var caco := _enemy("cacodaemon", "Cacodemon", K.NORMAL, 3, 26.0, 56.0, 4,
+		S.CIRCLE, Color(0.80, 0.20, 0.25), 30.0)
+	caco.anim_key = &"cacodaemon"
+	caco.flying = true
+	caco.move_pattern = EnemyDef.MovePattern.BOUNCE
+	# 45 px/s de travers pour 56 de descente : une diagonale franche qu on lit, pas
+	# une toupie. A 0 (= vitesse de base) il traversait l ecran trop vite pour
+	# qu un sort cible ait le temps de partir.
+	caco.pattern_lateral_speed = 45.0
+	# Une bouche de l enfer : le feu est chez lui, le givre le saisit. La foudre
+	# passe par la gueule ouverte.
+	_resist(caco, {&"phys": 0.95, &"feu": 0.6, &"givre": 1.3, &"arcane": 1.1,
+		&"poison": 0.8, &"foudre": 1.1})
+	_save(caco, E + "cacodaemon.tres")
+
+	# GOLEM A NOYAU — MINI-BOSS de `lvl_07`, la forge de Vharn (« tout est
+	# blinde »). Il remplace le Glouton, un P4 ordinaire, en tete du palier.
+	#
+	# LASER DE RIPOSTE : chaque coup qui MORD declenche un rayon sur le mage, au
+	# plus une fois toutes les 1,8 s. Il punit exactement ce que Vharn punit a sa
+	# facon : la pluie de petits coups (poison, pluie de givre, nappes). La reponse
+	# est le gros sort unique — la meme lecon que le boss du niveau, posee avant lui.
+	#
+	# SON PACK N A NI MARCHE NI DEGATS : il avance sur sa pose d attente (le noyau
+	# respire) et le coup recu se lit par l eclair blanc et le rayon rouge, deux
+	# canaux que le moteur donne a tout monstre. Verifie en capture.
+	var mecha := _enemy("mecha_golem", "Golem a noyau", K.MINIBOSS, 6, 135.0, 26.0, 13,
+		S.SQUARE, Color(0.55, 0.60, 0.70), 56.0)
+	mecha.anim_key = &"mechagolem"
+	mecha.laser_damage = 6
+	mecha.laser_cooldown = 1.8
+	# Pierre et cristal : le physique s y ebreche, rien a empoisonner, on ne le
+	# ralentit pas. Le cristal du noyau boit la magie savante mais CONDUIT la
+	# foudre — c est sa faille, differente de celle du Golem de pierre (arcane).
+	_resist(mecha, {&"phys": 0.65, &"feu": 0.9, &"givre": 1.0, &"arcane": 0.8,
+		&"poison": 0.0, &"foudre": 1.35, &"lent": 0.0})
+	_save(mecha, E + "mecha_golem.tres")
+
+	# LES JUMEAUX DU CERCLE — MINI-BOSS de `lvl_12`, le temple d Ymoa (« auras et
+	# protections »). Deux diablotins lies : si l un tombe pendant que l autre tient
+	# debout, il se RELEVE 4 s plus tard a 60 % de ses PV. Ils se protegent l un
+	# l autre, ce qui est tout le propos du temple.
+	#
+	# `swarm_count = 2` et non deux entrees : UNE definition, donc UN tirage en
+	# Massacre, fait descendre la paire complete. Deux definitions auraient laisse
+	# le mode infini tirer un jumeau seul, qui n est plus qu un monstre ordinaire.
+	#
+	# La reponse : un sort de zone, ou deux frappes rapprochees. Deux retours au plus
+	# par jumeau (`twin_max_returns`), sinon un joueur sans zone ne finit jamais.
+	var twins := _enemy("circle_twins", "Jumeaux du Cercle", K.MINIBOSS, 6, 70.0, 40.0, 7,
+		S.DIAMOND, Color(0.85, 0.30, 0.30), 44.0)
+	twins.anim_key = &"demon"
+	# La feuille `demon` n occupe que 22 % de sa case : sans correction chaque
+	# jumeau entrerait a la taille d un gnome.
+	twins.sprite_scale = 1.3
+	twins.swarm_count = 2
+	twins.twin_group = &"circle_twins"
+	twins.twin_revive_delay = 4.0
+	twins.twin_revive_hp_pct = 60.0
+	twins.twin_max_returns = 2
+	# Diablotins : le feu est leur element, le givre leur faille. Le temple ne leur
+	# donne aucune armure — leur protection est l AUTRE jumeau, pas leur peau.
+	_resist(twins, {&"phys": 1.0, &"feu": 0.6, &"givre": 1.25, &"arcane": 1.0,
+		&"poison": 0.8, &"foudre": 1.1})
+	_save(twins, E + "circle_twins.tres")
+
+	# MALYK, LE SEIGNEUR DEMON — BOSS de `lvl_13`, le pentacle brise.
+	#
+	# LE DOCUMENT LUI FAIT DEJA SA PLACE sans le nommer : « Aucun des quatre n a meme
+	# lu l ordre. Ils l ont RECU. » Malyk est celui qui l a porte — le seigneur du
+	# pentacle, que les quatre grands demons croyaient servir. La Reine gorgone,
+	# qui tenait la place faute de tete (chantier N3), redescend mener le palier
+	# de mini-boss du meme niveau, au milieu de ses Regards.
+	#
+	# DEVOREUR-INVOCATEUR : il appelle des Cacodemons et, une fois qu ils ont muri
+	# trois secondes, il les RAPPELLE et les mange pour se soigner de 60 % de ce
+	# qu il leur restait. Tuer ses sbires loin de lui lui coupe les vivres ; les
+	# laisser vivre le rend plus dur a finir. La question est celle de l Ensevelisseur
+	# retournee : il ne faut pas seulement couper la source, il faut affamer le boss.
+	var demon_lord := _enemy("demon_lord", "Malyk, Seigneur demon", K.BOSS, 10, 210.0, 30.0, 32,
+		S.STAR, Color(0.45, 0.25, 0.55), 80.0)
+	demon_lord.anim_key = &"demonlord"
+	demon_lord.devours = true
+	demon_lord.devour_heal_pct = 60.0
+	demon_lord.devour_delay = 3.0
+	demon_lord.summon_def = load(E + "cacodaemon.tres")
+	demon_lord.summon_interval = 6.0
+	demon_lord.summon_count = 1
+	# Trois au plus : chaque Cacodemon vaut jusqu a 16 PV de soin, et trois a
+	# l ecran suffisent a rendre le combat long pour qui les ignore.
+	demon_lord.summon_max_alive = 3
+	# Le maitre du monde demoniaque : le feu lui appartient, le givre le fend comme
+	# il fend toute sa lignee. L arcane atteint ce qui le lie au pentacle.
+	_resist(demon_lord, {&"phys": 0.85, &"feu": 0.55, &"givre": 1.25, &"arcane": 1.2,
+		&"poison": 0.7, &"foudre": 1.0})
+	_save(demon_lord, E + "demon_lord.tres")
+
+	# --- LE TRIO DE MAGES (acte 3) et SES ADEPTES (actes 4 et 5) ----------
+	#
+	# BOSS de `lvl_20`, la cour des rois morts : « statues, arrieres-gardes
+	# laissees par le roi ». Trois gardiens de pierre flottants (la famille du Sceau
+	# de Tombol) arrivent ENSEMBLE, chacun avec sa table et son pouvoir :
+	#
+	#   bleu    (givre)   — MIROIR DU MAGE : il avance au rythme du mage
+	#   rouge   (braise)  — TROIS VIES : il revient du haut, de plus en plus vite
+	#   magenta (arcanes) — DIX SCEAUX : ses dix premiers coups ne font rien
+	#
+	# Trois questions opposees en meme temps : ralentir (bleu), tuer loin (rouge),
+	# depenser des petits coups (magenta). Aucun deck ne repond aux trois, le joueur
+	# choisit l ordre — c est ce qui fait d un trio un combat et non trois PV.
+	#
+	# SEUL LE ROUGE EST UN BOSS, et il mene la vague : c est lui que la demande
+	# decrit (« un boss qui revient a la vie trois fois depuis le haut »). Le bleu et
+	# le magenta sont des MINI-BOSS : en Massacre un palier tire UNE tete, et trois
+	# boss d un meme monde y auraient dilue les autres. Le rouge sort donc comme
+	# boss du Grand Cimetiere, ses deux freres comme paliers de mini-boss, chacun
+	# avec son pouvoir entier.
+	#
+	# Le rouge en tete a une seconde raison : la carte de campagne illustre chaque
+	# niveau par sa tete de boss, une silhouette par niveau. La feuille bleue est
+	# celle du Sceau de Tombol, qui ferme le meme acte ; en tete, le bleu lui volait
+	# son medaillon.
+	#
+	# LEURS FEUILLES RESTENT PURES : les trois couleurs du pack font le trio. C est
+	# le Sceau de Tombol, qui partageait la feuille bleue, qui prend une teinte
+	# (AnimCatalog.MODULATE) — il est seul, eux vont par trois.
+	#
+	# Chaine : 100 (bleu) + 85 x (1 + 3 x 60 %) = 238 (rouge) + 85 (magenta) = 423
+	# PV, le poids de l Enfant releve. Chacun est leger ; c est le cumul qui pese.
+	var trio_frost := _enemy("trio_frost", "Mage du givre", K.MINIBOSS, 6, 100.0, 30.0, 12,
+		S.STAR, Color(0.35, 0.65, 0.95), 52.0)
+	trio_frost.anim_key = &"mageguardian"
+	trio_frost.sprite_scale = 1.3
+	# Reference = la vitesse de depart du mage : au premier instant il avance a sa
+	# vitesse de base. Le mage qui accelere l accelere ; le mage touche le freine
+	# plus que le reste du monde. Borne a x1,8 : au-dela il traverse l ecran plus
+	# vite qu une incantation.
+	trio_frost.mirror_speed_ref = GameConfig.SPEED_START_PERCENT
+	trio_frost.mirror_speed_min = 0.6
+	trio_frost.mirror_speed_max = 1.8
+	_resist(trio_frost, {&"phys": 1.0, &"feu": 1.35, &"givre": 0.4, &"arcane": 1.0,
+		&"poison": 0.8, &"foudre": 1.1})
+	_save(trio_frost, E + "trio_frost.tres")
+
+	var trio_ember := _enemy("trio_ember", "Mage de braise", K.BOSS, 10, 85.0, 34.0, 24,
+		S.STAR, Color(0.95, 0.40, 0.25), 56.0)
+	trio_ember.anim_key = &"mageguardian_red"
+	trio_ember.sprite_scale = 1.3
+	# TROIS VIES, mot pour mot la demande : il revient trois fois DEPUIS LE HAUT,
+	# de plus en plus vite. 60 % des PV a chaque retour, +35 % de vitesse cumules.
+	# Le tuer loin du mage lui fait refaire tout le chemin : c est la reponse.
+	trio_ember.extra_lives = 3
+	trio_ember.extra_life_hp_pct = 60.0
+	trio_ember.extra_life_speed_pct = 35.0
+	_resist(trio_ember, {&"phys": 1.0, &"feu": 0.4, &"givre": 1.35, &"arcane": 1.0,
+		&"poison": 0.9, &"foudre": 1.0})
+	_save(trio_ember, E + "trio_ember.tres")
+
+	var trio_arcane := _enemy("trio_arcane", "Mage des arcanes", K.MINIBOSS, 6, 85.0, 32.0, 12,
+		S.STAR, Color(0.80, 0.35, 0.90), 52.0)
+	trio_arcane.anim_key = &"mageguardian_magenta"
+	trio_arcane.sprite_scale = 1.3
+	# DIX SCEAUX, mot pour mot la demande : ses dix premiers coups ne lui font rien.
+	# Dix et non six (Reliquaire, Vharn) parce qu il n est pas seul : pendant que le
+	# joueur depense ses coups sur lui, les deux autres avancent. Les petites cartes
+	# rapides brisent les sceaux, le gros sort se garde pour apres.
+	trio_arcane.hits_immune = 10
+	_resist(trio_arcane, {&"phys": 1.35, &"feu": 1.0, &"givre": 1.0, &"arcane": 0.4,
+		&"poison": 1.0, &"foudre": 0.85})
+	_save(trio_arcane, E + "trio_arcane.tres")
+
+	# LES ADEPTES — le trio revient en MONSTRES ORDINAIRES dans les actes de fin
+	# (acte 5 : « les anciens boss redeviennent des monstres ordinaires »). Meme
+	# feuille, plus petite, un tiers des PV, et la mecanique SIMPLIFIEE — jamais le
+	# .tres du boss rejoue avec ses PV de boss.
+	#
+	# Chacun gagne un trajet non rectiligne a la place du pouvoir qu il perd : le
+	# bleu zigzague, le magenta saute de colonne en colonne (il se teleporte), le
+	# rouge garde UNE vie de rechange.
+	var adept_frost := _enemy("adept_frost", "Adepte du givre", K.NORMAL, 3, 28.0, 44.0, 5,
+		S.STAR, Color(0.35, 0.65, 0.95), 28.0)
+	adept_frost.anim_key = &"mageguardian"
+	adept_frost.move_pattern = EnemyDef.MovePattern.ZIGZAG
+	adept_frost.pattern_width = 200.0
+	_resist(adept_frost, {&"phys": 1.0, &"feu": 1.25, &"givre": 0.6, &"arcane": 1.0,
+		&"poison": 0.85, &"foudre": 1.1})
+	_save(adept_frost, E + "adept_frost.tres")
+
+	var adept_ember := _enemy("adept_ember", "Adepte de braise", K.NORMAL, 3, 22.0, 48.0, 5,
+		S.STAR, Color(0.95, 0.40, 0.25), 28.0)
+	adept_ember.anim_key = &"mageguardian_red"
+	adept_ember.extra_lives = 1
+	adept_ember.extra_life_hp_pct = 60.0
+	_resist(adept_ember, {&"phys": 1.0, &"feu": 0.6, &"givre": 1.25, &"arcane": 1.0,
+		&"poison": 0.9, &"foudre": 1.0})
+	_save(adept_ember, E + "adept_ember.tres")
+
+	var adept_arcane := _enemy("adept_arcane", "Adepte des arcanes", K.NORMAL, 3, 26.0, 44.0, 5,
+		S.STAR, Color(0.80, 0.35, 0.90), 28.0)
+	adept_arcane.anim_key = &"mageguardian_magenta"
+	adept_arcane.move_pattern = EnemyDef.MovePattern.HOP
+	adept_arcane.pattern_width = 220.0
+	adept_arcane.pattern_interval = 1.8
+	# Deux sceaux au lieu de dix : la lecon du maitre, en rappel.
+	adept_arcane.hits_immune = 2
+	_resist(adept_arcane, {&"phys": 1.25, &"feu": 1.0, &"givre": 1.0, &"arcane": 0.6,
+		&"poison": 1.0, &"foudre": 0.9})
+	_save(adept_arcane, E + "adept_arcane.tres")
+
+	# --- ACTE 3 : LE FOSSOYEUR ---------------------------------------------
+	#
+	# MINI-BOSS de `lvl_21`, le pentacle de Tombol, qui n avait aucun palier. Il
+	# ENTRE PAR LE COTE — il sort des tombes du bord, pas du fond du terrain — et il
+	# RELEVE les morts autour de lui : toutes les 4 s, un monstre tombe dans un
+	# rayon de 300 px se remet debout, six fois au plus.
+	#
+	# CE QU IL CHANGE : l ordre des cibles. Partout ailleurs on nettoie la vague et
+	# on finit par le gros ; ici chaque mort pres de lui est un corps a retuer, et
+	# la seule sortie est de le chercher d abord, sur le cote ou il est entre.
+	# LE PLAFOND (six releves) EST LA MECANIQUE : sans lui la vague ne finirait pas.
+	var digger := _enemy("gravedigger", "Le Fossoyeur", K.MINIBOSS, 6, 120.0, 32.0, 13,
+		S.SQUARE, Color(0.40, 0.40, 0.45), 54.0)
+	digger.anim_key = &"pawn_black"
+	# La feuille pawn_black occupe 40 % de sa case : agrandie pour qu il domine les
+	# goules qu il releve.
+	digger.sprite_scale = 1.4
+	digger.entry_side = true
+	digger.reanimate_radius = 300.0
+	digger.reanimate_interval = 4.0
+	digger.reanimate_max = 6
+	# Un homme de pelle : chair vivante sous la capuche. Le feu le trouve, le venin
+	# des fosses ne lui fait plus rien depuis longtemps.
+	_resist(digger, {&"phys": 1.1, &"feu": 1.2, &"givre": 0.9, &"arcane": 1.1,
+		&"poison": 0.6, &"foudre": 1.0})
+	_save(digger, E + "gravedigger.tres")
+
+	# --- ACTE 5 : L ESPACE DIVIN -------------------------------------------
+
+	# LE CAMELEON DES SAISONS — MINI-BOSS de `lvl_14`, la galerie des saisons.
+	# Toutes les 5 s il change d element faible, dans l ordre des saisons : feu
+	# (l ete), poison (l automne), givre (l hiver), foudre (le printemps). L element
+	# resiste est a l oppose du cycle. Le deck qui gagne est celui qui a DEUX
+	# elements et attend le bon moment.
+	#
+	# Il ne declare AUCUN de ces quatre elements dans `resistances` : les deux
+	# tables se multiplieraient, et un feu resiste a 0,5 par la table et a 0,5 par
+	# le cycle deviendrait une immunite de fait.
+	var chameleon := _enemy("season_chameleon", "Cameleon des saisons", K.MINIBOSS, 6,
+		125.0, 36.0, 13, S.STAR, Color(0.70, 0.85, 0.55), 54.0)
+	chameleon.anim_key = &"wraith"
+	chameleon.chameleon_interval = 5.0
+	chameleon.chameleon_elements = [T.FIRE, T.POISON, T.FROST, T.LIGHTNING]
+	chameleon.chameleon_weak_mult = 1.5
+	chameleon.chameleon_resist_mult = 0.5
+	_resist(chameleon, {&"phys": 0.9, &"arcane": 1.1})
+	_save(chameleon, E + "season_chameleon.tres")
+
+	# LE GREFFIER — MINI-BOSS de `lvl_15`, le registre. Le commis des dieux qui
+	# tiennent les comptes : il RAYE une ligne de la main du joueur. Toutes les 7 s
+	# il petrifie la carte la plus longue a incanter et, 4 s plus tard, la lance
+	# CONTRE le mage : 5 points de vitesse par seconde d incantation. Tue avant, il
+	# rend la carte.
+	#
+	# Le joueur apprend a jouer ses gros sorts VITE devant lui, ou a garder une
+	# main de petites cartes — le contraire exact du Reliquaire.
+	var clerk := _enemy("spell_clerk", "Le Greffier", K.MINIBOSS, 6, 115.0, 34.0, 13,
+		S.DIAMOND, Color(0.55, 0.45, 0.80), 54.0)
+	clerk.anim_key = &"evilwizard"
+	clerk.steal_interval = 7.0
+	clerk.steal_cast_delay = 4.0
+	clerk.steal_damage_per_cast_second = 5.0
+	# Un scribe : sa robe ne pare rien, sa plume pare la magie savante.
+	_resist(clerk, {&"phys": 1.3, &"feu": 1.15, &"givre": 0.9, &"arcane": 0.6,
+		&"poison": 0.85, &"foudre": 1.0})
+	_save(clerk, E + "spell_clerk.tres")
+
+	# L HORLOGER — BOSS de `lvl_15`, le registre, qui n avait pas de boss.
+	#
+	# Toutes les 7 s il REVIENT 3 s en arriere : a la position et aux PV qu il
+	# avait alors. Les degats portes juste avant un retour sont effaces, ceux portes
+	# juste APRES tiennent. C est le seul adversaire du jeu qui fait au mage ce que
+	# le mage a fait au monde — il recule le temps — et les dieux du registre le
+	# trouvent amusant pour cette raison exacte.
+	#
+	# Quatre retours au plus (`rewind_max`) : la fenetre garantit deja la fin, le
+	# plafond empeche le combat de s etirer pour qui n a pas compris le rythme.
+	var clock := _enemy("clockmaker", "L Horloger", K.BOSS, 10, 240.0, 30.0, 34,
+		S.HEXAGON, Color(0.90, 0.72, 0.35), 78.0)
+	clock.anim_key = &"decepticle"
+	# Meme correction que le Colosse des Forges (33 % d occupation). La teinte
+	# laiton (AnimCatalog.MODULATE) le distingue du Colosse, qui porte la feuille
+	# nue.
+	clock.sprite_scale = 1.15
+	clock.rewind_interval = 7.0
+	clock.rewind_seconds = 3.0
+	clock.rewind_max = 4
+	# Un automate de laiton : l acier ricoche, rien a empoisonner, et on ne ralentit
+	# pas celui qui tient l heure. La foudre deregle son mecanisme.
+	_resist(clock, {&"phys": 0.7, &"feu": 0.9, &"givre": 1.1, &"arcane": 1.25,
+		&"poison": 0.0, &"foudre": 1.3, &"lent": 0.0})
+	_save(clock, E + "clockmaker.tres")
+
+	# --- LES BOSS PROMUS EN VERMINE (acte 5) --------------------------------
+	#
+	# « Les anciens boss redeviennent des monstres ordinaires. » Chaque promu est un
+	# .tres DERIVE : un tiers des PV environ, une mecanique simplifiee, la feuille
+	# du boss plus petite. Rejouer le .tres du boss aurait envoye ses PV et son
+	# contact de boss dans une vague de troupes.
+
+	# LE CAILLOT — le Coagule (boss de `lvl_02`) en vermine. Il se releve encore une
+	# fois, mais a 30 PV : la lecon du deuxieme niveau, rejouee sans le combat.
+	var clot := _enemy("blood_clot", "Caillot", K.NORMAL, 3, 30.0, 44.0, 5,
+		S.DIAMOND, Color(0.72, 0.18, 0.22), 30.0)
+	clot.anim_key = &"blood"
+	clot.sprite_scale = 1.1
+	clot.revive_hp_pct = 40.0
+	_resist(clot, {&"phys": 0.75, &"feu": 1.25, &"givre": 1.2, &"arcane": 1.0,
+		&"poison": 0.0, &"foudre": 0.9})
+	_save(clot, E + "blood_clot.tres")
+
+	# L ECLAT DE MIROIR — le Miroir de Forge (mini-boss de `lvl_05`) en vermine. Une
+	# garde plus courte (1,5 s sur 6) et un renvoi de 30 % au lieu de 45 : il
+	# rappelle qu il faut regarder avant de lancer, il ne l impose plus.
+	var shard := _enemy("mirror_shard", "Eclat de miroir", K.NORMAL, 3, 24.0, 46.0, 5,
+		S.STAR, Color(0.70, 0.88, 0.95), 28.0)
+	shard.anim_key = &"monk_blue"
+	shard.reflect_interval = 6.0
+	shard.reflect_window = 1.5
+	shard.reflect_pct = 30.0
+	_resist(shard, {&"phys": 1.3, &"feu": 0.85, &"givre": 1.1, &"arcane": 0.8,
+		&"poison": 0.0, &"foudre": 0.85})
+	_save(shard, E + "mirror_shard.tres")
+
 
 
 func _spec(key: String, magnitude: float, duration: float = 0.0,
@@ -2579,10 +3089,13 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# saine (81 a 92 %). Cause : c est le niveau le plus long ET il portait DEUX
 	# vagues a 12 rats (w3_2 et w3_4) en plus des gelees qui se scindent. On
 	# ramene chacune a 8 rats : la lecon du nombre reste, l usure devient tenable.
+	# CHANTIER W2 — deux Slimes moyens en fin de vague : le joueur voit la petite
+	# forme bleue AVANT que le Slime enorme du palier n en lache trois d un coup.
 	a2.entries = [
 		_entry(E + "jelly.tres", 1, 2.5),
 		_entry(E + "rat_swarm.tres", 2, 2.0, 6.0),
 		_entry(E + "sprite.tres", 4, 1.6, 14.0),
+		_entry(E + "slime_mid.tres", 2, 1.6, 20.0),
 	]
 	_save(a2, "res://resources/waves/w3_2.tres")
 
@@ -2608,10 +3121,17 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# LE PRETRE GOULE, et non le Gardien (mort en `lvl_04`, voir lvl_02).
 	# L Ossuaire est plein de morts-vivants : son immunite au poison y rend la
 	# Mare de venin inutile, ce qui force a changer de sort au pire moment.
+	#
+	# CHANTIER W2 — LE SLIME ENORME prend la tete, le Pretre redevient escorte. Un
+	# P3 qui soigne ne faisait pas un palier ; un mini-boss qui se brise en trois
+	# Slimes moyens, dans le niveau des monstres qui se multiplient, en fait un. Le
+	# Pretre y gagne son role : il SOIGNE le slime, donc le tuer d abord est la
+	# decision que la vague demande. Une Sauterelle de moins pour garder le poids.
 	a4.entries = [
-		_entry(E + "ghoul_priest.tres", 1, 1.0),
+		_entry(E + "slime_huge.tres", 1, 1.0),
+		_entry(E + "ghoul_priest.tres", 1, 1.0, 4.0),
 		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
-		_entry(E + "hopper.tres", 3, 1.8, 18.0),
+		_entry(E + "hopper.tres", 2, 1.8, 18.0),
 	]
 	_save(a4, "res://resources/waves/w3_4_miniboss.tres")
 
@@ -2683,7 +3203,7 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "rat_swarm.tres"),
 		load(E + "wisp.tres"), load(E + "hopper.tres"), load(E + "imp_archer.tres"),
 		load(E + "jelly.tres"), load(E + "ghoul_priest.tres"), load(E + "hive.tres"),
-		load(E + "shade.tres"),
+		load(E + "shade.tres"), load(E + "slime_mid.tres"), load(E + "slime_huge.tres"),
 	]
 	# DECK ANTI-NOMBRE. Le contenu du niveau est fait de monstres qui se divisent et
 	# qui pullulent : le mono-cible y est un piege (tuer une Gelee au Trait, c est
@@ -3338,10 +3858,17 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# +35 % : c est le seul mini-boss de la campagne contre lequel la Mare de
 	# venin et le Semis de fletrissure sont le bon choix, ce qui donne enfin une
 	# cible a cette famille de cartes.
+	#
+	# CHANTIER W2 — LE GOLEM A NOYAU remplace le Glouton, un P4 ordinaire qui menait
+	# le palier faute de mini-boss. Il retourne la lecon ci-dessus : chaque coup qui
+	# mord lui arrache un laser, donc la Mare de venin qui tique dix fois devient le
+	# PIRE choix. Dans la forge de Vharn, qui compte les coups, le palier annonce le
+	# boss : un gros sort vaut mieux que dix petits. Le Glouton sort de la vague
+	# (70 PV de moins pour 135 de plus) et une Sauterelle avec lui.
 	f3.entries = [
-		_entry(E + "glutton.tres", 1, 1.0),
+		_entry(E + "mecha_golem.tres", 1, 1.0),
 		_entry(E + "berserker.tres", 2, 2.5, 9.0),
-		_entry(E + "hopper.tres", 4, 1.8, 20.0),
+		_entry(E + "hopper.tres", 3, 1.8, 20.0),
 	]
 	_save(f3, "res://resources/waves/w7_3_miniboss.tres")
 
@@ -3450,6 +3977,7 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "behemoth.tres"), load(E + "shade.tres"),
 		# CHANTIER I2 — la biomasse du monde d origine.
 		load(E + "mushroom.tres"), load(E + "carnivore_plant.tres"),
+		load(E + "mecha_golem.tres"),
 		# CHANTIER N3 — Vharn, qui mene desormais ce niveau. Un boss absent du
 		# pool n a pas de monde en Massacre (`build_membership`) et le tirage ne
 		# le proposerait jamais.
@@ -3707,11 +4235,18 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 	m4.difficulty = 1.45
 	# Le dernier palier avant le Gardien. Il monte SANS doubler : le boss est
 	# deja un saut, il ne faut pas deux sauts d affilee.
+	#
+	# CHANTIER W2 — DEUX RENARDS DORMEURS a la place de deux Sauterelles. On tient
+	# une position pendant que le rat repare : un renard qui s arrete et coupe la
+	# magie deux secondes est la pire chose a laisser vivre devant le dirigeable,
+	# et le tuer eveille est la decision que la vague demande. Meme puissance (P2),
+	# cinq PV de plus chacun.
 	m4.entries = [
 		_entry(E + "hive.tres", 2, 3.0),
 		_entry(E + "rat_swarm.tres", 2, 2.2, 8.0),
 		_entry(E + "hornblower.tres", 1, 1.0, 15.0),
-		_entry(E + "hopper.tres", 3, 1.8, 20.0),
+		_entry(E + "sleepy_fox.tres", 2, 2.4, 18.0),
+		_entry(E + "hopper.tres", 1, 1.8, 22.0),
 	]
 	_save(m4, "res://resources/waves/w9_4.tres")
 
@@ -3746,7 +4281,7 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 	lvl9.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "hopper.tres"),
 		load(E + "rat_swarm.tres"), load(E + "jelly.tres"), load(E + "hive.tres"),
-		load(E + "hornblower.tres"),
+		load(E + "hornblower.tres"), load(E + "sleepy_fox.tres"),
 		load(E + "emberlord.tres"), load(E + "warden.tres"),
 	]
 	# Le deck de la fin d acte : il garde des zones mais rend du MONO-CIBLE lourd,
@@ -4109,10 +4644,15 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	r1.difficulty = 1.40
 	# Un seul Pretre, avec de la chair autour de lui : le joueur doit VOIR la
 	# barre de vie remonter, et comprendre pourquoi.
+	#
+	# CHANTIER W2 — deux Slimes fantomes a la place des deux Ombres : on avance
+	# dans l eau des tombes ouvertes, et ce qui y meurt ne reste pas mort. Trois
+	# secondes apres chacun, un Slime squelette sort de la marque — la premiere
+	# fois que le joueur voit le danger arriver AVANT qu il soit la.
 	r1.entries = [
 		_entry(E + "pit_ghoul.tres", 2, 2.4),
 		_entry(E + "ghoul_priest.tres", 1, 2.0, 10.0),
-		_entry(E + "shade.tres", 2, 2.2, 17.0),
+		_entry(E + "slime_ghost.tres", 2, 2.2, 17.0),
 	]
 	_save(r1, "res://resources/waves/w19_1.tres")
 
@@ -4123,10 +4663,13 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# DEUX Pretres : ils se soignent mutuellement, donc en tuer un seul ne suffit
 	# pas et en tuer aucun rend la vague interminable. Premier vrai probleme
 	# d ordre de cibles de l acte.
+	# CHANTIER W2 — deux Slimes squelettes descendent SEULS, sans fantome : la
+	# silhouette qu on a vue renaitre devient une creature qu on connait.
 	r2.entries = [
 		_entry(E + "ghoul_priest.tres", 2, 2.5),
 		_entry(E + "pit_ghoul.tres", 2, 2.2, 9.0),
-		_entry(E + "shade.tres", 3, 2.0, 18.0),
+		_entry(E + "shade.tres", 1, 2.0, 18.0),
+		_entry(E + "slime_skeleton.tres", 2, 2.0, 20.0),
 	]
 	_save(r2, "res://resources/waves/w19_2.tres")
 
@@ -4137,11 +4680,14 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# Le pic. On ajoute le Squelette pareur, qui avale le premier coup : contre
 	# du soin, le joueur veut des coups repetes ; contre un pareur, le premier
 	# coup est perdu. Les deux exigences s opposent dans la meme vague.
+	# CHANTIER W2 — le Gros slime fantome ferme le pic a la place de deux
+	# Ombres : il laisse DEUX squelettes, donc une marque qui vaut deux corps. Le
+	# joueur qui a appris a viser la marque en w19_1 le fait ici pour de bon.
 	r3.entries = [
 		_entry(E + "pit_ghoul.tres", 2, 2.2),
 		_entry(E + "parry_skeleton.tres", 3, 2.2, 8.0),
 		_entry(E + "ghoul_priest.tres", 1, 2.0, 16.0),
-		_entry(E + "shade.tres", 2, 2.0, 22.0),
+		_entry(E + "slime_ghost_big.tres", 1, 2.0, 22.0),
 	]
 	_save(r3, "res://resources/waves/w19_3.tres")
 
@@ -4160,6 +4706,34 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	]
 	_save(r4, "res://resources/waves/w19_4_miniboss.tres")
 
+	# CHANTIER W2 — LE TRIO DE MAGES, boss des fosses basses.
+	#
+	# Le premier acte de la poursuite : le Roi squelette laisse derriere lui ce
+	# qu il a de plus precieux, TROIS gardiens de la pierre du pentacle (la meme
+	# que le Sceau de Tombol, qu on affrontera au bout de l acte). Ils arrivent
+	# ENSEMBLE — six dixiemes de seconde d ecart, le temps que le joueur lise trois
+	# couleurs et non une tache.
+	#
+	# POURQUOI ICI ET PAS DANS LA COUR DES ROIS MORTS, dont les « statues »
+	# appelaient le trio : mesure au banc du 27/09, `lvl_20` se gagne 13 fois sur
+	# 30 et `lvl_19` 30 fois sur 30. Un boss de plus dans la cour la faisait tomber
+	# a zero ; ici il donne au premier niveau de l acte le palier qui lui manquait.
+	#
+	# Escorte MINIMALE, et tardive : trois tetes a lire suffisent. Deux fournees
+	# de goules a 20 s rappellent que les fosses continuent de se vider.
+	var r5 := WaveDef.new()
+	r5.id = &"w19_5_boss"
+	r5.duration = 45.0
+	r5.difficulty = 1.0
+	r5.is_boss = true
+	r5.entries = [
+		_entry(E + "trio_ember.tres", 1, 1.0),
+		_entry(E + "trio_frost.tres", 1, 1.0, 0.6),
+		_entry(E + "trio_arcane.tres", 1, 1.0, 1.2),
+		_entry(E + "pit_ghoul.tres", 2, 3.0, 20.0),
+	]
+	_save(r5, "res://resources/waves/w19_5_boss.tres")
+
 	var lvl19 := LevelDef.new()
 	lvl19.id = &"lvl_19"
 	lvl19.display_name = "Les fosses basses"
@@ -4167,11 +4741,15 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	lvl19.backdrop = "act2_graveyard"
 	lvl19.intro_story = &"lvl_19_intro"
 	lvl19.outro_story = &"lvl_19_outro"
-	lvl19.waves = [r1, r2, r3, r4]
+	lvl19.waves = [r1, r2, r3, r4, r5]
 	lvl19.enemy_pool = [
 		load(E + "pit_ghoul.tres"), load(E + "ghoul_priest.tres"),
 		load(E + "shade.tres"), load(E + "parry_skeleton.tres"),
 		load(E + "risen_ghoul.tres"), load(E + "pit_witch.tres"),
+		load(E + "slime_ghost.tres"), load(E + "slime_skeleton.tres"),
+		load(E + "slime_ghost_big.tres"),
+		load(E + "trio_frost.tres"), load(E + "trio_ember.tres"),
+		load(E + "trio_arcane.tres"),
 	]
 	# DECK ANTI-SOIN. Un soigneur ne se bat pas au total de degats, il se bat au
 	# DEBIT : il faut passer sa barre plus vite qu il ne la remonte. D ou trois
@@ -4357,18 +4935,31 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 	_save(t1, "res://resources/waves/w21_1.tres")
 
 	var t2 := WaveDef.new()
-	t2.id = &"w21_2"
+	t2.id = &"w21_2_miniboss"
 	t2.duration = 28.0
 	t2.difficulty = 1.55
 	# LE VER DE FEU entre : il remonte du puits, il ondule et il tire. Il est
 	# aussi le seul monstre de l acte IMMUNISE AU FEU — le joueur qui a fini par
 	# se fabriquer un deck de feu trouve ici la porte fermee.
+	#
+	# CHANTIER W2 — LA VAGUE DEVIENT UN PALIER : le Fossoyeur la mene. Le pentacle
+	# n avait aucun mini-boss (voir w21_3) et le catalogue en compte desormais un
+	# de plus. Il ENTRE PAR LE COTE, des tombes du bord, et il RELEVE les morts
+	# autour de lui : chaque squelette abattu pres de lui se remet debout. La salle
+	# du portail est la ou l on a enterre le plus, c est la qu il travaille.
+	#
+	# Le poids est tenu : il prend la place de deux Vers et d une Ombre, et la
+	# difficulte descend a 1,10 comme sur tout palier — ses six releves sont deja
+	# un supplement de PV que le tableau ne voit pas.
+	t2.is_miniboss = true
+	t2.difficulty = 1.10
 	t2.entries = [
-		_entry(E + "fire_worm.tres", 3, 2.2),
-		_entry(E + "parry_skeleton.tres", 3, 2.0, 10.0),
-		_entry(E + "shade.tres", 2, 2.0, 19.0),
+		_entry(E + "gravedigger.tres", 1, 1.0),
+		_entry(E + "fire_worm.tres", 1, 2.2, 4.0),
+		_entry(E + "parry_skeleton.tres", 2, 2.0, 10.0),
+		_entry(E + "shade.tres", 1, 2.0, 19.0),
 	]
-	_save(t2, "res://resources/waves/w21_2.tres")
+	_save(t2, "res://resources/waves/w21_2_miniboss.tres")
 
 	var t3 := WaveDef.new()
 	t3.id = &"w21_3"
@@ -4431,7 +5022,7 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 		load(E + "fire_worm.tres"), load(E + "shade.tres"),
 		load(E + "void_knight.tres"), load(E + "berserker.tres"),
 		load(E + "totem_guardian.tres"), load(E + "current_eye.tres"),
-		load(E + "tombol_seal.tres"),
+		load(E + "tombol_seal.tres"), load(E + "gravedigger.tres"),
 	]
 	# DECK DE SYNTHESE DE L ACTE 3, et il doit resoudre TROIS problemes que rien
 	# ne resout ensemble : une aura qu il faut percer, un boss qui ne bouge pas,
@@ -4588,11 +5179,16 @@ func _acte_4_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	s4.duration = 30.0
 	s4.difficulty = 1.45
 	# Le dernier palier avant le boss : il monte SANS doubler la vague precedente.
+	#
+	# CHANTIER W2 — deux Cacodemons a la place de trois Sauterelles : des gueules
+	# volantes dans les fosses ou tout se mange. Le Glouton de la meme vague les
+	# gobe s il les croise (P3 sous P4) — le joueur qui les laisse vivre nourrit
+	# le monstre qu il devra finir, la lecon exacte de Sesh.
 	s4.entries = [
 		_entry(E + "glutton.tres", 1, 1.0),
 		_entry(E + "hive.tres", 1, 2.5, 8.0),
 		_entry(E + "jelly.tres", 2, 2.5, 16.0),
-		_entry(E + "hopper.tres", 3, 1.8, 24.0),
+		_entry(E + "cacodaemon.tres", 2, 2.4, 22.0),
 	]
 	_save(s4, "res://resources/waves/w10_4.tres")
 
@@ -4627,6 +5223,7 @@ func _acte_4_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "hive.tres"), load(E + "hopper.tres"), load(E + "glutton.tres"),
 		load(E + "mushroom.tres"), load(E + "carnivore_plant.tres"),
 		load(E + "demon_slime.tres"), load(E + "demon_maw.tres"),
+		load(E + "cacodaemon.tres"),
 	]
 	# DECK DE ZONE, parce que le niveau est fait de nombre. Mais le Slime
 	# demoniaque etant immunise au feu, le deck porte AUSSI du givre et de
@@ -4824,6 +5421,9 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 	y3.id = &"w12_3"
 	y3.duration = 32.0
 	y3.difficulty = 1.40
+	# (CHANTIER W2 : le niveau a desormais son mini-boss, les Jumeaux du Cercle en
+	# w12_4. La note qui suit explique pourquoi cette vague-ci s en passait.)
+	#
 	# PAS DE MINI-BOSS DANS CE NIVEAU, ET C EST UNE CONTRAINTE SUBIE, pas un
 	# choix : le catalogue est EPUISE. Les huit mini-boss et les treize boss du
 	# jeu mènent deja un niveau chacun (`test_bosses` interdit qu un adversaire en
@@ -4845,21 +5445,29 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 	_save(y3, "res://resources/waves/w12_3.tres")
 
 	var y4 := WaveDef.new()
-	y4.id = &"w12_4"
-	y4.duration = 30.0
-	y4.difficulty = 1.45
+	y4.id = &"w12_4_miniboss"
+	y4.duration = 32.0
+	y4.difficulty = 1.10
+	y4.is_miniboss = true
 	# LA VAGUE LA PLUS FERMEE DU NIVEAU, et celle qui prepare litteralement le
 	# boss : une aura posee devant du BLINDAGE. La vague precedente demandait de
 	# couper quatre soutiens ; celle-ci en laisse un seul, mais ce qu il protege
 	# est un Behemoth de 130 PV. Le joueur ne peut plus etaler ses sorts, il doit
 	# choisir l ordre — exactement ce qu Ymoa lui demandera depuis le fond du
 	# terrain.
+	#
+	# CHANTIER W2 — LES JUMEAUX DU CERCLE prennent la place du Behemoth et font de
+	# la vague le palier qui manquait au temple. Ce qu elle demandait reste vrai et
+	# devient plus aigu : l aura du Totem couvre deux diablotins qui se RELEVENT
+	# l un l autre tant que l autre tient debout. Le joueur doit couper le Totem,
+	# puis frapper les deux ensemble — deux protections superposees, le propos
+	# d Ymoa. Difficulte de palier (1,10) : la paire et ses retours sont le poids.
 	y4.entries = [
-		_entry(E + "totem_guardian.tres", 1, 1.0),
-		_entry(E + "behemoth.tres", 1, 1.0, 10.0),
-		_entry(E + "shade.tres", 3, 2.0, 20.0),
+		_entry(E + "circle_twins.tres", 1, 1.2),
+		_entry(E + "totem_guardian.tres", 1, 1.0, 6.0),
+		_entry(E + "shade.tres", 2, 2.0, 20.0),
 	]
-	_save(y4, "res://resources/waves/w12_4.tres")
+	_save(y4, "res://resources/waves/w12_4_miniboss.tres")
 
 	var y5 := WaveDef.new()
 	y5.id = &"w12_5_boss"
@@ -4891,6 +5499,7 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 		load(E + "ghoul_priest.tres"), load(E + "golem.tres"),
 		load(E + "shade.tres"), load(E + "gnome.tres"),
 		load(E + "behemoth.tres"), load(E + "demon_circle.tres"),
+		load(E + "circle_twins.tres"),
 	]
 	# DECK DE PORTEE ET DE PERCEE. Le boss campe au fond : il faut des cartes qui
 	# vont LOIN (Fleche percante, Meteore) et de l arcane, qui fend le cristal.
@@ -4944,6 +5553,14 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# piece du plateau. » Elle annonce aussi la mecanique du boss final, qui
 	# petrifie lui aussi : le joueur doit l avoir vue une fois avant la derniere
 	# vague du jeu.
+	#
+	# CHANTIER W2 — MALYK FERME LE PENTACLE, LA REINE MENE SON PALIER. La Reine
+	# tenait la place du boss faute de tete (« le dernier boss libre du
+	# catalogue ») ; le Seigneur demon est celui que la scene attend sans le
+	# nommer — « aucun des quatre n a lu l ordre, ils l ont RECU ». Elle ne quitte
+	# pas le niveau : elle prend la tete de w13_3, qui etait deja la vague du
+	# Regard, et ce qui est ecrit plus haut reste vrai — le joueur voit la
+	# petrification a trois cartes avant l Enfant.
 
 	var p1 := WaveDef.new()
 	p1.id = &"w13_1"
@@ -4974,9 +5591,10 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	_save(p2, "res://resources/waves/w13_2.tres")
 
 	var p3 := WaveDef.new()
-	p3.id = &"w13_3"
-	p3.duration = 34.0
-	p3.difficulty = 1.40
+	p3.id = &"w13_3_miniboss"
+	p3.duration = 36.0
+	p3.difficulty = 1.10
+	p3.is_miniboss = true
 	# Citation de KALTEK : la rage et le blindage ensemble.
 	#
 	# PAS DE MINI-BOSS ICI NON PLUS, meme cause qu au temple d Ymoa : le catalogue
@@ -4989,12 +5607,20 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# effet (trois cartes bloquees) sans usurper sa place de mini-boss, et ils
 	# preparent la Reine exactement comme il faut : le joueur apprend la mecanique
 	# sur des cibles fragiles avant de la subir d un boss.
+	#
+	# CHANTIER W2 — LE PALIER EXISTE ENFIN, et c est la Reine qui le mene. Les
+	# trois Regards de l ancienne vague etaient sa doublure : la Reine gele a elle
+	# seule les trois cartes qu ils gelaient a trois. On garde UN Regard pour que
+	# la lignee se lise (le petit sous la grande), et l escorte perd un Berserker
+	# et un Chevalier pour que la vague ne pese pas la Reine EN PLUS de ce qu elle
+	# pesait. Difficulte de palier (1,10).
 	p3.entries = [
-		_entry(E + "gorgon_gazer.tres", 3, 2.2),
-		_entry(E + "berserker.tres", 3, 2.2, 10.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 22.0),
+		_entry(E + "gorgon_queen.tres", 1, 1.0),
+		_entry(E + "gorgon_gazer.tres", 1, 2.2, 8.0),
+		_entry(E + "berserker.tres", 2, 2.2, 12.0),
+		_entry(E + "void_knight.tres", 1, 2.5, 24.0),
 	]
-	_save(p3, "res://resources/waves/w13_3.tres")
+	_save(p3, "res://resources/waves/w13_3_miniboss.tres")
 
 	var p4 := WaveDef.new()
 	p4.id = &"w13_4"
@@ -5036,10 +5662,16 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	p5.duration = 50.0
 	p5.difficulty = 1.05
 	p5.is_boss = true
-	# LA REINE GORGONE. Une seule, et une escorte melangee des quatre familles :
+	# MALYK, LE SEIGNEUR DEMON (chantier W2), a la place de la Reine gorgone, qui
+	# mene desormais le palier w13_3. Une escorte melangee des quatre familles :
 	# c est le pentacle qui se fend, donc les quatre mondes arrivent ensemble.
+	#
+	# Il appelle ses Cacodemons et les MANGE pour se soigner : l escorte ecrite ne
+	# change pas, c est lui qui ajoute ses propres corps. Les Golems (P3, lents)
+	# restent hors de portee de sa gueule le temps qu il les rattrape — il gobe ce
+	# qui est plus faible que lui, et c est aussi une facon de lire le personnage.
 	p5.entries = [
-		_entry(E + "gorgon_queen.tres", 1, 1.0),
+		_entry(E + "demon_lord.tres", 1, 1.0),
 		_entry(E + "golem.tres", 2, 2.8, 12.0),
 		_entry(E + "berserker.tres", 2, 2.5, 26.0),
 		_entry(E + "hive.tres", 1, 2.5, 38.0),
@@ -5061,6 +5693,7 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 		load(E + "totem_guardian.tres"), load(E + "ghoul_priest.tres"),
 		load(E + "shade.tres"),
 		load(E + "gorgon_gazer.tres"), load(E + "gorgon_queen.tres"),
+		load(E + "demon_lord.tres"), load(E + "cacodaemon.tres"),
 		# Les quatre seigneurs, qui reviennent dans les vagues du pentacle.
 		load(E + "demon_anvil.tres"), load(E + "demon_maw.tres"),
 		load(E + "demon_chain.tres"), load(E + "demon_circle.tres"),
@@ -5155,10 +5788,15 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	g1.difficulty = 1.40
 	# La toute premiere vague du jeu, citee mot pour mot (gnomes et lutins), mais
 	# au double du nombre. Le joueur doit reconnaitre la vitrine.
+	#
+	# CHANTIER W2 — deux Renards dormeurs a la place de deux Sauterelles : la
+	# foret de Nuri exposee avec ses betes etranges, celles qui endormaient la
+	# magie du mage devant le dirigeable.
 	g1.entries = [
 		_entry(E + "gnome.tres", 6, 1.6),
 		_entry(E + "sprite.tres", 5, 1.4, 9.0),
-		_entry(E + "hopper.tres", 3, 1.8, 18.0),
+		_entry(E + "sleepy_fox.tres", 2, 2.4, 16.0),
+		_entry(E + "hopper.tres", 1, 1.8, 22.0),
 	]
 	_save(g1, "res://resources/waves/w14_1.tres")
 
@@ -5187,6 +5825,12 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	g3.id = &"w14_3"
 	g3.duration = 34.0
 	g3.difficulty = 1.45
+	# (CHANTIER W2 : la galerie a desormais un palier, le Cameleon des saisons en
+	# w14_4, et un boss, le Slime colossal en w14_6. Le co-auteur a demande de
+	# combler les niveaux sans tete ; la note qui suit explique pourquoi ils en
+	# etaient prives, et le propos tient toujours — les TROUPES de l acte restent
+	# d anciens boss sans titre.)
+	#
 	# AUCUNE VAGUE DE MINI-BOSS DANS TOUT L ACTE 5, et pour une fois la contrainte
 	# et le propos disent la meme chose.
 	#
@@ -5214,18 +5858,24 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	_save(g3, "res://resources/waves/w14_3.tres")
 
 	var g4 := WaveDef.new()
-	g4.id = &"w14_4"
-	g4.duration = 31.0
-	g4.difficulty = 1.50
+	g4.id = &"w14_4_miniboss"
+	g4.duration = 33.0
+	g4.difficulty = 1.10
+	g4.is_miniboss = true
 	# Melange acte 1 + acte 2, comme le document le demande : la foret et les Sky
 	# Lands dans la meme vitrine.
+	#
+	# CHANTIER W2 — LE CAMELEON DES SAISONS mene la vague, qui devient le palier
+	# de la galerie. Il change d element faible toutes les 5 s dans l ordre des
+	# saisons : c est la galerie qui se met a tourner. L escorte perd la Ruche et
+	# un Feu follet, et la difficulte descend a celle d un palier.
 	g4.entries = [
-		_entry(E + "hornblower.tres", 1, 1.0),
-		_entry(E + "wisp.tres", 4, 1.8, 8.0),
-		_entry(E + "imp_archer.tres", 2, 2.0, 16.0),
-		_entry(E + "hive.tres", 1, 2.5, 24.0),
+		_entry(E + "season_chameleon.tres", 1, 1.0),
+		_entry(E + "hornblower.tres", 1, 1.0, 4.0),
+		_entry(E + "wisp.tres", 3, 1.8, 10.0),
+		_entry(E + "imp_archer.tres", 2, 2.0, 18.0),
 	]
-	_save(g4, "res://resources/waves/w14_4.tres")
+	_save(g4, "res://resources/waves/w14_4_miniboss.tres")
 
 	var g5 := WaveDef.new()
 	g5.id = &"w14_5"
@@ -5235,14 +5885,40 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# tete d affiche a la fin. Les divinites ne mettent pas de gardien a la porte
 	# d une galerie — elles regardent. Le joueur termine sur une vague ordinaire
 	# tres dense, ce qui est plus inquietant qu un boss.
+	#
+	# (CHANTIER W2 : elle n est plus la derniere, le Slime colossal ferme la
+	# galerie. Deux Caillots — le Coagule du niveau 2 en vermine — remplacent les
+	# deux nuees : un ancien boss qui se releve encore, sans titre.)
 	g5.entries = [
 		_entry(E + "warden.tres", 2, 5.0),
 		_entry(E + "berserker.tres", 3, 2.5, 12.0),
 		_entry(E + "hive.tres", 1, 2.5, 20.0),
-		_entry(E + "rat_swarm.tres", 2, 2.2, 26.0),
+		_entry(E + "blood_clot.tres", 2, 2.4, 26.0),
 		_entry(E + "sprite.tres", 4, 1.4, 30.0),
 	]
 	_save(g5, "res://resources/waves/w14_5.tres")
+
+	# CHANTIER W2 — LE SLIME COLOSSAL ferme la galerie des saisons.
+	#
+	# Le musee de ce que le joueur a tue finit sur la plus grosse piece : toutes
+	# les gelees de l acte 1 et les slimes de l acte 2 refondus en une masse sous
+	# une croute de lave. Rien n est neuf dans ce qu il fait (se diviser, le joueur
+	# le sait depuis le niveau 2) ; tout est plus grand. C est la definition du
+	# « plus rien n impressionne » — et pourtant il faut changer d element au
+	# milieu du combat, quand la croute cede.
+	#
+	# Escorte MINIMALE et tardive : il lache lui-meme sept corps en deux temps. Sa
+	# chaine pese 402 PV, sous la vague precedente : le palier est la mecanique.
+	var g6 := WaveDef.new()
+	g6.id = &"w14_6_boss"
+	g6.duration = 48.0
+	g6.difficulty = 1.0
+	g6.is_boss = true
+	g6.entries = [
+		_entry(E + "slime_colossal.tres", 1, 1.0),
+		_entry(E + "hopper.tres", 3, 2.0, 24.0),
+	]
+	_save(g6, "res://resources/waves/w14_6_boss.tres")
 
 	var lvl14 := LevelDef.new()
 	lvl14.id = &"lvl_14"
@@ -5254,13 +5930,14 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	lvl14.backdrop = "act5_divine"
 	lvl14.intro_story = &"lvl_14_intro"
 	lvl14.outro_story = &"lvl_14_outro"
-	lvl14.waves = [g1, g2, g3, g4, g5]
+	lvl14.waves = [g1, g2, g3, g4, g5, g6]
 	lvl14.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "hopper.tres"),
 		load(E + "rat_swarm.tres"), load(E + "jelly.tres"), load(E + "hive.tres"),
 		load(E + "hornblower.tres"), load(E + "wisp.tres"),
 		load(E + "imp_archer.tres"), load(E + "berserker.tres"),
-		load(E + "warden.tres"),
+		load(E + "warden.tres"), load(E + "sleepy_fox.tres"), load(E + "blood_clot.tres"),
+		load(E + "season_chameleon.tres"), load(E + "slime_colossal.tres"),
 	]
 	# LE DECK DU RETOUR. Il est fait des cartes de l acte 1 : le joueur refait la
 	# galerie avec la main qu il avait au premier matin, et il decouvre qu elle
@@ -5311,9 +5988,12 @@ depuis le pentacle, et il marche devant."
 	r1.duration = 28.0
 	r1.difficulty = 1.40
 	# Melange acte 3 : les morts-vivants de Tombol, en colonne.
+	#
+	# CHANTIER W2 — deux Adeptes du givre a la place des deux Chevaliers : le trio
+	# des fosses de Tombol revient en vermine, un tiers de ses PV, et il zigzague.
 	r1.entries = [
 		_entry(E + "ghoul_priest.tres", 2, 2.5),
-		_entry(E + "void_knight.tres", 2, 2.5, 10.0),
+		_entry(E + "adept_frost.tres", 2, 2.5, 10.0),
 		_entry(E + "shade.tres", 3, 2.0, 20.0),
 	]
 	_save(r1, "res://resources/waves/w15_1.tres")
@@ -5339,9 +6019,10 @@ depuis le pentacle, et il marche devant."
 	_save(r2, "res://resources/waves/w15_2.tres")
 
 	var r3 := WaveDef.new()
-	r3.id = &"w15_3"
-	r3.duration = 34.0
-	r3.difficulty = 1.45
+	r3.id = &"w15_3_miniboss"
+	r3.duration = 36.0
+	r3.difficulty = 1.10
+	r3.is_miniboss = true
 	# Meme regle que dans la galerie : aucune tete d affiche dans l acte 5 (voir
 	# `w14_3` pour l argumentaire complet — le catalogue est epuise ET l acte a
 	# pour sujet que plus personne n a de titre).
@@ -5351,12 +6032,20 @@ depuis le pentacle, et il marche devant."
 	# REGARDS GORGONES, communs, qui apportent ici la petrification — et c est la
 	# derniere fois que le joueur la voit avant que l Enfant la lui impose, ce qui
 	# reste la fonction dramatique dont ce niveau avait besoin.
+	#
+	# CHANTIER W2 — LE GREFFIER mene la vague, qui devient le palier du registre.
+	# Le commis des dieux RAYE une ligne de la main : il petrifie la plus longue
+	# carte a incanter et la lance contre le mage. Dans le seul niveau dont le deck
+	# est bati sur des sorts lourds, c est la question la plus cruelle possible —
+	# jouer ses Meteores vite, ou les perdre. Un seul Regard reste pour que la
+	# petrification se lise encore avant l Enfant (la Reine l a montree en `lvl_13`).
 	r3.entries = [
-		_entry(E + "gorgon_gazer.tres", 3, 2.2),
+		_entry(E + "spell_clerk.tres", 1, 1.0),
+		_entry(E + "gorgon_gazer.tres", 1, 2.2, 6.0),
 		_entry(E + "void_knight.tres", 2, 2.5, 12.0),
-		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
+		_entry(E + "ghoul_priest.tres", 1, 2.5, 24.0),
 	]
-	_save(r3, "res://resources/waves/w15_3.tres")
+	_save(r3, "res://resources/waves/w15_3_miniboss.tres")
 
 	var r4 := WaveDef.new()
 	r4.id = &"w15_4"
@@ -5364,12 +6053,14 @@ depuis le pentacle, et il marche devant."
 	r4.difficulty = 1.50
 	# Melange acte 4 : le blindage et l aura, plus le SECOND Chronos. La courbe a
 	# rattrape son poids, il peut maintenant venir accompagne d un Behemoth.
+	# CHANTIER W2 — deux Adeptes de braise a la place de trois Ombres : ils
+	# reviennent une fois du haut, le rappel du Mage de braise des fosses.
 	r4.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 12.0),
 		_entry(E + "totem_guardian.tres", 1, 1.0, 20.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
-		_entry(E + "shade.tres", 3, 2.0, 28.0),
+		_entry(E + "adept_ember.tres", 2, 2.2, 28.0),
 	]
 	_save(r4, "res://resources/waves/w15_4.tres")
 
@@ -5377,6 +6068,10 @@ depuis le pentacle, et il marche devant."
 	r5.id = &"w15_5"
 	r5.duration = 40.0
 	r5.difficulty = 1.50
+	# (CHANTIER W2 : le registre a desormais son boss, l Horloger, en w15_6. Deux
+	# Eclats de miroir — le Miroir de Forge en vermine — remplacent les deux
+	# Chevaliers. La note qui suit dit pourquoi le niveau s en passait.)
+	#
 	# LE REGISTRE N A PAS DE BOSS, et c est la decision la plus consequente de ce
 	# niveau. Le Reliquaire d os, qui devait le fermer, ferme deja `lvl_03` : le
 	# catalogue des treize boss du jeu est entierement consomme par les vingt-et-un
@@ -5396,11 +6091,33 @@ depuis le pentacle, et il marche devant."
 	# tenu, pas parce qu il a vaincu quelqu un.
 	r5.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 14.0),
+		_entry(E + "mirror_shard.tres", 2, 2.5, 14.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
 		_entry(E + "shade.tres", 3, 2.0, 32.0),
 	]
 	_save(r5, "res://resources/waves/w15_5.tres")
+
+	# CHANTIER W2 — L HORLOGER ferme le registre.
+	#
+	# Chronos portait les dates ; l Horloger les REMONTE. Toutes les 7 s il revient
+	# 3 s en arriere, position et PV compris : le seul adversaire du jeu qui fait
+	# au mage ce que le mage a fait au monde. Le registre a ete rature une fois — le
+	# mage l a fait — et c est lui qu on a charge de verifier que ca ne se reproduise
+	# pas. Le deck du niveau (sorts lourds, Concentration, Precipitation) est
+	# exactement celui qui frappe fort dans la fenetre qui suit un retour.
+	#
+	# Escorte legere : deux Adeptes des arcanes qui sautent de colonne en colonne,
+	# pour que le joueur ne puisse pas regarder le boss seul.
+	var r6 := WaveDef.new()
+	r6.id = &"w15_6_boss"
+	r6.duration = 48.0
+	r6.difficulty = 1.0
+	r6.is_boss = true
+	r6.entries = [
+		_entry(E + "clockmaker.tres", 1, 1.0),
+		_entry(E + "adept_arcane.tres", 2, 3.0, 14.0),
+	]
+	_save(r6, "res://resources/waves/w15_6_boss.tres")
 
 	var lvl15 := LevelDef.new()
 	lvl15.id = &"lvl_15"
@@ -5409,12 +6126,15 @@ depuis le pentacle, et il marche devant."
 	lvl15.backdrop = "act5_divine"
 	lvl15.intro_story = &"lvl_15_intro"
 	lvl15.outro_story = &"lvl_15_outro"
-	lvl15.waves = [r1, r2, r3, r4, r5]
+	lvl15.waves = [r1, r2, r3, r4, r5, r6]
 	lvl15.enemy_pool = [
 		load(E + "ghoul_priest.tres"), load(E + "void_knight.tres"),
 		load(E + "shade.tres"), load(E + "risen_ghoul.tres"),
 		load(E + "behemoth.tres"), load(E + "totem_guardian.tres"),
 		load(E + "chronos.tres"), load(E + "gorgon_gazer.tres"),
+		load(E + "adept_frost.tres"), load(E + "adept_ember.tres"),
+		load(E + "adept_arcane.tres"), load(E + "mirror_shard.tres"),
+		load(E + "spell_clerk.tres"), load(E + "clockmaker.tres"),
 	]
 	# LE DECK DU REGISTRE. Le Reliquaire compte les coups, donc il faut des sorts
 	# LOURDS et peu nombreux : c est le seul deck de la campagne construit contre
@@ -5510,11 +6230,13 @@ courir pour voir jusqu ou tu irais."
 	# normale : le joueur a passe quatre niveaux a les abattre un par un, et
 	# l enfant en renvoie deux d un coup sans commentaire. C est la vague qui fait
 	# le plus mal au moral, et c est son seul travail.
+	# CHANTIER W2 — deux Adeptes de braise a la place des deux Chevaliers : les
+	# gardiens de Tombol, eux aussi renvoyes en vermine.
 	f2.entries = [
 		_entry(E + "demon_anvil.tres", 1, 1.0),
 		_entry(E + "demon_maw.tres", 1, 1.0, 14.0),
 		_entry(E + "berserker.tres", 3, 2.5, 8.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 22.0),
+		_entry(E + "adept_ember.tres", 2, 2.5, 22.0),
 	]
 	_save(f2, "res://resources/waves/w16_2.tres")
 
@@ -5525,11 +6247,14 @@ courir pour voir jusqu ou tu irais."
 	# Les deux autres demons, plus Chronos. La derniere vague avant le siege : tout
 	# ce que le joueur a vaincu dans la campagne descend en meme temps, et aucun
 	# n a de titre.
+	# CHANTIER W2 — un Adepte du givre et un des arcanes a la place des deux
+	# Chevaliers : le trio complet est passe dans la vermine avant le siege.
 	f3.entries = [
 		_entry(E + "demon_chain.tres", 1, 1.0),
 		_entry(E + "demon_circle.tres", 1, 1.0, 12.0),
 		_entry(E + "chronos.tres", 1, 1.0, 22.0),
-		_entry(E + "void_knight.tres", 2, 2.5, 8.0),
+		_entry(E + "adept_frost.tres", 1, 2.5, 8.0),
+		_entry(E + "adept_arcane.tres", 1, 2.5, 10.5),
 		_entry(E + "berserker.tres", 3, 2.2, 18.0),
 		_entry(E + "hive.tres", 1, 2.5, 26.0),
 	]
@@ -5582,6 +6307,9 @@ courir pour voir jusqu ou tu irais."
 		# niveau etait illisible pour le banc.
 		load(E + "sprite.tres"), load(E + "hopper.tres"),
 		load(E + "void_knight.tres"), load(E + "hive.tres"),
+		# CHANTIER W2 — le trio de Tombol, renvoye en vermine.
+		load(E + "adept_ember.tres"), load(E + "adept_frost.tres"),
+		load(E + "adept_arcane.tres"),
 	]
 	# LE DECK DE LA DERNIERE MAIN. Trois legendaires, et c est le seul niveau de
 	# la campagne a les poser toutes les trois : le mage entre au siege vide avec

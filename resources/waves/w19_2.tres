@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_xrmfj"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_8bb5c"]
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="3_v1dte"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_o64w3"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_0p4gh"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="5_8bb5c"]
 
-[sub_resource type="Resource" id="Resource_xrmfj"]
+[sub_resource type="Resource" id="Resource_8bb5c"]
 script = ExtResource("1_xrmfj")
 enemy = ExtResource("2_8bb5c")
 count = 2
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_8bb5c"]
+[sub_resource type="Resource" id="Resource_v1dte"]
 script = ExtResource("1_xrmfj")
 enemy = ExtResource("3_v1dte")
 count = 2
 spawn_delay = 2.2
 start_offset = 9.0
 
-[sub_resource type="Resource" id="Resource_v1dte"]
+[sub_resource type="Resource" id="Resource_o64w3"]
 script = ExtResource("1_xrmfj")
 enemy = ExtResource("4_o64w3")
-count = 3
+count = 1
 spawn_delay = 2.0
 start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_0p4gh"]
+script = ExtResource("1_xrmfj")
+enemy = ExtResource("5_8bb5c")
+count = 2
+spawn_delay = 2.0
+start_offset = 20.0
 
 [resource]
 script = ExtResource("5_0p4gh")
 id = &"w19_2"
 duration = 27.0
-entries = Array[ExtResource("1_xrmfj")]([SubResource("Resource_xrmfj"), SubResource("Resource_8bb5c"), SubResource("Resource_v1dte")])
+entries = Array[ExtResource("1_xrmfj")]([SubResource("Resource_8bb5c"), SubResource("Resource_v1dte"), SubResource("Resource_o64w3"), SubResource("Resource_0p4gh")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

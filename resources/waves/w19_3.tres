@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="2_1p4ke"]
 [ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="3_8liur"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_5ks84"]
-[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_gpkhf"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="5_5kkyx"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_lgufp"]
 
 [sub_resource type="Resource" id="Resource_5kkyx"]
@@ -30,8 +30,8 @@ start_offset = 16.0
 
 [sub_resource type="Resource" id="Resource_5ks84"]
 script = ExtResource("1_5kkyx")
-enemy = ExtResource("5_gpkhf")
-count = 2
+enemy = ExtResource("5_5kkyx")
+count = 1
 spawn_delay = 2.0
 start_offset = 22.0
 

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_mphq1"]
-[ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="2_0xyev"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_lord.tres" id="2_mphq1"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="3_ljpno"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_v183x"]
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="5_hj424"]
@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_mphq1"]
 script = ExtResource("1_mphq1")
-enemy = ExtResource("2_0xyev")
+enemy = ExtResource("2_mphq1")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0

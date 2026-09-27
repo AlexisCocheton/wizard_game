@@ -591,6 +591,18 @@ func _test_les_trois_nouvelles_mecaniques_sont_livrees() -> void:
 	# le nombre de boss starves ne GRANDIT pas. Il rougira au prochain boss ajoute
 	# dans un monde deja servi, ce qui est exactement le moment ou il faut ouvrir
 	# wave_budget.gd.
+	#
+	# CHANTIER W2 — LE DEFAUT DU MOTEUR EST CORRIGE, LA SONDE S ADAPTE. pick_boss()
+	# tire desormais au hasard parmi les candidats du monde (wave_budget.gd). Un
+	# boss qui ne sort pas sur 300 vagues d UNE graine n est donc plus un boss
+	# affame, c est un echantillon trop court : 300 vagues ne font que DIX paliers
+	# de boss par monde, et un monde qui compte quatre boss en laisse un de cote
+	# une fois sur dix-huit. Le plafond « 4 prives au plus » mesurait le bug ; il
+	# ne mesurait plus rien une fois le bug parti, sinon le nombre de boss par monde.
+	#
+	# La sonde joue donc le meme echantillon que test_wave_budget (24 graines de
+	# 30 vagues, soit 24 paliers par monde et par genre) et elle devient PLUS
+	# stricte : AUCUN boss rattache a un monde ne doit rester sur le banc.
 	var bosses: Array[EnemyDef] = []
 	var pool: Array[EnemyDef] = []
 	for def: EnemyDef in ContentDB.enemies.values():
@@ -599,31 +611,37 @@ func _test_les_trois_nouvelles_mecaniques_sont_livrees() -> void:
 		elif not def.projectile:
 			pool.append(def)
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 12345
 	var tetes: Dictionary = {}
-	for n in range(1, 301):
-		var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
-		if (w.is_boss or w.is_miniboss) and not w.entries.is_empty() \
-				and w.entries[0].enemy != null:
-			tetes[w.entries[0].enemy.id] = true
+	var troupes: Dictionary = {}
+	for graine in 24:
+		rng.seed = 12345 + graine
+		for n in range(1, 31):
+			var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
+			if (w.is_boss or w.is_miniboss) and not w.entries.is_empty() \
+					and w.entries[0].enemy != null:
+				tetes[w.entries[0].enemy.id] = true
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					troupes[e.enemy.id] = true
 
-	# Les deux boss (kind BOSS) du chantier menent chacun leur monde : eux doivent
-	# sortir, sans exception.
+	# Les porteurs de classe boss menent leur monde : eux doivent sortir EN TETE,
+	# sans exception. Un porteur ORDINAIRE (le Caillot, l Adepte des arcanes :
+	# chantier W2) ne mene jamais un palier — il doit sortir dans les TROUPES.
 	for def in ressuscite + compteur:
-		ok(tetes.has(def.id),
-			"%s n est jamais tire sur 300 vagues de Massacre" % def.id)
+		if def.is_boss():
+			ok(tetes.has(def.id),
+				"%s n est jamais tire en tete de palier en Massacre" % def.id)
+		else:
+			ok(troupes.has(def.id),
+				"%s n est jamais tire dans les troupes du Massacre" % def.id)
 
-	# Le compte de boss starves ne doit pas grandir. 4 est le releve du jour, dont
-	# 3 anterieurs au chantier I.
 	var prives: Array[String] = []
 	for def in bosses:
-		if not tetes.has(def.id):
+		if membership.has(def.id) and not tetes.has(def.id):
 			prives.append(String(def.id))
 	prives.sort()
-	ok(prives.size() <= 4,
-		("%d boss ne sont jamais tires en Massacre (%s) : pick_boss() rend le"
-		+ " PREMIER candidat du monde, donc le premier par ordre alphabetique."
-		+ " Le correctif est dans wave_budget.gd.")
+	ok(prives.is_empty(),
+		("%d boss rattaches a un monde ne sont jamais tires en Massacre (%s)")
 		% [prives.size(), ", ".join(prives)])
 
 

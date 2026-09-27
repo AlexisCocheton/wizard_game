@@ -6,7 +6,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="4_t42rk"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_3soi1"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="5_808tn"]
-[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="6_t42rk"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_ember.tres" id="6_808tn"]
 
 [sub_resource type="Resource" id="Resource_808tn"]
 script = ExtResource("1_5ieor")
@@ -38,9 +38,9 @@ start_offset = 24.0
 
 [sub_resource type="Resource" id="Resource_umbwr"]
 script = ExtResource("1_5ieor")
-enemy = ExtResource("6_t42rk")
-count = 3
-spawn_delay = 2.0
+enemy = ExtResource("6_808tn")
+count = 2
+spawn_delay = 2.2
 start_offset = 28.0
 
 [resource]

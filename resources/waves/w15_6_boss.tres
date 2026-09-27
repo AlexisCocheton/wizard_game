@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_sf10y"]
+[ext_resource type="Resource" path="res://resources/enemies/clockmaker.tres" id="2_dva1i"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_arcane.tres" id="3_lxawo"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_obdrv"]
+
+[sub_resource type="Resource" id="Resource_sf10y"]
+script = ExtResource("1_sf10y")
+enemy = ExtResource("2_dva1i")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_dva1i"]
+script = ExtResource("1_sf10y")
+enemy = ExtResource("3_lxawo")
+count = 2
+spawn_delay = 3.0
+start_offset = 14.0
+
+[resource]
+script = ExtResource("4_obdrv")
+id = &"w15_6_boss"
+duration = 48.0
+entries = Array[ExtResource("1_sf10y")]([SubResource("Resource_sf10y"), SubResource("Resource_dva1i")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

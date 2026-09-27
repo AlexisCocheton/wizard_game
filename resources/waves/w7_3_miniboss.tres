@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_cyq0y"]
-[ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="2_cyq0y"]
+[ext_resource type="Resource" path="res://resources/enemies/mecha_golem.tres" id="2_cyq0y"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_eyx1u"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_68ik4"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_wnuuc"]
@@ -23,7 +23,7 @@ start_offset = 9.0
 [sub_resource type="Resource" id="Resource_eyx1u"]
 script = ExtResource("1_cyq0y")
 enemy = ExtResource("4_68ik4")
-count = 4
+count = 3
 spawn_delay = 1.8
 start_offset = 20.0
 
