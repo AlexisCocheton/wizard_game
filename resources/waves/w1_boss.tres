@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5e45o"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_7m1ey"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_iuf3w"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_8oeh3"]
+
+[sub_resource type="Resource" id="Resource_5e45o"]
+script = ExtResource("1_5e45o")
+enemy = ExtResource("2_7m1ey")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_7m1ey"]
+script = ExtResource("1_5e45o")
+enemy = ExtResource("3_iuf3w")
+count = 6
+spawn_delay = 1.2
+start_offset = 6.0
+
+[resource]
+script = ExtResource("4_8oeh3")
+id = &"w1_boss"
+duration = 40.0
+entries = Array[ExtResource("1_5e45o")]([SubResource("Resource_5e45o"), SubResource("Resource_7m1ey")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

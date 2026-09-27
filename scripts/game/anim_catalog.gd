@@ -219,6 +219,14 @@ const MODULATE: Dictionary = {
 	## Chronos a pleine taille : le boss final ne doit pas sembler arriver en vague 1.
 	"warden_echo": Color(0.72, 0.85, 1.0, 0.82),
 	"chronos_echo": Color(0.72, 0.85, 1.0, 0.82),
+	## CHANTIER W4 — les echos des quatre seigneurs de l acte 4, meme teinte
+	## spectrale. Elle les separe aussi des monstres communs qui portent la meme
+	## feuille (Golem, Glouton, Berserker, Gardien-totem) : sans elle, un echo de
+	## Sesh et un Glouton seraient le meme dessin a la meme taille.
+	"demon_anvil_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"demon_maw_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"demon_chain_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"demon_circle_echo": Color(0.72, 0.85, 1.0, 0.82),
 }
 
 

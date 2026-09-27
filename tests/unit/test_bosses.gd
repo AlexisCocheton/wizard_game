@@ -92,6 +92,7 @@ func run() -> void:
 	_test_les_monstres_neufs_sortent_vraiment_en_massacre()
 	_test_les_paliers_de_la_gorgone_sont_des_paliers()
 	_test_un_promu_ne_garde_pas_les_pv_de_boss()
+	_test_aucune_tete_en_vague_ordinaire()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -970,7 +971,10 @@ func _test_un_promu_ne_garde_pas_les_pv_de_boss() -> void:
 			% [d.id, d.contact_hit(), source.contact_hit(), source.id])
 	# Les deux anciens boss que l acte 5 NOMME ont leur version allegee. Sans ces
 	# deux lignes, retirer toute filiation rendrait le test vide et vert.
-	for ancien: StringName in [&"warden", &"chronos"]:
+	# CHANTIER W4 : les quatre seigneurs de l acte 4, que `lvl_13` et `lvl_16`
+	# renvoient dans des vagues de troupes.
+	for ancien: StringName in [&"warden", &"chronos", &"demon_anvil", &"demon_maw",
+			&"demon_chain", &"demon_circle"]:
 		ok(promus.has(ancien), "%s a sa version allegee (demoted_from)" % ancien)
 	# Une vague ordinaire n envoie jamais le boss lui-meme quand sa vermine existe.
 	for lv: LevelDef in ContentDB.levels.values():
@@ -983,3 +987,70 @@ func _test_un_promu_ne_garde_pas_les_pv_de_boss() -> void:
 				ok(false, ("%s (%s) envoie %s avec ses PV de boss dans une vague ordinaire :"
 					+ " c est %s qui doit descendre")
 					% [w.id, lv.id, e.enemy.id, (promus[e.enemy.id] as EnemyDef).id])
+
+
+# --- CHANTIER W4 : aucune tete dans une vague ordinaire ----------------------
+
+## Les tetes (boss ou mini-boss) qu une vague ORDINAIRE a le droit d envoyer avec
+## leurs PV de tete, cle `vague/monstre`. Chacune est NOMMEE et JUSTIFIEE, et ce
+## sont toutes des MINI-BOSS : un BOSS en vague de troupes n a pas d exception
+## possible (contact de boss, P10, et c est exactement la rupture mesuree).
+##
+## Justification commune, mesuree au banc le 28/09 (30 parties par niveau) :
+## aucun de ces niveaux ne perd ses parties sur la vague qui porte l exception.
+## Ce sont des mini-boss poses en fin de niveau comme une montee, qui leur
+## donnent aussi leur monde de Massacre (build_membership lit les vagues ecrites).
+const TETES_EN_VAGUE_ORDINAIRE: Dictionary = {
+	# 32 % des PV de sa vague ; le premier volant qui tient tete, annonce avant le
+	# boss. lvl_02 : 29/30, aucune defaite en w2_6.
+	"w2_6/skyreaver": "l Ecumeur du ciel annonce le boss volant de l acte",
+	# SA SEULE vague ecrite : sans elle le Gardien d ossements n a ni rencontre en
+	# campagne ni monde en Massacre. lvl_03 : 30/30.
+	"w3_5/bonewarden": "seule rencontre ecrite du Gardien d ossements",
+	# 29 % des PV de sa vague. lvl_05 perd sur le Miroir (w5_3_miniboss), jamais en w5_5.
+	"w5_5/emberlord": "le Seigneur de braise monte la derniere vague de la forge",
+	# lvl_07 perd en w7_2 et sur son mini-boss, jamais en w7_4.
+	"w7_4/totem_elder": "le blindage et le nombre, avec leur porteur d aura",
+	# Deux auras et deux soigneurs : la question du temple posee par une vague.
+	# lvl_12 : 29/30.
+	"w12_3/totem_elder": "la lecon du temple, couper les soutiens dans l ordre",
+	# Le porteur d aura du melange des quatre ; les seigneurs, eux, y descendent
+	# en ECHOS depuis le chantier W4.
+	"w13_4/totem_elder": "l aura qui protege les echos du pentacle",
+}
+
+
+## LE GARDE-FOU GENERAL. `_test_un_promu_ne_garde_pas_les_pv_de_boss` ne mordait
+## que sur un boss qui AVAIT deja sa vermine : `lvl_16` envoyait les quatre
+## seigneurs de l acte 4 avec leurs PV de boss (195 + 205 dans w16_2) et restait
+## vert, faute d echo a comparer. La regle porte desormais sur la TETE elle-meme :
+## une vague ordinaire n envoie aucun boss ni mini-boss, sauf exception nommee
+## ci-dessus — et une exception qui ne correspond plus a rien fait rougir, pour
+## que la liste ne pourrisse pas.
+func _test_aucune_tete_en_vague_ordinaire() -> void:
+	var vues: Dictionary = {}
+	var vagues_ordinaires: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		for w: WaveDef in lv.waves:
+			if w == null or w.is_boss or w.is_miniboss:
+				continue
+			vagues_ordinaires += 1
+			for e: WaveEntry in w.entries:
+				if e == null or e.enemy == null or not e.enemy.is_boss():
+					continue
+				var cle: String = "%s/%s" % [w.id, e.enemy.id]
+				var rang: String = "BOSS" if e.enemy.kind == GameEnums.EnemyKind.BOSS 					else "mini-boss"
+				if not TETES_EN_VAGUE_ORDINAIRE.has(cle):
+					ok(false, ("%s (%s) envoie %s, un %s, avec ses %.0f PV de tete dans une"
+						+ " vague ordinaire : il faut sa version allegee (demoted_from)"
+						+ " ou une exception nommee dans TETES_EN_VAGUE_ORDINAIRE")
+						% [w.id, lv.id, e.enemy.id, rang, e.enemy.max_hp])
+					continue
+				vues[cle] = true
+				not_ok(e.enemy.kind == GameEnums.EnemyKind.BOSS,
+					"%s : un BOSS n a pas d exception en vague ordinaire" % cle)
+	# Sans ce compte, un contenu sans aucune vague ordinaire rendrait le test vide.
+	ok(vagues_ordinaires > ContentDB.levels.size(),
+		"la campagne a des vagues ordinaires a verifier (%d)" % vagues_ordinaires)
+	for cle: String in TETES_EN_VAGUE_ORDINAIRE:
+		ok(vues.has(cle), "l exception %s ne correspond plus a aucune vague : la retirer" % cle)

@@ -15,6 +15,7 @@ func run() -> void:
 	_test_le_niveau_2_prolonge_le_niveau_1()
 	_test_le_joueur_pioche_assez_pour_repondre()
 	_test_le_mode_infini_laisse_le_temps_de_construire()
+	_test_le_tutoriel_est_le_niveau_le_plus_court()
 
 
 ## Les PV d une vague ne doivent jamais plus que doubler d une vague a l autre :
@@ -77,6 +78,36 @@ func _test_le_mode_infini_laisse_le_temps_de_construire() -> void:
 	ok(WaveBudget.budget_for(5) <= derniere,
 		"la vague 5 du mode infini (budget %d) reste sous l avant-derniere du niveau 1 (puissance %d)"
 		% [WaveBudget.budget_for(5), derniere])
+
+
+## LE TUTORIEL EST LE PLUS COURT DES NIVEAUX (chantier W4, demande du testeur :
+## « tutoriel, 3 vagues »). Un RAPPORT et non un nombre : lvl_01 compte moins de
+## vagues et dure moins longtemps que tout autre niveau de la campagne. Les deux
+## essais refuses (quatre puis cinq vagues) retiraient des vagues sans refaire la
+## courbe ; si le tutoriel s allonge pour retrouver un palier, c est ici que ca
+## rougit, et `_test_la_courbe_monte_sans_a_coup` dit s il y a un mur.
+func _test_le_tutoriel_est_le_niveau_le_plus_court() -> void:
+	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	ok(l1 != null and not l1.waves.is_empty(), "le tutoriel lvl_01 existe et a des vagues")
+	if l1 == null:
+		return
+	var duree_l1: float = _duree(l1)
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv == l1:
+			continue
+		ok(l1.waves.size() < lv.waves.size(),
+			"le tutoriel (%d vagues) est plus court que %s (%d vagues)"
+			% [l1.waves.size(), lv.id, lv.waves.size()])
+		ok(duree_l1 < _duree(lv),
+			"le tutoriel (%.0f s de vagues) dure moins que %s (%.0f s)"
+			% [duree_l1, lv.id, _duree(lv)])
+
+
+func _duree(lv: LevelDef) -> float:
+	var t: float = 0.0
+	for w: WaveDef in lv.waves:
+		t += w.duration
+	return t
 
 
 ## Une NUEE compte pour plusieurs corps (swarm_count) : `_entry(rat_swarm, 3)`

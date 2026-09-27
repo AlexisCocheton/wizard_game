@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=52 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_vmxm3"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_4lqvx"]
@@ -54,175 +54,92 @@ params = {
 "key": "build_wall"
 }
 
-[sub_resource type="Resource" id="Resource_i4yhr"]
+[sub_resource type="Resource" id="Resource_gibdu"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("2_4lqvx")
 count = 5
 spawn_delay = 2.2
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_elxgn"]
-script = ExtResource("17_smbsg")
-id = &"w1"
-duration = 22.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_i4yhr")])
-difficulty = 1.0
-is_miniboss = false
-is_boss = false
-
-[sub_resource type="Resource" id="Resource_l1cdp"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("2_4lqvx")
-count = 4
-spawn_delay = 1.8
-start_offset = 0.0
-
-[sub_resource type="Resource" id="Resource_ce7hc"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("3_8wkm5")
-count = 4
-spawn_delay = 1.3
-start_offset = 5.0
-
-[sub_resource type="Resource" id="Resource_s7sqw"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("7_6vmxt")
-count = 2
-spawn_delay = 2.0
-start_offset = 12.0
-
-[sub_resource type="Resource" id="Resource_vs6mp"]
-script = ExtResource("17_smbsg")
-id = &"w2"
-duration = 27.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_l1cdp"), SubResource("Resource_ce7hc"), SubResource("Resource_s7sqw")])
-difficulty = 1.1
-is_miniboss = false
-is_boss = false
-
-[sub_resource type="Resource" id="Resource_ge784"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("6_6vmxt")
-count = 3
-spawn_delay = 2.0
-start_offset = 0.0
-
-[sub_resource type="Resource" id="Resource_pgyu4"]
+[sub_resource type="Resource" id="Resource_v68nu"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("5_ckexf")
 count = 3
 spawn_delay = 2.0
-start_offset = 7.0
+start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_q87ot"]
+[sub_resource type="Resource" id="Resource_374a1"]
 script = ExtResource("18_d8uqj")
-enemy = ExtResource("8_07mnm")
+enemy = ExtResource("6_6vmxt")
 count = 1
 spawn_delay = 1.0
-start_offset = 15.0
+start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_dykfr"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("7_6vmxt")
-count = 1
-spawn_delay = 1.0
-start_offset = 20.0
-
-[sub_resource type="Resource" id="Resource_jmste"]
+[sub_resource type="Resource" id="Resource_elxgn"]
 script = ExtResource("17_smbsg")
-id = &"w3"
+id = &"w1"
 duration = 26.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_ge784"), SubResource("Resource_pgyu4"), SubResource("Resource_q87ot"), SubResource("Resource_dykfr")])
-difficulty = 1.2
+entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_gibdu"), SubResource("Resource_v68nu"), SubResource("Resource_374a1")])
+difficulty = 1.0
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_o1ap2"]
+[sub_resource type="Resource" id="Resource_u6mmx"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("19_ilyg2")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_t2ef7"]
+[sub_resource type="Resource" id="Resource_t6a47"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("2_4lqvx")
 count = 3
 spawn_delay = 2.5
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_y0x5k"]
+[sub_resource type="Resource" id="Resource_d88fn"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("3_8wkm5")
 count = 3
 spawn_delay = 1.6
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_mjm5p"]
+[sub_resource type="Resource" id="Resource_ksq1u"]
+script = ExtResource("18_d8uqj")
+enemy = ExtResource("6_6vmxt")
+count = 1
+spawn_delay = 1.0
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_vs6mp"]
 script = ExtResource("17_smbsg")
-id = &"w4_miniboss"
+id = &"w1_miniboss"
 duration = 30.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_o1ap2"), SubResource("Resource_t2ef7"), SubResource("Resource_y0x5k")])
-difficulty = 0.85
+entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_u6mmx"), SubResource("Resource_t6a47"), SubResource("Resource_d88fn"), SubResource("Resource_ksq1u")])
+difficulty = 0.9
 is_miniboss = true
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_4k3k1"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("4_67x60")
-count = 2
-spawn_delay = 2.5
-start_offset = 0.0
-
-[sub_resource type="Resource" id="Resource_fhclr"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("8_hb77b")
-count = 3
-spawn_delay = 2.0
-start_offset = 6.0
-
-[sub_resource type="Resource" id="Resource_ifisb"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("9_hb77b")
-count = 2
-spawn_delay = 2.0
-start_offset = 12.0
-
-[sub_resource type="Resource" id="Resource_gujlq"]
-script = ExtResource("18_d8uqj")
-enemy = ExtResource("7_07mnm")
-count = 1
-spawn_delay = 1.0
-start_offset = 16.0
-
-[sub_resource type="Resource" id="Resource_31cm4"]
-script = ExtResource("17_smbsg")
-id = &"w5"
-duration = 28.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_4k3k1"), SubResource("Resource_fhclr"), SubResource("Resource_ifisb"), SubResource("Resource_gujlq")])
-difficulty = 1.35
-is_miniboss = false
-is_boss = false
-
-[sub_resource type="Resource" id="Resource_7g5ig"]
+[sub_resource type="Resource" id="Resource_5e45o"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("20_tnbgt")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_qub3u"]
+[sub_resource type="Resource" id="Resource_7m1ey"]
 script = ExtResource("18_d8uqj")
 enemy = ExtResource("3_8wkm5")
 count = 6
 spawn_delay = 1.2
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_6wclg"]
+[sub_resource type="Resource" id="Resource_jmste"]
 script = ExtResource("17_smbsg")
-id = &"w6_boss"
+id = &"w1_boss"
 duration = 40.0
-entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_7g5ig"), SubResource("Resource_qub3u")])
+entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_5e45o"), SubResource("Resource_7m1ey")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true
@@ -239,7 +156,7 @@ intro_story = &"lvl_01_intro"
 outro_story = &"lvl_01_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("17_smbsg")]([SubResource("Resource_elxgn"), SubResource("Resource_vs6mp"), SubResource("Resource_jmste"), SubResource("Resource_mjm5p"), SubResource("Resource_31cm4"), SubResource("Resource_6wclg")])
+waves = Array[ExtResource("17_smbsg")]([SubResource("Resource_elxgn"), SubResource("Resource_vs6mp"), SubResource("Resource_jmste")])
 enemy_pool = Array[ExtResource("1_vmxm3")]([ExtResource("2_4lqvx"), ExtResource("3_8wkm5"), ExtResource("4_67x60"), ExtResource("5_ckexf"), ExtResource("6_6vmxt"), ExtResource("7_6vmxt"), ExtResource("8_07mnm"), ExtResource("9_hb77b"), ExtResource("7_07mnm"), ExtResource("8_hb77b")])
 exploration_deck = Array[ExtResource("9_elxgn")]([ExtResource("10_vs6mp"), ExtResource("10_vs6mp"), ExtResource("10_vs6mp"), ExtResource("10_vs6mp"), ExtResource("11_jmste"), ExtResource("11_jmste"), ExtResource("11_jmste"), ExtResource("12_mjm5p"), ExtResource("12_mjm5p"), ExtResource("13_31cm4"), ExtResource("13_31cm4"), ExtResource("14_8wkm5"), ExtResource("14_8wkm5"), ExtResource("15_67x60"), ExtResource("15_67x60")])
 objectives = Array[ExtResource("15_01qir")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])

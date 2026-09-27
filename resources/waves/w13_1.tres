@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_uqxo2"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="2_o0kv4"]
 [ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="3_5v2y0"]
-[ext_resource type="Resource" path="res://resources/enemies/demon_anvil.tres" id="3_o0kv4"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_anvil_echo.tres" id="3_o0kv4"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_ag0oc"]
 
 [sub_resource type="Resource" id="Resource_o0kv4"]

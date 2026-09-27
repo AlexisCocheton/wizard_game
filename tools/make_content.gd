@@ -1858,6 +1858,88 @@ func _enemies_v3(E: String) -> void:
 		&"poison": 1.05, &"lent": 0.6})
 	_save(chronos_echo, E + "chronos_echo.tres")
 
+	# LES ECHOS DES QUATRE SEIGNEURS DE L ACTE 4 (chantier W4). Meme defaut que le
+	# Gardien et Chronos, un acte plus loin : `lvl_16` envoyait Vharn, Sesh, Kaltek
+	# et Ymoa EUX-MEMES dans ses vagues ordinaires (195 + 205 PV dans w16_2, 175 +
+	# 160 dans w16_3, contact de boss, a difficulte 1,5), et `lvl_13` en citait
+	# trois vagues sur cinq. Au banc (90 parties, degats attribues a leur vraie
+	# source) : lvl_16 a 48 % et lvl_13 a 44 %, les defaites tombant presque
+	# toutes sur w16_3 et w13_4 — Ymoa qui campe, tire et rend son entourage
+	# invulnerable, Kaltek qui fabrique des Berserkers, tous deux avec des PV de
+	# boss. Pas le boss final : les vagues de troupes.
+	#
+	# Meme methode : un .tres derive par seigneur, un P4, la feuille du boss sans
+	# son agrandissement, en teinte spectrale (AnimCatalog.MODULATE). Les tables de
+	# resistances gardent le sens de celles des seigneurs, ecarts ramenes dans la
+	# borne commune des monstres (+/- 35 %).
+	#
+	# REGLE PAR LA MESURE, pas a l estime (60 parties par variante, memes graines) :
+	#   - un tiers des PV et les mecaniques retirees : 60/60 sur les deux niveaux.
+	#     La fin de la campagne ne se jouait plus ;
+	#   - PV pres du plafond du garde-fou (48 % du seigneur) et les mecaniques
+	#     d Ymoa et de Kaltek rendues en plus petit : 54/60 et 58/60 ;
+	#   - DEUX echos de chaque (x2) : 4/60 et 6/60, un mur de nouveau ;
+	#   - retenu : ce reglage, et DEUX echos de Kaltek dans les vagues ou il
+	#     descend (w13_4, w16_3) : 41/60 et 46/60. Des fins d acte dures, qui ne
+	#     sont plus des murs, et le boss final retrouve des defaites a son nom.
+	#
+	# ECHO DE VHARN — deux coups ignores au lieu de six : la lecon « ouvre sur le
+	# gros sort » tient en une seule decision.
+	var anvil_echo := _enemy("demon_anvil_echo", "Echo de Vharn", K.SHIELDED, 4, 94.0, 28.0, 6,
+		S.SQUARE, Color(0.78, 0.52, 0.34), 40.0)
+	anvil_echo.anim_key = &"golem_blue"
+	anvil_echo.hits_immune = 2
+	anvil_echo.demoted_from = &"demon_anvil"
+	_resist(anvil_echo, {&"phys": 0.7, &"feu": 0.75, &"givre": 1.25, &"arcane": 1.2,
+		&"poison": 0, &"foudre": 1.05, &"lent": 0.6})
+	_save(anvil_echo, E + "demon_anvil_echo.tres")
+
+	# ECHO DE SESH — il gobe encore, comme le Glouton dont il porte la feuille :
+	# laisser vivre la vermine autour de lui reste une erreur qui se paie.
+	var maw_echo := _enemy("demon_maw_echo", "Echo de Sesh", K.DEVOURER, 4, 98.0, 40.0, 6,
+		S.CAPSULE, Color(0.88, 0.42, 0.18), 40.0)
+	maw_echo.anim_key = &"dino"
+	maw_echo.devours = true
+	maw_echo.demoted_from = &"demon_maw"
+	_resist(maw_echo, {&"phys": 0.85, &"feu": 0.7, &"givre": 1.25, &"arcane": 1.05,
+		&"poison": 0.75, &"foudre": 1.1})
+	_save(maw_echo, E + "demon_maw_echo.tres")
+
+	# ECHO DE KALTEK — la rage ET les esclaves, en plus petit : un Berserker toutes
+	# les 9 s (7,5 pour Kaltek), deux vivants au plus (trois), une rage qui
+	# plafonne a 1,35 (1,7). Sans les esclaves il n etait qu un Berserker de plus.
+	var chain_echo := _enemy("demon_chain_echo", "Echo de Kaltek", K.ENRAGER, 4, 84.0, 44.0, 6,
+		S.TRIANGLE, Color(0.62, 0.20, 0.45), 38.0)
+	chain_echo.anim_key = &"warrior_red"
+	chain_echo.enrage_speed_pct = 6.0
+	chain_echo.enrage_cap = 1.35
+	chain_echo.summon_def = load(E + "berserker.tres")
+	chain_echo.summon_interval = 9.0
+	chain_echo.summon_count = 1
+	chain_echo.summon_max_alive = 2
+	chain_echo.demoted_from = &"demon_chain"
+	_resist(chain_echo, {&"phys": 1.1, &"feu": 1.05, &"givre": 1.2, &"arcane": 1.0,
+		&"poison": 1.05, &"foudre": 0.9})
+	_save(chain_echo, E + "demon_chain_echo.tres")
+
+	# ECHO D YMOA — il campe au fond et tient son cercle, comme Ymoa, mais son
+	# aura est plus courte (150 px contre 210) et ses tirs plus rares et plus
+	# faibles (3 toutes les 5 s contre 4 toutes les 4,2 s). La question du temple,
+	# aller chercher le protecteur, reste entiere. C est lui qui fait la vague :
+	# deux echos d Ymoa dans la meme vague rendaient le niveau injouable (voir
+	# plus haut), un seul la rend dure.
+	var circle_echo := _enemy("demon_circle_echo", "Echo d Ymoa", K.GUARDIAN, 4, 77.0, 26.0, 6,
+		S.HEXAGON, Color(0.45, 0.75, 0.85), 40.0)
+	circle_echo.anim_key = &"totem_tower"
+	circle_echo.aura_shield_radius = 150.0
+	circle_echo.keeps_distance_at = 480.0
+	circle_echo.shoot_interval = 5.0
+	circle_echo.shot_damage = 3
+	circle_echo.demoted_from = &"demon_circle"
+	_resist(circle_echo, {&"phys": 0.7, &"feu": 0.9, &"givre": 1.1, &"arcane": 1.3,
+		&"poison": 0, &"foudre": 1.15, &"lent": 0.6})
+	_save(circle_echo, E + "demon_circle_echo.tres")
+
 	# --- LE BRISEUR DE TERTRES (chantier W3) -------------------------------
 	#
 	# MINI-BOSS de `lvl_04`, le Grand Appel. Le golem qui a creuse le Grand
@@ -2682,83 +2764,61 @@ func _entry(def_path: String, count: int, delay: float, offset: float = 0.0) -> 
 func _waves_and_level() -> void:
 	var E := "res://resources/enemies/"
 
+	# LE TUTORIEL EN TROIS VAGUES (chantier W4, demande du testeur, reste de la
+	# v2). Deux essais precedents (quatre puis cinq vagues) RETIRAIENT des vagues
+	# de l ancienne courbe et laissaient le boss a plus du double de ce qui le
+	# precedait (« 356 PV apres 165 ») : un mur, refuse a juste titre par
+	# test_balance. Ici la courbe est REFAITE entiere, trois paliers qui montent
+	# chacun sous x2 : 106 -> 189 -> 356 PV.
+	#
+	# Chaque vague apprend UN geste, et porte ce que les objectifs du niveau
+	# demandent (volants, serie de morts) :
+	#   1. viser : gnomes espaces, puis trois feux follets qui VOLENT, puis une
+	#      nuee de rats — la premiere cible faite pour une zone ;
+	#   2. le Gardien, premiere grosse cible, escorte legere (difficulte 0,9) ;
+	#   3. Chronos et ses lutins, inchange.
+	# Mesure (60 parties, memes graines) : 59/60 et 257 % de vitesse a l arrivee,
+	# contre 57/60 et 280 % pour les six vagues. Le niveau dure ~96 s au lieu de
+	# ~173 s : c est le but.
 	var w1 := WaveDef.new()
 	w1.id = &"w1"
-	w1.duration = 22.0
+	# 26 s : a 24 s la vague serait la plus dense du niveau au-dessus du rythme
+	# de pioche (garde-fou de test_balance.gd, neuf decisions dans la vague).
+	w1.duration = 26.0
 	w1.difficulty = 1.0
-	# Premiere vague : espacee, pour apprendre a viser sans etre submerge.
-	w1.entries = [_entry(E + "gnome.tres", 5, 2.2)]
+	w1.entries = [
+		_entry(E + "gnome.tres", 5, 2.2),
+		_entry(E + "wisp.tres", 3, 2.0, 8.0),
+		_entry(E + "rat_swarm.tres", 1, 1.0, 16.0),
+	]
 	_save(w1, "res://resources/waves/w1.tres")
 
 	var w2 := WaveDef.new()
-	w2.id = &"w2"
-	# 27 s et non 25 : a 25 s la vague 2 etait la plus dense du niveau et passait
-	# juste au-dessus du rythme de pioche (garde-fou de test_balance.gd).
-	w2.duration = 27.0
-	w2.difficulty = 1.1
-	# Mesure au banc : sur les six premieres vagues, les PV du mage ne bougeaient
-	# pas avant la vague 5 (interception 89 a 96 %). Les vagues 2 a 4 passaient
-	# SOUS le debit de nettoyage du joueur : il n y avait rien a rater. On resserre
-	# l arrivee des lutins plutot que d ajouter des monstres — c est le groupement
-	# qui cree la pression, pas le nombre.
-	w2.entries = [
-		_entry(E + "gnome.tres", 4, 1.8),
-		_entry(E + "sprite.tres", 4, 1.3, 5.0),
-		_entry(E + "hopper.tres", 2, 2.0, 12.0),
-	]
-	_save(w2, "res://resources/waves/w2.tres")
-
-	var w3 := WaveDef.new()
-	w3.id = &"w3"
-	w3.duration = 26.0
-	w3.difficulty = 1.2
-	# Cette vague precede le mini-boss : elle doit preparer le saut, pas le subir.
-	w3.entries = [
-		_entry(E + "rat_swarm.tres", 3, 2.0),
-		_entry(E + "wisp.tres", 3, 2.0, 7.0),
-		_entry(E + "imp_archer.tres", 1, 1.0, 15.0),
-		_entry(E + "hopper.tres", 1, 1.0, 20.0),
-	]
-	_save(w3, "res://resources/waves/w3.tres")
-
-	var w4 := WaveDef.new()
-	w4.id = &"w4_miniboss"
-	w4.duration = 30.0
+	w2.id = &"w1_miniboss"
+	w2.duration = 30.0
 	# Le mini-boss EST le saut de difficulte : son escorte reste legere pour que
-	# le joueur puisse se concentrer sur lui.
-	w4.difficulty = 0.85
-	w4.is_miniboss = true
-	# Le mini-boss arrivait presque seul : 4 corps sur 30 s, la vague la plus
-	# calme du niveau alors qu elle porte son premier gros monstre.
-	w4.entries = [
+	# le joueur puisse se concentrer sur lui. Sa puissance (14) tient aussi la
+	# regle du Massacre : sa vague 5 reste sous l avant-derniere du niveau 1.
+	w2.difficulty = 0.9
+	w2.is_miniboss = true
+	w2.entries = [
 		_entry(E + "warden.tres", 1, 1.0),
 		_entry(E + "gnome.tres", 3, 2.5, 10.0),
 		_entry(E + "sprite.tres", 3, 1.6, 18.0),
+		_entry(E + "rat_swarm.tres", 1, 1.0, 22.0),
 	]
-	_save(w4, "res://resources/waves/w4_miniboss.tres")
+	_save(w2, "res://resources/waves/w1_miniboss.tres")
 
-	var w5 := WaveDef.new()
-	w5.id = &"w5"
-	w5.duration = 28.0
-	w5.difficulty = 1.35
-	w5.entries = [
-		_entry(E + "golem.tres", 2, 2.5),
-		_entry(E + "shade.tres", 3, 2.0, 6.0),
-		_entry(E + "sand_serpent.tres", 2, 2.0, 12.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 16.0),
-	]
-	_save(w5, "res://resources/waves/w5.tres")
-
-	var w6 := WaveDef.new()
-	w6.id = &"w6_boss"
-	w6.duration = 40.0
-	w6.difficulty = 1.0
-	w6.is_boss = true
-	w6.entries = [
+	var w3 := WaveDef.new()
+	w3.id = &"w1_boss"
+	w3.duration = 40.0
+	w3.difficulty = 1.0
+	w3.is_boss = true
+	w3.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
 		_entry(E + "sprite.tres", 6, 1.2, 6.0),
 	]
-	_save(w6, "res://resources/waves/w6_boss.tres")
+	_save(w3, "res://resources/waves/w1_boss.tres")
 
 	# --- Objectifs ---
 	# Chaque niveau porte SES trois objectifs, poses par _objectifs_de() en fin
@@ -2777,21 +2837,10 @@ func _waves_and_level() -> void:
 	lvl.intro_story = &"lvl_01_intro"
 	lvl.outro_story = &"lvl_01_outro"
 	lvl.backdrop = "act1_sky"
-	# SIX vagues, et c est un choix MESURE, pas un oubli.
-	#
-	# Le testeur demandait un niveau 1 "tutoriel, 3 vagues". Deux essais de
-	# raccourcissement ont ete refuses par le garde-fou d equilibrage :
-	#   - a quatre vagues (w1, w2, mini, boss) : "356 PV apres 165" ;
-	#   - a cinq (sans w5)  : "356 PV apres 165" encore.
-	# Chaque vague retiree est un PALIER en moins, et le boss se retrouve a plus
-	# du DOUBLE de ce qui le precede — c est-a-dire un mur, exactement ce qu un
-	# tutoriel ne doit pas etre.
-	#
-	# Raccourcir vraiment demanderait d alleger AUSSI le boss, donc de refaire
-	# la courbe du niveau 1 entiere. Le niveau se gagne aujourd hui 77-83 % du
-	# temps, dans la cible : le raccourcir n est pas un defaut a corriger mais
-	# un chantier a part, et il faut alors re-mesurer les sept niveaux.
-	lvl.waves = [w1, w2, w3, w4, w5, w6]
+	# TROIS vagues depuis le chantier W4 : voir la courbe plus haut. Le pool garde
+	# les monstres des anciennes vagues 3 et 5 : il ne sert qu au Massacre et a la
+	# vitrine, et l amputer changerait le tirage du mode infini.
+	lvl.waves = [w1, w2, w3]
 	lvl.enemy_pool = [
 		load(E + "gnome.tres"), load(E + "sprite.tres"), load(E + "golem.tres"),
 		load(E + "wisp.tres"), load(E + "rat_swarm.tres"), load(E + "hopper.tres"),
@@ -5626,12 +5675,13 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	p1.id = &"w13_1"
 	p1.duration = 27.0
 	p1.difficulty = 1.35
-	# Citation de VHARN, et VHARN LUI-MEME : le blindage, puis son seigneur.
-	# Meme raison que la vague 4 — les quatre demons doivent avoir leur densite
-	# dans LEUR acte, sinon le Massacre les rattache tous au monde de l acte 5.
+	# Citation de VHARN, et son ECHO : le blindage, puis l ombre de son seigneur.
+	# CHANTIER W4 — les seigneurs eux-memes ne descendent plus dans les vagues de
+	# troupes (voir `demon_anvil_echo` et test_bosses) : ils ne comptent plus que
+	# dans leur propre vague de boss, qui les tient dans le monde de l acte 4.
 	p1.entries = [
 		_entry(E + "golem.tres", 2, 2.5),
-		_entry(E + "demon_anvil.tres", 1, 1.0, 12.0),
+		_entry(E + "demon_anvil_echo.tres", 1, 1.0, 12.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 22.0),
 	]
 	_save(p1, "res://resources/waves/w13_1.tres")
@@ -5640,10 +5690,10 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	p2.id = &"w13_2"
 	p2.duration = 28.0
 	p2.difficulty = 1.40
-	# Citation de SESH, et SESH LUI-MEME : le nombre qui se mange, et la gueule
+	# Citation de SESH, et son ECHO : le nombre qui se mange, et la gueule
 	# qui le mange. Il gobe sa propre escorte de gelees sous les yeux du joueur.
 	p2.entries = [
-		_entry(E + "demon_maw.tres", 1, 1.0),
+		_entry(E + "demon_maw_echo.tres", 1, 1.0),
 		_entry(E + "hive.tres", 2, 2.5, 12.0),
 		_entry(E + "jelly.tres", 2, 2.5, 20.0),
 		_entry(E + "glutton.tres", 1, 1.0, 24.0),
@@ -5688,9 +5738,14 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	p4.difficulty = 1.45
 	# LE MELANGE DES QUATRE, litteralement : le document (section 6) decrit ce
 	# niveau comme « melange des quatre », et cette vague est l endroit ou les
-	# seigneurs eux-memes reviennent. Ymoa et Kaltek descendent ensemble, l aura de
-	# l un protegeant la rage de l autre — la seule combinaison du jeu ou un boss
-	# rend un autre boss invulnerable.
+	# seigneurs reviennent. Ymoa et Kaltek descendent ensemble, l aura de l un
+	# protegeant la rage de l autre.
+	#
+	# CHANTIER W4 — en ECHOS. Avec leurs PV de boss a difficulte 1,45, cette vague
+	# faisait perdre 56 % des parties du niveau (banc, 90 parties). Le paragraphe
+	# qui suit explique pourquoi ils etaient ici ; la raison mecanique ne tient
+	# plus : chaque seigneur reste dans le monde de l acte 4 par sa propre vague
+	# de boss, et ce sont leurs echos qui comptent ici.
 	#
 	# POURQUOI ILS SONT ICI ET PAS SEULEMENT DANS LEURS PROPRES NIVEAUX. Deux
 	# raisons, et la seconde est mecanique.
@@ -5708,8 +5763,9 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	#   n en tirait plus qu un sur neuf. Leur donner leur vraie place dans leur
 	#   propre acte remet chaque seigneur dans son monde de Massacre.
 	p4.entries = [
-		_entry(E + "demon_circle.tres", 1, 1.0),
-		_entry(E + "demon_chain.tres", 1, 1.0, 12.0),
+		_entry(E + "demon_circle_echo.tres", 1, 1.0),
+		# Deux echos de Kaltek : voir la mesure au-dessus de `demon_chain_echo`.
+		_entry(E + "demon_chain_echo.tres", 2, 1.0, 12.0),
 		_entry(E + "totem_elder.tres", 1, 1.0, 18.0),
 		_entry(E + "berserker.tres", 3, 2.2, 8.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
@@ -5754,9 +5810,10 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 		load(E + "shade.tres"),
 		load(E + "gorgon_gazer.tres"), load(E + "gorgon_queen.tres"),
 		load(E + "demon_lord.tres"), load(E + "cacodaemon.tres"),
-		# Les quatre seigneurs, qui reviennent dans les vagues du pentacle.
-		load(E + "demon_anvil.tres"), load(E + "demon_maw.tres"),
-		load(E + "demon_chain.tres"), load(E + "demon_circle.tres"),
+		# Les ECHOS des quatre seigneurs, qui reviennent dans les vagues du
+		# pentacle (chantier W4 : plus les seigneurs eux-memes, voir w13_4).
+		load(E + "demon_anvil_echo.tres"), load(E + "demon_maw_echo.tres"),
+		load(E + "demon_chain_echo.tres"), load(E + "demon_circle_echo.tres"),
 	]
 	# DECK DE SYNTHESE DE L ACTE : il doit repondre aux quatre registres, donc il
 	# n excelle dans aucun. C est voulu : le joueur qui veut mieux doit avoir
@@ -6311,15 +6368,15 @@ courir pour voir jusqu ou tu irais."
 	f2.id = &"w16_2"
 	f2.duration = 30.0
 	f2.difficulty = 1.50
-	# Les quatre grands demons de l acte 4 reviennent, et eux aussi en vague
-	# normale : le joueur a passe quatre niveaux a les abattre un par un, et
+	# Les quatre grands demons de l acte 4 reviennent, en ECHOS (chantier W4 :
+	# leurs .tres de boss faisaient de w16_3 un mur, voir `demon_anvil_echo`) : le joueur a passe quatre niveaux a les abattre un par un, et
 	# l enfant en renvoie deux d un coup sans commentaire. C est la vague qui fait
 	# le plus mal au moral, et c est son seul travail.
 	# CHANTIER W2 — deux Adeptes de braise a la place des deux Chevaliers : les
 	# gardiens de Tombol, eux aussi renvoyes en vermine.
 	f2.entries = [
-		_entry(E + "demon_anvil.tres", 1, 1.0),
-		_entry(E + "demon_maw.tres", 1, 1.0, 14.0),
+		_entry(E + "demon_anvil_echo.tres", 1, 1.0),
+		_entry(E + "demon_maw_echo.tres", 1, 1.0, 14.0),
 		_entry(E + "berserker.tres", 3, 2.5, 8.0),
 		_entry(E + "adept_ember.tres", 2, 2.5, 22.0),
 	]
@@ -6335,8 +6392,9 @@ courir pour voir jusqu ou tu irais."
 	# CHANTIER W2 — un Adepte du givre et un des arcanes a la place des deux
 	# Chevaliers : le trio complet est passe dans la vermine avant le siege.
 	f3.entries = [
-		_entry(E + "demon_chain.tres", 1, 1.0),
-		_entry(E + "demon_circle.tres", 1, 1.0, 12.0),
+		# Deux echos de Kaltek : voir la mesure au-dessus de `demon_chain_echo`.
+		_entry(E + "demon_chain_echo.tres", 2, 1.0),
+		_entry(E + "demon_circle_echo.tres", 1, 1.0, 12.0),
 		_entry(E + "chronos_echo.tres", 1, 1.0, 22.0),
 		_entry(E + "adept_frost.tres", 1, 2.5, 8.0),
 		_entry(E + "adept_arcane.tres", 1, 2.5, 10.5),
@@ -6384,8 +6442,8 @@ courir pour voir jusqu ou tu irais."
 	lvl16.waves = [f1, f2, f3, f4]
 	lvl16.enemy_pool = [
 		load(E + "warden_echo.tres"), load(E + "chronos_echo.tres"),
-		load(E + "demon_anvil.tres"), load(E + "demon_maw.tres"),
-		load(E + "demon_chain.tres"), load(E + "demon_circle.tres"),
+		load(E + "demon_anvil_echo.tres"), load(E + "demon_maw_echo.tres"),
+		load(E + "demon_chain_echo.tres"), load(E + "demon_circle_echo.tres"),
 		load(E + "berserker.tres"), load(E + "child_god.tres"),
 		# L escorte ordinaire des trois premieres vagues : sans elle, ces vagues
 		# ne pesaient RIEN au budget (tout y est hors budget) et la courbe du
@@ -6542,7 +6600,7 @@ func _objectifs_de(level_id: StringName) -> Array[ObjectiveDef]:
 		&"lvl_01":
 			# Tutoriel. Trois gestes du jeu, tous a la portee d un debutant :
 			# - les feux follets VOLENT (et esquivent) : il faut aller les viser ;
-			# - la nuee de rats de la vague 3 est faite pour une zone ;
+			# - les nuees de rats (vagues 1 et 2) sont faites pour une zone ;
 			# - le Mur est dans le deck, mais un mur retarde sans tuer :
 			#   gagner sans lui apprend que les degats sont la vraie defense.
 			out.assign([
