@@ -30,3 +30,22 @@ Thumbs.db
 # dans un depot pousse sur GitHub, c est exactement ce qui fuit.
 .browser_profile/
 __pycache__/
+
+# SONDES DE TRAVAIL (tools/_*.gd et leur .tscn).
+#
+# Ce sont des scripts jetables qu on ecrit pour mesurer une chose, lire un
+# resultat, puis supprimer. Ils ne doivent jamais etre versionnes — mais
+# surtout, l etage `import` du harnais SCANNE TOUT LE PROJET : une sonde mal
+# formee fait rougir ci_load et compile pour TOUT LE MONDE, y compris les
+# agents qui travaillent en parallele et qui cherchent alors un defaut chez eux.
+#
+# C est arrive trois fois le 26-27 septembre. La regle : une sonde vit le temps
+# d une mesure et se supprime dans la foulee, meme quand elle a marche.
+# Les sondes DEJA versionnees (`_probe_infinite`, `_probe_worlds`) restent
+# suivies : ce sont des instruments de mesure gardes a dessein, et ils
+# compilent. La regle porte sur les nouvelles.
+tools/_*.gd
+tools/_*.tscn
+tools/_*.gd.uid
+!tools/_probe_infinite.*
+!tools/_probe_worlds.*

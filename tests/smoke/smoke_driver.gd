@@ -729,15 +729,28 @@ func _check_cartes_petrifiees() -> void:
 	for k in 6:
 		g.battlefield.simulate(FIXED_DELTA)
 
-	if RunState.hand.size() < 3:
-		_fail("cartes petrifiees : main trop courte (%d)" % RunState.hand.size())
+	# La main de DEPART fait GameConfig.START_HAND_SIZE cartes, pas un nombre
+	# fixe : ce controle exigeait 3 cartes en dur et a rougi des que le testeur
+	# a ramene le depart a 2. On pioche donc de quoi travailler au lieu de
+	# supposer une taille — un test qui impose une valeur de reglage empeche
+	# justement de la regler.
+	var voulu: int = mini(3, GameConfig.MAX_HAND_SIZE)
+	if RunState.hand.size() < voulu:
+		RunState.draw(voulu - RunState.hand.size())
+	if RunState.hand.size() < 2:
+		_fail("cartes petrifiees : main trop courte (%d), le deck est-il vide ?"
+			% RunState.hand.size())
 		g.queue_free()
 		return
-	# Deux regards : la Matrone en gele deux.
+	# Deux regards : la Matrone en gele deux. Le plafond garde une carte
+	# jouable, donc sur une main de 2 une seule peut geler.
 	RunState.set_card_block_count(2)
+	var attendu_gel: int = mini(2, maxi(0,
+		RunState.hand.size() - RunState.MIN_PLAYABLE_CARDS))
 	var bloquees: int = RunState.blocked_count()
-	if bloquees != 2:
-		_fail("cartes petrifiees : %d gelees au lieu de 2" % bloquees)
+	if bloquees != attendu_gel:
+		_fail("cartes petrifiees : %d gelees au lieu de %d (main de %d)"
+			% [bloquees, attendu_gel, RunState.hand.size()])
 	# LE PLAFOND : il doit toujours rester une carte jouable, quoi qu il arrive.
 	RunState.set_card_block_count(99)
 	var restantes: int = RunState.hand.size() - RunState.blocked_count()

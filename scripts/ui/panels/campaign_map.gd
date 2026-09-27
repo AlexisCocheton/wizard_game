@@ -145,6 +145,63 @@ func rebuild() -> void:
 # Donnees
 # --------------------------------------------------------------------------
 
+
+## Les niveaux dans l ORDRE OU ON LES JOUE, en suivant `next_levels`.
+##
+## Pourquoi pas l ordre des identifiants : la campagne a ete etendue en ajoutant
+## des niveaux a la SUITE plutot qu en renumerotant — pour ne pas casser les
+## sauvegardes — donc `lvl_17` se joue avant `lvl_03`. Trier sur le nom
+## afficherait le parcours a l envers.
+##
+## Les niveaux orphelins (qu aucun chainage n atteint) sont ajoutes a la fin :
+## une carte qui cache un niveau est pire qu une carte mal ordonnee.
+func _ordre_de_jeu() -> Array[StringName]:
+	var restants: Dictionary = {}
+	for k in ContentDB.levels.keys():
+		restants[StringName(k)] = true
+	# Les DEPARTS : ceux que personne ne pointe.
+	var pointes: Dictionary = {}
+	for k in restants:
+		var lv: LevelDef = ContentDB.levels[k]
+		for suivant in lv.next_levels:
+			pointes[StringName(suivant)] = true
+	var departs: Array[StringName] = []
+	for k in restants:
+		if not pointes.has(k):
+			departs.append(StringName(k))
+	departs.sort_custom(func(a: StringName, b: StringName) -> bool:
+		return String(a) < String(b))
+
+	var ordre: Array[StringName] = []
+	var vus: Dictionary = {}
+	# Parcours en largeur : un niveau qui ouvre plusieurs suites (l acte 4 est
+	# un eventail) place ses enfants cote a cote, ce qui se lit bien sur la
+	# carte.
+	var file: Array[StringName] = departs.duplicate()
+	var garde: int = 512
+	while not file.is_empty() and garde > 0:
+		garde -= 1
+		var id: StringName = file.pop_front()
+		if vus.has(id) or not ContentDB.levels.has(id):
+			continue
+		vus[id] = true
+		ordre.append(id)
+		var lv2: LevelDef = ContentDB.levels[id]
+		for suivant in lv2.next_levels:
+			var s: StringName = StringName(suivant)
+			if not vus.has(s):
+				file.append(s)
+	# Les orphelins, en queue, pour qu aucun niveau ne disparaisse.
+	var reste: Array[StringName] = []
+	for k in restants:
+		if not vus.has(k):
+			reste.append(StringName(k))
+	reste.sort_custom(func(a: StringName, b: StringName) -> bool:
+		return String(a) < String(b))
+	ordre.append_array(reste)
+	return ordre
+
+
 func _compute() -> void:
 	_by_act.clear()
 	_nodes.clear()
@@ -157,10 +214,19 @@ func _compute() -> void:
 	# son voyage a l envers. Le resultat dependait en plus du contexte d appel,
 	# donc le defaut apparaissait a l ecran sans apparaitre au test.
 	# On compare explicitement les valeurs en String : plus rien a deviner.
-	var ids: Array[StringName] = []
-	for k in ContentDB.levels.keys():
-		ids.append(StringName(k))
-	ids.sort_custom(func(a: StringName, b: StringName) -> bool: return String(a) < String(b))
+	# L ORDRE EST CELUI DU CHAINAGE, pas celui des identifiants.
+	#
+	# Le tri alphabetique marchait tant que les niveaux etaient ecrits dans
+	# l ordre ou on les joue. La campagne s est etendue en AJOUTANT des niveaux
+	# a la suite — `lvl_17` se joue avant `lvl_03` — et l acte II affichait donc
+	# ses niveaux neufs sous les anciens, a l envers du parcours. Le joueur
+	# lisait des noms dans un ordre qui n est pas le sien.
+	#
+	# On remonte donc `next_levels` depuis le premier niveau de chaque acte. Un
+	# niveau qu aucun chainage n atteint est ajoute a la fin par ordre
+	# d identifiant : il ne disparait jamais de la carte, meme si le contenu est
+	# incoherent.
+	var ids: Array[StringName] = _ordre_de_jeu()
 	for id in ids:
 		var lv: LevelDef = ContentDB.levels[id]
 		var a: int = lv.act
