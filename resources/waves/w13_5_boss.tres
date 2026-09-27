@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_mphq1"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="2_0xyev"]
+[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="3_ljpno"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_v183x"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="5_hj424"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_wq7ht"]
+
+[sub_resource type="Resource" id="Resource_mphq1"]
+script = ExtResource("1_mphq1")
+enemy = ExtResource("2_0xyev")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_0xyev"]
+script = ExtResource("1_mphq1")
+enemy = ExtResource("3_ljpno")
+count = 2
+spawn_delay = 2.8
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_ljpno"]
+script = ExtResource("1_mphq1")
+enemy = ExtResource("4_v183x")
+count = 2
+spawn_delay = 2.5
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_v183x"]
+script = ExtResource("1_mphq1")
+enemy = ExtResource("5_hj424")
+count = 1
+spawn_delay = 2.5
+start_offset = 38.0
+
+[resource]
+script = ExtResource("6_wq7ht")
+id = &"w13_5_boss"
+duration = 50.0
+entries = Array[ExtResource("1_mphq1")]([SubResource("Resource_mphq1"), SubResource("Resource_0xyev"), SubResource("Resource_ljpno"), SubResource("Resource_v183x")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

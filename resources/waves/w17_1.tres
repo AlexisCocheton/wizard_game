@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_6w7dx"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="2_kpx41"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="3_quq56"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_mt8nj"]
+
+[sub_resource type="Resource" id="Resource_6w7dx"]
+script = ExtResource("1_6w7dx")
+enemy = ExtResource("2_kpx41")
+count = 3
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_kpx41"]
+script = ExtResource("1_6w7dx")
+enemy = ExtResource("3_quq56")
+count = 2
+spawn_delay = 2.4
+start_offset = 9.0
+
+[resource]
+script = ExtResource("4_mt8nj")
+id = &"w17_1"
+duration = 24.0
+entries = Array[ExtResource("1_6w7dx")]([SubResource("Resource_6w7dx"), SubResource("Resource_kpx41")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

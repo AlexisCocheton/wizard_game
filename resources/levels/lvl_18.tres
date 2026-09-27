@@ -1,0 +1,183 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_il855"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="2_323wf"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_ysblc"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_71fqq"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_oi32p"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="6_dkopx"]
+[ext_resource type="Resource" path="res://resources/enemies/dark_mage.tres" id="7_1stm8"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="8_dc1bl"]
+[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="9_g451r"]
+[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="10_wgl7e"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="11_y4skc"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_a7q5d"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="13_hxfeh"]
+[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="14_qaf3n"]
+[ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="15_4uhm5"]
+[ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="16_pk01i"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="17_nshsb"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_jfkqu"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_u162o"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_4hem6"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_bh4ch"]
+
+[sub_resource type="Resource" id="Resource_6vmxt"]
+script = ExtResource("18_jfkqu")
+id = &"obj_max_speed"
+description = "Gagner en gardant la vitesse au maximum des la vague 1"
+check_key = &"never_dropped_speed"
+params = {}
+
+[sub_resource type="Resource" id="Resource_07mnm"]
+script = ExtResource("18_jfkqu")
+id = &"obj_no_legendary"
+description = "Gagner sans utiliser de carte legendaire"
+check_key = &"no_legendary_used"
+params = {}
+
+[sub_resource type="Resource" id="Resource_hb77b"]
+script = ExtResource("18_jfkqu")
+id = &"obj_untouched"
+description = "Gagner sans subir de degats"
+check_key = &"no_damage_taken"
+params = {}
+
+[sub_resource type="Resource" id="Resource_lp3ji"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("2_323wf")
+count = 4
+spawn_delay = 1.8
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_b62lj"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("5_oi32p")
+count = 2
+spawn_delay = 2.2
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_il855"]
+script = ExtResource("20_4hem6")
+id = &"w18_1"
+duration = 25.0
+entries = Array[ExtResource("21_bh4ch")]([SubResource("Resource_lp3ji"), SubResource("Resource_b62lj")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_mlcjj"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("3_ysblc")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_j4aur"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("4_71fqq")
+count = 2
+spawn_delay = 2.5
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_bnr5e"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("2_323wf")
+count = 3
+spawn_delay = 1.8
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_323wf"]
+script = ExtResource("20_4hem6")
+id = &"w18_2"
+duration = 27.0
+entries = Array[ExtResource("21_bh4ch")]([SubResource("Resource_mlcjj"), SubResource("Resource_j4aur"), SubResource("Resource_bnr5e")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_7apqc"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("4_71fqq")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_3jxjc"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("2_323wf")
+count = 4
+spawn_delay = 1.6
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_m63ah"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("5_oi32p")
+count = 3
+spawn_delay = 2.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_fvw6o"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("3_ysblc")
+count = 1
+spawn_delay = 2.5
+start_offset = 21.0
+
+[sub_resource type="Resource" id="Resource_ysblc"]
+script = ExtResource("20_4hem6")
+id = &"w18_3"
+duration = 28.0
+entries = Array[ExtResource("21_bh4ch")]([SubResource("Resource_7apqc"), SubResource("Resource_3jxjc"), SubResource("Resource_m63ah"), SubResource("Resource_fvw6o")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_axixa"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("7_1stm8")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_j82y2"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("2_323wf")
+count = 3
+spawn_delay = 1.8
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_78soh"]
+script = ExtResource("21_bh4ch")
+enemy = ExtResource("3_ysblc")
+count = 1
+spawn_delay = 2.5
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_71fqq"]
+script = ExtResource("20_4hem6")
+id = &"w18_4_miniboss"
+duration = 34.0
+entries = Array[ExtResource("21_bh4ch")]([SubResource("Resource_axixa"), SubResource("Resource_j82y2"), SubResource("Resource_78soh")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false
+
+[resource]
+script = ExtResource("19_u162o")
+id = &"lvl_18"
+display_name = "Port de Haute-Nacelle"
+act = 2
+subtitle = "L ordre des cibles"
+intro_text = "Haute-Nacelle a ete videe par le haut, pas par le bas. Sur les quais, trois facons de te tromper : le Chevalier du vide avale ton premier coup, le Berserker accelere a chaque coup recu, et les Pillards n arrivent meme pas par la ou tu regardes."
+outro_text = "Le mage noir tombe sur ses propres soudures. L enfant traverse le quai sans hesiter, prend a droite et dit que la gauche est fermee. Il n est jamais venu ici. Personne ne releve."
+intro_story = &"lvl_18_intro"
+outro_story = &"lvl_18_outro"
+terrain = "sand"
+backdrop = "act1_sky"
+waves = Array[ExtResource("20_4hem6")]([SubResource("Resource_il855"), SubResource("Resource_323wf"), SubResource("Resource_ysblc"), SubResource("Resource_71fqq")])
+enemy_pool = Array[ExtResource("1_il855")]([ExtResource("2_323wf"), ExtResource("3_ysblc"), ExtResource("4_71fqq"), ExtResource("5_oi32p"), ExtResource("6_dkopx"), ExtResource("7_1stm8")])
+exploration_deck = Array[ExtResource("8_dc1bl")]([ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("10_wgl7e"), ExtResource("10_wgl7e"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("12_a7q5d"), ExtResource("12_a7q5d"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("14_qaf3n"), ExtResource("15_4uhm5"), ExtResource("16_pk01i"), ExtResource("16_pk01i")])
+objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
+legendary_reward = ExtResource("17_nshsb")
+next_levels = Array[StringName]([&"lvl_03"])

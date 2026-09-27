@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_kc6my"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_abnyh"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="3_qb6xy"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_xkcu2"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_4lg58"]
+
+[sub_resource type="Resource" id="Resource_kc6my"]
+script = ExtResource("1_kc6my")
+enemy = ExtResource("2_abnyh")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_abnyh"]
+script = ExtResource("1_kc6my")
+enemy = ExtResource("3_qb6xy")
+count = 1
+spawn_delay = 1.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_qb6xy"]
+script = ExtResource("1_kc6my")
+enemy = ExtResource("4_xkcu2")
+count = 3
+spawn_delay = 2.0
+start_offset = 18.0
+
+[resource]
+script = ExtResource("5_4lg58")
+id = &"w12_2"
+duration = 28.0
+entries = Array[ExtResource("1_kc6my")]([SubResource("Resource_kc6my"), SubResource("Resource_abnyh"), SubResource("Resource_qb6xy")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false

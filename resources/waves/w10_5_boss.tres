@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_fq40a"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_maw.tres" id="2_8anri"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="3_83a0v"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="4_lsjsh"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="5_7wq2j"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_7jsnk"]
+
+[sub_resource type="Resource" id="Resource_fq40a"]
+script = ExtResource("1_fq40a")
+enemy = ExtResource("2_8anri")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8anri"]
+script = ExtResource("1_fq40a")
+enemy = ExtResource("3_83a0v")
+count = 3
+spawn_delay = 2.2
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_83a0v"]
+script = ExtResource("1_fq40a")
+enemy = ExtResource("4_lsjsh")
+count = 2
+spawn_delay = 2.5
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_lsjsh"]
+script = ExtResource("1_fq40a")
+enemy = ExtResource("5_7wq2j")
+count = 3
+spawn_delay = 1.8
+start_offset = 32.0
+
+[resource]
+script = ExtResource("6_7jsnk")
+id = &"w10_5_boss"
+duration = 44.0
+entries = Array[ExtResource("1_fq40a")]([SubResource("Resource_fq40a"), SubResource("Resource_8anri"), SubResource("Resource_83a0v"), SubResource("Resource_lsjsh")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

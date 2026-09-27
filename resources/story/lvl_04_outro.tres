@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_b0wf5"]
+
+[resource]
+script = ExtResource("1_b0wf5")
+id = &"lvl_04_outro"
+scene_background = "talk_greattree"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Les morts du cimetiere de bordure ne chargent pas. Ils s arretent, tous, en meme temps, et se tournent vers le mage."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "Un mort",
+"text": "Ce n est pas nous. Nous, on nous a reveilles."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Par qui ?"
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "Un mort",
+"text": "Par l ordre de Tombol. Le Roi squelette a signe. Il a signe pour nous tous et il n avait pas le droit."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Tombol, c est trois iles plus loin. Le grand cimetiere."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Alors on a enfin un nom. On y va."
+}])

@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_28e86"]
+
+[resource]
+script = ExtResource("1_28e86")
+id = &"lvl_21_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au fond de Tombol, une salle ronde et un pentacle qui tourne lentement au ras du sol. Devant, un squelette couronne, dos au cercle, qui n a plus nulle part ou reculer."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Encore toi. Tu cours vite pour un homme qui n a plus rien."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Tu as signe l extinction de mon royaume."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "J ai signe pour SAUVER le mien. Ils sont venus avec un contrat deja ecrit, mage."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "On ne negocie pas avec ce qui monte de ce puits."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Qui monte de ce puits ?"
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Regarde derriere moi et arrete de poser la question."
+}])

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_gi6ww"]
+[ext_resource type="Resource" path="res://resources/enemies/child_god.tres" id="2_3mx8d"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="3_5l7ut"]
+
+[sub_resource type="Resource" id="Resource_gi6ww"]
+script = ExtResource("1_gi6ww")
+enemy = ExtResource("2_3mx8d")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[resource]
+script = ExtResource("3_5l7ut")
+id = &"w16_4_boss"
+duration = 60.0
+entries = Array[ExtResource("1_gi6ww")]([SubResource("Resource_gi6ww")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

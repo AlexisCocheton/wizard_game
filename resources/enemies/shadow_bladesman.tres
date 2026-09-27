@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_tjcv6"]
+
+[resource]
+script = ExtResource("1_tjcv6")
+id = &"shadow_bladesman"
+display_name = "Epeiste d ombre"
+kind = 7
+power = 6
+max_hp = 130.0
+base_speed = 66.0
+base_xp = 13
+contact_damage = 0
+anim_key = &"nightborne"
+sprite_scale = 1.0
+shape = 2
+color = Color(0.3, 0.25, 0.45, 1)
+base_radius = 52.0
+resistances = {
+0: 1.15,
+1: 0.95,
+2: 0.7,
+3: 1.25,
+6: 0.0,
+7: 1.05
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = true
+burst_dash_time = 1.0
+burst_pause_time = 0.5
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = true
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+blocks_cards = 0
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0

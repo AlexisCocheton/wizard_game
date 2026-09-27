@@ -1,0 +1,69 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_2e43o"]
+
+[resource]
+script = ExtResource("1_2e43o")
+id = &"lvl_16_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au bout du registre, un siege. Il est vide depuis toujours."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ou est celui qui a signe ?"
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il est la."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L enfant lache la main du mage. Il ne grandit pas, il ne change pas de forme. Il arrete simplement de faire semblant d avoir peur."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Tu m as porte pendant cinq actes, mage. Merci. C etait tres long a pied."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... Tu etais la depuis la premiere clairiere."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "J etais la depuis la date. C est moi qui l ai posee. Nuri le sixieme jour, Nox la septieme nuit. C etait propre."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Le gamin. C est le gamin. J ai signe un contrat pour UN GAMIN."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Et puis tu as recule, et pour la premiere fois depuis tres longtemps je n ai pas su ce qui allait arriver."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Tu ne peux pas savoir a quel point c etait bon."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Tu m as laisse venir jusqu ici pour t amuser."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Je t ai laisse venir jusqu ici parce que je voulais voir la fin. Fais-la belle."
+}])

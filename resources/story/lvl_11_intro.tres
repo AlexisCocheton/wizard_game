@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_t45ob"]
+
+[resource]
+script = ExtResource("1_t45ob")
+id = &"lvl_11_intro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Une arene de sable noir. Des chaines partent du sol, des murs, du plafond, et toutes vont dans le meme sens."
+}, {
+"portrait": &"demon",
+"side": "right",
+"speaker": "Un demon",
+"text": "Le vieux ! On m a dit qu un homme avait recule le temps. C etait toi ?"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "C etait moi."
+}, {
+"portrait": &"demon",
+"side": "right",
+"speaker": "Un demon",
+"text": "Alors tu comprends ce qu est une laisse. Moi je tiens quarante mille laisses."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Et toi, qui te tient ?"
+}, {
+"portrait": &"demon",
+"side": "right",
+"speaker": "Un demon",
+"text": "Personne ne me tient ! Personne ! Frappe-moi, tu vas voir comme je suis libre."
+}])

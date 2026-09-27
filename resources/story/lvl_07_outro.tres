@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_3i55y"]
+
+[resource]
+script = ExtResource("1_3i55y")
+id = &"lvl_07_outro"
+scene_background = "talk_greattree"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L Enclume se fend en deux comme un moule de fonte. Dedans, pas de coeur : un contrat, grave dans le metal."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "C est ma signature. Et au-dessus, une autre, que je n ai jamais vue."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Donc il recevait des ordres, lui aussi."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Un atelier ou le patron fabrique ce qu on lui commande. J ai travaille la-dedans vingt ans."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il y en a trois autres. On peut commencer par n importe lequel."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... Comment tu sais qu ils sont trois ?"
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il y a quatre branches au pentacle. J ai compte."
+}])

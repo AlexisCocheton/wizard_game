@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_ekadc"]
+
+[resource]
+script = ExtResource("1_ekadc")
+id = &"lvl_19_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Les Pretres des fosses tombent les uns apres les autres, et aucun ne demande grace."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ils n ont pas essaye de me tuer. Ils ont essaye de me FAIRE PERDRE DU TEMPS."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "C est different ?"
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "C est tout ce qui compte, petit. Un roi qui veut ma mort m attend. Un roi qui veut mon retard, lui, court encore."
+}])

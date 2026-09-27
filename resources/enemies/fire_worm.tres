@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_vog48"]
+
+[resource]
+script = ExtResource("1_vog48")
+id = &"fire_worm"
+display_name = "Ver de feu"
+kind = 18
+power = 3
+max_hp = 30.0
+base_speed = 46.0
+base_xp = 5
+contact_damage = 0
+anim_key = &"fireworm"
+sprite_scale = 1.0
+shape = 5
+color = Color(0.95, 0.5, 0.2, 1)
+base_radius = 28.0
+resistances = {
+0: 0.9,
+1: 0.0,
+2: 1.35,
+3: 1.1,
+6: 0.0,
+7: 1.15
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 120.0
+wave_frequency = 0.6
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 3.8
+shot_damage = 3
+blocks_cards = 0
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0

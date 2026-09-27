@@ -282,13 +282,8 @@ id = &"lvl_05"
 display_name = "Forges du Mauvais Temps"
 act = 3
 subtitle = "Ils ne conquierent pas, ils fabriquent"
-intro_text = "De l autre cote de la porte : pas de chateau, pas de trone. 
-Des ateliers. Les demons fabriquent du temps, et ces creatures blindees ne sont pas 
-nees — elles ont ete coulees."
-outro_text = "Un Berserker a brise sa chaine devant toi au lieu de charger. 
-Les demons ne choisissent rien : une horloge bat au centre de leur monde et les 
-reveille. Elle n est pas a eux. Chaque extinction est une COMMANDE qui arrive par le 
-cadran, et ils ignorent qui la passe."
+intro_text = "De l autre cote de la porte : pas de chateau, pas de trone. Des ateliers. Les demons fabriquent du temps, et ces creatures blindees ne sont pas nees — elles ont ete coulees."
+outro_text = "Un Berserker a brise sa chaine devant toi au lieu de charger. Les demons ne choisissent rien : une horloge bat au centre de leur monde et les reveille. Elle n est pas a eux. Chaque extinction est une COMMANDE qui arrive par le cadran, et ils ignorent qui la passe."
 intro_story = &""
 outro_story = &""
 terrain = "sand"
@@ -298,4 +293,4 @@ enemy_pool = Array[ExtResource("1_n8ylh")]([ExtResource("2_kwppq"), ExtResource(
 exploration_deck = Array[ExtResource("11_jbul7")]([ExtResource("12_u46sd"), ExtResource("12_u46sd"), ExtResource("12_u46sd"), ExtResource("14_geehf"), ExtResource("14_geehf"), ExtResource("15_ku35m"), ExtResource("15_ku35m"), ExtResource("13_bv40u"), ExtResource("13_bv40u"), ExtResource("16_3n3tv"), ExtResource("16_3n3tv"), ExtResource("18_cfeh0"), ExtResource("19_u8rys"), ExtResource("17_6f240"), ExtResource("19_2mvqu")])
 objectives = Array[ExtResource("21_cvhwm")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("20_6ck1v")
-next_levels = Array[StringName]([&"lvl_07"])
+next_levels = Array[StringName]([&"lvl_21"])

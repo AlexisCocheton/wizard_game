@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_adatt"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_chain.tres" id="2_ns2j0"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_8md4r"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_pmckp"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_tbubf"]
+
+[sub_resource type="Resource" id="Resource_adatt"]
+script = ExtResource("1_adatt")
+enemy = ExtResource("2_ns2j0")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ns2j0"]
+script = ExtResource("1_adatt")
+enemy = ExtResource("3_8md4r")
+count = 2
+spawn_delay = 2.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_8md4r"]
+script = ExtResource("1_adatt")
+enemy = ExtResource("4_pmckp")
+count = 4
+spawn_delay = 1.5
+start_offset = 28.0
+
+[resource]
+script = ExtResource("5_tbubf")
+id = &"w11_5_boss"
+duration = 44.0
+entries = Array[ExtResource("1_adatt")]([SubResource("Resource_adatt"), SubResource("Resource_ns2j0"), SubResource("Resource_8md4r")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

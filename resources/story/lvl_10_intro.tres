@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_jma7i"]
+
+[resource]
+script = ExtResource("1_jma7i")
+id = &"lvl_10_intro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Des fosses tiedes, et le sol remue. Ce qui vit ici a deja mange ce qui vivait la avant."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Sesh ! Qui t a donne l ordre de monter chez moi ?"
+}, {
+"portrait": &"demon",
+"side": "right",
+"speaker": "Un demon",
+"text": "Monter ? On ne m a rien demande. J ai suivi l odeur."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Quelle odeur ?"
+}, {
+"portrait": &"demon",
+"side": "right",
+"speaker": "Un demon",
+"text": "Celle d un monde qui allait finir. Ca sent tres bon, un monde qui finit."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Il dit vrai, mage. Lui n a jamais rien signe. Il est juste arrive a table."
+}])

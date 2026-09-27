@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_t008w"]
+
+[resource]
+script = ExtResource("1_t008w")
+id = &"lvl_21_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le sceau se fend. Ce qui passe au travers n a pas d yeux et sait exactement ou tout le monde se tient."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Voila mes creanciers. Ils m ont pris mes morts, mes terres et ma signature."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Ils te prendront ta boucle."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ma quoi ?"
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Ils savent que tu as recule le temps, mage. Tout le monde en bas le sait."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "C est pour CA qu ils avancent si vite maintenant."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... Alors c est moi qui ai accelere la fin."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Tu as change la date, pas la fin. Fais-moi une place, je descends avec toi. Je n ai plus de royaume a perdre."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "On descend ? Vraiment ?"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "On descend."
+}])

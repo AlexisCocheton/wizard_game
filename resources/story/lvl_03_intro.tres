@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_0j7ju"]
+
+[resource]
+script = ExtResource("1_0j7ju")
+id = &"lvl_03_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Passe le port, l archipel change. Les iles suivantes ne portent plus de maisons : elles portent des tombes, rangees, numerotees, et de la brume jusqu aux genoux."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Cimetiere de bordure. On enterrait ici ce que les iles hautes ne voulaient pas garder."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Les tombes sont ouvertes. Toutes, et de l interieur."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Elles sont rangees par... par quoi ? Ce ne sont pas des noms."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ce sont des quantites. Quelqu un tient des comptes ici, petit."
+}])

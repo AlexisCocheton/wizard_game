@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_oawjp"]
+
+[resource]
+script = ExtResource("1_oawjp")
+id = &"lvl_20_intro"
+scene_background = "talk_greattree"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Une cour bordee de statues, chacune un roi de Tombol, chacune plus haute que la precedente. Au pied de la derniere, des gardes en rang qui ne regardent meme pas l entree."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ils ne surveillent pas la porte. Ils surveillent le fond de la cour."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Ils ont peur de ce qui est derriere eux, pas de nous."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Reste pres de moi. Et ne touche a rien qui soit grave."
+}])

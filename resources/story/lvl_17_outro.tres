@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_lbye6"]
+
+[resource]
+script = ExtResource("1_lbye6")
+id = &"lvl_17_outro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L Ecumeur du ciel tombe a cote de la nacelle et reste accroche au bastingage par une aile."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Bougez pas."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le rat le retourne du pied, se penche, et ne dit rien pendant un long moment."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Sous l aile. La meme soudure noire que dans la poitrine de votre Gardien."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Donc ce n est pas une bete des courants. C est une piece."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Les Sky Lands ne sont pas sauvages, mage. C est un atelier. J y ai travaille."
+}])

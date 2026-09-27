@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_y4mek"]
+
+[resource]
+script = ExtResource("1_y4mek")
+id = &"lvl_18_intro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Haute-Nacelle a ete videe par le haut. Les quais de bois tiennent encore, les entrepots sont ouverts, et il n y a personne."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Six cents habitants. J y ai bu pendant douze ans."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ils sont partis ou ?"
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Ils ne sont pas partis. On ne vide pas un port par le haut en laissant les portes ouvertes."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il y a des gens sur les quais. Ils ne bougent pas comme des gens."
+}])

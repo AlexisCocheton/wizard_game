@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_v2aun"]
+
+[resource]
+script = ExtResource("1_v2aun")
+id = &"lvl_14_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Il n y a pas de sol. Il y a une galerie, et dans la galerie tout ce qui a deja ete efface, range par saison."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Mage. La chose dans la vitrine, la. C est ton Gardien."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "C est un Gardien. Il y en a deux autres derriere."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Et une aile entiere pour mon cimetiere. Nous sommes une COLLECTION."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Alors ce que j ai pris pour une guerre etait un inventaire."
+}])

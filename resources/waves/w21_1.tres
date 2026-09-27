@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_mfsqp"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="2_pn8hc"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="3_damo6"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_dougj"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_4lw7f"]
+
+[sub_resource type="Resource" id="Resource_mfsqp"]
+script = ExtResource("1_mfsqp")
+enemy = ExtResource("2_pn8hc")
+count = 2
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_pn8hc"]
+script = ExtResource("1_mfsqp")
+enemy = ExtResource("3_damo6")
+count = 3
+spawn_delay = 2.0
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_damo6"]
+script = ExtResource("1_mfsqp")
+enemy = ExtResource("4_dougj")
+count = 2
+spawn_delay = 2.5
+start_offset = 17.0
+
+[resource]
+script = ExtResource("5_4lw7f")
+id = &"w21_1"
+duration = 27.0
+entries = Array[ExtResource("1_mfsqp")]([SubResource("Resource_mfsqp"), SubResource("Resource_pn8hc"), SubResource("Resource_damo6")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

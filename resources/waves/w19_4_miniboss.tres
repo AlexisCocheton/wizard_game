@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_os571"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_witch.tres" id="2_rb21f"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="3_vb0he"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="4_kvku5"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_upvr7"]
+
+[sub_resource type="Resource" id="Resource_os571"]
+script = ExtResource("1_os571")
+enemy = ExtResource("2_rb21f")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_rb21f"]
+script = ExtResource("1_os571")
+enemy = ExtResource("3_vb0he")
+count = 2
+spawn_delay = 2.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_vb0he"]
+script = ExtResource("1_os571")
+enemy = ExtResource("4_kvku5")
+count = 2
+spawn_delay = 2.2
+start_offset = 19.0
+
+[resource]
+script = ExtResource("5_upvr7")
+id = &"w19_4_miniboss"
+duration = 34.0
+entries = Array[ExtResource("1_os571")]([SubResource("Resource_os571"), SubResource("Resource_rb21f"), SubResource("Resource_vb0he")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

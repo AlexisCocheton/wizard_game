@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_kcrl5"]
+
+[resource]
+script = ExtResource("1_kcrl5")
+id = &"child_god"
+display_name = "L Enfant"
+kind = 8
+power = 10
+max_hp = 300.0
+base_speed = 32.0
+base_xp = 40
+contact_damage = 0
+anim_key = &"juggernaut"
+sprite_scale = 1.15
+shape = 6
+color = Color(0.95, 0.85, 0.45, 1)
+base_radius = 82.0
+resistances = {
+0: 0.5,
+1: 0.7,
+2: 0.85,
+3: 1.4,
+4: 0.0,
+6: 0.0,
+7: 0.9
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+blocks_cards = 3
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 40.0
+hits_immune = 0
+reflect_interval = 7.0
+reflect_window = 2.0
+reflect_pct = 45.0

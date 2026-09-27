@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_s435j"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_43782"]
+[ext_resource type="Resource" path="res://resources/enemies/fire_worm.tres" id="3_y8ios"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="4_nife6"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_udlv7"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_vkkxu"]
+
+[sub_resource type="Resource" id="Resource_s435j"]
+script = ExtResource("1_s435j")
+enemy = ExtResource("2_43782")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_43782"]
+script = ExtResource("1_s435j")
+enemy = ExtResource("3_y8ios")
+count = 2
+spawn_delay = 2.2
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_y8ios"]
+script = ExtResource("1_s435j")
+enemy = ExtResource("4_nife6")
+count = 1
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_nife6"]
+script = ExtResource("1_s435j")
+enemy = ExtResource("5_udlv7")
+count = 2
+spawn_delay = 2.2
+start_offset = 23.0
+
+[resource]
+script = ExtResource("6_vkkxu")
+id = &"w21_3"
+duration = 34.0
+entries = Array[ExtResource("1_s435j")]([SubResource("Resource_s435j"), SubResource("Resource_43782"), SubResource("Resource_y8ios"), SubResource("Resource_nife6")])
+difficulty = 1.6
+is_miniboss = false
+is_boss = false

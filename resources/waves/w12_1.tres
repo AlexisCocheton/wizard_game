@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_cse7q"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_d0g5j"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_ob24v"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_814h7"]
+
+[sub_resource type="Resource" id="Resource_cse7q"]
+script = ExtResource("1_cse7q")
+enemy = ExtResource("2_d0g5j")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_d0g5j"]
+script = ExtResource("1_cse7q")
+enemy = ExtResource("3_ob24v")
+count = 4
+spawn_delay = 1.8
+start_offset = 8.0
+
+[resource]
+script = ExtResource("4_814h7")
+id = &"w12_1"
+duration = 26.0
+entries = Array[ExtResource("1_cse7q")]([SubResource("Resource_cse7q"), SubResource("Resource_d0g5j")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

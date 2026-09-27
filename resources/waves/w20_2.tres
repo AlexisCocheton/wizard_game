@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_db4fy"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="2_aoneh"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_ief74"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_xnqj7"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_qgwe0"]
+
+[sub_resource type="Resource" id="Resource_db4fy"]
+script = ExtResource("1_db4fy")
+enemy = ExtResource("2_aoneh")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_aoneh"]
+script = ExtResource("1_db4fy")
+enemy = ExtResource("3_ief74")
+count = 2
+spawn_delay = 2.5
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_ief74"]
+script = ExtResource("1_db4fy")
+enemy = ExtResource("4_xnqj7")
+count = 3
+spawn_delay = 2.0
+start_offset = 19.0
+
+[resource]
+script = ExtResource("5_qgwe0")
+id = &"w20_2"
+duration = 28.0
+entries = Array[ExtResource("1_db4fy")]([SubResource("Resource_db4fy"), SubResource("Resource_aoneh"), SubResource("Resource_ief74")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

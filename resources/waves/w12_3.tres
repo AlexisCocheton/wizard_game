@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_c3enh"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_elder.tres" id="2_8jd3h"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="3_jbgwk"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_1cg4y"]
+[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="5_8efwj"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_l6ynx"]
+
+[sub_resource type="Resource" id="Resource_c3enh"]
+script = ExtResource("1_c3enh")
+enemy = ExtResource("2_8jd3h")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8jd3h"]
+script = ExtResource("1_c3enh")
+enemy = ExtResource("3_jbgwk")
+count = 1
+spawn_delay = 1.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_jbgwk"]
+script = ExtResource("1_c3enh")
+enemy = ExtResource("4_1cg4y")
+count = 2
+spawn_delay = 2.5
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_1cg4y"]
+script = ExtResource("1_c3enh")
+enemy = ExtResource("5_8efwj")
+count = 2
+spawn_delay = 2.5
+start_offset = 26.0
+
+[resource]
+script = ExtResource("6_l6ynx")
+id = &"w12_3"
+duration = 32.0
+entries = Array[ExtResource("1_c3enh")]([SubResource("Resource_c3enh"), SubResource("Resource_8jd3h"), SubResource("Resource_jbgwk"), SubResource("Resource_1cg4y")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false

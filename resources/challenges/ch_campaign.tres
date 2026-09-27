@@ -6,8 +6,8 @@
 script = ExtResource("1_cnts4")
 id = &"ch_campaign"
 display_name = "Jusqu a la source"
-description = "Terminer les 9 niveaux de la campagne."
+description = "Terminer les 21 niveaux de la campagne."
 rarity = 3
 xp_reward = 1600
 track_key = &"levels_cleared"
-target = 9
+target = 21

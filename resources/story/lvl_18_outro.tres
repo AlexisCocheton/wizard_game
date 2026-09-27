@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_jmh42"]
+
+[resource]
+script = ExtResource("1_jmh42")
+id = &"lvl_18_outro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le dernier pillard tombe sur ses propres soudures. Au bout du quai, deux passages : celui de droite et celui de gauche."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il faut passer par la droite. La gauche est fermee."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Tu es deja venu ici ?"
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Non. Mais c est ferme. Je le sais, c est tout."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... D accord. Par la droite."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Personne ne releve. Le rat regarde l enfant une seconde de trop, puis regarde ailleurs."
+}])

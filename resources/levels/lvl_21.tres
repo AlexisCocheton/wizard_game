@@ -1,0 +1,193 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=45 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_nrv4l"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="2_qoti4"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="3_e42nv"]
+[ext_resource type="Resource" path="res://resources/enemies/fire_worm.tres" id="4_2bcqe"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_sw1il"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="6_ia684"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="7_jxcgh"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="8_1k6lh"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="9_wosyd"]
+[ext_resource type="Resource" path="res://resources/enemies/tombol_seal.tres" id="10_y52nd"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="11_h3ov4"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_0n865"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="13_ngw11"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="14_jablq"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="15_cmqx7"]
+[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="16_bret4"]
+[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="17_od5c2"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="18_vk0ai"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/meteor_storm.tres" id="19_cnvpr"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="20_v0fir"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_6gits"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_s8hpk"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_belrn"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_rf6lm"]
+
+[sub_resource type="Resource" id="Resource_6vmxt"]
+script = ExtResource("21_6gits")
+id = &"obj_max_speed"
+description = "Gagner en gardant la vitesse au maximum des la vague 1"
+check_key = &"never_dropped_speed"
+params = {}
+
+[sub_resource type="Resource" id="Resource_07mnm"]
+script = ExtResource("21_6gits")
+id = &"obj_no_legendary"
+description = "Gagner sans utiliser de carte legendaire"
+check_key = &"no_legendary_used"
+params = {}
+
+[sub_resource type="Resource" id="Resource_hb77b"]
+script = ExtResource("21_6gits")
+id = &"obj_untouched"
+description = "Gagner sans subir de degats"
+check_key = &"no_damage_taken"
+params = {}
+
+[sub_resource type="Resource" id="Resource_mfsqp"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("2_qoti4")
+count = 2
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_pn8hc"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("9_wosyd")
+count = 3
+spawn_delay = 2.0
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_damo6"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("7_jxcgh")
+count = 2
+spawn_delay = 2.5
+start_offset = 17.0
+
+[sub_resource type="Resource" id="Resource_nrv4l"]
+script = ExtResource("23_belrn")
+id = &"w21_1"
+duration = 27.0
+entries = Array[ExtResource("24_rf6lm")]([SubResource("Resource_mfsqp"), SubResource("Resource_pn8hc"), SubResource("Resource_damo6")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_bh5en"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("4_2bcqe")
+count = 3
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_s7g3k"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("3_e42nv")
+count = 3
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_oh2iq"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("5_sw1il")
+count = 2
+spawn_delay = 2.0
+start_offset = 19.0
+
+[sub_resource type="Resource" id="Resource_qoti4"]
+script = ExtResource("23_belrn")
+id = &"w21_2"
+duration = 28.0
+entries = Array[ExtResource("24_rf6lm")]([SubResource("Resource_bh5en"), SubResource("Resource_s7g3k"), SubResource("Resource_oh2iq")])
+difficulty = 1.55
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_s435j"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("6_ia684")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_43782"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("4_2bcqe")
+count = 2
+spawn_delay = 2.2
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_y8ios"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("8_1k6lh")
+count = 1
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_nife6"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("2_qoti4")
+count = 2
+spawn_delay = 2.2
+start_offset = 23.0
+
+[sub_resource type="Resource" id="Resource_e42nv"]
+script = ExtResource("23_belrn")
+id = &"w21_3"
+duration = 34.0
+entries = Array[ExtResource("24_rf6lm")]([SubResource("Resource_s435j"), SubResource("Resource_43782"), SubResource("Resource_y8ios"), SubResource("Resource_nife6")])
+difficulty = 1.6
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_0fdnp"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("10_y52nd")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_el181"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("4_2bcqe")
+count = 2
+spawn_delay = 2.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_3cmm4"]
+script = ExtResource("24_rf6lm")
+enemy = ExtResource("2_qoti4")
+count = 2
+spawn_delay = 2.2
+start_offset = 28.0
+
+[sub_resource type="Resource" id="Resource_2bcqe"]
+script = ExtResource("23_belrn")
+id = &"w21_4_boss"
+duration = 45.0
+entries = Array[ExtResource("24_rf6lm")]([SubResource("Resource_0fdnp"), SubResource("Resource_el181"), SubResource("Resource_3cmm4")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("22_s8hpk")
+id = &"lvl_21"
+display_name = "Le pentacle"
+act = 3
+subtitle = "Il ne fuyait pas devant toi"
+intro_text = "Au fond de Tombol, une salle et un pentacle qui tourne. Le Roi squelette est accule contre lui et il ne se bat pas : il te dit qu il a signe pour SAUVER son royaume, et que ce qui monte de ce puits ne negocie pas. L adversaire de cette salle n est pas le roi. C est le sceau."
+outro_text = "Le sceau se fend et ce qui passe au travers n a pas d yeux, et sait pourtant exactement ou tout le monde se tient. Ils savent que tu as recule le temps : tout le monde, en bas, le sait. C est pour CA qu ils avancent si vite maintenant. Tu n as pas change la fin, tu as change la date. Le roi demande une place dans le groupe : il n a plus de royaume a perdre. On descend."
+intro_story = &"lvl_21_intro"
+outro_story = &"lvl_21_outro"
+terrain = "sand"
+backdrop = "act2_graveyard"
+waves = Array[ExtResource("23_belrn")]([SubResource("Resource_nrv4l"), SubResource("Resource_qoti4"), SubResource("Resource_e42nv"), SubResource("Resource_2bcqe")])
+enemy_pool = Array[ExtResource("1_nrv4l")]([ExtResource("2_qoti4"), ExtResource("3_e42nv"), ExtResource("4_2bcqe"), ExtResource("5_sw1il"), ExtResource("6_ia684"), ExtResource("7_jxcgh"), ExtResource("8_1k6lh"), ExtResource("9_wosyd"), ExtResource("10_y52nd")])
+exploration_deck = Array[ExtResource("11_h3ov4")]([ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("15_cmqx7"), ExtResource("16_bret4"), ExtResource("16_bret4"), ExtResource("17_od5c2"), ExtResource("18_vk0ai"), ExtResource("18_vk0ai"), ExtResource("19_cnvpr")])
+objectives = Array[ExtResource("21_6gits")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
+legendary_reward = ExtResource("20_v0fir")
+next_levels = Array[StringName]([&"lvl_07", &"lvl_10", &"lvl_11", &"lvl_12"])

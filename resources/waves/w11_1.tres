@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_j5biy"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="2_6vimb"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="3_gpl2p"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_jxmun"]
+
+[sub_resource type="Resource" id="Resource_j5biy"]
+script = ExtResource("1_j5biy")
+enemy = ExtResource("2_6vimb")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_6vimb"]
+script = ExtResource("1_j5biy")
+enemy = ExtResource("3_gpl2p")
+count = 3
+spawn_delay = 2.0
+start_offset = 10.0
+
+[resource]
+script = ExtResource("4_jxmun")
+id = &"w11_1"
+duration = 26.0
+entries = Array[ExtResource("1_j5biy")]([SubResource("Resource_j5biy"), SubResource("Resource_6vimb")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

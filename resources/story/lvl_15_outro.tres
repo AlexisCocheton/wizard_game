@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_nd835"]
+
+[resource]
+script = ExtResource("1_nd835")
+id = &"lvl_15_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Sur la ligne du mage, la date a ete raturee une fois, et quelqu un a ecrit dans la marge. L ecriture est petite et soignee."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Qu est-ce que ca dit ?"
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Ca dit : inattendu, souligne. Et il y a un trait dessous, comme quand on souligne ce qui amuse."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "J ai brule ma magie, mes annees et mes cheveux pour reculer le temps."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Et ca les a fait SOURIRE."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "On t a laisse courir pour voir jusqu ou tu irais. Tu es alle jusqu ici. Bravo, je suppose."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au bout du registre, une porte, et derriere la porte un siege."
+}])

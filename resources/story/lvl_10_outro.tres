@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_6xtks"]
+
+[resource]
+script = ExtResource("1_6xtks")
+id = &"lvl_10_outro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Sesh creve comme une outre, et tout ce qu il avait avale ressort intact. Rien n etait digere : tout attendait."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il ne commandait rien. Il a suivi une odeur."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Une odeur que quelqu un a mise dans l air, alors. Les fins de monde ne sentent pas tout seules."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Quelqu un a prevenu les charognards avant le mort."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "C est plus gentil, non ? Comme ca personne n attend pour rien."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... Petit, ne dis plus jamais ca comme ca."
+}])

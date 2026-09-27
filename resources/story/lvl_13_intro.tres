@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_2knk7"]
+
+[resource]
+script = ExtResource("1_2knk7")
+id = &"lvl_13_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Quatre. Quatre seigneurs, quatre contrats, et pas une seule signature en commun."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Donc aucun des quatre n a donne l ordre."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Aucun des quatre n a meme lu l ordre. Ils l ont RECU."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "J ai deja vu ca. Un atelier ou personne n est le patron : ca veut dire que le patron n habite pas l atelier."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Alors on monte encore. Je suis descendu pour rien."
+}])

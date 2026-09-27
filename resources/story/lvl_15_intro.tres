@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_s0gpa"]
+
+[resource]
+script = ExtResource("1_s0gpa")
+id = &"lvl_15_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Des colonnes de noms qui montent plus haut que le regard. Ce ne sont pas des morts : ce sont des DATES."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Nuri. Nox. Le sixieme jour, la septieme nuit. C etait ecrit avant."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Tombol aussi. Trois lignes plus bas, meme encre, meme main."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ce n est pas une invasion. C est une SAISON qui se termine."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Je le savais. Je l ai vu une fois deja, et je n ai rien dit parce que reparer me tenait occupe."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... Tu le savais."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Je repare, mage. C est ma facon de refuser."
+}])

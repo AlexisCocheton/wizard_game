@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5kkyx"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="2_1p4ke"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="3_8liur"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_5ks84"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_gpkhf"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_lgufp"]
+
+[sub_resource type="Resource" id="Resource_5kkyx"]
+script = ExtResource("1_5kkyx")
+enemy = ExtResource("2_1p4ke")
+count = 2
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_1p4ke"]
+script = ExtResource("1_5kkyx")
+enemy = ExtResource("3_8liur")
+count = 3
+spawn_delay = 2.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_8liur"]
+script = ExtResource("1_5kkyx")
+enemy = ExtResource("4_5ks84")
+count = 1
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_5ks84"]
+script = ExtResource("1_5kkyx")
+enemy = ExtResource("5_gpkhf")
+count = 2
+spawn_delay = 2.0
+start_offset = 22.0
+
+[resource]
+script = ExtResource("6_lgufp")
+id = &"w19_3"
+duration = 28.0
+entries = Array[ExtResource("1_5kkyx")]([SubResource("Resource_5kkyx"), SubResource("Resource_1p4ke"), SubResource("Resource_8liur"), SubResource("Resource_5ks84")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_s34vu"]
+
+[resource]
+script = ExtResource("1_s34vu")
+id = &"demon_maw"
+display_name = "Sesh, la Faim"
+kind = 8
+power = 10
+max_hp = 205.0
+base_speed = 40.0
+base_xp = 30
+contact_damage = 0
+anim_key = &"dino"
+sprite_scale = 1.4
+shape = 5
+color = Color(0.88, 0.42, 0.18, 1)
+base_radius = 76.0
+resistances = {
+0: 0.75,
+1: 0.5,
+2: 1.4,
+3: 1.1,
+6: 0.6,
+7: 1.15
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = true
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+blocks_cards = 0
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0

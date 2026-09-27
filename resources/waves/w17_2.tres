@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_bnmaj"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="2_ad87a"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="3_2377p"]
+[ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="4_gip0j"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_mafpi"]
+
+[sub_resource type="Resource" id="Resource_bnmaj"]
+script = ExtResource("1_bnmaj")
+enemy = ExtResource("2_ad87a")
+count = 3
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ad87a"]
+script = ExtResource("1_bnmaj")
+enemy = ExtResource("3_2377p")
+count = 2
+spawn_delay = 2.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_2377p"]
+script = ExtResource("1_bnmaj")
+enemy = ExtResource("4_gip0j")
+count = 3
+spawn_delay = 1.8
+start_offset = 16.0
+
+[resource]
+script = ExtResource("5_mafpi")
+id = &"w17_2"
+duration = 26.0
+entries = Array[ExtResource("1_bnmaj")]([SubResource("Resource_bnmaj"), SubResource("Resource_ad87a"), SubResource("Resource_2377p")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false

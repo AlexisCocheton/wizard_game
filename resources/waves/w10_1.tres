@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_r0h4k"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="2_pkbh4"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="3_rjvsx"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_be6rh"]
+
+[sub_resource type="Resource" id="Resource_r0h4k"]
+script = ExtResource("1_r0h4k")
+enemy = ExtResource("2_pkbh4")
+count = 2
+spawn_delay = 2.8
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_pkbh4"]
+script = ExtResource("1_r0h4k")
+enemy = ExtResource("3_rjvsx")
+count = 3
+spawn_delay = 2.0
+start_offset = 9.0
+
+[resource]
+script = ExtResource("4_be6rh")
+id = &"w10_1"
+duration = 26.0
+entries = Array[ExtResource("1_r0h4k")]([SubResource("Resource_r0h4k"), SubResource("Resource_pkbh4")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_djd5v"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_circle.tres" id="2_7musp"]
+[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="3_dw0yp"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_660n5"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_2x04b"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6x0i5"]
+
+[sub_resource type="Resource" id="Resource_djd5v"]
+script = ExtResource("1_djd5v")
+enemy = ExtResource("2_7musp")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_7musp"]
+script = ExtResource("1_djd5v")
+enemy = ExtResource("3_dw0yp")
+count = 2
+spawn_delay = 2.8
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_dw0yp"]
+script = ExtResource("1_djd5v")
+enemy = ExtResource("4_660n5")
+count = 2
+spawn_delay = 2.5
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_660n5"]
+script = ExtResource("1_djd5v")
+enemy = ExtResource("5_2x04b")
+count = 3
+spawn_delay = 2.0
+start_offset = 34.0
+
+[resource]
+script = ExtResource("6_6x0i5")
+id = &"w12_5_boss"
+duration = 46.0
+entries = Array[ExtResource("1_djd5v")]([SubResource("Resource_djd5v"), SubResource("Resource_7musp"), SubResource("Resource_dw0yp"), SubResource("Resource_660n5")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

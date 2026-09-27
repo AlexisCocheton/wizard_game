@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_5ot7p"]
+
+[resource]
+script = ExtResource("1_5ot7p")
+id = &"lvl_16_outro"
+scene_background = "talk_glade"
+lines = Array[Dictionary]([{
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Bien joue. Vraiment."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Rends-moi Nuri. Rends-moi Nox."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Je ne rends rien, je PLACE. Et toi, je te place ici."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le registre se referme sur une seule page, qui recommence."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Tu as voulu recommencer une fois. Recommence autant que tu veux."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... C est cense etre une punition ?"
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "C est cense etre un cadeau. Tu verras a la millieme vague."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Une clairiere, au petit matin. La meme odeur de mousse, la meme lumiere entre les branches."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "MODE INFINI DEBLOQUE."
+}])

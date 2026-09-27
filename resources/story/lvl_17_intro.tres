@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_k4wa8"]
+
+[resource]
+script = ExtResource("1_k4wa8")
+id = &"lvl_17_intro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le dirigeable se decroche des arbres et monte. Sous la nacelle, la foret de Nuri devient une tache verte, puis rien."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Regle une : si je crie a bas, vous vous mettez a bas. Pas de question, pas de regard autour."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il y a une regle deux ?"
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "La regle deux c est qu il n y a pas de regle deux, on va s ecraser."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il y a des choses qui volent, dehors. Beaucoup."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Alors mes murs ne servent plus a rien. Il va falloir couvrir le ciel."
+}])

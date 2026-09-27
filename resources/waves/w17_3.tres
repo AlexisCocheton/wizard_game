@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_n55h0"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="2_51l6g"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_mfnyw"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="4_t6x3d"]
+[ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="5_qu45o"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_t674r"]
+
+[sub_resource type="Resource" id="Resource_n55h0"]
+script = ExtResource("1_n55h0")
+enemy = ExtResource("2_51l6g")
+count = 3
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_51l6g"]
+script = ExtResource("1_n55h0")
+enemy = ExtResource("3_mfnyw")
+count = 3
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_mfnyw"]
+script = ExtResource("1_n55h0")
+enemy = ExtResource("4_t6x3d")
+count = 3
+spawn_delay = 2.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_t6x3d"]
+script = ExtResource("1_n55h0")
+enemy = ExtResource("5_qu45o")
+count = 2
+spawn_delay = 1.8
+start_offset = 21.0
+
+[resource]
+script = ExtResource("6_t674r")
+id = &"w17_3"
+duration = 27.0
+entries = Array[ExtResource("1_n55h0")]([SubResource("Resource_n55h0"), SubResource("Resource_51l6g"), SubResource("Resource_mfnyw"), SubResource("Resource_t6x3d")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false

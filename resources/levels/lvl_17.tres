@@ -1,0 +1,183 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_rl3tf"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="2_01pvm"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="3_7tp28"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_hf8a2"]
+[ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="5_jg7in"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="6_npl76"]
+[ext_resource type="Resource" path="res://resources/enemies/great_eye.tres" id="7_rl3tf"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="8_1r60b"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="9_rxae5"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="10_tfajv"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="11_jqiqt"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="12_ak1y0"]
+[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="13_tb52g"]
+[ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="14_odxng"]
+[ext_resource type="Resource" path="res://resources/cards/rare/quickening.tres" id="15_lwcjq"]
+[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="16_diyvq"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="17_1a3ua"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_0qchf"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_2lmll"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_qqxj5"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_bxr3v"]
+
+[sub_resource type="Resource" id="Resource_6vmxt"]
+script = ExtResource("18_0qchf")
+id = &"obj_max_speed"
+description = "Gagner en gardant la vitesse au maximum des la vague 1"
+check_key = &"never_dropped_speed"
+params = {}
+
+[sub_resource type="Resource" id="Resource_07mnm"]
+script = ExtResource("18_0qchf")
+id = &"obj_no_legendary"
+description = "Gagner sans utiliser de carte legendaire"
+check_key = &"no_legendary_used"
+params = {}
+
+[sub_resource type="Resource" id="Resource_hb77b"]
+script = ExtResource("18_0qchf")
+id = &"obj_untouched"
+description = "Gagner sans subir de degats"
+check_key = &"no_damage_taken"
+params = {}
+
+[sub_resource type="Resource" id="Resource_6w7dx"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("3_7tp28")
+count = 3
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_kpx41"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("2_01pvm")
+count = 2
+spawn_delay = 2.4
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_rl3tf"]
+script = ExtResource("20_qqxj5")
+id = &"w17_1"
+duration = 24.0
+entries = Array[ExtResource("21_bxr3v")]([SubResource("Resource_6w7dx"), SubResource("Resource_kpx41")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_bnmaj"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("2_01pvm")
+count = 3
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ad87a"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("4_hf8a2")
+count = 2
+spawn_delay = 2.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_2377p"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("5_jg7in")
+count = 3
+spawn_delay = 1.8
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_01pvm"]
+script = ExtResource("20_qqxj5")
+id = &"w17_2"
+duration = 26.0
+entries = Array[ExtResource("21_bxr3v")]([SubResource("Resource_bnmaj"), SubResource("Resource_ad87a"), SubResource("Resource_2377p")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_n55h0"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("3_7tp28")
+count = 3
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_51l6g"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("6_npl76")
+count = 3
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_mfnyw"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("2_01pvm")
+count = 3
+spawn_delay = 2.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_t6x3d"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("5_jg7in")
+count = 2
+spawn_delay = 1.8
+start_offset = 21.0
+
+[sub_resource type="Resource" id="Resource_7tp28"]
+script = ExtResource("20_qqxj5")
+id = &"w17_3"
+duration = 27.0
+entries = Array[ExtResource("21_bxr3v")]([SubResource("Resource_n55h0"), SubResource("Resource_51l6g"), SubResource("Resource_mfnyw"), SubResource("Resource_t6x3d")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_0swrq"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("7_rl3tf")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_wbbbs"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("3_7tp28")
+count = 3
+spawn_delay = 2.0
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_hiarp"]
+script = ExtResource("21_bxr3v")
+enemy = ExtResource("2_01pvm")
+count = 3
+spawn_delay = 2.0
+start_offset = 19.0
+
+[sub_resource type="Resource" id="Resource_hf8a2"]
+script = ExtResource("20_qqxj5")
+id = &"w17_4_miniboss"
+duration = 32.0
+entries = Array[ExtResource("21_bxr3v")]([SubResource("Resource_0swrq"), SubResource("Resource_wbbbs"), SubResource("Resource_hiarp")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false
+
+[resource]
+script = ExtResource("19_2lmll")
+id = &"lvl_17"
+display_name = "Les courants"
+act = 2
+subtitle = "Le mur ne sert plus a rien"
+intro_text = "Le dirigeable monte dans les courants et tout ce qui t y attend vole. Les Planogos passent au-dessus des murs, les Oeils se laissent porter et ne vont jamais droit, l Archer ne descend pas du tout. Couvre le ciel ou ne couvre rien."
+outro_text = "L Ecumeur du ciel tombe a cote de la nacelle. Le rat le retourne du pied et ne dit rien pendant un moment : sous l aile, la meme soudure noire que dans la poitrine du Gardien. Les Sky Lands ne sont pas sauvages. Elles sont un atelier."
+intro_story = &"lvl_17_intro"
+outro_story = &"lvl_17_outro"
+terrain = "grass"
+backdrop = "act1_sky"
+waves = Array[ExtResource("20_qqxj5")]([SubResource("Resource_rl3tf"), SubResource("Resource_01pvm"), SubResource("Resource_7tp28"), SubResource("Resource_hf8a2")])
+enemy_pool = Array[ExtResource("1_rl3tf")]([ExtResource("2_01pvm"), ExtResource("3_7tp28"), ExtResource("4_hf8a2"), ExtResource("5_jg7in"), ExtResource("6_npl76"), ExtResource("7_rl3tf")])
+exploration_deck = Array[ExtResource("8_1r60b")]([ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("10_tfajv"), ExtResource("10_tfajv"), ExtResource("11_jqiqt"), ExtResource("11_jqiqt"), ExtResource("12_ak1y0"), ExtResource("12_ak1y0"), ExtResource("13_tb52g"), ExtResource("13_tb52g"), ExtResource("14_odxng"), ExtResource("15_lwcjq"), ExtResource("16_diyvq"), ExtResource("16_diyvq")])
+objectives = Array[ExtResource("18_0qchf")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
+legendary_reward = ExtResource("17_1a3ua")
+next_levels = Array[StringName]([&"lvl_18"])

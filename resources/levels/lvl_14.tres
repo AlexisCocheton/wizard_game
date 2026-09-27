@@ -1,0 +1,233 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=53 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_70dm8"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_fe3w6"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_6yp3l"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_1s8yj"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="5_0t5bb"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="6_lk4y5"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="7_4jdvf"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="8_it8ya"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="9_xlx3v"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="10_qhu6a"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="11_t6kx1"]
+[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="12_rtnxx"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="14_q6tsu"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="15_s86if"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="16_egwhj"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="17_wajrc"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="18_lc2k0"]
+[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="19_c8xt7"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="20_v8vux"]
+[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="21_ylw6j"]
+[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="22_eyuxg"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="23_iht3g"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="24_1f7y4"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="25_7esuy"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="26_ave5e"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="27_xhh80"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="28_3bv1m"]
+
+[sub_resource type="Resource" id="Resource_6vmxt"]
+script = ExtResource("25_7esuy")
+id = &"obj_max_speed"
+description = "Gagner en gardant la vitesse au maximum des la vague 1"
+check_key = &"never_dropped_speed"
+params = {}
+
+[sub_resource type="Resource" id="Resource_07mnm"]
+script = ExtResource("25_7esuy")
+id = &"obj_no_legendary"
+description = "Gagner sans utiliser de carte legendaire"
+check_key = &"no_legendary_used"
+params = {}
+
+[sub_resource type="Resource" id="Resource_hb77b"]
+script = ExtResource("25_7esuy")
+id = &"obj_untouched"
+description = "Gagner sans subir de degats"
+check_key = &"no_damage_taken"
+params = {}
+
+[sub_resource type="Resource" id="Resource_itlgh"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("2_fe3w6")
+count = 6
+spawn_delay = 1.6
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_0qk4i"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("3_6yp3l")
+count = 5
+spawn_delay = 1.4
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_rpj5h"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("4_1s8yj")
+count = 3
+spawn_delay = 1.8
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_ju6cb"]
+script = ExtResource("27_xhh80")
+id = &"w14_1"
+duration = 27.0
+entries = Array[ExtResource("28_3bv1m")]([SubResource("Resource_itlgh"), SubResource("Resource_0qk4i"), SubResource("Resource_rpj5h")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_paeqj"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("12_rtnxx")
+count = 2
+spawn_delay = 4.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_c6k5s"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("5_0t5bb")
+count = 2
+spawn_delay = 2.2
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_bvw4h"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("6_lk4y5")
+count = 2
+spawn_delay = 2.5
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_70dm8"]
+script = ExtResource("27_xhh80")
+id = &"w14_2"
+duration = 29.0
+entries = Array[ExtResource("28_3bv1m")]([SubResource("Resource_paeqj"), SubResource("Resource_c6k5s"), SubResource("Resource_bvw4h")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_x5fvf"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("12_rtnxx")
+count = 3
+spawn_delay = 4.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8vwiy"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("8_it8ya")
+count = 1
+spawn_delay = 1.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_kp468"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("3_6yp3l")
+count = 5
+spawn_delay = 1.4
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_fe3w6"]
+script = ExtResource("27_xhh80")
+id = &"w14_3"
+duration = 34.0
+entries = Array[ExtResource("28_3bv1m")]([SubResource("Resource_x5fvf"), SubResource("Resource_8vwiy"), SubResource("Resource_kp468")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_dmecf"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("8_it8ya")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_x6s4q"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("9_xlx3v")
+count = 4
+spawn_delay = 1.8
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_5yewb"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("10_qhu6a")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_el85c"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("7_4jdvf")
+count = 1
+spawn_delay = 2.5
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_6yp3l"]
+script = ExtResource("27_xhh80")
+id = &"w14_4"
+duration = 31.0
+entries = Array[ExtResource("28_3bv1m")]([SubResource("Resource_dmecf"), SubResource("Resource_x6s4q"), SubResource("Resource_5yewb"), SubResource("Resource_el85c")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_khwoo"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("12_rtnxx")
+count = 2
+spawn_delay = 5.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_tqsjo"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("11_t6kx1")
+count = 2
+spawn_delay = 2.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_paodg"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("5_0t5bb")
+count = 2
+spawn_delay = 2.2
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_sw7qq"]
+script = ExtResource("28_3bv1m")
+enemy = ExtResource("3_6yp3l")
+count = 4
+spawn_delay = 1.4
+start_offset = 28.0
+
+[sub_resource type="Resource" id="Resource_1s8yj"]
+script = ExtResource("27_xhh80")
+id = &"w14_5"
+duration = 33.0
+entries = Array[ExtResource("28_3bv1m")]([SubResource("Resource_khwoo"), SubResource("Resource_tqsjo"), SubResource("Resource_paodg"), SubResource("Resource_sw7qq")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[resource]
+script = ExtResource("26_ave5e")
+id = &"lvl_14"
+display_name = "La galerie des saisons"
+act = 5
+subtitle = "Ce qui a deja ete efface, expose"
+intro_text = "Il n y a pas de sol. Il y a une galerie, et dans la galerie tout ce que tu as deja tue, range par saison. Le Gardien de la foret est dans une vitrine, et il y en a deux."
+outro_text = "Personne n est venu defendre la galerie. On te laisse passer d une salle a l autre comme on laisse passer un visiteur. L enfant ne dit plus rien depuis le pentacle, et il marche devant."
+intro_story = &"lvl_14_intro"
+outro_story = &"lvl_14_outro"
+terrain = "grass"
+backdrop = "act5_divine"
+waves = Array[ExtResource("27_xhh80")]([SubResource("Resource_ju6cb"), SubResource("Resource_70dm8"), SubResource("Resource_fe3w6"), SubResource("Resource_6yp3l"), SubResource("Resource_1s8yj")])
+enemy_pool = Array[ExtResource("1_70dm8")]([ExtResource("2_fe3w6"), ExtResource("3_6yp3l"), ExtResource("4_1s8yj"), ExtResource("5_0t5bb"), ExtResource("6_lk4y5"), ExtResource("7_4jdvf"), ExtResource("8_it8ya"), ExtResource("9_xlx3v"), ExtResource("10_qhu6a"), ExtResource("11_t6kx1"), ExtResource("12_rtnxx")])
+exploration_deck = Array[ExtResource("14_q6tsu")]([ExtResource("15_s86if"), ExtResource("15_s86if"), ExtResource("15_s86if"), ExtResource("16_egwhj"), ExtResource("16_egwhj"), ExtResource("17_wajrc"), ExtResource("17_wajrc"), ExtResource("18_lc2k0"), ExtResource("18_lc2k0"), ExtResource("19_c8xt7"), ExtResource("19_c8xt7"), ExtResource("20_v8vux"), ExtResource("21_ylw6j"), ExtResource("22_eyuxg"), ExtResource("23_iht3g")])
+objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
+legendary_reward = ExtResource("24_1f7y4")
+next_levels = Array[StringName]([&"lvl_15"])

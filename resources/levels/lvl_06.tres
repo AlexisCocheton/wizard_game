@@ -254,12 +254,8 @@ id = &"lvl_06"
 display_name = "La Cour brisee"
 act = 3
 subtitle = "Une guerre civile ou tu n es qu un passant"
-intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui 
-portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera 
-quand meme, en passant."
-outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a 
-enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur 
-le cadran, tu as lu une adresse."
+intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera quand meme, en passant."
+outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur le cadran, tu as lu une adresse."
 intro_story = &""
 outro_story = &""
 terrain = "sand"
@@ -269,4 +265,4 @@ enemy_pool = Array[ExtResource("1_hygvp")]([ExtResource("2_7juvv"), ExtResource(
 exploration_deck = Array[ExtResource("14_5hav6")]([ExtResource("15_pkiwx"), ExtResource("16_hvxva"), ExtResource("17_hygvp"), ExtResource("17_cnoig"), ExtResource("17_cnoig"), ExtResource("17_cnoig"), ExtResource("18_v36rt"), ExtResource("18_v36rt"), ExtResource("19_v2fyw"), ExtResource("19_v2fyw"), ExtResource("21_7juvv"), ExtResource("22_qoior"), ExtResource("20_hygvp"), ExtResource("21_is78b"), ExtResource("23_bcmnx")])
 objectives = Array[ExtResource("25_o1m5h")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("24_mgke4")
-next_levels = Array[StringName]([&"lvl_07"])
+next_levels = Array[StringName]([&"lvl_21"])

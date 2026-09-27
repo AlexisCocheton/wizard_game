@@ -210,13 +210,8 @@ id = &"lvl_09"
 display_name = "Proteger le dirigeable"
 act = 1
 subtitle = "On ne devient pas fou en six jours"
-intro_text = "Le rat pilote repare sous la carcasse et ne veut voir 
-personne. Tiens la clairiere le temps qu il faut. Au fond, les arbres s ecartent 
-d eux-memes : le Gardien de la foret vient, et il ne marche pas entre les arbres."
-outro_text = "Le Gardien s effondre en un tas de bois mort. Dans sa poitrine 
-ouverte, plantee comme une echarde, une plaque de metal noir que personne n a taillee 
-ici. Il n est pas devenu fou : on lui a mis quelque chose dedans, et la soudure vient 
-d en haut."
+intro_text = "Le rat pilote repare sous la carcasse et ne veut voir personne. Tiens la clairiere le temps qu il faut. Au fond, les arbres s ecartent d eux-memes : le Gardien de la foret vient, et il ne marche pas entre les arbres."
+outro_text = "Le Gardien s effondre en un tas de bois mort. Dans sa poitrine ouverte, plantee comme une echarde, une plaque de metal noir que personne n a taillee ici. Il n est pas devenu fou : on lui a mis quelque chose dedans, et la soudure vient d en haut."
 intro_story = &"lvl_09_intro"
 outro_story = &"lvl_09_outro"
 terrain = "grass"
@@ -226,4 +221,4 @@ enemy_pool = Array[ExtResource("1_afr64")]([ExtResource("2_7s4ln"), ExtResource(
 exploration_deck = Array[ExtResource("11_8xjrd")]([ExtResource("12_olbp5"), ExtResource("12_olbp5"), ExtResource("13_aq1hf"), ExtResource("13_aq1hf"), ExtResource("14_1bsyt"), ExtResource("14_1bsyt"), ExtResource("14_1bsyt"), ExtResource("15_k56tj"), ExtResource("16_htlmc"), ExtResource("16_htlmc"), ExtResource("17_s5lay"), ExtResource("18_f6y4v"), ExtResource("19_caqve"), ExtResource("19_caqve"), ExtResource("20_476h2")])
 objectives = Array[ExtResource("22_v1e3n")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("21_vtgx3")
-next_levels = Array[StringName]([&"lvl_03"])
+next_levels = Array[StringName]([&"lvl_17"])

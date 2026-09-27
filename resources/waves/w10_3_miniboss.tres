@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5cqp1"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_slime.tres" id="2_23if8"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="3_mc1kp"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="4_8p3an"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_idu2m"]
+
+[sub_resource type="Resource" id="Resource_5cqp1"]
+script = ExtResource("1_5cqp1")
+enemy = ExtResource("2_23if8")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_23if8"]
+script = ExtResource("1_5cqp1")
+enemy = ExtResource("3_mc1kp")
+count = 2
+spawn_delay = 2.5
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_mc1kp"]
+script = ExtResource("1_5cqp1")
+enemy = ExtResource("4_8p3an")
+count = 3
+spawn_delay = 1.8
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_idu2m")
+id = &"w10_3_miniboss"
+duration = 32.0
+entries = Array[ExtResource("1_5cqp1")]([SubResource("Resource_5cqp1"), SubResource("Resource_23if8"), SubResource("Resource_mc1kp")])
+difficulty = 1.05
+is_miniboss = true
+is_boss = false

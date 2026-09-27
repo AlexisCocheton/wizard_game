@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5xhnr"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_circle.tres" id="2_0elns"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="3_0bkkj"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_chain.tres" id="3_8163g"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_8163g"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_er08u"]
+
+[sub_resource type="Resource" id="Resource_er08u"]
+script = ExtResource("1_5xhnr")
+enemy = ExtResource("2_0elns")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_7cfvv"]
+script = ExtResource("1_5xhnr")
+enemy = ExtResource("3_8163g")
+count = 1
+spawn_delay = 1.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_lgaib"]
+script = ExtResource("1_5xhnr")
+enemy = ExtResource("3_0bkkj")
+count = 2
+spawn_delay = 2.5
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_01754"]
+script = ExtResource("1_5xhnr")
+enemy = ExtResource("4_8163g")
+count = 3
+spawn_delay = 2.0
+start_offset = 30.0
+
+[resource]
+script = ExtResource("5_er08u")
+id = &"w13_4"
+duration = 31.0
+entries = Array[ExtResource("1_5xhnr")]([SubResource("Resource_er08u"), SubResource("Resource_7cfvv"), SubResource("Resource_lgaib"), SubResource("Resource_01754")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false

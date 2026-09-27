@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_khwoo"]
+[ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="2_tqsjo"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_paodg"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_sw7qq"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_n2rm5"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_8sjc0"]
+
+[sub_resource type="Resource" id="Resource_khwoo"]
+script = ExtResource("1_khwoo")
+enemy = ExtResource("2_tqsjo")
+count = 2
+spawn_delay = 5.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_tqsjo"]
+script = ExtResource("1_khwoo")
+enemy = ExtResource("3_paodg")
+count = 2
+spawn_delay = 2.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_paodg"]
+script = ExtResource("1_khwoo")
+enemy = ExtResource("4_sw7qq")
+count = 2
+spawn_delay = 2.2
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_sw7qq"]
+script = ExtResource("1_khwoo")
+enemy = ExtResource("5_n2rm5")
+count = 4
+spawn_delay = 1.4
+start_offset = 28.0
+
+[resource]
+script = ExtResource("6_8sjc0")
+id = &"w14_5"
+duration = 33.0
+entries = Array[ExtResource("1_khwoo")]([SubResource("Resource_khwoo"), SubResource("Resource_tqsjo"), SubResource("Resource_paodg"), SubResource("Resource_sw7qq")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

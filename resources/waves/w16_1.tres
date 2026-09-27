@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_qx126"]
+[ext_resource type="Resource" path="res://resources/enemies/blood_coagulum.tres" id="2_8472u"]
+[ext_resource type="Resource" path="res://resources/enemies/forge_colossus.tres" id="3_htf8n"]
+[ext_resource type="Resource" path="res://resources/enemies/gravecaller.tres" id="4_2uv4j"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_7o6pp"]
+
+[sub_resource type="Resource" id="Resource_qx126"]
+script = ExtResource("1_qx126")
+enemy = ExtResource("2_8472u")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8472u"]
+script = ExtResource("1_qx126")
+enemy = ExtResource("3_htf8n")
+count = 1
+spawn_delay = 1.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_htf8n"]
+script = ExtResource("1_qx126")
+enemy = ExtResource("4_2uv4j")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_7o6pp")
+id = &"w16_1"
+duration = 28.0
+entries = Array[ExtResource("1_qx126")]([SubResource("Resource_qx126"), SubResource("Resource_8472u"), SubResource("Resource_htf8n")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false

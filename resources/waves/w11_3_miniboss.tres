@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_b1isi"]
+[ext_resource type="Resource" path="res://resources/enemies/skyreaver.tres" id="2_vpxg0"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_ofhlb"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_ao20m"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_fgk6l"]
+
+[sub_resource type="Resource" id="Resource_b1isi"]
+script = ExtResource("1_b1isi")
+enemy = ExtResource("2_vpxg0")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_vpxg0"]
+script = ExtResource("1_b1isi")
+enemy = ExtResource("3_ofhlb")
+count = 2
+spawn_delay = 2.5
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_ofhlb"]
+script = ExtResource("1_b1isi")
+enemy = ExtResource("4_ao20m")
+count = 4
+spawn_delay = 1.8
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_fgk6l")
+id = &"w11_3_miniboss"
+duration = 32.0
+entries = Array[ExtResource("1_b1isi")]([SubResource("Resource_b1isi"), SubResource("Resource_vpxg0"), SubResource("Resource_ofhlb")])
+difficulty = 1.05
+is_miniboss = true
+is_boss = false

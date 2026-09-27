@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_dmecf"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="2_x6s4q"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="3_5yewb"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_el85c"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="5_na4wr"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_u3x57"]
+
+[sub_resource type="Resource" id="Resource_dmecf"]
+script = ExtResource("1_dmecf")
+enemy = ExtResource("2_x6s4q")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_x6s4q"]
+script = ExtResource("1_dmecf")
+enemy = ExtResource("3_5yewb")
+count = 4
+spawn_delay = 1.8
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_5yewb"]
+script = ExtResource("1_dmecf")
+enemy = ExtResource("4_el85c")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_el85c"]
+script = ExtResource("1_dmecf")
+enemy = ExtResource("5_na4wr")
+count = 1
+spawn_delay = 2.5
+start_offset = 24.0
+
+[resource]
+script = ExtResource("6_u3x57")
+id = &"w14_4"
+duration = 31.0
+entries = Array[ExtResource("1_dmecf")]([SubResource("Resource_dmecf"), SubResource("Resource_x6s4q"), SubResource("Resource_5yewb"), SubResource("Resource_el85c")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

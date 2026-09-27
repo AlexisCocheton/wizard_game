@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_qao11"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_o2dpr"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_bnhx8"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="4_pa3hn"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_e64q5"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_wm7a6"]
+
+[sub_resource type="Resource" id="Resource_qao11"]
+script = ExtResource("1_qao11")
+enemy = ExtResource("2_o2dpr")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_o2dpr"]
+script = ExtResource("1_qao11")
+enemy = ExtResource("3_bnhx8")
+count = 1
+spawn_delay = 2.0
+start_offset = 11.0
+
+[sub_resource type="Resource" id="Resource_bnhx8"]
+script = ExtResource("1_qao11")
+enemy = ExtResource("4_pa3hn")
+count = 3
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_pa3hn"]
+script = ExtResource("1_qao11")
+enemy = ExtResource("5_e64q5")
+count = 2
+spawn_delay = 2.2
+start_offset = 23.0
+
+[resource]
+script = ExtResource("6_wm7a6")
+id = &"w20_3"
+duration = 29.0
+entries = Array[ExtResource("1_qao11")]([SubResource("Resource_qao11"), SubResource("Resource_o2dpr"), SubResource("Resource_bnhx8"), SubResource("Resource_pa3hn")])
+difficulty = 1.55
+is_miniboss = false
+is_boss = false

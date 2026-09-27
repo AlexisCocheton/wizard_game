@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_r4va7"]
+
+[resource]
+script = ExtResource("1_r4va7")
+id = &"lvl_03_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Les registres de l ossuaire sont intacts. Une colonne par ile, une ligne par annee, et pour les trois dernieres annees les chiffres ne sont plus des chiffres : ce sont des commandes."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ils ne nous ont pas effaces par haine. Ils nous ont effaces pour le STOCK."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Du stock pour quoi ?"
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Pour une invocation. On ne compte pas des morts a la ligne si on n a pas l intention de s en servir tous en meme temps."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il y en a un qui nous regarde. Au fond. Il ne vient pas."
+}])

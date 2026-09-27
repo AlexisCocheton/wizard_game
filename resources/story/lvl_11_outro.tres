@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_fvfys"]
+
+[resource]
+script = ExtResource("1_fvfys")
+id = &"lvl_11_outro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Kaltek tombe au milieu de ses chaines. Elles ne tenaient rien : elles PARTAIENT de lui, vers le haut, et elles continuent de tirer."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Voila. Il gueulait parce qu il ne pouvait pas regarder en l air."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Un seigneur de la rage qui obeit. Ca n a plus de nom."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Ca a un nom : un contremaitre."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il en reste. Tu veux te reposer avant ?"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Non. Je commence a avoir une idee et elle ne me plait pas."
+}])

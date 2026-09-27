@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_lp3ji"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="2_b62lj"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_rmrep"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_g84k1"]
+
+[sub_resource type="Resource" id="Resource_lp3ji"]
+script = ExtResource("1_lp3ji")
+enemy = ExtResource("2_b62lj")
+count = 4
+spawn_delay = 1.8
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_b62lj"]
+script = ExtResource("1_lp3ji")
+enemy = ExtResource("3_rmrep")
+count = 2
+spawn_delay = 2.2
+start_offset = 10.0
+
+[resource]
+script = ExtResource("4_g84k1")
+id = &"w18_1"
+duration = 25.0
+entries = Array[ExtResource("1_lp3ji")]([SubResource("Resource_lp3ji"), SubResource("Resource_b62lj")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false

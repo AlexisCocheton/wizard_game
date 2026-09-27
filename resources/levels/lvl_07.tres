@@ -36,7 +36,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="32_raevg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="33_tka0t"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_elder.tres" id="34_xuvbo"]
-[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="35_n2no6"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_anvil.tres" id="37_2enmq"]
 
 [sub_resource type="Resource" id="Resource_6vmxt"]
 script = ExtResource("30_0hr58")
@@ -253,7 +253,7 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_f5oys"]
 script = ExtResource("33_tka0t")
-enemy = ExtResource("35_n2no6")
+enemy = ExtResource("37_2enmq")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -291,24 +291,18 @@ is_boss = true
 [resource]
 script = ExtResource("31_ksdft")
 id = &"lvl_07"
-display_name = "Le Metier du Monde"
+display_name = "La forge de Vharn"
 act = 4
-subtitle = "Ce n est pas un monde, c est une matrice"
-intro_text = "Une grille de fils tendus entre des etoiles, ou des divinites 
-tissent les evenements. Elles ne sont ni bonnes ni mauvaises : elles sont OCCUPEES. 
-L herbe sous tes pieds est le meme motif qu au premier matin, repete."
-outro_text = "Il n y a pas de coupable, il y a un calcul. Ton royaume 
-generait trop de futurs possibles : on l a coupe pour simplifier le motif. Et en 
-remontant le temps, tu es devenu exactement ce que la machine voulait supprimer — le 
-fil qui depasse. Reste a savoir si tu le coupes, si tu prends la place, ou si tu 
-laisses la boucle ouverte."
+subtitle = "Six coups pour rien, et il est toujours debout"
+intro_text = "Une forge sans forgeron, ou tout ce qui bouge porte une armure. Vharn ne parle pas et ne se presse pas : il encaisse. Tes premiers sorts ne lui feront rien du tout, et il faudra que tu le voies pour le croire."
+outro_text = "L Enclume se fend enfin, et dedans il n y a pas de coeur : il y a un contrat, grave dans la fonte, signe par quelqu un qu il n a jamais rencontre. Vharn se croyait le commanditaire. Il etait un outil de plus dans son propre atelier."
 intro_story = &""
 outro_story = &""
 terrain = "grass"
-backdrop = "act4_origin"
+backdrop = "act3_demon"
 waves = Array[ExtResource("32_raevg")]([SubResource("Resource_2enmq"), SubResource("Resource_qnhb2"), SubResource("Resource_u1eb3"), SubResource("Resource_63ls2"), SubResource("Resource_wlt05"), SubResource("Resource_ov2ma")])
-enemy_pool = Array[ExtResource("1_xuvbo")]([ExtResource("2_lyna4"), ExtResource("3_2enmq"), ExtResource("4_qnhb2"), ExtResource("5_u1eb3"), ExtResource("6_63ls2"), ExtResource("7_wlt05"), ExtResource("8_ov2ma"), ExtResource("9_a43ve"), ExtResource("10_x6hq0"), ExtResource("11_vewni"), ExtResource("12_sc3o3"), ExtResource("13_p6aea"), ExtResource("14_55kjb"), ExtResource("15_ibebx"), ExtResource("16_uvtgg"), ExtResource("17_2enmq"), ExtResource("18_qnhb2")])
+enemy_pool = Array[ExtResource("1_xuvbo")]([ExtResource("2_lyna4"), ExtResource("3_2enmq"), ExtResource("4_qnhb2"), ExtResource("5_u1eb3"), ExtResource("6_63ls2"), ExtResource("7_wlt05"), ExtResource("8_ov2ma"), ExtResource("9_a43ve"), ExtResource("10_x6hq0"), ExtResource("11_vewni"), ExtResource("12_sc3o3"), ExtResource("13_p6aea"), ExtResource("14_55kjb"), ExtResource("15_ibebx"), ExtResource("16_uvtgg"), ExtResource("17_2enmq"), ExtResource("18_qnhb2"), ExtResource("37_2enmq")])
 exploration_deck = Array[ExtResource("17_muspt")]([ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("19_a5r0e"), ExtResource("19_a5r0e"), ExtResource("20_ij338"), ExtResource("20_ij338"), ExtResource("21_jnc4j"), ExtResource("22_6xcos"), ExtResource("23_rewrk"), ExtResource("24_6volu"), ExtResource("25_jwiqm"), ExtResource("26_yim71"), ExtResource("27_808q8"), ExtResource("28_780l5")])
 objectives = Array[ExtResource("30_0hr58")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("29_pq4nw")
-next_levels = Array[StringName]([])
+next_levels = Array[StringName]([&"lvl_13"])

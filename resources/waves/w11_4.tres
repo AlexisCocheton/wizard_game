@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ljjsb"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_736l0"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_2y5fh"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_a3nx4"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_qdr8n"]
+
+[sub_resource type="Resource" id="Resource_ljjsb"]
+script = ExtResource("1_ljjsb")
+enemy = ExtResource("2_736l0")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_736l0"]
+script = ExtResource("1_ljjsb")
+enemy = ExtResource("3_2y5fh")
+count = 3
+spawn_delay = 2.2
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_2y5fh"]
+script = ExtResource("1_ljjsb")
+enemy = ExtResource("4_a3nx4")
+count = 2
+spawn_delay = 2.2
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_qdr8n")
+id = &"w11_4"
+duration = 30.0
+entries = Array[ExtResource("1_ljjsb")]([SubResource("Resource_ljjsb"), SubResource("Resource_736l0"), SubResource("Resource_2y5fh")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
