@@ -103,6 +103,8 @@ func reset() -> void:
 	casts_by_card.clear()
 	upgrades_taken.clear()
 	pending_upgrade_card = null
+	# Compteurs du moteur d objectifs (voir la section OBJECTIFS PARAMETRES).
+	_reset_objective_counters()
 
 
 ## Fixe la graine pour rendre les tirages deterministes (tests, replays).
@@ -834,6 +836,191 @@ func note_speed_drop() -> void:
 	speed_dropped = true
 
 
+# --- OBJECTIFS PARAMETRES ----------------------------------------------------
+#
+# Les compteurs que lit ObjectiveChecker (voir le tableau en tete de
+# objective_checker.gd). Ils ne JUGENT rien : ils enregistrent des faits de la
+# partie, et chaque objectif en tire sa regle avec ses propres parametres. C est
+# ce qui permet a deux niveaux d exiger "5 monstres en 1 s" et "3 monstres d un
+# coup" sans une ligne de code de plus.
+#
+# L HORLOGE est du temps REEL de combat : la somme des delta bruts passes a
+# GameController.simulate(), hors pauses (choix de carte, amelioration). C est
+# le seul temps que le joueur percoit et peut viser ; le temps du monde, lui,
+# court cinq fois plus vite a 500 % et rendrait "gagner en moins de 3 min"
+# illisible.
+
+## Secondes de combat ecoulees (temps reel, pauses exclues).
+var run_time: float = 0.0
+## Instant (run_time) de chaque monstre tue, dans l ordre. Les projectiles n y
+## sont pas : Battlefield n emet pas leur mort comme une victime.
+var kill_times: PackedFloat64Array = PackedFloat64Array()
+var flying_kills: int = 0
+## Sorts lances par TAG (valeur entiere de GameEnums.DamageTag -> nombre).
+var casts_by_tag: Dictionary = {}
+## Sorts lances par CLE D EFFET (StringName -> nombre). Une carte a deux effets
+## de meme cle ne compte qu une fois : on compte des LANCERS, pas des effets.
+var casts_by_effect: Dictionary = {}
+## Coups qui ont mordu un monstre en garde de renvoi (donc renvoyes au mage).
+var reflect_hits: int = 0
+## Point le plus bas atteint par un monstre, en fraction du chemin
+## apparition -> ligne du mage (0 = en haut, 1 = au contact).
+var enemy_depth_max: float = 0.0
+## Monstres releves et pas encore acheves : id d instance -> run_time du releve.
+var _revived_at: Dictionary = {}
+## Delai releve -> mort de chaque monstre releve PUIS acheve.
+var revive_kill_delays: Array[float] = []
+## Photo de la fin de partie, prise a la victoire. -1 tant qu il n y en a pas :
+## les objectifs lisent alors l etat courant (tests, ecran ouvert hors combat).
+var victory_speed_percent: int = -1
+var victory_time: float = -1.0
+
+
+func _reset_objective_counters() -> void:
+	run_time = 0.0
+	kill_times = PackedFloat64Array()
+	flying_kills = 0
+	casts_by_tag.clear()
+	casts_by_effect.clear()
+	reflect_hits = 0
+	enemy_depth_max = 0.0
+	_revived_at.clear()
+	revive_kill_delays.clear()
+	victory_speed_percent = -1
+	victory_time = -1.0
+
+
+## Avance l horloge des objectifs. delta BRUT : voir l en-tete de la section.
+func advance_clock(delta: float) -> void:
+	run_time += maxf(delta, 0.0)
+
+
+func _note_cast_for_objectives(card: SpellCard) -> void:
+	for t in card.tags:
+		casts_by_tag[int(t)] = int(casts_by_tag.get(int(t), 0)) + 1
+	var vues: Dictionary = {}
+	for k: StringName in card.effect_keys():
+		if vues.has(k):
+			continue
+		vues[k] = true
+		casts_by_effect[k] = int(casts_by_effect.get(k, 0)) + 1
+
+
+func casts_with_tag(tag: int) -> int:
+	return int(casts_by_tag.get(tag, 0))
+
+
+func casts_with_effect(key: StringName) -> int:
+	return int(casts_by_effect.get(key, 0))
+
+
+## Le sort le plus lance de la partie : son nombre de lancers.
+func max_same_card_casts() -> int:
+	var best: int = 0
+	for k in casts_by_card:
+		best = maxi(best, int(casts_by_card[k]))
+	return best
+
+
+## Nombre de sorts DIFFERENTS lances (par id : trois exemplaires = un sort).
+func distinct_cards_cast() -> int:
+	return casts_by_card.size()
+
+
+## Un monstre vient de mourir (branche sur Battlefield.enemy_killed par le
+## GameController).
+func note_kill(def: EnemyDef) -> void:
+	kill_times.append(run_time)
+	if def != null and def.flying:
+		flying_kills += 1
+
+
+## Le plus grand nombre de morts tenant dans une fenetre STRICTEMENT plus courte
+## que `window` secondes. Des morts de la meme image ont le meme instant : elles
+## tiennent toujours ensemble, quel que soit `window` > 0.
+func best_kill_burst(window: float) -> int:
+	# Fenetre nulle : la boucle ci-dessous depasserait j. L AUDIT l interdit deja.
+	if window <= 0.0:
+		return 0
+	var best: int = 0
+	var i: int = 0
+	for j in kill_times.size():
+		while kill_times[j] - kill_times[i] >= window:
+			i += 1
+		best = maxi(best, j - i + 1)
+	return best
+
+
+## Un coup a mordu pendant une garde de renvoi. Appele d un seul endroit,
+## Battlefield._reflect_to_mage(), qui ne s execute QUE dans ce cas.
+func note_reflect_hit() -> void:
+	reflect_hits += 1
+
+
+## Un monstre vient de se relever (Enemy._try_revive).
+func note_enemy_revived(instance_id: int) -> void:
+	_revived_at[instance_id] = run_time
+
+
+## Un monstre releve vient de mourir pour de bon (Enemy.kill).
+func note_revived_enemy_killed(instance_id: int) -> void:
+	if not _revived_at.has(instance_id):
+		return
+	revive_kill_delays.append(run_time - float(_revived_at[instance_id]))
+	_revived_at.erase(instance_id)
+
+
+## Monstres releves jamais acheves (partis au contact, gobes...).
+func revived_still_standing() -> int:
+	return _revived_at.size()
+
+
+## Fraction du chemin parcouru a l ordonnee `y`, bornee a [0, 1].
+static func depth_ratio(y: float) -> float:
+	var course: float = GameConfig.MAGE_LINE_Y - GameConfig.SPAWN_LINE_Y
+	if course <= 0.0:
+		return 0.0
+	return clampf((y - GameConfig.SPAWN_LINE_Y) / course, 0.0, 1.0)
+
+
+## Releve la profondeur des monstres vivants. Appele par GameController une
+## fois par image, APRES la simulation du terrain. Tableau NON type : l appelant
+## passe Battlefield.enemies, et un parametre Array[Enemy] ferait dependre
+## RunState de la scene de jeu pour rien.
+##
+## Angle mort assume : un monstre qui touche le mage est retire du terrain dans
+## l image meme ou il arrive, sa derniere position n est donc pas relevee — mais
+## celle de l image d avant l est, a un pas de deplacement de la ligne. C est
+## pourquoi ObjectiveChecker borne le ratio de no_enemy_past a 0,95.
+func note_enemy_depths(enemies: Array) -> void:
+	for e in enemies:
+		if e == null or not is_instance_valid(e):
+			continue
+		var n: Node2D = e as Node2D
+		if n == null or not n.has_method("is_dead") or n.call("is_dead"):
+			continue
+		var def: EnemyDef = n.get("definition") as EnemyDef
+		if def != null and def.projectile:
+			continue
+		enemy_depth_max = maxf(enemy_depth_max, depth_ratio(n.position.y))
+
+
+## Photo de fin : vitesse et temps AU MOMENT de la victoire. L ecran de victoire
+## juge les objectifs apres le changement de scene ; rien ne garantit que la
+## jauge n aura pas bouge d ici la.
+func note_victory() -> void:
+	victory_speed_percent = SpeedGauge.speed_percent
+	victory_time = run_time
+
+
+func final_speed_percent() -> int:
+	return victory_speed_percent if victory_speed_percent >= 0 else SpeedGauge.speed_percent
+
+
+func final_time() -> float:
+	return victory_time if victory_time >= 0.0 else run_time
+
+
 # --- Sorts demandes par le testeur : echo de la main, double incantation ---
 
 ## Les `count` prochaines cartes lancees reviennent en main au lieu de partir.
@@ -908,6 +1095,9 @@ func note_cast(card: SpellCard) -> void:
 		return
 	var cle: StringName = card.id
 	casts_by_card[cle] = int(casts_by_card.get(cle, 0)) + 1
+	# Objectifs : element et effets du sort. AVANT les retours anticipes qui
+	# suivent, sinon un sort deja ameliore cesserait d etre compte.
+	_note_cast_for_objectives(card)
 	# Une carte DEJA amelioree ne redemande rien : sans ce garde, le sort favori
 	# ouvrirait un ecran modal toutes les huit incantations jusqu a la fin de la
 	# partie. Une seule amelioration par sort et par partie.

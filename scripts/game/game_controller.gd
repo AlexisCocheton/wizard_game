@@ -169,8 +169,12 @@ func simulate(delta: float) -> void:
 	# La pioche suit le temps du MONDE : a x4, quatre fois plus de monstres
 	# arrivent, il faut quatre fois plus de cartes pour y repondre.
 	RunState.tick(SpeedGauge.world_delta(delta))
+	# OBJECTIFS : horloge en temps REEL (voir RunState, OBJECTIFS PARAMETRES).
+	RunState.advance_clock(delta)
 	caster.tick(delta)
 	battlefield.simulate(delta)
+	# OBJECTIFS : profondeur atteinte par les monstres (no_enemy_past).
+	RunState.note_enemy_depths(battlefield.enemies)
 	# Une carte lancee peut tuer le dernier monstre et terminer le niveau : on
 	# reverifie avant de faire apparaitre la vague suivante.
 	if _ended:
@@ -435,6 +439,8 @@ func _passive_equipped_at(key: StringName, percent: int) -> bool:
 
 func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:
 	ChallengeTracker.bump(&"enemies_killed")
+	# OBJECTIFS : instant de la mort (multi_kill) et volants (kill_flying).
+	RunState.note_kill(_def)
 	# Compteur PAR ESPECE, affiche sur la fiche du bestiaire ("N vaincus").
 	if _def != null:
 		ChallengeTracker.bump(StringName("kills:%s" % _def.id))
@@ -468,6 +474,8 @@ func _offer_boss_reward(final_boss: bool) -> void:
 
 
 func _on_all_cleared() -> void:
+	# OBJECTIFS : photo de la vitesse et du temps AU MOMENT de la victoire.
+	RunState.note_victory()
 	running = false
 	_ended = true
 	level_won.emit()

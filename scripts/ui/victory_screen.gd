@@ -97,7 +97,7 @@ func _remplir(level: LevelDef, done: Dictionary, newly: bool) -> void:
 		# Plus de prefixe entre crochets : la couleur et le mot disent l etat.
 		# "[   ]" se lisait comme une case a cocher cassee.
 		_objectives.add_child(UiTheme.label(
-			"%s  -  %s" % ["Reussi" if pris else "A refaire", obj.description],
+			"%s  -  %s" % ["Reussi" if pris else "A refaire", ObjectiveChecker.label(obj)],
 			UiTheme.FONT_SMALL,
 			Color(0.16, 0.46, 0.22) if pris else Color(0.52, 0.42, 0.30)))
 
