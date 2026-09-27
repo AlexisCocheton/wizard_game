@@ -11,6 +11,11 @@ var aim_point: Vector2 = Vector2.ZERO
 var valid: bool = false
 var wall_half_width: float = 0.0
 var zone_radius: float = 0.0
+## Riviere : la ligne couvre TOUTE la largeur, a la rangee ou la carte la posera
+## (point ramene dans les bornes par NavGrid.river_row). L apercu dessine donc la
+## rangee reelle, pas le doigt : sinon il mentirait d une rangee pres des bords.
+var river: bool = false
+var _water: Texture2D = null
 
 const COL_OK := Color(1.0, 1.0, 1.0, 0.75)
 const COL_BAD := Color(1.0, 0.45, 0.45, 0.6)
@@ -37,6 +42,12 @@ func _ready() -> void:
 		var frames: Array[Texture2D] = SheetLib.grid(hit, 100)
 		if frames.size() > 10:
 			_cross = frames[10]
+	var eau: Texture2D = SheetLib.texture("res://assets/props/terrain_river_water.png")
+	if eau != null:
+		var tuile := AtlasTexture.new()
+		tuile.atlas = eau
+		tuile.region = Rect2(0, 0, eau.get_height(), eau.get_height())
+		_water = tuile
 
 
 func show_aim(c: SpellCard, point: Vector2, is_valid: bool) -> void:
@@ -59,12 +70,15 @@ func hide_aim() -> void:
 func _read_shape() -> void:
 	zone_radius = 0.0
 	wall_half_width = 0.0
+	river = false
 	if card == null:
 		return
 	for spec in card.effects:
 		if spec == null:
 			continue
-		if spec.key == &"build_wall":
+		if spec.key == &"terrain_river":
+			river = true
+		elif spec.key == &"build_wall":
 			wall_half_width = maxf(spec.radius, 60.0)
 		elif spec.key == &"ground_zone" or spec.key == &"damage_per_enemy":
 			zone_radius = maxf(spec.radius, 10.0)
@@ -78,6 +92,14 @@ func _draw() -> void:
 	if card == null:
 		return
 	var col: Color = COL_OK if valid else COL_BAD
+
+	if river and _water != null:
+		var cote: float = NavGrid.CELL_SIZE
+		var y: float = NavGrid.row_center_y(NavGrid.river_row(aim_point.y)) - cote * 0.5
+		var n: int = int(ceil(GameConfig.BATTLEFIELD_WIDTH / cote))
+		for i in n:
+			draw_texture_rect(_water, Rect2(i * cote, y, cote, cote), false, col)
+		return
 
 	if wall_half_width > 0.0 and not _rocks.is_empty():
 		var step: float = 56.0

@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7aqar"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_6tfyb"]
+
+[sub_resource type="Resource" id="Resource_7aqar"]
+script = ExtResource("1_7aqar")
+key = &"place_terrain"
+magnitude = 0.0
+duration = 0.0
+radius = 0.0
+params = {
+&"ally_damage": 8.0,
+&"ally_duration": 5.0,
+&"kind": "altar",
+&"prop_hp": 140.0,
+&"summon_every": 6.0,
+&"taunt_radius": 220.0
+}
+
+[resource]
+script = ExtResource("2_6tfyb")
+id = &"terrain_altar"
+display_name = "Autel d appel"
+description = "Erige un autel de 140 PV qui reste jusqu a ce qu on l abatte. Toutes les 6 s, il fait naitre un allie qui frappe pour 8 pendant 5 s. Les monstres qui passent pres de lui viennent le briser."
+rarity = 2
+base_cast_time = 2.2
+targeting = 1
+tags = Array[int]([5])
+effects = Array[ExtResource("1_7aqar")]([SubResource("Resource_7aqar")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"portal_violet"
+sfx_key = &"whoosh_summon"

@@ -673,6 +673,9 @@ static func prop_visual(parent: Node2D, at: Vector2, kind: int, duration: float,
 			var anneau := ZoneRing.new()
 			anneau.setup(rayon * part, COL_FROST)
 			root.add_child(anneau)
+	elif kind == TerrainProp.Kind.BRAMBLE or kind == TerrainProp.Kind.PIT \
+			or kind == TerrainProp.Kind.ALTAR:
+		_terrain_body(root, kind, tint)
 	else:
 		var sf: SpriteFrames = SheetLib.frames("decor:tree1",
 			{"sway": {"path": "res://assets/terrain/tree1.png", "frame": 192,
@@ -723,6 +726,146 @@ const PROP_WATER_PX: float = 560.0
 ## Rayons relatifs des disques empiles qui font la nappe. Le premier porte la
 ## portee exacte : c est lui que le joueur lit, les autres ne font qu epaissir.
 const PROP_WATER_LAYERS: Array[float] = [1.0, 0.74, 0.46]
+
+
+## --- SORTS DE TERRAIN PERMANENTS : corps des objets ---
+##
+## Tires du pack Ancient Ruins (tools/assets/extract_terrain.py), en attendant le
+## pack « undead tileset » demande, absent du disque. Ce sont des tuiles de 32 px :
+## on les agrandit par un facteur ENTIER ou presque, le filtre du projet est au
+## plus proche et un facteur fractionnaire ferait des pixels de tailles inegales.
+const PROPS_DIR := "res://assets/props/"
+## Ronces : touffes d arbustes morts, agrandies x3 (32x51 -> ~100x150 px).
+const TERRAIN_BRAMBLE_SCALE: float = 3.0
+## Touffes de la ronce, en fraction du rayon d affichage : un bosquet serre au
+## centre de la zone, qui laisse l anneau de la zone dire la portee.
+const TERRAIN_BRAMBLE_SPOTS: Array[Vector2] = [
+	Vector2(0.0, 0.0), Vector2(-0.55, 0.25), Vector2(0.55, 0.2),
+	Vector2(-0.3, -0.45), Vector2(0.35, -0.4),
+]
+const TERRAIN_BRAMBLE_SPREAD_PX: float = 95.0
+## Fosse : margelle de galets (x3) autour d un trou sombre.
+const TERRAIN_PIT_RADIUS_PX: float = 78.0
+const TERRAIN_PIT_STONES: int = 10
+const TERRAIN_PEBBLE_SCALE: float = 3.0
+## Autel : case de 224x288 dont le socle n occupe que le bas. A 0,8 la capture
+## le montrait plus petit qu un gnome ; a 1,25 le socle fait ~230 px de large,
+## une cible que la vague remarque sans masquer l arbre voisin.
+const TERRAIN_ALTAR_SCALE: float = 1.25
+
+
+static func _terrain_body(root: Node2D, kind: int, tint: Color) -> void:
+	match kind:
+		TerrainProp.Kind.BRAMBLE:
+			var tex: Texture2D = SheetLib.texture(PROPS_DIR + "terrain_bramble.png")
+			if tex == null:
+				return
+			for i in TERRAIN_BRAMBLE_SPOTS.size():
+				var s := Sprite2D.new()
+				s.texture = tex
+				s.position = TERRAIN_BRAMBLE_SPOTS[i] * TERRAIN_BRAMBLE_SPREAD_PX
+				s.scale = Vector2.ONE * TERRAIN_BRAMBLE_SCALE
+				# Une touffe sur deux retournee : cinq copies alignees du meme
+				# dessin se liraient comme un motif, pas comme un buisson.
+				s.flip_h = i % 2 == 1
+				# Plus sombre que le decor : des epines, pas un arbre du fond.
+				s.modulate = Color(0.75, 0.55, 0.45)
+				root.add_child(s)
+		TerrainProp.Kind.PIT:
+			# Le trou : des anneaux empiles, comme la nappe d eau, mais sombres.
+			for part in PROP_WATER_LAYERS:
+				var trou := ZoneRing.new()
+				trou.setup(TERRAIN_PIT_RADIUS_PX * part, Color(0.08, 0.05, 0.1))
+				root.add_child(trou)
+			var galets: Array[Texture2D] = []
+			for nom in ["terrain_pebble_a.png", "terrain_pebble_b.png"]:
+				var t: Texture2D = SheetLib.texture(PROPS_DIR + nom)
+				if t != null:
+					galets.append(t)
+			if galets.is_empty():
+				return
+			for i in TERRAIN_PIT_STONES:
+				var a: float = TAU * float(i) / float(TERRAIN_PIT_STONES)
+				var s := Sprite2D.new()
+				s.texture = galets[i % galets.size()]
+				s.position = Vector2(cos(a), sin(a)) * TERRAIN_PIT_RADIUS_PX
+				s.scale = Vector2.ONE * TERRAIN_PEBBLE_SCALE
+				root.add_child(s)
+		TerrainProp.Kind.ALTAR:
+			var sf: SpriteFrames = SheetLib.frames("prop:terrain_altar",
+				{"pulse": {"path": PROPS_DIR + "terrain_altar.png", "frame": 224,
+					"frame_h": 288, "fps": 6, "loop": true}})
+			if sf == null:
+				return
+			var a2 := AnimatedSprite2D.new()
+			a2.sprite_frames = sf
+			a2.scale = Vector2.ONE * TERRAIN_ALTAR_SCALE
+			# Le socle repose sur le point pose, la colonne de lumiere monte.
+			a2.position = Vector2(0.0, -40.0)
+			root.add_child(a2)
+			a2.play("pulse")
+
+
+## LA RIVIERE : eau animee sur toute la largeur, berges rocheuses, un pont de
+## dalles. Le corps suit exactement la rangee bloquee dans la grille : le joueur
+## doit lire OU les monstres ne passent pas, a la cellule pres, sinon il
+## accuserait le pathfinding d un detour qu il n a pas vu.
+static func river_visual(parent: Node2D, y: float, thickness: float,
+		bridge_x: float, sheet: String = "") -> Node:
+	_note(sheet)
+	if not enabled() or parent == null:
+		return null
+	var root := Node2D.new()
+	root.position = Vector2(0.0, y)
+	# Sous les monstres et les autres objets : c est du sol.
+	root.z_index = -3
+	parent.add_child(root)
+	var cote: float = thickness
+	var n: int = int(ceil(GameConfig.BATTLEFIELD_WIDTH / cote))
+	var eau: SpriteFrames = SheetLib.frames("prop:terrain_river_water",
+		{"flow": {"path": PROPS_DIR + "terrain_river_water.png", "frame": 32,
+			"frame_h": 32, "fps": 6, "loop": true}})
+	var echelle: float = cote / 32.0
+	for i in n:
+		var cx: float = (float(i) + 0.5) * cote
+		if absf(cx - bridge_x) < cote * 0.5:
+			continue
+		if eau != null:
+			var w := AnimatedSprite2D.new()
+			w.sprite_frames = eau
+			w.position = Vector2(cx, 0.0)
+			w.scale = Vector2.ONE * echelle
+			root.add_child(w)
+			w.play("flow")
+			# Images decalees d une tuile a l autre : 18 tuiles qui ondulent en
+			# meme temps se liraient comme une seule image qui clignote.
+			w.frame = i % 8
+	# Berges : la bande rocheuse du pack, en haut, et retournee en bas.
+	var berge: Texture2D = SheetLib.texture(PROPS_DIR + "terrain_river_bank.png")
+	if berge != null:
+		var larg: float = float(berge.get_width()) * echelle
+		var haut: float = float(berge.get_height()) * echelle
+		var k: int = int(ceil(GameConfig.BATTLEFIELD_WIDTH / larg))
+		for bas in [false, true]:
+			for i in k:
+				var b := Sprite2D.new()
+				b.texture = berge
+				b.centered = false
+				b.scale = Vector2.ONE * echelle
+				b.flip_v = bas
+				b.position = Vector2(i * larg,
+					cote * 0.5 - haut * 0.35 if bas else -cote * 0.5 - haut * 0.65)
+				root.add_child(b)
+	# Le pont par-dessus les berges : il doit se lire comme LE passage.
+	var dalle: Texture2D = SheetLib.texture(PROPS_DIR + "terrain_bridge.png")
+	if dalle != null:
+		var p := Sprite2D.new()
+		p.texture = dalle
+		p.position = Vector2(bridge_x, 0.0)
+		p.scale = Vector2(cote / float(dalle.get_width()),
+			(cote * 1.8) / float(dalle.get_height()))
+		root.add_child(p)
+	return root
 
 
 ## Halo persistant (bouclier du premier coup, aura protectrice).

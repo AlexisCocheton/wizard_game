@@ -5,21 +5,20 @@
 
 [sub_resource type="Resource" id="Resource_0bp55"]
 script = ExtResource("1_0bp55")
-key = &"taunt_prop"
+key = &"place_terrain"
 magnitude = 9.0
-duration = 12.0
-radius = 400.0
+duration = 0.0
+radius = 230.0
 params = {
 &"kind": "tree",
-&"prop_hp": 60.0,
-&"zone_radius": 230.0
+&"prop_hp": 120.0
 }
 
 [resource]
 script = ExtResource("2_7dxnh")
 id = &"blight_sapling"
 display_name = "Semis de fletrissure"
-description = "Plante un arbre empoisonne de 60 PV pendant 12 s : il attire les monstres et repand 9 degats de POISON par seconde autour de lui."
+description = "Plante un arbre empoisonne de 120 PV qui reste jusqu a la fin du combat : il repand 9 degats de POISON par seconde autour de lui. Il n attire pas les monstres, mais ceux qui passent a son pied le frappent."
 rarity = 2
 base_cast_time = 1.9
 targeting = 1

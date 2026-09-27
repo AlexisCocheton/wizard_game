@@ -1865,22 +1865,30 @@ func _cards() -> void:
 	# monstres a portee marchent sur l arbre au lieu de descendre et le tapent
 	# jusqu a l abattre.
 	#
-	# Les chiffres repondent a la question posee par le brief (« combien de temps
-	# tient-il ? S il est trop solide, le joueur n a plus rien a faire »). 90 PV,
-	# c est a peu pres deux secondes de trois monstres P2 au pied : assez pour
-	# reposer un sort, jamais assez pour se croiser les bras. Sa duree de 10 s le
-	# borne meme si personne ne vient le frapper, sinon un arbre plante loin de la
-	# trajectoire resterait plante toute la vague pour rien.
+	# PERMANENT tant qu il n est pas abattu (duree 0 = jusqu a la fin du combat),
+	# et c est le SEUL arbre du jeu qui reste destructible par les monstres : un
+	# appat eternel ET invulnerable tiendrait la vague loin du mage pour toujours.
+	#
+	# 3500 PV, MESURES et non devines. Sonde sur les 204 vagues normales des
+	# niveaux 3 a 21 : une vague entiere au pied de l arbre frappe a ~670 PV/s
+	# (mediane), ~1000 au 9e decile, ~1500 pour la pire. L ancien totem de 90 PV
+	# tombait donc en 0,13 s — le testeur disait « il meurt en 1 s », c etait
+	# encore genereux. A 3500 il tient ~5 s monde contre une vague mediane
+	# (~3,5 s reelles a la vitesse de depart), ~2,3 s contre la pire : plusieurs
+	# secondes pour poser deux sorts sur le paquet qu il a rassemble, jamais une
+	# forteresse. La regle est verrouillee par test_terrain.gd contre
+	# GameConfig.TERRAIN_TAUNT_MIN_HOLD / MAX_HOLD, pas contre ce nombre.
 	#
 	# Portee de 460 px : moins de la moitie de la largeur du terrain. Un arbre qui
 	# provoquerait tout l ecran serait un bouton « plus personne n avance ».
 	var totem := _card("heartwood_totem", "Totem de coeur-de-bois",
-		"Plante un arbre de 90 PV pendant 10 s. Les monstres a portee le prennent "
-		+ "pour cible au lieu du mage et s acharnent dessus.",
+		"Plante un arbre de 3500 PV qui reste jusqu a ce qu on l abatte. Les "
+		+ "monstres a portee le prennent pour cible au lieu du mage et s acharnent "
+		+ "dessus : une vague entiere le fait tomber en quelques secondes.",
 		GameEnums.Rarity.RARE, 1.6, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.PHYSICAL],
-		[_spec("taunt_prop", 0.0, 10.0, 460.0,
-			{&"prop_hp": 90.0, &"kind": "tree"})])
+		[_spec("taunt_prop", 0.0, 0.0, 460.0,
+			{&"prop_hp": 3500.0, &"kind": "tree"})])
 	totem.fx_key = &"spirit_gold"
 	totem.sfx_key = &"stone_shove"
 	_save(totem, "res://resources/cards/rare/heartwood_totem.tres")
@@ -1896,17 +1904,25 @@ func _cards() -> void:
 	# resistances existent pour creer, et la carte annonce sa faiblesse dans son
 	# element.
 	#
-	# Epique et pas rare : la provocation ET la zone dans une seule carte, c est
-	# deux effets qui se renforcent — les monstres viennent se placer eux-memes dans
-	# le poison. 60 PV seulement, la moitie du totem : sa valeur est dans la mare,
-	# pas dans son bois.
+	# PERMANENT, et il n ATTIRE PLUS. Decision prise avec le co-auteur : un appat
+	# qui ne partirait jamais tiendrait les monstres loin du mage pour toujours, et
+	# sa mare les y empoisonnerait sans fin — la carte gagnerait la partie seule.
+	# Il reste donc une mare de poison fixe, que la vague traverse au lieu de venir
+	# s y placer. Cle `place_terrain` et non `taunt_prop` : la carte ne DIT plus
+	# qu elle attire.
+	#
+	# Toujours destructible : un monstre qui passe au pied du tronc le frappe. 120
+	# PV, parce qu il n attire plus personne — seuls ceux dont le couloir passe
+	# dessus le cognent, et le joueur choisit ou le planter pour les eviter. Le
+	# plafond de GameConfig.TERRAIN_PERMANENT_MAX borne le reste.
 	var sapling := _card("blight_sapling", "Semis de fletrissure",
-		"Plante un arbre empoisonne de 60 PV pendant 12 s : il attire les monstres "
-		+ "et repand 9 degats de POISON par seconde autour de lui.",
+		"Plante un arbre empoisonne de 120 PV qui reste jusqu a la fin du combat : "
+		+ "il repand 9 degats de POISON par seconde autour de lui. Il n attire pas "
+		+ "les monstres, mais ceux qui passent a son pied le frappent.",
 		GameEnums.Rarity.EPIC, 1.9, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.POISON],
-		[_spec("taunt_prop", 9.0, 12.0, 400.0,
-			{&"prop_hp": 60.0, &"kind": "tree", &"zone_radius": 230.0})])
+		[_spec("place_terrain", 9.0, 0.0, 230.0,
+			{&"prop_hp": 120.0, &"kind": "tree"})])
 	sapling.fx_key = &"spirit_violet"
 	# `whoosh_deep` et non `spell_crackle` : ce dernier portait deja trois cartes,
 	# et le projet tient a ce qu un son soit partage entre deux ou trois au plus —
@@ -1970,6 +1986,90 @@ func _cards() -> void:
 	tide.fx_key = &"orb_cyan"
 	tide.sfx_key = &"drip_frost"
 	_save(tide, "res://resources/cards/common/tidal_pool.tres")
+
+	# --- SORTS DE TERRAIN PERMANENTS ---
+	#
+	# Demande du co-auteur : des sorts PHYSIQUES qui modifient le terrain et
+	# RESTENT toute la bataille, pour trois usages — changer le chemin des
+	# monstres, les affaiblir, poser des generateurs d allies. Tous ont une duree
+	# de 0 : « jusqu a la fin du combat » (voir TerrainProp.time_left). Leur
+	# nombre est borne par GameConfig.TERRAIN_PERMANENT_MAX, le plus ancien etant
+	# remplace : c est ce qui garde le Massacre (20 vagues et plus) jouable.
+	#
+	# Aucun n est range dans un deck de campagne : ils arrivent par les montees de
+	# niveau et le Massacre. Les decks de campagne sont tenus par la regle des
+	# six cartes differentes, ajoutee en parallele par un autre chantier.
+
+	# LA RIVIERE. Le seul sort qui change le CHEMIN pour toute la bataille : une
+	# ligne d eau sur toute la largeur, un seul pont tire au hasard. Les monstres
+	# au sol font le detour par le pont, les volants et projectiles passent
+	# au-dessus. Legendaire et LONGUE a lancer (2,6 s, dans le haut de la
+	# hierarchie qui va de 0,45 a 2,8 s) : elle transforme la carte entiere.
+	#
+	# Aucun degat, aucun ralentissement : elle rassemble. Tout le paquet passe par
+	# une seule case, et c est la que le joueur pose ses zones.
+	var river := _card("terrain_river", "Riviere",
+		"Fait couler une riviere sur toute la largeur du terrain, a la hauteur visee, "
+		+ "jusqu a la fin du combat. Les monstres au sol doivent passer par son "
+		+ "unique pont ; les volants et les projectiles passent au-dessus.",
+		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.POSITION,
+		[],
+		[_spec("terrain_river", 0.0, 0.0, 0.0)])
+	river.fx_key = &"portal_blue"
+	river.sfx_key = &"wind_gust"
+	_save(river, "res://resources/cards/legendary/terrain_river.tres")
+
+	# LE GENERATEUR. Un autel qui fait naitre un allie toutes les 6 s, a cote de
+	# lui. L allie est celui de l Apprenti miroir (meme mecanique, `spawn_ally`),
+	# plus faible (8 par coup, 5 s de vie) : l autel en fait naitre sans fin.
+	#
+	# Destructible (140 PV) et il attire un peu (220 px) : sans cela, pose dans un
+	# coin loin du passage, il invoquerait pour toujours et vaudrait une infinite
+	# de sorts en Massacre. La petite provocation garantit qu une vague qui passe
+	# a cote vient le casser.
+	var altar := _card("terrain_altar", "Autel d appel",
+		"Erige un autel de 140 PV qui reste jusqu a ce qu on l abatte. Toutes les "
+		+ "6 s, il fait naitre un allie qui frappe pour 8 pendant 5 s. Les monstres "
+		+ "qui passent pres de lui viennent le briser.",
+		GameEnums.Rarity.EPIC, 2.2, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.SUMMON],
+		[_spec("place_terrain", 0.0, 0.0, 0.0,
+			{&"kind": "altar", &"prop_hp": 140.0, &"taunt_radius": 220.0,
+				&"summon_every": 6.0, &"ally_damage": 8.0, &"ally_duration": 5.0})])
+	altar.fx_key = &"portal_violet"
+	altar.sfx_key = &"whoosh_summon"
+	_save(altar, "res://resources/cards/epic/terrain_altar.tres")
+
+	# LES RONCES. Un ralentissement qui ne s en va pas, et un peu de degats
+	# PHYSIQUES pour que la resistance du bestiaire ait prise dessus. Plus faible
+	# que le Champ de givre (35 % contre 50 %) : le givre achete beaucoup pendant
+	# 5 s, les ronces un peu pendant tout le combat. Indestructibles (on ne frappe
+	# pas un buisson d epines) : seul le plafond les remplace.
+	var brambles := _card("terrain_brambles", "Ronces",
+		"Fait pousser des ronces qui restent jusqu a la fin du combat : elles "
+		+ "ralentissent de 35 pourcent et infligent 2 degats PHYSIQUES par seconde.",
+		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
+		[GameEnums.DamageTag.PHYSICAL, GameEnums.DamageTag.SLOW],
+		[_spec("place_terrain", 2.0, 0.0, 170.0,
+			{&"kind": "bramble", &"slow_pct": 35.0})])
+	brambles.fx_key = &"slash_arc"
+	brambles.sfx_key = &"impact_heavy"
+	_save(brambles, "res://resources/cards/rare/terrain_brambles.tres")
+
+	# LA FOSSE. Une Marque de faiblesse qui ne s efface pas, en plus petit et en
+	# moins fort (x1,3 contre la marque). Elle ne fait rien seule : elle designe
+	# l endroit ou les autres sorts doivent tomber, ce qui se combine avec la
+	# Riviere — une fosse au debouche du pont.
+	var pit := _card("terrain_pit", "Fosse",
+		"Creuse une fosse qui reste jusqu a la fin du combat : les monstres qui s y "
+		+ "trouvent subissent 30 pourcent de degats en plus.",
+		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION,
+		[],
+		[_spec("place_terrain", 0.0, 0.0, 150.0,
+			{&"kind": "pit", &"vuln_mult": 1.3})])
+	pit.fx_key = &"orb_magenta"
+	pit.sfx_key = &"blast_pop"
+	_save(pit, "res://resources/cards/epic/terrain_pit.tres")
 
 
 ## Deck pre-etabli EXPLICITE : [[chemin, exemplaires], ...] -> une entree par exemplaire.

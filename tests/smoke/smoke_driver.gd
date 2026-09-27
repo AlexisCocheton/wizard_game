@@ -317,7 +317,58 @@ func _showcase_terrain() -> void:
 
 	g.queue_free()
 	await get_tree().process_frame
+	await _showcase_terrain_permanent()
 	await _showcase_ombre_et_temps()
+
+
+## PLANCHE DES SORTS DE TERRAIN PERMANENTS : la riviere et son pont, les deux
+## arbres devenus permanents, ronces, fosse, autel. Une planche a part pour la
+## meme raison que la precedente : la riviere coupe TOUT le terrain, melangee aux
+## quatre autres sorts elle rendrait la capture illisible.
+##
+## Les gnomes partent AU-DESSUS de l eau : apres 2,5 s ils doivent se presser vers
+## le pont, ce qui est la seule preuve a l oeil que la riviere bloque.
+func _showcase_terrain_permanent() -> void:
+	if not _visual:
+		return
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = false
+	g.backdrop.setup("grass")
+	var bf: Battlefield = g.battlefield
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	for k in 6:
+		bf.spawn_enemy(gnome, 140.0 + k * 160.0, 1.0, Vector2(140.0 + k * 160.0, 420.0))
+	var poses: Array = [
+		[&"terrain_river", Vector2(540.0, 700.0)],
+		[&"heartwood_totem", Vector2(250.0, 1000.0)],
+		[&"blight_sapling", Vector2(830.0, 960.0)],
+		[&"terrain_altar", Vector2(540.0, 1180.0)],
+		[&"terrain_brambles", Vector2(220.0, 1330.0)],
+		[&"terrain_pit", Vector2(860.0, 1330.0)],
+	]
+	for c in poses:
+		var card3: SpellCard = ContentDB.cards.get(c[0])
+		if card3 == null:
+			_fail("vitrine terrain permanent : carte %s introuvable" % c[0])
+			continue
+		var ctx3 := CastContext.make(bf, card3)
+		ctx3.caster = g
+		ctx3.target_position = c[1]
+		ctx3.direction = Vector2.UP
+		EffectRegistry.cast(card3, ctx3)
+	if bf.river() == null:
+		_fail("vitrine terrain permanent : la riviere n a pas ete posee")
+	# 6 s : le temps que les gnomes rejoignent le pont et que les premiers le
+	# franchissent. Plus tot, la capture les montre encore alignes et ne prouve
+	# rien ; les objets etant permanents, attendre ne les fait pas disparaitre.
+	for k in 360:
+		bf.simulate(FIXED_DELTA)
+	await _shot("vitrine_riviere")
+	g.queue_free()
+	await get_tree().process_frame
 
 
 ## TROISIEME PLANCHE (chantier F2) : les cinq feuilles des packs du 26/09.

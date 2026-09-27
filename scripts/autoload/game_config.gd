@@ -251,6 +251,49 @@ const SPAWN_LINE_Y: float = 120.0
 ## vagues avant qu elles existent.
 const SPAWN_FADE_TIME: float = 0.5
 
+## --- Sorts de terrain PERMANENTS ---
+## Plafond d objets de terrain permanents actifs en meme temps (arbres, ronces,
+## fosses, autels). Au-dela, le PLUS ANCIEN est remplace par le nouveau.
+##
+## Pourquoi un plafond et pas une duree : la demande est que ces sorts restent
+## toute la bataille, et une partie de Massacre dure vingt vagues et plus. Sans
+## borne, le terrain s accumulerait carte apres carte jusqu a ce que chaque case
+## soit empoisonnee, vulnerable et gardee par un autel — le joueur ne jouerait
+## plus, il aurait fini de construire. Six, c est assez pour composer un vrai
+## decor (deux arbres, deux ronces, une fosse, un autel), trop peu pour tout
+## couvrir sur un champ de 1080 px de large.
+##
+## Remplacer le plus ancien plutot que REFUSER la pose : une carte refusee pour
+## un plafond que le joueur ne voit pas se lirait comme un bug, alors qu un vieil
+## objet qui s efface au moment ou le neuf apparait se comprend tout seul.
+##
+## La RIVIERE n est pas comptee : elle a sa propre regle (une seule a la fois,
+## la nouvelle remplace l ancienne), parce qu elle ne s ajoute pas au decor —
+## elle le coupe en deux.
+const TERRAIN_PERMANENT_MAX: int = 6
+
+## Temps (secondes MONDE) que l arbre qui ATTIRE doit tenir au pied d une vague
+## normale mediane, tous ses monstres au contact. C est la regle que
+## test_terrain.gd verifie contre les PV de la carte livree.
+##
+## Mesure a la sonde sur les 204 vagues normales des niveaux 3 a 21 : une vague
+## entiere au pied de l arbre frappe a ~670 PV/s (mediane), jusqu a ~1500 pour la
+## pire. L ancien totem de 90 PV tombait en 0,13 s — « il meurt en 1 s » etait
+## encore genereux. Il doit tenir PLUSIEURS secondes, pas devenir invulnerable :
+## le plafond MAX existe pour que la verification morde aussi dans l autre sens.
+const TERRAIN_TAUNT_MIN_HOLD: float = 4.0
+const TERRAIN_TAUNT_MAX_HOLD: float = 12.0
+
+## Bornes de hauteur de la riviere, en rangees de la grille de navigation
+## (cellules de 60 px) comptees depuis la ligne d apparition et depuis la ligne
+## du mage. Trop haut, les monstres naitraient dans l eau ou juste au bord et le
+## pont ne servirait a rien ; trop bas, il ne resterait plus la place de viser
+## ceux qui l ont franchie. Le point vise par le joueur est RAMENE dans ces
+## bornes, jamais refuse : une riviere a une rangee pres de la ou on l a lachee
+## vaut mieux qu une carte qui ne part pas.
+const RIVER_MIN_ROWS_BELOW_SPAWN: int = 3
+const RIVER_MIN_ROWS_ABOVE_MAGE: int = 4
+
 
 func xp_required(level: int) -> int:
 	return int(round(XP_PER_LEVEL_BASE * pow(XP_PER_LEVEL_GROWTH, maxi(0, level - 1))))
