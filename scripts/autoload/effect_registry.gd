@@ -44,6 +44,10 @@ func register_defaults() -> void:
 		EffectHandlers.TauntProp.new(),
 		EffectHandlers.StunZone.new(),
 		EffectHandlers.WaterFlood.new(),
+		# Sorts de terrain PERMANENTS : objets qui restent tout le combat (ronces,
+		# fosse, autel generateur) et la riviere qui coupe le terrain.
+		EffectHandlers.PlaceTerrain.new(),
+		EffectHandlers.River.new(),
 	]:
 		register(h)
 

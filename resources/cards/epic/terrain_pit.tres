@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_oxs7y"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_w6rc1"]
+
+[sub_resource type="Resource" id="Resource_oxs7y"]
+script = ExtResource("1_oxs7y")
+key = &"place_terrain"
+magnitude = 0.0
+duration = 0.0
+radius = 150.0
+params = {
+&"kind": "pit",
+&"vuln_mult": 1.3
+}
+
+[resource]
+script = ExtResource("2_w6rc1")
+id = &"terrain_pit"
+display_name = "Fosse"
+description = "Creuse une fosse qui reste jusqu a la fin du combat : les monstres qui s y trouvent subissent 30 pourcent de degats en plus."
+rarity = 2
+base_cast_time = 1.7
+targeting = 1
+tags = Array[int]([])
+effects = Array[ExtResource("1_oxs7y")]([SubResource("Resource_oxs7y")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"orb_magenta"
+sfx_key = &"blast_pop"

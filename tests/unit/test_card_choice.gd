@@ -60,8 +60,27 @@ func _test_montee_de_niveau_propose() -> void:
 	var cards: int = RunState.total_cards()
 	# La partie est en pause : rien ne bouge tant qu on n a pas choisi.
 	g.simulate(1.0)
-	ok(g.choose_card(0) != null, "le choix est pris")
-	eq(RunState.total_cards(), cards + 1, "le deck a grandi")
+	# On prend le premier SORT de l offre, pas l option 0 : un passif choisi
+	# s equipe hors deck (RunState.pick_offer) et le deck ne grandit pas. Le
+	# tirage n est pas seme (RunState randomise au demarrage) : l option 0 etait
+	# un passif une fois sur cinq, et chaque carte ajoutee au catalogue deplacait
+	# le tirage — le test echouait alors sans qu aucune regle n ait change.
+	var idx: int = -1
+	for i in RunState.pending_offer.size():
+		if not (RunState.pending_offer[i] as SpellCard).is_passive:
+			idx = i
+			break
+	if idx < 0:
+		# Trois passifs (moins d une fois sur cent) : la regle a verifier est
+		# alors l autre branche de pick_offer, le passif s equipe.
+		var equipes: int = RunState.equipped_passives.size()
+		ok(g.choose_card(0) != null, "le choix est pris")
+		ok(RunState.equipped_passives.size() > equipes \
+				or RunState.total_cards() == cards,
+			"un passif choisi s equipe sans entrer dans le deck")
+	else:
+		ok(g.choose_card(idx) != null, "le choix est pris")
+		eq(RunState.total_cards(), cards + 1, "le deck a grandi")
 	eq(RunState.pending_offer.size(), 0, "plus d offre en attente")
 	detach(g)
 	RunState.reset()

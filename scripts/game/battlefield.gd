@@ -235,6 +235,7 @@ func _simulate_walls(wd: float) -> void:
 			var node: Node = w.get("node")
 			if node != null and is_instance_valid(node):
 				node.queue_free()
+			_free_anchor(w.get("anchor"))
 			walls.remove_at(i)
 
 
@@ -595,12 +596,17 @@ func clear_all() -> void:
 		var node: Node = w.get("node")
 		if node != null and is_instance_valid(node):
 			node.queue_free()
+		_free_anchor(w.get("anchor"))
 	walls.clear()
 	# Les accessoires plantes doivent partir avec la partie : un arbre oublie
 	# resterait a l ecran d une vague a la suivante et continuerait a provoquer.
+	# C est aussi la SEULE fin d un objet permanent intact : « jusqu a la fin du
+	# combat » veut dire jusqu ici, pas jusqu a la fin de la vague.
 	for p in props:
 		if p.node != null and is_instance_valid(p.node):
 			p.node.queue_free()
+		_free_anchor(p.anchor)
+		p.anchor = null
 	props.clear()
 	for s in shots:
 		var node: Node = s.get("node")
@@ -762,12 +768,19 @@ func apply_reverse(duration: float) -> void:
 ## Il a une POSITION et un sprite : le testeur signalait qu on ne voyait pas
 ## l invocation. Elle existait bien, mais seulement comme une entree de donnees —
 ## le joueur payait une carte pour un effet invisible.
-func spawn_ally(duration: float, damage: float) -> void:
+##
+## `at` : lieu d apparition. Par defaut devant le mage ; un AUTEL (generateur de
+## terrain) fait naitre les siens a cote de lui, sinon le joueur ne relierait pas
+## les allies a l objet qu il a pose.
+func spawn_ally(duration: float, damage: float, at: Vector2 = Vector2.INF) -> void:
 	# Devant le mage, decale au hasard : deux allies ne se superposent pas.
 	var pos := Vector2(
 		clampf(GameConfig.BATTLEFIELD_WIDTH * 0.5 + randf_range(-220.0, 220.0),
 			120.0, GameConfig.BATTLEFIELD_WIDTH - 120.0),
 		GameConfig.MAGE_LINE_Y - 190.0)
+	if at != Vector2.INF:
+		pos = Vector2(clampf(at.x + randf_range(-70.0, 70.0), 60.0,
+			GameConfig.BATTLEFIELD_WIDTH - 60.0), at.y + randf_range(20.0, 70.0))
 	var node: Node = Fx.sprite(self, "magicbubbles", pos, 130.0, true,
 		Color(Fx.COL_SUMMON.r, Fx.COL_SUMMON.g, Fx.COL_SUMMON.b, 0.95))
 	allies.append({"time": duration, "damage": damage, "cooldown": 0.5,
@@ -784,8 +797,17 @@ func spawn_wall(center: Vector2, half_width: float, duration: float,
 		return
 	AudioBus.play_sfx(&"wall")
 	var node: Node = Fx.spawn_wall_visual(self, center, half_width, thickness, duration)
-	walls.append({"cells": cells, "time": maxf(duration, 0.1), "node": node,
-		"center": center, "half_width": half_width, "thickness": thickness})
+	var w: Dictionary = {"cells": cells, "time": maxf(duration, 0.1), "node": node,
+		"center": center, "half_width": half_width, "thickness": thickness}
+	walls.append(w)
+	# Un mur est un objet de terrain comme un autre pour le Briseur de terrain :
+	# il recoit la meme ancre, et `destroy()` le fait tomber comme s il avait ete
+	# casse. On retrouve le mur par identite du dictionnaire, pas par son index,
+	# qui glisse des qu un autre mur expire.
+	w["anchor"] = _new_anchor(center, -1, func() -> void:
+		var i: int = _wall_index(w)
+		if i >= 0:
+			_break_wall(i))
 
 
 func wall_count() -> int:
@@ -919,6 +941,7 @@ func _break_wall(index: int) -> void:
 	Fx.impact(self, w.get("center", Vector2.ZERO), Fx.COL_WALL,
 		float(w.get("half_width", 60.0)))
 	AudioBus.play_sfx(&"wall")
+	_free_anchor(w.get("anchor"))
 	walls.remove_at(index)
 
 
@@ -982,19 +1005,27 @@ func spawn_prop(kind: int, center: Vector2, duration: float, hp: float,
 	p.position = Vector2(
 		clampf(center.x, 60.0, GameConfig.BATTLEFIELD_WIDTH - 60.0),
 		clampf(center.y, GameConfig.SPAWN_LINE_Y + 60.0, GameConfig.MAGE_LINE_Y - 80.0))
-	p.time_left = maxf(duration, 0.1)
+	# duration <= 0 = PERMANENT (voir TerrainProp.time_left). Le plafond est tenu
+	# AVANT l ajout : le nouveau n est jamais celui qu on retire.
+	p.time_left = TerrainProp.lifetime_for(duration)
+	if p.is_permanent():
+		_make_room_for_permanent()
+	_prop_serial += 1
+	p.serial = _prop_serial
 	p.hp = maxf(hp, 0.0)
 	p.max_hp = p.hp
 	p.taunt_radius = maxf(taunt_radius, 0.0)
 	p.current = current
 	p.area = maxf(area, 0.0)
-	p.reach = 70.0 if kind == TerrainProp.Kind.TREE else 40.0
+	# L autel se frappe comme un arbre : c est un objet de la meme taille a l ecran.
+	p.reach = 40.0 if kind == TerrainProp.Kind.WATER else 70.0
 	# L aire est transmise au visuel : c est elle que l anneau de la nappe trace,
 	# et un anneau qui mentirait sur la portee serait pire que pas d anneau du tout
 	# — le joueur s en sert pour decider ou poser le sort suivant.
 	p.node = Fx.prop_visual(self, p.position, kind, p.time_left, sheet, tint, p.area)
-	AudioBus.play_sfx(&"wall" if kind == TerrainProp.Kind.TREE else &"drip_frost")
+	AudioBus.play_sfx(&"drip_frost" if kind == TerrainProp.Kind.WATER else &"wall")
 	props.append(p)
+	_anchor_prop(p)
 	return p
 
 
@@ -1036,6 +1067,12 @@ func taunt_target_for(point: Vector2) -> TerrainProp:
 	var best_d: float = INF
 	for p in props:
 		if not p.attracts(point) or not p.is_alive():
+			continue
+		# Pas de provocation A TRAVERS un obstacle : le monstre marche droit sur
+		# l arbre, sans A*, donc il traverserait la riviere ou le mur pour
+		# l atteindre. Il suit son chemin normal jusqu a ce que la voie soit libre
+		# (le pont franchi), et l arbre le reprend alors.
+		if nav != null and not nav.segment_clear(point, p.position):
 			continue
 		var d: float = p.position.distance_to(point)
 		if d < best_d:
@@ -1099,6 +1136,7 @@ func _simulate_props(wd: float) -> void:
 		if not p.is_alive():
 			_destroy_prop(i, p.max_hp > 0.0 and p.hp <= 0.0)
 			continue
+		_tick_generator(p, wd)
 		_props_take_hits(p, wd)
 
 
@@ -1140,10 +1178,302 @@ func _destroy_prop(index: int, brise: bool) -> void:
 		p.zone = {}
 	if p.node != null and is_instance_valid(p.node):
 		p.node.queue_free()
+	# Un objet qui bloquait (la riviere) rend EXACTEMENT ses cellules : la grille
+	# compte les blocages, un mur pose sur la meme rangee reste debout.
+	if not p.cells.is_empty() and nav != null:
+		nav.unblock_cells(p.cells)
+		p.cells = []
+	_free_anchor(p.anchor)
+	p.anchor = null
 	if brise:
 		Fx.impact(self, p.position, Fx.COL_WALL, maxf(p.reach, 60.0))
 		AudioBus.play_sfx(&"wall")
 	props.remove_at(index)
+
+
+# =====================================================================
+# SORTS DE TERRAIN PERMANENTS — riviere, ronces, fosse, autel, arbres qui restent
+#
+# Trois regles tiennent toute la famille, et elles vivent ICI plutot que dans les
+# handlers parce qu elles portent sur l ETAT du terrain, que seul Battlefield voit :
+#   1. un objet permanent reste jusqu a `clear_all()` (fin du combat) ;
+#   2. au-dela de GameConfig.TERRAIN_PERMANENT_MAX, le plus ancien est remplace ;
+#   3. rien de ce qui bloque ne coupe tout chemin des monstres au sol vers le mage.
+
+## Compteur de poses, pour retrouver le plus ancien objet permanent.
+var _prop_serial: int = 0
+
+
+## Objets permanents actifs, riviere NON comprise (elle a sa propre regle : une
+## seule a la fois).
+func permanent_prop_count() -> int:
+	var n: int = 0
+	for p in props:
+		if p.is_permanent() and p.kind != TerrainProp.Kind.RIVER and p.is_alive():
+			n += 1
+	return n
+
+
+## Retire le plus ancien objet permanent tant que le plafond est atteint. Appele
+## AVANT d ajouter le nouveau, qui n est donc jamais celui qu on retire.
+##
+## Retire sans eclat de destruction (`brise = false`) : il n a pas ete abattu, il
+## a ete remplace, et le joueur doit pouvoir faire la difference.
+func _make_room_for_permanent() -> void:
+	while permanent_prop_count() >= GameConfig.TERRAIN_PERMANENT_MAX:
+		var plus_vieux: int = -1
+		var serie: int = 0
+		for i in props.size():
+			var p: TerrainProp = props[i]
+			if not p.is_permanent() or p.kind == TerrainProp.Kind.RIVER:
+				continue
+			if plus_vieux < 0 or p.serial < serie:
+				plus_vieux = i
+				serie = p.serial
+		if plus_vieux < 0:
+			return
+		_destroy_prop(plus_vieux, false)
+
+
+## Ancre du groupe `terrain_props` : voir TerrainProp.Anchor.
+func _new_anchor(at: Vector2, kind: int, on_destroy: Callable) -> Node:
+	var a := TerrainProp.Anchor.new()
+	a.kind = kind
+	a.on_destroy = on_destroy
+	# Position AVANT add_child, comme pour tout noeud du jeu.
+	a.position = at
+	add_child(a)
+	return a
+
+
+func _anchor_prop(p: TerrainProp) -> void:
+	p.anchor = _new_anchor(p.position, p.kind, func() -> void: destroy_terrain(p))
+
+
+## Libere une ancre. Retiree du groupe TOUT DE SUITE : `queue_free` ne la libere
+## qu en fin d image, et un boss qui parcourrait le groupe dans l intervalle
+## frapperait un objet deja parti.
+func _free_anchor(a: Variant) -> void:
+	if a == null or not (a is Node) or not is_instance_valid(a):
+		return
+	var n: Node = a
+	if n.is_in_group(TerrainProp.GROUP):
+		n.remove_from_group(TerrainProp.GROUP)
+	n.queue_free()
+
+
+func _wall_index(w: Dictionary) -> int:
+	for i in walls.size():
+		if is_same(walls[i], w):
+			return i
+	return -1
+
+
+## Retire un objet de terrain comme s il avait ete abattu. C est ce que
+## `Anchor.destroy()` appelle : le futur Briseur de terrain, et tout ce qui voudra
+## un jour nettoyer le terrain, passent par la.
+func destroy_terrain(p: TerrainProp) -> void:
+	var i: int = props.find(p)
+	if i >= 0:
+		_destroy_prop(i, true)
+
+
+## Les ancres vivantes (accessoires ET murs). Lecture pour les tests et pour le
+## futur boss ; l ordre n a aucun sens.
+func terrain_anchors() -> Array[Node]:
+	var out: Array[Node] = []
+	for c in get_children():
+		if c.is_in_group(TerrainProp.GROUP):
+			out.append(c)
+	return out
+
+
+## GENERATEUR : un autel invoque un allie a intervalle, a cote de lui. Le compte
+## a rebours suit le temps du MONDE, comme les allies eux-memes : a x4 l autel
+## invoque quatre fois plus vite, et ses allies vivent quatre fois moins
+## longtemps — le rapport reste celui de la carte a toutes les vitesses.
+func _tick_generator(p: TerrainProp, wd: float) -> void:
+	if p.summon_every <= 0.0:
+		return
+	p.summon_timer -= wd
+	if p.summon_timer > 0.0:
+		return
+	p.summon_timer += p.summon_every
+	spawn_ally(p.summon_duration, p.summon_damage, p.position)
+	Fx.impact(self, p.position, Fx.COL_SUMMON, 60.0)
+
+
+## Positions des monstres AU SOL encore en jeu : ceux que la garantie de chemin
+## protege. Les volants et les projectiles passent au-dessus de tout, ils n en
+## ont pas besoin.
+func ground_positions() -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for e in enemies:
+		if not _alive(e) or e.definition == null or e.definition.flying:
+			continue
+		out.append(e.position)
+	return out
+
+
+## Bloquer ces cellules laisserait-il un chemin a chaque monstre au sol, present
+## ou a venir ? C est la question posee avant TOUTE pose d un objet qui bloque.
+func can_block(cells: Array[Vector2i]) -> bool:
+	if nav == null:
+		return true
+	return nav.keeps_path(cells, ground_positions())
+
+
+## La riviere active, ou null.
+func river() -> TerrainProp:
+	for p in props:
+		if p.kind == TerrainProp.Kind.RIVER:
+			return p
+	return null
+
+
+## Colonnes ou le pont d une riviere a cette rangee garderait un chemin.
+##
+## Le pont ne tombe JAMAIS sur une cellule deja bloquee (un mur pose sur la meme
+## rangee) : le pont serait alors un morceau de mur et il n y aurait plus aucun
+## passage. Au-dela de cette regle, chaque candidat est juge par la garantie
+## complete : un pont libre qui debouche dans une poche fermee par un mur ne vaut
+## pas mieux qu un pont bouche.
+##
+## L ancienne riviere est jugee comme deja partie : la nouvelle la remplace.
+## `premier_suffit` coupe au premier candidat valable (l apercu de visee n a
+## besoin que de savoir s il en existe un).
+func river_bridge_columns(row: int, premier_suffit: bool = false,
+		ordre: Array[int] = []) -> Array[int]:
+	var out: Array[int] = []
+	if nav == null:
+		return out
+	var liberees: Array[Vector2i] = []
+	var ancienne: TerrainProp = river()
+	if ancienne != null:
+		liberees = ancienne.cells
+	var positions: Array[Vector2] = _positions_after_river(row)
+	var colonnes: Array[int] = ordre.duplicate()
+	if colonnes.is_empty():
+		for cx in nav.cols:
+			colonnes.append(cx)
+	var rangee: Array[Vector2i] = nav.row_cells(row)
+	for cx in colonnes:
+		var pont := Vector2i(cx, row)
+		# Blocages COMPTES : une cellule tenue a la fois par l ancienne riviere et
+		# par un mur reste bloquee quand l ancienne riviere part.
+		var restants: int = nav.block_count(pont) - (1 if liberees.has(pont) else 0)
+		if restants > 0:
+			continue
+		var eau: Array[Vector2i] = []
+		for c in rangee:
+			if c != pont:
+				eau.append(c)
+		if nav.keeps_path(eau, positions, liberees):
+			out.append(cx)
+			if premier_suffit:
+				break
+	return out
+
+
+## Une riviere visee a ce point peut-elle etre posee ? Sert a l apercu de visee :
+## une ligne ROUGE avant de lacher la carte plutot qu une carte depensee pour rien.
+func river_possible(y: float) -> bool:
+	return not river_bridge_columns(NavGrid.river_row(y), true).is_empty()
+
+
+## Les monstres deja sur la ligne d eau sont REPOUSSES en amont (voir
+## `spawn_river`). La garantie doit donc juger leur position d arrivee, pas celle
+## qu ils occupent encore.
+func _positions_after_river(row: int) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	var amont: float = NavGrid.row_center_y(row - 1)
+	for pos in ground_positions():
+		if nav != null and nav.to_cell(pos).y == row:
+			out.append(Vector2(pos.x, amont))
+		else:
+			out.append(pos)
+	return out
+
+
+## Pose la RIVIERE : une ligne d eau sur toute la largeur, a la rangee visee
+## (ramenee dans les bornes de GameConfig), franchie par un seul pont.
+##
+## DECISIONS, et pourquoi :
+##   - Le joueur choisit la HAUTEUR, pas le pont. Le pont est tire au hasard parmi
+##     les colonnes qui gardent un chemin : si le joueur le placait, il le mettrait
+##     toujours au bord le plus eloigne de son mage et la carte deviendrait un
+##     detour garanti, pas un pari.
+##   - UNE seule riviere a la fois ; la nouvelle remplace l ancienne. Deux
+##     rivieres paralleles avec deux ponts opposes feraient serpenter la vague sur
+##     toute la largeur a chaque traversee : un labyrinthe, plus un sort.
+##   - Les monstres AU SOL deja sur la ligne sont repousses en amont : une riviere
+##     qu on traverse parce qu on s y trouvait au moment ou elle est apparue ne
+##     serait qu une riviere a moitie. Les volants et projectiles restent ou ils
+##     sont, ils passent au-dessus.
+##   - Elle n a pas de PV : on ne casse pas de l eau. Elle reste jusqu a la fin du
+##     combat (duree <= 0) ou jusqu a une riviere suivante.
+##
+## Renvoie null si aucun pont ne peut garder un chemin (terrain deja trop bouche) :
+## rien n est pose, et l ancienne riviere reste en place.
+func spawn_river(y: float, duration: float = 0.0, sheet: String = "",
+		rng: RandomNumberGenerator = null) -> TerrainProp:
+	if nav == null:
+		nav = NavGrid.new()
+	var row: int = NavGrid.river_row(y)
+	var ordre: Array[int] = []
+	for cx in nav.cols:
+		ordre.append(cx)
+	# Melange de Fisher-Yates avec le generateur fourni : un test peut ainsi
+	# rejouer des centaines de tirages sans dependre du hasard global.
+	var r: RandomNumberGenerator = rng
+	if r == null:
+		r = RandomNumberGenerator.new()
+		r.randomize()
+	for i in range(ordre.size() - 1, 0, -1):
+		var j: int = r.randi_range(0, i)
+		var t: int = ordre[i]
+		ordre[i] = ordre[j]
+		ordre[j] = t
+	var ponts: Array[int] = river_bridge_columns(row, true, ordre)
+	if ponts.is_empty():
+		return null
+	var pont: int = ponts[0]
+
+	# L ancienne part SANS eclat : elle n a pas ete detruite, elle a ete remplacee.
+	var ancienne: TerrainProp = river()
+	if ancienne != null:
+		_destroy_prop(props.find(ancienne), false)
+
+	var p := TerrainProp.new()
+	p.kind = TerrainProp.Kind.RIVER
+	p.position = Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, NavGrid.row_center_y(row))
+	p.time_left = TerrainProp.lifetime_for(duration)
+	_prop_serial += 1
+	p.serial = _prop_serial
+	p.bridge_col = pont
+	for c in nav.row_cells(row):
+		if c.x != pont:
+			p.cells.append(c)
+	nav.block_cells(p.cells)
+	_wash_upstream(row, pont)
+	p.node = Fx.river_visual(self, p.position.y, NavGrid.CELL_SIZE,
+		nav.to_world(Vector2i(pont, row)).x, sheet)
+	AudioBus.play_sfx(&"drip_frost")
+	props.append(p)
+	_anchor_prop(p)
+	return p
+
+
+## Repousse en amont les monstres au sol debout sur la ligne d eau (hors pont).
+func _wash_upstream(row: int, pont: int) -> void:
+	var amont: float = NavGrid.row_center_y(row - 1)
+	for e in enemies:
+		if not _alive(e) or e.definition == null or e.definition.flying:
+			continue
+		var c: Vector2i = nav.to_cell(e.position)
+		if c.y == row and c.x != pont:
+			e.position.y = amont
+			e.repath()
 
 
 ## Etourdit les monstres d une zone. Renvoie le nombre de monstres figes.
