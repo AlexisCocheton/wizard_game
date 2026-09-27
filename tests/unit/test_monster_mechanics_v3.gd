@@ -545,19 +545,21 @@ func _test_sommeil_la_main_reste_grisee() -> void:
 	var hud: Node = load("res://scripts/ui/hud.gd").new()
 	var c := SpellCard.new()
 	RunState.hand.append(c)
-	eq(hud._teinte_carte(c, null), Color.WHITE, "eveille : carte normale")
+	eq(hud._teinte_carte(c, 0, null), Color.WHITE, "eveille : carte normale")
 	RunState.set_silenced(true)
-	var t: Color = hud._teinte_carte(c, null)
+	var t: Color = hud._teinte_carte(c, 0, null)
 	ok(t.r < 0.8 and t.g < 0.8, "sommeil : la carte est grisee, image apres image")
 	RunState.set_silenced(false)
 	# Deux cartes : le plafond en laisse toujours une jouable, la DERNIERE gele.
+	# La teinte se demande par POSITION (c en 0, c2 en 1) : c est l exemplaire
+	# qui est gele, pas la ressource.
 	var c2 := SpellCard.new()
 	RunState.hand.append(c2)
 	RunState.set_card_block_count(1)
 	ok(RunState.is_card_blocked(c2), "(la derniere carte est petrifiee)")
-	var p: Color = hud._teinte_carte(c2, null)
+	var p: Color = hud._teinte_carte(c2, 1, null)
 	ok(p.r < 0.8 and p.g < 0.8, "petrifiee : la carte reste grisee elle aussi")
-	eq(hud._teinte_carte(c, null), Color.WHITE, "sa voisine libre reste normale")
+	eq(hud._teinte_carte(c, 0, null), Color.WHITE, "sa voisine libre reste normale")
 	hud.free()
 	RunState.reset()
 

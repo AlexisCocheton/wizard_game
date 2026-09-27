@@ -86,6 +86,8 @@ func _ready() -> void:
 		RunState.passives_changed.connect(_build_passive_rail)
 	if not RunState.passive_swap_needed.is_connected(_on_passive_swap_needed):
 		RunState.passive_swap_needed.connect(_on_passive_swap_needed)
+	if not RunState.objective_failed.is_connected(_on_objective_failed):
+		RunState.objective_failed.connect(_on_objective_failed)
 	_refresh_all()
 
 
@@ -122,6 +124,9 @@ func _process(_delta: float) -> void:
 
 
 func _refresh_all() -> void:
+	# Le bandeau AVANT les jauges : _refresh_gauges() le met a jour, et bind()
+	# vient de fixer le niveau dont il lit les objectifs.
+	_build_objective_strip()
 	_refresh_gauges()
 	_refresh_hand()
 	_on_wave_changed(RunState.wave_index)
@@ -151,7 +156,7 @@ func _refresh_gauges() -> void:
 	for child in _hand.get_children():
 		if child is CardView:
 			var cv := child as CardView
-			cv.modulate = _teinte_carte(cv.card, en_attente)
+			cv.modulate = _teinte_carte(cv.card, int(cv.get_meta(&"slot", -1)), en_attente)
 
 	# Compte a rebours de la prochaine pioche : le joueur jouait a l aveugle
 	# entre deux pioches, sans savoir s il devait garder une carte ou la depenser.
@@ -171,6 +176,7 @@ func _refresh_gauges() -> void:
 	_enemy_bar.modulate = Color(1, 1, 1, 0.4 + 0.6 * SpeedGauge.death_gauge) 		if SpeedGauge.is_dying else Color.WHITE
 
 	_refresh_passive_rail()
+	_refresh_objective_strip()
 
 
 # --- Icones des passifs, le long de la barre de vitesse ---
@@ -431,14 +437,18 @@ func _refresh_hand() -> void:
 	# cible tactile confortable et laisse 100 px d icone.
 	var width: float = clampf((1052.0 - 6.0 * (n - 1)) / n, 118.0, 200.0)
 	# Hauteur constante : la main ne doit pas sauter quand une carte entre ou sort.
-	for card: SpellCard in RunState.hand:
+	for slot in n:
+		var card: SpellCard = RunState.hand[slot]
 		var cv := CardView.new()
 		cv.setup_hand(card, width, 230.0)
-		cv.gui_input.connect(_on_card_input.bind(card))
+		# La POSITION suit la carte : deux copies d une meme carte sont la meme
+		# ressource, seule leur place dans la main dit laquelle est gelee.
+		cv.set_meta(&"slot", slot)
+		cv.gui_input.connect(_on_card_input.bind(card, slot))
 		_hand.add_child(cv)
 		_ajouter_jauge_amelioration(cv, card, width)
-		_marquer_si_petrifiee(cv, card)
-		_marquer_si_sommeil(cv, card)
+		_marquer_si_petrifiee(cv, card, slot)
+		_marquer_si_sommeil(cv, card, slot)
 
 
 ## Une carte PETRIFIEE par le regard d une gorgone doit SE VOIR.
@@ -472,12 +482,14 @@ static func _contre_teinte(t: Color) -> Color:
 		1.0 / maxf(t.a, 0.05))
 
 
-func _teinte_carte(card: SpellCard, en_attente: SpellCard) -> Color:
+func _teinte_carte(card: SpellCard, slot: int, en_attente: SpellCard) -> Color:
 	# La carte VOLEE est aussi "bloquee" pour RunState : on la teste d abord,
 	# sinon cette boucle, qui tourne a chaque image, repeindrait son rouge en gris.
-	if card != null and RunState.is_card_stolen(card):
+	# Par EXEMPLAIRE (slot) et non par carte : demander par ressource grisait
+	# toutes les copies d une carte dont une seule etait gelee.
+	if card != null and RunState.is_slot_stolen(slot):
 		return TEINTE_VOLEE
-	if card != null and RunState.is_card_blocked(card):
+	if card != null and RunState.is_slot_blocked(slot):
 		return TEINTE_BLOQUEE
 	if RunState.is_silenced():
 		return TEINTE_SOMMEIL
@@ -486,17 +498,19 @@ func _teinte_carte(card: SpellCard, en_attente: SpellCard) -> Color:
 	return Color.WHITE
 
 
-func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
-	if card == null or not RunState.is_card_blocked(card):
+func _marquer_si_petrifiee(cv: Control, card: SpellCard, slot: int) -> void:
+	if card == null or not RunState.is_slot_blocked(slot):
 		return
 	# VOLEE par un voleur de sorts : meme gel, autre mot et teinte chaude. Le
 	# joueur doit distinguer la carte qui revient quand la gorgone tombe de celle
 	# qui va lui etre LANCEE dessus s il ne tue pas le voleur a temps.
-	var volee: bool = RunState.is_card_stolen(card)
+	var volee: bool = RunState.is_slot_stolen(slot)
 	cv.modulate = TEINTE_VOLEE if volee else TEINTE_BLOQUEE
 	# Le mot en clair par-dessus : la couleur dit "quelque chose ne va pas",
 	# le mot dit QUOI. Un joueur daltonien ne lit que le mot.
 	var bandeau := Label.new()
+	# Nomme pour que le smoke puisse compter les cartes marquees sans lire le texte.
+	bandeau.name = "Volee" if volee else "Petrifiee"
 	bandeau.text = "VOLEE" if volee else "PETRIFIEE"
 	bandeau.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bandeau.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -522,8 +536,8 @@ func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
 ##
 ## Une carte deja petrifiee garde son propre mot : elle restera bloquee APRES le
 ## reveil, et le joueur doit le savoir avant.
-func _marquer_si_sommeil(cv: Control, card: SpellCard) -> void:
-	if card == null or not RunState.is_silenced() or RunState.is_card_blocked(card):
+func _marquer_si_sommeil(cv: Control, card: SpellCard, slot: int) -> void:
+	if card == null or not RunState.is_silenced() or RunState.is_slot_blocked(slot):
 		return
 	cv.modulate = TEINTE_SOMMEIL
 	var bandeau := Label.new()
@@ -620,10 +634,15 @@ func _needs_aim(card: SpellCard) -> bool:
 ## La carte a mouse_filter = STOP : elle CONSOMME le relachement, qui n atteint
 ## donc jamais _unhandled_input. Le suivi et le relachement sont pour cette
 ## raison geres dans _input(), qui recoit l evenement avant l UI.
-func _on_card_input(event: InputEvent, card: SpellCard) -> void:
+func _on_card_input(event: InputEvent, card: SpellCard, slot: int) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+			return
+		# L exemplaire TOUCHE est gele : on refuse ici, avant le moteur. Le moteur
+		# ne recoit que la carte et lancerait une copie libre de la meme carte —
+		# le joueur verrait partir une carte qu il n a pas touchee.
+		if RunState.is_slot_blocked(slot):
 			return
 		if _needs_aim(card):
 			_begin_drag(card, mb.global_position)
@@ -993,3 +1012,121 @@ func _on_wave_changed(index: int) -> void:
 		_wave_label.text = "Vague %d/%d   Niv.%d" % [mini(index + 1, total), total, RunState.level]
 	else:
 		_wave_label.text = "Vague %d   Niv.%d" % [index + 1, RunState.level]
+
+
+# --- Objectifs du niveau, suivis EN COMBAT ---
+#
+# Le moteur d objectifs jugeait tout a l ecran de victoire : le joueur visait
+# « 30 fois le meme sort » sans savoir s il en etait a 12 ou a 29, et apprenait
+# qu il avait perdu « sans subir de degats » bien apres le coup qui l avait
+# ruine. Le bandeau dit deux choses et rien d autre :
+#   - OU il en est, pour ce qui se compte   ("Meme sort  12/30") ;
+#   - QUAND c est perdu, pour tout objectif ("Sans degats : rate").
+# Une interdiction encore tenue n affiche rien : « Sans degats » ecrit en
+# permanence serait une ligne de plus que l oeil apprend a ignorer.
+#
+# EN HAUT A DROITE, sous le bouton pause : la seule bande libre du HUD. A gauche
+# courent la barre de vitesse et le rail des passifs, en bas la main et le
+# compte a rebours de pioche. Texte aligne a droite, sans fond, qui laisse
+# passer le doigt : il ne cache ni ne bloque rien du terrain.
+#
+# Police : FONT_SMALL, le plancher du theme — rien en dessous, c est la plainte
+# du testeur sur les polices. Un objectif deja acquis dans une partie precedente
+# n est pas repete : il n y a plus rien a y gagner.
+
+## Bord superieur du bandeau : sous la barre du haut (TopBar finit a 140).
+const OBJ_TOP: float = 150.0
+## Largeur : la moitie droite de l ecran, moins la marge.
+const OBJ_WIDTH: float = 520.0
+const OBJ_MARGIN: float = 24.0
+const OBJ_ECHEC := Color(1.0, 0.48, 0.42)
+
+var _obj_box: VBoxContainer = null
+## ObjectiveDef -> Label, dans l ordre du niveau.
+var _obj_lines: Dictionary = {}
+
+
+func _build_objective_strip() -> void:
+	if _obj_box != null and is_instance_valid(_obj_box):
+		_obj_box.queue_free()
+	_obj_box = null
+	_obj_lines.clear()
+	var lvl: LevelDef = RunState.current_level_def
+	if lvl == null or RunState.mode != GameEnums.Mode.EXPLORATION or lvl.objectives.is_empty():
+		return
+	_obj_box = VBoxContainer.new()
+	_obj_box.name = "ObjectiveStrip"
+	_obj_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_obj_box.add_theme_constant_override(&"separation", 2)
+	_obj_box.position = Vector2(1080.0 - OBJ_MARGIN - OBJ_WIDTH, OBJ_TOP)
+	_obj_box.size = Vector2(OBJ_WIDTH, 0.0)
+	_root.add_child(_obj_box)
+	for o: ObjectiveDef in lvl.objectives:
+		if o == null or SaveData.is_objective_done(lvl.id, o.id):
+			continue
+		var l: Label = UiTheme.label_hud("", UiTheme.FONT_SMALL, UiTheme.TEXT,
+			HORIZONTAL_ALIGNMENT_RIGHT)
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.custom_minimum_size = Vector2(OBJ_WIDTH, 0.0)
+		l.visible = false
+		_obj_box.add_child(l)
+		_obj_lines[o] = l
+
+
+func _refresh_objective_strip() -> void:
+	for o: ObjectiveDef in _obj_lines:
+		var l: Label = _obj_lines[o]
+		if l == null or not is_instance_valid(l):
+			continue
+		var texte: String = ""
+		var couleur: Color = UiTheme.TEXT
+		if RunState.is_objective_failed(o.id):
+			texte = "%s : rate" % ObjectiveChecker.short_label(o)
+			couleur = OBJ_ECHEC
+		else:
+			var p: Dictionary = ObjectiveChecker.progress(o)
+			if not p.is_empty():
+				texte = "%s  %s" % [ObjectiveChecker.short_label(o), _obj_count(p)]
+				# Un compte qui a atteint sa cible passe a l or : l etoile est a
+				# portee, il reste a gagner. (Un plafond atteint, lui, reste neutre :
+				# max_distinct_cast pile a la limite n est pas un succes, c est un
+				# avertissement.)
+				if o.check_key != &"max_distinct_cast" and float(p["current"]) >= float(p["target"]):
+					couleur = UiTheme.GOLD
+		l.visible = texte != ""
+		if l.text != texte:
+			l.text = texte
+		l.add_theme_color_override(&"font_color", couleur)
+
+
+## "12/30", ou "1:23 / 3:00" pour un chrono.
+func _obj_count(p: Dictionary) -> String:
+	if bool(p.get("time", false)):
+		return "%s / %s" % [_mmss(float(p["current"])), _mmss(float(p["target"]))]
+	return "%d/%d" % [int(p["current"]), int(p["target"])]
+
+
+static func _mmss(sec: float) -> String:
+	var t: int = int(floor(maxf(sec, 0.0)))
+	return "%d:%02d" % [t / 60, t % 60]
+
+
+## L objectif vient d etre perdu : la ligne passe au rouge (par le rafraichissement)
+## et BAT une fois. Un texte qui change de couleur en haut de l ecran pendant une
+## vague ne se remarque pas ; un battement, si. Un seul, et bref : c est une
+## information, pas une alarme qui detournerait le regard des monstres.
+func _on_objective_failed(objective_id: StringName) -> void:
+	_refresh_objective_strip()
+	for o: ObjectiveDef in _obj_lines:
+		if o.id != objective_id:
+			continue
+		var l: Label = _obj_lines[o]
+		if l == null or not is_instance_valid(l):
+			return
+		# Par la LUMINOSITE et non par l echelle : la ligne vit dans un
+		# VBoxContainer, qui remet l echelle de ses enfants a 1 a chaque tri.
+		var tw: Tween = l.create_tween()
+		for i in 2:
+			tw.tween_property(l, "modulate", Color(2.2, 2.0, 2.0), 0.12)
+			tw.tween_property(l, "modulate", Color.WHITE, 0.28)
+		return
