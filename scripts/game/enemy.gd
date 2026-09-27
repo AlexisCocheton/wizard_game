@@ -100,6 +100,7 @@ var _last_x: float = 0.0
 
 func setup(def: EnemyDef, diff: float = 1.0) -> void:
 	definition = def
+	_sheet_resolved = false
 	difficulty = diff
 	hp = def.max_hp * diff
 	_max_hp = maxf(hp, 0.001)
@@ -168,9 +169,56 @@ static func resting_anim(key: StringName) -> String:
 	return ""
 
 
+## LE REFLET DU MAGE. Un monstre dessine avec la feuille du mage lui-meme
+## (`UiTheme.MAGE_DEFAULT`, aujourd hui le Miroir de Forge) n a pas une
+## apparence a lui : il est le reflet du joueur. Quand le joueur a choisi une
+## apprentie, le reflet doit etre cette apprentie — sinon le miroir montre un
+## personnage que le joueur ne joue pas, et le monstre perd son sens.
+##
+## Seule la feuille monk_blue compte : monk_black et monk_purple sont aussi des
+## robes du mage, mais le contenu les donne a d autres monstres (le Sonneur de
+## cor, le Pretre) qui ne sont pas des reflets.
+static func is_mage_reflection(def: EnemyDef) -> bool:
+	return def != null and String(def.anim_key) == UiTheme.MAGE_DEFAULT
+
+
+## La feuille REELLEMENT affichee pour ce monstre. C est `anim_key`, sauf pour
+## un reflet du mage, qui prend le personnage joue (apprentie, ou mage dans la
+## robe equipee). Statique pour que les tests la verifient sans scene.
+static func shown_sheet(def: EnemyDef) -> StringName:
+	if def == null:
+		return &""
+	if not is_mage_reflection(def):
+		return def.anim_key
+	var heros: String = UiTheme.hero_key()
+	if heros != AccountRewardDef.CHARACTER_MAGE:
+		return StringName(heros)
+	# Le mage lui-meme : sa robe si elle est au catalogue. Un chapeau n y est pas
+	# (feuille de cosmetique, voir UiTheme.mage_frames) : on garde alors la robe
+	# equipee, puis la feuille d origine.
+	for k: String in [UiTheme.mage_sheet_key(),
+			SaveData.equipped_cosmetic(GameEnums.RewardKind.MAGE_COLOR)]:
+		if k != "" and AnimCatalog.has(StringName(k)):
+			return StringName(k)
+	return def.anim_key
+
+
+## Resolue UNE fois par monstre : un reflet qui changerait de feuille en cours de
+## vie (profil modifie pendant la partie) melangerait les echelles de deux feuilles.
+var _sheet: StringName = &""
+var _sheet_resolved: bool = false
+
+
+func sheet_key() -> StringName:
+	if not _sheet_resolved and definition != null:
+		_sheet = shown_sheet(definition)
+		_sheet_resolved = true
+	return _sheet
+
+
 ## Feuille animee du pack si le monstre en a une ; sinon la forme de secours.
 func _setup_visual() -> void:
-	var key: StringName = definition.anim_key
+	var key: StringName = sheet_key()
 	if key == &"" or not AnimCatalog.has(key) or _anim == null:
 		return
 	_body.draw_shape = false
@@ -221,7 +269,7 @@ func visual_radius() -> float:
 
 ## Met le sprite a l echelle du rayon visuel : un monstre P4 est gros a l ecran.
 func _apply_scale(node: Node2D, frame_px: float) -> void:
-	var key: StringName = definition.anim_key
+	var key: StringName = sheet_key()
 	var visible_px: float = frame_px * AnimCatalog.occupancy(key)
 	var wanted: float = visual_radius() * 2.0 * definition.sprite_scale
 	node.scale = Vector2.ONE * (wanted / maxf(visible_px, 1.0))
@@ -602,7 +650,7 @@ func take_damage(amount: float, tags: Array) -> bool:
 		_enrage_bonus = minf(_enrage_bonus + definition.enrage_speed_pct * 0.01, definition.enrage_cap)
 	if hp <= 0.0:
 		kill()
-	elif _anim != null and _anim.visible and AnimCatalog.has_anim(definition.anim_key, "hurt"):
+	elif _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "hurt"):
 		_anim.play("hurt")
 		if not _anim.animation_finished.is_connected(_back_to_walk):
 			_anim.animation_finished.connect(_back_to_walk)
@@ -616,14 +664,14 @@ func take_damage(amount: float, tags: Array) -> bool:
 func _back_to_walk() -> void:
 	if _anim == null or _dead or definition == null:
 		return
-	var repos: String = resting_anim(definition.anim_key)
+	var repos: String = resting_anim(sheet_key())
 	if repos != "" and _anim.animation != StringName(repos):
 		_anim.play(repos)
 
 
 ## Animation d attaque (tir de l archer, coup du berserker).
 func play_attack() -> void:
-	if _anim != null and _anim.visible and AnimCatalog.has_anim(definition.anim_key, "attack"):
+	if _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "attack"):
 		_anim.play("attack")
 		if not _anim.animation_finished.is_connected(_back_to_walk):
 			_anim.animation_finished.connect(_back_to_walk)
@@ -644,7 +692,7 @@ func grow(hp_gain: float, scale_gain: float) -> void:
 	if _body != null:
 		_body.set_growth(growth)
 	if _anim != null and _anim.visible and definition != null:
-		_apply_scale(_anim, float(AnimCatalog.frame_px(definition.anim_key)))
+		_apply_scale(_anim, float(AnimCatalog.frame_px(sheet_key())))
 	_place_hp_bar()
 	AudioBus.play_sfx(&"grow")
 	_refresh_hp_bar()
@@ -756,7 +804,7 @@ func _try_revive() -> bool:
 	modulate = Color(1.6, 1.5, 1.1)
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "modulate", Color.WHITE, REVIVE_GRACE)
-	if _anim != null and _anim.visible and AnimCatalog.has_anim(definition.anim_key, "hurt"):
+	if _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "hurt"):
 		_anim.play("hurt")
 		if not _anim.animation_finished.is_connected(_back_to_walk):
 			_anim.animation_finished.connect(_back_to_walk)
@@ -853,7 +901,7 @@ func _open_reflect(duration: float) -> void:
 		if _reflect_fx is CanvasItem:
 			(_reflect_fx as CanvasItem).z_index = 5
 	if _anim != null and _anim.visible and definition != null \
-			and AnimCatalog.has_anim(definition.anim_key, "guard"):
+			and AnimCatalog.has_anim(sheet_key(), "guard"):
 		_anim.play("guard")
 	AudioBus.play_sfx(&"ward_deep")
 
@@ -896,7 +944,7 @@ func _refresh_parts_visual() -> void:
 	var reste: float = float(_parts.size()) / float(definition.parts_count)
 	var facteur: float = lerpf(0.55, 1.0, reste)
 	if _anim != null and _anim.visible:
-		_apply_scale(_anim, float(AnimCatalog.frame_px(definition.anim_key)))
+		_apply_scale(_anim, float(AnimCatalog.frame_px(sheet_key())))
 		_anim.scale *= facteur
 	if _aura_fx != null and is_instance_valid(_aura_fx):
 		_aura_fx.scale = Vector2.ONE * facteur

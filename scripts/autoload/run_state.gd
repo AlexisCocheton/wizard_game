@@ -23,12 +23,30 @@ var hand: Array[SpellCard] = []
 ## gelees, et elles doivent rester les MEMES d une image a l autre. Un compte
 ## obligerait a re-tirer les victimes a chaque rafraichissement, la petrification
 ## sauterait de carte en carte et plus rien ne serait planifiable.
-var _blocked: Array[SpellCard] = []
-## VOLEUR DE SORTS — cartes de la main tenues par un voleur vivant. Separees des
-## petrifiees : une gorgone gele un NOMBRE de cartes, un voleur tient UNE carte
+##
+## UN EXEMPLAIRE, PAS UNE CARTE. Les copies d une meme carte partagent la MEME
+## ressource SpellCard : un registre qui comparait les ressources gelait toutes
+## les copies d un coup (vu en capture : deux regards, quatre cartes figees).
+## Chaque entree retient donc la carte ET sa position dans la main — voir Tenue.
+var _blocked: Array[Tenue] = []
+## VOLEUR DE SORTS — exemplaires de la main tenus par un voleur vivant. Separes
+## des petrifies : une gorgone gele un NOMBRE de cartes, un voleur tient UNE carte
 ## precise qu il va lancer. Les deux sont injouables, mais le joueur doit lire
 ## laquelle va lui revenir dans la figure.
-var _stolen: Array[SpellCard] = []
+var _stolen: Array[Tenue] = []
+
+
+## Un exemplaire tenu (petrifie ou vole). La carte seule ne suffit pas a le
+## designer — deux copies sont la meme ressource — et la position seule ne
+## suffit pas a le verifier : la carte sert de controle quand la main bouge
+## par un chemin que RunState ne voit pas (un test qui la reconstruit).
+class Tenue:
+	var card: SpellCard
+	var slot: int
+
+	func _init(c: SpellCard, i: int) -> void:
+		card = c
+		slot = i
 var discard: Array[SpellCard] = []
 var exiled: Array[SpellCard] = []
 
@@ -208,23 +226,37 @@ func effective_cast_time(card: SpellCard) -> float:
 	return SpeedGauge.effective_cast_time(base) * passive_cast_factor()
 
 
-func play_card(card: SpellCard) -> bool:
-	var idx: int = hand.find(card)
-	if idx == -1:
-		return false
+## `slot` designe l EXEMPLAIRE touche par le joueur (sa position dans la main).
+## Sans lui (-1), on lance la premiere copie LIBRE de la carte : un effet qui
+## rejoue « une Boule de feu » n a pas a savoir laquelle des copies est gelee.
+func play_card(card: SpellCard, slot: int = -1) -> bool:
+	_heal_holds()
 	# REGARD PETRIFIANT : une carte gelee ne part pas et ne quitte pas la main.
 	# Le garde est pose ICI plutot que dans le HUD parce que TOUS les chemins de
 	# lancement passent par cette fonction — clic, glisser, pre-cast, double
 	# lancement, effets qui rejouent une carte. Un garde cote interface laisserait
 	# au moins un de ces chemins ouvert, et le joueur lancerait une carte que son
 	# ecran lui montre comme petrifiee.
-	if _blocked.has(card) or _stolen.has(card):
+	var idx: int = -1
+	if slot >= 0:
+		# Le joueur a touche UNE carte precise : si c est la gelee, on refuse,
+		# meme si une copie libre attend ailleurs. Lancer l autre copie a sa place
+		# ferait partir une carte qu il n a pas touchee.
+		if slot >= hand.size() or hand[slot] != card or is_slot_blocked(slot):
+			return false
+		idx = slot
+	else:
+		for i in hand.size():
+			if hand[i] == card and not is_slot_blocked(i):
+				idx = i
+				break
+	if idx == -1:
 		return false
 	# SOMMEIL (comportements v3) : un dormeur coupe TOUTE la magie. Meme garde,
 	# meme endroit, meme raison que la petrification.
 	if _silenced:
 		return false
-	hand.remove_at(idx)
+	_remove_from_hand(idx)
 	if card.rarity == GameEnums.Rarity.LEGENDARY:
 		used_legendary = true
 	# Un passif n a plus rien a faire dans la main : il est equipe hors deck.
@@ -277,19 +309,50 @@ func play_card(card: SpellCard) -> bool:
 const MIN_PLAYABLE_CARDS: int = 1
 
 
-## Les cartes actuellement petrifiees. Copie defensive : l appelant (le HUD) ne
-## doit pas pouvoir degeler une carte en modifiant le tableau qu il affiche.
+## Les cartes actuellement petrifiees, une entree PAR EXEMPLAIRE : deux copies
+## gelees d une meme carte y figurent deux fois. Copie defensive : l appelant
+## (le HUD) ne doit pas pouvoir degeler une carte en modifiant ce qu il affiche.
 func blocked_cards() -> Array[SpellCard]:
-	return _blocked.duplicate()
+	_heal_holds()
+	return _cards_of(_blocked)
 
 
-## Injouable, pour quelque cause que ce soit : petrifiee OU volee. C est la
-## question que pose le HUD avant de griser, et la reponse doit couvrir les deux.
+## Injouable, pour quelque cause que ce soit : petrifiee OU volee — et ce pour
+## TOUTES ses copies en main. Une carte dont une copie reste libre se joue
+## encore (play_card lance la copie libre) : repondre « bloquee » ici mentirait
+## au code qui demande avant de lancer.
+##
+## L ecran, lui, raisonne par exemplaire : voir is_slot_blocked().
 func is_card_blocked(card: SpellCard) -> bool:
-	return card != null and (_blocked.has(card) or _stolen.has(card))
+	if card == null:
+		return false
+	_heal_holds()
+	var copies: int = 0
+	for i in hand.size():
+		if hand[i] == card:
+			copies += 1
+			if not is_slot_blocked(i):
+				return false
+	return copies > 0
+
+
+## L EXEMPLAIRE en position `slot` de la main est-il injouable (petrifie ou
+## vole) ? C est la question que pose le HUD, carte par carte : poser la
+## question par ressource grisait toutes les copies d une carte gelee une fois.
+func is_slot_blocked(slot: int) -> bool:
+	_heal_holds()
+	return _holds_slot(_blocked, slot) or _holds_slot(_stolen, slot)
+
+
+## L exemplaire en position `slot` est-il tenu par un VOLEUR ? Distinct de la
+## petrification : le HUD lui donne un autre mot et une autre teinte.
+func is_slot_stolen(slot: int) -> bool:
+	_heal_holds()
+	return _holds_slot(_stolen, slot)
 
 
 func blocked_count() -> int:
+	_heal_holds()
 	return _blocked.size()
 
 
@@ -298,37 +361,36 @@ func blocked_count() -> int:
 ## vivante donne zero regard, donc la main se degele d elle-meme quand la source
 ## tombe — il n y a aucun chemin ou un blocage survivrait a son monstre.
 ##
-## STABILITE : on ne reconstruit pas la liste, on l AJUSTE. Les cartes deja
-## gelees le restent tant qu elles sont en main et que le nombre de regards ne
+## STABILITE : on ne reconstruit pas la liste, on l AJUSTE. Les exemplaires deja
+## geles le restent tant qu ils sont en main et que le nombre de regards ne
 ## baisse pas. C est ce qui permet au joueur de planifier autour de sa main
 ## mutilee au lieu de voir la petrification danser d une carte a l autre.
 func set_card_block_count(wanted: int) -> void:
-	var avant: int = _blocked.size()
 	# Une carte qui a quitte la main (defausse, echange, fin de vague) ne peut
 	# plus etre gelee : sinon le ledger retiendrait des cartes fantomes et le
 	# plafond compterait des blocages que le joueur ne voit pas.
-	for i in range(_blocked.size() - 1, -1, -1):
-		if not hand.has(_blocked[i]):
-			_blocked.remove_at(i)
-	_purge_stolen()
+	var change: bool = _heal_holds()
 	# Les cartes volees comptent dans le plafond : une gorgone et un voleur
 	# ensemble ne doivent jamais geler la derniere carte jouable.
 	var plafond: int = maxi(0, hand.size() - MIN_PLAYABLE_CARDS - _stolen.size())
 	var cible: int = clampi(wanted, 0, plafond)
 	while _blocked.size() > cible:
 		_blocked.pop_back()
+		change = true
 	if _blocked.size() < cible:
 		# On gele en partant de la FIN de la main : la carte la plus a droite,
 		# donc la plus recemment piochee. Geler la premiere carte volerait au
 		# joueur celle qu il avait deja decide de lancer, ce qui se lit comme une
 		# triche ; lui prendre sa derniere pioche se lit comme un cout.
+		# Par POSITION et non par carte : une copie deja gelee n empeche plus de
+		# geler sa jumelle, et geler l une ne gele plus l autre.
 		for i in range(hand.size() - 1, -1, -1):
 			if _blocked.size() >= cible:
 				break
-			var c: SpellCard = hand[i]
-			if c != null and not _blocked.has(c) and not _stolen.has(c):
-				_blocked.append(c)
-	if _blocked.size() != avant:
+			if hand[i] != null and not is_slot_blocked(i):
+				_blocked.append(Tenue.new(hand[i], i))
+				change = true
+	if change:
 		hand_changed.emit()
 
 
@@ -352,10 +414,15 @@ func is_silenced() -> bool:
 
 # --- VOLEUR DE SORTS ----------------------------------------------------------
 #
-# Le voleur (Enemy, champs steal_* d EnemyDef) tient UNE carte de la main, puis
-# la lance contre le mage. Le ledger vit ici pour la meme raison que la
+# Le voleur (Enemy, champs steal_* d EnemyDef) tient UN exemplaire de la main,
+# puis le lance contre le mage. Le ledger vit ici pour la meme raison que la
 # petrification : c est la MAIN qui est touchee, et `play_card` est le seul
 # passage de toutes les facons de lancer.
+#
+# Le voleur ne connait que la CARTE (Enemy._stolen_card). Deux voleurs qui
+# tiennent deux copies d une meme carte partagent donc ce nom : celui qui meurt
+# rend UNE des deux copies, pas forcement celle qu il avait prise. Les deux
+# copies etant identiques, la seule difference est laquelle se rallume.
 
 ## Prend une carte pour un voleur. Renvoie null s il ne peut rien prendre sans
 ## violer le plafond (il reste toujours MIN_PLAYABLE_CARDS carte jouable).
@@ -364,37 +431,42 @@ func is_silenced() -> bool:
 ## c est la plus precieuse, donc le vol se lit comme un vol, et c est celle qui
 ## fera le plus mal — ce que le joueur doit pouvoir anticiper en regardant sa main.
 func steal_card() -> SpellCard:
-	_purge_stolen()
-	var libres: Array[SpellCard] = []
-	for c in hand:
-		if c != null and not c.is_passive and not _blocked.has(c) and not _stolen.has(c):
-			libres.append(c)
+	_heal_holds()
+	var libres: Array[int] = []
+	for i in hand.size():
+		var c: SpellCard = hand[i]
+		if c != null and not c.is_passive and not is_slot_blocked(i):
+			libres.append(i)
 	if libres.size() <= MIN_PLAYABLE_CARDS:
 		return null
-	var choix: SpellCard = libres[0]
-	for c in libres:
-		if c.base_cast_time > choix.base_cast_time:
-			choix = c
-	_stolen.append(choix)
+	var choix: int = libres[0]
+	for i in libres:
+		if hand[i].base_cast_time > hand[choix].base_cast_time:
+			choix = i
+	_stolen.append(Tenue.new(hand[choix], choix))
 	hand_changed.emit()
-	return choix
+	return hand[choix]
 
 
 func is_card_stolen(card: SpellCard) -> bool:
-	return card != null and _stolen.has(card)
+	_heal_holds()
+	return card != null and _find_hold(_stolen, card) != -1
 
 
 ## Copie defensive, comme blocked_cards().
 func stolen_cards() -> Array[SpellCard]:
-	return _stolen.duplicate()
+	_heal_holds()
+	return _cards_of(_stolen)
 
 
 ## Le voleur est mort (ou a quitte le terrain) avant de lancer : la carte redevient
 ## jouable, a sa place dans la main.
 func release_stolen_card(card: SpellCard) -> void:
-	if card == null or not _stolen.has(card):
+	_heal_holds()
+	var k: int = _find_hold(_stolen, card)
+	if k == -1:
 		return
-	_stolen.erase(card)
+	_stolen.remove_at(k)
 	hand_changed.emit()
 
 
@@ -402,24 +474,75 @@ func release_stolen_card(card: SpellCard) -> void:
 ## joueur l avait jouee. Renvoie false si la carte n etait plus tenue (partie
 ## de la main entre-temps) : rien n est alors lance.
 func spend_stolen_card(card: SpellCard) -> bool:
-	if card == null or not _stolen.has(card):
+	_heal_holds()
+	var k: int = _find_hold(_stolen, card)
+	if k == -1:
 		return false
-	_stolen.erase(card)
-	var idx: int = hand.find(card)
-	if idx == -1:
-		hand_changed.emit()
-		return false
-	hand.remove_at(idx)
+	# C est l exemplaire TENU qui part, pas la premiere copie venue : sinon la
+	# copie libre disparaitrait et la volee resterait grisee en main.
+	var idx: int = _stolen[k].slot
+	_stolen.remove_at(k)
+	_remove_from_hand(idx)
 	discard.append(card)
 	hand_changed.emit()
 	return true
 
 
-## Une carte volee qui a quitte la main par un autre chemin n est plus tenue.
-func _purge_stolen() -> void:
-	for i in range(_stolen.size() - 1, -1, -1):
-		if not hand.has(_stolen[i]):
-			_stolen.remove_at(i)
+# --- Registre par exemplaire ---------------------------------------------------
+
+## Retire l exemplaire `idx` de la main ET recale le registre. Toute sortie de
+## main faite par RunState passe ici : un `hand.remove_at` nu laisserait les
+## positions tenues a droite de la carte decalees d un cran, et la petrification
+## glisserait sur la carte voisine.
+func _remove_from_hand(idx: int) -> SpellCard:
+	var c: SpellCard = hand[idx]
+	hand.remove_at(idx)
+	for ledger: Array[Tenue] in [_blocked, _stolen]:
+		for k in range(ledger.size() - 1, -1, -1):
+			if ledger[k].slot == idx:
+				ledger.remove_at(k)
+			elif ledger[k].slot > idx:
+				ledger[k].slot -= 1
+	return c
+
+
+## Oublie les entrees qui ne designent plus leur carte : la main a ete changee
+## par un chemin qui ne passe pas par _remove_from_hand (videe, reconstruite
+## par un test). On ne cherche PAS a recaser l entree sur une autre copie : une
+## copie piochee plus tard se retrouverait gelee ou volee sans cause visible.
+## Rend vrai si quelque chose a ete oublie.
+func _heal_holds() -> bool:
+	var change: bool = false
+	for ledger: Array[Tenue] in [_blocked, _stolen]:
+		for k in range(ledger.size() - 1, -1, -1):
+			var t: Tenue = ledger[k]
+			if t.slot < 0 or t.slot >= hand.size() or hand[t.slot] != t.card:
+				ledger.remove_at(k)
+				change = true
+	return change
+
+
+static func _holds_slot(ledger: Array[Tenue], slot: int) -> bool:
+	for t in ledger:
+		if t.slot == slot:
+			return true
+	return false
+
+
+static func _find_hold(ledger: Array[Tenue], card: SpellCard) -> int:
+	if card == null:
+		return -1
+	for k in ledger.size():
+		if ledger[k].card == card:
+			return k
+	return -1
+
+
+static func _cards_of(ledger: Array[Tenue]) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	for t in ledger:
+		out.append(t.card)
+	return out
 
 
 func discard_random(count: int) -> int:
@@ -428,8 +551,7 @@ func discard_random(count: int) -> int:
 		if hand.is_empty():
 			break
 		var idx: int = _rng.randi_range(0, hand.size() - 1)
-		discard.append(hand[idx])
-		hand.remove_at(idx)
+		discard.append(_remove_from_hand(idx))
 		n += 1
 	if n > 0:
 		hand_changed.emit()
@@ -440,6 +562,11 @@ func discard_hand() -> int:
 	var n: int = hand.size()
 	discard.append_array(hand)
 	hand.clear()
+	# Plus aucune carte en main, donc plus aucun exemplaire tenu. Vide ICI et pas
+	# a la prochaine lecture : une copie piochee entre-temps a la meme position
+	# ressemblerait a l ancienne et heriterait de son gel.
+	_blocked.clear()
+	_stolen.clear()
 	if n > 0:
 		hand_changed.emit()
 	return n
@@ -994,11 +1121,45 @@ func _reset_objective_counters() -> void:
 	revive_kill_delays.clear()
 	victory_speed_percent = -1
 	victory_time = -1.0
+	_failed_objectives.clear()
 
 
 ## Avance l horloge des objectifs. delta BRUT : voir l en-tete de la section.
+##
+## C est aussi le battement ou l on guette les objectifs PERDUS : appele une fois
+## par image de combat (GameController.simulate), jamais pendant une pause.
 func advance_clock(delta: float) -> void:
 	run_time += maxf(delta, 0.0)
+	watch_objectives()
+
+
+## Objectifs du niveau deja perdus dans cette partie : id -> true.
+var _failed_objectives: Dictionary = {}
+
+
+## Emet `objective_failed` UNE fois par objectif, a l image ou il devient
+## impossible (ObjectiveChecker.is_failed). Le signal existait depuis le debut
+## et rien ne l emettait : le joueur apprenait son echec a l ecran de victoire.
+##
+## Par SONDAGE et non branche sur chaque evenement : dix sources differentes
+## font perdre un objectif (coup recu, sort lance, renvoi, profondeur, horloge,
+## passif...). Brancher chacune ouvrait dix occasions d en oublier une ; relire
+## les compteurs une fois par image n en oublie aucune, pour trois objectifs.
+##
+## Campagne seulement : le Massacre n a pas d objectifs (voir le briefing).
+func watch_objectives() -> void:
+	if current_level_def == null or mode != GameEnums.Mode.EXPLORATION:
+		return
+	for o: ObjectiveDef in current_level_def.objectives:
+		if o == null or _failed_objectives.has(o.id):
+			continue
+		if ObjectiveChecker.is_failed(o):
+			_failed_objectives[o.id] = true
+			objective_failed.emit(o.id)
+
+
+func is_objective_failed(objective_id: StringName) -> bool:
+	return _failed_objectives.has(objective_id)
 
 
 func _note_cast_for_objectives(card: SpellCard) -> void:
@@ -1079,6 +1240,16 @@ func note_revived_enemy_killed(instance_id: int) -> void:
 ## Monstres releves jamais acheves (partis au contact, gobes...).
 func revived_still_standing() -> int:
 	return _revived_at.size()
+
+
+## Depuis combien de secondes le plus ancien releve encore debout l est. 0 si
+## aucun. Sert a declarer boss_quick_after_revive perdu SANS attendre sa mort :
+## passe le delai, il ne peut plus etre acheve a temps.
+func revived_oldest_age() -> float:
+	var age: float = 0.0
+	for id in _revived_at:
+		age = maxf(age, run_time - float(_revived_at[id]))
+	return age
 
 
 ## Fraction du chemin parcouru a l ordonnee `y`, bornee a [0, 1].

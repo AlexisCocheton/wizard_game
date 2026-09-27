@@ -33,6 +33,7 @@ func run() -> void:
 	_test_la_vignette_est_recadree()
 	_test_aucun_apprenti_ne_porte_un_monstre()
 	_test_l_onglet_grise_robe_et_chapeau()
+	_test_le_miroir_copie_le_personnage_joue()
 	SaveData.set_tester_mode(false)
 	SaveData.reset_profile()
 
@@ -364,4 +365,38 @@ func _test_l_onglet_grise_robe_et_chapeau() -> void:
 
 	root.remove_child(panel)
 	panel.free()
+	SaveData.reset_profile()
+
+
+## LE MIROIR DE FORGE est le reflet du mage : il porte la feuille du mage. Avec
+## une apprentie choisie, il montrait encore le vieux mage — un reflet de
+## quelqu un que le joueur ne joue pas. Il doit copier le PERSONNAGE JOUE.
+func _test_le_miroir_copie_le_personnage_joue() -> void:
+	var miroir: EnemyDef = ContentDB.enemies.get(&"glass_mirror")
+	ok(miroir != null, "le Miroir de Forge est au catalogue")
+	if miroir == null:
+		return
+	ok(Enemy.is_mage_reflection(miroir), "il porte la feuille du mage : c est un reflet")
+	SaveData.reset_profile()
+	eq(String(Enemy.shown_sheet(miroir)), UiTheme.MAGE_DEFAULT,
+		"profil neuf : le reflet est le mage")
+	# Un monstre dessine avec une AUTRE robe du mage n est pas un reflet.
+	var autre := EnemyDef.new()
+	autre.id = &"pretre_test"
+	autre.anim_key = &"monk_black"
+	not_ok(Enemy.is_mage_reflection(autre), "une autre robe n est pas un reflet")
+	for r: AccountRewardDef in _apprentis():
+		SaveData.reset_profile()
+		_monter_au_niveau(r.at_level)
+		ok(SaveData.equip_cosmetic(r.id), "%s s equipe" % r.id)
+		eq(String(Enemy.shown_sheet(miroir)), r.texture_name,
+			"%s joue : le Miroir prend son apparence" % r.id)
+		eq(Enemy.shown_sheet(autre), autre.anim_key,
+			"%s joue : les autres monstres gardent la leur" % r.id)
+		# Le monstre REEL, pas seulement la fonction : c est sa feuille qui
+		# pilote l echelle et chaque animation (coup recu, attaque, repos).
+		var e: Enemy = load("res://scenes/game/Enemy.tscn").instantiate()
+		e.setup(miroir)
+		eq(String(e.sheet_key()), r.texture_name, "%s : le Miroir instancie le copie" % r.id)
+		e.free()
 	SaveData.reset_profile()
