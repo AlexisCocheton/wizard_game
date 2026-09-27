@@ -1,42 +1,42 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5ieor"]
-[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_qlr7k"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="2_808tn"]
 [ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="3_808tn"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="4_t42rk"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_3soi1"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="5_808tn"]
 [ext_resource type="Resource" path="res://resources/enemies/adept_ember.tres" id="6_808tn"]
 
-[sub_resource type="Resource" id="Resource_808tn"]
+[sub_resource type="Resource" id="Resource_t42rk"]
 script = ExtResource("1_5ieor")
-enemy = ExtResource("2_qlr7k")
+enemy = ExtResource("2_808tn")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_t42rk"]
+[sub_resource type="Resource" id="Resource_3soi1"]
 script = ExtResource("1_5ieor")
 enemy = ExtResource("3_808tn")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_3soi1"]
+[sub_resource type="Resource" id="Resource_w5rc5"]
 script = ExtResource("1_5ieor")
 enemy = ExtResource("4_t42rk")
 count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_w5rc5"]
+[sub_resource type="Resource" id="Resource_umbwr"]
 script = ExtResource("1_5ieor")
 enemy = ExtResource("5_808tn")
 count = 2
 spawn_delay = 2.5
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_umbwr"]
+[sub_resource type="Resource" id="Resource_2ls1e"]
 script = ExtResource("1_5ieor")
 enemy = ExtResource("6_808tn")
 count = 2
@@ -47,7 +47,7 @@ start_offset = 28.0
 script = ExtResource("5_3soi1")
 id = &"w15_4"
 duration = 32.0
-entries = Array[ExtResource("1_5ieor")]([SubResource("Resource_808tn"), SubResource("Resource_t42rk"), SubResource("Resource_3soi1"), SubResource("Resource_w5rc5"), SubResource("Resource_umbwr")])
+entries = Array[ExtResource("1_5ieor")]([SubResource("Resource_t42rk"), SubResource("Resource_3soi1"), SubResource("Resource_w5rc5"), SubResource("Resource_umbwr"), SubResource("Resource_2ls1e")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false

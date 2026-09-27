@@ -100,3 +100,7 @@ devour_delay = 3.0
 mirror_speed_ref = 0
 mirror_speed_min = 0.5
 mirror_speed_max = 2.0
+terrain_break_interval = 0.0
+terrain_break_reach = 520.0
+terrain_break_windup = 1.5
+demoted_from = &""

@@ -91,6 +91,7 @@ func run() -> void:
 	_test_les_monstres_neufs_sont_rattaches_a_un_monde()
 	_test_les_monstres_neufs_sortent_vraiment_en_massacre()
 	_test_les_paliers_de_la_gorgone_sont_des_paliers()
+	_test_un_promu_ne_garde_pas_les_pv_de_boss()
 	if _bf != null:
 		detach(_bf)
 		_bf = null
@@ -824,16 +825,23 @@ func _test_les_monstres_neufs_sortent_vraiment_en_massacre() -> void:
 		if (d.anim_key in SILHOUETTES_2026_09_26) and not _est_invoque(d.id):
 			neufs.append(d)
 
+	# CHANTIER W3 — 64 graines de 30 vagues, et non plus UNE graine de 300. Sur
+	# une seule graine, un mini-boss d un monde a sept tetes n a que dix paliers
+	# pour sortir : il reste au banc une fois sur cinq par pur hasard, et le moindre
+	# monstre ajoute AILLEURS (qui decale le tirage) faisait rougir le Bourreau,
+	# pourtant joignable. C est la lecon deja tiree par test_bestiaire_w2 : a 64
+	# paliers par monde, un monstre qui ne sort pas est vraiment injoignable.
 	var vus: Dictionary = {}
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 4242
-	for n in range(1, 301):
-		var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
-		if w == null:
-			continue
-		for e: WaveEntry in w.entries:
-			if e != null and e.enemy != null:
-				vus[e.enemy.id] = true
+	for graine in 64:
+		rng.seed = 4242 + graine
+		for n in range(1, 31):
+			var w: WaveDef = WaveBudget.build_wave(n, pool, rng, bosses, membership)
+			if w == null:
+				continue
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					vus[e.enemy.id] = true
 
 	var jamais: Array[String] = []
 	for d in neufs:
@@ -841,7 +849,7 @@ func _test_les_monstres_neufs_sortent_vraiment_en_massacre() -> void:
 			jamais.append(String(d.id))
 	jamais.sort()
 	ok(jamais.is_empty(),
-		("sur 300 vagues de Massacre ces monstres neufs ne sortent JAMAIS : le"
+		("sur 64 parties de 30 vagues de Massacre ces monstres neufs ne sortent JAMAIS : le"
 		+ " .tres existe, le joueur ne les verra pas — %s") % ", ".join(jamais))
 
 
@@ -926,3 +934,52 @@ func _test_les_paliers_de_la_gorgone_sont_des_paliers() -> void:
 			if e != null and e.enemy != null and e.enemy.id == p3.id:
 				sorti = true
 	ok(sorti, "%s (3 regards) sort reellement sur 300 vagues de Massacre" % p3.id)
+
+
+# --- CHANTIER W3 : un ancien boss promu en vermine ---------------------------
+
+## Part maximale des PV de sa version boss qu une vermine peut garder. C est une
+## REGLE et non un reglage : au-dela de la moitie, « redevenir un monstre
+## ordinaire » n est plus qu un changement de nom — le defaut exact de l acte 5,
+## qui envoyait le Gardien a 140 PV et Chronos a 320 dans des vagues de troupes.
+const PROMU_PV_MAX_RAPPORT: float = 0.5
+
+
+## LE GARDE-FOU DES PROMUS. Un monstre qui declare `demoted_from` est la version
+## allegee d un boss : il ne peut garder ni ses PV, ni son rang, ni son contact.
+## Et une vague ORDINAIRE qui veut cet ancien boss envoie sa vermine, jamais le
+## .tres du boss — c est la seconde moitie, celle qui mordait sur le contenu.
+func _test_un_promu_ne_garde_pas_les_pv_de_boss() -> void:
+	var promus: Dictionary = {}
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null or d.demoted_from == &"":
+			continue
+		var source: EnemyDef = ContentDB.enemies.get(d.demoted_from)
+		ok(source != null, "%s se dit l echo de %s, absent du catalogue" % [d.id, d.demoted_from])
+		if source == null:
+			continue
+		promus[source.id] = d
+		ok(source.is_boss(), "%s : %s n etait ni boss ni mini-boss" % [d.id, source.id])
+		not_ok(d.is_boss(), "%s est de la VERMINE : il ne peut pas garder un rang de tete" % d.id)
+		ok(d.resource_path != source.resource_path, "%s est un .tres a part" % d.id)
+		ok(d.max_hp <= source.max_hp * PROMU_PV_MAX_RAPPORT,
+			"%s garde %.0f PV sur les %.0f de %s : au plus %d %%"
+			% [d.id, d.max_hp, source.max_hp, source.id, int(PROMU_PV_MAX_RAPPORT * 100.0)])
+		ok(d.contact_hit() < source.contact_hit(),
+			"%s frappe le mage comme un boss (%d contre %d pour %s)"
+			% [d.id, d.contact_hit(), source.contact_hit(), source.id])
+	# Les deux anciens boss que l acte 5 NOMME ont leur version allegee. Sans ces
+	# deux lignes, retirer toute filiation rendrait le test vide et vert.
+	for ancien: StringName in [&"warden", &"chronos"]:
+		ok(promus.has(ancien), "%s a sa version allegee (demoted_from)" % ancien)
+	# Une vague ordinaire n envoie jamais le boss lui-meme quand sa vermine existe.
+	for lv: LevelDef in ContentDB.levels.values():
+		for w: WaveDef in lv.waves:
+			if w == null or w.is_boss or w.is_miniboss:
+				continue
+			for e: WaveEntry in w.entries:
+				if e == null or e.enemy == null or not promus.has(e.enemy.id):
+					continue
+				ok(false, ("%s (%s) envoie %s avec ses PV de boss dans une vague ordinaire :"
+					+ " c est %s qui doit descendre")
+					% [w.id, lv.id, e.enemy.id, (promus[e.enemy.id] as EnemyDef).id])

@@ -1668,6 +1668,9 @@ func _enemies_v3(E: String) -> void:
 	adept_frost.pattern_width = 200.0
 	_resist(adept_frost, {&"phys": 1.0, &"feu": 1.25, &"givre": 0.6, &"arcane": 1.0,
 		&"poison": 0.85, &"foudre": 1.1})
+	# La filiation est ECRITE (EnemyDef.demoted_from) : le garde-fou de test_bosses
+	# compare chaque promu a sa tete d origine, sans deviner par la feuille.
+	adept_frost.demoted_from = &"trio_frost"
 	_save(adept_frost, E + "adept_frost.tres")
 
 	var adept_ember := _enemy("adept_ember", "Adepte de braise", K.NORMAL, 3, 22.0, 48.0, 5,
@@ -1677,6 +1680,7 @@ func _enemies_v3(E: String) -> void:
 	adept_ember.extra_life_hp_pct = 60.0
 	_resist(adept_ember, {&"phys": 1.0, &"feu": 0.6, &"givre": 1.25, &"arcane": 1.0,
 		&"poison": 0.9, &"foudre": 1.0})
+	adept_ember.demoted_from = &"trio_ember"
 	_save(adept_ember, E + "adept_ember.tres")
 
 	var adept_arcane := _enemy("adept_arcane", "Adepte des arcanes", K.NORMAL, 3, 26.0, 44.0, 5,
@@ -1689,6 +1693,7 @@ func _enemies_v3(E: String) -> void:
 	adept_arcane.hits_immune = 2
 	_resist(adept_arcane, {&"phys": 1.25, &"feu": 1.0, &"givre": 1.0, &"arcane": 0.6,
 		&"poison": 1.0, &"foudre": 0.9})
+	adept_arcane.demoted_from = &"trio_arcane"
 	_save(adept_arcane, E + "adept_arcane.tres")
 
 	# --- ACTE 3 : LE FOSSOYEUR ---------------------------------------------
@@ -1800,6 +1805,7 @@ func _enemies_v3(E: String) -> void:
 	clot.revive_hp_pct = 40.0
 	_resist(clot, {&"phys": 0.75, &"feu": 1.25, &"givre": 1.2, &"arcane": 1.0,
 		&"poison": 0.0, &"foudre": 0.9})
+	clot.demoted_from = &"blood_coagulum"
 	_save(clot, E + "blood_clot.tres")
 
 	# L ECLAT DE MIROIR — le Miroir de Forge (mini-boss de `lvl_05`) en vermine. Une
@@ -1813,7 +1819,74 @@ func _enemies_v3(E: String) -> void:
 	shard.reflect_pct = 30.0
 	_resist(shard, {&"phys": 1.3, &"feu": 0.85, &"givre": 1.1, &"arcane": 0.8,
 		&"poison": 0.0, &"foudre": 0.85})
+	shard.demoted_from = &"glass_mirror"
 	_save(shard, E + "mirror_shard.tres")
+
+	# LES ECHOS DU GARDIEN ET DE CHRONOS (chantier W3). L acte 5 envoyait
+	# `warden.tres` et `chronos.tres` EUX-MEMES dans ses vagues de troupes : deux ou
+	# trois Gardiens a 140 PV et un Chronos a 320 PV par vague ordinaire, avec leur
+	# contact de boss. `lvl_16` tombait a 5 victoires sur 30, le joueur mourant des
+	# la premiere vague — un mur de PV la ou le document raconte une DECHEANCE.
+	#
+	# Des ECHOS : l espace divin rejoue les anciens combats du mage, en plus petit
+	# et en plus pale (teinte spectrale, AnimCatalog.MODULATE). Pale aussi pour les
+	# separer de l Enfant, qui porte la feuille de Chronos a pleine taille et ferme
+	# la campagne : le joueur ne doit pas croire le boss final arrive en vague 1.
+	#
+	# ECHO DU GARDIEN — 40 % des PV, un P4. Sa mecanique simplifiee est son
+	# BOUCLIER : l armure lourde du Gardien devient un premier coup encaisse, la
+	# meme lecon (ne pas ouvrir sur le gros sort) en une seule fois.
+	var warden_echo := _enemy("warden_echo", "Echo du Gardien", K.NORMAL, 4, 56.0, 42.0, 6,
+		S.HEXAGON, Color(0.90, 0.40, 0.25), 36.0)
+	warden_echo.anim_key = &"chaosknight"
+	warden_echo.first_hit_shield = true
+	warden_echo.demoted_from = &"warden"
+	# La table du Gardien, ecarts resserres : la magie savante reste sa faille.
+	_resist(warden_echo, {&"phys": 0.85, &"feu": 0.9, &"givre": 0.95, &"arcane": 1.15,
+		&"foudre": 1.1})
+	_save(warden_echo, E + "warden_echo.tres")
+
+	# ECHO DE CHRONOS — 30 % des PV, un P4. Chronos ne se ralentissait PAS ; son
+	# echo se ralentit a moitie (0,6 et non 0,5 : sous ce seuil un monstre devient
+	# aussi insensible a l etourdissement, voir Enemy.STUN_RESIST_THRESHOLD, et la
+	# decheance ne serait plus qu un nom).
+	var chronos_echo := _enemy("chronos_echo", "Echo de Chronos", K.NORMAL, 4, 96.0, 36.0, 8,
+		S.STAR, Color(0.95, 0.20, 0.25), 40.0)
+	chronos_echo.anim_key = &"juggernaut"
+	chronos_echo.demoted_from = &"chronos"
+	_resist(chronos_echo, {&"phys": 1.1, &"feu": 1.1, &"givre": 0.8, &"arcane": 0.95,
+		&"poison": 1.05, &"lent": 0.6})
+	_save(chronos_echo, E + "chronos_echo.tres")
+
+	# --- LE BRISEUR DE TERTRES (chantier W3) -------------------------------
+	#
+	# MINI-BOSS de `lvl_04`, le Grand Appel. Le golem qui a creuse le Grand
+	# Cimetiere : ce qui depasse du sol, il l aplanit. Toutes les 7 s il s arrete,
+	# marque le mur, l arbre ou l autel le plus proche (560 px, la moitie du
+	# terrain) et l abat 1,8 s plus tard d une frappe au sol. Il epargne l eau.
+	#
+	# POURQUOI `lvl_04` : c est le premier niveau dont le deck porte un objet de
+	# terrain qu on a INTERET a garder (le Totem de coeur-de-bois, deux exemplaires,
+	# qui detourne le flux de l Ensevelisseur). Place ailleurs, sa mecanique ne se
+	# verrait jamais — il marcherait vers un mage qui n a rien pose. Ici il apprend,
+	# DEUX vagues avant le boss, que le decor tombe si on laisse vivre celui qui le
+	# brise : la lecon sert immediatement contre l Ensevelisseur.
+	#
+	# Il remplace le Gardien d ossements en tete du palier (qui descend toujours en
+	# `w3_5`, donc reste du monde 2) avec un poids voisin : 150 PV contre 165.
+	#
+	# Pierre de tombe : le physique s y ebreche, le venin n a rien a ronger, l arcane
+	# defait ce qui l anime. Il ne resiste PAS au ralentissement : l etourdir pendant
+	# son geste est l une des deux reponses, elle doit exister.
+	var breaker := _enemy("terrain_breaker", "Le Briseur de tertres", K.MINIBOSS, 6, 150.0,
+		30.0, 13, S.SQUARE, Color(0.55, 0.50, 0.40), 58.0)
+	breaker.anim_key = &"golem_orange"
+	breaker.terrain_break_interval = 7.0
+	breaker.terrain_break_reach = 560.0
+	breaker.terrain_break_windup = 1.8
+	_resist(breaker, {&"phys": 0.75, &"feu": 0.9, &"givre": 1.15, &"arcane": 1.3,
+		&"poison": 0.65, &"foudre": 1.0})
+	_save(breaker, E + "terrain_breaker.tres")
 
 
 
@@ -3301,8 +3374,14 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	# Le Gardien d ossements pese 165 PV, immunise au poison comme tout
 	# mort-vivant : dans un niveau plein de goules, il ferme la porte a la Mare
 	# de venin au pire moment. Il rattache aussi le monde 2 du mode infini.
+	#
+	# CHANTIER W3 — LE BRISEUR DE TERTRES prend la tete (voir `_enemies_v3`) : le
+	# deck de ce niveau est le premier a porter un arbre qu on a interet a garder,
+	# et un Briseur ailleurs n aurait rien a briser. Le Gardien d ossements garde sa
+	# place en `w3_5`, qui suffit a le rattacher au monde 2. Poids voisin : 150 PV
+	# contre 165. Les notes ci-dessus datent de son choix.
 	b3.entries = [
-		_entry(E + "bonewarden.tres", 1, 1.0),
+		_entry(E + "terrain_breaker.tres", 1, 1.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.0, 9.0),
 		_entry(E + "sprite.tres", 4, 1.6, 22.0),
 	]
@@ -3372,7 +3451,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		load(E + "jelly.tres"), load(E + "ghoul_priest.tres"), load(E + "hive.tres"),
 		load(E + "berserker.tres"), load(E + "void_knight.tres"),
 		load(E + "totem_guardian.tres"), load(E + "behemoth.tres"),
-		load(E + "risen_ghoul.tres"),
+		load(E + "risen_ghoul.tres"), load(E + "terrain_breaker.tres"),
 	]
 	# DECK CHARNIERE. Le niveau commence en registre "nombre" et finit en registre
 	# "masse" : le deck doit tenir les deux moities. Braises pour les goules,
@@ -5761,6 +5840,16 @@ vers le bas."
 ## `is_miniboss`, et `tests/unit/test_campaign_acts.gd` verrouille desormais les
 ## deux moities de cette regle.
 ##
+## CHANTIER W3 — DE LA VERMINE, PAS DES BOSS. Le premier jet envoyait les .tres
+## des boss EUX-MEMES dans ces vagues, donc avec leurs PV et leur contact de boss :
+## trois Gardiens a 140 PV dans une vague de troupes, un Chronos a 320. Ce n etait
+## pas une decheance, c etait un mur (`lvl_16` a 5 victoires sur 30, mort en
+## vague 1 ou 2). Ils descendent desormais en ECHOS (`warden_echo`,
+## `chronos_echo`) : des .tres derives, un tiers des PV environ, la mecanique
+## simplifiee, et `EnemyDef.demoted_from` qui dit de qui ils sont l echo. C est ce
+## champ que test_campaign_acts lit pour reconnaitre un ancien boss, et que
+## test_bosses compare a la version boss.
+##
 ## POURQUOI AUCUN MONSTRE NEUF DANS CET ACTE. Le document, section 10 : « Aucun
 ## nouveau type de monstre. » C est l acte ou cette contrainte devient une force :
 ## un espace divin peuple de creatures INEDITES dirait « voici un nouveau lieu »,
@@ -5774,7 +5863,8 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# ---------- lvl_14 : La galerie des saisons ----------
 	#
 	# Document : « ce qui a deja ete efface, expose », melange acte 1 + 2, et
-	# `warden` en vague normale.
+	# `warden` en vague normale — sous la forme de son ECHO (`warden_echo`, chantier
+	# W3), jamais le .tres du mini-boss avec ses PV de mini-boss.
 	#
 	# LE NIVEAU EST UN MUSEE DE CE QUE LE JOUEUR A TUE. Il rejoue la vermine du
 	# premier acte — gnomes, lutins, gelees, nuees — mais en quantites que
@@ -5813,8 +5903,12 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# que le garde-fou d equilibrage refuse a juste titre. Deux suffisent
 	# largement a faire passer le message — voir un SECOND Gardien est deja
 	# l information.
+	#
+	# (CHANTIER W3 : ce sont des ECHOS du Gardien, 56 PV et non 140 — voir
+	# `_enemies_v3`. Les comptes de la vague sont gardes tels quels : le chantier
+	# remplace la piece, il ne regle pas la courbe.)
 	g2.entries = [
-		_entry(E + "warden.tres", 2, 4.0),
+		_entry(E + "warden_echo.tres", 2, 4.0),
 		_entry(E + "rat_swarm.tres", 3, 2.2, 12.0),
 		_entry(E + "jelly.tres", 2, 2.5, 20.0),
 		_entry(E + "hopper.tres", 4, 1.8, 24.0),
@@ -5850,7 +5944,7 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# se fait par le NOMBRE d anciens boss, ce qui est la seule courbe que cet
 	# acte peut avoir.
 	g3.entries = [
-		_entry(E + "warden.tres", 3, 4.0),
+		_entry(E + "warden_echo.tres", 3, 4.0),
 		_entry(E + "hornblower.tres", 2, 2.0, 14.0),
 		_entry(E + "rat_swarm.tres", 2, 2.2, 20.0),
 		_entry(E + "sprite.tres", 5, 1.4, 26.0),
@@ -5890,7 +5984,7 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# galerie. Deux Caillots — le Coagule du niveau 2 en vermine — remplacent les
 	# deux nuees : un ancien boss qui se releve encore, sans titre.)
 	g5.entries = [
-		_entry(E + "warden.tres", 2, 5.0),
+		_entry(E + "warden_echo.tres", 2, 5.0),
 		_entry(E + "berserker.tres", 3, 2.5, 12.0),
 		_entry(E + "hive.tres", 1, 2.5, 20.0),
 		_entry(E + "blood_clot.tres", 2, 2.4, 26.0),
@@ -5936,7 +6030,7 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "rat_swarm.tres"), load(E + "jelly.tres"), load(E + "hive.tres"),
 		load(E + "hornblower.tres"), load(E + "wisp.tres"),
 		load(E + "imp_archer.tres"), load(E + "berserker.tres"),
-		load(E + "warden.tres"), load(E + "sleepy_fox.tres"), load(E + "blood_clot.tres"),
+		load(E + "warden_echo.tres"), load(E + "sleepy_fox.tres"), load(E + "blood_clot.tres"),
 		load(E + "season_chameleon.tres"), load(E + "slime_colossal.tres"),
 	]
 	# LE DECK DU RETOUR. Il est fait des cartes de l acte 1 : le joueur refait la
@@ -6010,8 +6104,12 @@ depuis le pentacle, et il marche devant."
 	# environ 150, et deux Chronos auraient quadruple le poids d un coup. Le
 	# SECOND arrive a la vague 4, quand la courbe l a rattrape — c est la
 	# progression qui porte le propos, pas l entassement.
+	#
+	# (CHANTIER W3 : c est l ECHO de Chronos, 96 PV et non 320 — voir
+	# `_enemies_v3`. Les comptes sont gardes, les chiffres ci-dessus datent du
+	# premier jet qui envoyait le boss lui-meme.)
 	r2.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "chronos_echo.tres", 1, 1.0),
 		_entry(E + "shade.tres", 4, 2.0, 12.0),
 		_entry(E + "void_knight.tres", 2, 2.5, 20.0),
 		_entry(E + "risen_ghoul.tres", 4, 1.8, 26.0),
@@ -6056,7 +6154,7 @@ depuis le pentacle, et il marche devant."
 	# CHANTIER W2 — deux Adeptes de braise a la place de trois Ombres : ils
 	# reviennent une fois du haut, le rappel du Mage de braise des fosses.
 	r4.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "chronos_echo.tres", 1, 1.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 12.0),
 		_entry(E + "totem_guardian.tres", 1, 1.0, 20.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
@@ -6090,7 +6188,7 @@ depuis le pentacle, et il marche devant."
 	# Chronos-classe — et non un duel : le joueur sort de la salle parce qu il a
 	# tenu, pas parce qu il a vaincu quelqu un.
 	r5.entries = [
-		_entry(E + "chronos.tres", 1, 1.0),
+		_entry(E + "chronos_echo.tres", 1, 1.0),
 		_entry(E + "mirror_shard.tres", 2, 2.5, 14.0),
 		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
 		_entry(E + "shade.tres", 3, 2.0, 32.0),
@@ -6131,7 +6229,7 @@ depuis le pentacle, et il marche devant."
 		load(E + "ghoul_priest.tres"), load(E + "void_knight.tres"),
 		load(E + "shade.tres"), load(E + "risen_ghoul.tres"),
 		load(E + "behemoth.tres"), load(E + "totem_guardian.tres"),
-		load(E + "chronos.tres"), load(E + "gorgon_gazer.tres"),
+		load(E + "chronos_echo.tres"), load(E + "gorgon_gazer.tres"),
 		load(E + "adept_frost.tres"), load(E + "adept_ember.tres"),
 		load(E + "adept_arcane.tres"), load(E + "mirror_shard.tres"),
 		load(E + "spell_clerk.tres"), load(E + "clockmaker.tres"),
@@ -6214,9 +6312,16 @@ courir pour voir jusqu ou tu irais."
 	# Le Gardien et Chronos, eux, APPARTIENNENT a l acte 5 par le texte : ils sont
 	# les deux pieces de musee que le document expose. Leur densite ici est donc
 	# juste, pas un effet de bord.
+	#
+	# CHANTIER W3 — leurs ECHOS, plus eux : `warden.tres` et `chronos.tres` avec
+	# leurs PV de boss faisaient de cette vague d ouverture la plus lourde du
+	# niveau (2 x 140 + 320 PV avant la moindre escorte) ; le banc y voyait mourir le
+	# joueur 25 fois sur 30. La densite, elle, reste ici : ce sont les echos qui
+	# appartiennent au monde 5, et le Gardien et Chronos retournent dans le monde de
+	# leur acte, ou le Massacre les tire comme tetes.
 	f1.entries = [
-		_entry(E + "warden.tres", 2, 4.0),
-		_entry(E + "chronos.tres", 1, 1.0, 18.0),
+		_entry(E + "warden_echo.tres", 2, 4.0),
+		_entry(E + "chronos_echo.tres", 1, 1.0, 18.0),
 		_entry(E + "sprite.tres", 4, 1.5, 6.0),
 		_entry(E + "hopper.tres", 3, 2.0, 16.0),
 	]
@@ -6252,7 +6357,7 @@ courir pour voir jusqu ou tu irais."
 	f3.entries = [
 		_entry(E + "demon_chain.tres", 1, 1.0),
 		_entry(E + "demon_circle.tres", 1, 1.0, 12.0),
-		_entry(E + "chronos.tres", 1, 1.0, 22.0),
+		_entry(E + "chronos_echo.tres", 1, 1.0, 22.0),
 		_entry(E + "adept_frost.tres", 1, 2.5, 8.0),
 		_entry(E + "adept_arcane.tres", 1, 2.5, 10.5),
 		_entry(E + "berserker.tres", 3, 2.2, 18.0),
@@ -6298,7 +6403,7 @@ courir pour voir jusqu ou tu irais."
 	lvl16.outro_story = &"lvl_16_outro"
 	lvl16.waves = [f1, f2, f3, f4]
 	lvl16.enemy_pool = [
-		load(E + "warden.tres"), load(E + "chronos.tres"),
+		load(E + "warden_echo.tres"), load(E + "chronos_echo.tres"),
 		load(E + "demon_anvil.tres"), load(E + "demon_maw.tres"),
 		load(E + "demon_chain.tres"), load(E + "demon_circle.tres"),
 		load(E + "berserker.tres"), load(E + "child_god.tres"),

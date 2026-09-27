@@ -197,6 +197,17 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 			+ " cercle %s et inflige %d degats a tout ce qu elle traverse,"
 			+ " le mage et votre decor compris")
 			% [_num(def.shockwave_interval), cercle, def.shockwave_damage])
+	# LE BRISEUR DE TERRAIN. La phrase dit la CAUSE (il detruit le decor pose), le
+	# SIGNE (il s arrete et marque sa cible) et la REPONSE (le tuer ou l etourdir
+	# pendant le geste). Sans elle, le joueur voit son mur disparaitre a l autre
+	# bout du terrain et conclut que le sort a expire trop tot.
+	if def.terrain_break_interval > 0.0:
+		out.append(("Brise vos objets de terrain : toutes les %s s, il s arrete, marque"
+			+ " le mur, l arbre ou l autel le plus proche, et l abat %s s plus tard."
+			+ " Tuez-le ou etourdissez-le pendant son geste pour le sauver. L eau lui"
+			+ " resiste : ni la nappe ni la Riviere ne se brisent")
+			% [_num(Enemy._brk_period(def)),
+				_num(maxf(def.terrain_break_windup, Enemy.BREAK_MIN_WINDUP))])
 	# Un boss qui N AVANCE PAS doit le dire : sans cette ligne, le joueur
 	# l attend sur sa ligne de defense et ne comprend pas pourquoi rien n arrive.
 	if def.base_speed <= 0.0:
@@ -258,6 +269,13 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 	if def.projectile:
 		out.append("Projectile, pas une creature : destructible, mais ne donne"
 			+ " aucune experience")
+	# ANCIEN BOSS. Le joueur qui a vaincu le Gardien le reconnait a l ecran ; la
+	# fiche doit dire que c est bien lui, et qu il n a plus sa force d antan — sinon
+	# il abordera la vague avec la prudence (et les cartes) d un combat de boss.
+	var ancien: String = former_boss_name(def)
+	if ancien != "":
+		out.append("Ancien boss (%s), revenu en simple monstre : moins de PV, moins de ruses"
+			% ancien)
 	out.append_array(resistance_lines(def))
 
 	# Toujours une ligne, meme pour un monstre sans particularite : un encadre
@@ -411,6 +429,16 @@ static func boss_v3_lines(def: EnemyDef) -> Array[String]:
 			% [def.mirror_speed_ref, _num(minf(def.mirror_speed_min, def.mirror_speed_max)),
 				_num(maxf(def.mirror_speed_min, def.mirror_speed_max))])
 	return out
+
+
+## Nom du boss dont ce monstre est la version allegee, "" s il n en est pas une.
+## Repli sur l id quand le boss n est pas au catalogue : la fiche doit dire la
+## filiation meme si le contenu d origine a ete renomme.
+static func former_boss_name(def: EnemyDef) -> String:
+	if def == null or def.demoted_from == &"":
+		return ""
+	var source: EnemyDef = ContentDB.enemies.get(def.demoted_from)
+	return source.display_name if source != null else String(def.demoted_from)
 
 
 static func _num(v: float) -> String:

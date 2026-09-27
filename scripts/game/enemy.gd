@@ -128,6 +128,7 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 			_parts.append(def.part_hp * diff)
 	_v3_setup(def)
 	_setup_v3(def)
+	_brk_setup(def)
 
 
 func _ready() -> void:
@@ -352,6 +353,9 @@ func advance(world_delta: float) -> void:
 		_stun_time = 0.0
 	# Mecaniques v3 qu un etourdissement suspend (vol de carte, rappel des sbires).
 	_tick_v3_active(world_delta)
+	# BRISEUR DE TERRAIN : plante pendant son geste, il n avance pas.
+	if _brk_tick(world_delta):
+		return
 	if _slow_time > 0.0:
 		_slow_time -= world_delta
 		if _slow_time <= 0.0:
@@ -461,7 +465,7 @@ func advance(world_delta: float) -> void:
 		_shoot_timer -= world_delta
 		if _shoot_timer <= 0.0:
 			_shoot_timer = definition.shoot_interval
-			play_attack()
+			play_shot_pose(false)
 			battlefield.enemy_shoot(self, definition.shot_damage)
 
 	# Les unites du pack regardent a droite : on les retourne quand elles vont a gauche.
@@ -664,9 +668,14 @@ func take_damage(amount: float, tags: Array) -> bool:
 func _back_to_walk() -> void:
 	if _anim == null or _dead or definition == null:
 		return
-	var repos: String = resting_anim(sheet_key())
+	# Un dormeur frappe se RENDORT a l ecran : sans cette ligne, le coup recu le
+	# remettait en marche visuelle alors qu il dort toujours pour les regles.
+	var repos: String = _rest_pose()
 	if repos != "" and _anim.animation != StringName(repos):
 		_anim.play(repos)
+	# Feuille SANS pose de sommeil : on refige, comme a l endormissement.
+	if is_sleeping() and repos != "sleep":
+		_anim.pause()
 
 
 ## Animation d attaque (tir de l archer, coup du berserker).
@@ -740,6 +749,8 @@ func apply_stun(duration: float) -> bool:
 	# Le plus LONG gagne : deux etourdissements qui se superposent ne doivent pas
 	# raccourcir le premier.
 	_stun_time = maxf(_stun_time, duration)
+	# Etourdi pendant son geste, le Briseur le PERD : c est la reponse de controle.
+	_brk_cancel(true)
 	return true
 
 
@@ -750,6 +761,8 @@ func is_stunned() -> bool:
 func kill() -> void:
 	if _dead:
 		return
+	# Tue pendant son geste, le Briseur ne brise rien — meme s il se releve.
+	_brk_cancel(false)
 	# RESURRECTION. Interceptee dans kill() et non dans take_damage() parce que
 	# kill() est le point de passage UNIQUE de la mort : une carte d execution, un
 	# effet de terrain ou un gobage futur passeraient par la aussi, et un releve
@@ -1234,8 +1247,14 @@ func _v3_fall_asleep() -> void:
 	# QUI), la main grisee dans le HUD (le QUOI), l animation figee (le COMMENT).
 	if Fx.enabled() and _v3_zzz == null:
 		_v3_zzz = Fx.sleep_marker(self, visual_radius())
+	# La POSE de sommeil si la feuille en a une (le renard se roule en boule),
+	# sinon l image figee. Le figeage n etait qu un repli : une feuille qui porte
+	# une anim `sleep` a ete extraite pour etre jouee ici.
 	if _anim != null and _anim.visible:
-		_anim.pause()
+		if sleep_anim(sheet_key()) != "":
+			_anim.play(sleep_anim(sheet_key()))
+		else:
+			_anim.pause()
 
 
 func _v3_wake() -> void:
@@ -1243,8 +1262,11 @@ func _v3_wake() -> void:
 	if _v3_zzz != null and is_instance_valid(_v3_zzz):
 		_v3_zzz.queue_free()
 	_v3_zzz = null
-	if _anim != null and _anim.visible and not _anim.is_playing():
-		_anim.play()
+	if _anim != null and _anim.visible:
+		if _anim.animation == &"sleep":
+			_back_to_walk()
+		elif not _anim.is_playing():
+			_anim.play()
 
 
 # --- 3. REANIMATEUR ----------------------------------------------------------
@@ -1536,6 +1558,8 @@ func _exit_tree() -> void:
 	# partie) : la carte doit revenir quel que soit le chemin, sinon elle reste
 	# petrifiee pour une cause qui n existe plus.
 	_release_stolen()
+	# Meme raison pour la marque du Briseur : elle vit sur l ANCRE, pas sur lui.
+	_brk_cancel(false)
 
 
 func age() -> float:
@@ -2020,6 +2044,9 @@ func mech_caption() -> String:
 			ceili(maxf(_steal_cast_left, 0.0))])
 	if _rewind_active() and not _rewind_history.is_empty():
 		lignes.append("RETOUR dans %d s" % ceili(maxf(_rewind_timer, 0.0)))
+	var brise: String = break_caption()
+	if brise != "":
+		lignes.append(brise)
 	return "\n".join(lignes)
 
 
@@ -2041,3 +2068,184 @@ func _refresh_mech_caption() -> void:
 	var faible: int = chameleon_weak()
 	var teinte: Color = Fx.color_for([faible]).lightened(0.35) if faible >= 0 else Color(0.96, 0.94, 0.86)
 	_mech_label.add_theme_color_override(&"font_color", teinte)
+
+
+# =============================================================================
+# POSES DE LA FEUILLE (chantier W3) — sommeil et tir.
+#
+# Deux feuilles portaient des poses extraites et jamais jouees : le renard
+# (`sleep`) restait fige sur une image de marche pendant son sommeil, et le golem
+# a noyau (`laser`, `shoot`) jouait son attaque generique en tirant son rayon. La
+# regle est GENERIQUE, lue dans le catalogue et non attachee a un id : toute
+# feuille future qui porte ces poses les jouera sans une ligne de plus.
+# =============================================================================
+
+## Pose de sommeil de la feuille, "" si elle n en a pas (on fige alors l image).
+## Statique pour que les tests verifient le choix sans instancier de scene.
+static func sleep_anim(key: StringName) -> String:
+	return "sleep" if AnimCatalog.has_anim(key, "sleep") else ""
+
+
+## Pose de TIR de la feuille. Le laser de riposte prefere `laser` (le noyau qui se
+## charge), puis `shoot` ; un tir ordinaire prefere `shoot`. A defaut, l attaque
+## generique, qui etait jusqu ici la seule pose jouee au tir. "" = rien a jouer.
+static func shot_anim(key: StringName, laser: bool) -> String:
+	# Pas de ternaire entre deux litteraux : Godot 4.4 le type `Array` et refuse de
+	# l affecter a un Array[String] (SCRIPT ERROR a l execution, pas a la compilation).
+	var ordre: Array[String] = ["shoot", "attack"]
+	if laser:
+		ordre.push_front("laser")
+	for a in ordre:
+		if AnimCatalog.has_anim(key, a):
+			return a
+	return ""
+
+
+func play_shot_pose(laser: bool) -> void:
+	var pose: String = shot_anim(sheet_key(), laser)
+	if pose == "" or _anim == null or not _anim.visible:
+		return
+	_anim.play(pose)
+	if not _anim.animation_finished.is_connected(_back_to_walk):
+		_anim.animation_finished.connect(_back_to_walk)
+
+
+## Ce que le monstre joue quand il ne fait rien de particulier : sa pose de
+## sommeil s il dort et que la feuille en a une, sa pose de repos sinon.
+func _rest_pose() -> String:
+	if is_sleeping() and sleep_anim(sheet_key()) != "":
+		return sleep_anim(sheet_key())
+	return resting_anim(sheet_key())
+
+
+# =============================================================================
+# LE BRISEUR DE TERRAIN (chantier W3) — pilote par le groupe « Briseur de
+# terrain » d EnemyDef. L Enemy decide QUAND (minuterie, geste, annulation) ;
+# Battlefield sait QUOI (les ancres du groupe `terrain_props`), comme pour toute
+# mecanique qui touche autre chose que le monstre lui-meme.
+#
+# Chaque fonction est appelee par UNE ligne depuis un point d accroche existant
+# (setup, advance, apply_stun, kill, _exit_tree, mech_caption).
+# =============================================================================
+
+## Delai avant de chercher a nouveau quand rien n est a portee. Court : un mur
+## pose devant lui doit etre vise presque aussitot, pas a l intervalle suivant.
+const BREAK_RETRY: float = 0.25
+## Plancher de la preparation. En dessous le geste ne se voit plus, et un geste
+## qu on ne voit pas transforme la mecanique en disparition inexpliquee.
+const BREAK_MIN_WINDUP: float = 0.6
+## Plancher de l intervalle, pour la meme raison que celui du laser : un .tres a
+## 0,1 viderait le terrain en une seconde.
+const BREAK_MIN_INTERVAL: float = 2.0
+## Le coup visible part sur la FIN de la preparation : la frappe au sol de la
+## feuille doit arriver quand l objet tombe, pas une demi-seconde apres.
+const BREAK_SLAM_LEAD: float = 0.5
+
+var _brk_timer: float = 0.0
+var _brk_windup_left: float = 0.0
+var _brk_target: Node = null
+var _brk_marker: Node = null
+var _brk_slammed: bool = false
+var _brk_count: int = 0
+
+
+static func _brk_period(def: EnemyDef) -> float:
+	return maxf(def.terrain_break_interval, BREAK_MIN_INTERVAL)
+
+
+func _brk_setup(def: EnemyDef) -> void:
+	# Premier coup a l intervalle PLEIN, comme l onde et l invocation : le joueur
+	# doit voir le Briseur entrer avant de perdre son decor.
+	_brk_timer = _brk_period(def) if def.terrain_break_interval > 0.0 else 0.0
+	_brk_clear()
+	_brk_count = 0
+
+
+## Vrai pendant la preparation du coup.
+func is_breaking() -> bool:
+	return _brk_windup_left > 0.0 and _brk_target != null and is_instance_valid(_brk_target)
+
+
+## L ancre visee pendant la preparation, null sinon.
+func break_target() -> Node:
+	return _brk_target if is_breaking() else null
+
+
+## Objets de terrain brises par CE monstre.
+func terrain_broken() -> int:
+	return _brk_count
+
+
+## Renvoie true pendant le geste : il est plante, advance() s arrete la.
+func _brk_tick(world_delta: float) -> bool:
+	if definition == null or definition.terrain_break_interval <= 0.0 or battlefield == null:
+		return false
+	if _brk_windup_left > 0.0:
+		# La cible est partie pendant le geste (expiree, abattue par la vague) :
+		# rien a briser, il se remet en marche et cherche vite autre chose.
+		if not battlefield.breaker_can_break(_brk_target):
+			_brk_clear()
+			_brk_timer = BREAK_RETRY
+			return false
+		_brk_windup_left -= world_delta
+		if not _brk_slammed and _brk_windup_left <= BREAK_SLAM_LEAD:
+			_brk_slammed = true
+			play_attack()
+		if _brk_windup_left > 0.0:
+			return true
+		var cible: Node = _brk_target
+		_brk_clear()
+		_brk_timer = _brk_period(definition)
+		if battlefield.breaker_strike(self, cible):
+			_brk_count += 1
+		return false
+	_brk_timer -= world_delta
+	if _brk_timer > 0.0:
+		return false
+	var trouve: Node = battlefield.breaker_target(self, definition.terrain_break_reach)
+	if trouve == null:
+		_brk_timer = BREAK_RETRY
+		return false
+	_brk_begin(trouve)
+	return true
+
+
+func _brk_begin(cible: Node) -> void:
+	_brk_target = cible
+	_brk_windup_left = maxf(definition.terrain_break_windup, BREAK_MIN_WINDUP)
+	_brk_slammed = false
+	# Il se TOURNE vers ce qu il va briser : avec la marque sur l objet et la
+	# legende au-dessus de lui, c est le troisieme canal qui relie la cause a
+	# l effet.
+	if _anim != null and _anim.visible and cible is Node2D:
+		_anim.flip_h = (cible as Node2D).position.x < position.x
+	_brk_marker = Fx.break_marker(cible as Node2D, _brk_windup_left)
+	AudioBus.play_sfx(&"stone_shove")
+	_refresh_mech_caption()
+
+
+func _brk_clear() -> void:
+	if _brk_marker != null and is_instance_valid(_brk_marker):
+		_brk_marker.queue_free()
+	_brk_marker = null
+	_brk_target = null
+	_brk_windup_left = 0.0
+	_brk_slammed = false
+
+
+## Annule le geste en cours. `recharge` : l etourdissement fait PAYER au Briseur
+## un intervalle complet — sinon le stun ne ferait que decaler le coup d une
+## fraction de seconde, et la reponse de controle ne vaudrait rien.
+func _brk_cancel(recharge: bool) -> void:
+	var en_geste: bool = _brk_windup_left > 0.0
+	_brk_clear()
+	if en_geste and recharge and definition != null and definition.terrain_break_interval > 0.0:
+		_brk_timer = _brk_period(definition)
+
+
+## Legende ecrite pendant le geste : CE qui va tomber, et QUAND.
+func break_caption() -> String:
+	if not is_breaking():
+		return ""
+	return "BRISE : %s (%d s)" % [TerrainProp.kind_label(int(_brk_target.get("kind"))).to_upper(),
+		ceili(maxf(_brk_windup_left, 0.0))]
