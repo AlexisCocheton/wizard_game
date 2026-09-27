@@ -22,6 +22,7 @@ func run_stage() -> void:
 	_check_raw_sheets()
 	_check_gauge_tints()
 	_check_voice_keys()
+	_check_apprentices()
 	for w in _soft:
 		print("  [AVERTISSEMENT] %s" % w)
 	print("[AUDIT] %d avertissement(s)" % _soft.size())
@@ -261,3 +262,49 @@ func _check_levels() -> void:
 			if not ContentDB.levels.has(next_id):
 				fail("niveau %s : next_levels pointe vers '%s' qui n'existe pas"
 					% [level.id, next_id])
+
+
+## LES APPRENTIS DU MAGE. Un apprenti est une recompense CHARACTER qui designe une
+## feuille d AnimCatalog, sans une ligne de code : c est donc ici, et pas dans un
+## script, que ses erreurs doivent se voir.
+##
+## LA REGLE QUI COMPTE : aucune feuille d apprenti n est portee par un monstre.
+## La sorciere bleue a ete un monstre (la Sorciere des fosses) avant d etre la
+## premiere apprentie ; si les deux coexistaient, le joueur verrait descendre son
+## propre personnage et tirerait dessus. Le defaut ne plante rien et passe tous
+## les tests de presence — seul un controle croise le voit.
+func _check_apprentices() -> void:
+	var monstres: Dictionary = {}   # anim_key -> id du premier monstre qui la porte
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e != null and e.anim_key != &"" and not monstres.has(String(e.anim_key)):
+			monstres[String(e.anim_key)] = e.id
+	var mage_de_depart: bool = false
+	var vus: Dictionary = {}
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r == null or r.kind != GameEnums.RewardKind.CHARACTER:
+			continue
+		if r.texture_name == AccountRewardDef.CHARACTER_MAGE:
+			# Sans le mage au niveau 1, un profil neuf n aurait rien a porter et
+			# celui qui a choisi une apprentie ne pourrait plus revenir.
+			if r.at_level <= 1:
+				mage_de_depart = true
+			continue
+		var cle: StringName = StringName(r.texture_name)
+		if vus.has(cle):
+			fail("apprenti %s : feuille %s deja prise par %s" % [r.id, cle, vus[cle]])
+		vus[cle] = r.id
+		if not AnimCatalog.has(cle) or AnimCatalog.is_static(cle):
+			fail("apprenti %s : '%s' n est pas une feuille animee d AnimCatalog"
+				% [r.id, cle])
+			continue
+		# L attente est la pose permanente ; l incantation doit avoir un geste.
+		if not AnimCatalog.has_anim(cle, "idle"):
+			fail("apprenti %s : la feuille %s n a pas de pose d attente" % [r.id, cle])
+		if not (AnimCatalog.has_anim(cle, "cast") or AnimCatalog.has_anim(cle, "attack")):
+			fail("apprenti %s : la feuille %s n a ni 'cast' ni 'attack' pour incanter"
+				% [r.id, cle])
+		if monstres.has(String(cle)):
+			fail("apprenti %s : la feuille %s est aussi celle du monstre %s"
+				% [r.id, cle, monstres[String(cle)]])
+	if not mage_de_depart:
+		fail("aucune recompense CHARACTER ne rend le mage au niveau 1")

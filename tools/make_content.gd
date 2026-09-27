@@ -977,9 +977,13 @@ func _enemies() -> void:
 	# remplit, et la seule sortie est de la trouver dans sa propre foule.
 	var pit_witch := _enemy("pit_witch", "Sorciere des fosses", K.MINIBOSS, 6,
 		125.0, 40.0, 12, S.DIAMOND, Color(0.35, 0.55, 0.85), 54.0)
-	pit_witch.anim_key = &"bluewitch"
-	# La feuille bluewitch fait 48 px de case : la plus petite du lot. Sans
-	# agrandissement elle serait plus petite que les goules qu elle commande.
+	# La silhouette Duelyst "unhallowed" (cape noire, cheveux blancs, feu vert) et
+	# non plus bluewitch : la sorciere bleue est devenue la premiere APPRENTIE du
+	# mage, et l AUDIT refuse qu un apprenti partage sa feuille avec un monstre.
+	# L Ensevelisseur de lvl_04 porte la meme, mais quinze niveaux plus tot ; aucun
+	# voisin de lvl_19 a lvl_21 ne lui ressemble.
+	pit_witch.anim_key = &"unhallowed"
+	# Agrandie : sans cela elle serait plus petite que les goules qu elle commande.
 	pit_witch.sprite_scale = 1.35
 	# 2,5 PV/s, sous le Pretre goule : deux soins qui se cumulent dans la meme
 	# vague rendraient les degats etales totalement inutiles, ce qui n est plus

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_lijlh"]
+
+[resource]
+script = ExtResource("1_lijlh")
+id = &"rw_char_bluewitch"
+display_name = "Apprentie d azur"
+description = "La premiere apprentie du mage. Elle combat a sa place ; il garde la parole dans les histoires."
+at_level = 9
+kind = 5
+texture_name = "bluewitch"
