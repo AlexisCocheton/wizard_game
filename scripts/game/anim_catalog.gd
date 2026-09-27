@@ -193,7 +193,7 @@ const MODULATE: Dictionary = {
 	##
 	## La Sorciere des fosses et L Ensevelisseur partagent `unhallowed` : elle est
 	## une sorciere d eau morte, son feu vert passe au bleu d eau.
-	"pit_witch": Color(0.55, 0.78, 1.0),
+	"pit_witch": Color(0.50, 0.72, 1.0),
 	## Le Sceau de Tombol partage `mageguardian` avec le Mage du givre, qui va par
 	## trois avec ses freres rouge et magenta. Le trio garde les feuilles PURES du
 	## pack (c est leur couleur qui les distingue entre eux) ; le Sceau, seul, prend
@@ -204,9 +204,12 @@ const MODULATE: Dictionary = {
 	## Le Cameleon des saisons partage `wraith` avec le Seigneur Spectre : un
 	## esprit pale et dore, pas une ombre.
 	"season_chameleon": Color(1.0, 0.92, 0.62),
-	## Le Greffier partage `evilwizard` avec le Mage noir : robe d encre violette
-	## au lieu du rouge.
-	"spell_clerk": Color(0.70, 0.62, 1.0),
+	## Le Greffier partage `evilwizard` avec le Mage noir. La robe du pack est
+	## ROUGE, et une teinte ne peut qu assombrir un canal : aucun modulate n en
+	## fera une robe violette (essai a 0,70 / 0,62 / 1,0, invisible en capture).
+	## On joue donc la VALEUR : robe sombre, visage blafard, flamme eteinte — un
+	## scribe qui ne sort pas de ses registres, la ou le Mage noir flamboie.
+	"spell_clerk": Color(0.50, 0.60, 1.0),
 }
 
 

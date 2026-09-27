@@ -187,23 +187,42 @@ func _run_all() -> void:
 
 
 ## Vitrine : un exemplaire de chaque monstre en grille, pour juger sprites et tailles.
+##
+## PAR PAGES (chantier W2). Une seule planche posait les monstres sur 180 px de
+## haut par rangee : a 79 monstres la grille descendait a 4 900 px, et tout ce qui
+## passait la dixieme rangee etait dessine HORS de l ecran. La vitrine affirmait
+## montrer le bestiaire et n en montrait qu un tiers — dont aucun des monstres
+## neufs, que l ordre alphabetique rejetait en bas. Une page = 18 monstres.
+const VITRINE_PAR_PAGE: int = 18
+
+
 func _showcase_enemies() -> void:
 	if not _visual:
 		return
+	var ids: Array = ContentDB.enemies.keys()
+	# Tri sur les String : le tri des StringName n est pas fiable en 4.4 (gotcha).
+	ids.sort_custom(func(a, b): return String(a) < String(b))
+	var page: int = 0
+	while page * VITRINE_PAR_PAGE < ids.size():
+		var tranche: Array = ids.slice(page * VITRINE_PAR_PAGE, (page + 1) * VITRINE_PAR_PAGE)
+		await _vitrine_page(tranche, "vitrine_monstres" if page == 0 else "vitrine_monstres_%d" % (page + 1))
+		page += 1
+	await _showcase_giants()
+
+
+func _vitrine_page(ids: Array, label: String) -> void:
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
 	add_child(g)
 	g.running = false
 	g.backdrop.setup("grass")
-	var ids: Array = ContentDB.enemies.keys()
-	ids.sort()
 	var cols: int = 3
 	var i: int = 0
 	for id in ids:
 		var def: EnemyDef = ContentDB.enemies[id]
 		var x: float = 200.0 + (i % cols) * 340.0
-		var y: float = 230.0 + int(i / cols) * 180.0
+		var y: float = 260.0 + int(i / cols) * 260.0
 		var e: Enemy = g.battlefield.spawn_enemy(def, x, 1.0, Vector2(x, y))
 		if e != null:
 			e.take_damage(1.0, [])  # fait apparaitre la barre de vie
@@ -217,7 +236,81 @@ func _showcase_enemies() -> void:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		g.battlefield.add_child(l)
 		i += 1
-	await _shot("vitrine_monstres")
+	await _shot(label)
+	g.queue_free()
+	await get_tree().process_frame
+
+
+## Les deux mises en scene que la grille ne peut pas juger (chantier W2) : le
+## Slime colossal a sa taille reelle, pose ou le couloir le plus large le ferait
+## naitre, et le trio de mages ensemble. Dans la grille, un sprite de 600 px
+## deborde sur ses voisins ; ici on verifie qu il tient ENTIER dans le cadre et
+## que les trois mages se lisent comme trois, pas comme une tache.
+func _showcase_giants() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = false
+	g.backdrop.setup("grass")
+	var W: float = GameConfig.BATTLEFIELD_WIDTH
+	var colosse: EnemyDef = ContentDB.enemies.get(&"slime_colossal")
+	if colosse != null:
+		# Au bord gauche de ce que la marge d apparition autorise : le pire cas.
+		var x: float = WaveSpawner.spawn_margin(colosse)
+		g.battlefield.spawn_enemy(colosse, x, 1.0, Vector2(x, 520.0))
+	var trio: Array[StringName] = [&"trio_frost", &"trio_ember", &"trio_arcane"]
+	for k in trio.size():
+		var d: EnemyDef = ContentDB.enemies.get(trio[k])
+		if d == null:
+			_fail("vitrine geants : %s introuvable" % trio[k])
+			continue
+		var x: float = W * (0.22 + 0.28 * k)
+		g.battlefield.spawn_enemy(d, x, 1.0, Vector2(x, 1180.0))
+	await _laisser_jouer(0.3)
+	await _shot("vitrine_geants")
+	g.queue_free()
+	await get_tree().process_frame
+	await _showcase_tints()
+
+
+## Les feuilles PARTAGEES entre deux tetes, cote a cote : a gauche celle qui
+## porte la feuille nue, a droite celle que AnimCatalog.MODULATE teinte. Sans
+## coup encaisse (la grille en inflige un pour la barre de vie, et l eclair de
+## degat blanchit la silhouette) : on juge la teinte, pas le flash.
+func _showcase_tints() -> void:
+	var paires: Array = [
+		[&"gravecaller", &"pit_witch"],
+		[&"trio_frost", &"tombol_seal"],
+		[&"forge_colossus", &"clockmaker"],
+		[&"wraith_lord", &"season_chameleon"],
+		[&"dark_mage", &"spell_clerk"],
+	]
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.running = false
+	g.backdrop.setup("grass")
+	for i in paires.size():
+		for k in 2:
+			var d: EnemyDef = ContentDB.enemies.get(paires[i][k])
+			if d == null:
+				_fail("vitrine teintes : %s introuvable" % paires[i][k])
+				continue
+			var x: float = 300.0 + 480.0 * k
+			var y: float = 230.0 + 270.0 * i
+			g.battlefield.spawn_enemy(d, x, 1.0, Vector2(x, y))
+			var l := Label.new()
+			l.text = String(d.id)
+			l.add_theme_font_size_override(&"font_size", 22)
+			l.add_theme_color_override(&"font_color", Color(0.05, 0.05, 0.08))
+			l.position = Vector2(x - 120.0, y + 90.0)
+			l.size = Vector2(240.0, 30.0)
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			g.battlefield.add_child(l)
+	await _laisser_jouer(0.2)
+	await _shot("vitrine_teintes")
 	g.queue_free()
 	await get_tree().process_frame
 

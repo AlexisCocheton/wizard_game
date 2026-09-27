@@ -106,7 +106,8 @@ a faire : **trouver d ou vient le mal**, cette fois avant qu il ne frappe.
 ## 3. ACTE 1 — La foret de Nuri
 
 **Monstres : terrestres, animaux, vermine.** `gnome`, `sprite`, `hopper`, `rat_swarm`,
-`jelly` et ses enfants, `hive`, `hornblower`, puis `warden` (le Gardien).
+`jelly` et ses enfants, `hive`, `hornblower`, `sleepy_fox` (le renard qui endort la
+magie, devant le dirigeable), puis `warden` (le Gardien).
 **Fond : `act1_sky`. Terrain `grass`.** Niveaux `lvl_01` a `lvl_04`.
 
 C est l acte ou le joueur apprend le jeu et ou le mage apprend qu il n a rien compris :
@@ -276,7 +277,7 @@ derniere colonne donne l identifiant REEL, celui de `resources/levels/`.
 |---|---|---|---|---|
 | `lvl_05` | Les courants | tout en vol, plates-formes etroites | `current_eye`, `wisp`, `imp_archer`, `sand_serpent` | **`lvl_17`** |
 | `lvl_06` | Port de Haute-Nacelle | un port pille, quais de bois | `nacelle_raider`, `void_knight`, `berserker`, `shade` | **`lvl_18`** |
-| `lvl_07` | Les serres d en haut | jardins suspendus pourris | `glutton`, `jelly`, `hive` | `lvl_03` (Ossuaire des Marees) |
+| `lvl_07` | Les serres d en haut | jardins suspendus pourris | `glutton`, `jelly`, `hive`, `slime_mid`, mini-boss `slime_huge` | `lvl_03` (Ossuaire des Marees) |
 | `lvl_08` | Cimetiere de bordure | premiers morts-vivants, brume | `ghoul_priest`, `shade`, `void_knight` | `lvl_04` (Le Grand Appel) |
 
 Ordre de jeu reel : `lvl_09` (fin acte 1) -> `lvl_17` -> `lvl_18` -> `lvl_03` ->
@@ -339,11 +340,20 @@ derniere donne l identifiant reel.
 
 | Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
 |---|---|---|---|---|
-| `lvl_09` | Les fosses basses | tombes ouvertes, on avance dans l eau | `pit_ghoul`, `ghoul_priest`, `shade` | **`lvl_19`** |
+| `lvl_09` | Les fosses basses | tombes ouvertes, on avance dans l eau | `pit_ghoul`, `ghoul_priest`, `shade`, `slime_ghost`, `slime_skeleton`, `slime_ghost_big` ; boss : le trio `trio_ember` + `trio_frost` + `trio_arcane` | **`lvl_19`** |
 | `lvl_10` | L ossuaire | murs d os, couloirs — terrain de murs | `void_knight`, `golem` | `lvl_05` (Forges du Mauvais Temps) |
 | `lvl_11` | La cour des rois morts | statues, arrieres-gardes laissees par le roi | `totem_guardian`, `hive`, `parry_skeleton` | **`lvl_20`** |
 | `lvl_12` | Le puits de contrat | descente, lumiere rouge par en bas | `behemoth`, `berserker` | `lvl_06` (La Cour brisee) |
-| `lvl_13` | Le pentacle | salle du portail, le roi accule | mixte + `tombol_seal` | **`lvl_21`** |
+| `lvl_13` | Le pentacle | salle du portail, le roi accule | mixte + mini-boss `gravedigger` + `tombol_seal` | **`lvl_21`** |
+
+**Le trio des fosses basses** (chantier W2). Trois gardiens de la pierre du
+pentacle — la famille du Sceau de Tombol — que le roi laisse derriere lui au
+premier niveau de la poursuite. Ils arrivent ensemble, chacun avec sa table et son
+pouvoir : le rouge revient trois fois du haut, le bleu avance au rythme du mage,
+le magenta ignore ses dix premiers coups. Le document les voulait dans la cour
+des rois morts (« statues ») ; le banc a tranche : `lvl_20` se gagnait 13 fois sur
+30 avant tout ajout, `lvl_19` 30 fois sur 30. Ils reviennent en ADEPTES (vermine)
+dans l acte 5.
 
 Ordre de jeu reel : `lvl_04` (fin acte 2) -> `lvl_19` -> `lvl_20` -> fourche
 `lvl_05` / `lvl_06` au choix -> `lvl_21` -> acte 4.
@@ -411,11 +421,17 @@ derniere donne l identifiant REEL de `resources/levels/`.
 
 | Niveau (plan) | Le demon | Ambiance | Monstres | Id reel |
 |---|---|---|---|---|
-| `lvl_14` | **Vharn, l Enclume** | forge, tout est blinde | `demon_anvil`, `golem`, `behemoth` | **`lvl_07`** |
-| `lvl_15` | **Sesh, la Faim** | fosses, tout se mange | `demon_maw`, `glutton`, `jelly`, `hive` | **`lvl_10`** |
+| `lvl_14` | **Vharn, l Enclume** | forge, tout est blinde | `demon_anvil`, `golem`, `behemoth`, mini-boss `mecha_golem` | **`lvl_07`** |
+| `lvl_15` | **Sesh, la Faim** | fosses, tout se mange | `demon_maw`, `glutton`, `jelly`, `hive`, `cacodaemon` | **`lvl_10`** |
 | `lvl_16` | **Kaltek, la Chaine** | arene, rage et esclaves | `demon_chain`, `berserker`, `void_knight` | **`lvl_11`** |
-| `lvl_17` | **Ymoa, le Cercle** | temple, auras et protections | `demon_circle`, `totem_guardian`, `ghoul_priest` | **`lvl_12`** |
-| `lvl_18` | le pentacle brise | apres les 4, le sol se derobe | melange des quatre + `gorgon_queen` | **`lvl_13`** |
+| `lvl_17` | **Ymoa, le Cercle** | temple, auras et protections | `demon_circle`, `totem_guardian`, `ghoul_priest`, mini-boss `circle_twins` | **`lvl_12`** |
+| `lvl_18` | le pentacle brise | apres les 4, le sol se derobe | melange des quatre, mini-boss `gorgon_queen`, boss `demon_lord` | **`lvl_13`** |
+
+**Malyk, le Seigneur demon** (`demon_lord`, chantier W2) ferme le pentacle brise.
+La scene `lvl_18_intro` lui faisait deja sa place sans le nommer : « Aucun des
+quatre n a meme lu l ordre. Ils l ont RECU. » Malyk est celui qui l a porte. Il
+appelle des Cacodemons et les mange pour se soigner. La Reine gorgone, qui tenait
+ce boss faute de tete, mene desormais le palier du meme niveau.
 
 `lvl_07` existait avant ce chantier sous le nom « Le Metier du Monde », devant le
 fond des divinites : il etait le dernier niveau du jeu quand la campagne en
@@ -492,15 +508,26 @@ leur a offert.
 
 | Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
 |---|---|---|---|---|
-| `lvl_19` | La galerie des saisons | ce qui a deja ete efface, expose | melange acte 1 + 2, `warden` en vague normale | **`lvl_14`** |
-| `lvl_20` | Le registre | colonnes de noms, dont le sien | melange acte 3 + 4, `chronos` en vague normale | **`lvl_15`** |
-| `lvl_21` | Le siege vide | rien. Puis l enfant | `child_god`, boss final | **`lvl_16`** |
+| `lvl_19` | La galerie des saisons | ce qui a deja ete efface, expose | melange acte 1 + 2, `warden` en vague normale, `sleepy_fox`, `blood_clot` ; mini-boss `season_chameleon`, boss `slime_colossal` | **`lvl_14`** |
+| `lvl_20` | Le registre | colonnes de noms, dont le sien | melange acte 3 + 4, `chronos` en vague normale, adeptes du trio, `mirror_shard` ; mini-boss `spell_clerk`, boss `clockmaker` | **`lvl_15`** |
+| `lvl_21` | Le siege vide | rien. Puis l enfant | adeptes du trio, `child_god`, boss final | **`lvl_16`** |
 
 **Le propos de l acte est une regle mecanique**, pas une ambiance. Le Gardien de
 la foret descend par deux puis par trois dans des vagues SANS nom, Chronos deux
 fois, et la premiere vague du siege vide envoie deux Gardiens puis Chronos sans
-fanfare. Aucune vague de mini-boss dans tout l acte : le catalogue est epuise, et
-c est aussi ce que le lieu raconte — plus personne n a de titre.
+fanfare. Les anciens boss promus en vermine sont des `.tres` DERIVES (plus legers,
+mecanique simplifiee) : `blood_clot` (le Coagule), `mirror_shard` (le Miroir de
+Forge), `adept_frost` / `adept_ember` / `adept_arcane` (le trio des fosses). Le
+Gardien et Chronos, eux, descendent encore avec leur `.tres` de boss (anterieur au
+chantier W2).
+
+**Les tetes de l acte 5** (chantier W2). La galerie et le registre n avaient ni
+mini-boss ni (pour le registre) boss, faute de catalogue. Ils en ont, et ce sont
+des tetes qui ne sont PAS d anciens boss : le Cameleon des saisons (la galerie qui
+tourne avec les saisons), le Slime colossal (toutes les gelees du voyage refondues
+en une), le Greffier (le commis qui rature une carte de la main) et l Horloger
+(celui qui remonte le temps, comme le mage l a fait). Le siege vide garde son
+tete-a-tete : aucune tete intermediaire.
 
 `lvl_16` ferme la campagne (`next_levels` vide). La finir ouvre le Massacre :
 `SaveData.campaign_cleared()` compte sur le total de `ContentDB.levels`, donc
@@ -619,15 +646,47 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
   `tests/unit/test_campaign_acts.gd` verrouille ce tableau : sa table `ACTES_LIVRES`
   dit quels actes sont declares finis, et le compte doit alors tomber juste.
 
-- **Un boss de campagne n est pas obligatoire a chaque niveau, et a 21 niveaux le
-  catalogue est EPUISE.** Le jeu compte 13 boss et 8 mini-boss ; `test_bosses` refuse
-  qu un adversaire mene deux niveaux, donc cinq niveaux se passent de palier :
-  `lvl_12`, `lvl_13`, `lvl_14` et `lvl_15` n ont pas de mini-boss, et `lvl_15` n a pas
-  de boss. Les vagues concernees portent la mecanique attendue autrement — quatre
-  soutiens a couper au temple d Ymoa, trois Regards gorgones pour la petrification.
-  Ajouter un niveau de plus demandera d abord une tete de plus. On reserve donc `is_boss` aux **fins d acte** — ce que ce document
-  decrit deja : l acte 1 se ferme sur le Gardien, il n aligne pas quatre boss.
-  Les niveaux intermediaires culminent sur un mini-boss.
+- **Un boss de campagne n est pas obligatoire a chaque niveau.** `test_bosses` refuse
+  qu un adversaire mene deux niveaux. Jusqu au 27/09 le catalogue etait EPUISE et
+  `lvl_12` a `lvl_15` se passaient de mini-boss, `lvl_15` de boss. Le chantier W2 a
+  livre les tetes qui manquaient (tableau ci-dessous) ; restent sans mini-boss
+  `lvl_16` (le siege vide, voulu) et sans boss les niveaux intermediaires de la
+  poursuite (`lvl_08`, `lvl_17`, `lvl_18`, `lvl_20`), qui culminent sur un mini-boss.
+
+- **Le bestiaire du 27 septembre (chantier W2).** La note « aucun nouveau type de
+  monstre » ci-dessus visait la vermine qu on aurait ajoutee pour remplir ; la vague 1
+  a livre douze MECANIQUES et onze SILHOUETTES qui attendaient des porteurs. Chaque
+  monstre neuf porte une mecanique, et chaque mecanique a son porteur :
+
+  | Id | Nom | Role | Mecanique | Ou il apparait |
+  |---|---|---|---|---|
+  | `slime_mid` | Slime moyen | P1 | enfant de division | `lvl_03`, et sort du Slime enorme |
+  | `slime_huge` | Slime enorme | mini-boss | se divise en 3 Slimes moyens | mene le palier de `lvl_03` ; 2 sortent du Slime colossal |
+  | `slime_colossal` | Slime colossal | boss | croute de lave, se divise en 2 Slimes enormes | boss de `lvl_14` |
+  | `slime_ghost` | Slime fantome | P2 | renait en Slime squelette apres 3 s ; zigzag | `lvl_19` |
+  | `slime_ghost_big` | Gros slime fantome | P4 | renait en 2 Slimes squelettes | `lvl_19` |
+  | `slime_skeleton` | Slime squelette | P2 | — (la renaissance des fantomes) | `lvl_19` |
+  | `sleepy_fox` | Renard dormeur | P2 | dort 2 s : aucun sort pendant son sommeil | `lvl_09`, `lvl_14` |
+  | `cacodaemon` | Cacodemon | P3 | vole, rebondit d un bord a l autre | `lvl_10`, sbire de Malyk |
+  | `mecha_golem` | Golem a noyau | mini-boss | laser sur le mage a chaque coup qui mord | mene le palier de `lvl_07` |
+  | `circle_twins` | Jumeaux du Cercle | mini-boss (paire) | jumeaux : se relevent tant que l autre tient | mene le palier de `lvl_12` |
+  | `demon_lord` | Malyk, Seigneur demon | boss | devoreur-invocateur (mange ses Cacodemons) | boss de `lvl_13` |
+  | `trio_ember` | Mage de braise | boss | trois vies depuis le haut, de plus en plus vite | mene le trio, boss de `lvl_19` |
+  | `trio_frost` | Mage du givre | mini-boss | miroir du mage (sa vitesse suit celle du mage) | trio de `lvl_19` |
+  | `trio_arcane` | Mage des arcanes | mini-boss | immunise aux 10 premiers coups | trio de `lvl_19` |
+  | `adept_frost` / `adept_ember` / `adept_arcane` | Adeptes | P3 | zigzag / une vie de rechange / sauts + 2 sceaux | `lvl_15`, `lvl_16` |
+  | `gravedigger` | Le Fossoyeur | mini-boss | entre par le cote, releve les morts autour de lui | mene le palier de `lvl_21` |
+  | `season_chameleon` | Cameleon des saisons | mini-boss | cameleon : faiblesse feu, poison, givre, foudre en cycle | mene le palier de `lvl_14` |
+  | `spell_clerk` | Le Greffier | mini-boss | voleur de sorts | mene le palier de `lvl_15` |
+  | `clockmaker` | L Horloger | boss | revient 3 s en arriere toutes les 7 s | boss de `lvl_15` |
+  | `blood_clot` | Caillot | P3 | le Coagule promu : se releve une fois | `lvl_14` |
+  | `mirror_shard` | Eclat de miroir | P3 | le Miroir de Forge promu : renvoi court | `lvl_15` |
+
+  Trois feuilles partagees sont departagees par une teinte (`AnimCatalog.MODULATE`),
+  verifiee en capture (`shot_07_vitrine_teintes`) : la Sorciere des fosses (bleue)
+  contre l Ensevelisseur, le Sceau de Tombol (vert-de-gris) contre le trio bleu,
+  l Horloger (laiton) contre le Colosse des Forges. `tests/unit/test_bestiaire_w2.gd`
+  verrouille le placement, la chaine de PV des boss qui se divisent et le trio.
 
 - Les scenes generees couvrent le prologue et l acte 1 entier. Attention : la route du
   maire et le dirigeable sont les scenes `lvl_08_*` et `lvl_09_*`, pas `lvl_03_*` /
