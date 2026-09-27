@@ -72,14 +72,6 @@ static func max_copies(rarity: int) -> int:
 	return 1
 
 
-## COMPATIBILITE : il n y a plus de plafond par rarete dans le deck entier, la
-## regle des 6 cartes differentes le remplace (voir l en-tete). Rend toujours -1
-## ("pas de plafond") pour que l ecran de deck, qui l interroge encore, compile
-## et ne refuse rien a tort. A supprimer quand il passera par refusal_reason().
-static func max_of_rarity(_rarity: int) -> int:
-	return -1
-
-
 static func count_of(deck_ids: Array, card_id: StringName) -> int:
 	var n: int = 0
 	for id in deck_ids:
@@ -305,7 +297,3 @@ static func default_deck_ids() -> Array:
 						break
 	return out
 
-
-## STUB — remplace par le chantier "regle de deck" a la fusion.
-static func refusal_reason(deck_ids: Array, card: SpellCard, discovered: bool) -> String:
-	return "" if can_add(deck_ids, card, discovered) else "Ajout impossible"
