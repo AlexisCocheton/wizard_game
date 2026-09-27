@@ -734,3 +734,84 @@ const PROP_WATER_LAYERS: Array[float] = [1.0, 0.74, 0.46]
 ## bouillie. L hexagone en remplit 84 % et reste net a la taille protegee.
 static func halo(parent: Node2D, radius: float, tint: Color = Color.WHITE) -> Node:
 	return sprite(parent, "shield_hex", Vector2.ZERO, radius * 2.0, true, tint)
+
+
+# --- Mecaniques de boss v3 ---------------------------------------------------
+
+## HORLOGER : le fantome qui montre OU il va revenir. Une copie translucide du
+## sprite (meme feuille, meme animation, teinte froide) et une horloge qui tourne
+## par-dessus : les aiguilles disent « le temps va reculer ici ».
+##
+## TOP-LEVEL : le fantome est l enfant du monstre (il meurt avec lui) mais ne suit
+## pas sa position — il reste la ou le monstre etait il y a quelques secondes.
+## `source` peut etre null (forme dessinee) : l horloge seule suffit alors.
+static func rewind_ghost(enemy: Node2D, source: AnimatedSprite2D, radius: float) -> Node2D:
+	if not enabled() or enemy == null:
+		return null
+	var root := Node2D.new()
+	root.name = "RewindGhost"
+	root.top_level = true
+	root.z_index = 4
+	if source != null and source.sprite_frames != null:
+		var copie := AnimatedSprite2D.new()
+		copie.sprite_frames = source.sprite_frames
+		copie.scale = source.scale
+		copie.flip_h = source.flip_h
+		copie.modulate = Color(0.55, 0.85, 1.0, 0.8)
+		root.add_child(copie)
+		copie.play(source.animation)
+	# `timemagic` est une horloge de 192 px : nette a la taille du monstre, et
+	# c est la feuille du jeu qui dit « temps » sans un mot.
+	sprite(root, "timemagic", Vector2.ZERO, radius * 2.4, true, Color(0.75, 1.0, 0.95, 0.9))
+	enemy.add_child(root)
+	root.global_position = enemy.global_position
+	return root
+
+
+## HORLOGER : le retour lui-meme. Une spirale d horloge au point de depart, une
+## autre au point d arrivee : le joueur voit le SAUT, pas seulement le resultat.
+static func rewind_flash(parent: Node2D, from: Vector2, to: Vector2, radius: float) -> void:
+	sprite(parent, "clock_spiral", from, radius * 1.8, false, Color(0.7, 1.0, 0.95))
+	sprite(parent, "clock_spiral", to, radius * 2.2, false, Color(0.85, 1.0, 0.95))
+
+
+## DEVOREUR-INVOCATEUR : le sbire rappele file vers la gueule du boss. Sans ce
+## trait, le sbire disparait sur place et le joueur ne relie pas sa disparition
+## au soin du boss.
+static func swallow_trail(parent: Node2D, from: Vector2, to: Vector2) -> void:
+	var s: AnimatedSprite2D = sprite(parent, "spiral_pull", from, 90.0, true,
+		Color(0.85, 0.45, 0.95))
+	if s == null:
+		return
+	var tw: Tween = parent.create_tween()
+	tw.tween_property(s, "position", to, 0.3)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(s):
+			s.queue_free())
+
+
+## Legende ecrite au-dessus d un boss v3 (element du Cameleon, carte volee,
+## compte a rebours). Des MOTS et pas seulement une couleur : un joueur daltonien
+## ne distingue pas le feu du poison a la teinte, il lit « FAIBLE : FEU ».
+## Tailles du theme, jamais un nombre en dur (voir gotchas : police hors theme).
+static func mech_label(parent: Node2D, radius: float) -> Label:
+	if not enabled() or parent == null:
+		return null
+	var l := Label.new()
+	l.name = "MechCaption"
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	l.add_theme_font_override(&"font", UiTheme.font())
+	l.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+	l.add_theme_color_override(&"font_outline_color", Color(0.06, 0.05, 0.10))
+	l.add_theme_constant_override(&"outline_size", 10)
+	l.z_index = 6
+	# Boite large centree sur le monstre, calee AU-DESSUS de sa barre de vie :
+	# le texte pousse vers le haut quand il gagne des lignes.
+	var large: float = 420.0
+	var haut: float = 150.0
+	l.size = Vector2(large, haut)
+	l.position = Vector2(-large * 0.5, -radius * 0.95 - haut)
+	parent.add_child(l)
+	return l

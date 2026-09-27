@@ -186,6 +186,7 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 		var quoi: String = "une carte" if def.blocks_cards == 1 			else "%d cartes" % def.blocks_cards
 		out.append(("Son regard petrifie %s de votre main : elles restent en main"
 			+ " mais refusent de partir. Le tuer les libere aussitot") % quoi)
+	out.append_array(boss_v3_lines(def))
 	# L ONDE DE CHOC. On dit qu elle part du BOSS et non du mage : c est ce qui
 	# fait comprendre qu il y a un endroit sur, et donc qu il y a une decision.
 	if def.shockwave_interval > 0.0 and def.shockwave_radius > 0.0:
@@ -226,7 +227,9 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 	if def.shoot_interval > 0.0:
 		out.append("Tire a distance sur le mage toutes les %s s (%d degats)"
 			% [_num(def.shoot_interval), def.shot_damage])
-	if def.devours:
+	# Un devoreur qui se SOIGNE ne grossit pas (voir EnemyDef.devour_heal_pct) :
+	# sa ligne est ecrite par boss_v3_lines().
+	if def.devours and def.devour_heal_pct <= 0.0:
 		out.append("Gobe les monstres plus faibles et grossit")
 	if def.enrage_speed_pct > 0.0:
 		out.append("Accelere de %d %% a chaque coup recu" % int(round(def.enrage_speed_pct)))
@@ -297,6 +300,64 @@ static func resistance_lines(def: EnemyDef) -> Array[String]:
 		out.append("Resiste : %s" % ", ".join(resistes))
 	if not faiblesses.is_empty():
 		out.append("Vulnerable : %s" % ", ".join(faiblesses))
+	return out
+
+
+## LES SIX MECANIQUES DE BOSS v3, en clair et avec leurs chiffres (modele du
+## Reliquaire) : chaque ligne dit la REGLE et la REPONSE. Ce sont des mecaniques
+## qui changent une regle du jeu ; decouvertes en combat sans explication, elles
+## se liraient comme des bugs.
+static func boss_v3_lines(def: EnemyDef) -> Array[String]:
+	var out: Array[String] = []
+	if def == null:
+		return out
+	if def.rewind_interval > 0.0 and def.rewind_seconds > 0.0:
+		# Les chiffres affiches sont ceux que le moteur applique : l intervalle
+		# est releve au plancher qui garantit une fenetre de degats.
+		var periode: float = Enemy._rewind_period(def)
+		var ligne: String = ("Toutes les %s s, il revient %s s en arriere, a la place"
+			+ " et aux PV qu il avait alors : les degats portes juste AVANT son retour"
+			+ " sont effaces, frappez juste APRES. Son fantome montre ou il reviendra") \
+			% [_num(periode), _num(def.rewind_seconds)]
+		if def.rewind_max > 0:
+			ligne += " (%d retours au plus)" % def.rewind_max
+		out.append(ligne)
+	if def.twin_group != &"":
+		out.append(("Lie a son jumeau : s il tombe pendant que l autre tient debout, il"
+			+ " se releve %s s plus tard avec %d %% de ses PV (%d fois au plus)."
+			+ " Tuez-les ensemble, un sort de zone est la reponse")
+			% [_num(def.twin_revive_delay), int(round(def.twin_revive_hp_pct)),
+				def.twin_max_returns])
+	if def.chameleon_interval > 0.0:
+		var elems: Array[String] = []
+		var cycle: Array[int] = def.chameleon_elements if not def.chameleon_elements.is_empty() \
+			else GameEnums.ELEMENTS
+		for t in cycle:
+			elems.append(GameEnums.tag_name(t))
+		out.append(("Change d element toutes les %s s (%s) : l element FAIBLE, ecrit"
+			+ " au-dessus de lui et donne par sa teinte, blesse de +%d %% ; l element"
+			+ " d en face ne fait que %d %%")
+			% [_num(def.chameleon_interval), ", ".join(elems),
+				int(round((def.chameleon_weak_mult - 1.0) * 100.0)),
+				int(round(maxf(def.chameleon_resist_mult, 0.1) * 100.0))])
+	if def.steal_interval > 0.0:
+		out.append(("Vole toutes les %s s votre carte la plus longue a incanter, puis la"
+			+ " lance contre vous %s s plus tard : %s points de vitesse par seconde"
+			+ " d incantation de la carte, et elle part a la defausse. Tuez-le avant :"
+			+ " la carte vous revient")
+			% [_num(def.steal_interval), _num(def.steal_cast_delay),
+				_num(def.steal_damage_per_cast_second)])
+	if def.devours and def.devour_heal_pct > 0.0:
+		var cible: String = "ses sbires murs de %s s, ou qu ils soient," \
+			% _num(def.devour_delay) if def.summon_def != null else "les monstres plus faibles"
+		out.append(("Avale %s et se soigne de %d %% de leurs PV restants :"
+			+ " affaiblissez-les avant qu il les mange")
+			% [cible, int(round(def.devour_heal_pct))])
+	if def.mirror_speed_ref > 0:
+		out.append(("Miroir du mage : sa vitesse suit la votre (normale a %d %%, de x%s"
+			+ " a x%s). Plus vous allez vite, plus il va vite ; un coup recu le ralentit")
+			% [def.mirror_speed_ref, _num(minf(def.mirror_speed_min, def.mirror_speed_max)),
+				_num(maxf(def.mirror_speed_min, def.mirror_speed_max))])
 	return out
 
 

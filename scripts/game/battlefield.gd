@@ -175,10 +175,13 @@ func _devour_nearby(glutton: Enemy) -> void:
 			continue
 		if prey.position.distance_to(glutton.position) > reach:
 			continue
+		if not glutton.can_devour(prey):
+			continue
+		# Ce que rapporte la proie (soin ou croissance) est decide par le devoreur.
+		glutton.devour(prey)
 		prey.absorb()
 		enemies.erase(prey)
 		prey.queue_free()
-		glutton.grow(prey.max_hp() * 0.5, 0.18)
 
 
 func _simulate_zones(wd: float) -> void:

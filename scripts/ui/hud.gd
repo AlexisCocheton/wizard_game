@@ -453,11 +453,15 @@ func _refresh_hand() -> void:
 func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
 	if card == null or not RunState.is_card_blocked(card):
 		return
-	cv.modulate = Color(0.46, 0.46, 0.56, 0.85)
+	# VOLEE par un voleur de sorts : meme gel, autre mot et teinte chaude. Le
+	# joueur doit distinguer la carte qui revient quand la gorgone tombe de celle
+	# qui va lui etre LANCEE dessus s il ne tue pas le voleur a temps.
+	var volee: bool = RunState.is_card_stolen(card)
+	cv.modulate = Color(0.62, 0.40, 0.40, 0.85) if volee else Color(0.46, 0.46, 0.56, 0.85)
 	# Le mot en clair par-dessus : la couleur dit "quelque chose ne va pas",
 	# le mot dit QUOI. Un joueur daltonien ne lit que le mot.
 	var bandeau := Label.new()
-	bandeau.text = "PETRIFIEE"
+	bandeau.text = "VOLEE" if volee else "PETRIFIEE"
 	bandeau.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bandeau.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bandeau.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
