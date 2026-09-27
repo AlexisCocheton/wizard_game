@@ -615,6 +615,21 @@ func _check_menu_screens() -> void:
 		for a in carte.acts():
 			carte.show_act(a)
 			await _shot("campagne_acte%d" % a)
+		# Les medaillons (UI-007) ont DEUX etats a juger : sur un profil neuf
+		# presque tout est verrouille, donc les pages ci-dessus ne montrent que
+		# des OMBRES. Le mode testeur ouvre tout sans rien ecrire au profil :
+		# on voit alors chaque illustration en couleurs, puis on le referme pour
+		# ne rien changer a la suite du smoke.
+		SaveData.set_tester_mode(true)
+		carte.rebuild()
+		for a in carte.acts():
+			carte.show_act(a)
+			for id in carte.levels_in_act(a):
+				if carte.medallion_for(id) == null:
+					_fail("le niveau %s n a pas de medaillon sur la carte" % id)
+			await _shot("campagne_ouvert_acte%d" % a)
+		SaveData.set_tester_mode(false)
+		carte.rebuild()
 		# Le detail d un niveau : c est l ecran que le testeur voulait conserver,
 		# et il n est atteignable que par un toucher sur un point de la carte.
 		campagne.open_level(SaveData.current_level())
@@ -660,12 +675,14 @@ func _check_menu_screens() -> void:
 	else:
 		deck_ecran.create_deck()
 		await _shot("deck_vide")
+		await _check_deck_drag(deck_ecran)
 		# Tourner une page de collection : les fleches du pied de page doivent
 		# marcher ici comme dans le grimoire.
 		deck_ecran.turn_page(1)
 		await _shot("deck_page2")
 		deck_ecran.delete_current_deck()
 		await _shot("deck_plein")
+		await _check_deck_drag_refused(deck_ecran)
 
 	# Le profil a quitte la barre du bas pour l en-tete : sans cette capture il
 	# ne serait plus verifie du tout.
@@ -696,6 +713,132 @@ func _check_menu_screens() -> void:
 	menu.select_tab(menu.HOME_TAB)
 	menu.queue_free()
 	print("[SMOKE] menu : %d onglets construits" % count)
+
+
+## Rejoue un GLISSER au doigt, par la vraie file d evenements du viewport.
+##
+## Pourquoi pas les methodes publiques du panneau (begin_drag/drop_on) : le
+## piege du projet est justement que le Button de la vignette AVALE le
+## relachement. Seul un evenement pousse dans le viewport traverse le meme
+## chemin que le doigt (_input, puis l interface) ; appeler les methodes
+## prouverait la regle, pas le geste. Les tests unitaires couvrent la regle.
+func _glisser(depart: Vector2, arrivee: Vector2, capture: String) -> void:
+	var vp: Viewport = get_viewport()
+	var appui := InputEventMouseButton.new()
+	appui.button_index = MOUSE_BUTTON_LEFT
+	appui.pressed = true
+	appui.position = depart
+	appui.global_position = depart
+	vp.push_input(appui, true)
+	await get_tree().process_frame
+	# Trois pas : le premier franchit le seuil de demarrage, les suivants
+	# promenent la carte jusqu a la zone.
+	for t in [0.15, 0.6, 1.0]:
+		var bouge := InputEventMouseMotion.new()
+		bouge.button_mask = MOUSE_BUTTON_MASK_LEFT
+		bouge.position = depart.lerp(arrivee, t)
+		bouge.global_position = bouge.position
+		vp.push_input(bouge, true)
+		await get_tree().process_frame
+	if capture != "":
+		await _shot(capture)
+	var lache := InputEventMouseButton.new()
+	lache.button_index = MOUSE_BUTTON_LEFT
+	lache.pressed = false
+	lache.position = arrivee
+	lache.global_position = arrivee
+	vp.push_input(lache, true)
+	await get_tree().process_frame
+
+
+## Laisse les conteneurs se disposer. Les vignettes sont reconstruites a chaque
+## rendu et leur rectangle n est juste qu apres le tri differe des conteneurs :
+## en headless, `_shot` ne fait pas attendre de frame, et le premier appui
+## tombait sur la barre du haut (vu : (125, 105)).
+func _disposer() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+## UI-006 sur un deck VIDE : collection -> deck ajoute, deck -> collection
+## retire, et un depot hors zone ne change rien.
+func _check_deck_drag(panel: DeckPanel) -> void:
+	await _disposer()
+	var tuiles: Array[Button] = panel.draggable_tiles(false)
+	if tuiles.is_empty():
+		_fail("aucune vignette glissable dans la collection")
+		return
+	var t: Button = tuiles[0]
+	var id: StringName = t.get_meta(&"card_id")
+	var avant: int = SaveData.massacre_deck().size()
+	var cible: Vector2 = panel.deck_zone_rect().get_center()
+	await _glisser(t.get_global_rect().get_center(), cible, "deck_glisser")
+	if panel.is_dragging():
+		_fail("le glisser ne se termine pas au relachement")
+	if SaveData.massacre_deck().size() != avant + 1:
+		_fail("glisser une carte sur le deck ne l ajoute pas (%d -> %d)" % [
+			avant, SaveData.massacre_deck().size()])
+	if panel.armed_card() != &"":
+		_fail("le relachement d un glisser a ete pris pour un toucher")
+
+	# Hors zone : la carte revient, rien ne change.
+	await _disposer()
+	tuiles = panel.draggable_tiles(false)
+	var n: int = SaveData.massacre_deck().size()
+	var t2: Button = tuiles[0]
+	var r: Rect2 = t2.get_global_rect()
+	# Un point de la COLLECTION, loin de la vignette : ni deck ni seuil manque.
+	var ailleurs: Vector2 = panel.collection_zone_rect().end - Vector2(20.0, 20.0)
+	await _glisser(r.get_center(), ailleurs, "")
+	if SaveData.massacre_deck().size() != n:
+		_fail("un depot hors du deck a change le deck")
+	# Laisser la carte finir son retour : sinon la capture suivante montre deux
+	# cartes en vol et ne permet plus de juger le geste en cours.
+	await get_tree().create_timer(DeckPanel.RETURN_S + 0.1).timeout
+
+	# Deck -> collection : retire un exemplaire.
+	await _disposer()
+	var du_deck: Array[Button] = panel.draggable_tiles(true)
+	if du_deck.is_empty():
+		_fail("la carte ajoutee n apparait pas dans la grille du deck")
+		return
+	var d: Button = du_deck[0]
+	await _glisser(d.get_global_rect().get_center(),
+		panel.collection_zone_rect().get_center(), "deck_glisser_retrait")
+	if SaveData.massacre_deck().size() != n - 1:
+		_fail("glisser une carte du deck vers la collection ne la retire pas")
+	# Le deck ne contenait que la carte ajoutee plus haut : elle doit etre partie.
+	if DeckRules.count_of(SaveData.massacre_deck(), id) != 0:
+		_fail("la carte glissee hors du deck y est restee")
+	print("[SMOKE] deck : glisser-deposer dans les deux sens")
+
+
+## UI-006 + raison du refus, sur le deck PLEIN : la zone annonce le refus
+## pendant le glisser, la carte revient, et le bandeau dit POURQUOI.
+func _check_deck_drag_refused(panel: DeckPanel) -> void:
+	await _disposer()
+	var tuiles: Array[Button] = panel.draggable_tiles(false)
+	if tuiles.is_empty():
+		_fail("aucune vignette glissable dans la collection (deck plein)")
+		return
+	var t: Button = tuiles[0]
+	var carte: SpellCard = ContentDB.cards.get(StringName(t.get_meta(&"card_id")))
+	var attendu: String = DeckRules.refusal_reason(SaveData.massacre_deck(), carte, true)
+	if attendu == "":
+		_fail("le deck de base devrait etre plein : aucun refus a montrer")
+		return
+	var avant: Array = SaveData.massacre_deck().duplicate()
+	await _glisser(t.get_global_rect().get_center(),
+		panel.deck_zone_rect().get_center(), "deck_glisser_refus")
+	if SaveData.massacre_deck() != avant:
+		_fail("un ajout refuse a quand meme change le deck")
+	if panel.refusal_message() != attendu:
+		_fail("le refus affiche '%s' au lieu de la raison de DeckRules '%s'" % [
+			panel.refusal_message(), attendu])
+	# Le retour de la carte vers sa vignette doit s etre joue sans erreur, et la
+	# capture doit montrer le bandeau seul : la carte qui revient passe dessus.
+	await get_tree().create_timer(DeckPanel.RETURN_S + 0.1).timeout
+	await _shot("deck_refus")
 
 
 ## Pre-cast : un second sort doit pouvoir etre prepare pendant le chargement du

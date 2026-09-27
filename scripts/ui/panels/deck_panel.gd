@@ -39,6 +39,36 @@ extends Control
 ## Le deck (en haut) garde le toucher UNIQUE : retirer est reversible d un geste,
 ## il n y a rien a lire avant.
 ##
+## GLISSER-DEPOSER (UI-006), EN PLUS DU TOUCHER
+## -------------------------------------------
+##   +--------------------------------------------------+
+##   |  Deck 1                          14 / 15         |
+##   | +==============================================+ |
+##   | |  DEPOSER ICI POUR AJOUTER    (ou la raison   | |  <- zone de depot
+##   | |  du refus, en rouge, AVANT de lacher)        | |     (or / rouge)
+##   | +==============================================+ |
+##   |               .-------.                          |
+##   |               | icone |  <- la carte suit le doigt,
+##   |               `-------'     AU-DESSUS de lui     |
+##   |                   o  <- doigt                    |
+##   |  COLLECTION   [x] [x] [ ] <- vignette source pale |
+##   +--------------------------------------------------+
+##
+## Collection -> deck ajoute un exemplaire ; deck -> collection en retire un.
+## Le geste ne demarre qu apres DRAG_START_PX de deplacement : en deca, c est un
+## toucher, et le toucher garde exactement son effet d avant (les habitues vont
+## plus vite au toucher). Au relachement hors de la zone, ou si l ajout est
+## refuse, la carte REVIENT a sa vignette : rien n a change, et on le voit.
+## Pourquoi la carte flotte AU-DESSUS du doigt : sous le pouce, on ne verrait
+## plus ce qu on transporte. Pourquoi montrer la raison du refus PENDANT le
+## glisser : le joueur apprend qu il ne peut pas deposer avant d avoir lache,
+## au lieu de le decouvrir par un retour qu il pourrait prendre pour un bug.
+##
+## Le suivi se fait dans `_input()` et non `_gui_input` : une vignette est un
+## Button, qui avale le relachement (piege documente du projet, meme cause que
+## le viseur des sorts). Le relachement d un glisser est marque traite pour que
+## le Button ne le prenne pas pour un toucher.
+##
 ## PLUSIEURS DECKS
 ## ---------------
 ## Les onglets du haut sont les decks nommes de SaveData. En changer n est qu un
@@ -72,6 +102,31 @@ const ARROW_W: float = 170.0
 const ARROW_H: float = 120.0
 const TAB_H: float = 110.0
 
+## Deplacement a partir duquel un appui devient un glisser. Un doigt qui touche
+## « sans bouger » derive de 5 a 15 px sur un ecran de 1080 : en dessous de ce
+## seuil, on laisse le toucher faire son office.
+const DRAG_START_PX: float = 28.0
+## La carte transportee flotte au-dessus du doigt, pas dessous : sinon le pouce
+## la cache precisement quand on vise.
+const GHOST_LIFT: float = 130.0
+## Retour de la carte a sa vignette quand le depot est refuse ou manque.
+const RETURN_S: float = 0.22
+## Duree d affichage de la raison d un refus. Assez pour lire une phrase courte,
+## assez court pour ne pas masquer le deck au geste suivant.
+const NOTICE_S: float = 3.2
+
+## Ou se trouve le doigt au moment du depot.
+enum Zone { NONE, DECK, COLLECTION }
+
+## Couleurs de la zone de depot. Or = « tu peux lacher ici », rouge = « lacher
+## ici sera refuse » — les deux couleurs d etat deja employees par l ecran
+## (compteur valide / compteur en defaut).
+const HINT_OK: Color = Color(0.95, 0.80, 0.35)
+const HINT_REFUSED: Color = Color(0.85, 0.25, 0.28)
+## Fond du bandeau de refus : rouge sombre sous un texte creme. Un rouge vif
+## sous du texte clair ne passe pas le plancher de contraste.
+const NOTICE_BG: Color = Color(0.36, 0.07, 0.09, 0.96)
+
 var _ids: Array = []
 var _filter: int = -1  # -1 = toutes les raretes
 var _page: int = 0
@@ -99,6 +154,27 @@ var _body: VBoxContainer
 var _cale: Control
 var _detail_box: VBoxContainer
 var _detail_card: SpellCard = null
+
+## Appui en cours sur une vignette, pas encore un glisser :
+## {card, from_deck, start, tile}. Vide = aucun doigt pose sur une carte.
+var _press: Dictionary = {}
+## Glisser en cours. `_drag_card == null` = aucun.
+var _drag_card: SpellCard = null
+var _drag_from_deck: bool = false
+var _drag_tile: Control = null
+var _drag_origin: Vector2 = Vector2.ZERO
+## Raison pour laquelle la carte transportee NE POURRA PAS entrer, calculee au
+## depart du glisser ("" = elle peut). Affichee dans la zone de depot.
+var _drag_refusal: String = ""
+var _ghost: Control = null
+var _hint: PanelContainer = null
+var _hint_lbl: Label = null
+var _hint_hover: bool = false
+## Bandeau de refus, pose sur le deck.
+var _notice: PanelContainer = null
+var _notice_lbl: Label = null
+var _notice_tween: Tween = null
+var _last_refusal: String = ""
 
 
 func _ready() -> void:
@@ -282,6 +358,10 @@ func refresh() -> void:
 	# oubliee d une visite precedente s ajouterait au premier toucher suivant.
 	_armed_id = &""
 	_detail_card = null
+	# Un glisser ou un bandeau d une visite precedente n a plus de sens : les
+	# vignettes qu ils designent vont etre reconstruites.
+	cancel_drag()
+	_hide_refusal()
 	_ids = SaveData.massacre_deck().duplicate()
 	# Premier passage : on propose le deck de base plutot qu un ecran vide.
 	if _ids.is_empty() and SaveData.deck_count() == 1:
@@ -429,9 +509,11 @@ func _render_deck_grid() -> void:
 		var card: SpellCard = ContentDB.cards.get(StringName(id))
 		if card == null:
 			continue
-		_deck_grid.add_child(_tile(card, "x%d" % counts[id],
+		var t: Button = _tile(card, "x%d" % counts[id],
 			UiTheme.rarity_color(card.rarity), _on_remove.bind(card),
-			"Toucher pour retirer un exemplaire"))
+			"Toucher pour retirer un exemplaire, ou glisser vers la collection")
+		_make_draggable(t, card, true)
+		_deck_grid.add_child(t)
 	# On complete la grille avec des emplacements VIDES visibles plutot qu un
 	# trou : le joueur voit qu il lui reste de la place sans lire le compteur.
 	# On n en met QUE de quoi finir la page visible — au-dela, la zone defile et
@@ -519,6 +601,9 @@ func _render_collection() -> void:
 		# Une carte non ajoutable reste TOUCHABLE : sa fiche doit pouvoir
 		# s ouvrir pour qu on comprenne pourquoi elle est refusee. C est le
 		# bouton AJOUTER de la fiche qui se desactive, pas la vignette.
+		# Elle reste aussi GLISSABLE : le glisser montre la raison du refus
+		# dans la zone de depot, et la carte revient.
+		_make_draggable(tile, card, false)
 		_grid.add_child(tile)
 	for _i in PER_PAGE - (fin - start):
 		var vide := Control.new()
@@ -609,13 +694,28 @@ func _on_collection_tap(card: SpellCard) -> void:
 
 ## L ajout reel. Separe du toucher pour que la regle de deck reste testable
 ## sans passer par l interface.
-func _do_add(card: SpellCard) -> void:
-	if not DeckRules.can_add(_ids, card, SaveData.is_discovered(card.id)):
+##
+## La decision passe par `DeckRules.refusal_reason` et par elle seule : c est la
+## SEULE source des regles de composition. Le joueur lit la chaine qu elle rend,
+## telle quelle — l ecran ne reformule pas une regle qu il ne possede pas.
+func _do_add(card: SpellCard) -> bool:
+	var raison: String = refusal_for(card)
+	if raison != "":
 		_render()
-		return
+		show_refusal(raison)
+		return false
+	_hide_refusal()
 	_ids.append(String(card.id))
 	_save()
 	_render()
+	return true
+
+
+## Pourquoi `card` ne peut pas entrer dans le deck courant ("" = elle peut).
+func refusal_for(card: SpellCard) -> String:
+	if card == null:
+		return ""
+	return DeckRules.refusal_reason(_ids, card, SaveData.is_discovered(card.id))
 
 
 ## Etat du double toucher, expose pour les tests et pour le retour visuel.
@@ -628,12 +728,337 @@ func _on_remove(card: SpellCard) -> void:
 	# armee la RE-ajouterait, ce que le joueur vient justement de defaire.
 	_armed_id = &""
 	_detail_card = null
+	if not _remove_one(card):
+		return
+	# Le refus affiche (« deck complet »...) vient peut-etre d etre resolu par ce
+	# retrait : le laisser a l ecran dirait le contraire de l etat du deck.
+	_hide_refusal()
+	_render()
+
+
+## Retire UN exemplaire. Rend faux si la carte n est pas dans le deck.
+func _remove_one(card: SpellCard) -> bool:
 	var idx: int = _ids.find(String(card.id))
 	if idx == -1:
-		return
+		return false
 	_ids.remove_at(idx)
 	_save()
+	return true
+
+
+# --- Glisser-deposer (UI-006) ---
+
+## Rend une vignette glissable. On n ecoute que l APPUI ici : le suivi et le
+## relachement passent par `_input()`, seul endroit ou le relachement arrive
+## avant que le Button ne l avale.
+func _make_draggable(tile: Button, card: SpellCard, from_deck: bool) -> void:
+	tile.set_meta(&"card_id", card.id)
+	tile.gui_input.connect(func(ev: InputEvent) -> void:
+		if ev is InputEventMouseButton:
+			var mb := ev as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+				_press = {"card": card, "from_deck": from_deck,
+					"start": mb.global_position, "tile": tile})
+
+
+func _input(event: InputEvent) -> void:
+	if _press.is_empty() and _drag_card == null:
+		return
+	if event is InputEventMouseMotion:
+		var p: Vector2 = (event as InputEventMouseMotion).global_position
+		if _drag_card == null:
+			if p.distance_to(_press["start"]) < DRAG_START_PX:
+				return
+			begin_drag(_press["card"], _press["from_deck"], p, _press["tile"])
+		drag_to(p)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index != MOUSE_BUTTON_LEFT or mb.pressed:
+			return
+		if _drag_card != null:
+			drop_at(mb.global_position)
+			# Le relachement d un glisser n est PAS un toucher. Double garde :
+			# le depot reconstruit les vignettes (le Button source quitte
+			# l arbre et perd le focus souris), et le relachement est marque
+			# traite, pour le jour ou un depot ne reconstruirait plus rien.
+			# Verifie par sabotage : retirer cette ligne seule ne suffit pas a
+			# rougir le smoke, c est la reconstruction qui porte la garde.
+			get_viewport().set_input_as_handled()
+		_press = {}
+
+
+## Prend une carte. Public pour les tests, qui rejouent le geste sans souris.
+func begin_drag(card: SpellCard, from_deck: bool, at: Vector2,
+		tile: Control = null) -> void:
+	cancel_drag()
+	_press = {}
+	_drag_card = card
+	_drag_from_deck = from_deck
+	_drag_tile = tile
+	_drag_origin = tile.get_global_rect().get_center() if tile != null else at
+	# La raison est connue DES LE DEPART : la zone de depot l affiche pendant
+	# tout le glisser (un retrait, lui, ne se refuse jamais).
+	_drag_refusal = "" if from_deck else refusal_for(card)
+	# Prendre une carte n est pas la lire : on ne laisse aucune carte armee
+	# derriere soi, sinon le toucher suivant l ajouterait sans fiche.
+	_armed_id = &""
+	_hide_refusal()
+	if tile != null:
+		tile.modulate = Color(1, 1, 1, 0.35)
+	_ghost = _make_ghost(card)
+	add_child(_ghost)
+	_show_hint()
+	drag_to(at)
+
+
+func drag_to(at: Vector2) -> void:
+	if _drag_card == null:
+		return
+	if _ghost != null:
+		_ghost.position = at - _ghost.size * 0.5 - Vector2(0.0, GHOST_LIFT)
+	var sur: bool = zone_at(at) == _target_zone()
+	if sur != _hint_hover:
+		_hint_hover = sur
+		_style_hint()
+
+
+## Lache la carte en `at`. Rend vrai si le deck a change.
+func drop_at(at: Vector2) -> bool:
+	return drop_on(zone_at(at))
+
+
+## Le coeur du depot, separe de la geometrie pour etre testable a froid :
+## en headless les conteneurs ne sont pas encore disposes quand le test lit.
+func drop_on(zone: int) -> bool:
+	var card: SpellCard = _drag_card
+	if card == null:
+		return false
+	var accepte: bool = false
+	if zone == _target_zone():
+		if _drag_from_deck:
+			accepte = _remove_one(card)
+		else:
+			# Relue au depot et non reprise du depart : c est la regle a
+			# l instant du geste qui fait foi.
+			var raison: String = refusal_for(card)
+			if raison == "":
+				_ids.append(String(card.id))
+				_save()
+				accepte = true
+			else:
+				show_refusal(raison)
+	_end_drag(accepte)
+	return accepte
+
+
+## Abandonne le glisser en cours sans rien changer au deck.
+func cancel_drag() -> void:
+	if _drag_card != null:
+		_end_drag(false)
+	_press = {}
+
+
+func is_dragging() -> bool:
+	return _drag_card != null
+
+
+## Les vignettes glissables affichees (deck ou page de collection courante).
+## Pour le smoke, qui rejoue le geste au doigt sur de vraies positions.
+func draggable_tiles(in_deck: bool) -> Array[Button]:
+	var out: Array[Button] = []
+	for c in (_deck_grid if in_deck else _grid).get_children():
+		if c is Button and c.has_meta(&"card_id"):
+			out.append(c)
+	return out
+
+
+## La zone ou il faut lacher : le deck pour une carte de la collection, la
+## collection pour une carte du deck.
+func _target_zone() -> int:
+	return Zone.COLLECTION if _drag_from_deck else Zone.DECK
+
+
+func zone_at(at: Vector2) -> int:
+	if deck_zone_rect().has_point(at):
+		return Zone.DECK
+	if collection_zone_rect().has_point(at):
+		return Zone.COLLECTION
+	return Zone.NONE
+
+
+## Zone du deck : l en-tete (le compteur) PLUS la grille. Une cible genereuse,
+## parce qu on vise au pouce et que l en-tete est ce que l on regarde en
+## deposant.
+func deck_zone_rect() -> Rect2:
+	return _header.get_global_rect().merge(_deck_scroll.get_global_rect())
+
+
+## Zone de la collection : de son titre au bas de la grille, filtres compris.
+func collection_zone_rect() -> Rect2:
+	return _coll_label.get_global_rect().merge(_filters.get_global_rect()) \
+		.merge(_grid.get_global_rect())
+
+
+func _end_drag(accepte: bool) -> void:
+	var ghost: Control = _ghost
+	_ghost = null
+	_drag_card = null
+	_drag_tile = null
+	_hint_hover = false
+	if _hint != null:
+		_hint.visible = false
+	if ghost != null:
+		if accepte or not Fx.enabled() or not is_inside_tree():
+			ghost.queue_free()
+		else:
+			# Le RETOUR : la carte repart vers sa vignette. C est lui qui dit
+			# « rien n a change », sans un mot.
+			var tw: Tween = ghost.create_tween()
+			tw.tween_property(ghost, "position",
+				_drag_origin - ghost.size * 0.5, RETURN_S) \
+				.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.tween_callback(ghost.queue_free)
+	# Reconstruire rend aussi a la vignette source son opacite, et remet a zero
+	# l etat « enfonce » du Button dont on a avale le relachement.
 	_render()
+
+
+## La carte transportee : meme forme que la vignette, un peu plus petite, pour
+## que la zone de depot reste visible autour.
+func _make_ghost(card: SpellCard) -> Control:
+	var g := PanelContainer.new()
+	g.top_level = true
+	g.z_index = 50
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	g.size = Vector2(TILE_W, TILE_H * 0.8)
+	g.custom_minimum_size = g.size
+	g.add_theme_stylebox_override(&"panel", UiTheme.rarity_border(card.rarity,
+		UiTheme.PANEL_LIGHT.lightened(0.05)))
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	g.add_child(box)
+	var art: TextureRect = CardIcons.make_rect(card, ICON_PX)
+	if art != null:
+		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		box.add_child(art)
+	var nom: Label = UiTheme.label(card.display_name, UiTheme.FONT_SMALL,
+		UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
+	nom.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	nom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(nom)
+	return g
+
+
+## La zone de depot, posee PAR-DESSUS la zone visee pendant tout le glisser.
+func _show_hint() -> void:
+	if _hint == null:
+		_hint = PanelContainer.new()
+		_hint.top_level = true
+		_hint.z_index = 40
+		_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hint_lbl = UiTheme.label_hud("", UiTheme.FONT_BODY, UiTheme.TEXT,
+			HORIZONTAL_ALIGNMENT_CENTER, true)
+		_hint_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hint.add_child(_hint_lbl)
+		add_child(_hint)
+	var r: Rect2 = collection_zone_rect() if _drag_from_deck else deck_zone_rect()
+	_hint.position = r.position
+	_hint.size = r.size
+	if _drag_from_deck:
+		_hint_lbl.text = "DEPOSER ICI\npour retirer du deck"
+	elif _drag_refusal != "":
+		_hint_lbl.text = _drag_refusal
+	else:
+		_hint_lbl.text = "DEPOSER ICI\npour ajouter au deck"
+	_hint_hover = false
+	_style_hint()
+	_hint.visible = true
+
+
+## Or si on peut lacher, rouge si ce sera refuse ; plus appuye quand le doigt
+## est DANS la zone, pour que le joueur sache qu il vise juste.
+func _style_hint() -> void:
+	if _hint == null:
+		return
+	var teinte: Color = HINT_REFUSED if _drag_refusal != "" else HINT_OK
+	var fond := Color(0.08, 0.06, 0.12, 0.72 if _hint_hover else 0.50)
+	_hint.add_theme_stylebox_override(&"panel", UiTheme.flat_box(fond, 18, 24.0,
+		teinte, 10 if _hint_hover else 6))
+	_hint_lbl.add_theme_color_override(&"font_color",
+		Color(1.0, 0.80, 0.80) if _drag_refusal != "" else Color(1.0, 0.93, 0.70))
+
+
+func drop_hint_visible() -> bool:
+	return _hint != null and _hint.visible
+
+
+func drop_hint_text() -> String:
+	return _hint_lbl.text if _hint_lbl != null else ""
+
+
+## Affiche POURQUOI un ajout vient d etre refuse, en bandeau sur le deck.
+## Il s efface seul : c est un retour sur un geste, pas un etat de l ecran.
+func show_refusal(raison: String) -> void:
+	_last_refusal = raison
+	if raison == "":
+		_hide_refusal()
+		return
+	if _notice == null:
+		_notice = PanelContainer.new()
+		_notice.top_level = true
+		_notice.z_index = 45
+		_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_notice.add_theme_stylebox_override(&"panel", UiTheme.flat_box(NOTICE_BG, 18, 22.0,
+			HINT_REFUSED, 4))
+		_notice_lbl = UiTheme.label("", UiTheme.FONT_BODY, UiTheme.TEXT,
+			HORIZONTAL_ALIGNMENT_CENTER, true)
+		_notice_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_notice.add_child(_notice_lbl)
+		add_child(_notice)
+	_notice_lbl.text = raison
+	_notice.visible = true
+	_fit_notice()
+	# Second recalage APRES le tri differe du conteneur. Un Label a retour a la
+	# ligne mesure sa hauteur sur sa largeur COURANTE : tant que le conteneur ne
+	# lui a pas donne la sienne, il la mesure a largeur nulle, une lettre par
+	# ligne — le bandeau naissait haut comme la page (vu sur `deck_refus`). Un
+	# Control `top_level` ne rapetisse jamais seul : il faut le remesurer.
+	_fit_notice.call_deferred()
+	# Minuterie portee par le bandeau lui-meme : liberee avec lui, elle ne peut
+	# pas rappeler un ecran detruit. Un nouveau refus relance le compte.
+	if _notice_tween != null and _notice_tween.is_valid():
+		_notice_tween.kill()
+	if _notice.is_inside_tree():
+		_notice_tween = _notice.create_tween()
+		_notice_tween.tween_interval(NOTICE_S)
+		_notice_tween.tween_callback(_hide_refusal)
+
+
+## Pose le bandeau en bas de la zone du deck : c est la que le joueur vient de
+## lacher, donc la que son regard se trouve. Hauteur = celle du texte, pas plus.
+func _fit_notice() -> void:
+	if _notice == null or not is_instance_valid(_notice) or not _notice.visible:
+		return
+	var r: Rect2 = deck_zone_rect()
+	var w: float = maxf(r.size.x - 40.0, 120.0)
+	_notice_lbl.custom_minimum_size = Vector2(w - 44.0, 0.0)
+	_notice.reset_size()
+	_notice.size = Vector2(w, _notice.get_combined_minimum_size().y)
+	_notice.position = Vector2(r.position.x + 20.0, r.end.y - _notice.size.y - 12.0)
+
+
+func _hide_refusal() -> void:
+	_last_refusal = ""
+	if _notice != null:
+		_notice.visible = false
+
+
+## Le message de refus affiche en ce moment ("" = aucun).
+func refusal_message() -> String:
+	return _last_refusal
 
 
 # --- Fiche d effet, a la place de la grille sur la page ---
@@ -693,10 +1118,11 @@ func _render_detail() -> void:
 	add.text = "AJOUTER"
 	add.custom_minimum_size = Vector2(0, 110)   # cible tactile confortable
 	add.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add.disabled = not DeckRules.can_add(_ids, card, SaveData.is_discovered(card.id))
+	var raison: String = refusal_for(card)
+	add.disabled = raison != ""
 	# Un bouton grise sans raison est une impasse : on dit POURQUOI juste dessous.
 	if add.disabled:
-		box.add_child(UiTheme.label(_refus(card), UiTheme.FONT_SMALL,
+		box.add_child(UiTheme.label(raison, UiTheme.FONT_SMALL,
 			Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
 	add.pressed.connect(func() -> void:
 		AudioBus.play_sfx(&"ui_tap")
@@ -713,22 +1139,6 @@ func _render_detail() -> void:
 		_detail_card = null
 		_render())
 	boutons.add_child(close)
-
-
-## Pourquoi cette carte ne peut pas entrer dans le deck. Le joueur doit pouvoir
-## corriger : "deck plein" et "trop d epiques" n appellent pas le meme geste.
-func _refus(card: SpellCard) -> String:
-	if not SaveData.is_discovered(card.id):
-		return "Carte non decouverte"
-	if _ids.size() >= DeckRules.DECK_SIZE:
-		return "Deck complet : retire une carte d abord"
-	if DeckRules.count_of(_ids, card.id) >= DeckRules.max_copies(card.rarity):
-		return "Deja %d exemplaires, le maximum pour cette rarete" % DeckRules.max_copies(card.rarity)
-	var plafond: int = DeckRules.max_of_rarity(card.rarity)
-	if plafond >= 0:
-		return "Deja %d %s dans le deck, le maximum" % [plafond,
-			GameEnums.rarity_name(card.rarity) + "s"]
-	return "Ajout impossible"
 
 
 func _fmt(v: float) -> String:

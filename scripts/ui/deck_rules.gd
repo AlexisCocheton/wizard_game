@@ -225,3 +225,8 @@ static func default_deck_ids() -> Array:
 					if out.size() >= DECK_SIZE:
 						break
 	return out
+
+
+## STUB — remplace par le chantier "regle de deck" a la fusion.
+static func refusal_reason(deck_ids: Array, card: SpellCard, discovered: bool) -> String:
+	return "" if can_add(deck_ids, card, discovered) else "Ajout impossible"
