@@ -15,9 +15,51 @@ const FIXED_DELTA: float = 1.0 / 60.0
 ## reelle du niveau le plus long (214 s de vagues au niveau 7, soit ~330 s joue)
 ## sinon on mesure la longueur du niveau et non sa difficulte.
 const MAX_SECONDS: float = 900.0
-## Les niveaux de campagne mesures par le banc. Ajouter ici tout nouveau niveau.
-const LEVELS: Array[String] = ["lvl_01", "lvl_02", "lvl_03", "lvl_04", "lvl_05",
-	"lvl_06", "lvl_07"]
+## Les niveaux de campagne mesures par le banc — DEDUITS du contenu.
+##
+## C etait une liste ecrite a la main, avec le commentaire « ajouter ici tout
+## nouveau niveau ». Personne ne l a fait sur QUATORZE ajouts : la campagne est
+## passee de 7 a 21 niveaux et le banc en mesurait toujours 7, sans rien dire.
+## Un outil de mesure qui ignore les deux tiers du jeu est pire qu absent : on
+## le croit.
+##
+## Ordre de JEU et non ordre d identifiant, pour que le rapport se lise comme la
+## campagne se parcourt (la campagne s est etendue en ajoutant des niveaux a la
+## suite, donc `lvl_17` se joue avant `lvl_03`).
+static func _levels() -> Array[String]:
+	var niveaux: Dictionary = ContentDB.levels
+	var pointes: Dictionary = {}
+	for k in niveaux:
+		for s in (niveaux[k] as LevelDef).next_levels:
+			pointes[StringName(s)] = true
+	var departs: Array[StringName] = []
+	for k in niveaux:
+		if not pointes.has(StringName(k)):
+			departs.append(StringName(k))
+	departs.sort_custom(func(a: StringName, b: StringName) -> bool:
+		return String(a) < String(b))
+	var out: Array[String] = []
+	var vus: Dictionary = {}
+	var file: Array[StringName] = departs.duplicate()
+	var garde: int = 512
+	while not file.is_empty() and garde > 0:
+		garde -= 1
+		var id: StringName = file.pop_front()
+		if vus.has(id) or not niveaux.has(id):
+			continue
+		vus[id] = true
+		out.append(String(id))
+		for s in (niveaux[id] as LevelDef).next_levels:
+			if not vus.has(StringName(s)):
+				file.append(StringName(s))
+	# Les orphelins : un niveau non mesure doit apparaitre, pas disparaitre.
+	var reste: Array[String] = []
+	for k in niveaux:
+		if not vus.has(StringName(k)):
+			reste.append(String(k))
+	reste.sort()
+	out.append_array(reste)
+	return out
 
 var _total_damage: float = 0.0
 var _cast_time: float = 0.0
@@ -34,7 +76,7 @@ func _ready() -> void:
 	_report_waves()
 	# Une seule partie ne prouve rien : le tirage des cartes et la composition des
 	# vagues varient. On mesure un TAUX DE REUSSITE sur plusieurs graines.
-	for level_id in LEVELS:
+	for level_id in _levels():
 		await _run_level_many(StringName(level_id), 30)
 	await _run_massacre_many(20)
 	print("=== FIN ===")
@@ -44,7 +86,7 @@ func _ready() -> void:
 ## Ce que chaque vague envoie, avant meme de jouer.
 func _report_waves() -> void:
 	print("\n-- Contenu des vagues (puissance totale, nombre de monstres) --")
-	for level_id in LEVELS:
+	for level_id in _levels():
 		var level: LevelDef = ContentDB.levels.get(StringName(level_id))
 		if level == null:
 			continue
