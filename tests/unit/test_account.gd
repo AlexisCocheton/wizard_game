@@ -97,6 +97,8 @@ func _test_les_recompenses_sont_cosmetiques() -> void:
 		GameEnums.RewardKind.TITLE, GameEnums.RewardKind.AVATAR,
 		GameEnums.RewardKind.MAGE_COLOR, GameEnums.RewardKind.HAT,
 		GameEnums.RewardKind.TOWER,
+		# Les apprentis du mage : une autre silhouette, les memes stats.
+		GameEnums.RewardKind.CHARACTER,
 	]
 	# Le garde-fou qui compte vraiment : si quelqu un ajoute un type a l enum
 	# sans le declarer cosmetique ici, ce test rougit et la question se pose.
@@ -194,6 +196,8 @@ func _test_les_cosmetiques_restent_cosmetiques() -> void:
 		GameEnums.RewardKind.TITLE, GameEnums.RewardKind.AVATAR,
 		GameEnums.RewardKind.MAGE_COLOR, GameEnums.RewardKind.HAT,
 		GameEnums.RewardKind.TOWER,
+		# Les apprentis du mage : une autre silhouette, les memes stats.
+		GameEnums.RewardKind.CHARACTER,
 	]
 	for r: AccountRewardDef in ContentDB.rewards_list():
 		ok(permis.has(r.kind), "la recompense %s est d un type cosmetique" % r.id)

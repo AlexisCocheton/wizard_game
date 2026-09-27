@@ -271,7 +271,8 @@ func _achievement_card(d: ChallengeDef) -> void:
 
 ## --- COSMETIQUES ---
 ##
-## Trois axes : la robe du mage, son chapeau, sa tour. Uniquement de l apparence
+## Quatre axes : le personnage (le mage ou un apprenti), la robe du mage, son
+## chapeau, sa tour. Uniquement de l apparence
 ## — le compte ne donne JAMAIS de puissance, sinon l equilibrage mesure des sept
 ## niveaux ne vaudrait plus rien et jouer beaucoup vaudrait mieux que jouer bien.
 ##
@@ -284,13 +285,30 @@ func _build_cosmetics() -> void:
 		"Change ce que tu vois en combat. Aucun cosmetique ne rend plus fort.",
 		UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.22)))
 
-	_cosmetic_group("ROBE", K.MAGE_COLOR)
-	_cosmetic_group("CHAPEAU", K.HAT)
+	# Le PERSONNAGE d abord : c est le choix qui decide si les deux suivants
+	# comptent. Les apprentis du mage se gagnent au niveau de compte.
+	_cosmetic_group("PERSONNAGE", K.CHARACTER)
+	# Robe et chapeau sont des TEINTES DE LA FEUILLE DU MAGE : sur une apprentie
+	# elles n ont aucun sens. On les GRISE avec une phrase au lieu de les cacher —
+	# le joueur doit voir que ses choix sont gardes et reviendront avec le mage,
+	# pas croire qu il les a perdus.
+	var eteint: bool = SaveData.is_apprentice_equipped()
+	if eteint:
+		var note := UiTheme.label(
+			"Robe et chapeau habillent le mage : ils reviennent quand tu le reprends.",
+			UiTheme.FONT_SMALL, Color(0.52, 0.40, 0.25))
+		note.name = "ApprenticeNote"
+		_box.add_child(note)
+	_cosmetic_group("ROBE", K.MAGE_COLOR, eteint)
+	_cosmetic_group("CHAPEAU", K.HAT, eteint)
 	_cosmetic_group("TOUR", K.TOWER)
 
 
-func _cosmetic_group(titre: String, kind: int) -> void:
-	_box.add_child(UiTheme.label(titre, UiTheme.FONT_BODY, Color(0.35, 0.26, 0.15)))
+## `eteint` : le groupe ne s applique pas au personnage joue. Il reste lisible et
+## choisissable (le choix est garde pour le mage), mais terni.
+func _cosmetic_group(titre: String, kind: int, eteint: bool = false) -> void:
+	var entete := UiTheme.label(titre, UiTheme.FONT_BODY, Color(0.35, 0.26, 0.15))
+	_box.add_child(entete)
 
 	var porte: String = SaveData.equipped_cosmetic(kind)
 	var niveau: int = SaveData.account_level()
@@ -298,7 +316,13 @@ func _cosmetic_group(titre: String, kind: int) -> void:
 	grille.columns = 2
 	grille.add_theme_constant_override(&"h_separation", 12)
 	grille.add_theme_constant_override(&"v_separation", 12)
+	grille.name = "Group_%d" % kind
 	_box.add_child(grille)
+	if eteint:
+		# Un seul modulate sur le groupe entier : les vignettes, les cadres et le
+		# jeton equipe palissent ensemble, et le titre avec eux.
+		grille.modulate = Color(1.0, 1.0, 1.0, 0.45)
+		entete.modulate = Color(1.0, 1.0, 1.0, 0.55)
 
 	for r: AccountRewardDef in ContentDB.rewards_list():
 		if r == null or r.kind != kind:

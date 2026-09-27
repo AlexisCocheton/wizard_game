@@ -297,7 +297,140 @@ static func cosmetic_preview(kind: int, texture_name: String) -> Texture2D:
 			# pour les icones de cartes (voir card_icons.gd).
 			at.region = Rect2(MAGE_CROP.position, MAGE_CROP.size)
 			return at
+		GameEnums.RewardKind.CHARACTER:
+			# Le mage se montre TEL QU IL EST HABILLE : c est lui qu on retrouve
+			# en le reprenant, avec la robe et le chapeau deja choisis.
+			if texture_name == AccountRewardDef.CHARACTER_MAGE:
+				return cosmetic_preview(GameEnums.RewardKind.HAT, mage_sheet_key())
+			return _apprentice_preview(texture_name)
 	return null
+
+
+## --- LE PERSONNAGE EN COMBAT : le mage ou un de ses apprentis ---
+##
+## mage_view.gd ne lit que ces fonctions : il ne sait pas qui il affiche. C est
+## ce qui rend un apprenti purement DECLARATIF — une recompense CHARACTER et une
+## cle d AnimCatalog suffisent, la taille, la hauteur des pieds et la pose
+## d incantation se deduisent de la feuille.
+
+## Echelle et hauteur du mage d origine, reprises telles quelles de mage_view.gd :
+## c est l etalon sur lequel chaque apprenti est aligne.
+const MAGE_SCALE: float = 1.35
+const MAGE_Y: float = -20.0
+
+## Mesures de silhouette deja faites (get_image() coute : on ne le fait qu une
+## fois par feuille).
+static var _visible_cache: Dictionary = {}
+
+
+## La cle reellement jouee : celle du profil, SAUF si sa feuille ne donne pas de
+## pose d attente — un personnage invisible est pire que le retour au mage.
+static func hero_key() -> String:
+	var key: String = SaveData.equipped_character()
+	if key == AccountRewardDef.CHARACTER_MAGE:
+		return key
+	var sf: SpriteFrames = AnimCatalog.frames(StringName(key))
+	if sf == null or not sf.has_animation(&"idle") or sf.get_frame_count(&"idle") == 0:
+		return AccountRewardDef.CHARACTER_MAGE
+	return key
+
+
+static func hero_is_apprentice() -> bool:
+	return hero_key() != AccountRewardDef.CHARACTER_MAGE
+
+
+## Les animations du personnage joue. Le mage garde sa robe et son chapeau ; un
+## apprenti les met de cote (ce sont des teintes de la feuille du mage, elles
+## n ont aucun sens sur une autre silhouette).
+static func hero_frames() -> SpriteFrames:
+	var key: String = hero_key()
+	if key == AccountRewardDef.CHARACTER_MAGE:
+		return mage_frames()
+	return AnimCatalog.frames(StringName(key))
+
+
+## La pose d incantation. Le mage a une feuille "cast" ; les sorcieres du pack
+## n ont qu une "attack", qui est bien un geste de sort. A defaut, l attente :
+## mieux vaut un personnage immobile qu une animation absente.
+static func hero_cast_anim(sf: SpriteFrames) -> StringName:
+	for a: StringName in [&"cast", &"attack"]:
+		if sf != null and sf.has_animation(a) and sf.get_frame_count(a) > 0:
+			return a
+	return &"idle"
+
+
+## Echelle et position du sprite pour que le personnage ait la HAUTEUR du mage a
+## l ecran et les PIEDS au meme endroit.
+##
+## POURQUOI PAS UN SIMPLE RAPPORT DE CASES. La case du mage fait 192 px et il en
+## occupe 71 de haut ; celle de la sorciere bleue fait 48 px et elle en occupe
+## une quarantaine. Reprendre l echelle du mage donnerait une apprentie deux fois
+## plus petite que lui. L occupation du catalogue ne suffit pas non plus : elle
+## est mesuree sur la plus grande dimension de la MARCHE, qui chez le mage est sa
+## largeur (83 px, les bras qui balancent) — la sorciere sortirait d une tete
+## plus grande que lui. On compare donc les hauteurs reellement opaques de la pose d attente.
+static func hero_pose(key: String = "") -> Dictionary:
+	if key == "":
+		key = hero_key()
+	if key == AccountRewardDef.CHARACTER_MAGE:
+		return {"scale": MAGE_SCALE, "y": MAGE_Y}
+	var etalon := Rect2(MAGE_CROP)
+	var r: Rect2 = hero_visible_rect(key)
+	if r.size.y <= 0.0:
+		return {"scale": MAGE_SCALE, "y": MAGE_Y}
+	var s: float = MAGE_SCALE * etalon.size.y / r.size.y
+	# Le sprite est centre sur sa case : les pieds tombent a (bas de la
+	# silhouette - demi-case) * echelle sous la position du sprite.
+	var pieds_mage: float = MAGE_Y + (etalon.end.y - MAGE_FRAME * 0.5) * MAGE_SCALE
+	var demi_case: float = AnimCatalog.frame_px(StringName(key)) * 0.5
+	return {"scale": s, "y": pieds_mage - (r.end.y - demi_case) * s}
+
+
+## Region opaque de la premiere image d attente, en pixels DE LA CASE.
+##
+## Mesuree sur l image quand le moteur la rend (jeu, etage visual). En headless
+## get_image() peut ne rien rendre : on retombe sur un carre centre de la part
+## occupee (AnimCatalog.occupancy), ce qui garde des proportions justes pour les
+## tests sans rien afficher de faux a l ecran.
+static func hero_visible_rect(key: String) -> Rect2:
+	if key == AccountRewardDef.CHARACTER_MAGE:
+		return Rect2(MAGE_CROP)
+	if _visible_cache.has(key):
+		return _visible_cache[key]
+	var cell: float = float(AnimCatalog.frame_px(StringName(key)))
+	var side: float = cell * clampf(AnimCatalog.occupancy(StringName(key)), 0.05, 1.0)
+	var r := Rect2(Vector2.ONE * (cell - side) * 0.5, Vector2.ONE * side)
+	var frame: Texture2D = _hero_idle_frame(key)
+	if frame != null:
+		var img: Image = frame.get_image()
+		if img != null and not img.is_empty():
+			var used: Rect2i = img.get_used_rect()
+			if used.size.x > 0 and used.size.y > 0:
+				r = Rect2(used)
+	_visible_cache[key] = r
+	return r
+
+
+static func _hero_idle_frame(key: String) -> Texture2D:
+	var sf: SpriteFrames = AnimCatalog.frames(StringName(key))
+	if sf == null or not sf.has_animation(&"idle") or sf.get_frame_count(&"idle") == 0:
+		return null
+	return sf.get_frame_texture(&"idle", 0)
+
+
+## Vignette d un apprenti : sa premiere image d attente RECADREE sur la
+## silhouette. Meme lecon que pour le mage (MAGE_CROP) : la case entiere laisse
+## un personnage perdu au milieu du vide, et c est le recadrage qui fait qu on
+## le reconnait. L atlas reste la feuille d origine, aucune texture n est creee.
+static func _apprentice_preview(key: String) -> Texture2D:
+	var frame: AtlasTexture = _hero_idle_frame(key) as AtlasTexture
+	if frame == null:
+		return null
+	var r: Rect2 = hero_visible_rect(key)
+	var at := AtlasTexture.new()
+	at.atlas = frame.atlas
+	at.region = Rect2(frame.region.position + r.position, r.size)
+	return at
 
 
 ## La texture de tour que le joueur a equipee, avec repli sur celle d origine.

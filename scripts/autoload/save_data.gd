@@ -49,6 +49,10 @@ func _defaults() -> Dictionary:
 				"mage_color": "monk_blue",
 				"hat": "monk_blue",
 				"tower": "tower_blue",
+				## Le PERSONNAGE joue en combat : le mage, ou un apprenti (cle
+				## AnimCatalog). Un profil d avant les apprentis n a pas cette
+				## cle : _migrate() la complete, et il se charge avec le mage.
+				"character": AccountRewardDef.CHARACTER_MAGE,
 			},
 			## Scenes d histoire deja vues : une scene ne se rejoue pas quand on
 			## refait un niveau. _migrate() ajoute la cle aux vieux profils.
@@ -115,6 +119,19 @@ func _migrate(d: Dictionary) -> Dictionary:
 	for key: String in base["settings"]:
 		if not d["settings"].has(key):
 			d["settings"][key] = base["settings"][key]
+	# Meme completion UN CRAN PLUS BAS, pour les cosmetiques : un profil d avant
+	# les apprentis a bien un dictionnaire "cosmetics", donc la boucle ci-dessus
+	# le garde tel quel, sans la cle "character". Sans cette passe, la cle
+	# n existerait jamais dans le fichier et seul le repli de lecture sauverait
+	# le mage. Pas de hausse de schema_version : c est un ajout de cle, que la
+	# completion couvre deja pour tout le reste du profil.
+	var cosm: Variant = d["profile"].get("cosmetics")
+	if typeof(cosm) != TYPE_DICTIONARY:
+		d["profile"]["cosmetics"] = (base["profile"] as Dictionary)["cosmetics"]
+	else:
+		for key: String in base["profile"]["cosmetics"]:
+			if not (cosm as Dictionary).has(key):
+				cosm[key] = base["profile"]["cosmetics"][key]
 	return d
 
 
@@ -699,7 +716,8 @@ func unlocked_rewards() -> Array[AccountRewardDef]:
 
 ## --- COSMETIQUES EQUIPES ---
 ##
-## Trois axes independants : la robe du mage, la couleur de son chapeau, sa tour.
+## Quatre axes independants : la robe du mage, la couleur de son chapeau, sa tour,
+## et le personnage (le mage ou un apprenti, qui met robe et chapeau de cote).
 ## Chacun retient une CLE (nom de feuille d animation ou de texture) et non un id
 ## de recompense : les deux fichiers de jeu qui la lisent n ont ainsi rien a
 ## chercher dans ContentDB, et une seule ligne leur suffit.
@@ -715,6 +733,7 @@ func _cosmetic_slot(kind: int) -> String:
 		GameEnums.RewardKind.MAGE_COLOR: return "mage_color"
 		GameEnums.RewardKind.HAT: return "hat"
 		GameEnums.RewardKind.TOWER: return "tower"
+		GameEnums.RewardKind.CHARACTER: return "character"
 	return ""
 
 
@@ -763,6 +782,37 @@ func equipped_reward(kind: int) -> AccountRewardDef:
 		if r != null and r.kind == kind and r.texture_name == porte:
 			return r
 	return null
+
+
+## --- PERSONNAGE (les apprentis du mage) ---
+##
+## Le personnage joue en combat. Rend la cle AnimCatalog d un apprenti, ou
+## AccountRewardDef.CHARACTER_MAGE.
+##
+## LA LECTURE REVERIFIE LE DROIT, pas seulement l ecriture. equip_cosmetic()
+## refuse deja un apprenti non gagne, mais un apprenti peut rester dans le
+## profil sans y avoir droit : equipe en mode testeur puis mode eteint, profil
+## edite a la main, recompense retiree du catalogue, feuille renommee. Dans tous
+## ces cas on rend le mage : un personnage sans feuille serait invisible en
+## combat, et un apprenti non merite viderait la recompense de son sens.
+func equipped_character() -> String:
+	var cle: String = equipped_cosmetic(GameEnums.RewardKind.CHARACTER)
+	if cle == AccountRewardDef.CHARACTER_MAGE:
+		return cle
+	var r: AccountRewardDef = equipped_reward(GameEnums.RewardKind.CHARACTER)
+	if r == null or r.at_level > account_level() or not AnimCatalog.has(StringName(cle)):
+		return AccountRewardDef.CHARACTER_MAGE
+	return cle
+
+
+## Un apprenti est-il joue ? Robe et chapeau sont alors mis de cote.
+func is_apprentice_equipped() -> bool:
+	return equipped_character() != AccountRewardDef.CHARACTER_MAGE
+
+
+## Pour les tests : le profil tel qu il serait ecrit sur le disque (copie).
+func to_dictionary() -> Dictionary:
+	return _data.duplicate(true)
 
 
 ## Pour les tests : charge un profil brut en passant par la migration.

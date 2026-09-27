@@ -660,7 +660,9 @@ func _test_lacte_3_se_ferme_sur_le_sceau_de_tombol() -> void:
 func _test_les_silhouettes_orphelines_ont_un_niveau() -> void:
 	const ORPHELINES: Array[StringName] = [
 		&"flyingeye", &"goblin2", &"skeleton2", &"evilwizard", &"fireworm",
-		&"ghoul", &"bluewitch", &"nightborne", &"mageguardian",
+		&"ghoul", &"nightborne", &"mageguardian",
+		# bluewitch n est plus orpheline : elle est la premiere APPRENTIE du mage
+		# (test_apprentices), et l AUDIT lui interdit justement de porter un monstre.
 	]
 	# anim_key -> le monstre qui la porte.
 	var portees: Dictionary = {}

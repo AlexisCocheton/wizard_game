@@ -159,6 +159,12 @@ func _rewards() -> void:
 			"Le chapeau du voyageur.", 1, K.HAT, "monk_blue"),
 		_reward("rw_tower_blue", "Tour d azur",
 			"La tour de pierre bleue.", 1, K.TOWER, "tower_blue"),
+		# Le mage est un choix comme un autre dans la grille PERSONNAGE : sans
+		# cette entree, un joueur qui a pris une apprentie ne pourrait plus
+		# revenir a lui.
+		_reward("rw_char_mage", "Le mage",
+			"Le gardien du temps en personne.", 1, K.CHARACTER,
+			AccountRewardDef.CHARACTER_MAGE),
 
 		# --- Paliers ---
 		_reward("rw_title_apprenti", "Apprenti",
@@ -188,6 +194,17 @@ func _rewards() -> void:
 
 		_reward("rw_tower_obsidian", "Tour d obsidienne",
 			"Une tour de verre noir, nee d un ancien incendie.", 7, K.TOWER, "tower_obsidian"),
+
+		# LES APPRENTIS DU MAGE (Witches Pack) : une sorciere par recompense.
+		# Changer de personnage est le plus gros cosmetique du compte, il vient
+		# donc apres la premiere moitie des robes et chapeaux. Le niveau 9 etait
+		# un palier VIDE : le joueur montait sans rien recevoir. Les suivantes
+		# prendront 11 (vide aussi) puis les paliers au-dela de 12, quand le pack
+		# complet sera sur le disque — une recompense et une cle d animation
+		# suffisent, aucun code.
+		_reward("rw_char_bluewitch", "Apprentie d azur",
+			"La premiere apprentie du mage. Elle combat a sa place ; il garde la parole dans les histoires.",
+			9, K.CHARACTER, "bluewitch"),
 
 		_reward("rw_avatar_09", "Portrait du dernier mage",
 			"Un nouveau portrait pour ton profil.", 8, K.AVATAR, "icon_09"),

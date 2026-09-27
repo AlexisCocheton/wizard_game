@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_tvsyn"]
+
+[resource]
+script = ExtResource("1_tvsyn")
+id = &"rw_char_mage"
+display_name = "Le mage"
+description = "Le gardien du temps en personne."
+at_level = 1
+kind = 5
+texture_name = "mage"

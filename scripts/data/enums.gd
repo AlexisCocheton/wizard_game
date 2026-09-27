@@ -82,6 +82,11 @@ enum RewardKind {
 	MAGE_COLOR,  ## la robe du mage (feuilles monk_blue / black / purple)
 	HAT,         ## la couleur de son chapeau (palette remappee)
 	TOWER,       ## la tour posee sur la ligne du mage
+	## Le PERSONNAGE joue en combat : le mage, ou l un de ses apprentis.
+	## Ajoute EN DERNIER : les .tres stockent le type en entier (kind = 4), un
+	## type insere au milieu decalerait toutes les recompenses deja ecrites.
+	## Un apprenti ne change que la silhouette, jamais les stats.
+	CHARACTER,
 }
 
 
