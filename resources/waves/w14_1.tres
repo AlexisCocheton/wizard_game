@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_itlgh"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_0qk4i"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_rpj5h"]
+[ext_resource type="Resource" path="res://resources/enemies/sleepy_fox.tres" id="4_0qk4i"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_uyi61"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_au2vn"]
 
-[sub_resource type="Resource" id="Resource_itlgh"]
+[sub_resource type="Resource" id="Resource_rpj5h"]
 script = ExtResource("1_itlgh")
 enemy = ExtResource("2_0qk4i")
 count = 6
 spawn_delay = 1.6
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_0qk4i"]
+[sub_resource type="Resource" id="Resource_uyi61"]
 script = ExtResource("1_itlgh")
 enemy = ExtResource("3_rpj5h")
 count = 5
 spawn_delay = 1.4
 start_offset = 9.0
 
-[sub_resource type="Resource" id="Resource_rpj5h"]
+[sub_resource type="Resource" id="Resource_au2vn"]
+script = ExtResource("1_itlgh")
+enemy = ExtResource("4_0qk4i")
+count = 2
+spawn_delay = 2.4
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_cl64v"]
 script = ExtResource("1_itlgh")
 enemy = ExtResource("4_uyi61")
-count = 3
+count = 1
 spawn_delay = 1.8
-start_offset = 18.0
+start_offset = 22.0
 
 [resource]
 script = ExtResource("5_au2vn")
 id = &"w14_1"
 duration = 27.0
-entries = Array[ExtResource("1_itlgh")]([SubResource("Resource_itlgh"), SubResource("Resource_0qk4i"), SubResource("Resource_rpj5h")])
+entries = Array[ExtResource("1_itlgh")]([SubResource("Resource_rpj5h"), SubResource("Resource_uyi61"), SubResource("Resource_au2vn"), SubResource("Resource_cl64v")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false

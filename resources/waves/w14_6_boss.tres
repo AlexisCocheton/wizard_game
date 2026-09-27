@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_e6jeb"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_colossal.tres" id="2_ojlua"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="3_nv6de"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_cakcl"]
+
+[sub_resource type="Resource" id="Resource_oexr8"]
+script = ExtResource("1_e6jeb")
+enemy = ExtResource("2_ojlua")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_jn4f5"]
+script = ExtResource("1_e6jeb")
+enemy = ExtResource("3_nv6de")
+count = 3
+spawn_delay = 2.0
+start_offset = 24.0
+
+[resource]
+script = ExtResource("4_cakcl")
+id = &"w14_6_boss"
+duration = 48.0
+entries = Array[ExtResource("1_e6jeb")]([SubResource("Resource_oexr8"), SubResource("Resource_jn4f5")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

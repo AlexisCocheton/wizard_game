@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=59 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=62 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_cshed"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="2_lhb6e"]
@@ -15,8 +15,10 @@
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="13_cshed"]
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="14_m3ew4"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_anvil.tres" id="15_5hm2b"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_lord.tres" id="15_lhb6e"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="15_opf7y"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_maw.tres" id="16_0t8fe"]
+[ext_resource type="Resource" path="res://resources/enemies/cacodaemon.tres" id="16_rwjjn"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="16_v38qs"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_chain.tres" id="17_m7vev"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="17_w82a7"]
@@ -73,7 +75,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_cysi5"]
+[sub_resource type="Resource" id="Resource_cgn7k"]
 script = ExtResource("30_kgkvb")
 id = &"w13_1"
 duration = 27.0
@@ -110,7 +112,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_cshed"]
+[sub_resource type="Resource" id="Resource_5hm2b"]
 script = ExtResource("30_kgkvb")
 id = &"w13_2"
 duration = 28.0
@@ -119,34 +121,41 @@ difficulty = 1.4
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_fafhq"]
+[sub_resource type="Resource" id="Resource_y8r6i"]
 script = ExtResource("31_xlvbd")
-enemy = ExtResource("13_cshed")
-count = 3
-spawn_delay = 2.2
+enemy = ExtResource("14_m3ew4")
+count = 1
+spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_drwus"]
+[sub_resource type="Resource" id="Resource_yifno"]
+script = ExtResource("31_xlvbd")
+enemy = ExtResource("13_cshed")
+count = 1
+spawn_delay = 2.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_41xv0"]
 script = ExtResource("31_xlvbd")
 enemy = ExtResource("7_m7vev")
-count = 3
+count = 2
 spawn_delay = 2.2
-start_offset = 10.0
+start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_dbk8p"]
+[sub_resource type="Resource" id="Resource_em8mc"]
 script = ExtResource("31_xlvbd")
 enemy = ExtResource("8_q51cj")
-count = 2
+count = 1
 spawn_delay = 2.5
-start_offset = 22.0
+start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_lhb6e"]
+[sub_resource type="Resource" id="Resource_0t8fe"]
 script = ExtResource("30_kgkvb")
-id = &"w13_3"
-duration = 34.0
-entries = Array[ExtResource("31_xlvbd")]([SubResource("Resource_fafhq"), SubResource("Resource_drwus"), SubResource("Resource_dbk8p")])
-difficulty = 1.4
-is_miniboss = false
+id = &"w13_3_miniboss"
+duration = 36.0
+entries = Array[ExtResource("31_xlvbd")]([SubResource("Resource_y8r6i"), SubResource("Resource_yifno"), SubResource("Resource_41xv0"), SubResource("Resource_em8mc")])
+difficulty = 1.1
+is_miniboss = true
 is_boss = false
 
 [sub_resource type="Resource" id="Resource_8163g"]
@@ -191,7 +200,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 30.0
 
-[sub_resource type="Resource" id="Resource_rwjjn"]
+[sub_resource type="Resource" id="Resource_m7vev"]
 script = ExtResource("30_kgkvb")
 id = &"w13_4"
 duration = 31.0
@@ -200,39 +209,39 @@ difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_mphq1"]
+[sub_resource type="Resource" id="Resource_0xyev"]
 script = ExtResource("31_xlvbd")
-enemy = ExtResource("14_m3ew4")
+enemy = ExtResource("15_lhb6e")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_0xyev"]
+[sub_resource type="Resource" id="Resource_ljpno"]
 script = ExtResource("31_xlvbd")
 enemy = ExtResource("2_lhb6e")
 count = 2
 spawn_delay = 2.8
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_ljpno"]
+[sub_resource type="Resource" id="Resource_v183x"]
 script = ExtResource("31_xlvbd")
 enemy = ExtResource("7_m7vev")
 count = 2
 spawn_delay = 2.5
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_v183x"]
+[sub_resource type="Resource" id="Resource_hj424"]
 script = ExtResource("31_xlvbd")
 enemy = ExtResource("5_5hm2b")
 count = 1
 spawn_delay = 2.5
 start_offset = 38.0
 
-[sub_resource type="Resource" id="Resource_cgn7k"]
+[sub_resource type="Resource" id="Resource_q51cj"]
 script = ExtResource("30_kgkvb")
 id = &"w13_5_boss"
 duration = 50.0
-entries = Array[ExtResource("31_xlvbd")]([SubResource("Resource_mphq1"), SubResource("Resource_0xyev"), SubResource("Resource_ljpno"), SubResource("Resource_v183x")])
+entries = Array[ExtResource("31_xlvbd")]([SubResource("Resource_0xyev"), SubResource("Resource_ljpno"), SubResource("Resource_v183x"), SubResource("Resource_hj424")])
 difficulty = 1.05
 is_miniboss = false
 is_boss = true
@@ -243,14 +252,19 @@ id = &"lvl_13"
 display_name = "Le pentacle brise"
 act = 4
 subtitle = "Quatre contrats, pas une signature en commun"
-intro_text = "Quatre seigneurs tombes, quatre contrats, et aucun des quatre n avait lu l ordre : ils l ont RECU. Le pentacle qui tient ce monde est au centre de la salle, et il n a jamais ete a eux."
-outro_text = "Le pentacle se fend en cinq morceaux et le monde avec lui. Ce n est pas toi qui l as casse : on te RETIRE, comme une piece qu on ote du plateau. L enfant te tient la main, et sa main est froide comme le puits. La chute ne va pas vers le bas."
+intro_text = "Quatre seigneurs tombes, quatre contrats, et aucun des quatre 
+n avait lu l ordre : ils l ont RECU. Le pentacle qui tient ce monde est au centre de 
+la salle, et il n a jamais ete a eux."
+outro_text = "Le pentacle se fend en cinq morceaux et le monde avec lui. Ce 
+n est pas toi qui l as casse : on te RETIRE, comme une piece qu on ote du plateau. 
+L enfant te tient la main, et sa main est froide comme le puits. La chute ne va pas 
+vers le bas."
 intro_story = &"lvl_13_intro"
 outro_story = &"lvl_13_outro"
 terrain = "sand"
 backdrop = "act3_demon"
-waves = Array[ExtResource("30_kgkvb")]([SubResource("Resource_cysi5"), SubResource("Resource_cshed"), SubResource("Resource_lhb6e"), SubResource("Resource_rwjjn"), SubResource("Resource_cgn7k")])
-enemy_pool = Array[ExtResource("1_cshed")]([ExtResource("2_lhb6e"), ExtResource("3_rwjjn"), ExtResource("4_cgn7k"), ExtResource("5_5hm2b"), ExtResource("6_0t8fe"), ExtResource("7_m7vev"), ExtResource("8_q51cj"), ExtResource("9_tmgem"), ExtResource("10_oa0p5"), ExtResource("11_an03n"), ExtResource("12_bemd2"), ExtResource("13_cshed"), ExtResource("14_m3ew4"), ExtResource("15_5hm2b"), ExtResource("16_0t8fe"), ExtResource("17_m7vev"), ExtResource("18_q51cj")])
+waves = Array[ExtResource("30_kgkvb")]([SubResource("Resource_cgn7k"), SubResource("Resource_5hm2b"), SubResource("Resource_0t8fe"), SubResource("Resource_m7vev"), SubResource("Resource_q51cj")])
+enemy_pool = Array[ExtResource("1_cshed")]([ExtResource("2_lhb6e"), ExtResource("3_rwjjn"), ExtResource("4_cgn7k"), ExtResource("5_5hm2b"), ExtResource("6_0t8fe"), ExtResource("7_m7vev"), ExtResource("8_q51cj"), ExtResource("9_tmgem"), ExtResource("10_oa0p5"), ExtResource("11_an03n"), ExtResource("12_bemd2"), ExtResource("13_cshed"), ExtResource("14_m3ew4"), ExtResource("15_lhb6e"), ExtResource("16_rwjjn"), ExtResource("15_5hm2b"), ExtResource("16_0t8fe"), ExtResource("17_m7vev"), ExtResource("18_q51cj")])
 exploration_deck = Array[ExtResource("15_opf7y")]([ExtResource("17_w82a7"), ExtResource("17_w82a7"), ExtResource("17_w82a7"), ExtResource("17_w82a7"), ExtResource("16_v38qs"), ExtResource("16_v38qs"), ExtResource("16_v38qs"), ExtResource("22_cysi5"), ExtResource("22_cysi5"), ExtResource("22_cysi5"), ExtResource("20_j86d8"), ExtResource("20_j86d8"), ExtResource("25_tx3nd"), ExtResource("25_tx3nd"), ExtResource("26_m2i2p")])
 objectives = Array[ExtResource("28_gi347")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("27_m7n7p")

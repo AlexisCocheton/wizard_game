@@ -226,8 +226,12 @@ id = &"lvl_01"
 display_name = "Les Marches du Temps"
 act = 1
 subtitle = "Le matin de la premiere attaque"
-intro_text = "Le royaume est tombe. Tu as remonte le temps jusqu ici, le premier matin, pour trouver qui a donne l ordre. Ce ne sont que des gnomes et des lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne."
-outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher qu obeir. Chronos n etait qu un huissier venu verifier les delais."
+intro_text = "Le royaume est tombe. Tu as remonte le temps jusqu ici, le 
+premier matin, pour trouver qui a donne l ordre. Ce ne sont que des gnomes et des 
+lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne."
+outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette 
+guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher 
+qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 intro_story = &"lvl_01_intro"
 outro_story = &"lvl_01_outro"
 terrain = "grass"

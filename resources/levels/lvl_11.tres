@@ -192,8 +192,12 @@ id = &"lvl_11"
 display_name = "L arene de Kaltek"
 act = 4
 subtitle = "Plus tu frappes, plus vite il vient"
-intro_text = "Une arene de sable noir, et des chaines partout : Kaltek ne tient pas ses esclaves, il les FABRIQUE. Chaque coup que tu lui rends le rend plus rapide. Ici, aller vite est une erreur — c est le seul niveau qui te le dira."
-outro_text = "Kaltek tombe au milieu de ses propres chaines, et elles ne tenaient rien : elles PARTAIENT de lui, vers le haut. Lui aussi etait tenu. Un seigneur de la rage qui obeit, ca n a plus de nom."
+intro_text = "Une arene de sable noir, et des chaines partout : Kaltek ne 
+tient pas ses esclaves, il les FABRIQUE. Chaque coup que tu lui rends le rend plus 
+rapide. Ici, aller vite est une erreur — c est le seul niveau qui te le dira."
+outro_text = "Kaltek tombe au milieu de ses propres chaines, et elles ne 
+tenaient rien : elles PARTAIENT de lui, vers le haut. Lui aussi etait tenu. Un 
+seigneur de la rage qui obeit, ca n a plus de nom."
 intro_story = &"lvl_11_intro"
 outro_story = &"lvl_11_outro"
 terrain = "grass"

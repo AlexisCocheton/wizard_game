@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_7dhvo"]
+[ext_resource type="Resource" path="res://resources/enemies/circle_twins.tres" id="2_4c6m6"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="3_0thq5"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_n5msn"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_ktttw"]
+
+[sub_resource type="Resource" id="Resource_gef2v"]
+script = ExtResource("1_7dhvo")
+enemy = ExtResource("2_4c6m6")
+count = 1
+spawn_delay = 1.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_w1fx1"]
+script = ExtResource("1_7dhvo")
+enemy = ExtResource("3_0thq5")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_u11g5"]
+script = ExtResource("1_7dhvo")
+enemy = ExtResource("4_n5msn")
+count = 2
+spawn_delay = 2.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_ktttw")
+id = &"w12_4_miniboss"
+duration = 32.0
+entries = Array[ExtResource("1_7dhvo")]([SubResource("Resource_gef2v"), SubResource("Resource_w1fx1"), SubResource("Resource_u11g5")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

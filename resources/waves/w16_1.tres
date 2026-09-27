@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_htf8n"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="6_2uv4j"]
 
-[sub_resource type="Resource" id="Resource_2uv4j"]
+[sub_resource type="Resource" id="Resource_8472u"]
 script = ExtResource("1_qx126")
 enemy = ExtResource("2_8472u")
 count = 2
 spawn_delay = 4.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_7o6pp"]
+[sub_resource type="Resource" id="Resource_htf8n"]
 script = ExtResource("1_qx126")
 enemy = ExtResource("3_htf8n")
 count = 1
 spawn_delay = 1.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_ufvot"]
+[sub_resource type="Resource" id="Resource_2uv4j"]
 script = ExtResource("1_qx126")
 enemy = ExtResource("5_htf8n")
 count = 4
 spawn_delay = 1.5
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_g5apd"]
+[sub_resource type="Resource" id="Resource_7o6pp"]
 script = ExtResource("1_qx126")
 enemy = ExtResource("6_2uv4j")
 count = 3
@@ -39,7 +39,7 @@ start_offset = 16.0
 script = ExtResource("5_7o6pp")
 id = &"w16_1"
 duration = 28.0
-entries = Array[ExtResource("1_qx126")]([SubResource("Resource_2uv4j"), SubResource("Resource_7o6pp"), SubResource("Resource_ufvot"), SubResource("Resource_g5apd")])
+entries = Array[ExtResource("1_qx126")]([SubResource("Resource_8472u"), SubResource("Resource_htf8n"), SubResource("Resource_2uv4j"), SubResource("Resource_7o6pp")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

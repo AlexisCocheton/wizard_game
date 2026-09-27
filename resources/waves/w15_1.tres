@@ -2,25 +2,25 @@
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_8b64j"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_jiyuw"]
-[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_cfl1p"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_frost.tres" id="3_8b64j"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_541jl"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_ywetc"]
 
-[sub_resource type="Resource" id="Resource_8b64j"]
+[sub_resource type="Resource" id="Resource_jiyuw"]
 script = ExtResource("1_8b64j")
 enemy = ExtResource("2_jiyuw")
 count = 2
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_jiyuw"]
+[sub_resource type="Resource" id="Resource_cfl1p"]
 script = ExtResource("1_8b64j")
-enemy = ExtResource("3_cfl1p")
+enemy = ExtResource("3_8b64j")
 count = 2
 spawn_delay = 2.5
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_cfl1p"]
+[sub_resource type="Resource" id="Resource_541jl"]
 script = ExtResource("1_8b64j")
 enemy = ExtResource("4_541jl")
 count = 3
@@ -31,7 +31,7 @@ start_offset = 20.0
 script = ExtResource("5_ywetc")
 id = &"w15_1"
 duration = 28.0
-entries = Array[ExtResource("1_8b64j")]([SubResource("Resource_8b64j"), SubResource("Resource_jiyuw"), SubResource("Resource_cfl1p")])
+entries = Array[ExtResource("1_8b64j")]([SubResource("Resource_jiyuw"), SubResource("Resource_cfl1p"), SubResource("Resource_541jl")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false

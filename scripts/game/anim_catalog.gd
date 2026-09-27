@@ -185,6 +185,28 @@ const MODULATE: Dictionary = {
 	"shade": Color(0.42, 0.42, 0.62, 0.80),
 	## (poison_ball n y est plus : sa feuille est verte d origine, et un modulate
 	## vert sur du vert l assombrissait.)
+	##
+	## CHANTIER W2 — des feuilles PARTAGEES, et cette fois c est bien la raison :
+	## deux monstres qu on croise dans la meme campagne ne doivent pas se lire
+	## comme un seul. Une teinte multiplie (voir gotchas.md) : on choisit donc des
+	## couleurs que la feuille peut RECEVOIR, verifiees en capture.
+	##
+	## La Sorciere des fosses et L Ensevelisseur partagent `unhallowed` : elle est
+	## une sorciere d eau morte, son feu vert passe au bleu d eau.
+	"pit_witch": Color(0.55, 0.78, 1.0),
+	## Le Sceau de Tombol partage `mageguardian` avec le Mage du givre, qui va par
+	## trois avec ses freres rouge et magenta. Le trio garde les feuilles PURES du
+	## pack (c est leur couleur qui les distingue entre eux) ; le Sceau, seul, prend
+	## le vert-de-gris d une pierre gravee.
+	"tombol_seal": Color(0.72, 1.0, 0.72),
+	## L Horloger partage `decepticle` avec le Colosse des Forges : laiton chaud.
+	"clockmaker": Color(1.0, 0.82, 0.50),
+	## Le Cameleon des saisons partage `wraith` avec le Seigneur Spectre : un
+	## esprit pale et dore, pas une ombre.
+	"season_chameleon": Color(1.0, 0.92, 0.62),
+	## Le Greffier partage `evilwizard` avec le Mage noir : robe d encre violette
+	## au lieu du rouge.
+	"spell_clerk": Color(0.70, 0.62, 1.0),
 }
 
 
