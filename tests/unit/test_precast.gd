@@ -67,7 +67,13 @@ func _test_le_sort_en_attente_part_a_la_fin_du_premier() -> void:
 
 	c.begin(a, CastContext.make(null, a))
 	c.queue_next(b, CastContext.make(null, b))
-	for i in 70:
+	# On simule assez de temps pour que le PREMIER sort finisse, multiplicateur
+	# global compris. Le test comptait 70 images en dur pour un sort d une
+	# seconde ; il a rougi des que le testeur a rallonge les incantations, alors
+	# que le relais fonctionnait — il manquait simplement du temps. Le nombre
+	# d images se DEDUIT donc du temps reel a couvrir.
+	var a_couvrir: float = RunState.effective_cast_time(a) + 0.2
+	for i in int(ceil(a_couvrir * 60.0)):
 		c.tick(1.0 / 60.0)
 	eq(c.current, b, "le sort en attente a pris le relais")
 	not_ok(c.has_queued(), "la place d attente est liberee")

@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_41i2d")
 id = &"ch_act_one"
-display_name = "Le Monde volant"
-description = "Terminer les deux niveaux du premier acte."
+display_name = "La foret de Nuri"
+description = "Terminer les 4 niveaux du premier acte."
 rarity = 1
 xp_reward = 500
 track_key = &"levels_cleared"
-target = 2
+target = 4

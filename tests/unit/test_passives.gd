@@ -156,8 +156,15 @@ func _test_reduction_du_temps_de_charge() -> void:
 	feq(RunState.effective_cast_time(c), sans, "a 100 %, le passif dort encore")
 
 	SpeedGauge.set_speed_percent(110)
-	var sans110: float = SpeedGauge.effective_cast_time(2.0)
-	feq(RunState.effective_cast_time(c), SpeedGauge.effective_cast_time(2.0 - 0.3),
+	# L attendu passe par le MEME chemin que le jeu, multiplicateur global
+	# d incantation compris. Le test comparait a `SpeedGauge.effective_cast_time`
+	# en direct, ce qui court-circuitait ce multiplicateur : il a rougi des que
+	# le testeur a rallonge les incantations, alors que le passif fonctionnait
+	# parfaitement. Un test qui contourne le point de passage unique mesure une
+	# autre regle que celle que le jeu applique.
+	var sans110: float = SpeedGauge.effective_cast_time(2.0 * GameConfig.CAST_TIME_SCALE)
+	feq(RunState.effective_cast_time(c),
+		SpeedGauge.effective_cast_time((2.0 - 0.3) * GameConfig.CAST_TIME_SCALE),
 		"au seuil, le passif retire 0,3 s au temps de base")
 	ok(RunState.effective_cast_time(c) < sans110, "et le sort part plus vite")
 

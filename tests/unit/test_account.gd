@@ -28,6 +28,7 @@ func run() -> void:
 	_test_on_n_equipe_que_ce_qu_on_a_debloque()
 	_test_la_banniere_suit_le_niveau()
 	_test_les_succes_accomplis_survivent_a_la_migration()
+	_test_les_succes_de_campagne_suivent_le_contenu()
 	_test_un_succes_deja_merite_est_rattrape()
 	_test_chaque_cosmetique_a_un_apercu()
 	SaveData.reset_profile()
@@ -352,3 +353,45 @@ func _test_chaque_cosmetique_a_un_apercu() -> void:
 	# texte seul, ce qui reste utilisable.
 	eq(UiTheme.cosmetic_preview(GameEnums.RewardKind.HAT, "feuille_absente"), null,
 		"une feuille absente rend null plutot que de planter")
+
+
+## Un succes qui compte des niveaux doit compter les VRAIS niveaux.
+##
+## Le defaut que ceci empeche : "Jusqu a la source" demandait 7 niveaux pour
+## recompenser la FIN de la campagne. Celle-ci passe a 21 — le succes le plus
+## rare du jeu se serait valide au tiers du parcours, et le joueur aurait recu
+## sa plus haute recompense en plein acte 2. Rien n aurait plante : un nombre en
+## dur qui devient faux ne rougit nulle part.
+##
+## Le test compare au CONTENU, jamais a un nombre : ecrire "21" ici referait le
+## meme piege un cran plus loin.
+func _test_les_succes_de_campagne_suivent_le_contenu() -> void:
+	var total: int = ContentDB.levels.size()
+	ok(total >= 7, "la campagne a des niveaux (%d)" % total)
+
+	var vus: Dictionary = {}
+	for c: ChallengeDef in ContentDB.challenges_list():
+		if c == null or c.track_key != &"levels_cleared":
+			continue
+		vus[c.id] = c.target
+		# Aucun succes ne peut demander PLUS de niveaux qu il n en existe :
+		# il serait alors impossible a obtenir, ce qui est pire qu une cible
+		# trop basse — le joueur le verrait a jamais inaccessible.
+		ok(c.target <= total,
+			"%s demande %d niveaux, la campagne en a %d"
+			% [c.id, c.target, total])
+
+	# Celui qui recompense la FIN doit demander TOUS les niveaux.
+	ok(vus.has(&"ch_campaign"), "le succes de fin de campagne existe")
+	if vus.has(&"ch_campaign"):
+		eq(int(vus[&"ch_campaign"]), total,
+			"le succes de fin demande les %d niveaux, pas moins" % total)
+
+	# Celui de l acte 1 doit demander les niveaux DE L ACTE 1.
+	var acte1: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv != null and lv.act == 1:
+			acte1 += 1
+	if vus.has(&"ch_act_one"):
+		eq(int(vus[&"ch_act_one"]), acte1,
+			"le succes de l acte 1 demande ses %d niveaux" % acte1)

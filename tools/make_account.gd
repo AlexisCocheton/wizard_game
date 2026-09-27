@@ -70,8 +70,9 @@ func _challenges() -> void:
 			"Rencontrer 10 especes de monstres.", "enemies_discovered", 10, R.COMMON),
 
 		# --- RARES : demandent quelques soirees, ou de jouer autrement ---
-		_challenge("ch_act_one", "Le Monde volant",
-			"Terminer les deux niveaux du premier acte.", "levels_cleared", 2, R.RARE),
+		_challenge("ch_act_one", "La foret de Nuri",
+			"Terminer les %d niveaux du premier acte." % _niveaux_acte(1),
+			"levels_cleared", _niveaux_acte(1), R.RARE),
 		_challenge("ch_bestiary_20", "Naturaliste",
 			"Rencontrer 20 especes de monstres.", "enemies_discovered", 20, R.RARE),
 		_challenge("ch_massacre_10", "Sans fin",
@@ -93,7 +94,8 @@ func _challenges() -> void:
 
 		# --- LEGENDAIRES : la fin du jeu, ou tres au-dela ---
 		_challenge("ch_campaign", "Jusqu a la source",
-			"Terminer les sept niveaux de la campagne.", "levels_cleared", 7, R.LEGENDARY),
+			"Terminer les %d niveaux de la campagne." % _niveaux_total(),
+			"levels_cleared", _niveaux_total(), R.LEGENDARY),
 		_challenge("ch_flawless_3", "Sans une egratignure",
 			"Terminer trois niveaux sans subir le moindre degat.", "flawless_clears", 3, R.LEGENDARY),
 		_challenge("ch_massacre_50", "Le temps n existe plus",
@@ -101,6 +103,27 @@ func _challenges() -> void:
 	]
 	for c in liste:
 		_save(c, CH + String(c.id) + ".tres")
+
+
+## LES CIBLES SE DEDUISENT DU CONTENU, elles ne sont plus ecrites a la main.
+##
+## Le defaut que ceci empeche : "Jusqu a la source" demandait 7 niveaux termines
+## pour recompenser la FIN de la campagne. La campagne passe a 21 niveaux — le
+## succes legendaire se serait valide au tiers du jeu, et le joueur aurait recu
+## sa plus haute recompense en plein acte 2. Rien n aurait plante, rien n aurait
+## rougi : un nombre en dur qui devient faux ne se voit pas.
+##
+## Meme raison pour l acte 1, passe de 2 a 4 niveaux.
+func _niveaux_total() -> int:
+	return maxi(1, ContentDB.levels.size())
+
+
+func _niveaux_acte(acte: int) -> int:
+	var n: int = 0
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv != null and lv.act == acte:
+			n += 1
+	return maxi(1, n)
 
 
 func _reward(id: String, nom: String, desc: String, niveau: int,
