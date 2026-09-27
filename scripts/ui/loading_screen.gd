@@ -179,7 +179,7 @@ func _build_objectives() -> void:
 		# Le MOT dit l etat, la couleur le confirme — et un joueur daltonien lit
 		# quand meme "Acquis" ou "A faire".
 		_waves.add_child(UiTheme.label(
-			"%s  -  %s" % ["Acquis" if fait else "A faire", obj.description],
+			"%s  -  %s" % ["Acquis" if fait else "A faire", ObjectiveChecker.label(obj)],
 			UiTheme.FONT_BODY,
 			Color(0.16, 0.46, 0.22) if fait else UiTheme.TEXT_DARK))
 	if _level.legendary_reward != null:

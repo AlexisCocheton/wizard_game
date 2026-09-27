@@ -524,6 +524,8 @@ const REFLECT_MAX_PER_HIT: int = 20
 ## un renvoi coute de la VITESSE, comme n importe quel coup. La mecanique
 ## signature n a pas d exception.
 func _reflect_to_mage(source: Enemy, raw: float) -> void:
+	# OBJECTIFS (never_hit_reflect) : un coup a mordu pendant la garde.
+	RunState.note_reflect_hit()
 	var degats: int = clampi(int(round(raw * REFLECT_TO_MAGE_SCALE)), 1, REFLECT_MAX_PER_HIT)
 	speed_before_hit = SpeedGauge.speed_percent
 	SpeedGauge.take_hit(degats)

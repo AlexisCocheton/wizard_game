@@ -18,6 +18,7 @@ func run() -> void:
 	_test_never_dropped_speed()
 	_test_no_legendary()
 	_test_no_damage()
+	_test_shipped_labels_unchanged()
 
 
 func _test_keys_exist() -> void:
@@ -65,3 +66,19 @@ func _test_no_damage() -> void:
 	ok(ObjectiveChecker.evaluate(obj), "valide avant tout degat")
 	RunState.note_damage_taken()
 	not_ok(ObjectiveChecker.evaluate(obj), "echoue apres un degat subi")
+
+
+## Le libelle est desormais GENERE (ObjectiveChecker.label). Les objectifs deja
+## livres doivent garder au mot pres le texte que le joueur connait : sinon le
+## passage au moteur aurait change les ecrans sans que personne ne le decide.
+func _test_shipped_labels_unchanged() -> void:
+	var vus: int = 0
+	for level: LevelDef in ContentDB.levels.values():
+		for o: ObjectiveDef in level.objectives:
+			if o == null or not (o.check_key in [&"never_dropped_speed",
+					&"no_legendary_used", &"no_damage_taken"]):
+				continue
+			vus += 1
+			eq(ObjectiveChecker.label(o), o.description,
+				"%s / %s : libelle genere = texte livre" % [level.id, o.id])
+	ok(vus > 0, "des objectifs historiques ont ete relus")

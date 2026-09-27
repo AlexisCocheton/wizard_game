@@ -245,10 +245,26 @@ func _scan_text(dir_path: String, out: Array[String]) -> void:
 
 
 ## Un objectif dont la cle n est pas evaluable serait impossible a valider.
+## Les objectifs des niveaux sont des SOUS-RESSOURCES de leur .tres : ils ne
+## passent pas par ContentDB.objectives, d ou la seconde boucle.
 func _check_objective_keys() -> void:
 	for obj: ObjectiveDef in ContentDB.objectives.values():
 		if not ObjectiveChecker.has_key(obj.check_key):
 			fail("objectif %s : aucun checker pour '%s'" % [obj.id, obj.check_key])
+		for err in ObjectiveChecker.validate(obj):
+			fail("objectif %s : %s" % [obj.id, err])
+	for level: LevelDef in ContentDB.levels.values():
+		for obj: ObjectiveDef in level.objectives:
+			if obj == null:
+				fail("niveau %s : objectif nul" % level.id)
+				continue
+			for err in ObjectiveChecker.validate(obj):
+				fail("niveau %s, objectif %s : %s" % [level.id, obj.id, err])
+			# Coherence avec les monstres et le deck du niveau.
+			for why in ObjectiveChecker.impossible_reasons(obj, level):
+				fail("niveau %s, objectif %s impossible : %s" % [level.id, obj.id, why])
+			for why in ObjectiveChecker.trivial_reasons(obj, level):
+				_soft.append("niveau %s, objectif %s gratuit : %s" % [level.id, obj.id, why])
 
 
 func _check_levels() -> void:

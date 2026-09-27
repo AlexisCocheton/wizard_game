@@ -699,6 +699,8 @@ func kill() -> void:
 	# de tuer le boss pendant sa garde, ce qui est exactement le contraire de la
 	# mecanique — elle doit faire payer le lancement mal choisi, surtout celui-la.
 	_close_reflect()
+	# OBJECTIFS (boss_quick_after_revive) : un monstre releve meurt pour de bon.
+	if _revived: RunState.note_revived_enemy_killed(get_instance_id())
 	died.emit(self)
 
 
@@ -708,6 +710,8 @@ func _try_revive() -> bool:
 	if definition == null or definition.revive_hp_pct <= 0.0 or _revived:
 		return false
 	_revived = true
+	# OBJECTIFS (boss_quick_after_revive) : l instant du releve.
+	RunState.note_enemy_revived(get_instance_id())
 	hp = maxf(_max_hp * definition.revive_hp_pct * 0.01, 1.0)
 	# Un boss qui se releve repart a decouvert : ses parties, son bouclier et son
 	# compteur de coups ont ete payes une fois, les rendre serait deux combats.

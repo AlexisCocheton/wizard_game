@@ -274,7 +274,7 @@ func _render_detail() -> void:
 			# Meme formulation que le briefing et l ecran de victoire : le mot
 			# porte l etat, jamais un prefixe entre crochets.
 			box.add_child(UiTheme.label(
-				"%s  -  %s" % ["Acquis" if done else "A faire", obj.description],
+				"%s  -  %s" % ["Acquis" if done else "A faire", ObjectiveChecker.label(obj)],
 				UiTheme.FONT_SMALL, UiTheme.GREEN if done else UiTheme.TEXT_DARK))
 		if level.legendary_reward != null:
 			var got: bool = SaveData.unlocked_legendaries().has(String(level.legendary_reward.id))
