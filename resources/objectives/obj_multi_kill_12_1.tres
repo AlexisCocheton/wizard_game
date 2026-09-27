@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_38xjh"]
+
+[resource]
+script = ExtResource("1_38xjh")
+id = &"obj_multi_kill_12_1"
+description = "Tuer 12 monstres en moins de 1 s"
+check_key = &"multi_kill"
+params = {
+"count": 12,
+"window": 1
+}

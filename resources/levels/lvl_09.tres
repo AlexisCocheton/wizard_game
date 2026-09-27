@@ -24,26 +24,31 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_7ldq4"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="25_lnymc"]
 
-[sub_resource type="Resource" id="Resource_6vmxt"]
-script = ExtResource("22_v1e3n")
-id = &"obj_max_speed"
-description = "Gagner en gardant la vitesse au maximum des la vague 1"
-check_key = &"never_dropped_speed"
-params = {}
-
-[sub_resource type="Resource" id="Resource_07mnm"]
+[sub_resource type="Resource" id="Resource_84rjn"]
 script = ExtResource("22_v1e3n")
 id = &"obj_no_legendary"
 description = "Gagner sans utiliser de carte legendaire"
 check_key = &"no_legendary_used"
 params = {}
 
-[sub_resource type="Resource" id="Resource_hb77b"]
+[sub_resource type="Resource" id="Resource_qlmhj"]
 script = ExtResource("22_v1e3n")
-id = &"obj_untouched"
-description = "Gagner sans subir de degats"
-check_key = &"no_damage_taken"
-params = {}
+id = &"obj_element_casts_25_arcane"
+description = "Lancer 25 sorts d arcane"
+check_key = &"element_casts"
+params = {
+"count": 25,
+"element": "ARCANE"
+}
+
+[sub_resource type="Resource" id="Resource_afr64"]
+script = ExtResource("22_v1e3n")
+id = &"obj_win_below_speed_300"
+description = "Gagner avec moins de 300 % de vitesse"
+check_key = &"win_below_speed"
+params = {
+"pct": 300
+}
 
 [sub_resource type="Resource" id="Resource_ati74"]
 script = ExtResource("25_lnymc")
@@ -59,7 +64,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 11.0
 
-[sub_resource type="Resource" id="Resource_84rjn"]
+[sub_resource type="Resource" id="Resource_7s4ln"]
 script = ExtResource("24_7ldq4")
 id = &"w9_1"
 duration = 25.0
@@ -96,7 +101,7 @@ count = 2
 spawn_delay = 2.5
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_qlmhj"]
+[sub_resource type="Resource" id="Resource_xlrew"]
 script = ExtResource("24_7ldq4")
 id = &"w9_2"
 duration = 27.0
@@ -126,7 +131,7 @@ count = 4
 spawn_delay = 1.6
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_afr64"]
+[sub_resource type="Resource" id="Resource_e2mpa"]
 script = ExtResource("24_7ldq4")
 id = &"w9_3_miniboss"
 duration = 30.0
@@ -170,7 +175,7 @@ count = 1
 spawn_delay = 1.8
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_7s4ln"]
+[sub_resource type="Resource" id="Resource_pj7ba"]
 script = ExtResource("24_7ldq4")
 id = &"w9_4"
 duration = 28.0
@@ -200,7 +205,7 @@ count = 5
 spawn_delay = 1.5
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_xlrew"]
+[sub_resource type="Resource" id="Resource_hrl8r"]
 script = ExtResource("24_7ldq4")
 id = &"w9_5_boss"
 duration = 42.0
@@ -221,9 +226,9 @@ intro_story = &"lvl_09_intro"
 outro_story = &"lvl_09_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("24_7ldq4")]([SubResource("Resource_84rjn"), SubResource("Resource_qlmhj"), SubResource("Resource_afr64"), SubResource("Resource_7s4ln"), SubResource("Resource_xlrew")])
+waves = Array[ExtResource("24_7ldq4")]([SubResource("Resource_7s4ln"), SubResource("Resource_xlrew"), SubResource("Resource_e2mpa"), SubResource("Resource_pj7ba"), SubResource("Resource_hrl8r")])
 enemy_pool = Array[ExtResource("1_afr64")]([ExtResource("2_7s4ln"), ExtResource("3_xlrew"), ExtResource("4_e2mpa"), ExtResource("5_pj7ba"), ExtResource("6_hrl8r"), ExtResource("7_c57w3"), ExtResource("8_2bqby"), ExtResource("9_84rjn"), ExtResource("9_j6y2r"), ExtResource("10_fv56p")])
 exploration_deck = Array[ExtResource("11_8xjrd")]([ExtResource("12_olbp5"), ExtResource("12_olbp5"), ExtResource("12_olbp5"), ExtResource("13_aq1hf"), ExtResource("13_aq1hf"), ExtResource("13_aq1hf"), ExtResource("14_1bsyt"), ExtResource("14_1bsyt"), ExtResource("14_1bsyt"), ExtResource("16_htlmc"), ExtResource("16_htlmc"), ExtResource("16_htlmc"), ExtResource("19_caqve"), ExtResource("19_caqve"), ExtResource("20_476h2")])
-objectives = Array[ExtResource("22_v1e3n")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
+objectives = Array[ExtResource("22_v1e3n")]([SubResource("Resource_84rjn"), SubResource("Resource_qlmhj"), SubResource("Resource_afr64")])
 legendary_reward = ExtResource("21_vtgx3")
 next_levels = Array[StringName]([&"lvl_17"])

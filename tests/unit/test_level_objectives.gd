@@ -1,0 +1,162 @@
+extends TestCase
+## LES OBJECTIFS LIVRES — le contenu, pas le moteur (test_objective_engine).
+##
+## Demande du co-auteur (27/09) : trois objectifs par combat de campagne,
+## differents, coherents avec le niveau, et une vraie variete sur la campagne.
+## Les 21 niveaux portaient jusque-la le MEME trio recopie. Ce qui est verifie :
+##   - trois objectifs valides par niveau, trois CONTROLES differents ;
+##   - aucun objectif impossible ni gratuit selon l AUDIT (l AUDIT ne fait
+##     qu AVERTIR sur le gratuit : ici c est une faute) ;
+##   - la variete : assez de controles differents, aucun controle partout,
+##     aucun trio recopie d un niveau a l autre ;
+##   - les exemples du co-auteur presents quelque part ;
+##   - le libelle livre = le libelle genere.
+##
+## Les BORNES de variete sont ecrites en dur : un test qui les relirait dans le
+## contenu qu il controle ne mordrait jamais (piege note dans gotchas.md).
+
+func get_suite_name() -> String:
+	return "level_objectives"
+
+
+## Au moins autant de controles differents sur la campagne. Il en existe 16 ;
+## un seul (never_dropped_speed) est hors d atteinte dans des niveaux de moins
+## de 175 s, voir la table de tools/make_content.gd.
+const MIN_CLES_DIFFERENTES: int = 12
+## Un meme controle sur plus d un tiers des 21 niveaux redevient un trio
+## recopie qui ne dit plus rien du niveau.
+const MAX_NIVEAUX_PAR_CLE: int = 7
+## Les exemples ecrits par le co-auteur : "ne pas perdre de vie, ne pas utiliser
+## de legendaire, jouer 30 fois la meme carte, gagner avec moins de 300 de
+## vitesse, tuer 5 monstres en meme temps".
+const EXEMPLES_CO_AUTEUR: Array[StringName] = [
+	&"no_damage_taken", &"no_legendary_used", &"same_card_casts",
+	&"win_below_speed", &"multi_kill",
+]
+
+
+func run() -> void:
+	_test_trois_objectifs_valides_et_differents()
+	_test_ni_impossible_ni_gratuit()
+	_test_variete_sur_la_campagne()
+	_test_exemples_du_co_auteur()
+	_test_libelle_livre_est_le_libelle_genere()
+	_test_le_detecteur_de_doublon_mord()
+
+
+func _niveaux() -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv != null:
+			out.append(lv)
+	return out
+
+
+## Les raisons de refuser le trio d UN niveau. Vide = conforme. Separe du test
+## pour pouvoir le SABOTER sur un niveau fabrique (_test_le_detecteur_de_doublon_mord).
+static func defauts_du_trio(lv: LevelDef) -> Array[String]:
+	var out: Array[String] = []
+	if lv.objectives.size() != 3:
+		out.append("%d objectifs (3 attendus)" % lv.objectives.size())
+	var cles: Dictionary = {}
+	var ids: Dictionary = {}
+	for o: ObjectiveDef in lv.objectives:
+		if o == null:
+			out.append("objectif nul")
+			continue
+		for err in ObjectiveChecker.validate(o):
+			out.append("%s : %s" % [o.id, err])
+		if ids.has(o.id):
+			out.append("id %s en double" % o.id)
+		ids[o.id] = true
+		# DIFFERENTS = trois controles distincts. Deux multi_kill a des seuils
+		# differents font deux etoiles pour un seul geste.
+		if cles.has(o.check_key):
+			out.append("controle %s en double" % o.check_key)
+		cles[o.check_key] = true
+	return out
+
+
+func _test_trois_objectifs_valides_et_differents() -> void:
+	var niveaux: Array[LevelDef] = _niveaux()
+	ok(niveaux.size() > 0, "des niveaux a controler")
+	for lv in niveaux:
+		var defauts: Array[String] = defauts_du_trio(lv)
+		ok(defauts.is_empty(), "%s : trio conforme %s" % [lv.id, defauts])
+
+
+func _test_ni_impossible_ni_gratuit() -> void:
+	for lv in _niveaux():
+		for o: ObjectiveDef in lv.objectives:
+			if o == null:
+				continue
+			var impossible: Array[String] = ObjectiveChecker.impossible_reasons(o, lv)
+			ok(impossible.is_empty(), "%s / %s possible %s" % [lv.id, o.id, impossible])
+			var gratuit: Array[String] = ObjectiveChecker.trivial_reasons(o, lv)
+			ok(gratuit.is_empty(), "%s / %s pas gratuit %s" % [lv.id, o.id, gratuit])
+
+
+func _test_variete_sur_la_campagne() -> void:
+	var niveaux_par_cle: Dictionary = {}
+	var trios: Dictionary = {}
+	for lv in _niveaux():
+		var ids: Array[String] = []
+		for o: ObjectiveDef in lv.objectives:
+			if o == null:
+				continue
+			ids.append(String(o.id))
+			niveaux_par_cle[o.check_key] = int(niveaux_par_cle.get(o.check_key, 0)) + 1
+		ids.sort()
+		var trio: String = "+".join(ids)
+		ok(not trios.has(trio), "%s : trio different de %s" % [lv.id, trios.get(trio, "-")])
+		trios[trio] = lv.id
+	ok(niveaux_par_cle.size() >= MIN_CLES_DIFFERENTES,
+		"%d controles differents sur la campagne (au moins %d)"
+		% [niveaux_par_cle.size(), MIN_CLES_DIFFERENTES])
+	for cle in niveaux_par_cle:
+		ok(int(niveaux_par_cle[cle]) <= MAX_NIVEAUX_PAR_CLE,
+			"%s porte par %d niveaux (au plus %d)"
+			% [cle, niveaux_par_cle[cle], MAX_NIVEAUX_PAR_CLE])
+
+
+func _test_exemples_du_co_auteur() -> void:
+	var vues: Dictionary = {}
+	for lv in _niveaux():
+		for o: ObjectiveDef in lv.objectives:
+			if o != null:
+				vues[o.check_key] = true
+	for cle in EXEMPLES_CO_AUTEUR:
+		ok(vues.has(cle), "l exemple du co-auteur %s est dans la campagne" % cle)
+
+
+## La description d un .tres n est plus qu un repli : si elle divergeait du
+## libelle genere, un ecran qui retomberait dessus dirait autre chose que les
+## autres.
+func _test_libelle_livre_est_le_libelle_genere() -> void:
+	for lv in _niveaux():
+		for o: ObjectiveDef in lv.objectives:
+			if o != null:
+				eq(o.description, ObjectiveChecker.label(o),
+					"%s / %s : description = libelle genere" % [lv.id, o.id])
+
+
+## SABOTAGE EMBARQUE : le detecteur doit refuser un trio recopie en interne.
+## Sans ce cas, un defauts_du_trio() qui ne verrait rien passerait en silence.
+func _test_le_detecteur_de_doublon_mord() -> void:
+	var lv := LevelDef.new()
+	lv.id = &"t_sabotage"
+	var a := ObjectiveDef.new()
+	a.id = &"t_a"
+	a.check_key = &"multi_kill"
+	a.params = {"count": 5, "window": 1}
+	var b := ObjectiveDef.new()
+	b.id = &"t_b"
+	b.check_key = &"multi_kill"
+	b.params = {"count": 6, "window": 1}
+	var c := ObjectiveDef.new()
+	c.id = &"t_c"
+	c.check_key = &"no_passive"
+	lv.objectives = [a, b, c]
+	not_ok(defauts_du_trio(lv).is_empty(), "deux controles identiques sont refuses")
+	lv.objectives = [a, c]
+	not_ok(defauts_du_trio(lv).is_empty(), "deux objectifs au lieu de trois sont refuses")

@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_anydv"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_x5x0l"]
 
-[sub_resource type="Resource" id="Resource_ge78s"]
+[sub_resource type="Resource" id="Resource_4l325"]
 script = ExtResource("1_4l325")
 enemy = ExtResource("2_4l325")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_fx5b8"]
+[sub_resource type="Resource" id="Resource_ge78s"]
 script = ExtResource("1_4l325")
 enemy = ExtResource("3_4l325")
 count = 2
 spawn_delay = 2.5
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_lso32"]
+[sub_resource type="Resource" id="Resource_fx5b8"]
 script = ExtResource("1_4l325")
 enemy = ExtResource("4_lso32")
 count = 2
 spawn_delay = 2.5
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_anydv"]
+[sub_resource type="Resource" id="Resource_lso32"]
 script = ExtResource("1_4l325")
 enemy = ExtResource("5_anydv")
 count = 3
@@ -39,7 +39,7 @@ start_offset = 32.0
 script = ExtResource("6_x5x0l")
 id = &"w15_5"
 duration = 40.0
-entries = Array[ExtResource("1_4l325")]([SubResource("Resource_ge78s"), SubResource("Resource_fx5b8"), SubResource("Resource_lso32"), SubResource("Resource_anydv")])
+entries = Array[ExtResource("1_4l325")]([SubResource("Resource_4l325"), SubResource("Resource_ge78s"), SubResource("Resource_fx5b8"), SubResource("Resource_lso32")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false
