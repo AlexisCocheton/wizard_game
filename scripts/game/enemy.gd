@@ -126,6 +126,7 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 		for i in def.parts_count:
 			_parts.append(def.part_hp * diff)
 	_v3_setup(def)
+	_setup_v3(def)
 
 
 func _ready() -> void:
@@ -138,6 +139,7 @@ func _ready() -> void:
 		_setup_visual()
 		_place_hp_bar()
 	_refresh_hp_bar()
+	_setup_visual_v3()
 
 
 ## L animation de REPOS d une feuille : ce que le monstre joue quand il ne fait
@@ -245,9 +247,12 @@ func begin_spawn_fade() -> void:
 	modulate.a = 0.0
 
 
-## Vrai pendant le fondu : immobile et intouchable.
+## Vrai pendant le fondu : immobile et intouchable. Un jumeau A TERRE est dans le
+## meme etat pour tout le reste du jeu (ni cible, ni regard, ni decor) : c est ce
+## que Battlefield demande a cette fonction, et le dire ici evite d ouvrir un
+## second chemin que chaque systeme devrait apprendre a tester.
 func is_spawning() -> bool:
-	return _spawn_fade > 0.0
+	return _spawn_fade > 0.0 or _twin_fallen
 
 
 func radius() -> float:
@@ -280,6 +285,10 @@ func advance(world_delta: float) -> void:
 	# bonne carte. Le cycle tourne donc toujours, et etourdir la garde reste une
 	# reponse valable — on attend qu elle retombe sans encaisser de renvoi.
 	_tick_reflect(world_delta)
+	# Mecaniques v3 qui tournent MEME etourdi (horloge, cameleon, jumeau a terre).
+	if _tick_v3_always(world_delta):
+		return
+	# Sommeil (comportements v3) : il dort, il n avance pas.
 	if _v3_tick_sleep(world_delta):
 		return
 	# ETOURDISSEMENT : il ne bouge pas, il ne tire pas, il ne frappe rien. Le
@@ -293,6 +302,8 @@ func advance(world_delta: float) -> void:
 		if _stun_time > 0.0:
 			return
 		_stun_time = 0.0
+	# Mecaniques v3 qu un etourdissement suspend (vol de carte, rappel des sbires).
+	_tick_v3_active(world_delta)
 	if _slow_time > 0.0:
 		_slow_time -= world_delta
 		if _slow_time <= 0.0:
@@ -310,6 +321,7 @@ func advance(world_delta: float) -> void:
 	# Le modifier touche TOUS les monstres d un coup, sans reecrire 22 fichiers.
 	var speed: float = (definition.base_speed * GameConfig.ENEMY_SPEED_SCALE
 		* speed_scale * _slow_factor * (1.0 + _enrage_bonus))
+	speed *= mirror_factor()
 
 	# Boss morcele : chaque partie tombee le ralentit. Le facteur est borne a 15 %
 	# de sa vitesse d origine, sinon un boss a 4 parties finirait immobile et le
@@ -513,6 +525,8 @@ func take_damage(amount: float, tags: Array) -> bool:
 	# le retuait dans la meme frame et le joueur ne voyait JAMAIS la resurrection.
 	if _revive_grace > 0.0:
 		return false
+	if _twin_fallen:
+		return false
 	# Resistance TOTALE (0 %) a l un des elements du sort : rien ne passe, et
 	# `false` coupe aussi l eclair et le son de coup — le joueur voit que son
 	# sort n a pas mordu. La graduation entre 0 et 1 est appliquee en amont par
@@ -528,6 +542,7 @@ func take_damage(amount: float, tags: Array) -> bool:
 		amount *= PHASE_DAMAGE_FACTOR
 	if definition.dodge_chance > 0.0 and randf() < definition.dodge_chance:
 		return false
+	amount *= _chameleon_factor(tags)
 
 	# IMMUNISE AUX N PREMIERS COUPS. On teste ICI, apres l esquive et avant tout
 	# calcul de PV : la PUISSANCE du coup n entre pas en ligne de compte, c est un
@@ -695,9 +710,14 @@ func kill() -> void:
 	# gobe n est pas mourir.
 	if _try_revive():
 		return
+	# Une vie supplementaire se consomme AVANT la chute d un jumeau : perdre une
+	# vie n est pas tomber, le jumeau n a pas a le savoir.
 	if _v3_try_extra_life():
 		return
+	if _try_twin_fall():
+		return
 	_dead = true
+	_on_final_death_v3()
 	# Un boss mort ne tient plus sa garde : le halo ambre doit partir avec lui,
 	# sinon il reste a l ecran accroche a un monstre qui n existe plus.
 	#
@@ -1339,3 +1359,637 @@ func _v3_apply_move_pattern(speed: float, world_delta: float) -> void:
 	# ce centre avec le motif pour que les deux se CUMULENT au lieu que
 	# l ondulation ramene le monstre a sa colonne de depart a chaque image.
 	_base_x += applique
+
+# =============================================================================
+# --- MECANIQUES DE BOSS v3 ---------------------------------------------------
+# =============================================================================
+#
+# Six mecaniques pilotees par le groupe « Mecaniques de boss v3 » d EnemyDef.
+# Elles vivent dans ce bloc et ne touchent le reste du fichier que par une ligne
+# d accroche chacune (setup, _ready, advance, take_damage, kill) : un autre
+# chantier ajoute des mecaniques dans le meme fichier, et un bloc a soi se fusionne
+# sans se marcher dessus.
+
+## Temps de monde vecu depuis la fin du fondu. Sert au Devoreur-invocateur, qui
+## n avale ses sbires qu une fois « murs ».
+var _age: float = 0.0
+
+## HORLOGER : compte a rebours du prochain retour, horloge interne qui date
+## l historique, historique [temps, position, pv], nombre de retours faits.
+var _rewind_timer: float = 0.0
+var _rewind_clock: float = 0.0
+var _rewind_history: Array = []
+var _rewinds_done: int = 0
+## Le fantome qui montre OU il va revenir. Top-level : il vit en coordonnees du
+## terrain, mais meurt avec le monstre puisqu il en est l enfant.
+var _rewind_ghost: Node2D = null
+## Pas d echantillonnage de l historique. Un dixieme de seconde : assez fin pour
+## que le fantome glisse, assez grossier pour que 3 s tiennent en 30 entrees.
+const REWIND_SAMPLE: float = 0.1
+## Fenetre minimale (s) entre la fin d un retour et le debut de la zone effacee
+## du suivant. C est LA garantie de fin : sans elle un intervalle egal a la duree
+## du retour effacerait chaque degat et le combat ne finirait jamais.
+const REWIND_MIN_WINDOW: float = 1.0
+
+## JUMEAUX : a terre ? secondes avant de se relever, retours deja consommes.
+var _twin_fallen: bool = false
+var _twin_timer: float = 0.0
+var _twin_returns: int = 0
+## Mort forcee par la chute du dernier jumeau : ne doit plus retomber a terre.
+var _twin_no_more: bool = false
+
+## CAMELEON : compte a rebours, position dans le cycle, table courante
+## (element -> multiplicateur, meme semantique que EnemyDef.resistances).
+var _cham_timer: float = 0.0
+var _cham_index: int = 0
+var _cham_table: Dictionary = {}
+
+## VOLEUR DE SORTS : compte a rebours du prochain vol, carte tenue, et temps
+## restant avant de la lancer sur le mage.
+var _steal_timer: float = 0.0
+var _stolen_card: SpellCard = null
+var _steal_cast_left: float = 0.0
+
+## Legende ecrite au-dessus du boss (element du Cameleon, carte volee, compte a
+## rebours du retour ou du releve). Le mot, pas seulement la couleur : un joueur
+## daltonien doit pouvoir lire la regle.
+var _mech_label: Label = null
+
+
+func _setup_v3(def: EnemyDef) -> void:
+	_age = 0.0
+	# Premier retour a l intervalle PLEIN : il faut d abord 3 s d historique pour
+	# qu un retour de 3 s ait un sens, et le joueur doit voir le fantome naitre.
+	_rewind_timer = _rewind_period(def)
+	_rewind_clock = 0.0
+	_rewind_history.clear()
+	_rewinds_done = 0
+	_twin_fallen = false
+	_twin_timer = 0.0
+	_twin_returns = 0
+	_twin_no_more = false
+	_cham_index = 0
+	_cham_timer = def.chameleon_interval
+	_cham_table.clear()
+	if def.chameleon_interval > 0.0:
+		_cham_apply()
+	# Premier vol a l intervalle PLEIN : le joueur doit voir le voleur entrer avant
+	# de perdre une carte, sinon la perte se lit comme un bug de la main.
+	_steal_timer = def.steal_interval
+	_stolen_card = null
+	_steal_cast_left = 0.0
+
+
+func _setup_visual_v3() -> void:
+	if definition == null:
+		return
+	if definition.chameleon_interval > 0.0:
+		_cham_retint()
+	_refresh_mech_caption()
+
+
+## Accroche AVANT l etourdissement. Renvoie true si le monstre est A TERRE (jumeau) :
+## advance() doit alors s arreter, il ne bouge ni ne frappe.
+func _tick_v3_always(world_delta: float) -> bool:
+	if definition == null:
+		return false
+	_age += world_delta
+	if _tick_twin(world_delta):
+		_refresh_mech_caption()
+		return true
+	# L horloge et le cycle d element tournent MEME etourdi : figer le cycle d un
+	# boss en l etourdissant recompenserait le stun deux fois, et un Horloger
+	# etourdi juste avant son retour le rendrait impossible a punir.
+	_tick_rewind(world_delta)
+	_tick_chameleon(world_delta)
+	_refresh_mech_caption()
+	return false
+
+
+## Accroche APRES l etourdissement : un voleur etourdi ne vole pas et ne lance
+## rien, un devoreur etourdi n avale rien. C est la reponse de controle a ces deux
+## boss, et elle doit exister.
+func _tick_v3_active(world_delta: float) -> void:
+	if definition == null:
+		return
+	_tick_thief(world_delta)
+	_tick_recall()
+
+
+## A la mort DEFINITIVE : rend la carte volee, entraine les jumeaux a terre.
+func _on_final_death_v3() -> void:
+	_release_stolen()
+	_drop_ghost()
+	_release_fallen_twins()
+
+
+func _exit_tree() -> void:
+	# Un voleur peut quitter le terrain sans mourir (gobe, arrive au mage, fin de
+	# partie) : la carte doit revenir quel que soit le chemin, sinon elle reste
+	# petrifiee pour une cause qui n existe plus.
+	_release_stolen()
+
+
+func age() -> float:
+	return _age
+
+
+# --- 1. L HORLOGER -----------------------------------------------------------
+
+## Intervalle reel entre deux retours : jamais sous la duree du retour + la
+## fenetre minimale. Sans ce plancher, une valeur de contenu malheureuse (retour de
+## 3 s toutes les 3 s) effacerait TOUS les degats et le boss serait immortel.
+static func _rewind_period(def: EnemyDef) -> float:
+	if def == null or def.rewind_interval <= 0.0:
+		return 0.0
+	return maxf(def.rewind_interval, maxf(def.rewind_seconds, 0.0) + REWIND_MIN_WINDOW)
+
+
+func rewind_period() -> float:
+	return _rewind_period(definition)
+
+
+func rewinds_done() -> int:
+	return _rewinds_done
+
+
+## Secondes avant le prochain retour (0 s il ne revient plus jamais).
+func rewind_time_left() -> float:
+	return _rewind_timer if _rewind_active() else 0.0
+
+
+func _rewind_active() -> bool:
+	if definition == null or definition.rewind_interval <= 0.0 or definition.rewind_seconds <= 0.0:
+		return false
+	return definition.rewind_max <= 0 or _rewinds_done < definition.rewind_max
+
+
+## Position a laquelle il reviendra si le retour avait lieu MAINTENANT. C est ce
+## que le fantome montre : le joueur voit a tout instant ou le boss va reapparaitre.
+func rewind_target_position() -> Vector2:
+	if _rewind_history.is_empty():
+		return position
+	return _rewind_history[0][1]
+
+
+## PV qu il retrouvera si le retour avait lieu maintenant.
+func rewind_target_hp() -> float:
+	if _rewind_history.is_empty():
+		return hp
+	return float(_rewind_history[0][2])
+
+
+func _tick_rewind(world_delta: float) -> void:
+	if not _rewind_active():
+		_drop_ghost()
+		return
+	_rewind_clock += world_delta
+	if _rewind_history.is_empty() \
+			or _rewind_clock - float(_rewind_history.back()[0]) >= REWIND_SAMPLE:
+		_rewind_history.append([_rewind_clock, position, hp])
+	# On garde en tete l echantillon le plus RECENT qui a au moins
+	# `rewind_seconds` : c est lui la destination du retour.
+	var borne: float = _rewind_clock - definition.rewind_seconds
+	while _rewind_history.size() > 1 and float(_rewind_history[1][0]) <= borne:
+		_rewind_history.pop_front()
+	_rewind_timer -= world_delta
+	_update_ghost()
+	if _rewind_timer <= 0.0:
+		_rewind_timer = rewind_period()
+		_do_rewind()
+
+
+func _do_rewind() -> void:
+	if _rewind_history.is_empty():
+		return
+	var avant: Vector2 = position
+	var cible: Array = _rewind_history[0]
+	position = cible[1]
+	# Les PV d ALORS, bornes au maximum courant. On ne ressuscite pas : il est
+	# vivant, donc ces PV etaient positifs.
+	hp = clampf(float(cible[2]), 1.0, _max_hp)
+	_rewinds_done += 1
+	# L historique repart d ici : sinon le retour suivant pourrait viser un point
+	# ANTERIEUR au retour, et deux retours s enchaineraient en un seul saut.
+	_rewind_history.clear()
+	_rewind_history.append([_rewind_clock, position, hp])
+	repath()
+	_last_x = position.x
+	_refresh_hp_bar()
+	if Fx.enabled() and battlefield != null:
+		Fx.rewind_flash(battlefield, avant, position, visual_radius())
+	AudioBus.play_sfx(&"spell_rise")
+	if not _rewind_active():
+		_drop_ghost()
+
+
+func _update_ghost() -> void:
+	if not Fx.enabled():
+		return
+	if _rewind_ghost == null or not is_instance_valid(_rewind_ghost):
+		_rewind_ghost = Fx.rewind_ghost(self, _anim if (_anim != null and _anim.visible) else null,
+			visual_radius())
+	if _rewind_ghost == null:
+		return
+	_rewind_ghost.global_position = _to_global_battlefield(rewind_target_position())
+	# Le fantome S ALLUME a l approche du retour : c est le signal « frappe apres ».
+	var periode: float = maxf(rewind_period(), 0.001)
+	var proche: float = 1.0 - clampf(_rewind_timer / periode, 0.0, 1.0)
+	_rewind_ghost.modulate.a = lerpf(0.35, 0.9, proche)
+
+
+## Position du monstre (locale au terrain) convertie en coordonnees globales :
+## le fantome est top-level, il ne suit pas la transformation de son parent.
+func _to_global_battlefield(p: Vector2) -> Vector2:
+	var parent: Node2D = get_parent() as Node2D
+	return parent.to_global(p) if parent != null else p
+
+
+func _drop_ghost() -> void:
+	if _rewind_ghost != null and is_instance_valid(_rewind_ghost):
+		_rewind_ghost.queue_free()
+	_rewind_ghost = null
+
+
+# --- 2. LES JUMEAUX ----------------------------------------------------------
+
+func is_fallen() -> bool:
+	return _twin_fallen
+
+
+func twin_returns() -> int:
+	return _twin_returns
+
+
+## Les autres membres VIVANTS du groupe (debout ou a terre).
+func _twin_partners() -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	if battlefield == null or definition == null or definition.twin_group == &"":
+		return out
+	for e in battlefield.enemies:
+		if e == self or e == null or not is_instance_valid(e) or e.is_dead():
+			continue
+		if e.definition != null and e.definition.twin_group == definition.twin_group:
+			out.append(e)
+	return out
+
+
+## Tombe a terre au lieu de mourir si un jumeau tient encore debout. Renvoie true
+## s il est tombe : kill() ne doit alors rien emettre (ni XP ni retrait).
+func _try_twin_fall() -> bool:
+	if definition == null or definition.twin_group == &"" or _twin_no_more:
+		return false
+	if _twin_returns >= definition.twin_max_returns:
+		return false
+	var debout: bool = false
+	for p in _twin_partners():
+		if not p.is_fallen():
+			debout = true
+			break
+	if not debout:
+		return false
+	_twin_fallen = true
+	_twin_timer = maxf(definition.twin_revive_delay, 0.1)
+	hp = 0.0
+	_refresh_hp_bar()
+	# A TERRE doit se lire : grise et transparent, comme une chose qui n est plus
+	# une cible. Le compte a rebours ecrit au-dessus dit combien de temps reste.
+	# On teinte le CORPS et pas le noeud entier : verifie sur capture, un
+	# `modulate` sur le monstre grisait aussi la legende, et le compte a rebours
+	# devenait illisible au moment precis ou le joueur en a besoin.
+	_twin_tint(true)
+	AudioBus.play_sfx(&"shield_break")
+	return true
+
+
+## Renvoie true tant qu il est a terre.
+func _tick_twin(world_delta: float) -> bool:
+	if not _twin_fallen:
+		return false
+	_twin_timer -= world_delta
+	if _twin_timer <= 0.0:
+		_twin_rise()
+	return true
+
+
+func _twin_rise() -> void:
+	_twin_fallen = false
+	_twin_returns += 1
+	hp = maxf(_max_hp * definition.twin_revive_hp_pct * 0.01, 1.0)
+	_refresh_hp_bar()
+	_twin_tint(false)
+	modulate = Color(1.5, 1.4, 1.1)
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "modulate", Color.WHITE, 0.5)
+	if Fx.enabled() and battlefield != null:
+		Fx.impact(battlefield, position, Color(1.0, 0.95, 0.65), visual_radius() * 1.6)
+	AudioBus.play_sfx(&"spell_rise")
+
+
+## Le dernier debout vient de tomber : les jumeaux a terre meurent AVEC lui.
+func _release_fallen_twins() -> void:
+	for p in _twin_partners():
+		if p.is_fallen():
+			p._twin_final_death()
+
+
+func _twin_final_death() -> void:
+	_twin_fallen = false
+	_twin_no_more = true
+	kill()
+
+
+## Grise (ou rend sa couleur a) la partie VISIBLE du monstre : feuille animee,
+## sprite fixe ou forme dessinee, plus sa barre de vie.
+func _twin_tint(a_terre: bool) -> void:
+	if not Fx.enabled() or definition == null:
+		return
+	var gris := Color(0.55, 0.55, 0.65, 0.45)
+	if _anim != null and _anim.visible:
+		_anim.modulate = gris if a_terre else AnimCatalog.modulate_for(definition.id)
+	var fixe: CanvasItem = get_node_or_null("Static") as CanvasItem
+	if fixe != null:
+		fixe.modulate = gris if a_terre else Color.WHITE
+	if _body != null:
+		_body.modulate = gris if a_terre else Color.WHITE
+	if _hp_bar != null:
+		_hp_bar.modulate = gris if a_terre else Color.WHITE
+	# Un jumeau Cameleon reprend la teinte de son element en se relevant.
+	if not a_terre and definition.chameleon_interval > 0.0:
+		_cham_retint()
+
+
+# --- 3. LE CAMELEON ----------------------------------------------------------
+
+func _cham_cycle() -> Array[int]:
+	if definition != null and not definition.chameleon_elements.is_empty():
+		return definition.chameleon_elements
+	return GameEnums.ELEMENTS
+
+
+## Element qui le blesse en ce moment (-1 s il n est pas Cameleon).
+func chameleon_weak() -> int:
+	if definition == null or definition.chameleon_interval <= 0.0:
+		return -1
+	var c: Array[int] = _cham_cycle()
+	return c[_cham_index % c.size()] if not c.is_empty() else -1
+
+
+## Element auquel il resiste en ce moment : celui d EN FACE dans le cycle, donc
+## jamais le meme que le faible tant que le cycle compte deux elements.
+func chameleon_resisted() -> int:
+	if definition == null or definition.chameleon_interval <= 0.0:
+		return -1
+	var c: Array[int] = _cham_cycle()
+	if c.size() < 2:
+		return -1
+	return c[(_cham_index + floori(c.size() / 2.0)) % c.size()]
+
+
+## Multiplicateur de degats du Cameleon pour un sort. MEME regle que
+## EnemyDef.resistance_to_tags : un sort multi-element retient le PLUS FAIBLE,
+## sinon ajouter un element suffirait a toujours toucher sa faiblesse.
+func _chameleon_factor(tags: Array) -> float:
+	if _cham_table.is_empty():
+		return 1.0
+	var m: float = 1.0
+	var vu: bool = false
+	for t in tags:
+		if not (t in GameEnums.ELEMENTS):
+			continue
+		var r: float = float(_cham_table.get(t, 1.0))
+		m = r if not vu else minf(m, r)
+		vu = true
+	return m
+
+
+func _tick_chameleon(world_delta: float) -> void:
+	if definition.chameleon_interval <= 0.0:
+		return
+	_cham_timer -= world_delta
+	if _cham_timer > 0.0:
+		return
+	_cham_timer = definition.chameleon_interval
+	_cham_index += 1
+	_cham_apply()
+	_cham_retint()
+	AudioBus.play_sfx(&"ward_deep")
+
+
+func _cham_apply() -> void:
+	_cham_table.clear()
+	var faible: int = chameleon_weak()
+	var resiste: int = chameleon_resisted()
+	if faible >= 0:
+		_cham_table[faible] = definition.chameleon_weak_mult
+	# Plancher a 0,1 : une immunite tournante obligerait le joueur a attendre.
+	if resiste >= 0 and resiste != faible:
+		_cham_table[resiste] = maxf(definition.chameleon_resist_mult, 0.1)
+
+
+## LA TEINTE montre l element qui le BLESSE, pas celui qu il resiste : le joueur
+## cherche dans sa main la carte de cette couleur. Melange a 55 % avec le blanc,
+## parce qu une teinte MULTIPLIE (gotchas) : pure, elle noircirait le sprite.
+func _cham_retint() -> void:
+	if not Fx.enabled():
+		return
+	var faible: int = chameleon_weak()
+	if faible < 0:
+		return
+	reset_flash()
+	var teinte: Color = Color.WHITE.lerp(Fx.color_for([faible]), 0.55)
+	if _anim != null and _anim.visible:
+		_anim.modulate = teinte
+	elif _body != null:
+		_body.modulate = teinte
+
+
+## La legende ecrite : element faible en MAJUSCULES, element resiste en clair.
+func chameleon_caption() -> String:
+	var faible: int = chameleon_weak()
+	if faible < 0:
+		return ""
+	var txt: String = "FAIBLE : %s" % GameEnums.tag_name(faible).to_upper()
+	var resiste: int = chameleon_resisted()
+	if resiste >= 0:
+		txt += "\nresiste : %s" % GameEnums.tag_name(resiste)
+	return txt
+
+
+# --- 4. LE VOLEUR DE SORTS ---------------------------------------------------
+
+func stolen_card() -> SpellCard:
+	return _stolen_card
+
+
+func steal_cast_left() -> float:
+	return _steal_cast_left if _stolen_card != null else 0.0
+
+
+## LA REGLE DES DEGATS : secondes d incantation de BASE de la carte, fois le
+## tarif du voleur, arrondi, au moins 1. La base et non le temps effectif : le
+## voleur ne profite pas de la vitesse du mage, et le joueur lit la base sur sa
+## carte.
+static func stolen_card_damage(def: EnemyDef, card: SpellCard) -> int:
+	if def == null or card == null:
+		return 0
+	return maxi(1, int(round(card.base_cast_time * def.steal_damage_per_cast_second)))
+
+
+func _tick_thief(world_delta: float) -> void:
+	if definition.steal_interval <= 0.0:
+		return
+	if _stolen_card != null:
+		# La carte a quitte la main par un autre chemin (defausse forcee, fin de
+		# vague) : il n a plus rien a lancer, il retourne a la chasse.
+		if not RunState.is_card_stolen(_stolen_card):
+			_stolen_card = null
+			_steal_timer = definition.steal_interval
+			return
+		_steal_cast_left -= world_delta
+		if _steal_cast_left <= 0.0:
+			_cast_stolen_card()
+		return
+	_steal_timer -= world_delta
+	if _steal_timer > 0.0:
+		return
+	_steal_timer = definition.steal_interval
+	var c: SpellCard = RunState.steal_card()
+	if c == null:
+		return
+	_stolen_card = c
+	_steal_cast_left = maxf(definition.steal_cast_delay, 0.1)
+	play_attack()
+	AudioBus.play_sfx(&"ward_deep")
+	if Fx.enabled() and battlefield != null:
+		Fx.sprite(battlefield, "diamond_mark", position, visual_radius() * 1.6, false,
+			Fx.color_for(c.tags))
+
+
+func _cast_stolen_card() -> void:
+	var card: SpellCard = _stolen_card
+	_stolen_card = null
+	_steal_timer = definition.steal_interval
+	if card == null or not RunState.spend_stolen_card(card):
+		return
+	var degats: int = stolen_card_damage(definition, card)
+	play_attack()
+	if battlefield != null:
+		battlefield.speed_before_hit = SpeedGauge.speed_percent
+	# Un sort vole coute de la VITESSE, comme tout coup : la regle vit dans
+	# SpeedGauge.take_hit() et n a aucune exception ici.
+	SpeedGauge.take_hit(degats)
+	if battlefield != null:
+		battlefield.mage_hit.emit(degats, definition)
+		if Fx.enabled():
+			Fx.projectile(battlefield, position,
+				Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y),
+				Fx.color_for(card.tags), Fx.card_sheet(card))
+	AudioBus.play_sfx(&"hp_lost")
+
+
+func _release_stolen() -> void:
+	if _stolen_card == null:
+		return
+	RunState.release_stolen_card(_stolen_card)
+	_stolen_card = null
+
+
+# --- 5. LE DEVOREUR-INVOCATEUR -----------------------------------------------
+
+## Peut-il avaler cette proie maintenant ? Ses PROPRES sbires doivent avoir vecu
+## `devour_delay` s ; toute autre proie suit la regle historique du Glouton.
+func can_devour(prey: Enemy) -> bool:
+	if prey == null or definition == null:
+		return false
+	if _summoned.has(prey):
+		return prey.age() >= definition.devour_delay
+	return true
+
+
+## Ce que rapporte une proie. Avec `devour_heal_pct`, un SOIN borne au maximum ;
+## sans, la croissance historique du Glouton, inchangee.
+func devour(prey: Enemy) -> void:
+	if prey == null or definition == null:
+		return
+	if definition.devour_heal_pct > 0.0:
+		heal(maxf(prey.hp, 0.0) * definition.devour_heal_pct * 0.01)
+		if Fx.enabled() and battlefield != null:
+			Fx.heal_effect(battlefield, position)
+		AudioBus.play_sfx(&"heal")
+		return
+	grow(prey.max_hp() * 0.5, 0.18)
+
+
+## RAPPEL : un devoreur qui invoque avale ses sbires MURS ou qu ils soient. Sans
+## ce rappel, un sbire plus rapide que lui s eloignait hors de portee et la
+## combinaison invocation + devoration ne se produisait jamais.
+func _tick_recall() -> void:
+	if not definition.devours or definition.summon_def == null or battlefield == null:
+		return
+	for s in _summoned.duplicate():
+		if s == null or not is_instance_valid(s) or s.is_dead() or s.is_spawning():
+			continue
+		if s.age() < definition.devour_delay:
+			continue
+		var d: Vector2 = s.position
+		devour(s)
+		s.absorb()
+		battlefield.enemies.erase(s)
+		_summoned.erase(s)
+		if Fx.enabled():
+			Fx.swallow_trail(battlefield, d, position)
+		s.queue_free()
+
+
+# --- 6. LE MIROIR DU MAGE ----------------------------------------------------
+
+## Facteur de vitesse du Miroir : vitesse du mage / vitesse de reference, borne.
+## 1 pour tout autre monstre.
+func mirror_factor() -> float:
+	if definition == null or definition.mirror_speed_ref <= 0:
+		return 1.0
+	var lo: float = minf(definition.mirror_speed_min, definition.mirror_speed_max)
+	var hi: float = maxf(definition.mirror_speed_min, definition.mirror_speed_max)
+	return clampf(float(SpeedGauge.speed_percent) / float(definition.mirror_speed_ref), lo, hi)
+
+
+# --- Legende ecrite ------------------------------------------------------------
+
+## Tout ce qu un boss v3 doit DIRE au joueur, en mots. Vide pour un monstre
+## ordinaire : aucun noeud n est cree.
+func mech_caption() -> String:
+	if definition == null:
+		return ""
+	var lignes: Array[String] = []
+	if _twin_fallen:
+		lignes.append("A TERRE : releve dans %d s" % ceili(maxf(_twin_timer, 0.0)))
+	var cam: String = chameleon_caption()
+	if cam != "":
+		lignes.append(cam)
+	if _stolen_card != null:
+		lignes.append("VOLE : %s (%d s)" % [_stolen_card.display_name.to_upper(),
+			ceili(maxf(_steal_cast_left, 0.0))])
+	if _rewind_active() and not _rewind_history.is_empty():
+		lignes.append("RETOUR dans %d s" % ceili(maxf(_rewind_timer, 0.0)))
+	return "\n".join(lignes)
+
+
+func _refresh_mech_caption() -> void:
+	if not Fx.enabled():
+		return
+	var txt: String = mech_caption()
+	if txt == "":
+		if _mech_label != null and is_instance_valid(_mech_label):
+			_mech_label.visible = false
+		return
+	if _mech_label == null or not is_instance_valid(_mech_label):
+		_mech_label = Fx.mech_label(self, visual_radius())
+	if _mech_label == null:
+		return
+	_mech_label.visible = true
+	if _mech_label.text != txt:
+		_mech_label.text = txt
+	var faible: int = chameleon_weak()
+	var teinte: Color = Fx.color_for([faible]).lightened(0.35) if faible >= 0 else Color(0.96, 0.94, 0.86)
+	_mech_label.add_theme_color_override(&"font_color", teinte)

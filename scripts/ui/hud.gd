@@ -459,6 +459,7 @@ func _refresh_hand() -> void:
 ## la couleur disparaissait — et c est la couleur qui se voit du coin de l oeil.
 ## La teinte depend donc de l ETAT de la carte, pas de l ordre des appels.
 const TEINTE_BLOQUEE := Color(0.46, 0.46, 0.56, 0.85)
+const TEINTE_VOLEE := Color(0.62, 0.40, 0.40, 0.85)
 const TEINTE_SOMMEIL := Color(0.46, 0.48, 0.60, 0.85)
 const TEINTE_PREPAREE := Color(1.0, 0.92, 0.6)
 
@@ -472,6 +473,10 @@ static func _contre_teinte(t: Color) -> Color:
 
 
 func _teinte_carte(card: SpellCard, en_attente: SpellCard) -> Color:
+	# La carte VOLEE est aussi "bloquee" pour RunState : on la teste d abord,
+	# sinon cette boucle, qui tourne a chaque image, repeindrait son rouge en gris.
+	if card != null and RunState.is_card_stolen(card):
+		return TEINTE_VOLEE
 	if card != null and RunState.is_card_blocked(card):
 		return TEINTE_BLOQUEE
 	if RunState.is_silenced():
@@ -484,11 +489,15 @@ func _teinte_carte(card: SpellCard, en_attente: SpellCard) -> Color:
 func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
 	if card == null or not RunState.is_card_blocked(card):
 		return
-	cv.modulate = TEINTE_BLOQUEE
+	# VOLEE par un voleur de sorts : meme gel, autre mot et teinte chaude. Le
+	# joueur doit distinguer la carte qui revient quand la gorgone tombe de celle
+	# qui va lui etre LANCEE dessus s il ne tue pas le voleur a temps.
+	var volee: bool = RunState.is_card_stolen(card)
+	cv.modulate = TEINTE_VOLEE if volee else TEINTE_BLOQUEE
 	# Le mot en clair par-dessus : la couleur dit "quelque chose ne va pas",
 	# le mot dit QUOI. Un joueur daltonien ne lit que le mot.
 	var bandeau := Label.new()
-	bandeau.text = "PETRIFIEE"
+	bandeau.text = "VOLEE" if volee else "PETRIFIEE"
 	bandeau.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bandeau.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bandeau.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -501,7 +510,7 @@ func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
 	bandeau.add_theme_color_override(&"font_color", Color(0.94, 0.92, 0.98))
 	bandeau.add_theme_color_override(&"font_outline_color", Color(0.10, 0.08, 0.16))
 	bandeau.add_theme_constant_override(&"outline_size", 10)
-	bandeau.modulate = _contre_teinte(TEINTE_BLOQUEE)
+	bandeau.modulate = _contre_teinte(TEINTE_VOLEE if volee else TEINTE_BLOQUEE)
 	cv.add_child(bandeau)
 
 

@@ -24,6 +24,11 @@ var hand: Array[SpellCard] = []
 ## obligerait a re-tirer les victimes a chaque rafraichissement, la petrification
 ## sauterait de carte en carte et plus rien ne serait planifiable.
 var _blocked: Array[SpellCard] = []
+## VOLEUR DE SORTS — cartes de la main tenues par un voleur vivant. Separees des
+## petrifiees : une gorgone gele un NOMBRE de cartes, un voleur tient UNE carte
+## precise qu il va lancer. Les deux sont injouables, mais le joueur doit lire
+## laquelle va lui revenir dans la figure.
+var _stolen: Array[SpellCard] = []
 var discard: Array[SpellCard] = []
 var exiled: Array[SpellCard] = []
 
@@ -98,6 +103,7 @@ func reset() -> void:
 	pending_offer.clear()
 	_blocked.clear()
 	_silenced = false
+	_stolen.clear()
 	# L amelioration des cartes vaut pour LA PARTIE EN COURS : sans cet effacement
 	# elle franchirait la fin du niveau et l equilibrage mesure au banc ne
 	# decrirait plus aucune partie reelle (voir la section AMELIORATION plus bas).
@@ -212,7 +218,7 @@ func play_card(card: SpellCard) -> bool:
 	# lancement, effets qui rejouent une carte. Un garde cote interface laisserait
 	# au moins un de ces chemins ouvert, et le joueur lancerait une carte que son
 	# ecran lui montre comme petrifiee.
-	if _blocked.has(card):
+	if _blocked.has(card) or _stolen.has(card):
 		return false
 	# SOMMEIL (comportements v3) : un dormeur coupe TOUTE la magie. Meme garde,
 	# meme endroit, meme raison que la petrification.
@@ -277,8 +283,10 @@ func blocked_cards() -> Array[SpellCard]:
 	return _blocked.duplicate()
 
 
+## Injouable, pour quelque cause que ce soit : petrifiee OU volee. C est la
+## question que pose le HUD avant de griser, et la reponse doit couvrir les deux.
 func is_card_blocked(card: SpellCard) -> bool:
-	return card != null and _blocked.has(card)
+	return card != null and (_blocked.has(card) or _stolen.has(card))
 
 
 func blocked_count() -> int:
@@ -302,7 +310,10 @@ func set_card_block_count(wanted: int) -> void:
 	for i in range(_blocked.size() - 1, -1, -1):
 		if not hand.has(_blocked[i]):
 			_blocked.remove_at(i)
-	var plafond: int = maxi(0, hand.size() - MIN_PLAYABLE_CARDS)
+	_purge_stolen()
+	# Les cartes volees comptent dans le plafond : une gorgone et un voleur
+	# ensemble ne doivent jamais geler la derniere carte jouable.
+	var plafond: int = maxi(0, hand.size() - MIN_PLAYABLE_CARDS - _stolen.size())
 	var cible: int = clampi(wanted, 0, plafond)
 	while _blocked.size() > cible:
 		_blocked.pop_back()
@@ -315,7 +326,7 @@ func set_card_block_count(wanted: int) -> void:
 			if _blocked.size() >= cible:
 				break
 			var c: SpellCard = hand[i]
-			if c != null and not _blocked.has(c):
+			if c != null and not _blocked.has(c) and not _stolen.has(c):
 				_blocked.append(c)
 	if _blocked.size() != avant:
 		hand_changed.emit()
@@ -337,6 +348,78 @@ func set_silenced(value: bool) -> void:
 
 func is_silenced() -> bool:
 	return _silenced
+
+
+# --- VOLEUR DE SORTS ----------------------------------------------------------
+#
+# Le voleur (Enemy, champs steal_* d EnemyDef) tient UNE carte de la main, puis
+# la lance contre le mage. Le ledger vit ici pour la meme raison que la
+# petrification : c est la MAIN qui est touchee, et `play_card` est le seul
+# passage de toutes les facons de lancer.
+
+## Prend une carte pour un voleur. Renvoie null s il ne peut rien prendre sans
+## violer le plafond (il reste toujours MIN_PLAYABLE_CARDS carte jouable).
+##
+## LA CARTE PRISE est la plus LONGUE a incanter (a egalite, la plus a gauche) :
+## c est la plus precieuse, donc le vol se lit comme un vol, et c est celle qui
+## fera le plus mal — ce que le joueur doit pouvoir anticiper en regardant sa main.
+func steal_card() -> SpellCard:
+	_purge_stolen()
+	var libres: Array[SpellCard] = []
+	for c in hand:
+		if c != null and not c.is_passive and not _blocked.has(c) and not _stolen.has(c):
+			libres.append(c)
+	if libres.size() <= MIN_PLAYABLE_CARDS:
+		return null
+	var choix: SpellCard = libres[0]
+	for c in libres:
+		if c.base_cast_time > choix.base_cast_time:
+			choix = c
+	_stolen.append(choix)
+	hand_changed.emit()
+	return choix
+
+
+func is_card_stolen(card: SpellCard) -> bool:
+	return card != null and _stolen.has(card)
+
+
+## Copie defensive, comme blocked_cards().
+func stolen_cards() -> Array[SpellCard]:
+	return _stolen.duplicate()
+
+
+## Le voleur est mort (ou a quitte le terrain) avant de lancer : la carte redevient
+## jouable, a sa place dans la main.
+func release_stolen_card(card: SpellCard) -> void:
+	if card == null or not _stolen.has(card):
+		return
+	_stolen.erase(card)
+	hand_changed.emit()
+
+
+## Le voleur LANCE la carte : elle quitte la main pour la defausse, comme si le
+## joueur l avait jouee. Renvoie false si la carte n etait plus tenue (partie
+## de la main entre-temps) : rien n est alors lance.
+func spend_stolen_card(card: SpellCard) -> bool:
+	if card == null or not _stolen.has(card):
+		return false
+	_stolen.erase(card)
+	var idx: int = hand.find(card)
+	if idx == -1:
+		hand_changed.emit()
+		return false
+	hand.remove_at(idx)
+	discard.append(card)
+	hand_changed.emit()
+	return true
+
+
+## Une carte volee qui a quitte la main par un autre chemin n est plus tenue.
+func _purge_stolen() -> void:
+	for i in range(_stolen.size() - 1, -1, -1):
+		if not hand.has(_stolen[i]):
+			_stolen.remove_at(i)
 
 
 func discard_random(count: int) -> int:

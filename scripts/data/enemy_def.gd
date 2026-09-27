@@ -298,6 +298,102 @@ enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP }
 @export var reflect_window: float = 0.0
 @export_range(0.0, 100.0) var reflect_pct: float = 0.0
 
+@export_group("Mecaniques de boss v3")
+## Six mecaniques de boss (27 septembre). Chacune pose au joueur une question
+## qu aucune autre ne pose ; tous les champs valent 0 / vide par defaut, donc un
+## monstre qui ne les declare pas se comporte exactement comme avant.
+
+## L HORLOGER — toutes les `rewind_interval` secondes il REVIENT `rewind_seconds`
+## secondes en arriere : a la position ET aux PV qu il avait alors. 0 = jamais.
+##
+## Ce que la mecanique change : le MOMENT ou frapper, mais a l envers du renvoi.
+## Les degats portes pendant les `rewind_seconds` qui precedent un retour sont
+## effaces ; ceux portes JUSTE APRES un retour restent. Le joueur apprend a
+## garder son gros sort pour l instant qui suit le retour.
+##
+## LA GARANTIE DE FIN est structurelle : l intervalle est toujours force au-dessus
+## de la duree du retour (voir Enemy), donc il existe a chaque cycle une fenetre
+## ou les degats tiennent. `rewind_max` ajoute un plafond dur par-dessus.
+@export var rewind_interval: float = 0.0
+@export var rewind_seconds: float = 3.0
+## Nombre maximal de retours sur tout le combat. 0 = pas de plafond (la fenetre
+## suffit a garantir la fin, le plafond ne sert qu a raccourcir le combat).
+@export var rewind_max: int = 0
+
+## LES JUMEAUX — deux monstres (ou plus) portant le MEME `twin_group` sont lies :
+## si l un tombe pendant qu un autre tient debout, il reste A TERRE (intouchable,
+## immobile) et se RELEVE apres `twin_revive_delay` secondes avec
+## `twin_revive_hp_pct` % de ses PV. Si le dernier debout tombe pendant ce temps,
+## tous meurent pour de bon. Vide = monstre ordinaire.
+##
+## Ce que la mecanique change : la CIBLE n est plus un monstre mais une paire.
+## La bonne reponse est un sort de zone, ou deux frappes rapprochees.
+## Plafond `twin_max_returns` par jumeau : sans lui, un joueur sans zone ne
+## finirait jamais le combat.
+@export var twin_group: StringName = &""
+@export var twin_revive_delay: float = 4.0
+@export_range(1.0, 100.0) var twin_revive_hp_pct: float = 60.0
+@export var twin_max_returns: int = 2
+
+## LE CAMELEON — toutes les `chameleon_interval` secondes il change d element
+## faible et d element resiste, en parcourant `chameleon_elements` dans l ordre
+## (vide = les six elements). L element resiste est celui qui se trouve a
+## l oppose du cycle, jamais le meme que le faible. 0 = jamais.
+##
+## Meme semantique que `resistances` (multiplicateur de degats subis), et meme
+## regle multi-element : un sort qui porte plusieurs elements retient le PLUS
+## FAIBLE. Le Cameleon ne doit donc pas declarer ces elements dans `resistances`,
+## sinon les deux tables se multiplient.
+##
+## `chameleon_resist_mult` est borne au-dessus de 0 : une immunite tournante
+## obligerait le joueur a attendre, ce qui n est pas une decision.
+@export var chameleon_interval: float = 0.0
+@export var chameleon_elements: Array[int] = []
+@export_range(1.0, 3.0) var chameleon_weak_mult: float = 1.5
+@export_range(0.1, 1.0) var chameleon_resist_mult: float = 0.5
+
+## LE VOLEUR DE SORTS — toutes les `steal_interval` secondes il petrifie UNE
+## carte de la main (la plus longue a incanter), puis `steal_cast_delay` secondes
+## plus tard la LANCE CONTRE LE MAGE. 0 = jamais.
+##
+## LA REGLE DES DEGATS, simple et lisible : chaque seconde d incantation de la
+## carte volee coute `steal_damage_per_cast_second` points de vitesse. Un gros
+## sort vole fait mal, un petit presque rien : le joueur comprend d un coup
+## d oeil ce qu il risque.
+##
+## CE QUE DEVIENT LA CARTE : lancee par le voleur, elle part a la DEFAUSSE comme
+## si le joueur l avait jouee — il la reverra au prochain melange. Tue avant son
+## lancement, le voleur la rend : elle redevient jouable en main.
+@export var steal_interval: float = 0.0
+@export var steal_cast_delay: float = 4.0
+@export var steal_damage_per_cast_second: float = 6.0
+
+## LE DEVOREUR-INVOCATEUR — `devour_heal_pct` : a chaque proie avalee, le
+## devoreur se SOIGNE de ce pourcentage des PV restants de la proie, sans
+## depasser son maximum. 0 = comportement historique du Glouton (il grossit :
+## +50 % des PV max de la proie en PV max et en PV, et +18 % de taille).
+##
+## Avec un soin, il ne grossit plus : un invocateur qui grossirait a chaque sbire
+## avale deviendrait un mur de PV sans fin.
+@export_range(0.0, 200.0) var devour_heal_pct: float = 0.0
+## Age minimal (s) d un de SES sbires avant qu il puisse l avaler. Sans ce delai
+## le sbire, qui nait colle a lui, etait gobe l image suivante : l invocation etait
+## invisible et le joueur ne voyait qu une regeneration. Une fois murs, il les
+## RAPPELLE ou qu ils soient. Ne s applique qu a ses propres invocations.
+@export var devour_delay: float = 3.0
+
+## LE MIROIR DU MAGE — sa vitesse suit celle du mage : a `mirror_speed_ref` %
+## de vitesse du mage il avance a sa vitesse de base, au double il va deux fois
+## plus vite, borne dans [`mirror_speed_min`, `mirror_speed_max`]. 0 = inactif.
+##
+## Ce que la mecanique change : elle met a l epreuve « la vitesse est la vie ».
+## Contre lui, etre rapide le rend rapide, et encaisser un coup le ralentit plus
+## que le reste du monde. Le facteur s ajoute a l horloge du monde, il ne la
+## remplace pas.
+@export var mirror_speed_ref: int = 0
+@export var mirror_speed_min: float = 0.5
+@export var mirror_speed_max: float = 2.0
+
 
 ## Multiplicateur de degats subis pour UN tag. 1.0 si rien n est declare.
 func resistance_to(tag: int) -> float:
