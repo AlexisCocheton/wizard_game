@@ -66,6 +66,10 @@ var _cast_time: float = 0.0
 var _alive_sum: float = 0.0
 var _samples: int = 0
 var _by_enemy: Dictionary = {}
+## Vitesse retiree par source, et pas seulement le nombre de coups : un contact de
+## Behemoth et une piqure de lutin comptaient pareil, et le classement des causes
+## s inversait.
+var _dmg_by_enemy: Dictionary = {}
 var _passed: int = 0
 var _killed: int = 0
 
@@ -261,6 +265,7 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 	_alive_sum = 0.0
 	_samples = 0
 	_by_enemy = {}
+	_dmg_by_enemy = {}
 	_passed = 0
 	_killed = 0
 	if not g.battlefield.enemy_killed.is_connected(_on_enemy_killed):
@@ -321,7 +326,7 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 		"degats_infliges": _total_damage, "temps_incantation": _cast_time,
 		"monstres_moyen": _alive_sum / maxf(_samples, 1.0),
 		"passes": _passed, "tues": _killed,
-		"par_source": _by_enemy, "temps": t, "coups_recus": hits,
+		"par_source": _by_enemy, "degats_par_source": _dmg_by_enemy, "temps": t, "coups_recus": hits,
 		"cartes_jouees": cards_played, "cartes_bloquees": cards_missed,
 		"monstres_max": max_enemies, "vague": wave_reached,
 		"vitesse": SpeedGauge.speed_percent,
@@ -334,25 +339,32 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 
 ## Vise le monstre le plus avance (le plus proche du mage) : c est ce que fait
 ## un joueur qui veut survivre.
-## Qui a touche le mage ? On regarde le monstre le plus bas au moment du coup.
+## La partie observee, pour le repli d attribution d un coup sans source.
 var _watch: GameController = null
 
 func _on_enemy_killed(_def: EnemyDef) -> void:
 	_killed += 1
 
 
-func _on_mage_hit(_dmg: int, _source: EnemyDef = null) -> void:
-	var nom: String = "projectile ou contact inconnu"
-	var y_max: float = -1e9
-	if _watch != null:
-		for e in _watch.battlefield.enemies:
-			if e != null and is_instance_valid(e) and e.position.y > y_max:
-				y_max = e.position.y
-				nom = String(e.definition.id) if e.definition != null else "?"
-	# Un monstre encore loin signifie que le coup vient d un projectile.
-	if y_max < GameConfig.MAGE_LINE_Y - 250.0:
-		nom = "tir a distance (%s)" % nom
+func _on_mage_hit(dmg: int, source: EnemyDef = null) -> void:
+	var nom: String = ""
+	# Le signal PORTE sa source (contact, tir, laser, riposte) : c est elle qui
+	# compte. L ancienne attribution prenait le monstre le plus bas a l instant du
+	# coup, et accusait un Berserker au corps a corps d un « tir a distance » des
+	# que le vrai tireur etait plus haut que lui.
+	if source != null:
+		nom = String(source.id)
+	else:
+		# Repli sans source (degats d environnement) : le monstre le plus bas.
+		nom = "sans source"
+		var y_max: float = -1e9
+		if _watch != null:
+			for e in _watch.battlefield.enemies:
+				if e != null and is_instance_valid(e) and e.position.y > y_max:
+					y_max = e.position.y
+					nom = "sans source (%s)" % (String(e.definition.id) if e.definition != null else "?")
 	_by_enemy[nom] = int(_by_enemy.get(nom, 0)) + 1
+	_dmg_by_enemy[nom] = int(_dmg_by_enemy.get(nom, 0)) + dmg
 	_passed += 1
 
 
@@ -420,10 +432,11 @@ func _print_stats(nom: String, s: Dictionary) -> void:
 	print("    temps passe a incanter %.0f s sur %.0f s (%.0f %%)"
 		% [s["temps_incantation"], s["temps"], 100.0 * s["temps_incantation"] / maxf(s["temps"], 0.01)])
 	var src: Dictionary = s["par_source"]
+	var dmg: Dictionary = s["degats_par_source"]
 	if not src.is_empty():
 		var parts: Array[String] = []
 		for k in src:
-			parts.append("%s x%d" % [k, src[k]])
+			parts.append("%s x%d (-%d %%)" % [k, src[k], int(dmg.get(k, 0))])
 		print("    coups par source : " + ", ".join(parts))
 	var par_vague: Dictionary = s["vitesse_par_vague"]
 	var keys: Array = par_vague.keys()

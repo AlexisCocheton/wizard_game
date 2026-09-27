@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_o1058"]
-[ext_resource type="Resource" path="res://resources/enemies/demon_maw.tres" id="2_o1058"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_maw_echo.tres" id="2_mgsg6"]
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_vp5ln"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="4_npmx4"]
 [ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="5_mgsg6"]
@@ -9,7 +9,7 @@
 
 [sub_resource type="Resource" id="Resource_mgsg6"]
 script = ExtResource("1_o1058")
-enemy = ExtResource("2_o1058")
+enemy = ExtResource("2_mgsg6")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0

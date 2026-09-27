@@ -3,10 +3,10 @@
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_phey4"]
 [ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="2_phey4"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="3_1uh55"]
-[ext_resource type="Resource" path="res://resources/enemies/demon_anvil.tres" id="6_pegq6"]
-[ext_resource type="Resource" path="res://resources/enemies/demon_maw.tres" id="7_00s4r"]
-[ext_resource type="Resource" path="res://resources/enemies/demon_chain.tres" id="8_fn1rf"]
-[ext_resource type="Resource" path="res://resources/enemies/demon_circle.tres" id="9_k3q17"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_anvil_echo.tres" id="4_phey4"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_maw_echo.tres" id="5_1uh55"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_chain_echo.tres" id="6_v27ae"]
+[ext_resource type="Resource" path="res://resources/enemies/demon_circle_echo.tres" id="7_iqwbf"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="10_h83vr"]
 [ext_resource type="Resource" path="res://resources/enemies/child_god.tres" id="11_4s603"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="12_0beht"]
@@ -94,14 +94,14 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_3x1tw"]
 script = ExtResource("28_yjxix")
-enemy = ExtResource("6_pegq6")
+enemy = ExtResource("4_phey4")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_vxmca"]
 script = ExtResource("28_yjxix")
-enemy = ExtResource("7_00s4r")
+enemy = ExtResource("5_1uh55")
 count = 1
 spawn_delay = 1.0
 start_offset = 14.0
@@ -131,14 +131,14 @@ is_boss = false
 
 [sub_resource type="Resource" id="Resource_gsf6m"]
 script = ExtResource("28_yjxix")
-enemy = ExtResource("8_fn1rf")
-count = 1
+enemy = ExtResource("6_v27ae")
+count = 2
 spawn_delay = 1.0
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_pffdu"]
 script = ExtResource("28_yjxix")
-enemy = ExtResource("9_k3q17")
+enemy = ExtResource("7_iqwbf")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
@@ -216,7 +216,7 @@ outro_story = &"lvl_16_outro"
 terrain = "sand"
 backdrop = "act5_divine"
 waves = Array[ExtResource("27_noohh")]([SubResource("Resource_v27ae"), SubResource("Resource_iqwbf"), SubResource("Resource_0beht"), SubResource("Resource_pegq6")])
-enemy_pool = Array[ExtResource("1_phey4")]([ExtResource("2_phey4"), ExtResource("3_1uh55"), ExtResource("6_pegq6"), ExtResource("7_00s4r"), ExtResource("8_fn1rf"), ExtResource("9_k3q17"), ExtResource("10_h83vr"), ExtResource("11_4s603"), ExtResource("12_0beht"), ExtResource("13_pegq6"), ExtResource("12_phey4"), ExtResource("15_fn1rf"), ExtResource("14_phey4"), ExtResource("15_1uh55"), ExtResource("16_v27ae")])
+enemy_pool = Array[ExtResource("1_phey4")]([ExtResource("2_phey4"), ExtResource("3_1uh55"), ExtResource("4_phey4"), ExtResource("5_1uh55"), ExtResource("6_v27ae"), ExtResource("7_iqwbf"), ExtResource("10_h83vr"), ExtResource("11_4s603"), ExtResource("12_0beht"), ExtResource("13_pegq6"), ExtResource("12_phey4"), ExtResource("15_fn1rf"), ExtResource("14_phey4"), ExtResource("15_1uh55"), ExtResource("16_v27ae")])
 exploration_deck = Array[ExtResource("17_1uh55")]([ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("21_pegq6"), ExtResource("22_00s4r"), ExtResource("23_fn1rf")])
 objectives = Array[ExtResource("25_kvakk")]([SubResource("Resource_phey4"), SubResource("Resource_84rjn"), SubResource("Resource_1uh55")])
 legendary_reward = ExtResource("24_k3q17")
