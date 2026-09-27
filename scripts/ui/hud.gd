@@ -653,7 +653,7 @@ func _on_card_input(event: InputEvent, card: SpellCard, slot: int) -> void:
 func _begin_drag(card: SpellCard, screen_pos: Vector2) -> void:
 	_dragging = card
 	var point: Vector2 = _battlefield_point(screen_pos)
-	_aim.show_aim(card, point, _is_valid_aim(point))
+	_aim.show_aim(card, point, _is_valid_aim(point, card))
 
 
 ## Recoit TOUS les evenements, y compris ceux que les cartes consomment ensuite.
@@ -662,7 +662,7 @@ func _input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		var point: Vector2 = _battlefield_point((event as InputEventMouseMotion).global_position)
-		_aim.show_aim(_dragging, point, _is_valid_aim(point))
+		_aim.show_aim(_dragging, point, _is_valid_aim(point, _dragging))
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index == MOUSE_BUTTON_LEFT and not mb.pressed:
@@ -677,15 +677,20 @@ func _end_drag(screen_pos: Vector2) -> void:
 	if card == null:
 		return
 	var point: Vector2 = _battlefield_point(screen_pos)
-	if _is_valid_aim(point):
+	if _is_valid_aim(point, card):
 		_play(card, point)
 	# Visee hors terrain : la carte reste en main, le geste est simplement annule.
 
 
-## La zone jouable exclut la main de cartes et la barre du haut.
-func _is_valid_aim(point: Vector2) -> bool:
-	return point.y > 160.0 and point.y < GameConfig.MAGE_LINE_Y \
+## La zone jouable exclut la main de cartes et la barre du haut. Un objet qui
+## BLOQUE (mur, riviere) est aussi refuse la ou il couperait tout chemin des
+## monstres : l apercu passe au rouge et la carte reste en main.
+func _is_valid_aim(point: Vector2, card: SpellCard = null) -> bool:
+	var dans_le_terrain: bool = point.y > 160.0 and point.y < GameConfig.MAGE_LINE_Y \
 		and point.x > 0.0 and point.x < GameConfig.BATTLEFIELD_WIDTH
+	if not dans_le_terrain or card == null or game == null:
+		return dans_le_terrain
+	return game.aim_allowed(card, point)
 
 
 ## Convertit un point ecran en coordonnees du champ de bataille.

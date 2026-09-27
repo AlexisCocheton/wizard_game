@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_oaysl"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5o7pc"]
+
+[sub_resource type="Resource" id="Resource_oaysl"]
+script = ExtResource("1_oaysl")
+key = &"terrain_river"
+magnitude = 0.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("2_5o7pc")
+id = &"terrain_river"
+display_name = "Riviere"
+description = "Fait couler une riviere sur toute la largeur du terrain, a la hauteur visee, jusqu a la fin du combat. Les monstres au sol doivent passer par son unique pont ; les volants et les projectiles passent au-dessus."
+rarity = 3
+base_cast_time = 2.6
+targeting = 1
+tags = Array[int]([])
+effects = Array[ExtResource("1_oaysl")]([SubResource("Resource_oaysl")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"portal_blue"
+sfx_key = &"wind_gust"

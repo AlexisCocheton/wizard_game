@@ -11,6 +11,88 @@ static func _tags(ctx: CastContext) -> Array:
 	return ctx.card.tags if ctx.card != null else []
 
 
+## Cellules qu un mur de cette carte bloquerait a ce point. Meme decoupe que
+## `Battlefield.spawn_wall` -> `NavGrid.block_rect`, lue dans la MEME spec : la
+## verification et la pose ne peuvent pas diverger.
+static func wall_cells(spec: EffectSpec, bf: Node, at: Vector2) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if bf == null or bf.get("nav") == null:
+		return out
+	var half: float = maxf(spec.radius, 60.0)
+	var thickness: float = float(spec.get_param(&"thickness", 60.0))
+	return (bf.nav as NavGrid).rect_cells(at, half, thickness)
+
+
+## La carte peut-elle etre LACHEE a ce point ? Interroge par le glisser-deposer
+## (apercu rouge) et par GameController.play_card (la carte reste en main).
+##
+## Seuls les objets qui BLOQUENT ont une raison d etre refuses : ils sont les seuls
+## a pouvoir couper le chemin des monstres. Refuser AVANT de depenser la carte
+## plutot que poser puis retirer : un objet qui disparait seul se lirait comme un
+## bug, et une carte payee pour rien comme une injustice.
+static func placement_allowed(card: SpellCard, point: Vector2, bf: Node) -> bool:
+	if card == null or bf == null or point == Vector2.INF:
+		return true
+	for spec in card.effects:
+		if spec == null:
+			continue
+		if spec.key == &"build_wall":
+			if not bf.can_block(wall_cells(spec, bf, point)):
+				return false
+		elif spec.key == &"terrain_river":
+			if not bf.river_possible(point.y):
+				return false
+	return true
+
+
+## Genre d accessoire lu dans les params d une carte.
+static func prop_kind(name: String) -> int:
+	match name:
+		"water": return TerrainProp.Kind.WATER
+		"bramble": return TerrainProp.Kind.BRAMBLE
+		"pit": return TerrainProp.Kind.PIT
+		"altar": return TerrainProp.Kind.ALTAR
+	return TerrainProp.Kind.TREE
+
+
+## Plante un accessoire et ce qu il porte (zone au sol, generateur d allies).
+## Partage par `taunt_prop` (qui attire) et `place_terrain` (qui n attire pas, ou
+## peu) : la pose est la meme, seule la portee de provocation change.
+##
+## La zone attachee est posee APRES l accessoire et rangee dans `p.zone` : c est
+## cette poignee qui permet a Battlefield de la couper quand l objet tombe. Une
+## zone posee independamment survivrait a son porteur, et le joueur aurait
+## interet a abattre son propre arbre pour garder le poison.
+static func plant(spec: EffectSpec, ctx: CastContext, taunt_radius: float,
+		zone_radius: float) -> TerrainProp:
+	var genre: int = prop_kind(String(spec.get_param(&"kind", "tree")))
+	var col: Color = Fx.color_for(_tags(ctx))
+	var p: TerrainProp = ctx.battlefield.spawn_prop(
+		genre, ctx.target_position, spec.duration,
+		float(spec.get_param(&"prop_hp", 0.0)),
+		taunt_radius, 0.0, 0.0, Fx.card_sheet(ctx.card), col)
+	if p == null:
+		return null
+	if zone_radius > 0.0:
+		# Duree de la zone = duree de l objet : INF pour un objet permanent. Elle
+		# ne meurt de toute facon qu avec lui (`_destroy_prop`).
+		p.zone = ctx.battlefield.spawn_ground_zone(
+			p.position, zone_radius, p.time_left,
+			spec.magnitude * ctx.damage_mult,
+			float(spec.get_param(&"slow_pct", 0.0)), ctx.card,
+			float(spec.get_param(&"vuln_mult", 1.0)))
+	var tous_les: float = float(spec.get_param(&"summon_every", 0.0))
+	if tous_les > 0.0:
+		p.summon_every = tous_les
+		# Le premier allie arrive a mi-intervalle : le joueur doit VOIR que l autel
+		# fonctionne avant que la vague ne l ait abattu, sans pour autant recevoir
+		# un allie gratuit a l instant de la pose.
+		p.summon_timer = tous_les * 0.5
+		p.summon_damage = float(spec.get_param(&"ally_damage", 0.0)) * ctx.damage_mult
+		p.summon_duration = float(spec.get_param(&"ally_duration", tous_les))
+	return p
+
+
 ## Degats sur une cible unique.
 class DamageSingle extends EffectHandler:
 	func get_key() -> StringName:
@@ -217,6 +299,14 @@ class BuildWall extends EffectHandler:
 		# comme un Mur de pierre.
 		Fx.impact(ctx.battlefield, ctx.target_position, Fx.COL_WALL, half * 0.6,
 			Fx.card_sheet(ctx.card))
+		# GARANTIE DE CHEMIN, reverifiee a la resolution. L apercu de visee a deja
+		# refuse les poses qui enferment (voir `placement_allowed`), mais le terrain
+		# a pu changer pendant l incantation : un second sort charge en meme temps,
+		# une riviere posee entre-temps. Un mur qui couperait tout chemin figerait
+		# une vague derriere de l eau qu aucun monstre ne sait frapper.
+		if not ctx.battlefield.can_block(EffectHandlers.wall_cells(spec, ctx.battlefield,
+				ctx.target_position)):
+			return
 		# Mur PERMANENT : il ne s efface pas au bout de N secondes, il tombe quand
 		# les monstres enfermes l ont casse. Meme cle d effet, meme carte-donnee :
 		# c est un parametre, pas un second handler.
@@ -417,26 +507,69 @@ class TauntProp extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
-		var genre: int = TerrainProp.Kind.WATER \
-			if String(spec.get_param(&"kind", "tree")) == "water" \
-			else TerrainProp.Kind.TREE
-		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
-		var p: TerrainProp = ctx.battlefield.spawn_prop(
-			genre, ctx.target_position, spec.duration,
-			float(spec.get_param(&"prop_hp", 80.0)),
-			spec.radius, 0.0, 0.0, Fx.card_sheet(ctx.card), col)
-		if p == null:
+		# Sans PV, un appat serait eternel ET invulnerable : il tiendrait la vague
+		# loin du mage pour toujours. La valeur de repli n est qu un filet, les
+		# cartes livrees donnent toujours la leur.
+		if not spec.params.has(&"prop_hp"):
+			spec = spec.duplicate()
+			spec.params = spec.params.duplicate()
+			spec.params[&"prop_hp"] = 80.0
+		EffectHandlers.plant(spec, ctx, spec.radius,
+			float(spec.get_param(&"zone_radius", 0.0)))
+
+
+## Pose un objet de terrain QUI N ATTIRE PAS (ou peu) : ronces, fosse, arbre
+## empoisonne, autel. Meme pose que `taunt_prop`, lue autrement :
+##   radius      rayon de la ZONE au sol portee par l objet (0 = aucune)
+##   magnitude   degats/seconde de cette zone (element de la carte)
+##   duration    <= 0 : l objet reste jusqu a la fin du combat
+## params :
+##   kind          "tree", "bramble", "pit", "altar"
+##   prop_hp       PV ; 0 = indestructible (seul le plafond le remplace)
+##   taunt_radius  provocation, 0 par defaut. L autel en porte une PETITE : sans
+##                 elle, pose loin du passage, il invoquerait pour toujours et
+##                 vaudrait une infinite de sorts en Massacre.
+##   slow_pct, vuln_mult   effets de la zone
+##   summon_every, ally_damage, ally_duration   GENERATEUR d allies
+##
+## Pourquoi une cle a part plutot que `taunt_prop` sans portee : dans le .tres,
+## `taunt_prop` DIT « attire ». Des ronces ecrites `taunt_prop` mentiraient a qui
+## relit la carte, et le rayon de la spec y designe la provocation, pas la zone.
+class PlaceTerrain extends EffectHandler:
+	func get_key() -> StringName:
+		return &"place_terrain"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
 			return
-		# La zone attachee est posee APRES l accessoire et rangee dans `p.zone` :
-		# c est cette poignee qui permet a Battlefield de la couper quand l arbre
-		# tombe. Une zone posee independamment survivrait a son porteur, et le
-		# joueur aurait interet a abattre son propre arbre pour garder le poison.
-		var rayon_zone: float = float(spec.get_param(&"zone_radius", 0.0))
-		if rayon_zone > 0.0:
-			p.zone = ctx.battlefield.spawn_ground_zone(
-				p.position, rayon_zone, spec.duration,
-				spec.magnitude * ctx.damage_mult,
-				float(spec.get_param(&"slow_pct", 0.0)), ctx.card)
+		EffectHandlers.plant(spec, ctx, float(spec.get_param(&"taunt_radius", 0.0)),
+			spec.radius)
+
+
+## LA RIVIERE : une ligne d eau sur toute la largeur, un seul pont, jusqu a la
+## fin du combat. Les monstres au sol passent par le pont ; volants et projectiles
+## passent au-dessus (ils ignorent deja la grille de navigation).
+##
+## Le joueur vise la HAUTEUR ; le pont est tire au hasard parmi les colonnes qui
+## gardent un chemin. Toutes les decisions sont detaillees sur
+## `Battlefield.spawn_river`.
+##
+## duration <= 0 : jusqu a la fin du combat.
+class River extends EffectHandler:
+	func get_key() -> StringName:
+		return &"terrain_river"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		var y: float = NavGrid.row_center_y(NavGrid.river_row(ctx.target_position.y))
+		# L effet propre a la carte est joue meme si la pose echoue : le joueur
+		# doit voir que le sort est parti. Refus possible seulement si le terrain
+		# a change pendant l incantation, l apercu ayant deja filtre la visee.
+		Fx.impact(ctx.battlefield, Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, y),
+			Fx.COL_FROST, 160.0, Fx.card_sheet(ctx.card))
+		ctx.battlefield.spawn_river(ctx.target_position.y, spec.duration,
+			Fx.card_sheet(ctx.card))
 
 
 ## Etourdit les monstres d une zone : vitesse NULLE, pas un ralentissement fort.

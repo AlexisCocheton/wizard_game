@@ -64,6 +64,12 @@ extends Control
 ## glisser : le joueur apprend qu il ne peut pas deposer avant d avoir lache,
 ## au lieu de le decouvrir par un retour qu il pourrait prendre pour un bug.
 ##
+## DEFILER OU PRENDRE. Quand la zone du deck deborde (deck hors regle, plus de
+## six cartes differentes), un geste parti a la VERTICALE sur une de ses
+## vignettes fait defiler la zone au lieu de prendre la carte ; parti de cote,
+## il la prend. Voir `gesture_for`. Un deck conforme ne defile jamais et garde
+## le geste d origine dans toutes les directions.
+##
 ## Le suivi se fait dans `_input()` et non `_gui_input` : une vignette est un
 ## Button, qui avale le relachement (piege documente du projet, meme cause que
 ## le viseur des sorts). Le relachement d un glisser est marque traite pour que
@@ -118,6 +124,10 @@ const NOTICE_S: float = 3.2
 ## Ou se trouve le doigt au moment du depot.
 enum Zone { NONE, DECK, COLLECTION }
 
+## Ce que devient un appui sur une vignette une fois que le doigt a bouge.
+## AUCUN = pas encore decide (sous le seuil) ; le relachement sera un toucher.
+enum Geste { AUCUN, DEFILER, PRENDRE }
+
 ## Couleurs de la zone de depot. Or = « tu peux lacher ici », rouge = « lacher
 ## ici sera refuse » — les deux couleurs d etat deja employees par l ecran
 ## (compteur valide / compteur en defaut).
@@ -170,6 +180,13 @@ var _ghost: Control = null
 var _hint: PanelContainer = null
 var _hint_lbl: Label = null
 var _hint_hover: bool = false
+## Defilement au doigt de la zone du deck, commence sur une vignette.
+var _scrolling: bool = false
+var _scroll_anchor_y: float = 0.0
+var _scroll_from: int = 0
+## Vignette dont le PROCHAIN `pressed` doit etre ignore : celle sur laquelle un
+## defilement a commence (voir `_input`).
+var _eat_tap_tile: Control = null
 ## Bandeau de refus, pose sur le deck.
 var _notice: PanelContainer = null
 var _notice_lbl: Label = null
@@ -655,6 +672,13 @@ func _tile(card: SpellCard, pied: String, teinte: Color,
 		HORIZONTAL_ALIGNMENT_CENTER, false))
 
 	tile.pressed.connect(func() -> void:
+		# Le relachement d un DEFILEMENT n est pas un toucher : le contenu a
+		# suivi le doigt, qui se retrouve donc au-dessus de la meme vignette,
+		# et le Button croit a un appui complet. Sans cette garde, faire
+		# defiler le deck retirait la carte sous le pouce.
+		if _eat_tap_tile == tile:
+			_eat_tap_tile = null
+			return
 		AudioBus.play_sfx(&"ui_tap")
 		action.call())
 	return tile
@@ -761,21 +785,77 @@ func _make_draggable(tile: Button, card: SpellCard, from_deck: bool) -> void:
 					"start": mb.global_position, "tile": tile})
 
 
+## Ce que devient un appui qui a bouge de `delta` depuis son point de depart.
+##
+## Sous DRAG_START_PX : rien n est decide, le relachement sera un toucher.
+## Au-dela, un appui sur une vignette du DECK dont la zone DEBORDE, parti
+## surtout a la verticale, fait DEFILER la zone ; tout le reste PREND la carte.
+##
+## Pourquoi la direction : la zone du deck ne defile que verticalement, et le
+## pouce qui la parcourt part a la verticale. Sans cette regle, le glisser-
+## deposer prenait la carte des 28 px dans toutes les directions, et un deck
+## trop long ne pouvait defiler qu en visant l interstice de 8 px entre deux
+## vignettes (les Button gardent l appui pour eux).
+##
+## Pourquoi SEULEMENT quand la zone deborde : un deck conforme (6 cartes
+## differentes au plus) tient en deux rangees et ne defile jamais. Il garde
+## alors le geste d UI-006 a l identique : on tire une carte vers le bas pour
+## la rendre a la collection. Retirer d un deck qui deborde reste possible au
+## toucher, ou en partant de cote.
+##
+## La collection n est jamais concernee : elle se feuillette par pages, elle ne
+## defile pas, et c est d elle que partent les ajouts vers le deck.
+static func gesture_for(from_deck: bool, can_scroll: bool, delta: Vector2) -> int:
+	if delta.length() < DRAG_START_PX:
+		return Geste.AUCUN
+	if from_deck and can_scroll and absf(delta.y) > absf(delta.x):
+		return Geste.DEFILER
+	return Geste.PRENDRE
+
+
+func is_scrolling() -> bool:
+	return _scrolling
+
+
 func _input(event: InputEvent) -> void:
-	if _press.is_empty() and _drag_card == null:
+	if _press.is_empty() and _drag_card == null and not _scrolling:
 		return
 	if event is InputEventMouseMotion:
 		var p: Vector2 = (event as InputEventMouseMotion).global_position
+		if _scrolling:
+			# Le contenu suit le doigt : doigt vers le haut = on descend dans
+			# le deck. ScrollContainer borne lui-meme la valeur.
+			_deck_scroll.scroll_vertical = _scroll_from + int(round(_scroll_anchor_y - p.y))
+			get_viewport().set_input_as_handled()
+			return
 		if _drag_card == null:
-			if p.distance_to(_press["start"]) < DRAG_START_PX:
-				return
-			begin_drag(_press["card"], _press["from_deck"], p, _press["tile"])
+			var start: Vector2 = _press["start"]
+			match gesture_for(bool(_press["from_deck"]), deck_can_scroll(), p - start):
+				Geste.AUCUN:
+					return
+				Geste.DEFILER:
+					_begin_scroll(start.y)
+					_deck_scroll.scroll_vertical = _scroll_from + int(round(_scroll_anchor_y - p.y))
+					get_viewport().set_input_as_handled()
+					return
+				_:
+					begin_drag(_press["card"], _press["from_deck"], p, _press["tile"])
 		drag_to(p)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index != MOUSE_BUTTON_LEFT or mb.pressed:
 			return
+		if _scrolling:
+			_scrolling = false
+			# Le relachement va a la vignette, qui emettra `pressed` : c est la
+			# garde de `_tile` qui l ignore. On ne marque PAS l evenement traite :
+			# un Button prive de son relachement garde le focus souris et
+			# volerait l appui suivant, ou qu il tombe.
+			# La garde est levee en fin de frame : si le doigt a quitte la
+			# vignette (defilement en butee), aucun `pressed` ne viendra, et la
+			# garde ne doit pas avaler le toucher suivant.
+			_clear_eat_tap.call_deferred()
 		if _drag_card != null:
 			drop_at(mb.global_position)
 			# Le relachement d un glisser n est PAS un toucher. Double garde :
@@ -786,6 +866,20 @@ func _input(event: InputEvent) -> void:
 			# rougir le smoke, c est la reconstruction qui porte la garde.
 			get_viewport().set_input_as_handled()
 		_press = {}
+
+
+func _begin_scroll(anchor_y: float) -> void:
+	_scrolling = true
+	_scroll_anchor_y = anchor_y
+	_scroll_from = _deck_scroll.scroll_vertical
+	_eat_tap_tile = _press.get("tile")
+	_press = {}
+	# Un defilement n est pas une lecture : pas de carte armee derriere soi.
+	_armed_id = &""
+
+
+func _clear_eat_tap() -> void:
+	_eat_tap_tile = null
 
 
 ## Prend une carte. Public pour les tests, qui rejouent le geste sans souris.
@@ -857,6 +951,8 @@ func cancel_drag() -> void:
 	if _drag_card != null:
 		_end_drag(false)
 	_press = {}
+	_scrolling = false
+	_eat_tap_tile = null
 
 
 func is_dragging() -> bool:
@@ -871,6 +967,21 @@ func draggable_tiles(in_deck: bool) -> Array[Button]:
 		if c is Button and c.has_meta(&"card_id"):
 			out.append(c)
 	return out
+
+
+## La zone du deck qui defile (pour le smoke, qui mesure le defilement).
+func deck_scroll() -> ScrollContainer:
+	return _deck_scroll
+
+
+## Vrai si le deck a plus de vignettes que sa zone n en montre. C est le cas
+## d un deck HORS REGLE (plus de DeckRules.MAX_DISTINCT cartes differentes,
+## typiquement un profil anterieur a la regle des six) : justement celui ou le
+## joueur doit tout voir pour savoir quoi retirer.
+func deck_can_scroll() -> bool:
+	if _deck_scroll == null or _deck_grid == null:
+		return false
+	return _deck_grid.get_combined_minimum_size().y > _deck_scroll.size.y + 1.0
 
 
 ## La zone ou il faut lacher : le deck pour une carte de la collection, la
