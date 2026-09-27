@@ -50,11 +50,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_0sax4"]
 script = ExtResource("22_wfffn")
-id = &"obj_max_distinct_cast_4"
-description = "Gagner avec 4 sorts differents au plus"
+id = &"obj_max_distinct_cast_5"
+description = "Gagner avec 5 sorts differents au plus"
 check_key = &"max_distinct_cast"
 params = {
-"count": 4
+"count": 5
 }
 
 [sub_resource type="Resource" id="Resource_joktu"]

@@ -6602,13 +6602,14 @@ func _objectifs_de(level_id: StringName) -> Array[ObjectiveDef]:
 		&"lvl_03":
 			# L ossuaire : nuees, gelees, slimes qui se divisent — la serie de
 			# morts. La Pluie de givre et la Fleche percante (x4 chacune) peuvent
-			# porter 30 lancers, l objectif du co-auteur. Et quatre sorts
-			# differents au plus sur six : le deck le plus fourni de l acte se
-			# joue resserre. (« Sans vortex » ne coutait rien : 30/30 au banc.)
+			# porter 30 lancers, l objectif du co-auteur. Et cinq sorts
+			# differents au plus sur six : le deck se joue resserre. (« Sans
+			# vortex » ne coutait rien : 30/30 au banc ; quatre sorts au plus
+			# ne passait plus que 2 fois sur 30.)
 			out.assign([
 				_objectif(&"multi_kill", {"count": 8, "window": 1}),
 				_objectif(&"same_card_casts", {"count": 30}),
-				_objectif(&"max_distinct_cast", {"count": 4}),
+				_objectif(&"max_distinct_cast", {"count": 5}),
 			])
 		&"lvl_04":
 			# Le Grand Appel : l Ensevelisseur invoque sans fin, et seuls deux
@@ -6736,12 +6737,21 @@ func _objectifs_de(level_id: StringName) -> Array[ObjectiveDef]:
 				_objectif(&"no_legendary_used"),
 			])
 		&"lvl_16":
-			# Le siege vide : l enfant se RELEVE, tient une garde de renvoi, et ne
-			# craint que l arcane. Ses trois mecaniques sont les trois objectifs.
+			# Le siege vide : l Enfant se RELEVE et ne craint que l arcane ; le
+			# deck porte TROIS legendaires, s en passer au dernier combat est le
+			# sacrifice le plus lourd de la campagne.
+			# « Ne jamais frapper en garde de renvoi » a ete essaye ici : 0 a 1
+			# partie sur 30 au banc, sur trois passages. Contre un boss qui gele
+			# trois cartes, se releve ET renvoie, attendre la fin de chaque garde
+			# n etait plus un defi mais un mur ; l objectif reste au Registre.
+			# 9 s et non 10 : a 10, le briefing coupait « s » seul sur une
+			# seconde ligne (capture relue) ; l ecart de difficulte est faible.
 			out.assign([
-				_objectif(&"boss_quick_after_revive", {"seconds": 10}),
-				_objectif(&"never_hit_reflect"),
-				_objectif(&"element_casts", {"element": "ARCANE", "count": 70}),
+				_objectif(&"boss_quick_after_revive", {"seconds": 9}),
+				_objectif(&"no_legendary_used"),
+				# 60 et non 70-80 : le niveau le plus dur du jeu garde un objectif
+				# a la portee de qui le gagne (3/30 a 70 au banc, 2/30 a 80).
+				_objectif(&"element_casts", {"element": "ARCANE", "count": 60}),
 			])
 		_:
 			printerr("Niveau %s sans objectifs dans la table" % level_id)

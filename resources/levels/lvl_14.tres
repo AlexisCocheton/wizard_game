@@ -39,7 +39,7 @@ params = {
 "window": 1
 }
 
-[sub_resource type="Resource" id="Resource_xlx3v"]
+[sub_resource type="Resource" id="Resource_70dm8"]
 script = ExtResource("25_7esuy")
 id = &"obj_same_card_casts_40"
 description = "Lancer 40 fois le meme sort"
@@ -83,7 +83,7 @@ count = 1
 spawn_delay = 1.8
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_qhu6a"]
+[sub_resource type="Resource" id="Resource_fe3w6"]
 script = ExtResource("27_xhh80")
 id = &"w14_1"
 duration = 27.0
@@ -120,7 +120,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_t6kx1"]
+[sub_resource type="Resource" id="Resource_6yp3l"]
 script = ExtResource("27_xhh80")
 id = &"w14_2"
 duration = 29.0
@@ -157,7 +157,7 @@ count = 5
 spawn_delay = 1.4
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_rtnxx"]
+[sub_resource type="Resource" id="Resource_1s8yj"]
 script = ExtResource("27_xhh80")
 id = &"w14_3"
 duration = 34.0
@@ -194,7 +194,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_hcis2"]
+[sub_resource type="Resource" id="Resource_0t5bb"]
 script = ExtResource("27_xhh80")
 id = &"w14_4_miniboss"
 duration = 33.0
@@ -238,7 +238,7 @@ count = 4
 spawn_delay = 1.4
 start_offset = 30.0
 
-[sub_resource type="Resource" id="Resource_q6tsu"]
+[sub_resource type="Resource" id="Resource_lk4y5"]
 script = ExtResource("27_xhh80")
 id = &"w14_5"
 duration = 33.0
@@ -261,7 +261,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_s86if"]
+[sub_resource type="Resource" id="Resource_4jdvf"]
 script = ExtResource("27_xhh80")
 id = &"w14_6_boss"
 duration = 48.0
@@ -282,9 +282,9 @@ intro_story = &"lvl_14_intro"
 outro_story = &"lvl_14_outro"
 terrain = "grass"
 backdrop = "act5_divine"
-waves = Array[ExtResource("27_xhh80")]([SubResource("Resource_qhu6a"), SubResource("Resource_t6kx1"), SubResource("Resource_rtnxx"), SubResource("Resource_hcis2"), SubResource("Resource_q6tsu"), SubResource("Resource_s86if")])
+waves = Array[ExtResource("27_xhh80")]([SubResource("Resource_fe3w6"), SubResource("Resource_6yp3l"), SubResource("Resource_1s8yj"), SubResource("Resource_0t5bb"), SubResource("Resource_lk4y5"), SubResource("Resource_4jdvf")])
 enemy_pool = Array[ExtResource("1_70dm8")]([ExtResource("2_fe3w6"), ExtResource("3_6yp3l"), ExtResource("4_1s8yj"), ExtResource("5_0t5bb"), ExtResource("6_lk4y5"), ExtResource("7_4jdvf"), ExtResource("8_it8ya"), ExtResource("9_xlx3v"), ExtResource("10_qhu6a"), ExtResource("11_t6kx1"), ExtResource("12_70dm8"), ExtResource("13_70dm8"), ExtResource("14_fe3w6"), ExtResource("15_6yp3l"), ExtResource("16_1s8yj")])
 exploration_deck = Array[ExtResource("17_70dm8")]([ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("19_6yp3l"), ExtResource("19_6yp3l"), ExtResource("19_6yp3l"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj"), ExtResource("21_0t5bb"), ExtResource("21_0t5bb"), ExtResource("22_lk4y5"), ExtResource("22_lk4y5"), ExtResource("23_4jdvf")])
-objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_ov0x5"), SubResource("Resource_xlx3v"), SubResource("Resource_84rjn")])
+objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_ov0x5"), SubResource("Resource_70dm8"), SubResource("Resource_84rjn")])
 legendary_reward = ExtResource("24_it8ya")
 next_levels = Array[StringName]([&"lvl_15"])

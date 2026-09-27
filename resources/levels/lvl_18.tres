@@ -20,7 +20,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_4hem6"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_bh4ch"]
 
-[sub_resource type="Resource" id="Resource_dfx8a"]
+[sub_resource type="Resource" id="Resource_0sax4"]
 script = ExtResource("18_jfkqu")
 id = &"obj_max_distinct_cast_5"
 description = "Gagner avec 5 sorts differents au plus"
@@ -180,6 +180,6 @@ backdrop = "act1_sky"
 waves = Array[ExtResource("20_4hem6")]([SubResource("Resource_il855"), SubResource("Resource_323wf"), SubResource("Resource_ysblc"), SubResource("Resource_71fqq")])
 enemy_pool = Array[ExtResource("1_il855")]([ExtResource("2_323wf"), ExtResource("3_ysblc"), ExtResource("4_71fqq"), ExtResource("5_oi32p"), ExtResource("6_dkopx"), ExtResource("7_1stm8")])
 exploration_deck = Array[ExtResource("8_dc1bl")]([ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("10_wgl7e"), ExtResource("10_wgl7e"), ExtResource("12_a7q5d"), ExtResource("12_a7q5d"), ExtResource("16_pk01i"), ExtResource("16_pk01i")])
-objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_dfx8a"), SubResource("Resource_mtblo"), SubResource("Resource_2cptc")])
+objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_0sax4"), SubResource("Resource_mtblo"), SubResource("Resource_2cptc")])
 legendary_reward = ExtResource("17_nshsb")
 next_levels = Array[StringName]([&"lvl_03"])

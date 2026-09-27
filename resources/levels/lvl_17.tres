@@ -29,7 +29,7 @@ params = {
 "count": 21
 }
 
-[sub_resource type="Resource" id="Resource_d7imv"]
+[sub_resource type="Resource" id="Resource_qw7h0"]
 script = ExtResource("18_0qchf")
 id = &"obj_no_enemy_past_0_75"
 description = "Aucun monstre au-dela des trois quarts du terrain"
@@ -182,6 +182,6 @@ backdrop = "act1_sky"
 waves = Array[ExtResource("20_qqxj5")]([SubResource("Resource_rl3tf"), SubResource("Resource_01pvm"), SubResource("Resource_7tp28"), SubResource("Resource_hf8a2")])
 enemy_pool = Array[ExtResource("1_rl3tf")]([ExtResource("2_01pvm"), ExtResource("3_7tp28"), ExtResource("4_hf8a2"), ExtResource("5_jg7in"), ExtResource("6_npl76"), ExtResource("7_rl3tf")])
 exploration_deck = Array[ExtResource("8_1r60b")]([ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("11_jqiqt"), ExtResource("11_jqiqt"), ExtResource("11_jqiqt"), ExtResource("10_tfajv"), ExtResource("10_tfajv"), ExtResource("12_ak1y0"), ExtResource("12_ak1y0"), ExtResource("16_diyvq"), ExtResource("16_diyvq"), ExtResource("14_odxng"), ExtResource("14_odxng")])
-objectives = Array[ExtResource("18_0qchf")]([SubResource("Resource_na325"), SubResource("Resource_d7imv"), SubResource("Resource_44dus")])
+objectives = Array[ExtResource("18_0qchf")]([SubResource("Resource_na325"), SubResource("Resource_qw7h0"), SubResource("Resource_44dus")])
 legendary_reward = ExtResource("17_1a3ua")
 next_levels = Array[StringName]([&"lvl_18"])
