@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ibmao"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_ldph6"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_ldg16"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_ldph6"]
 [ext_resource type="Resource" path="res://resources/enemies/risen_ghoul.tres" id="4_tpi8h"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_yhbue"]
 
-[sub_resource type="Resource" id="Resource_ibmao"]
+[sub_resource type="Resource" id="Resource_ldph6"]
 script = ExtResource("1_ibmao")
 enemy = ExtResource("2_ldph6")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ldph6"]
+[sub_resource type="Resource" id="Resource_ldg16"]
 script = ExtResource("1_ibmao")
 enemy = ExtResource("3_ldg16")
-count = 3
+count = 4
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_ldg16"]
+[sub_resource type="Resource" id="Resource_tpi8h"]
+script = ExtResource("1_ibmao")
+enemy = ExtResource("4_ldph6")
+count = 2
+spawn_delay = 2.5
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_yhbue"]
 script = ExtResource("1_ibmao")
 enemy = ExtResource("4_tpi8h")
 count = 4
 spawn_delay = 1.8
-start_offset = 22.0
+start_offset = 26.0
 
 [resource]
 script = ExtResource("5_yhbue")
 id = &"w15_2"
 duration = 30.0
-entries = Array[ExtResource("1_ibmao")]([SubResource("Resource_ibmao"), SubResource("Resource_ldph6"), SubResource("Resource_ldg16")])
+entries = Array[ExtResource("1_ibmao")]([SubResource("Resource_ldph6"), SubResource("Resource_ldg16"), SubResource("Resource_tpi8h"), SubResource("Resource_yhbue")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_b22w4"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_3mget"]
 
-[sub_resource type="Resource" id="Resource_14mao"]
+[sub_resource type="Resource" id="Resource_fafhq"]
 script = ExtResource("1_fafhq")
 enemy = ExtResource("2_drwus")
 count = 3
 spawn_delay = 2.2
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_svfca"]
+[sub_resource type="Resource" id="Resource_drwus"]
 script = ExtResource("1_fafhq")
 enemy = ExtResource("3_dbk8p")
 count = 3
 spawn_delay = 2.2
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_dn8a6"]
+[sub_resource type="Resource" id="Resource_dbk8p"]
 script = ExtResource("1_fafhq")
 enemy = ExtResource("4_b22w4")
 count = 2
@@ -31,7 +31,7 @@ start_offset = 22.0
 script = ExtResource("5_3mget")
 id = &"w13_3"
 duration = 34.0
-entries = Array[ExtResource("1_fafhq")]([SubResource("Resource_14mao"), SubResource("Resource_svfca"), SubResource("Resource_dn8a6")])
+entries = Array[ExtResource("1_fafhq")]([SubResource("Resource_fafhq"), SubResource("Resource_drwus"), SubResource("Resource_dbk8p")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false

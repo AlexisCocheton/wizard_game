@@ -109,7 +109,7 @@ is_boss = false
 [sub_resource type="Resource" id="Resource_s435j"]
 script = ExtResource("24_rf6lm")
 enemy = ExtResource("6_ia684")
-count = 2
+count = 3
 spawn_delay = 2.5
 start_offset = 0.0
 

@@ -455,6 +455,22 @@ func _test_la_campagne_se_termine_sur_lacte_5() -> void:
 ## Un test qui se contenterait de compter quatre niveaux dans l acte 2
 ## laisserait passer un chainage qui monte dans les courants APRES avoir visite
 ## un cimetiere trois iles plus loin.
+##
+## LIMITE CONNUE ET ASSUMEE, relevee sur `shot_15_campagne_acte2.png` : la CARTE
+## de campagne pose ses points par ordre d IDENTIFIANT (`campaign_map._compute()`
+## trie sur `String(id)`), pas par ordre de chainage. Les actes 2 et 3 affichent
+## donc leurs niveaux neufs SOUS les anciens, a l envers de l ordre de jeu.
+##
+## On ne corrige pas ici, et pour deux raisons. Le tri vit dans
+## `scripts/ui/panels/campaign_map.gd`, hors du perimetre de ce chantier. Et la
+## seule facon de le corriger sans toucher a l UI serait de renumeroter les
+## niveaux, c est-a-dire exactement la decision que le chantier N a refusee pour
+## ne pas casser les sauvegardes (voir l en-tete de ce fichier).
+##
+## Consequence reelle pour le joueur : les points restent verrouilles tant qu il
+## n y est pas arrive, donc il ne peut pas les jouer dans le desordre — il lit
+## seulement les noms dans un ordre qui n est pas le sien. Le vrai correctif est
+## un tri par ordre de chainage dans `campaign_map`, a ouvrir separement.
 func _test_lacte_2_suit_le_document() -> void:
 	const ORDRE: Array[StringName] = [&"lvl_17", &"lvl_18", &"lvl_03", &"lvl_04"]
 	for id: StringName in ORDRE:

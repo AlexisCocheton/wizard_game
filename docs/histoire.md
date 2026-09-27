@@ -268,12 +268,25 @@ Le groupe monte. Les Sky Lands ne sont pas une ile sauvage : c est un archipel h
 en train d etre vide par le haut. Et au bout, un cimetiere ou les morts se levent et
 **parlent** — ce sont eux qui lachent le premier vrai nom.
 
-| Niveau | Lieu | Ambiance | Monstres |
-|---|---|---|---|
-| `lvl_05` | Les courants | tout en vol, plates-formes etroites | `wisp`, `imp_archer`, `sand_serpent` |
-| `lvl_06` | Port de Haute-Nacelle | un port pille, quais de bois | `void_knight`, `berserker`, `shade` |
-| `lvl_07` | Les serres d en haut | jardins suspendus pourris | `glutton`, `jelly`, `hive` |
-| `lvl_08` | Cimetiere de bordure | premiers morts-vivants, brume | `ghoul_priest`, `shade`, `void_knight` |
+Les identifiants de la colonne « Niveau » sont ceux du PLAN, pas ceux du jeu : la
+campagne n a jamais ete renumerotee, pour ne pas casser les sauvegardes. La
+derniere colonne donne l identifiant REEL, celui de `resources/levels/`.
+
+| Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
+|---|---|---|---|---|
+| `lvl_05` | Les courants | tout en vol, plates-formes etroites | `current_eye`, `wisp`, `imp_archer`, `sand_serpent` | **`lvl_17`** |
+| `lvl_06` | Port de Haute-Nacelle | un port pille, quais de bois | `nacelle_raider`, `void_knight`, `berserker`, `shade` | **`lvl_18`** |
+| `lvl_07` | Les serres d en haut | jardins suspendus pourris | `glutton`, `jelly`, `hive` | `lvl_03` (Ossuaire des Marees) |
+| `lvl_08` | Cimetiere de bordure | premiers morts-vivants, brume | `ghoul_priest`, `shade`, `void_knight` | `lvl_04` (Le Grand Appel) |
+
+Ordre de jeu reel : `lvl_09` (fin acte 1) -> `lvl_17` -> `lvl_18` -> `lvl_03` ->
+`lvl_04` -> acte 3. Les deux etapes de vol gardent le fond `act1_sky`, les deux
+dernieres prennent `act2_graveyard` : c est la montee que le document decrit.
+
+Les deux dernieres etapes ne sont pas des serres suspendues mais un ossuaire et
+un rituel — c est du contenu anterieur, deja mesure au banc, qu on n a pas
+reecrit pour un decor. Ce qu elles doivent porter, elles le portent : ce sont les
+premiers morts-vivants, et c est la que le nom de Tombol tombe.
 
 ### Dialogues cles de l acte 2
 
@@ -321,13 +334,29 @@ Le Roi squelette **fuit**. Tout l acte est une poursuite : a chaque niveau on ar
 juste apres lui, on brise ce qu il a laisse derriere pour retarder. Puis on comprend
 pourquoi il court.
 
-| Niveau | Lieu | Ambiance | Monstres |
-|---|---|---|---|
-| `lvl_09` | Les fosses basses | tombes ouvertes, on avance dans l eau | `ghoul_priest`, `shade` |
-| `lvl_10` | L ossuaire | murs d os, couloirs — terrain de murs | `void_knight`, `golem` |
-| `lvl_11` | La cour des rois morts | statues, arrieres-gardes laissees par le roi | `totem_guardian`, `hive` |
-| `lvl_12` | Le puits de contrat | descente, lumiere rouge par en bas | `behemoth`, `berserker` |
-| `lvl_13` | Le pentacle | salle du portail, le roi accule | mixte + le portail |
+Meme convention qu a l acte 2 : la colonne « Niveau » est celle du PLAN, la
+derniere donne l identifiant reel.
+
+| Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
+|---|---|---|---|---|
+| `lvl_09` | Les fosses basses | tombes ouvertes, on avance dans l eau | `pit_ghoul`, `ghoul_priest`, `shade` | **`lvl_19`** |
+| `lvl_10` | L ossuaire | murs d os, couloirs — terrain de murs | `void_knight`, `golem` | `lvl_05` (Forges du Mauvais Temps) |
+| `lvl_11` | La cour des rois morts | statues, arrieres-gardes laissees par le roi | `totem_guardian`, `hive`, `parry_skeleton` | **`lvl_20`** |
+| `lvl_12` | Le puits de contrat | descente, lumiere rouge par en bas | `behemoth`, `berserker` | `lvl_06` (La Cour brisee) |
+| `lvl_13` | Le pentacle | salle du portail, le roi accule | mixte + `tombol_seal` | **`lvl_21`** |
+
+Ordre de jeu reel : `lvl_04` (fin acte 2) -> `lvl_19` -> `lvl_20` -> fourche
+`lvl_05` / `lvl_06` au choix -> `lvl_21` -> acte 4.
+
+Deux ecarts assumes avec le plan. La FOURCHE : `lvl_05` et `lvl_06` etaient deja
+une fourche equilibree au banc (blindes d un cote, monstres a effets de l autre)
+et elle est conservee telle quelle au milieu de l acte, la ou le plan voulait
+deux etapes imposees. Et elles gardent leur theme de forge et de cour
+demoniaques, avec le fond `act3_demon` : les rehabiller en ossuaire de Tombol
+aurait voulu dire reecrire deux niveaux mesures pour un decor.
+
+`lvl_21` EST LE PORTAIL DE L ACTE 4, et le seul : c est lui qui ouvre les quatre
+grands demons d un coup, comme la section 6 l exige.
 
 ### `lvl_13` — le retournement de l acte 3
 
@@ -377,13 +406,34 @@ Structure particuliere, demandee : les **4 premiers niveaux sont ouverts d emble
 un par grand demon. Le joueur choisit son ordre et son style. Le cinquieme ne s ouvre
 qu apres les quatre.
 
-| Niveau | Le demon | Ambiance | Monstres |
-|---|---|---|---|
-| `lvl_14` | **Vharn, l Enclume** | forge, tout est blinde | `golem`, `behemoth` — peu, enormes |
-| `lvl_15` | **Sesh, la Faim** | fosses, tout se mange | `glutton`, `jelly`, `hive` |
-| `lvl_16` | **Kaltek, la Chaine** | arene, rage et esclaves | `berserker`, `void_knight` |
-| `lvl_17` | **Ymoa, le Cercle** | temple, auras et protections | `totem_guardian`, `ghoul_priest` |
-| `lvl_18` | le pentacle brise | apres les 4, le sol se derobe | melange des quatre |
+Meme convention qu a l acte 2 : la colonne « Niveau » est celle du PLAN, la
+derniere donne l identifiant REEL de `resources/levels/`.
+
+| Niveau (plan) | Le demon | Ambiance | Monstres | Id reel |
+|---|---|---|---|---|
+| `lvl_14` | **Vharn, l Enclume** | forge, tout est blinde | `demon_anvil`, `golem`, `behemoth` | **`lvl_07`** |
+| `lvl_15` | **Sesh, la Faim** | fosses, tout se mange | `demon_maw`, `glutton`, `jelly`, `hive` | **`lvl_10`** |
+| `lvl_16` | **Kaltek, la Chaine** | arene, rage et esclaves | `demon_chain`, `berserker`, `void_knight` | **`lvl_11`** |
+| `lvl_17` | **Ymoa, le Cercle** | temple, auras et protections | `demon_circle`, `totem_guardian`, `ghoul_priest` | **`lvl_12`** |
+| `lvl_18` | le pentacle brise | apres les 4, le sol se derobe | melange des quatre + `gorgon_queen` | **`lvl_13`** |
+
+`lvl_07` existait avant ce chantier sous le nom « Le Metier du Monde », devant le
+fond des divinites : il etait le dernier niveau du jeu quand la campagne en
+comptait sept. Il devient la forge de Vharn, dans `act3_demon`. Son identifiant et
+ses vagues, mesurees au banc, ne bougent pas.
+
+**La structure en eventail, en pratique.** `lvl_21` (le pentacle de Tombol, fin de
+l acte 3) porte `next_levels = [lvl_07, lvl_10, lvl_11, lvl_12]` : les quatre
+demons s ouvrent d un coup. Chacun des quatre porte `next_levels = [lvl_13]`, et
+AUCUN ne cite un autre demon — c est ce qui rend l ordre libre. Le pentacle brise
+n est pas ouvert par Tombol : il se merite apres les quatre.
+
+**Les quatre grands demons sont des monstres neufs**, ce que la section 10
+interdit en principe. La note y visait la vermine ; une tete d affiche nommee par
+le document ne peut pas etre un monstre commun agrandi, et `test_bosses` refuse
+qu un adversaire mene deux niveaux. Ils partagent en revanche la SILHOUETTE de la
+famille qu ils commandent (golem, glouton, berserker, totem) : le seigneur porte
+l apparence de ses sujets, ce qui dit sans un mot qui commandait ces monstres.
 
 Les quatre grands demons ne se coordonnent pas : chacun croit etre le commanditaire.
 C est le comique noir de l acte — le mage descend en enfer pour trouver un chef et
@@ -440,11 +490,28 @@ qui recule sur le plateau, c est la premiere chose distrayante depuis des eons. 
 laisse courir pour voir jusqu ou il irait. Toute la campagne est un **spectacle** qu on
 leur a offert.
 
-| Niveau | Lieu | Ambiance | Monstres |
-|---|---|---|---|
-| `lvl_19` | La galerie des saisons | ce qui a deja ete efface, expose | melange acte 1 + 2, `warden` en vague normale |
-| `lvl_20` | Le registre | colonnes de noms, dont le sien | melange acte 3 + 4, `chronos` en vague normale |
-| `lvl_21` | Le siege vide | rien. Puis l enfant | boss final |
+| Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
+|---|---|---|---|---|
+| `lvl_19` | La galerie des saisons | ce qui a deja ete efface, expose | melange acte 1 + 2, `warden` en vague normale | **`lvl_14`** |
+| `lvl_20` | Le registre | colonnes de noms, dont le sien | melange acte 3 + 4, `chronos` en vague normale | **`lvl_15`** |
+| `lvl_21` | Le siege vide | rien. Puis l enfant | `child_god`, boss final | **`lvl_16`** |
+
+**Le propos de l acte est une regle mecanique**, pas une ambiance. Le Gardien de
+la foret descend par deux puis par trois dans des vagues SANS nom, Chronos deux
+fois, et la premiere vague du siege vide envoie deux Gardiens puis Chronos sans
+fanfare. Aucune vague de mini-boss dans tout l acte : le catalogue est epuise, et
+c est aussi ce que le lieu raconte — plus personne n a de titre.
+
+`lvl_16` ferme la campagne (`next_levels` vide). La finir ouvre le Massacre :
+`SaveData.campaign_cleared()` compte sur le total de `ContentDB.levels`, donc
+passer de 9 a 21 niveaux n a rien casse — la recompense demande la campagne
+entiere, ce qui est son sens, et ce que l ENDING raconte.
+
+**La scene `ending` se joue en OUTRO de `lvl_16`**, et non comme une scene a part :
+`SceneRouter` ne connait que `intro_story` et `outro_story`, donc une scene
+`ending` autonome ne serait jamais appelee. Son decor est `talk_glade`, la
+clairiere du premier matin — la boucle se referme a l image en meme temps que
+dans le texte.
 
 ### `lvl_21` — le plot twist
 
@@ -530,9 +597,8 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
 - **Aucun nouveau type de monstre.** Les 21 existants portent les 5 actes : la
   narration re-contextualise (le Gardien devient un conscrit retourne, Chronos devient
   de la vermine a l acte 5).
-- **Etat actuel du code** (chantier N) : **9 niveaux** existent sur les 21 que decrit
-  ce document. L **acte 1 est complet** — ses quatre etapes sont livrees, testees et
-  capturees. Les actes 2 a 5 restent la **cible** : 12 niveaux a ecrire.
+- **Etat actuel du code** : **les 21 niveaux existent**, et les cinq actes sont
+  livres. La campagne va du prologue au siege vide, et la finir ouvre le Massacre.
 
 - **LES IDENTIFIANTS NE SUIVENT PAS L ORDRE DE JEU, ET C EST VOULU.** Le chantier N a
   choisi de ne PAS renumeroter la campagne : les identifiants `lvl_01`..`lvl_07` sont
@@ -544,18 +610,22 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
 
   | Acte | Etapes du document | Niveaux livres, dans l ordre de jeu |
   |---|---|---|
-  | 1 — La foret de Nuri | 4 | `lvl_01`, `lvl_02`, `lvl_08`, `lvl_09` — **complet** |
-  | 2 — Les Sky Lands | 4 | `lvl_03`, `lvl_04` (2 manquants) |
-  | 3 — Le cimetiere de Tombol | 5 | `lvl_05`, `lvl_06` (3 manquants) |
-  | 4 — Le monde demoniaque | 5 | `lvl_07` (4 manquants) |
-  | 5 — L espace divin | 3 | aucun (3 manquants) |
+  | 1 — La foret de Nuri | 4 | `lvl_01`, `lvl_02`, `lvl_08`, `lvl_09` |
+  | 2 — Les Sky Lands | 4 | `lvl_17`, `lvl_18`, `lvl_03`, `lvl_04` |
+  | 3 — Le cimetiere de Tombol | 5 | `lvl_19`, `lvl_20`, `lvl_05`, `lvl_06`, `lvl_21` |
+  | 4 — Le monde demoniaque | 5 | `lvl_07`, `lvl_10`, `lvl_11`, `lvl_12` **en eventail**, puis `lvl_13` |
+  | 5 — L espace divin | 3 | `lvl_14`, `lvl_15`, `lvl_16` |
 
   `tests/unit/test_campaign_acts.gd` verrouille ce tableau : sa table `ACTES_LIVRES`
   dit quels actes sont declares finis, et le compte doit alors tomber juste.
 
-- **Un boss de campagne n est pas obligatoire a chaque niveau.** Le catalogue compte
-  7 boss et 8 mini-boss pour 21 niveaux vises, et `test_bosses` refuse qu un adversaire
-  mene deux niveaux. On reserve donc `is_boss` aux **fins d acte** — ce que ce document
+- **Un boss de campagne n est pas obligatoire a chaque niveau, et a 21 niveaux le
+  catalogue est EPUISE.** Le jeu compte 13 boss et 8 mini-boss ; `test_bosses` refuse
+  qu un adversaire mene deux niveaux, donc cinq niveaux se passent de palier :
+  `lvl_12`, `lvl_13`, `lvl_14` et `lvl_15` n ont pas de mini-boss, et `lvl_15` n a pas
+  de boss. Les vagues concernees portent la mecanique attendue autrement — quatre
+  soutiens a couper au temple d Ymoa, trois Regards gorgones pour la petrification.
+  Ajouter un niveau de plus demandera d abord une tete de plus. On reserve donc `is_boss` aux **fins d acte** — ce que ce document
   decrit deja : l acte 1 se ferme sur le Gardien, il n aligne pas quatre boss.
   Les niveaux intermediaires culminent sur un mini-boss.
 

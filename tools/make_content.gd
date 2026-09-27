@@ -4278,19 +4278,26 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 	t3.difficulty = 1.60
 	# PAS DE VAGUE DE MINI-BOSS ICI, et c est un choix force autant qu assume.
 	#
-	# `test_bosses` interdit qu un mini-boss mene DEUX niveaux, et apres les
-	# quatre mini-boss neufs de ce chantier le catalogue n en compte plus un seul
-	# de libre : Gardien, Ecumeur, Gardien d ossements, Seigneur de braise, Totem
-	# ancien, Miroir de Forge, Matrone gorgone, Bourreau, Glouton, Mage noir,
-	# Sorciere des fosses et Epeiste d ombre menent chacun son niveau.
+	# `test_bosses` interdit qu un mini-boss mene DEUX niveaux, et apres les cinq
+	# tetes neuves de ce chantier (Grand Oeil, Mage noir, Sorciere des fosses,
+	# Epeiste d ombre, Sceau de Tombol) le catalogue n en laisse plus un seul de
+	# libre : Gardien, Ecumeur, Gardien d ossements, Seigneur de braise, Totem
+	# ancien, Miroir de Forge, Matrone gorgone, Bourreau et Glouton menent deja
+	# chacun le sien.
 	#
-	# Plutot que d en inventer un treizieme pour remplir une case, ce dernier
+	# Plutot que d en inventer un de plus pour remplir une case, ce dernier
 	# palier reste une vague NORMALE et porte la difficulte la plus haute de
 	# l acte (1,60). C est defendable narrativement : la salle du pentacle n a
 	# pas de garde, le roi n en a plus a donner — tout ce qui reste sort du puits,
 	# et c est le BOSS qui l ouvre.
+	#
+	# TROIS Chevaliers du vide et non deux. A deux, cette vague pesait 20 points
+	# de troupes contre 22 a la vague precedente : LA COURBE RECULAIT juste avant
+	# le boss, releve par `tools/data_sheet.tscn` (anomalie « courbe qui recule »).
+	# Un palier qui redescend juste avant un boss laisse croire au joueur qu il a
+	# passe le plus dur.
 	t3.entries = [
-		_entry(E + "void_knight.tres", 2, 2.5),
+		_entry(E + "void_knight.tres", 3, 2.5),
 		_entry(E + "fire_worm.tres", 2, 2.2, 10.0),
 		_entry(E + "totem_guardian.tres", 1, 2.0, 18.0),
 		_entry(E + "pit_ghoul.tres", 2, 2.2, 23.0),
@@ -4846,8 +4853,9 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# qui le mange. Il gobe sa propre escorte de gelees sous les yeux du joueur.
 	p2.entries = [
 		_entry(E + "demon_maw.tres", 1, 1.0),
-		_entry(E + "hive.tres", 1, 2.5, 12.0),
+		_entry(E + "hive.tres", 2, 2.5, 12.0),
 		_entry(E + "jelly.tres", 2, 2.5, 20.0),
+		_entry(E + "glutton.tres", 1, 1.0, 24.0),
 	]
 	_save(p2, "res://resources/waves/w13_2.tres")
 
@@ -4902,7 +4910,9 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	p4.entries = [
 		_entry(E + "demon_circle.tres", 1, 1.0),
 		_entry(E + "demon_chain.tres", 1, 1.0, 12.0),
-		_entry(E + "ghoul_priest.tres", 2, 2.5, 22.0),
+		_entry(E + "totem_elder.tres", 1, 1.0, 18.0),
+		_entry(E + "berserker.tres", 3, 2.2, 8.0),
+		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
 		_entry(E + "shade.tres", 3, 2.0, 30.0),
 	]
 	_save(p4, "res://resources/waves/w13_4.tres")
@@ -5050,8 +5060,9 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# l information.
 	g2.entries = [
 		_entry(E + "warden.tres", 2, 4.0),
-		_entry(E + "rat_swarm.tres", 2, 2.2, 12.0),
-		_entry(E + "jelly.tres", 2, 2.5, 22.0),
+		_entry(E + "rat_swarm.tres", 3, 2.2, 12.0),
+		_entry(E + "jelly.tres", 2, 2.5, 20.0),
+		_entry(E + "hopper.tres", 4, 1.8, 24.0),
 	]
 	_save(g2, "res://resources/waves/w14_2.tres")
 
@@ -5079,8 +5090,9 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# acte peut avoir.
 	g3.entries = [
 		_entry(E + "warden.tres", 3, 4.0),
-		_entry(E + "hornblower.tres", 1, 1.0, 16.0),
-		_entry(E + "sprite.tres", 5, 1.4, 24.0),
+		_entry(E + "hornblower.tres", 2, 2.0, 14.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 20.0),
+		_entry(E + "sprite.tres", 5, 1.4, 26.0),
 	]
 	_save(g3, "res://resources/waves/w14_3.tres")
 
@@ -5108,9 +5120,10 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# tres dense, ce qui est plus inquietant qu un boss.
 	g5.entries = [
 		_entry(E + "warden.tres", 2, 5.0),
-		_entry(E + "berserker.tres", 2, 2.5, 12.0),
-		_entry(E + "rat_swarm.tres", 2, 2.2, 22.0),
-		_entry(E + "sprite.tres", 4, 1.4, 28.0),
+		_entry(E + "berserker.tres", 3, 2.5, 12.0),
+		_entry(E + "hive.tres", 1, 2.5, 20.0),
+		_entry(E + "rat_swarm.tres", 2, 2.2, 26.0),
+		_entry(E + "sprite.tres", 4, 1.4, 30.0),
 	]
 	_save(g5, "res://resources/waves/w14_5.tres")
 
@@ -5197,8 +5210,9 @@ depuis le pentacle, et il marche devant."
 	# progression qui porte le propos, pas l entassement.
 	r2.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
-		_entry(E + "shade.tres", 3, 2.0, 12.0),
-		_entry(E + "risen_ghoul.tres", 4, 1.8, 22.0),
+		_entry(E + "shade.tres", 4, 2.0, 12.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 20.0),
+		_entry(E + "risen_ghoul.tres", 4, 1.8, 26.0),
 	]
 	_save(r2, "res://resources/waves/w15_2.tres")
 
@@ -5231,7 +5245,9 @@ depuis le pentacle, et il marche devant."
 	r4.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),
 		_entry(E + "behemoth.tres", 1, 1.0, 12.0),
-		_entry(E + "totem_guardian.tres", 1, 1.0, 22.0),
+		_entry(E + "totem_guardian.tres", 1, 1.0, 20.0),
+		_entry(E + "ghoul_priest.tres", 2, 2.5, 24.0),
+		_entry(E + "shade.tres", 3, 2.0, 28.0),
 	]
 	_save(r4, "res://resources/waves/w15_4.tres")
 
@@ -5334,19 +5350,29 @@ courir pour voir jusqu ou tu irais."
 	f1.id = &"w16_1"
 	f1.duration = 28.0
 	f1.difficulty = 1.45
-	# TROIS ANCIENS BOSS DANS UNE VAGUE ORDINAIRE, sans titre ni fanfare. C est la
-	# demande du testeur executee a la lettre. Le Coagule se releve, le Colosse est
-	# morcele, l Ensevelisseur invoque : trois combats de fin d acte, envoyes
-	# ensemble comme de la vermine.
+	# DES ANCIENS BOSS DANS UNE VAGUE ORDINAIRE, sans titre ni fanfare : la demande
+	# du testeur (« ils n hesitent pas a envoyer plusieurs boss comme des monstres
+	# normaux ») et le propos du document (section 7) executes a la lettre. Deux
+	# Gardiens de la foret PUIS Chronos, dans la premiere vague du dernier niveau,
+	# escortes de la vermine du premier matin.
 	#
-	# UN de chaque, pas deux : 185 + 150 + 220 = 555 PV, ce qui est deja le poids
-	# le plus lourd jamais pose sur une PREMIERE vague de niveau. Le document veut
-	# de la desinvolture, pas un mur — et `difficulty` reste a 1,45, la valeur des
-	# vagues normales de fin de campagne, pour ne pas ajouter la pression a la masse.
+	# POURQUOI CE SONT LE GARDIEN ET CHRONOS, et non le Coagule, le Colosse et
+	# l Ensevelisseur comme dans le premier jet. Ce sont les deux que le document
+	# NOMME pour l acte 5, et c est aussi la seule version qui ne casse pas le
+	# Massacre : `build_membership()` rattache un monstre au monde de l acte ou il
+	# est le plus DENSE, et l acte 5 — trois niveaux, donc un petit volume — captait
+	# tout boss qu on citait ici. Mesure : cinq boss entasses dans le monde 4,
+	# aucun dans le monde 0, et `pick_boss()` affamait Chronos une fois sur deux.
+	# Les trois autres sont restes dans leur acte d origine, ou ils ont leur monde.
+	#
+	# Le Gardien et Chronos, eux, APPARTIENNENT a l acte 5 par le texte : ils sont
+	# les deux pieces de musee que le document expose. Leur densite ici est donc
+	# juste, pas un effet de bord.
 	f1.entries = [
-		_entry(E + "blood_coagulum.tres", 1, 1.0),
-		_entry(E + "forge_colossus.tres", 1, 1.0, 10.0),
-		_entry(E + "gravecaller.tres", 1, 1.0, 20.0),
+		_entry(E + "warden.tres", 2, 4.0),
+		_entry(E + "chronos.tres", 1, 1.0, 18.0),
+		_entry(E + "sprite.tres", 4, 1.5, 6.0),
+		_entry(E + "hopper.tres", 3, 2.0, 16.0),
 	]
 	_save(f1, "res://resources/waves/w16_1.tres")
 
@@ -5361,7 +5387,8 @@ courir pour voir jusqu ou tu irais."
 	f2.entries = [
 		_entry(E + "demon_anvil.tres", 1, 1.0),
 		_entry(E + "demon_maw.tres", 1, 1.0, 14.0),
-		_entry(E + "berserker.tres", 2, 2.5, 24.0),
+		_entry(E + "berserker.tres", 3, 2.5, 8.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 22.0),
 	]
 	_save(f2, "res://resources/waves/w16_2.tres")
 
@@ -5376,6 +5403,9 @@ courir pour voir jusqu ou tu irais."
 		_entry(E + "demon_chain.tres", 1, 1.0),
 		_entry(E + "demon_circle.tres", 1, 1.0, 12.0),
 		_entry(E + "chronos.tres", 1, 1.0, 22.0),
+		_entry(E + "void_knight.tres", 2, 2.5, 8.0),
+		_entry(E + "berserker.tres", 3, 2.2, 18.0),
+		_entry(E + "hive.tres", 1, 2.5, 26.0),
 	]
 	_save(f3, "res://resources/waves/w16_3.tres")
 
@@ -5417,11 +5447,15 @@ courir pour voir jusqu ou tu irais."
 	lvl16.outro_story = &"lvl_16_outro"
 	lvl16.waves = [f1, f2, f3, f4]
 	lvl16.enemy_pool = [
-		load(E + "blood_coagulum.tres"), load(E + "forge_colossus.tres"),
-		load(E + "gravecaller.tres"), load(E + "chronos.tres"),
+		load(E + "warden.tres"), load(E + "chronos.tres"),
 		load(E + "demon_anvil.tres"), load(E + "demon_maw.tres"),
 		load(E + "demon_chain.tres"), load(E + "demon_circle.tres"),
 		load(E + "berserker.tres"), load(E + "child_god.tres"),
+		# L escorte ordinaire des trois premieres vagues : sans elle, ces vagues
+		# ne pesaient RIEN au budget (tout y est hors budget) et la courbe du
+		# niveau etait illisible pour le banc.
+		load(E + "sprite.tres"), load(E + "hopper.tres"),
+		load(E + "void_knight.tres"), load(E + "hive.tres"),
 	]
 	# LE DECK DE LA DERNIERE MAIN. Trois legendaires — le plafond — et c est le
 	# seul niveau de la campagne a les poser toutes les trois : le mage entre au

@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/demon_anvil.tres" id="3_o0kv4"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_ag0oc"]
 
-[sub_resource type="Resource" id="Resource_5v2y0"]
+[sub_resource type="Resource" id="Resource_o0kv4"]
 script = ExtResource("1_uqxo2")
 enemy = ExtResource("2_o0kv4")
 count = 2
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ag0oc"]
+[sub_resource type="Resource" id="Resource_5v2y0"]
 script = ExtResource("1_uqxo2")
 enemy = ExtResource("3_o0kv4")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_tt4jm"]
+[sub_resource type="Resource" id="Resource_ag0oc"]
 script = ExtResource("1_uqxo2")
 enemy = ExtResource("3_5v2y0")
 count = 1
@@ -31,7 +31,7 @@ start_offset = 22.0
 script = ExtResource("4_ag0oc")
 id = &"w13_1"
 duration = 27.0
-entries = Array[ExtResource("1_uqxo2")]([SubResource("Resource_5v2y0"), SubResource("Resource_ag0oc"), SubResource("Resource_tt4jm")])
+entries = Array[ExtResource("1_uqxo2")]([SubResource("Resource_o0kv4"), SubResource("Resource_5v2y0"), SubResource("Resource_ag0oc")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false

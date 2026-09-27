@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=49 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=52 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_23yof"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="2_w28dl"]
@@ -76,32 +76,39 @@ difficulty = 1.4
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_ibmao"]
+[sub_resource type="Resource" id="Resource_ldph6"]
 script = ExtResource("25_vobco")
 enemy = ExtResource("8_4hx7v")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ldph6"]
+[sub_resource type="Resource" id="Resource_ldg16"]
 script = ExtResource("25_vobco")
 enemy = ExtResource("4_bilc3")
-count = 3
+count = 4
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_ldg16"]
+[sub_resource type="Resource" id="Resource_tpi8h"]
+script = ExtResource("25_vobco")
+enemy = ExtResource("3_sc6yj")
+count = 2
+spawn_delay = 2.5
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_yhbue"]
 script = ExtResource("25_vobco")
 enemy = ExtResource("5_xajwd")
 count = 4
 spawn_delay = 1.8
-start_offset = 22.0
+start_offset = 26.0
 
 [sub_resource type="Resource" id="Resource_23yof"]
 script = ExtResource("24_xq181")
 id = &"w15_2"
 duration = 30.0
-entries = Array[ExtResource("25_vobco")]([SubResource("Resource_ibmao"), SubResource("Resource_ldph6"), SubResource("Resource_ldg16")])
+entries = Array[ExtResource("25_vobco")]([SubResource("Resource_ldph6"), SubResource("Resource_ldg16"), SubResource("Resource_tpi8h"), SubResource("Resource_yhbue")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false
@@ -136,32 +143,46 @@ difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_5ieor"]
+[sub_resource type="Resource" id="Resource_808tn"]
 script = ExtResource("25_vobco")
 enemy = ExtResource("8_4hx7v")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_qlr7k"]
+[sub_resource type="Resource" id="Resource_t42rk"]
 script = ExtResource("25_vobco")
 enemy = ExtResource("6_6s48e")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_808tn"]
+[sub_resource type="Resource" id="Resource_3soi1"]
 script = ExtResource("25_vobco")
 enemy = ExtResource("7_gvwmy")
 count = 1
 spawn_delay = 1.0
-start_offset = 22.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_w5rc5"]
+script = ExtResource("25_vobco")
+enemy = ExtResource("2_w28dl")
+count = 2
+spawn_delay = 2.5
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_umbwr"]
+script = ExtResource("25_vobco")
+enemy = ExtResource("4_bilc3")
+count = 3
+spawn_delay = 2.0
+start_offset = 28.0
 
 [sub_resource type="Resource" id="Resource_sc6yj"]
 script = ExtResource("24_xq181")
 id = &"w15_4"
 duration = 32.0
-entries = Array[ExtResource("25_vobco")]([SubResource("Resource_5ieor"), SubResource("Resource_qlr7k"), SubResource("Resource_808tn")])
+entries = Array[ExtResource("25_vobco")]([SubResource("Resource_808tn"), SubResource("Resource_t42rk"), SubResource("Resource_3soi1"), SubResource("Resource_w5rc5"), SubResource("Resource_umbwr")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false
