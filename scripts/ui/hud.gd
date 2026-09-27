@@ -151,7 +151,7 @@ func _refresh_gauges() -> void:
 	for child in _hand.get_children():
 		if child is CardView:
 			var cv := child as CardView
-			cv.modulate = Color(1.0, 0.92, 0.6) if (en_attente != null and cv.card == en_attente) 				else Color.WHITE
+			cv.modulate = _teinte_carte(cv.card, en_attente)
 
 	# Compte a rebours de la prochaine pioche : le joueur jouait a l aveugle
 	# entre deux pioches, sans savoir s il devait garder une carte ou la depenser.
@@ -438,6 +438,7 @@ func _refresh_hand() -> void:
 		_hand.add_child(cv)
 		_ajouter_jauge_amelioration(cv, card, width)
 		_marquer_si_petrifiee(cv, card)
+		_marquer_si_sommeil(cv, card)
 
 
 ## Une carte PETRIFIEE par le regard d une gorgone doit SE VOIR.
@@ -450,10 +451,40 @@ func _refresh_hand() -> void:
 ## GRISEE ET PLUS PALE, pas seulement teintee : a 118 px de large dans une main
 ## pleine, une nuance de couleur ne se distingue pas. La carte doit sortir du
 ## rang par sa LUMINOSITE, ce qui se voit du coin de l oeil pendant qu on joue.
+## Teinte d une carte de la main, recalculee a CHAQUE image par _refresh_gauges.
+##
+## LE DEFAUT QUE CECI REPARE, vu en capture : la boucle du sort prepare remettait
+## toutes les cartes a blanc a chaque image, ce qui effacait aussitot le gris de
+## la petrification et celui du sommeil poses par _refresh_hand. Le mot restait,
+## la couleur disparaissait — et c est la couleur qui se voit du coin de l oeil.
+## La teinte depend donc de l ETAT de la carte, pas de l ordre des appels.
+const TEINTE_BLOQUEE := Color(0.46, 0.46, 0.56, 0.85)
+const TEINTE_SOMMEIL := Color(0.46, 0.48, 0.60, 0.85)
+const TEINTE_PREPAREE := Color(1.0, 0.92, 0.6)
+
+
+## Le bandeau (le MOT) est un enfant de la carte, donc il herite de son gris et
+## perdait la moitie de son contraste. On lui applique l inverse de la teinte :
+## la carte s eteint, le mot reste a pleine lumiere.
+static func _contre_teinte(t: Color) -> Color:
+	return Color(1.0 / maxf(t.r, 0.05), 1.0 / maxf(t.g, 0.05), 1.0 / maxf(t.b, 0.05),
+		1.0 / maxf(t.a, 0.05))
+
+
+func _teinte_carte(card: SpellCard, en_attente: SpellCard) -> Color:
+	if card != null and RunState.is_card_blocked(card):
+		return TEINTE_BLOQUEE
+	if RunState.is_silenced():
+		return TEINTE_SOMMEIL
+	if en_attente != null and card == en_attente:
+		return TEINTE_PREPAREE
+	return Color.WHITE
+
+
 func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
 	if card == null or not RunState.is_card_blocked(card):
 		return
-	cv.modulate = Color(0.46, 0.46, 0.56, 0.85)
+	cv.modulate = TEINTE_BLOQUEE
 	# Le mot en clair par-dessus : la couleur dit "quelque chose ne va pas",
 	# le mot dit QUOI. Un joueur daltonien ne lit que le mot.
 	var bandeau := Label.new()
@@ -462,11 +493,49 @@ func _marquer_si_petrifiee(cv: Control, card: SpellCard) -> void:
 	bandeau.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bandeau.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	bandeau.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Meme correctif que le bandeau du sommeil (voir _marquer_si_sommeil) : sans
+	# `clip_text`, le mot elargit la carte et la main pleine deborde de l ecran.
+	bandeau.clip_text = true
 	bandeau.add_theme_font_override(&"font", UiTheme.font())
-	bandeau.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+	bandeau.add_theme_font_size_override(&"font_size", int(UiTheme.FONT_SMALL * 0.8))
 	bandeau.add_theme_color_override(&"font_color", Color(0.94, 0.92, 0.98))
 	bandeau.add_theme_color_override(&"font_outline_color", Color(0.10, 0.08, 0.16))
 	bandeau.add_theme_constant_override(&"outline_size", 10)
+	bandeau.modulate = _contre_teinte(TEINTE_BLOQUEE)
+	cv.add_child(bandeau)
+
+
+## SOMMEIL (comportements v3) : un dormeur sur le terrain coupe TOUTE la magie.
+## Meme traitement que la petrification — grisee, plus pale, le mot en clair —
+## parce que c est la meme experience pour le joueur : des cartes qui refusent
+## de partir. Le mot est different parce que la reponse l est : ici on ne tue
+## pas une gorgone, on tue le monstre qui porte les Zzz.
+##
+## Une carte deja petrifiee garde son propre mot : elle restera bloquee APRES le
+## reveil, et le joueur doit le savoir avant.
+func _marquer_si_sommeil(cv: Control, card: SpellCard) -> void:
+	if card == null or not RunState.is_silenced() or RunState.is_card_blocked(card):
+		return
+	cv.modulate = TEINTE_SOMMEIL
+	var bandeau := Label.new()
+	bandeau.name = "Sommeil"
+	bandeau.text = "Zzz\nSOMMEIL"
+	bandeau.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bandeau.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bandeau.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bandeau.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# CardView est un PanelContainer : tout enfant entre dans le calcul de sa
+	# taille MINIMALE. Vu en capture au premier jet — le mot, plus large qu une
+	# carte de main pleine, elargissait les six cartes et la main debordait de
+	# l ecran des deux cotes. `clip_text` retire le texte de ce calcul, et la
+	# police a 80 % du petit corps fait tenir le mot dans une carte de 118 px.
+	bandeau.clip_text = true
+	bandeau.add_theme_font_override(&"font", UiTheme.font())
+	bandeau.add_theme_font_size_override(&"font_size", int(UiTheme.FONT_SMALL * 0.8))
+	bandeau.add_theme_color_override(&"font_color", Color(0.86, 0.90, 1.0))
+	bandeau.add_theme_color_override(&"font_outline_color", Color(0.08, 0.08, 0.18))
+	bandeau.add_theme_constant_override(&"outline_size", 10)
+	bandeau.modulate = _contre_teinte(TEINTE_SOMMEIL)
 	cv.add_child(bandeau)
 
 

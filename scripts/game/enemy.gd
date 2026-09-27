@@ -125,6 +125,7 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 	if def.parts_count > 0 and def.part_hp > 0.0:
 		for i in def.parts_count:
 			_parts.append(def.part_hp * diff)
+	_v3_setup(def)
 
 
 func _ready() -> void:
@@ -279,6 +280,8 @@ func advance(world_delta: float) -> void:
 	# bonne carte. Le cycle tourne donc toujours, et etourdir la garde reste une
 	# reponse valable — on attend qu elle retombe sans encaisser de renvoi.
 	_tick_reflect(world_delta)
+	if _v3_tick_sleep(world_delta):
+		return
 	# ETOURDISSEMENT : il ne bouge pas, il ne tire pas, il ne frappe rien. Le
 	# compteur suit le temps du MONDE comme tout le reste, donc a 500 % de vitesse
 	# une seconde d etourdissement ne dure qu un cinquieme de seconde reelle —
@@ -314,6 +317,7 @@ func advance(world_delta: float) -> void:
 	if definition.parts_count > 0 and definition.part_slow_pct > 0.0:
 		var perdues: int = definition.parts_count - _parts.size()
 		speed *= maxf(1.0 - perdues * definition.part_slow_pct * 0.01, 0.15)
+	speed *= _v3_speed_factor()
 
 	# Invocation : elle suit `world_delta`, donc le flux s accelere avec le
 	# multiplicateur comme le reste du monde. Sinon a x4 le boss inviterait
@@ -323,6 +327,7 @@ func advance(world_delta: float) -> void:
 		if _summon_timer <= 0.0:
 			_summon_timer = definition.summon_interval
 			_do_summon()
+	_v3_tick_reanimate(world_delta)
 
 	# ONDE DE CHOC : il frappe le sol. Elle suit `world_delta` comme l invocation,
 	# donc la cadence s accelere avec le multiplicateur — a x4 le sol tremble
@@ -389,6 +394,7 @@ func advance(world_delta: float) -> void:
 		_wave_phase += world_delta * definition.wave_frequency * TAU
 		position.x = clampf(_base_x + sin(_wave_phase) * definition.wave_amplitude,
 			40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0)
+	_v3_apply_move_pattern(speed, world_delta)
 
 	# Tir sur le mage.
 	if definition.shoot_interval > 0.0 and battlefield != null and not _hidden:
@@ -689,6 +695,8 @@ func kill() -> void:
 	# gobe n est pas mourir.
 	if _try_revive():
 		return
+	if _v3_try_extra_life():
+		return
 	_dead = true
 	# Un boss mort ne tient plus sa garde : le halo ambre doit partir avec lui,
 	# sinon il reste a l ecran accroche a un monstre qui n existe plus.
@@ -987,3 +995,347 @@ func dispel() -> void:
 		if _shield_fx != null and is_instance_valid(_shield_fx):
 			_shield_fx.queue_free()
 			_shield_fx = null
+
+
+# =====================================================================
+# COMPORTEMENTS v3 — plusieurs vies, sommeil qui coupe la magie, reanimateur,
+# laser de riposte, motifs de deplacement. Tout est pilote par le groupe
+# "Comportements v3" d EnemyDef ; chaque fonction est appelee par UNE ligne
+# depuis un point d accroche existant (setup, advance, kill), pour que ce bloc
+# se lise d un seul tenant et se fusionne sans toucher au reste.
+#
+# Ce qui implique D AUTRES monstres ou le mage (renaissance differee, memoire des
+# morts, verrou de magie global, rayon) vit dans Battlefield, comme le veut la
+# regle du fichier : l Enemy decide QUAND, le terrain sait QUOI et SUR QUI.
+
+## Plancher du delai entre deux lasers, quel que soit le contenu. Un poison
+## frappe a chaque image : sans plancher, un `laser_cooldown` oublie a 0 dans un
+## .tres transformerait une Mare de venin en peloton d execution.
+const LASER_MIN_COOLDOWN: float = 0.5
+## Plafond d UN sommeil, quel que soit le contenu. La fenetre de magie garantie
+## entre deux sommeils vit dans Battlefield (elle porte sur TOUS les dormeurs) ;
+## celui-ci borne la duree d un seul, pour qu un .tres a 30 s ne coupe pas la
+## magie une demi-minute.
+const SLEEP_MAX_DURATION: float = 4.0
+## Duree d un saut de colonne (motif HOP). Assez bref pour se lire comme un
+## bond, assez long pour que l oeil suive le monstre d une colonne a l autre.
+const HOP_TIME: float = 0.22
+## Intervalle minimal entre deux reanimations, pour la meme raison que le
+## plancher du laser : un intervalle a 0 viderait le plafond en une image.
+const REANIMATE_MIN_INTERVAL: float = 0.5
+
+var _v3_lives_used: int = 0
+var _v3_sleep_timer: float = 0.0
+var _v3_sleep_left: float = 0.0
+var _v3_zzz: Node = null
+var _v3_laser_cd: float = 0.0
+var _v3_reanimate_timer: float = 0.0
+var _v3_reanimated_count: int = 0
+## Vrai pour un monstre RELEVE par un reanimateur : sa deuxieme mort ne paie ni
+## XP ni compteur, la creature a deja ete comptee la premiere fois.
+var _v3_is_reanimated: bool = false
+## Generation de renaissance : 0 pour un monstre de vague, 1 pour un monstre ne
+## d une marque, etc. Borne par Battlefield.REBIRTH_MAX_DEPTH.
+var _v3_rebirth_depth: int = 0
+## Motifs : sens lateral (+1 / -1, 0 = pas encore choisi), distance parcourue
+## depuis le dernier demi-tour (ZIGZAG), minuterie et cible du saut (HOP).
+var _v3_dir: int = 0
+var _v3_travel: float = 0.0
+var _v3_hop_timer: float = 0.0
+var _v3_hopping: bool = false
+var _v3_hop_target: float = 0.0
+
+
+func _v3_setup(def: EnemyDef) -> void:
+	_v3_lives_used = 0
+	# Premier sommeil a l intervalle PLEIN, comme l invocation et l onde : le
+	# joueur doit voir le dormeur entrer et avoir une chance de le tuer avant qu il
+	# ne lui coupe la magie une premiere fois.
+	_v3_sleep_timer = def.sleep_interval
+	_v3_sleep_left = 0.0
+	_v3_laser_cd = 0.0
+	_v3_reanimate_timer = def.reanimate_interval
+	_v3_reanimated_count = 0
+	_v3_dir = 0
+	_v3_travel = 0.0
+	_v3_hop_timer = def.pattern_interval
+	_v3_hopping = false
+
+
+# --- 1. PLUSIEURS VIES ------------------------------------------------------
+
+## Vies restantes (0 pour un monstre ordinaire).
+func lives_left() -> int:
+	if definition == null:
+		return 0
+	return maxi(0, definition.extra_lives - _v3_lives_used)
+
+
+## Appele depuis kill(), APRES le releve sur place : un boss qui porte les deux
+## se releve d abord la ou il est tombe, puis repart du haut a sa mort suivante.
+## Renvoie true s il revient : l appelant ne doit alors PAS le traiter comme
+## mort (ni XP, ni division, ni renaissance, ni retrait du terrain).
+func _v3_try_extra_life() -> bool:
+	if definition == null or _v3_lives_used >= definition.extra_lives:
+		return false
+	_v3_lives_used += 1
+	hp = maxf(_max_hp * definition.extra_life_hp_pct * 0.01, 1.0)
+	# La mort se VOIT la ou il tombe : sans l explosion, le joueur verrait le
+	# monstre se teleporter et croirait a un bug d affichage.
+	if Fx.enabled() and battlefield != null:
+		Fx.death(battlefield, position, radius())
+	# DEPUIS LE HAUT, dans la meme colonne : le joueur le retrouve la ou il
+	# regarde deja, et le chemin a refaire est la recompense de l avoir tue.
+	position = Vector2(position.x, GameConfig.SPAWN_LINE_Y)
+	repath()
+	_last_x = position.x
+	# Une nouvelle vie efface ce qu il subissait : il n emporte pas un
+	# etourdissement ou un ralentissement de sa vie precedente.
+	_stun_time = 0.0
+	_slow_time = 0.0
+	_slow_factor = 1.0
+	_v3_wake()
+	# Le meme repit que le releve sur place, et pour la meme raison : le sort qui
+	# vient de le tuer (zone, chaine) le retuerait dans la meme image.
+	_revive_grace = REVIVE_GRACE
+	_refresh_hp_bar()
+	# Il ROUGIT a chaque vie perdue : c est la seule facon de lire, sans chiffre,
+	# qu il revient plus vite et qu il faut le traiter avant la prochaine fois.
+	var teinte: Color = _v3_life_tint()
+	modulate = Color(1.6, 1.5, 1.1, modulate.a)
+	var tw: Tween = create_tween()
+	tw.tween_property(self, "modulate", teinte, REVIVE_GRACE)
+	if Fx.enabled() and battlefield != null:
+		Fx.impact(battlefield, position, Color(1.0, 0.45, 0.35), visual_radius() * 1.4)
+	AudioBus.play_sfx(&"spell_rise")
+	return true
+
+
+func _v3_life_tint() -> Color:
+	var k: float = clampf(0.16 * float(_v3_lives_used), 0.0, 0.6)
+	return Color(1.0, 1.0 - k, 1.0 - k, 1.0)
+
+
+## Facteur de vitesse du a la mecanique v3 : +x % par vie perdue.
+func _v3_speed_factor() -> float:
+	if definition == null or _v3_lives_used <= 0:
+		return 1.0
+	return 1.0 + float(_v3_lives_used) * maxf(definition.extra_life_speed_pct, 0.0) * 0.01
+
+
+# --- 5. SOMMEIL QUI COUPE LA MAGIE ------------------------------------------
+
+func is_sleeping() -> bool:
+	return _v3_sleep_left > 0.0 and not _dead
+
+
+## Avance les minuteries v3 qui doivent tourner meme etourdi (delai du laser),
+## puis le sommeil. Renvoie true tant qu il dort : il ne bouge pas, ne tire pas,
+## n invoque pas — il dort, et c est justement le moment de le tuer.
+##
+## Place AVANT le retour d etourdissement : si un stun figeait le sommeil, etourdir
+## le dormeur PROLONGERAIT le silence du joueur, qui serait puni d avoir joue la
+## bonne carte.
+func _v3_tick_sleep(world_delta: float) -> bool:
+	if _v3_laser_cd > 0.0:
+		_v3_laser_cd = maxf(0.0, _v3_laser_cd - world_delta)
+	if definition == null or definition.sleep_interval <= 0.0:
+		return false
+	if _v3_sleep_left > 0.0:
+		_v3_sleep_left -= world_delta
+		if _v3_sleep_left > 0.0:
+			return true
+		_v3_wake()
+		return false
+	_v3_sleep_timer -= world_delta
+	# Le terrain peut REFUSER : un autre dormeur coupe deja la magie, ou la
+	# fenetre garantie depuis le dernier sommeil n est pas ecoulee. La minuterie
+	# reste alors a zero et il redemande a l image suivante — il s endormira des
+	# que le joueur aura eu sa fenetre, pas avant.
+	if _v3_sleep_timer <= 0.0 and _stun_time <= 0.0 and battlefield != null \
+			and battlefield.v3_grant_sleep(self):
+		_v3_fall_asleep()
+		return true
+	return false
+
+
+func _v3_fall_asleep() -> void:
+	_v3_sleep_left = clampf(definition.sleep_duration, 0.1, SLEEP_MAX_DURATION)
+	_v3_sleep_timer = definition.sleep_interval
+	# Trois canaux, comme pour la garde de renvoi : des Zzz au-dessus de lui (le
+	# QUI), la main grisee dans le HUD (le QUOI), l animation figee (le COMMENT).
+	if Fx.enabled() and _v3_zzz == null:
+		_v3_zzz = Fx.sleep_marker(self, visual_radius())
+	if _anim != null and _anim.visible:
+		_anim.pause()
+
+
+func _v3_wake() -> void:
+	_v3_sleep_left = 0.0
+	if _v3_zzz != null and is_instance_valid(_v3_zzz):
+		_v3_zzz.queue_free()
+	_v3_zzz = null
+	if _anim != null and _anim.visible and not _anim.is_playing():
+		_anim.play()
+
+
+# --- 3. REANIMATEUR ----------------------------------------------------------
+
+func reanimations_done() -> int:
+	return _v3_reanimated_count
+
+
+func is_reanimated() -> bool:
+	return _v3_is_reanimated
+
+
+## Marque un monstre releve par un reanimateur. Teinte verdatre : le joueur doit
+## distinguer au premier coup d oeil un revenant d un monstre de la vague, parce
+## que la reponse n est pas la meme — le revenant reviendra encore tant que le
+## reanimateur vit.
+func mark_reanimated() -> void:
+	_v3_is_reanimated = true
+	modulate = Color(0.72, 1.0, 0.78, modulate.a)
+
+
+func _v3_tick_reanimate(world_delta: float) -> void:
+	if definition == null or battlefield == null or definition.reanimate_max <= 0 \
+			or definition.reanimate_radius <= 0.0 or _hidden:
+		return
+	# LE PLAFOND : une fois ses releves epuises, il n est plus qu un monstre.
+	if _v3_reanimated_count >= definition.reanimate_max:
+		return
+	_v3_reanimate_timer -= world_delta
+	if _v3_reanimate_timer > 0.0:
+		return
+	if battlefield.v3_reanimate_near(self, definition.reanimate_radius):
+		_v3_reanimated_count += 1
+		_v3_reanimate_timer = maxf(definition.reanimate_interval, REANIMATE_MIN_INTERVAL)
+		play_attack()
+	else:
+		# Personne a relever : il reessaie bientot, sans attendre un intervalle
+		# plein. Un reanimateur qui arrive juste apres un massacre doit s en servir.
+		_v3_reanimate_timer = 0.25
+
+
+# --- 4. LASER DE RIPOSTE -----------------------------------------------------
+
+## Le monstre accepte-t-il de riposter MAINTENANT ? Consomme le delai s il tire.
+## Appele par Battlefield._hit() apres un coup qui a mordu.
+func v3_try_laser() -> bool:
+	if _dead or definition == null or definition.laser_damage <= 0:
+		return false
+	# Il vient de revenir d une vie : le coup qui l a tue n a pas a declencher un
+	# tir depuis le haut du terrain, a l autre bout de l ecran.
+	if _revive_grace > 0.0 or _v3_laser_cd > 0.0:
+		return false
+	_v3_laser_cd = maxf(definition.laser_cooldown, LASER_MIN_COOLDOWN)
+	return true
+
+
+# --- Renaissance : generation ------------------------------------------------
+
+func v3_rebirth_depth() -> int:
+	return _v3_rebirth_depth
+
+
+func v3_set_rebirth_depth(depth: int) -> void:
+	_v3_rebirth_depth = maxi(depth, 0)
+
+
+# --- 6. MOTIFS DE DEPLACEMENT ------------------------------------------------
+
+## Marge laterale : le monstre ne doit JAMAIS deborder de l ecran. Elle suit sa
+## taille AFFICHEE, pas un nombre fixe — le clamp historique a 40 px laissait la
+## moitie d un gros monstre hors cadre.
+func _v3_side_margin() -> float:
+	var r: float = visual_radius() * (definition.sprite_scale if definition != null else 1.0)
+	return clampf(r, 40.0, GameConfig.BATTLEFIELD_WIDTH * 0.5 - 1.0)
+
+
+## Applique le motif apres la descente. POUR UN MONSTRE AU SOL, seulement en
+## descente libre (chemin A* vide) : un mur pose par le joueur doit continuer a
+## le detourner, sinon le motif serait un passe-muraille. Et un ecart lateral qui
+## entrerait dans une cellule bloquee est refuse (il fait demi-tour a la place).
+## Un VOLANT ignore la grille : il applique toujours son motif.
+func _v3_apply_move_pattern(speed: float, world_delta: float) -> void:
+	if definition == null or definition.move_pattern == EnemyDef.MovePattern.STRAIGHT:
+		return
+	if speed <= 0.0 or world_delta <= 0.0:
+		return
+	var au_sol: bool = not definition.flying and nav != null
+	if au_sol and not _path.is_empty():
+		return
+	var marge: float = _v3_side_margin()
+	var gauche: float = marge
+	var droite: float = GameConfig.BATTLEFIELD_WIDTH - marge
+	if _v3_dir == 0:
+		# Vers le centre d abord : un monstre ne en bord de terrain qui partirait
+		# vers le bord toucherait le mur au premier pas.
+		_v3_dir = 1 if position.x < GameConfig.BATTLEFIELD_WIDTH * 0.5 else -1
+		# Premier demi-tour a mi-largeur : le zigzag oscille AUTOUR de sa colonne
+		# d apparition au lieu de s en ecarter d un seul cote.
+		_v3_travel = maxf(definition.pattern_width, 20.0) * 0.5
+	var ratio: float = 1.0
+	if definition.pattern_lateral_speed > 0.0 and definition.base_speed > 0.0:
+		ratio = definition.pattern_lateral_speed / definition.base_speed
+	# La vitesse laterale derive de la vitesse de descente DEJA calculee : elle
+	# herite du ralentissement, de la rage, du multiplicateur et des vies perdues.
+	# Un monstre gele ne doit pas continuer a zigzaguer a pleine vitesse.
+	var laterale: float = speed * ratio
+	var largeur: float = maxf(definition.pattern_width, 20.0)
+	var dx: float = 0.0
+	match definition.move_pattern:
+		EnemyDef.MovePattern.ZIGZAG:
+			dx = laterale * world_delta * _v3_dir
+			_v3_travel += absf(dx)
+			if _v3_travel >= largeur:
+				_v3_travel = 0.0
+				_v3_dir = -_v3_dir
+		EnemyDef.MovePattern.BOUNCE:
+			dx = laterale * world_delta * _v3_dir
+		EnemyDef.MovePattern.HOP:
+			if not _v3_hopping:
+				_v3_hop_timer -= world_delta
+				if _v3_hop_timer <= 0.0:
+					_v3_hop_timer = maxf(definition.pattern_interval, 0.3)
+					var cible: float = position.x + largeur * _v3_dir
+					if cible < gauche or cible > droite:
+						_v3_dir = -_v3_dir
+						cible = position.x + largeur * _v3_dir
+					_v3_hop_target = clampf(cible, gauche, droite)
+					_v3_hopping = true
+			if _v3_hopping:
+				var reste: float = _v3_hop_target - position.x
+				var pas: float = largeur / HOP_TIME * world_delta
+				if absf(reste) <= pas:
+					dx = reste
+					_v3_hopping = false
+					# L atterrissage se voit : sans poussiere, un saut de 240 px en
+					# un quart de seconde se lit comme une teleportation.
+					if Fx.enabled() and battlefield != null:
+						Fx.sprite(battlefield, "dust", position + Vector2(dx, radius() * 0.6),
+							radius() * 1.8)
+				else:
+					dx = signf(reste) * pas
+	if dx == 0.0:
+		return
+	var nx: float = clampf(position.x + dx, gauche, droite)
+	if nx != position.x + dx and definition.move_pattern != EnemyDef.MovePattern.HOP:
+		# Le bord du terrain : ZIGZAG et BOUNCE repartent dans l autre sens.
+		_v3_dir = -_v3_dir
+		_v3_travel = 0.0
+	if au_sol and nav.blocked_count() > 0 \
+			and nav.is_blocked(nav.to_cell(Vector2(nx, position.y))):
+		# Un mur a cote : le motif cede, il ne traverse pas. Demi-tour, et un saut
+		# en cours est annule plutot que de finir dans la pierre.
+		_v3_dir = -_v3_dir
+		_v3_travel = 0.0
+		_v3_hopping = false
+		return
+	var applique: float = nx - position.x
+	position.x = nx
+	# L ondulation historique calcule sa position depuis `_base_x` : on deplace
+	# ce centre avec le motif pour que les deux se CUMULENT au lieu que
+	# l ondulation ramene le monstre a sa colonne de depart a chaque image.
+	_base_x += applique

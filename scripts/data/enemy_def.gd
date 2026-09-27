@@ -137,6 +137,88 @@ extends Resource
 @export var shockwave_radius: float = 0.0
 @export var shockwave_damage: int = 0
 
+@export_group("Comportements v3")
+## PLUSIEURS VIES — a zero PV il revient `extra_lives` fois, a chaque fois DEPUIS
+## LE HAUT DU TERRAIN (meme colonne) avec `extra_life_hp_pct` % de ses PV. 0 = une
+## seule vie.
+##
+## DISTINCT de `revive_hp_pct`, qui le releve une fois SUR PLACE : ici le monstre
+## est renvoye au depart et doit refaire tout le chemin. Ce que la mecanique
+## change : le joueur a gagne du TEMPS en le tuant, pas la bataille. Les deux
+## peuvent se cumuler, le releve sur place passe alors en premier.
+##
+## Il ne compte qu UNE mort (XP, objectifs, bestiaire) : la definitive. Sinon un
+## monstre a trois vies serait la meilleure ferme d XP du jeu.
+@export_range(0, 5) var extra_lives: int = 0
+@export_range(1.0, 100.0) var extra_life_hp_pct: float = 100.0
+## Vitesse gagnee (%) a CHAQUE vie perdue, cumulee : a 35, la troisieme vie
+## descend a +105 %. C est ce qui fait que le laisser revenir coute de plus en
+## plus cher, et que le tuer loin du mage reste la bonne reponse.
+@export var extra_life_speed_pct: float = 35.0
+
+## RENAISSANCE DIFFEREE — a sa mort definitive, il laisse une MARQUE au sol et,
+## `rebirth_delay` secondes plus tard, `rebirth_count` exemplaires de
+## `rebirth_def` naissent a cet endroit. Null ou 0 = rien.
+##
+## Distinct de la division (`split_into`), qui fait naitre TOUT DE SUITE : ici le
+## joueur voit le danger arriver et peut preparer un sort de zone sur la marque.
+## La vague ne se termine pas tant qu une marque est au sol.
+@export var rebirth_def: EnemyDef
+@export_range(0, 6) var rebirth_count: int = 0
+@export var rebirth_delay: float = 3.0
+
+## REANIMATEUR — toutes les `reanimate_interval` s, il releve UN monstre mort
+## recemment dans un rayon de `reanimate_radius` px, `reanimate_max` fois au
+## total. 0 = ne reanime pas.
+##
+## LE PLAFOND EST LA MECANIQUE : sans lui, un reanimateur au fond du terrain
+## rendrait toute vague interminable. Le releve ne rapporte ni XP ni compteur
+## (la creature a deja ete comptee a sa premiere mort).
+@export var reanimate_radius: float = 0.0
+@export var reanimate_interval: float = 4.0
+@export_range(0, 20) var reanimate_max: int = 0
+
+## LASER DE RIPOSTE — chaque fois qu il ENCAISSE des degats (un coup qui mord,
+## pas une esquive ni un bouclier), il tire un rayon sur le mage qui coute
+## `laser_damage` points de vitesse. 0 = pas de laser.
+##
+## `laser_cooldown` est le delai MINIMAL entre deux tirs. Sans lui, un poison ou
+## une pluie qui frappent dix fois par seconde declencheraient dix lasers : la
+## punition des sorts a coups multiples deviendrait une execution. Le moteur
+## impose de toute facon un plancher (Enemy.LASER_MIN_COOLDOWN).
+@export var laser_damage: int = 0
+@export var laser_cooldown: float = 1.5
+
+## SOMMEIL QUI COUPE LA MAGIE — toutes les `sleep_interval` s d eveil, il
+## s arrete et dort `sleep_duration` s. PENDANT SON SOMMEIL LE JOUEUR NE PEUT
+## LANCER AUCUN SORT. 0 = ne dort jamais.
+##
+## Le tuer pendant qu il dort rend la magie aussitot : c est la reponse, et elle
+## se prepare pendant qu il est eveille. Un plafond de duree et une fenetre de
+## magie garantie entre deux sommeils, TOUS monstres confondus, vivent dans
+## Battlefield : trois dormeurs ne doivent pas verrouiller le joueur.
+@export var sleep_interval: float = 0.0
+@export var sleep_duration: float = 2.0
+
+## MOTIF DE DEPLACEMENT — autre chose que la ligne droite. Ajouter les valeurs A
+## LA FIN : les .tres stockent l entier.
+##   STRAIGHT : tout droit (defaut)
+##   ZIGZAG   : va-et-vient lateral sur `pattern_width` px
+##   BOUNCE   : diagonale qui rebondit sur les bords du terrain
+##   HOP      : saute d une colonne de `pattern_width` px toutes les
+##              `pattern_interval` s
+## Pour un monstre AU SOL, le motif ne s applique qu en descente libre : des
+## qu un mur impose un chemin A*, le chemin prime, et un ecart lateral qui
+## entrerait dans une cellule bloquee est refuse. Les volants l appliquent
+## toujours. `wave_amplitude` et `burst_move` restent independants et cumulables.
+enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP }
+@export var move_pattern: MovePattern = MovePattern.STRAIGHT
+## Vitesse laterale en px/s a x1 (ZIGZAG, BOUNCE). 0 = egale a `base_speed`,
+## donc une diagonale a 45 degres.
+@export var pattern_lateral_speed: float = 0.0
+@export var pattern_width: float = 240.0
+@export var pattern_interval: float = 1.5
+
 @export_group("Mecaniques de boss")
 ## MORCELE — le boss porte `parts_count` parties a detruire separement. Tant
 ## qu une partie tient, le coeur n encaisse RIEN : le joueur doit changer de
