@@ -26,6 +26,32 @@ extends Control
 ## de la gorgone »), et le jeu en a deja les feuilles animees. `signature_of`
 ## garantit en plus qu aucune silhouette ne se repete SUR UNE PAGE.
 ##
+## UN ACTE A EMBRANCHEMENT SE DESSINE EN EVENTAIL
+## ----------------------------------------------
+##   +--------------------------------------------------+
+##   |        ACTE IV  -  Le monde demoniaque           |
+##   |   Les niveaux cote a cote s ouvrent ensemble...  |  <- avis d ordre libre
+##   |                                                  |
+##   |      .--.    .--.     .--.    .--.               |
+##   |  <  (    )  (    )   (    )  (    )  >           |  <- une RANGEE : les
+##   |      `--'    `--'     `--'    `--'               |     quatre demons, en
+##   |     Vharn   Sesh    Kaltek   Ymoa                |     arc, nom DESSOUS
+##   |                                                  |
+##   |                    .--.                          |
+##   |                   (    )                         |  <- la convergence,
+##   |                    `--'                          |     centree sous
+##   |              Le pentacle brise                   |     l eventail
+##   +--------------------------------------------------+
+##
+## Le rang d un niveau est sa PROFONDEUR dans le chainage de son acte
+## (`_compute_rows`) : deux niveaux de meme profondeur s ouvrent par la meme
+## victoire et se jouent dans l ordre qu on veut. Les poser l un sous l autre en
+## zigzag, comme un acte lineaire, disait au joueur « celui du haut d abord » —
+## c est ce que l acte IV affichait, alors que le pentacle de Tombol ouvre ses
+## quatre demons d un coup. La regle est tiree des DONNEES, pas ecrite pour
+## l acte IV : l acte III (deux forges apres la cour des rois morts) en profite
+## aussi, et un acte a venir n aura rien a declarer.
+##
 ## POURQUOI un ecran par acte et non plus un defilement vertical : demande du
 ## testeur, mot pour mot — « utilise les fonds de combat pour l image de fond de
 ## l acte, change d acte avec les fleches ». Un fond peint ne se defile pas : il
@@ -59,6 +85,28 @@ const DOT_HIT_H: float = 170.0
 ## Part du medaillon occupee par la silhouette. Le reste est l anneau et un peu
 ## d air : une silhouette qui touche le bord se lit comme rognee.
 const PORTRAIT_FILL: float = 0.74
+
+## Tuile d EVENTAIL : le nom passe SOUS le medaillon. A cote, il faudrait 500 px
+## par niveau, et quatre niveaux n en ont que 740 entre les deux fleches.
+## Hauteur = medaillon (150) + deux lignes de nom + la rangee d etoiles.
+const FAN_HIT_H: float = 280.0
+## Colonne maximale d une rangee : au-dela, deux niveaux d une rangee de deux
+## s ecarteraient jusqu aux fleches et ne se liraient plus comme une paire.
+const FAN_COL_MAX: float = 360.0
+## Air entre deux tuiles voisines d une rangee : sans lui, deux cibles tactiles
+## se touchent et un pouce a cheval ouvre l une ou l autre au hasard.
+const FAN_GAP: float = 10.0
+## Cambrure de l arc (rangees de trois et plus) : les tuiles du bord descendent,
+## celles du centre montent. C est ce qui fait lire UNE rangee qui converge vers
+## le niveau d en dessous, et non une ligne de plus d une liste.
+const FAN_ARC: float = 80.0
+## Marge verticale reservee a chaque rangee, en plus de sa tuile.
+const ROW_GAP: float = 30.0
+
+## Avis affiche sous le titre d un acte a embranchement. La forme (cote a cote)
+## porte l information ; le texte la NOMME, pour le joueur qui n aurait pas lu
+## la disposition comme un choix.
+const FORK_NOTICE: String = "Les niveaux cote a cote s ouvrent ensemble : a toi de choisir l ordre."
 
 ## Bande utilisable du fond, en fraction de la hauteur de l ecran. Les fonds ont
 ## une bande DECOREE en haut (arbres, grilles, vitraux) et un PREMIER PLAN en bas
@@ -97,6 +145,33 @@ const FALLBACK_BACKDROP: String = "menu_space"
 ## eteinte sinon. On ne DESSINE pas une etoile : la regle du projet est de
 ## n utiliser que les assets fournis (DEC-012).
 const STAR_ICON: int = 3
+const STAR_FULL_PX: float = 40.0
+## Etoile VIDE : un ANNEAU creux, clair autour d un coeur sombre.
+##
+## Elle etait une piece de 30 px teintee rgba(0.22, 0.20, 0.18, 0.55) : sombre
+## et translucide. Mesure sur la capture de l acte V : le fond d espace rend
+## rgb(31,20,34) et la piece vide au mieux rgb(42,35,22), soit 1,14:1 — autant
+## dire invisible, le plancher du projet etant 4,5:1.
+## Une seule teinte ne peut pas servir a la fois le ciel clair de l acte I et le
+## vide de l acte V : l anneau porte donc DEUX tons. Sur un fond sombre c est le
+## liseret clair qui se voit, sur un fond clair c est le coeur sombre. Ce sont
+## les deux tons du texte de la carte (`label_hud` : lettre claire, contour
+## sombre), pour la meme raison.
+##
+## POURQUOI blanc et NOIR, et pas creme et violet sombre : c est la seule paire
+## qui passe 4,5:1 sur TOUT fond. Le noir y arrive des que le fond depasse une
+## luminance de 0,175, le blanc tant qu il reste sous 0,183 : les deux plages se
+## recouvrent. Un creme (luminance 0,70) laisse un trou entre 0,12 et 0,175 —
+## exactement les dalles des actes III et IV, mesurees a 4,04:1 avec le premier
+## essai creme/violet (test `campaign_map`, fonds lus sur le disque).
+##
+## La FORME porte l information autant que la couleur (lecon du chantier E) :
+## pleine = piece d or plus grande ; vide = anneau sans piece, plus petit. Un
+## joueur daltonien compte ses etoiles au creux, pas a la teinte.
+const STAR_EMPTY_PX: float = 28.0
+const STAR_EMPTY_RIM_W: int = 4
+const STAR_EMPTY_RIM: Color = Color(1.0, 1.0, 0.97)
+const STAR_EMPTY_FILL: Color = Color(0.0, 0.0, 0.0)
 
 ## Anneau du medaillon jouable — l or du cahier des charges, demande mot pour mot
 ## (« des points de couleur jaune, qui sont grises quand pas encore debloques »).
@@ -136,18 +211,22 @@ const EMPTY_NOTICE: String = "Le voyage ne va pas encore jusqu ici."
 
 ## Etat calcule : acte -> [ids ordonnes], et id -> donnees du point.
 var _by_act: Dictionary = {}          # int -> Array[StringName]
-var _nodes: Dictionary = {}           # StringName -> {level, pos, stars, max_stars, enabled}
+var _rows: Dictionary = {}            # int -> Array[Array[StringName]], par profondeur
+var _nodes: Dictionary = {}           # StringName -> {level, pos, hit, row, stars, max_stars, enabled}
 var _acts: Array[int] = []
 var _act: int = 0
 
 var _backdrop: TextureRect
 var _title: Label
+var _fork_lbl: Label
 var _empty_lbl: Label
 var _layer: Control                   # porte les points ; vide a chaque changement d acte
 var _prev_btn: Button
 var _next_btn: Button
 var _buttons: Dictionary = {}         # StringName -> Button
 var _signatures: Dictionary = {}      # StringName -> EnemyDef (ou absent)
+## Forme des tuiles au moment ou les boutons de l acte affiche ont ete construits.
+var _built_compact: bool = false
 
 ## Portraits recadres, partages entre toutes les cartes : le recadrage lit les
 ## pixels de la feuille, inutile de le refaire a chaque changement d acte.
@@ -275,6 +354,8 @@ func _compute() -> void:
 			"level": lv,
 			"act": a,
 			"pos": Vector2.ZERO,
+			"hit": Vector2(DOT_HIT_W, DOT_HIT_H),
+			"row": 0,
 			"stars": SaveData.objectives_done_count(lv),
 			"max_stars": lv.objectives.size(),
 			"enabled": SaveData.is_level_unlocked(id),
@@ -294,7 +375,67 @@ func _compute() -> void:
 		_acts.append(int(a))
 	_acts.sort()
 
+	_compute_rows()
 	_assign_signatures(ids)
+
+
+## Range les niveaux de chaque acte par PROFONDEUR dans le chainage de l acte :
+## rang 0 = les entrees (aucun niveau du meme acte n y mene), puis le plus long
+## chemin depuis elles. Deux niveaux de meme rang sont ouverts par la meme
+## victoire : ils forment une rangee, et leur ordre est libre.
+##
+## Pourquoi le plus LONG chemin et non le plus court : un niveau atteint a la
+## fois directement et par un detour doit se poser APRES le detour, sinon il
+## s afficherait au-dessus d un niveau qui le precede.
+##
+## Seuls comptent les liens INTERNES a l acte. Le pentacle de Tombol (acte III)
+## ouvre les quatre demons de l acte IV : vus depuis l acte IV, ils n ont aucun
+## predecesseur, donc ils sont tous au rang 0, cote a cote.
+##
+## L ordre DANS une rangee reste l ordre de jeu (`_ordre_de_jeu`), c est-a-dire
+## celui que l auteur a ecrit dans `next_levels`.
+func _compute_rows() -> void:
+	_rows.clear()
+	for a in _by_act.keys():
+		var ids: Array = _by_act[a]
+		var dans: Dictionary = {}
+		var rang: Dictionary = {}
+		for id in ids:
+			dans[id] = true
+			rang[id] = 0
+		# Relaxation bornee : au plus une passe par niveau. Un cycle dans le
+		# contenu (qui serait un defaut) ne peut donc pas boucler, et le rang
+		# reste plafonne au nombre de niveaux de l acte.
+		for _passe in ids.size():
+			var bouge: bool = false
+			for id in ids:
+				var lv: LevelDef = _nodes[id]["level"]
+				for suivant in lv.next_levels:
+					var s: StringName = StringName(suivant)
+					if s == id or not dans.has(s):
+						continue
+					var r: int = int(rang[id]) + 1
+					if r > int(rang[s]) and r < ids.size():
+						rang[s] = r
+						bouge = true
+			if not bouge:
+				break
+		# Rangs compactes : un rang sans niveau ne laisse pas de trou sur l ecran.
+		var par_rang: Dictionary = {}
+		for id in ids:
+			var r2: int = int(rang[id])
+			if not par_rang.has(r2):
+				par_rang[r2] = []
+			(par_rang[r2] as Array).append(id)
+		var cles: Array = par_rang.keys()
+		cles.sort()
+		var rangees: Array = []
+		for k in cles:
+			rangees.append(par_rang[k])
+		_rows[a] = rangees
+		for ri in rangees.size():
+			for id in rangees[ri]:
+				_nodes[id]["row"] = ri
 
 
 # --------------------------------------------------------------------------
@@ -515,6 +656,21 @@ func _build_shell() -> void:
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_title)
 
+	# 2 bis) l avis d ordre libre, sous le titre, seulement sur un acte a
+	# embranchement. Dans la bande decoree et non sur le sol : le sol est a
+	# l eventail, et un texte pose entre deux rangees se lirait comme le nom
+	# d un niveau.
+	_fork_lbl = UiTheme.label_hud(FORK_NOTICE, UiTheme.FONT_SMALL,
+		Color(1.0, 0.97, 0.90), HORIZONTAL_ALIGNMENT_CENTER, true)
+	_fork_lbl.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_fork_lbl.offset_left = SIDE_MARGIN * 0.5
+	_fork_lbl.offset_right = -SIDE_MARGIN * 0.5
+	_fork_lbl.offset_top = 96.0
+	_fork_lbl.offset_bottom = 190.0
+	_fork_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fork_lbl.visible = false
+	add_child(_fork_lbl)
+
 	# 3) la couche des points, videe a chaque changement d acte.
 	_layer = Control.new()
 	_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -601,6 +757,31 @@ func levels_in_act(act: int) -> Array[StringName]:
 	return out
 
 
+## Les rangees de l acte, de haut en bas (voir `_compute_rows`).
+func rows_in_act(act: int) -> Array:
+	var out: Array = []
+	for r in _rows.get(act, []):
+		out.append((r as Array).duplicate())
+	return out
+
+
+## Vrai si l acte contient au moins une rangee de plusieurs niveaux, c est-a-dire
+## un endroit ou le joueur choisit l ordre.
+func act_has_fork(act: int) -> bool:
+	for r in _rows.get(act, []):
+		if (r as Array).size() > 1:
+			return true
+	return false
+
+
+func fork_notice() -> String:
+	return FORK_NOTICE
+
+
+func fork_notice_visible() -> bool:
+	return _fork_lbl != null and _fork_lbl.visible
+
+
 ## Un acte est « ouvert » des qu UN de ses niveaux est jouable. Ferme, il reste
 ## affiche et atteignable : le joueur doit voir qu il y a une suite.
 func act_is_open(act: int) -> bool:
@@ -637,6 +818,7 @@ func show_act(act: int) -> void:
 		return
 	_backdrop.texture = SheetLib.texture(BACKDROP_DIR + backdrop_for_act(act) + ".png")
 	_title.text = act_title(act)
+	_fork_lbl.visible = act_has_fork(act)
 	if _prev_btn != null:
 		_prev_btn.disabled = not can_go_previous()
 		_next_btn.disabled = not can_go_next()
@@ -662,35 +844,129 @@ func backdrop_for_act(act: int) -> String:
 ## la construction pour qu un simple redimensionnement les replace sans
 ## reconstruire les boutons (et donc sans recasser les connexions).
 func _layout_dots() -> void:
-	var ids: Array[StringName] = levels_in_act(_act)
-	if ids.is_empty():
+	# La forme des tuiles (large ou d eventail) depend de la hauteur disponible :
+	# si un redimensionnement la fait basculer, les tuiles construites n ont plus
+	# la bonne forme et il faut les refaire, pas seulement les deplacer.
+	if not _buttons.is_empty() and _compact_for(_act) != _built_compact:
+		_build_dots()
+		return
+	_layout_act(_act)
+
+
+## Vrai si toutes les rangees de l acte passent en tuiles d eventail a la taille
+## actuelle de la carte (voir `_all_compact`).
+func _compact_for(act: int) -> bool:
+	var h: float = maxf(size.y, 1.0)
+	return _all_compact(_rows.get(act, []), h * (GROUND_BOTTOM - GROUND_TOP))
+
+
+## Calcule la place de chaque niveau d un acte. Ne deplace que les boutons de
+## l acte AFFICHE ; pour un autre acte, seules les positions sont memorisees
+## (c est ce que lit `position_of`).
+func _layout_act(act: int) -> void:
+	var rows: Array = _rows.get(act, [])
+	if rows.is_empty():
 		return
 	var w: float = maxf(size.x, 1.0)
 	var h: float = maxf(size.y, 1.0)
-	# Repartition sur la hauteur du sol : le premier niveau de l acte en haut, le
-	# dernier en bas — on lit l acte dans le sens de la marche, du fond vers soi.
+	# Repartition sur la hauteur du sol : la premiere rangee de l acte en haut, la
+	# derniere en bas — on lit l acte dans le sens de la marche, du fond vers soi.
 	var top: float = h * GROUND_TOP
 	var bottom: float = h * GROUND_BOTTOM
-	var step: float = (bottom - top) / float(maxi(ids.size(), 1))
-	# Zigzag horizontal : deux niveaux d affilee au meme x donneraient une colonne,
-	# ou le nom du second passerait sous le point du premier. L amplitude est
-	# bornee par SIDE_MARGIN pour ne jamais passer sous une fleche.
+	var fourche: bool = act_has_fork(act)
+	var tout_compact: bool = _all_compact(rows, bottom - top)
+
+	# Chaque rangee recoit une bande proportionnelle a ce qu elle doit loger :
+	# une tuile large (170) ou une tuile d eventail (280, plus la cambrure). Sur
+	# un acte lineaire toutes les bandes sont egales, donc la repartition est
+	# exactement l ancienne.
+	var besoins: Array[float] = []
+	var total: float = 0.0
+	for r in rows.size():
+		var k: int = (rows[r] as Array).size()
+		var compact: bool = tout_compact or k > 1
+		var besoin: float = (FAN_HIT_H if compact else DOT_HIT_H) + ROW_GAP
+		if k >= 3:
+			besoin += FAN_ARC
+		besoins.append(besoin)
+		total += besoin
+	var echelle: float = (bottom - top) / maxf(total, 1.0)
+
+	# Zigzag horizontal des rangees d UN niveau sur un acte LINEAIRE : deux
+	# niveaux d affilee au meme x donneraient une colonne, ou le nom du second
+	# passerait sous le point du premier. L amplitude est bornee par SIDE_MARGIN
+	# pour ne jamais passer sous une fleche.
 	#
-	# UN SEUL niveau dans l acte (cas de l acte IV) : pas de zigzag du tout. Le
-	# decaler le collait contre une fleche, ce qui etait pire que la colonne que
-	# le zigzag cherche a eviter. Vu sur la capture `map_acte4.png`.
+	# UN SEUL niveau dans l acte : pas de zigzag du tout. Le decaler le collait
+	# contre une fleche, ce qui etait pire que la colonne que le zigzag cherche a
+	# eviter. Vu sur la capture `map_acte4.png`, quand l acte IV n avait qu un
+	# niveau.
+	#
+	# Sur un acte a EMBRANCHEMENT, pas de zigzag non plus : le tronc reste au
+	# centre et l eventail s ouvre de part et d autre. Un tronc qui serpente
+	# ferait lire un eventail de plus la ou il n y en a pas.
 	var amp: float = 0.0
-	if ids.size() > 1:
+	if rows.size() > 1 and not fourche:
 		amp = minf(w * 0.16, maxf((w - 2.0 * SIDE_MARGIN - DOT_HIT_W) * 0.5, 0.0))
-	for i in ids.size():
-		var id: StringName = ids[i]
-		var y: float = top + step * (float(i) + 0.5)
-		var x: float = w * 0.5 + (amp if i % 2 == 1 else -amp)
-		var pos := Vector2(x, y)
-		_nodes[id]["pos"] = pos
-		var b: Button = _buttons.get(id)
-		if b != null:
-			b.position = pos - Vector2(DOT_HIT_W, DOT_HIT_H) * 0.5
+
+	var y0: float = top
+	for r in rows.size():
+		var rangee: Array = rows[r]
+		var k: int = rangee.size()
+		var bande: float = besoins[r] * echelle
+		var cy: float = y0 + bande * 0.5
+		y0 += bande
+		if k == 1 and not tout_compact:
+			var x: float = w * 0.5 + (amp if r % 2 == 1 else -amp)
+			_place(rangee[0], Vector2(x, cy), Vector2(DOT_HIT_W, DOT_HIT_H))
+			continue
+		# Rangee d eventail : colonnes egales entre les fleches, centrees.
+		var col: float = minf((w - 2.0 * SIDE_MARGIN) / float(k), FAN_COL_MAX)
+		var x0: float = w * 0.5 - col * float(k) * 0.5
+		var hit := Vector2(maxf(col - FAN_GAP, DOT_SIZE), FAN_HIT_H)
+		# Cambrure en parabole, recentree sur zero pour que la rangee reste au
+		# milieu de sa bande : les bords descendent, le centre monte.
+		var moyenne: float = 0.0
+		for c in k:
+			moyenne += _arc_t2(c, k)
+		moyenne /= float(k)
+		for c in k:
+			var creux: float = (_arc_t2(c, k) - moyenne) * FAN_ARC if k >= 3 else 0.0
+			_place(rangee[c], Vector2(x0 + col * (float(c) + 0.5), cy + creux), hit)
+
+
+## Carre de l ecart au centre de la colonne `c` sur `k`, ramene a [0, 1].
+func _arc_t2(c: int, k: int) -> float:
+	if k <= 1:
+		return 0.0
+	var t: float = (float(c) - float(k - 1) * 0.5) / (float(k - 1) * 0.5)
+	return t * t
+
+
+## Toutes les rangees d un acte a embranchement passent en tuiles d eventail
+## (nom sous le medaillon) QUAND LA HAUTEUR LE PERMET. Pourquoi : le niveau ou
+## l eventail converge doit etre centre SOUS lui ; en tuile large, son medaillon
+## serait decale de 175 px a gauche (le nom occupe la droite) et la convergence
+## ne se lirait plus. L acte III (cinq niveaux sur quatre rangees) n a pas la
+## hauteur : seule sa rangee double y passe en eventail.
+func _all_compact(rows: Array, hauteur: float) -> bool:
+	var fourche: bool = false
+	var besoin: float = 0.0
+	for r in rows:
+		var k: int = (r as Array).size()
+		fourche = fourche or k > 1
+		besoin += FAN_HIT_H + ROW_GAP + (FAN_ARC if k >= 3 else 0.0)
+	return fourche and besoin <= hauteur
+
+
+func _place(id: StringName, pos: Vector2, hit: Vector2) -> void:
+	_nodes[id]["pos"] = pos
+	_nodes[id]["hit"] = hit
+	var b: Button = _buttons.get(id) if int(_nodes[id]["act"]) == _act else null
+	if b != null:
+		b.custom_minimum_size = hit
+		b.size = hit
+		b.position = pos - hit * 0.5
 
 
 func _build_dots() -> void:
@@ -703,28 +979,43 @@ func _build_dots() -> void:
 
 	var ids: Array[StringName] = levels_in_act(_act)
 	_empty_lbl.visible = ids.is_empty()
+	_built_compact = _compact_for(_act)
 	for id in ids:
 		_add_dot(id)
-	_layout_dots()
+	_layout_act(_act)
 
 
-## Un niveau = un Button transparent de 500x170 qui porte le MEDAILLON, le nom
-## et les etoiles. Le bouton est la racine pour que TOUTE l etiquette reponde au
-## doigt, pas seulement le medaillon.
+## Vrai si le niveau se dessine en tuile d EVENTAIL (nom sous le medaillon).
+func _is_fan_tile(id: StringName) -> bool:
+	if _built_compact:
+		return true
+	var act: int = int(_nodes[id]["act"])
+	var rows: Array = _rows.get(act, [])
+	var r: int = int(_nodes[id]["row"])
+	return r < rows.size() and (rows[r] as Array).size() > 1
+
+
+## Un niveau = un Button transparent qui porte le MEDAILLON, le nom et les
+## etoiles. Le bouton est la racine pour que TOUTE l etiquette reponde au
+## doigt, pas seulement le medaillon. Deux formes :
 ##
-##   .------.
-##  ( boss   )  Nom du niveau
-##  (  en    )  sur deux lignes
-##   `------'   o o o            <- etoiles
+##   tuile LARGE (500x170, acte lineaire)     tuile d EVENTAIL (colonne x 280)
+##   .------.                                       .------.
+##  ( boss   )  Nom du niveau                      ( boss   )
+##  (  en    )  sur deux lignes                     `------'
+##   `------'   o o o            <- etoiles       Nom du niveau
+##                                                   o o o
 func _add_dot(id: StringName) -> void:
 	var data: Dictionary = _nodes[id]
 	var lv: LevelDef = data["level"]
 	var enabled: bool = bool(data["enabled"])
+	var eventail: bool = _is_fan_tile(id)
 
 	var b := Button.new()
+	b.name = "Niveau_%s" % id
 	b.flat = true
 	b.focus_mode = Control.FOCUS_NONE
-	b.size = Vector2(DOT_HIT_W, DOT_HIT_H)
+	b.size = Vector2(DOT_SIZE, FAN_HIT_H) if eventail else Vector2(DOT_HIT_W, DOT_HIT_H)
 	b.custom_minimum_size = b.size
 	b.disabled = not enabled
 	# Un bouton desactive ne montre pas d infobulle ; on met la raison dans le
@@ -733,17 +1024,26 @@ func _add_dot(id: StringName) -> void:
 	_layer.add_child(b)
 	_buttons[id] = b
 
-	var row := HBoxContainer.new()
+	var row: BoxContainer
+	if eventail:
+		row = VBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_BEGIN
+		row.add_theme_constant_override(&"separation", 4)
+	else:
+		row = HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_BEGIN
+		row.add_theme_constant_override(&"separation", 14)
 	row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	row.alignment = BoxContainer.ALIGNMENT_BEGIN
-	row.add_theme_constant_override(&"separation", 14)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(row)
 
-	row.add_child(_medallion(id, enabled))
+	var medal: Control = _medallion(id, enabled)
+	if eventail:
+		medal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	row.add_child(medal)
 
 	var vb := VBoxContainer.new()
-	vb.alignment = BoxContainer.ALIGNMENT_CENTER
+	vb.alignment = BoxContainer.ALIGNMENT_BEGIN if eventail else BoxContainer.ALIGNMENT_CENTER
 	vb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_theme_constant_override(&"separation", 4)
 	vb.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -762,45 +1062,59 @@ func _add_dot(id: StringName) -> void:
 	# « Proteger le dirigeable » n y tient pas sur une ligne. Le coupe-mot par
 	# lettre (piege connu de AUTOWRAP_WORD_SMART) ne mord pas ici : aucun mot de
 	# nom de niveau ne depasse la colonne.
+	#
+	# En tuile d EVENTAIL, le nom est centre sous le medaillon, sur la largeur
+	# de la colonne (~175 px pour quatre demons) : « La forge de Vharn » y tient
+	# en deux lignes, et le mot le plus long (« Kaltek ») loin de la limite.
 	var name_lbl: Label = UiTheme.label_hud(lv.display_name, UiTheme.FONT_SMALL,
 		Color(1.0, 0.97, 0.90) if enabled else Color(0.74, 0.74, 0.78),
-		HORIZONTAL_ALIGNMENT_LEFT, true)
+		HORIZONTAL_ALIGNMENT_CENTER if eventail else HORIZONTAL_ALIGNMENT_LEFT, true)
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(name_lbl)
 
-	# LES ETOILES : une par objectif, en icones du pack (jamais du texte ASCII,
-	# qui ne se lit pas comme une note). Pleines = acquises, ternies = restantes.
+	# LES ETOILES : une par objectif (jamais du texte ASCII, qui ne se lit pas
+	# comme une note). Pleines = pieces d or, vides = anneaux creux.
 	var stars: int = int(data["stars"])
 	var star_row := HBoxContainer.new()
-	star_row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	star_row.name = "Etoiles"
+	star_row.alignment = BoxContainer.ALIGNMENT_CENTER if eventail else BoxContainer.ALIGNMENT_BEGIN
 	star_row.add_theme_constant_override(&"separation", 8)
 	star_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vb.add_child(star_row)
 	for i in int(data["max_stars"]):
-		var acquise: bool = i < stars
-		# MESURE, pas impression : sur la capture de l acte I, une pastille
-		# acquise rendait rgb(171,148,54) et une vide rgb(149,152,78). Un ecart
-		# aussi faible ne se lit pas sur de l herbe, et la teinte grise prenait
-		# la couleur du fond. Les deux etats se distinguent donc par le
-		# CONTRASTE et la TAILLE, pas par la seule teinte : la pastille acquise
-		# est pleine, doree et plus grande ; la vide est un creux sombre et
-		# reduit. Un joueur daltonien compte alors ses etoiles a la forme.
-		var s: TextureRect = UiTheme.icon(STAR_ICON, 40.0 if acquise else 30.0)
-		if acquise:
-			s.modulate = Color(1.0, 0.88, 0.35)
-		else:
-			# Sombre et translucide : un CREUX. Il reste visible sur les fonds
-			# clairs comme sur les fonds sombres, sans jamais passer pour de l or.
-			s.modulate = Color(0.22, 0.20, 0.18, 0.55)
-		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		star_row.add_child(s)
+		star_row.add_child(_star(i < stars))
 
 	if enabled:
 		var idx: StringName = id
 		b.pressed.connect(func() -> void:
 			AudioBus.play_sfx(&"ui_tap")
 			level_pressed.emit(idx))
+
+
+## Une etoile de la rangee.
+##
+## HISTORIQUE, mesure et non impression : sur la capture de l acte I, une
+## pastille acquise rendait rgb(171,148,54) et une vide teintee en gris
+## rgb(149,152,78) — la vide etait donc devenue un creux sombre et translucide,
+## qui a son tour disparaissait sur l espace de l acte V (1,14:1, voir
+## STAR_EMPTY_*). La vide est desormais un ANNEAU a deux tons ; la pleine reste
+## la piece d or du pack, plus grande.
+func _star(acquise: bool) -> Control:
+	if acquise:
+		var s: TextureRect = UiTheme.icon(STAR_ICON, STAR_FULL_PX)
+		s.name = "EtoilePleine"
+		s.modulate = Color(1.0, 0.88, 0.35)
+		s.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		return s
+	var creux := Panel.new()
+	creux.name = "EtoileVide"
+	creux.custom_minimum_size = Vector2(STAR_EMPTY_PX, STAR_EMPTY_PX)
+	creux.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	creux.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	creux.add_theme_stylebox_override(&"panel", UiTheme.flat_box(STAR_EMPTY_FILL,
+		int(STAR_EMPTY_PX * 0.5), 0.0, STAR_EMPTY_RIM, STAR_EMPTY_RIM_W))
+	return creux
 
 
 ## Le medaillon : un disque a anneau epais, la silhouette du monstre signature
@@ -908,11 +1222,34 @@ func position_of(level_id: StringName) -> Vector2:
 	var pos: Vector2 = _nodes[level_id]["pos"]
 	if pos != Vector2.ZERO:
 		return pos
-	var memo: int = _act
-	_act = int(_nodes[level_id]["act"])
-	_layout_dots()
-	_act = memo
+	_layout_act(int(_nodes[level_id]["act"]))
 	return _nodes[level_id]["pos"]
+
+
+## La cible tactile du niveau, dans le repere de la carte : ce que le doigt peut
+## toucher. Calculee comme `position_of` pour un acte non affiche.
+func hit_rect_of(level_id: StringName) -> Rect2:
+	if not _nodes.has(level_id):
+		return Rect2()
+	var p: Vector2 = position_of(level_id)
+	var hit: Vector2 = _nodes[level_id]["hit"]
+	return Rect2(p - hit * 0.5, hit)
+
+
+## Les etoiles affichees pour un niveau de l acte courant, dans l ordre (vide si
+## le niveau n est pas sur la page). Pour les tests : ils jugent ce qui est
+## DESSINE, pas le compteur.
+func star_nodes_for(level_id: StringName) -> Array[Control]:
+	var out: Array[Control] = []
+	var b: Button = _buttons.get(level_id)
+	if b == null:
+		return out
+	var rangee: Node = b.find_child("Etoiles", true, false)
+	if rangee == null:
+		return out
+	for c in rangee.get_children():
+		out.append(c as Control)
+	return out
 
 
 func stars_for(level_id: StringName) -> int:

@@ -44,6 +44,10 @@ func run() -> void:
 	_test_un_niveau_a_boss_montre_son_boss()
 	_test_le_verrouille_se_lit_verrouille()
 	_test_le_medaillon_se_lit_sur_un_telephone()
+	_test_un_embranchement_se_dessine_en_eventail()
+	_test_un_acte_lineaire_reste_une_colonne()
+	_test_aucune_cible_ne_chevauche_une_autre()
+	_test_l_etoile_vide_se_lit_sur_chaque_fond()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 
@@ -471,3 +475,237 @@ func _test_le_medaillon_se_lit_sur_un_telephone() -> void:
 		if b != null:
 			ok(b.size.x >= 90.0 and b.size.y >= 90.0, "la cible tactile depasse 90 px")
 	detach(m)
+
+
+# --- L eventail : un acte non lineaire se dessine comme tel ---
+
+## Les FRERES : les niveaux d un meme acte ouverts par la meme victoire. Lu dans
+## `next_levels`, jamais recopie : le jour ou un acte gagne un embranchement, le
+## test le controle sans qu on ait a l y ajouter.
+func _fratries() -> Array:
+	var out: Array = []
+	for id in ContentDB.levels.keys():
+		var lv: LevelDef = ContentDB.levels[id]
+		var par_acte: Dictionary = {}
+		for s in lv.next_levels:
+			var sl: LevelDef = ContentDB.levels.get(StringName(s))
+			if sl == null:
+				continue
+			if not par_acte.has(sl.act):
+				par_acte[sl.act] = []
+			(par_acte[sl.act] as Array).append(StringName(s))
+		for a in par_acte:
+			if (par_acte[a] as Array).size() >= 2:
+				out.append({"parent": StringName(id), "act": int(a), "freres": par_acte[a]})
+	return out
+
+
+## Le niveau vers lequel TOUS les freres convergent, s il existe (le pentacle
+## brise pour les quatre demons).
+func _convergence(freres: Array) -> StringName:
+	var communs: Dictionary = {}
+	var premier: bool = true
+	for f in freres:
+		var lv: LevelDef = ContentDB.levels[f]
+		var ici: Dictionary = {}
+		for s in lv.next_levels:
+			ici[StringName(s)] = true
+		if premier:
+			communs = ici
+			premier = false
+		else:
+			for k in communs.keys():
+				if not ici.has(k):
+					communs.erase(k)
+	for k in communs.keys():
+		return StringName(k)
+	return &""
+
+
+## LE DEFAUT : l acte IV (le pentacle de Tombol ouvre les QUATRE demons d un
+## coup) etait range en colonne en zigzag, comme un acte lineaire. Le joueur
+## lisait « la forge d abord, puis les fosses... » alors que l ordre est libre.
+##
+## Ce qui doit se voir : les freres sur UNE rangee (cote a cote, pas l un sous
+## l autre), et le niveau ou ils convergent SOUS eux, centre. Plus l avis
+## d ordre libre sous le titre de l acte.
+func _test_un_embranchement_se_dessine_en_eventail() -> void:
+	var m: CampaignMap = _map()
+	var fratries: Array = _fratries()
+	ok(not fratries.is_empty(), "le contenu a au moins un embranchement (l acte IV)")
+	var plus_grande: int = 0
+	for fr in fratries:
+		var freres: Array = fr["freres"]
+		var a: int = fr["act"]
+		plus_grande = maxi(plus_grande, freres.size())
+		# Meme rangee, dans l ordre ou l auteur les a ecrits.
+		var rangee_de: Dictionary = {}
+		var ri: int = 0
+		for r in m.rows_in_act(a):
+			for id in r:
+				rangee_de[id] = ri
+			ri += 1
+		for f in freres:
+			eq(rangee_de.get(f, -1), rangee_de.get(freres[0], -2),
+				"acte %d : %s et %s s ouvrent ensemble, ils partagent une rangee" % [a, freres[0], f])
+		# COTE A COTE, et non en colonne : ecart horizontal d au moins un
+		# medaillon (150, en dur) entre voisins, ecart vertical plus petit
+		# qu un medaillon (sinon c est une colonne, meme en biais).
+		var ys: Array[float] = []
+		for i in freres.size():
+			var p: Vector2 = m.position_of(freres[i])
+			ys.append(p.y)
+			if i > 0:
+				var gauche: Vector2 = m.position_of(freres[i - 1])
+				ok(p.x - gauche.x >= 150.0,
+					"acte %d : %s est a droite de %s (ecart %.0f px)" % [a, freres[i], freres[i - 1], p.x - gauche.x])
+		ok(ys.max() - ys.min() < 150.0,
+			"acte %d : les freres de %s sont sur une rangee, pas en colonne (%.0f px de haut en bas)" % [
+				a, fr["parent"], ys.max() - ys.min()])
+		# La convergence : sous l eventail, au milieu.
+		var fin: StringName = _convergence(freres)
+		if fin != &"" and ContentDB.levels.has(fin) and (ContentDB.levels[fin] as LevelDef).act == a:
+			var pf: Vector2 = m.position_of(fin)
+			var milieu: float = 0.0
+			for f in freres:
+				ok(pf.y > m.position_of(f).y, "acte %d : %s est sous %s" % [a, fin, f])
+				milieu += m.position_of(f).x
+			milieu /= float(freres.size())
+			ok(absf(pf.x - milieu) < 75.0,
+				"acte %d : %s est centre sous l eventail (decale de %.0f px)" % [a, fin, pf.x - milieu])
+		# L avis d ordre libre accompagne la forme.
+		m.show_act(a)
+		ok(m.fork_notice_visible(), "acte %d : l avis d ordre libre est affiche" % a)
+	# Le cas qui a motive le chantier : quatre niveaux ouverts d un coup.
+	ok(plus_grande >= 4, "l eventail le plus large compte %d niveaux (les quatre demons)" % plus_grande)
+	detach(m)
+
+
+## Un acte SANS embranchement garde sa lecture en colonne : un niveau par
+## rangee, et pas d avis d ordre libre (il mentirait).
+func _test_un_acte_lineaire_reste_une_colonne() -> void:
+	var m: CampaignMap = _map()
+	var lineaires: int = 0
+	for a in m.acts():
+		if m.levels_in_act(a).size() < 2 or m.act_has_fork(a):
+			continue
+		lineaires += 1
+		for r in m.rows_in_act(a):
+			eq((r as Array).size(), 1, "acte %d lineaire : un niveau par rangee" % a)
+		m.show_act(a)
+		not_ok(m.fork_notice_visible(), "acte %d lineaire : pas d avis d ordre libre" % a)
+	ok(lineaires > 0, "au moins un acte lineaire a ete controle")
+	detach(m)
+
+
+## Deux cibles tactiles qui se chevauchent : le pouce ouvre l une ou l autre au
+## hasard. L eventail serre quatre tuiles entre les fleches, c est la qu un
+## chevauchement apparaitrait. Chaque cible reste aussi au-dela des 90 px et
+## hors des fleches (120 px + 8 de bord, en dur).
+func _test_aucune_cible_ne_chevauche_une_autre() -> void:
+	var m: CampaignMap = _map()
+	for a in m.acts():
+		var ids: Array[StringName] = m.levels_in_act(a)
+		for i in ids.size():
+			var r: Rect2 = m.hit_rect_of(ids[i])
+			ok(r.size.x >= 90.0 and r.size.y >= 90.0, "%s : cible de %s" % [ids[i], r.size])
+			ok(r.position.x >= 128.0 and r.end.x <= m.size.x - 128.0,
+				"%s : la cible ne passe pas sous une fleche (%.0f..%.0f)" % [ids[i], r.position.x, r.end.x])
+			for j in range(i + 1, ids.size()):
+				not_ok(r.intersects(m.hit_rect_of(ids[j])),
+					"%s et %s : les cibles tactiles se chevauchent" % [ids[i], ids[j]])
+	detach(m)
+
+
+# --- Les etoiles vides se lisent sur tous les fonds ---
+
+func _lin(c: float) -> float:
+	return c / 12.92 if c <= 0.03928 else pow((c + 0.055) / 1.055, 2.4)
+
+
+## Luminance relative WCAG. `Color.get_luminance()` ne lineairise pas : il
+## sur-estime les tons moyens et fausserait le ratio.
+func _lum(c: Color) -> float:
+	return 0.2126 * _lin(c.r) + 0.7152 * _lin(c.g) + 0.0722 * _lin(c.b)
+
+
+func _ratio(a: Color, b: Color) -> float:
+	var la: float = _lum(a)
+	var lb: float = _lum(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+## Le fond SOUS les etoiles : la bande de sol du fond de l acte, dont on garde
+## le ton le plus sombre et le plus clair qu on y croise (10e et 90e centiles).
+## Une moyenne cacherait les nuages orange de l acte V comme les herbes sombres
+## de l acte I, c est-a-dire exactement les endroits ou une etoile disparait.
+func _tons_du_sol(act_backdrop: String) -> Array[Color]:
+	var out: Array[Color] = []
+	var chemin: String = ProjectSettings.globalize_path(
+		"res://assets/backdrops/%s.png" % act_backdrop)
+	var img: Image = Image.load_from_file(chemin)
+	if img == null or img.is_empty():
+		return out
+	if img.is_compressed():
+		img.decompress()
+	var px: Array = []
+	var y0: int = int(img.get_height() * 0.24)
+	var y1: int = int(img.get_height() * 0.83)
+	for y in range(y0, y1, 8):
+		for x in range(0, img.get_width(), 8):
+			var c: Color = img.get_pixel(x, y)
+			px.append([_lum(c), c])
+	px.sort_custom(func(p: Array, q: Array) -> bool: return float(p[0]) < float(q[0]))
+	out.append(px[int(px.size() * 0.10)][1])
+	out.append(px[int(px.size() * 0.90)][1])
+	return out
+
+
+## LE DEFAUT : sur l espace de l acte V, l etoile vide (piece sombre et
+## translucide) rendait 1,14:1 contre le fond, mesure sur capture. Elle est
+## maintenant un anneau a DEUX tons : sur chaque fond, l un des deux doit
+## passer le plancher du projet, 4,5:1 (en dur).
+##
+## Et la distinction pleine / vide ne repose pas sur la seule couleur : la
+## pleine est la piece d or, la vide n a PAS la piece et elle est plus petite.
+func _test_l_etoile_vide_se_lit_sur_chaque_fond() -> void:
+	SaveData.reset_profile()
+	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	SaveData.record_victory(l1, GameEnums.Mode.EXPLORATION, {l1.objectives[0].id: true}, 6)
+	var m: CampaignMap = _map()
+	m.show_act(l1.act)
+	var etoiles: Array[Control] = m.star_nodes_for(&"lvl_01")
+	eq(etoiles.size(), l1.objectives.size(), "une etoile par objectif")
+	var pleine: Control = null
+	var vide: Control = null
+	for e in etoiles:
+		if e.name == "EtoilePleine" and pleine == null:
+			pleine = e
+		elif e.name == "EtoileVide" and vide == null:
+			vide = e
+	ok(pleine != null and vide != null, "une pleine et une vide pour 1 objectif sur %d" % etoiles.size())
+	if pleine == null or vide == null:
+		detach(m)
+		SaveData.reset_profile()
+		return
+	# La FORME : la pleine porte la piece, la vide non, et elle est plus petite.
+	ok(pleine is TextureRect and (pleine as TextureRect).texture != null, "la pleine est la piece d or")
+	not_ok(vide is TextureRect, "la vide n est pas une piece ternie : c est un creux")
+	ok(vide.custom_minimum_size.x < pleine.custom_minimum_size.x, "la vide est plus petite que la pleine")
+
+	var sb: StyleBoxFlat = vide.get_theme_stylebox(&"panel") as StyleBoxFlat
+	ok(sb != null and sb.border_width_left > 0, "la vide a un liseret")
+	if sb != null:
+		var controles: int = 0
+		for a in m.acts():
+			var fond: String = m.backdrop_for_act(a)
+			var tons: Array[Color] = _tons_du_sol(fond)
+			ok(tons.size() == 2, "le fond %s se lit sur le disque" % fond)
+			for t in tons:
+				var meilleur: float = maxf(_ratio(sb.border_color, t), _ratio(sb.bg_color, t))
+				ok(meilleur >= 4.5, "acte %d (%s) : l etoile vide se lit a %.2f:1 sur %s" % [
+					a, fond, meilleur, t.to_html(false)])
+				controles += 1
+		ok(controles >= 10, "les deux tons de sol des cinq actes sont controles (%d)" % controles)
+	detach(m)
+	SaveData.reset_profile()
