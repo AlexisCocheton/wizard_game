@@ -61,7 +61,7 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	battlefield.clear_all()
 
 	RunState.build_deck_from_list(_build_deck())
-	RunState.draw(4)
+	RunState.draw(GameConfig.START_HAND_SIZE)
 
 	if mode == GameEnums.Mode.MASSACRE:
 		spawner.setup_procedural(battlefield, _procedural_pool(), _boss_pool())

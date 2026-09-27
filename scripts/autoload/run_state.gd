@@ -191,6 +191,11 @@ func effective_cast_time(card: SpellCard) -> float:
 	# doit pas pouvoir rendre un sort instantane, la barre de charge n aurait
 	# plus rien a montrer.
 	base = maxf(0.1, base * upgrade_cast_factor(card))
+	# Le MULTIPLICATEUR GLOBAL entre ici, apres les ajustements par carte et
+	# avant la division par la vitesse : il rallonge tous les sorts dans la meme
+	# proportion, donc la hierarchie entre eux ne bouge pas. Le plancher de
+	# 0,1 s reste applique par SpeedGauge en dernier.
+	base *= GameConfig.CAST_TIME_SCALE
 	return SpeedGauge.effective_cast_time(base) * passive_cast_factor()
 
 

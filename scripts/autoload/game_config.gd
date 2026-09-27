@@ -21,7 +21,13 @@ const SPEED_MAX_PERCENT: int = 500
 ## au plancher l aurait tue au premier gnome. 250 lui donne 150 points de marge,
 ## soit une poignee de contacts, et la montee naturelle fait le reste.
 ## L EQUILIBRAGE FIN DE CETTE VALEUR APPARTIENT AU TESTEUR.
-const SPEED_START_PERCENT: int = 250
+## Vitesse au debut d un combat (demande du testeur, 27/09 : 150 %).
+##
+## C est AUSSI la reserve de depart depuis que la vitesse est la vie : a 150 %,
+## le mage commence avec 50 points au-dessus du plancher mortel de 100, contre
+## 150 auparavant. Le combat demarre donc plus lent ET plus fragile — les deux
+## vont ensemble, c est le principe de la mecanique.
+const SPEED_START_PERCENT: int = 150
 ## Le temps pendant lequel la montee naturelle est retenue apres un coup.
 ##
 ## Ce verrou a CHANGE DE NATURE avec la nouvelle regle. Avant, il empechait de
@@ -91,10 +97,28 @@ const CONTACT_DAMAGE_BOSS: int = 50
 ## passant sous le rythme d arrivee des monstres de la vague la plus dense. Le
 ## joueur se retrouverait les mains vides, ce qui est pire que de lire vite.
 const DRAW_INTERVAL: float = 6.5
+## MULTIPLICATEUR GLOBAL du temps d incantation (demande du testeur, 27/09).
+##
+## Un seul nombre plutot que 46 valeurs reecrites : la HIERARCHIE entre les
+## sorts est deja reglee carte par carte (0,45 s pour le plus vif, 2,8 s pour le
+## plus lourd), et c est elle qui porte l identite de chaque sort. La rallonger
+## d un facteur commun garde cette hierarchie intacte et se re-regle d un seul
+## chiffre — alors que retoucher 46 cartes une a une la deformerait a coup sur.
+##
+## Applique dans `RunState.effective_cast_time()`, le point de passage UNIQUE.
+const CAST_TIME_SCALE: float = 1.5
+
 const DRAW_COUNT: int = 2
 ## 6 et non 8 : a 8 cartes chacune tombait sous 130 px de large et le nom se
 ## coupait. Une main plus courte se lit d un coup d oeil, ce qui compte plus que
 ## d avoir le choix entre huit options qu on n a pas le temps de comparer.
+## Cartes en main au tout debut du combat (demande du testeur, 27/09).
+##
+## Distinct de MAX_HAND_SIZE : le plafond reste a 6, c est le DEPART qui est
+## maigre. Le joueur commence avec deux options et doit attendre la pioche —
+## les premieres secondes deviennent un choix serre plutot qu un tri.
+const START_HAND_SIZE: int = 2
+
 const MAX_HAND_SIZE: int = 6
 ## Pas de delai de remelange : la defausse repart dans la pioche des qu elle est
 ## vide. Le cahier des charges evoquait une "vitesse de melange", mais un temps
