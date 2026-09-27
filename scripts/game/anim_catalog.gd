@@ -60,14 +60,13 @@ const UNITS: Dictionary = {
 	"slimer":  {"frame": 41, "frame_h": 38, "occupancy": 0.66,
 		"walk": ["slimer_walk", 8], "idle": ["slimer_idle", 5],
 		"death": ["slimer_death", 10, false]},
-	## Boule de poison du Planogo. Pas de feuille dediee dans les packs : on
-	## reprend la silhouette de la gelee, qui est deja une masse ronde sans
-	## membres — exactement ce qu on veut lire comme "projectile" — et la teinte
-	## verte du poison est posee par MODULATE. Cle distincte de "slimer" pour
-	## que la Gelee garde sa propre couleur.
-	"poison_ball": {"frame": 41, "frame_h": 38, "occupancy": 0.66,
-		"walk": ["slimer_idle", 8], "idle": ["slimer_idle", 5],
-		"death": ["slimer_death", 12, false]},
+	## Boule de poison du Planogo : une VRAIE masse de venin (pack Effect and FX,
+	## planche 428, teinte verte), et non plus la gelee teintee par MODULATE qu elle
+	## etait jusqu au 27/09. Vol = aller-retour sur les 4 images denses, mort =
+	## l eclatement en gouttes. Voir tools/assets/extract_bestiaire_2026_09_27.py.
+	"poison_ball": {"frame": 33, "frame_h": 33, "occupancy": 0.85,
+		"walk": ["poison_ball_walk", 12], "idle": ["poison_ball_walk", 10],
+		"death": ["poison_ball_death", 14, false]},
 	"vulture": {"frame": 39, "frame_h": 39, "occupancy": 0.74,
 		"walk": ["vulture_walk", 8], "idle": ["vulture_idle", 5]},
 	## Duelyst (atlas recomposes par tools/assets/extract_duelyst.py) : reserve aux
@@ -133,6 +132,47 @@ const UNITS: Dictionary = {
 		"walk": ["nightborne_walk", 6], "idle": ["nightborne_idle", 9], "attack": ["nightborne_attack", 12, false], "hurt": ["nightborne_hurt", 5, false], "death": ["nightborne_death", 23, false]},
 	"executioner": {"frame": 84, "frame_h": 84, "occupancy": 0.74,
 		"idle": ["executioner_idle", 8], "attack": ["executioner_attack", 12, false], "death": ["executioner_death", 18, false], "summon": ["executioner_summon", 5, false]},
+	## --- BESTIAIRE DU 27 SEPTEMBRE ---
+	## tools/assets/extract_bestiaire_2026_09_27.py. Aucune de ces cles n est
+	## encore jouee par un monstre : elles attendent les chantiers de contenu.
+	##
+	## Trio de mages : meme planche que `mageguardian`, joyau et fumee changent.
+	"mageguardian_red": {"frame": 58, "frame_h": 58, "occupancy": 0.98,
+		"idle": ["mageguardian_red_idle", 4], "attack": ["mageguardian_red_attack", 6, false], "death": ["mageguardian_red_death", 4, false]},
+	"mageguardian_magenta": {"frame": 58, "frame_h": 58, "occupancy": 0.98,
+		"idle": ["mageguardian_magenta_idle", 4], "attack": ["mageguardian_magenta_attack", 6, false], "death": ["mageguardian_magenta_death", 4, false]},
+	## Golem de pierre a noyau de cristal. PAS de marche ni de degats dans le
+	## pack : il respire sur place. `laser` = le noyau qui se charge avant le
+	## rayon (feuille Fx `mecha_laser`), `shoot` = il lance son poing
+	## (Fx `mecha_fist`), `guard` = il se replie en rocher, `shield` = il se
+	## couvre d armure, `glow` = veines allumees. 10 fps, cadence du .aseprite.
+	"mechagolem": {"frame": 71, "frame_h": 71, "occupancy": 0.68,
+		"idle": ["mechagolem_idle", 10], "attack": ["mechagolem_attack", 10, false],
+		"shoot": ["mechagolem_shoot", 10, false], "laser": ["mechagolem_laser", 10, false],
+		"guard": ["mechagolem_guard", 10, false], "shield": ["mechagolem_shield", 10, false],
+		"glow": ["mechagolem_glow", 10, false], "death": ["mechagolem_death", 10, false]},
+	## Slimes. `slime_big` (vue de cote) et `slime_colossal` (lave) sont de vrais
+	## sprites ; `slime_skeleton` aussi (gelee a tete de mort). `slime_ghost` est
+	## la gelee verte RECOLOREE en bleu pale translucide a l extraction.
+	"slime_big": {"frame": 31, "frame_h": 31, "occupancy": 0.84,
+		"walk": ["slime_big_walk", 8], "idle": ["slime_big_idle", 6], "attack": ["slime_big_attack", 10, false], "hurt": ["slime_big_hurt", 10, false], "death": ["slime_big_death", 8, false]},
+	"slime_colossal": {"frame": 53, "frame_h": 53, "occupancy": 0.72,
+		"walk": ["slime_colossal_walk", 10], "idle": ["slime_colossal_idle", 8], "attack": ["slime_colossal_attack", 12, false], "hurt": ["slime_colossal_hurt", 10, false], "death": ["slime_colossal_death", 10, false]},
+	"slime_ghost": {"frame": 63, "frame_h": 63, "occupancy": 0.40,
+		"walk": ["slime_ghost_walk", 10], "idle": ["slime_ghost_idle", 8], "attack": ["slime_ghost_attack", 12, false], "hurt": ["slime_ghost_hurt", 10, false], "death": ["slime_ghost_death", 10, false]},
+	"slime_skeleton": {"frame": 41, "frame_h": 41, "occupancy": 0.73,
+		"walk": ["slime_skeleton_walk", 10], "idle": ["slime_skeleton_idle", 8], "attack": ["slime_skeleton_attack", 12, false], "hurt": ["slime_skeleton_hurt", 10, false], "death": ["slime_skeleton_death", 10, false]},
+	## elthen, livres sans archive ni licence (docs/assets_index.md §5.5).
+	## `sleep` = le renard roule en boule, en boucle : c est l arret de 2 s.
+	"fox": {"frame": 22, "frame_h": 22, "occupancy": 0.95,
+		"walk": ["fox_walk", 12], "idle": ["fox_idle", 8], "attack": ["fox_attack", 14, false], "hurt": ["fox_hurt", 10, false], "sleep": ["fox_sleep", 6], "death": ["fox_death", 10, false]},
+	## Seigneur demon : boss_malyk de Duelyst (CC0), choisi A LA PLACE de Lords
+	## Of Pain (ecarte : pas de seigneur demon dans la demo, rendu 3D flou a
+	## taille de boss). Style Duelyst = reserve aux boss.
+	"demonlord": {"frame": 100, "frame_h": 100, "occupancy": 0.53,
+		"walk": ["demonlord_walk", 10], "idle": ["demonlord_idle", 8], "hurt": ["demonlord_hurt", 12, false], "attack": ["demonlord_attack", 18, false], "death": ["demonlord_death", 14, false]},
+	"cacodaemon": {"frame": 58, "frame_h": 58, "occupancy": 0.84,
+		"walk": ["cacodaemon_walk", 10], "attack": ["cacodaemon_attack", 12, false], "hurt": ["cacodaemon_hurt", 10, false], "death": ["cacodaemon_death", 10, false]},
 }
 
 ## Teintes legeres pour distinguer deux familles qui partagent une feuille.
@@ -143,11 +183,8 @@ const MODULATE: Dictionary = {
 	"hopper": Color(0.62, 0.95, 0.45),
 	## Le vautour est brun : l Ombre doit rester spectrale.
 	"shade": Color(0.42, 0.42, 0.62, 0.80),
-	## La boule de poison reprend la gelee : il faut un vert franc, nettement
-	## plus acide que celui de la Gelee, pour qu on ne confonde pas une munition
-	## avec un monstre qu il vaut la peine de tuer.
-	"poison_ball": Color(0.45, 1.00, 0.30),
-
+	## (poison_ball n y est plus : sa feuille est verte d origine, et un modulate
+	## vert sur du vert l assombrissait.)
 }
 
 

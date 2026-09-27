@@ -35,19 +35,37 @@ elles sont extraites dans `assets/voice/`.
 Son readme demande : « If you use any of these sound clips, please let me know! »
 Un courriel a `itsjohncarroll@gmail.com` avant publication suffit.
 
-### 4. Supprimer 920 Mo de doublons — ttrpg_legend
+### 4. FAIT — doublons ttrpg_legend supprimes
 
-Les cinq archives `ttrpg_legend_too-many-charaters_1.0*.zip` sont **le meme
-fichier** (meme CRC32 `10AFB580`). Tu voulais cinq packs ddant1100 differents ;
-c est cinq fois le meme telechargement qui est arrive. Garde
-`ttrpg_legend_too-many-charaters_1.0.zip`, les quatre suffixees `(1)` a `(4)`
-peuvent partir.
+Les quatre copies `(1)` a `(4)` sont parties (constate le 2026-09-27), seule
+`ttrpg_legend_too-many-charaters_1.0.zip` reste.
 
 Les quatre autres packs ddant1100 restent a telecharger si tu les veux :
 - https://ddant1100.itch.io/ttrpg-legacy-characters-4
 - https://ddant1100.itch.io/ttrpg-legacy-characters-5
 - https://ddant1100.itch.io/ttrpg-legay-characters-3
 - https://ddant1100.itch.io/ttrpg-legay-characters
+
+### 5. Ouvrir la session craftpix UNE fois — pack Undead (prioritaire)
+
+Le pack `free-undead-tileset-top-down-pixel-art` (pierres tombales, os, eau
+sombre, obelisques pour les sorts de terrain) n a pas pu etre recupere : la
+session craftpix n est pas ouverte sur ce poste. Lance une seule fois :
+
+    python tools/assets/fetch_craftpix.py login
+
+connecte-toi dans la fenetre Chrome qui s ouvre, ferme-la. Ensuite je recupere
+le pack moi-meme (`fetch https://craftpix.net/freebies/free-undead-tileset-top-down-pixel-art/`)
+et j extrais les objets dans `assets/props/undead_*`.
+
+### 6. Confirmer une licence — Slime.zip (rvros)
+
+`Slime.zip` a ete extrait (`slime_big`, le slime enorme). Sa structure est
+exactement celle des packs rvros, mais l archive n a **aucun fichier de
+licence**. Ouvre https://rvros.itch.io/pixel-art-animated-slime et verifie que
+l usage commercial est bien permis (un extrait de recherche le dit). Si le
+telechargement de la page contient un fichier de licence, depose l archive a la
+racine du projet.
 
 ---
 
@@ -62,7 +80,8 @@ portraits humains, silhouettes de monstres).
 - https://chierit.itch.io/boss-frost-guardian
 - https://penusbmic.itch.io/sci-fi-character-pack-9
 - https://kindeyegames.itch.io/c3-3dobject-alpha
-- https://rvros.itch.io/pixel-art-animated-slime *(le zip `Slime.zip` arrive vient d une autre source)*
+- https://rvros.itch.io/pixel-art-animated-slime *(`Slime.zip` est tres probablement ce pack, mais sans licence : voir point 6 plus haut)*
+- *(optionnel)* Lords Of Pain version COMPLETE, https://trevor-pupkin.itch.io/ : seule elle contient le « Demonlord ». Deconseille : le rendu 3D pre-calcule devient flou a taille de boss ; le Seigneur demon est deja couvert par `demonlord` (Duelyst, CC0).
 
 ### Effets et decors
 
@@ -82,7 +101,9 @@ portraits humains, silhouettes de monstres).
 
 `Cacodaemon Sprite Sheet.png` et `Fox Sprite Sheet.png` sont arrives **nus**,
 sortis de leur archive, donc sans leur fichier de licence. Ils viennent
-d elthen. Retelecharge les archives completes si tu veux les utiliser :
+d elthen. Ils sont extraits depuis le 27/09 pour le DEVELOPPEMENT (`fox`,
+`cacodaemon`), mais **licence a confirmer : retelecharger l archive complete**
+avant toute publication :
 - https://elthen.itch.io/2d-pixel-art-cacodaemon-sprites
 - https://elthen.itch.io/2d-pixel-art-fox-sprites
 
@@ -99,9 +120,14 @@ Disponible, non extrait, laisse aux chantiers concernes : les 7 packs d icones
 (520 icones 512x512), les ~200 avatars et 41 decors elfiques, les 29 boutons de
 menu, le tileset Ancient Ruins. Detail en section 6 de `docs/assets_index.md`.
 
-Ecarte : Lords Of Pain (isometrique 16 directions), Free Sprites, Fairy,
-Essentials (doublon + licence inconnue), les 4 copies ttrpg. Raisons en
-section 6.4.
+Le 27/09, `tools/assets/extract_bestiaire_2026_09_27.py` a ajoute 11
+silhouettes (trio de mages rouge/magenta, golem laser, 4 slimes, renard,
+cacodemon, seigneur demon Duelyst, vraie boule de poison) et 2 effets du golem.
+Detail en section 6.5 de `docs/assets_index.md`.
+
+Ecarte : Lords Of Pain (isometrique 16 directions, et pas de seigneur demon
+dans la demo — reevalue le 27/09), Free Sprites, Fairy, Essentials (doublon +
+licence inconnue). Raisons en sections 6.4 et 6.5.
 
 ---
 

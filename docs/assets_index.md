@@ -260,8 +260,8 @@ Légende — Redistribution = a-t-on le droit de rediffuser **les fichiers sourc
 | boss_demon_slime — chierit | itch | oui | non | **non** |
 | Undead executioner — darkpixel-kronovi | itch | oui | non | **non** |
 | Mecha-stone Golem — darkpixel-kronovi | itch | oui | non | **non** |
-| Small Monster / Slime / Fairy / Free Tank Mushroom | itch | oui | non | **non** |
-| Free Sprites — robertpinero | itch | oui | non | **non** |
+| Small Monster / Fairy / Free Tank Mushroom | itch | oui | non | **non** |
+| **Slime.zip — rvros (probable, §5.6)** | **INCONNUE** (aucun fichier) ; page : commercial et modification permis | probable | non | **non** || Free Sprites — robertpinero | itch | oui | non | **non** |
 | Tiny RPG Character Pack 01 — Zerie | itch | oui | non | **non** |
 | EPIC RPG World (FREE Demo) — rafaelmatos | itch (src READ ME, notes d'usage) | oui | non | **non** |
 | Pipoya TimeMagic / LightPillar / Bell | pipoya.net | oui | non | oui si **gratuite** ; revente interdite |
@@ -272,7 +272,7 @@ Légende — Redistribution = a-t-on le droit de rediffuser **les fichiers sourc
 | free_character_1_20 — cogabushi | itch | oui | non | **non** |
 | **Essentials / Essentials Pre-Render** | **INCONNUE** | **?** | **?** | **?** |
 | **Phoenixling** | sans objet — **image absente** | — | — | — |
-| Cacodaemon / Fox (PNG nus) — elthen | itch (§5.5) | oui | **probable** | **non** |
+| Cacodaemon / Fox (PNG nus) — elthen | **licence a confirmer : retelecharger l archive complete** (§5.5) | ? | **probable** | **non** |
 
 ### 5.3 Les cinq `ttrpg_legend` sont le MÊME fichier
 
@@ -281,7 +281,8 @@ Les cinq archives `ttrpg_legend_too-many-charaters_1.0*.zip` (230 Mo chacune,
 téléchargements du même pack, que le navigateur a suffixés `(1)` à `(4)`.
 
 Il n'y a donc **qu'un seul pack ttrpg_legend**, pas cinq. Les quatre copies
-peuvent être supprimées : 920 Mo récupérés. La demande d'Alexis portait bien sur
+**ont été supprimées** (constaté le 2026-09-27 : seul
+`ttrpg_legend_too-many-charaters_1.0.zip` reste). La demande d'Alexis portait bien sur
 cinq pages itch différentes (`ttrpg-legay-characters-2`, `-3`, `-4`, `-5`…) mais
 c'est **cinq fois le même téléchargement** qui est arrivé — les quatre autres
 packs restent à récupérer s'ils sont voulus.
@@ -307,6 +308,27 @@ archive ni licence**, sortis de leur pack. Ils viennent d'elthen
 (`elthen.itch.io`), dont les packs demandent habituellement un crédit et
 interdisent la revente. En l'absence du fichier d'origine, on suppose le cas le
 plus strict : **crédit à afficher**, pas de redistribution.
+
+**2026-09-27 : extraits pour le DÉVELOPPEMENT** (`fox`, `cacodaemon`, voir §6.5).
+**Licence a confirmer : retelecharger l archive complete** avant toute
+publication — les pages elthen sont en §« Deux fichiers à rapatrier » de
+`docs/assets_a_telecharger.md`.
+
+### 5.6 `Slime.zip` : très probablement rvros, mais sans licence embarquée
+
+L'archive contient `slime-Sheet.png` (256×75 = 8×3 cases de 32×25) et un
+dossier `Individual Sprites/` nommé `slime-<anim>-<n>.png` (idle 4, move 4,
+attack 5, hurt 4, die 4). C'est **exactement la convention des packs rvros**
+(`<nom>-Sheet.png` + `Individual Sprites/<nom>-<anim>-<nn>.png`) et le contenu
+correspond à « Animated Pixel Slime », un monstre de plateforme vu de côté.
+L'inventaire du 26/09 disait « une autre source » : rien dans l'archive ne le
+montre.
+
+Mais l'archive ne porte **aucun fichier de licence** : par la règle maison, la
+licence reste **INCONNUE**. La page itch (403 pour l'assistant) annonce, d'après
+un extrait de recherche : usage personnel et commercial, modification permise,
+**interdit de redistribuer comme asset graphique**. À confirmer par Alexis sur
+https://rvros.itch.io/pixel-art-animated-slime avant publication.
 
 ---
 
@@ -397,17 +419,85 @@ raccords — à lire avant d'y toucher.
 
 | Pack | Raison |
 |---|---|
-| **Lords Of Pain** (539 PNG) | isométrique, **16 directions de boussole** par animation. Le jeu est en vue de côté : il faudrait jeter 15/16 du pack pour un style 3D pré-rendu qui ne raccorde avec aucune unité existante |
+| **Lords Of Pain** (539 PNG) | isométrique, **16 directions de boussole** par animation. **Réévalué le 27/09 à la demande du co-auteur (boss Seigneur démon), écarté à nouveau** — voir §6.5 : la démo n'a pas de seigneur démon, et le rendu 3D devient flou à taille de boss |
 | **Essentials Pre-Render** (29 PNG) | **doublon strict** de `Essentials.zip`, dont le dossier `Pre-Render/` contient les mêmes fichiers |
 | **Essentials** (46 PNG) | effets d'interface de combat au tour par tour (Guard, Steal, Scan, AggroUp), sans rapport avec le jeu ; et licence inconnue |
 | **ttrpg_legend ×4** | copies identiques du cinquième (§5.3) |
 | **Free Sprites** (28 PNG) | battlers RPG Maker vus de face, immobiles, résolutions incohérentes (berger allemand photo-réaliste à côté d'un gobelin 32 px) |
 | **Fairy** (3 PNG) | 32×32, 8 frames, **une seule pose de vol** — ni attaque ni mort, insuffisant pour une entrée d'`AnimCatalog` |
 | **Free Tank Mushroom** (5 PNG) | idle seul, 5 frames |
-| **Slime / gorgon 2 et 3** | mêmes silhouettes recolorées ; `EnemyDef` sait déjà teinter un sprite |
-| **Mecha-stone Golem** | la planche est exploitable (1000×1000) mais le pack livre surtout des `.aseprite` ; le golem laser est déjà couvert par un boss existant |
+| **gorgon 2 et 3** | mêmes silhouettes recolorées ; `EnemyDef` sait déjà teinter un sprite |
 | **Free-Animated-Explosions** (110 PNG) | 10 explosions en frames séparées — le jeu en a déjà 5, dont deux HD |
-| **Cacodaemon / Fox** (PNG nus) | sans licence ni archive (§5.5) ; à rapatrier proprement avant usage |
+
+Mecha-stone Golem, Slime.zip, free-slime-mobs, Cacodaemon et Fox figuraient
+ici le 26/09 : ils sont **extraits depuis le 27/09** (§6.5).
+
+### 6.5 Bestiaire du 2026-09-27 — EXTRAIT
+
+`tools/assets/extract_bestiaire_2026_09_27.py`, 53 feuilles. Toutes vérifiées en
+capture dans le jeu, à côté des boss existants (Chronos, Sceau de Tombol,
+Bourreau, Slime démoniaque). Aucune n'est encore jouée par un monstre : les
+clés attendent les chantiers de contenu.
+
+| clé `AnimCatalog` | Créature | Source | Animations (frames) | Vrai sprite ? |
+|---|---|---|---|---|
+| `mageguardian_red` | mage-totem, joyau rouge | creativekind | idle 4, attack 6, death 4 | oui |
+| `mageguardian_magenta` | mage-totem, joyau violet | creativekind | idle 4, attack 6, death 4 | oui |
+| `mechagolem` | golem de pierre à noyau de cristal | darkpixel-kronovi | idle 4, attack 7 (mêlée), shoot 9 (poing lancé), laser 7 (charge du noyau), guard 8 (se replie en rocher), shield 10 (armure), glow 8, death 14 — **ni marche ni dégâts dans le pack** | oui |
+| `slime_big` | gelée bleue vue de côté (mini-boss) | Slime.zip (rvros probable, §5.6) | idle 4, walk 4, attack 5, hurt 4, death 4 | oui |
+| `slime_colossal` | boule de lave à geysers (boss) | free-slime-mobs, Slime3 | idle 6, walk 8, attack 9, hurt 5, death 10 | oui |
+| `slime_skeleton` | gelée à tête de mort, os en travers | free-slime-mobs, Slime2 | idle 6, walk 8, attack 11, hurt 5, death 10 | **oui** |
+| `slime_ghost` | gelée spectrale translucide | free-slime-mobs, Slime1 | idle 6, walk 8, attack 10, hurt 5, death 10 | **NON : teinte** (voir ci-dessous) |
+| `fox` | renard | elthen (PNG nu) | idle 5, walk 8, attack 11 (bond), hurt 5, **sleep 6** (roulé en boule, boucle), death 7 | oui |
+| `cacodaemon` | tête démoniaque volante | elthen (PNG nu) | walk 6, attack 6, hurt 4, death 8 | oui |
+| `demonlord` | seigneur démon cornu | Duelyst `boss_malyk` (CC0) | walk 8, idle 14, hurt 3, attack 21, death 15 | oui |
+| `poison_ball` (remplacée) | masse de venin | Effect and FX, planche 428, ligne verte | walk 6 (aller-retour 0-1-2-3-2-1), death 6 (éclatement) | **oui** (n'est plus la gelée teintée) |
+
+Effets (`Fx.STRIPS`) : `mecha_laser` (300×100, 14 frames : 8 de charge puis 6 de
+rayon plein ; le rayon part de x=50 et file vers la **droite**) et `mecha_fist`
+(100×100, 6 frames, poing pointé à droite). Qui les joue doit les faire pivoter
+vers la cible et décaler le sprite, `Fx.sprite` centrant la case.
+
+**Le fantôme est une teinte, et c'est permis.** Aucun slime fantôme n'existe sur
+le disque (recherche par nom dans les 70 archives : slime, ghost, spectr,
+phantom, skel, bone, ooze, jelly, blob). `slime_ghost` est donc la gelée verte
+craftpix, **sans son ombre portée** (couche `body` : un fantôme flotte),
+recolorée à l'extraction par la luminance vers un bleu pâle, alpha 62 %. La
+licence craftpix n'interdit que la revente des sources ; la modification est
+libre. Même taille et même silhouette que `slime_skeleton` (même pack) : la
+transition fantôme → squelette 3 s plus tard se lit comme la même créature.
+
+**Colossal net à grande échelle ? Net oui, fin non.** Filtre de texture du
+projet = plus proche voisin : à 460 px de large (rayon 110), la boule de lave
+reste **sans flou**, bords francs. Mais elle ne fait que ~20 px dans sa case :
+à cette taille chaque pixel mesure ~20 px d'écran, quatre fois plus gros que
+ceux de Chronos à côté. Elle se lit (fissures lumineuses, yeux, geysers de
+l'attaque) ; le contraste de densité se voit. C'est le meilleur slime du
+disque : le Slime démoniaque de chierit (288×160) n'a **pas de forme slime
+dans la version gratuite** (sa marche est déjà le démon).
+
+**Renard qui dort** : la ligne 5 de la planche est le renard roulé en boule,
+6 frames qui bouclent (respiration). Clé d'animation `sleep`.
+
+**Lords Of Pain réévalué, écarté.** Deux raisons vérifiées :
+1. **La démo ne contient aucun seigneur démon.** `Asset Index (DEMO).txt` :
+   un guerrier (idle, walk) et un squelette (walk, death). Le « Demonlord »
+   n'existe que dans la version payante (`Asset Index (FULL).txt`).
+2. **Le rendu ne raccorde pas.** Une direction extraite (squelette, face S) :
+   personnage de 38 px dans une case de 256, bords anti-crénelés (254 niveaux
+   d'alpha), ombre portée cuite dans l'image. Posé en capture à taille de boss
+   à côté de Chronos, il devient une **tache grise floue presque invisible** sur
+   le fond de l'acte III. Aucun sprite du jeu n'a ce rendu.
+
+**Alternative retenue, déjà sur le disque** : `boss_malyk` du pack Duelyst
+(CC0, le style déjà réservé aux boss), clé `demonlord`. Comparé en capture à
+`boss_grym` (bête plus que seigneur) et `boss_treatoni` (oni aux couleurs de
+friandise) : Malyk, démon cornu en armure à la main en flamme, est celui qui se
+lit comme un SEIGNEUR. Si le co-auteur tient au rendu Lords Of Pain, il faut
+acheter la version complète — et le problème de rendu resterait.
+
+**Pack Undead craftpix** : non récupéré, la session craftpix n'est pas ouverte
+sur ce poste (`fetch_craftpix.py` répond « PAS CONNECTÉ »).
 | **Phoenixling** | **le .png manque**, seul le .json est arrivé |
 | **Mage Voice Pack** | **aucun PNG** : 130 .wav, traités séparément dans `assets/voice/` |
 
@@ -422,7 +512,7 @@ Musiques   : Original music by Marllon Silva (xDeviruchi)      [OBLIGATOIRE]
 Personnages: Ddant1100 — https://ddant1100.itch.io             [OBLIGATOIRE]
 Voix       : John Carroll — johncarroll.itch.io                [demandé : le prévenir]
 Monstres   : luizmelo · elesrech · chierit · creativekind · darkpixel-kronovi
-             9e0 · elthen · craftpix.net
+             9e0 · elthen · rvros (à confirmer §5.6) · craftpix.net
 Effets     : pimen (Dark VFX) · Pipoya · BDragon1727 · CodeManu · DavitMasia · ansimuz
 Icônes     : Batareya (SOUS RÉSERVE §1.5) · craftpix.net
 Décors     : lornn (Wood Elves) · cogabushi · rafaelmatos · craftpix.net · deep-fold

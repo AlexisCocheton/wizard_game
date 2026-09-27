@@ -119,6 +119,13 @@ const STRIPS: Dictionary = {
 	"dark_soul": ["dark_soul", 40, 32, 14],
 	"dark_vanish": ["dark_vanish", 40, 32, 12],
 	"dark_swirl": ["dark_swirl", 48, 64, 16],
+	## --- Golem de pierre (27/09), tools/assets/extract_bestiaire_2026_09_27.py ---
+	## Pas encore joues. ATTENTION a l origine : dans `mecha_laser` le rayon part
+	## de x=50 (sur 300) et file vers la DROITE ; dans `mecha_fist` le poing
+	## pointe aussi a droite. Qui les joue doit les faire pivoter vers la cible
+	## et decaler le sprite, `Fx.sprite` centrant la case.
+	"mecha_laser": ["mecha_laser", 300, 100, 10],
+	"mecha_fist": ["mecha_fist", 100, 100, 10],
 }
 
 
@@ -221,14 +228,16 @@ const OCC: Dictionary = {
 	"hex_sigil": 1.00,
 	"hex_summon": 0.80,
 	"lightning_fork": 1.00,
-	"lightpillar": 0.97,
 	"lightning_web": 1.00,
+	"lightpillar": 0.97,
 	"lotus_bloom": 1.00,
 	"magic8": 0.59,
 	"magicbubbles": 0.49,
 	"magickahit": 0.60,
 	"magicspell": 0.45,
 	"magma_burst": 0.66,
+	"mecha_fist": 0.35,
+	"mecha_laser": 0.90,
 	"meteor_streak": 0.94,
 	"midnight": 0.56,
 	"orb_burst": 0.62,
