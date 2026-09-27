@@ -158,6 +158,7 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 			out.append("Engendre %d %s a sa mort" % [def.split_count, child_name])
 	if def.first_hit_shield:
 		out.append("Encaisse le premier coup sans aucun degat")
+	out.append_array(v3_lines(def))
 	# LES TROIS MECANIQUES DU CHANTIER I, en TETE des lignes de comportement : ce
 	# sont les seules du jeu qui changent une REGLE (la condition de mort, la
 	# monnaie des degats, le moment ou lancer). Un joueur qui les decouvre en
@@ -260,6 +261,57 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 	# vide laisserait croire que la fiche est cassee.
 	if out.is_empty():
 		out.append("Descend tout droit vers le mage, sans ruse")
+	return out
+
+
+## Les mecaniques du groupe « Comportements v3 » d EnemyDef, en clair et avec
+## leurs chiffres. Section a part pour que la fiche se lise dans l ordre ou le
+## joueur en a besoin : ces mecaniques changent une REGLE (quand un monstre est
+## vraiment mort, quand on peut lancer), elles passent donc en tete.
+##
+## Chaque phrase dit la CAUSE et la REPONSE, sur le modele du Reliquaire (« ce
+## sont les COUPS qu il compte, pas les degats ») : un joueur qui decouvre la
+## regle en combat sans l avoir lue croit que le jeu est casse.
+static func v3_lines(def: EnemyDef) -> Array[String]:
+	var out: Array[String] = []
+	if def == null:
+		return out
+	if def.extra_lives > 0:
+		var fois: String = "une fois" if def.extra_lives == 1 \
+			else "%d fois" % def.extra_lives
+		out.append(("Revient %s apres sa mort, a chaque fois depuis le HAUT du terrain"
+			+ " et %d %% plus vite : il ne compte qu une seule mort, la derniere")
+			% [fois, int(round(def.extra_life_speed_pct))])
+	if def.rebirth_def != null and def.rebirth_count > 0:
+		var qui: String = def.rebirth_def.display_name if def.rebirth_count == 1 \
+			else "%d %s" % [def.rebirth_count, def.rebirth_def.display_name]
+		var verbe: String = "en nait" if def.rebirth_count == 1 else "en naissent"
+		out.append(("A sa mort, laisse une marque au sol : %s %s %s s plus tard."
+			+ " La vague n est pas finie tant que la marque est la")
+			% [qui, verbe, _num(maxf(def.rebirth_delay, 0.1))])
+	if def.reanimate_max > 0 and def.reanimate_radius > 0.0:
+		out.append(("Releve un monstre mort pres de lui toutes les %s s, %d fois au"
+			+ " plus : tuez-le en premier, les revenants ne rapportent rien")
+			% [_num(maxf(def.reanimate_interval, Enemy.REANIMATE_MIN_INTERVAL)),
+				def.reanimate_max])
+	if def.laser_damage > 0:
+		out.append(("Tire un laser sur le mage chaque fois qu il est blesse (%d degats,"
+			+ " au plus un toutes les %s s) : un gros sort vaut mieux que dix petits")
+			% [def.laser_damage,
+				_num(maxf(def.laser_cooldown, Enemy.LASER_MIN_COOLDOWN))])
+	if def.sleep_interval > 0.0:
+		out.append(("S endort %s s toutes les %s s : pendant son sommeil, AUCUN sort"
+			+ " ne peut etre lance. Le tuer vous rend la magie aussitot")
+			% [_num(clampf(def.sleep_duration, 0.1, Enemy.SLEEP_MAX_DURATION)),
+				_num(def.sleep_interval)])
+	match def.move_pattern:
+		EnemyDef.MovePattern.ZIGZAG:
+			out.append("Avance en zigzag : visez ou il va, pas ou il est")
+		EnemyDef.MovePattern.BOUNCE:
+			out.append("Descend en diagonale et rebondit d un bord a l autre")
+		EnemyDef.MovePattern.HOP:
+			out.append("Saute d une colonne a l autre toutes les %s s"
+				% _num(maxf(def.pattern_interval, 0.3)))
 	return out
 
 

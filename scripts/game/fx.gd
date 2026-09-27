@@ -734,3 +734,141 @@ const PROP_WATER_LAYERS: Array[float] = [1.0, 0.74, 0.46]
 ## bouillie. L hexagone en remplit 84 % et reste net a la taille protegee.
 static func halo(parent: Node2D, radius: float, tint: Color = Color.WHITE) -> Node:
 	return sprite(parent, "shield_hex", Vector2.ZERO, radius * 2.0, true, tint)
+
+
+# --- COMPORTEMENTS v3 ----------------------------------------------------------
+
+## LASER DE RIPOSTE : un rayon du monstre au mage, bref et net.
+##
+## TRACE et non pris dans une feuille, pour la meme raison que l anneau des zones
+## (ZoneRing) : le trait EST l information. Il doit relier exactement le tireur
+## a sa cible, quelle que soit la distance, et aucune feuille du pack ne s etire
+## sur 1400 px sans devenir une bouillie. Deux epaisseurs superposees — un halo
+## large et translucide, un coeur fin et clair — pour qu il se lise comme un
+## rayon d energie et pas comme un trait de debogage.
+static func laser(parent: Node2D, from: Vector2, to: Vector2, col: Color) -> Node:
+	if not enabled() or parent == null:
+		return null
+	var root := Node2D.new()
+	root.z_index = 6
+	parent.add_child(root)
+	var halo_l := Line2D.new()
+	halo_l.points = PackedVector2Array([from, to])
+	halo_l.width = 26.0
+	halo_l.default_color = Color(col.r, col.g, col.b, 0.45)
+	halo_l.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	halo_l.end_cap_mode = Line2D.LINE_CAP_ROUND
+	root.add_child(halo_l)
+	var coeur := Line2D.new()
+	coeur.points = PackedVector2Array([from, to])
+	coeur.width = 8.0
+	coeur.default_color = col.lightened(0.65)
+	coeur.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	coeur.end_cap_mode = Line2D.LINE_CAP_ROUND
+	root.add_child(coeur)
+	# L impact a l arrivee : le joueur doit voir OU le rayon a frappe, pas
+	# seulement d ou il est parti.
+	sprite(parent, "spark_burst", to, 120.0, false, col.lightened(0.3))
+	var tw: Tween = root.create_tween()
+	tw.tween_interval(0.12)
+	tw.tween_property(root, "modulate:a", 0.0, 0.30)
+	tw.tween_callback(root.queue_free)
+	return root
+
+
+## SOMMEIL : des « Zzz » qui flottent au-dessus du dormeur.
+##
+## Du TEXTE et non une feuille : le pack n a aucun effet de sommeil, et « Zzz »
+## est un code que tout joueur lit sans apprentissage. Le HUD repete le meme
+## signe sur la main grisee, pour que l oeil fasse le lien entre la cause (ce
+## monstre) et l effet (mes cartes).
+static func sleep_marker(parent: Node2D, radius: float) -> Node:
+	if not enabled() or parent == null:
+		return null
+	var root := Node2D.new()
+	root.name = "SleepZzz"
+	root.z_index = 7
+	root.position = Vector2(radius * 0.35, -radius * 0.95)
+	var l := Label.new()
+	l.text = "Z z z"
+	l.add_theme_font_override(&"font", UiTheme.font())
+	l.add_theme_font_size_override(&"font_size", UiTheme.FONT_BODY)
+	l.add_theme_color_override(&"font_color", Color(0.80, 0.90, 1.0))
+	l.add_theme_color_override(&"font_outline_color", Color(0.06, 0.06, 0.16))
+	l.add_theme_constant_override(&"outline_size", 10)
+	l.position = Vector2(-40.0, -30.0)
+	root.add_child(l)
+	parent.add_child(root)
+	# Une lente respiration verticale : un texte fige se lit comme une etiquette,
+	# un texte qui flotte se lit comme un etat du monstre.
+	var tw: Tween = root.create_tween().set_loops()
+	tw.tween_property(l, "position:y", -52.0, 0.7)
+	tw.tween_property(l, "position:y", -30.0, 0.7)
+	return root
+
+
+## RENAISSANCE DIFFEREE : la marque au sol qui annonce une naissance.
+##
+## Un anneau trace (la portee de la naissance, ou poser une zone) + un sceau
+## d invocation qui tourne au centre + le compte a rebours en clair. Le chiffre
+## est mis a jour par Battlefield (`rebirth_marker_set`) sur le temps du MONDE :
+## un compte a rebours en temps reel mentirait des que le multiplicateur monte.
+static func rebirth_marker(parent: Node2D, at: Vector2, radius: float,
+		delay: float) -> Node:
+	if not enabled() or parent == null:
+		return null
+	var root := Node2D.new()
+	root.name = "RebirthMark"
+	root.position = at
+	root.z_index = -1
+	parent.add_child(root)
+	# PLANCHER de 90 px de rayon, et le double du rayon du mort. Mesure sur la
+	# premiere capture : a 1,3 fois le rayon d un petit slime, la marque faisait
+	# la taille d une piece de monnaie et le chiffre se perdait dans l herbe. Elle
+	# doit se voir du coin de l oeil, puisque le joueur regarde ailleurs quand
+	# un monstre meurt.
+	var r: float = maxf(radius * 2.0, 90.0)
+	var ring := ZoneRing.new()
+	ring.setup(r, Color(0.55, 0.90, 1.0))
+	root.add_child(ring)
+	sprite(root, "hex_summon", Vector2.ZERO, r * 1.5, true, Color(0.70, 0.95, 1.0, 0.9))
+	var l := Label.new()
+	l.name = "Compte"
+	l.text = str(ceili(delay))
+	l.add_theme_font_override(&"font", UiTheme.font())
+	l.add_theme_font_size_override(&"font_size", UiTheme.FONT_TITLE)
+	l.add_theme_color_override(&"font_color", Color(0.90, 0.97, 1.0))
+	l.add_theme_color_override(&"font_outline_color", Color(0.05, 0.10, 0.18))
+	l.add_theme_constant_override(&"outline_size", 14)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.size = Vector2(120.0, 90.0)
+	l.position = Vector2(-60.0, -45.0)
+	root.add_child(l)
+	return root
+
+
+static func rebirth_marker_set(marker: Node, seconds_left: float) -> void:
+	if marker == null or not is_instance_valid(marker):
+		return
+	var l: Label = marker.get_node_or_null("Compte") as Label
+	if l != null:
+		l.text = str(maxi(1, ceili(seconds_left)))
+
+
+## REANIMATION : un fil d ame du reanimateur au corps qu il releve, et l esprit
+## qui remonte. Le fil est la seule chose qui dit QUI releve : sans lui le
+## joueur voit des morts revenir et accuse le jeu, pas le pretre au fond.
+static func reanimate_link(parent: Node2D, from: Vector2, to: Vector2) -> void:
+	if not enabled() or parent == null:
+		return
+	var l := Line2D.new()
+	l.points = PackedVector2Array([from, to])
+	l.width = 10.0
+	l.default_color = Color(0.70, 1.0, 0.75, 0.7)
+	l.z_index = 5
+	parent.add_child(l)
+	var tw: Tween = l.create_tween()
+	tw.tween_property(l, "modulate:a", 0.0, 0.6)
+	tw.tween_callback(l.queue_free)
+	sprite(parent, "spirit_violet", to, 170.0, false, Color(0.75, 1.0, 0.8))

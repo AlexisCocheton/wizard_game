@@ -178,8 +178,9 @@ func tick(delta: float) -> void:
 		var item: Dictionary = _queue.pop_front()
 		var def: EnemyDef = item["def"]
 		battlefield.spawn_enemy(def, _spawn_x(def, item.get("lane", -1.0)), item["difficulty"])
-	# La vague est finie quand la file est vide et le terrain nettoye.
-	if _queue.is_empty() and battlefield.alive_count() == 0:
+	# La vague est finie quand la file est vide et le terrain nettoye — y compris
+	# des marques de renaissance, qui sont des monstres a venir (is_clear).
+	if _queue.is_empty() and battlefield.is_clear():
 		active = false
 		wave_cleared.emit(index)
 
@@ -191,13 +192,30 @@ const LANE_SPREAD: float = 130.0
 
 
 func _spawn_x(def: EnemyDef, lane: float = -1.0) -> float:
-	var margin: float = 90.0
+	var margin: float = spawn_margin(def)
 	if def.entry_side:
 		return margin if _rng.randi() % 2 == 0 else GameConfig.BATTLEFIELD_WIDTH - margin
 	if lane < 0.0:
 		return _rng.randf_range(margin, GameConfig.BATTLEFIELD_WIDTH - margin)
 	return clampf(lane + _rng.randf_range(-LANE_SPREAD, LANE_SPREAD),
 		margin, GameConfig.BATTLEFIELD_WIDTH - margin)
+
+
+## Marge laterale d apparition : 90 px, ou la demi-largeur AFFICHEE du monstre si
+## elle est plus grande.
+##
+## LE DEFAUT QUE CECI REPARE : l entree par le cote posait tout monstre a 90 px
+## du bord. Un mini-boss de 62 px de rayon logique s affiche a ~130 px de
+## demi-largeur (Enemy.VISUAL_FACTOR), davantage avec son `sprite_scale` : la
+## moitie de sa silhouette naissait hors de l ecran, la ou le doigt ne peut pas
+## le viser. On raisonne sur la taille VUE, parce que c est elle que le joueur
+## cherche a toucher.
+static func spawn_margin(def: EnemyDef) -> float:
+	var marge: float = 90.0
+	if def == null:
+		return marge
+	var demi: float = def.base_radius * Enemy.VISUAL_FACTOR * maxf(def.sprite_scale, 0.1)
+	return clampf(maxf(marge, demi), marge, GameConfig.BATTLEFIELD_WIDTH * 0.5 - 1.0)
 
 
 func current_wave() -> WaveDef:

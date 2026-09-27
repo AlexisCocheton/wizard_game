@@ -102,6 +102,7 @@ func simulate(delta: float) -> void:
 	# chemins aurait demande son propre branchement — donc chacun aurait pu etre
 	# oublie, laissant une main petrifiee par un monstre qui n existe plus.
 	_refresh_card_block()
+	_v3_simulate(delta, wd)
 
 
 ## Total des regards des gorgones VIVANTES, pousse dans RunState. Zero gorgone
@@ -419,7 +420,7 @@ func spawn_enemy(def: EnemyDef, x: float, difficulty: float = 1.0,
 	e.battlefield = self
 	# Position AVANT add_child : _ready() s execute des l ajout.
 	var spontane: bool = at == Vector2.INF
-	e.position = at if not spontane else Vector2(x, GameConfig.SPAWN_LINE_Y)
+	e.position = at if not spontane else Vector2(x, v3_spawn_y(def))
 	e.died.connect(_on_enemy_died)
 	e.reached_mage.connect(_on_enemy_reached_mage)
 	enemies.append(e)
@@ -444,7 +445,8 @@ func _on_enemy_died(e: Enemy) -> void:
 		# Une boule de poison ne rapporte ni XP ni statistique de chasse : sinon
 		# le joueur monterait de niveau en tapant des munitions au lieu de
 		# s en prendre au Planogo qui les tire.
-		if not def.projectile:
+		# Un monstre RELEVE par un reanimateur a deja ete compte a sa premiere mort.
+		if not def.projectile and not e.is_reanimated():
 			RunState.gain_xp(def.base_xp)
 			enemy_killed.emit(def)
 		# Division / explosion : les enfants naissent la ou le parent est mort.
@@ -465,6 +467,7 @@ func _on_enemy_died(e: Enemy) -> void:
 				var child: Enemy = spawn_enemy(def.split_into, where.x, diff, where + offset)
 				if child != null:
 					child.position.x = clampf(child.position.x, 40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0)
+	_v3_on_death(e, def, where, diff)
 	e.queue_free()
 
 
@@ -599,6 +602,7 @@ func clear_all() -> void:
 		if node != null and is_instance_valid(node):
 			node.queue_free()
 	shots.clear()
+	_v3_clear()
 	_reverse_time = 0.0
 	if nav != null:
 		nav.clear()
@@ -670,6 +674,7 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 		var chill: float = RunState.passive_magnitude(&"passive_chill_on_hit")
 		if chill > 0.0:
 			e.apply_slow(maxf(0.25, 1.0 - chill * 0.01), 1.5)
+		_v3_after_hit(e)
 	return applied
 
 
@@ -1149,3 +1154,268 @@ func stun_at(center: Vector2, radius: float, duration: float) -> int:
 		if (e as Enemy).apply_stun(duration):
 			n += 1
 	return n
+
+
+# =====================================================================
+# COMPORTEMENTS v3 — ce qui, dans les mecaniques v3, implique le terrain entier :
+# la renaissance differee (une marque qui survit au monstre), la memoire des
+# morts du reanimateur, le verrou de magie des dormeurs (qui porte sur TOUS les
+# monstres a la fois) et le laser de riposte (qui vise le mage).
+
+## Fenetre de magie GARANTIE entre deux sommeils, tous dormeurs confondus, en
+## secondes REELLES. Reelles et non de monde : a 400 % de vitesse le monde va
+## quatre fois plus vite, mais le doigt du joueur non. Trois renards regles sur
+## le meme intervalle ne doivent pas pouvoir enchainer leurs siestes et
+## verrouiller la main : le suivant attend que cette fenetre soit passee.
+const SLEEP_MIN_MAGIC_WINDOW: float = 3.0
+## Generations de renaissance au plus. Un slime fantome dont la marque ferait
+## renaitre un slime fantome serait une vague sans fin ; le plafond garantit
+## que la chaine s arrete meme si le contenu se trompe.
+const REBIRTH_MAX_DEPTH: int = 2
+## Duree pendant laquelle un reanimateur se souvient d une mort, en secondes de
+## monde. Au-dela, le corps est « froid » : sans oubli, un reanimateur arrive en
+## fin de vague releverait tout le debut du combat.
+const REANIMATE_MEMORY: float = 8.0
+## Teinte du laser : rouge vif, distinct des fleches (couleur du tireur) et de
+## la garde de renvoi (ambre). Le joueur doit savoir QUI l a frappe.
+const LASER_COLOR := Color(1.0, 0.22, 0.18)
+
+## Marques de renaissance au sol : {def, count, pos, time, diff, depth, node}.
+var _v3_rebirths: Array[Dictionary] = []
+## Morts recentes que les reanimateurs peuvent relever : {def, pos, diff, t}.
+var _v3_deaths: Array[Dictionary] = []
+## Horloge du MONDE, pour dater les morts.
+var _v3_clock: float = 0.0
+var _v3_silenced: bool = false
+## Secondes REELLES ecoulees depuis la fin du dernier sommeil. Demarre pleine :
+## le premier dormeur de la partie n a pas a attendre une fenetre fictive.
+var _v3_since_silence: float = SLEEP_MIN_MAGIC_WINDOW
+## Compteurs cumules pour les tests et le debogage : un laser dure une fraction
+## de seconde, une sonde qui tomberait entre deux lirait zero.
+var lasers_fired: int = 0
+var reanimations: int = 0
+
+
+## Vrai quand plus rien ne reste a combattre, y compris ce qui va NAITRE. C est
+## la question que pose le deroule des vagues : une marque de renaissance au sol
+## est un monstre a venir, et la vague ne doit pas se terminer sans lui — sinon
+## le slime naitrait par-dessus l ecran de victoire.
+func is_clear() -> bool:
+	return alive_count() == 0 and _v3_rebirths.is_empty()
+
+
+func pending_rebirth_count() -> int:
+	return _v3_rebirths.size()
+
+
+func is_magic_silenced() -> bool:
+	return _v3_silenced
+
+
+## Hauteur de naissance d un monstre de vague. La ligne d apparition pour tous,
+## SAUF un monstre qui entre par le cote : il nait assez bas pour que toute sa
+## silhouette affichee soit dans le cadre. Un gros monstre pose a la ligne
+## d apparition dans un coin avait la moitie du corps hors de l ecran — ni
+## visible, ni visable au doigt. Meme marge que WaveSpawner.spawn_margin().
+func v3_spawn_y(def: EnemyDef) -> float:
+	if def == null or not def.entry_side:
+		return GameConfig.SPAWN_LINE_Y
+	return maxf(GameConfig.SPAWN_LINE_Y, WaveSpawner.spawn_margin(def))
+
+
+func _v3_simulate(delta: float, wd: float) -> void:
+	_v3_clock += wd
+	_v3_tick_rebirths(wd)
+	# Les morts trop anciennes sont oubliees : un reanimateur releve la bataille
+	# en cours, pas celle d il y a une minute.
+	for i in range(_v3_deaths.size() - 1, -1, -1):
+		if _v3_clock - float(_v3_deaths[i]["t"]) > REANIMATE_MEMORY:
+			_v3_deaths.remove_at(i)
+	_v3_refresh_silence(delta)
+
+
+func _v3_clear() -> void:
+	for r in _v3_rebirths:
+		var n: Node = r.get("node")
+		if n != null and is_instance_valid(n):
+			n.queue_free()
+	_v3_rebirths.clear()
+	_v3_deaths.clear()
+	_v3_clock = 0.0
+	_v3_silenced = false
+	_v3_since_silence = SLEEP_MIN_MAGIC_WINDOW
+	RunState.set_silenced(false)
+
+
+func _v3_on_death(e: Enemy, def: EnemyDef, where: Vector2, diff: float) -> void:
+	if def == null:
+		return
+	# MEMOIRE DES MORTS pour les reanimateurs. Ni boss (en relever un serait un
+	# second combat de boss gratuit), ni projectile, ni reanimateur (deux
+	# reanimateurs qui se relevent l un l autre ne finiraient qu a leurs plafonds,
+	# ce qui est long et illisible).
+	if not def.projectile and not def.is_boss() and def.reanimate_max <= 0:
+		_v3_deaths.append({"def": def, "pos": where, "diff": diff, "t": _v3_clock})
+	# RENAISSANCE DIFFEREE : une marque au sol, puis la naissance.
+	if def.rebirth_def != null and def.rebirth_count > 0:
+		var generation: int = e.v3_rebirth_depth() if e != null else 0
+		if generation < REBIRTH_MAX_DEPTH:
+			var delai: float = maxf(def.rebirth_delay, 0.1)
+			# LE JOUEUR DOIT LE VOIR : sans marque, un monstre qui surgit trois
+			# secondes apres une mort se lit comme un bug d apparition. La marque
+			# dit « quelque chose va sortir d ICI », et laisse le temps d y poser
+			# une zone.
+			var marque: Node = Fx.rebirth_marker(self, where,
+				maxf(e.radius() if e != null else 40.0, 40.0), delai)
+			_v3_rebirths.append({
+				"def": def.rebirth_def,
+				"count": def.rebirth_count,
+				"pos": where,
+				"time": delai,
+				"diff": diff,
+				"depth": generation + 1,
+				"node": marque,
+			})
+	# Le dormeur qui vient de mourir rend la magie TOUT DE SUITE, pas a la fin de
+	# l image : le sort que le joueur lance dans la foulee doit partir.
+	_v3_refresh_silence(0.0)
+
+
+func _v3_tick_rebirths(wd: float) -> void:
+	for i in range(_v3_rebirths.size() - 1, -1, -1):
+		var r: Dictionary = _v3_rebirths[i]
+		r["time"] = float(r["time"]) - wd
+		if float(r["time"]) > 0.0:
+			Fx.rebirth_marker_set(r.get("node"), float(r["time"]))
+			continue
+		var n: Node = r.get("node")
+		if n != null and is_instance_valid(n):
+			n.queue_free()
+		_v3_rebirths.remove_at(i)
+		var def: EnemyDef = r["def"]
+		var ou: Vector2 = r["pos"]
+		var combien: int = int(r["count"])
+		for k in combien:
+			# Meme eventail que la division : cote a cote, pas empiles, pour que le
+			# joueur compte ce qui vient de naitre.
+			var ecart := Vector2((k - (combien - 1) * 0.5) * 44.0, 0.0)
+			var enfant: Enemy = spawn_enemy(def, ou.x, float(r["diff"]), ou + ecart)
+			if enfant != null:
+				enfant.position.x = clampf(enfant.position.x, 40.0,
+					GameConfig.BATTLEFIELD_WIDTH - 40.0)
+				enfant.v3_set_rebirth_depth(int(r["depth"]))
+		if Fx.enabled():
+			Fx.impact(self, ou, Color(0.75, 0.95, 1.0), 90.0)
+		AudioBus.play_sfx(&"spell_rise")
+
+
+## Le verrou de magie : un dormeur vivant coupe la magie, aucun dormeur la rend.
+## Recalcule a chaque image (et a chaque mort) plutot que tenu par des signaux,
+## pour la meme raison que la petrification : un dormeur peut quitter le terrain
+## par mille chemins (gobe, tue, fin de vague), et chacun aurait pu oublier de
+## rendre la magie.
+func _v3_refresh_silence(real_delta: float) -> void:
+	var dort: bool = false
+	for e in enemies:
+		if _alive(e) and e.is_sleeping():
+			dort = true
+			break
+	if dort:
+		_v3_silenced = true
+	else:
+		if _v3_silenced:
+			# Fin de sommeil : la fenetre garantie commence maintenant.
+			_v3_since_silence = 0.0
+		else:
+			_v3_since_silence += real_delta
+		_v3_silenced = false
+	RunState.set_silenced(_v3_silenced)
+
+
+## Un dormeur demande a s endormir. Refuse si la magie est deja coupee (un seul
+## sommeil a la fois, les siestes ne s additionnent pas) ou si la fenetre
+## garantie depuis le dernier n est pas ecoulee. Accorde, le verrou tombe TOUT DE
+## SUITE : un second renard qui demande dans la meme image doit etre refuse.
+func v3_grant_sleep(_sleeper: Enemy) -> bool:
+	if _v3_silenced or _v3_since_silence < SLEEP_MIN_MAGIC_WINDOW:
+		return false
+	_v3_silenced = true
+	RunState.set_silenced(true)
+	AudioBus.play_sfx(&"drip_frost")
+	return true
+
+
+## Releve la mort la plus RECENTE dans le rayon. Renvoie true si quelqu un s est
+## releve. Le plus recent d abord : c est celui que le joueur vient de voir
+## tomber, donc celui dont il comprend qu il revient.
+func v3_reanimate_near(source: Enemy, radius: float) -> bool:
+	if source == null:
+		return false
+	var best: int = -1
+	for i in range(_v3_deaths.size() - 1, -1, -1):
+		if source.position.distance_to(_v3_deaths[i]["pos"]) <= radius:
+			best = i
+			break
+	if best < 0:
+		return false
+	var m: Dictionary = _v3_deaths[best]
+	_v3_deaths.remove_at(best)
+	var def: EnemyDef = m["def"]
+	var ou: Vector2 = m["pos"]
+	var revenant: Enemy = spawn_enemy(def, ou.x, float(m["diff"]), ou)
+	if revenant == null:
+		return false
+	revenant.mark_reanimated()
+	# Il SE RELEVE : le fondu d apparition le rend visible avant de le rendre
+	# dangereux, et intouchable le temps que le joueur comprenne ce qui se passe.
+	revenant.begin_spawn_fade()
+	reanimations += 1
+	if Fx.enabled():
+		Fx.reanimate_link(self, source.position, ou)
+	AudioBus.play_sfx(&"heal")
+	return true
+
+
+## Riposte au coup : appele par _hit() apres un coup qui a mordu.
+func _v3_after_hit(e: Enemy) -> void:
+	if not _alive(e) or e.definition == null or e.definition.laser_damage <= 0:
+		return
+	if not e.v3_try_laser():
+		return
+	_v3_fire_laser(e)
+
+
+func _v3_fire_laser(e: Enemy) -> void:
+	var depart: Vector2 = e.position
+	var mage := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)
+	lasers_fired += 1
+	e.play_attack()
+	AudioBus.play_sfx(&"arrow")
+	# Un mur de pierre arrete le rayon comme il arrete les fleches : le joueur
+	# qui s abrite doit etre recompense, sinon le mur mentirait sur ce qu il protege.
+	var arret: Vector2 = _v3_first_wall_on(depart, mage)
+	if arret != Vector2.INF:
+		Fx.laser(self, depart, arret, LASER_COLOR)
+		Fx.impact(self, arret, Fx.COL_PHYSICAL, 50.0)
+		return
+	Fx.laser(self, depart, mage, LASER_COLOR)
+	speed_before_hit = SpeedGauge.speed_percent
+	# Un laser coute de la VITESSE comme tout le reste : la regle entiere vit dans
+	# SpeedGauge.take_hit().
+	SpeedGauge.take_hit(e.definition.laser_damage)
+	mage_hit.emit(e.definition.laser_damage, e.definition)
+
+
+## Premier point du segment qui tombe dans un mur, Vector2.INF sinon. Echantillonne
+## tous les 20 px : les murs font 60 px d epaisseur, aucun ne passe entre deux
+## echantillons.
+func _v3_first_wall_on(from: Vector2, to: Vector2) -> Vector2:
+	if walls.is_empty():
+		return Vector2.INF
+	var longueur: float = from.distance_to(to)
+	var pas: int = maxi(1, int(longueur / 20.0))
+	for i in range(1, pas + 1):
+		var p: Vector2 = from.lerp(to, float(i) / float(pas))
+		if _blocked_by_wall(p):
+			return p
+	return Vector2.INF

@@ -97,6 +97,7 @@ func reset() -> void:
 	_double_cast_time = 0.0
 	pending_offer.clear()
 	_blocked.clear()
+	_silenced = false
 	# L amelioration des cartes vaut pour LA PARTIE EN COURS : sans cet effacement
 	# elle franchirait la fin du niveau et l equilibrage mesure au banc ne
 	# decrirait plus aucune partie reelle (voir la section AMELIORATION plus bas).
@@ -211,6 +212,10 @@ func play_card(card: SpellCard) -> bool:
 	# ecran lui montre comme petrifiee.
 	if _blocked.has(card):
 		return false
+	# SOMMEIL (comportements v3) : un dormeur coupe TOUTE la magie. Meme garde,
+	# meme endroit, meme raison que la petrification.
+	if _silenced:
+		return false
 	hand.remove_at(idx)
 	if card.rarity == GameEnums.Rarity.LEGENDARY:
 		used_legendary = true
@@ -312,6 +317,24 @@ func set_card_block_count(wanted: int) -> void:
 				_blocked.append(c)
 	if _blocked.size() != avant:
 		hand_changed.emit()
+
+
+## SOMMEIL QUI COUPE LA MAGIE (comportements v3). Pousse par Battlefield a chaque
+## image, comme le nombre de regards : aucun dormeur vivant donne aucun silence,
+## il n existe pas de chemin ou le verrou survit a son monstre.
+var _silenced: bool = false
+
+
+func set_silenced(value: bool) -> void:
+	if _silenced == value:
+		return
+	_silenced = value
+	# La main se redessine : grisee avec le mot en clair, ou rendue au joueur.
+	hand_changed.emit()
+
+
+func is_silenced() -> bool:
+	return _silenced
 
 
 func discard_random(count: int) -> int:
