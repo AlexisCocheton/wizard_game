@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ibmao"]
-[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_ldph6"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="2_ldph6"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_ldg16"]
 [ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_ldph6"]
 [ext_resource type="Resource" path="res://resources/enemies/risen_ghoul.tres" id="4_tpi8h"]

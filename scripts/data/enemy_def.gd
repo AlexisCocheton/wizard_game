@@ -394,6 +394,42 @@ enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP }
 @export var mirror_speed_min: float = 0.5
 @export var mirror_speed_max: float = 2.0
 
+@export_group("Briseur de terrain")
+## LE BRISEUR DE TERRAIN — toutes les `terrain_break_interval` secondes (temps du
+## MONDE), il choisit l objet de terrain le plus proche a moins de
+## `terrain_break_reach` px, s arrete, prepare son coup pendant
+## `terrain_break_windup` secondes, puis le DETRUIT. 0 = jamais.
+##
+## Ce que la mecanique change : le decor n est plus une reponse definitive. Tous
+## les sorts de terrain (murs, arbres, ronces, fosse, autel) sont payes une fois
+## et tiennent le combat ; devant lui, ils ne tiennent que tant qu il vit. La
+## question posee au joueur est « le tuer d abord, ou reposer derriere lui ».
+##
+## LE GESTE EST LA MOITIE DE LA MECANIQUE. Pendant la preparation il est plante,
+## une marque rougit sur l objet vise et sa legende dit ce qu il va briser : le
+## joueur doit comprendre POURQUOI son mur a disparu, et il a le temps d y
+## repondre. Le tuer ou l etourdir pendant la preparation ANNULE le coup — c est
+## la reponse de controle, et elle doit exister.
+##
+## L EAU N EST PAS UN OBJET QU ON CASSE : la nappe et la Riviere sont epargnees
+## (voir Battlefield.BREAKER_SPARED_KINDS). La Riviere est une legendaire tres
+## chere et unique par combat ; la briser d un geste ferait de ce monstre un
+## contre absolu de la carte la plus rare du jeu, et on ne fend pas de l eau.
+@export var terrain_break_interval: float = 0.0
+@export var terrain_break_reach: float = 520.0
+@export var terrain_break_windup: float = 1.5
+
+@export_group("Anciens boss")
+## ANCIEN BOSS PROMU EN VERMINE — l id du boss (ou mini-boss) dont ce monstre est
+## la version ALLEGEE. Vide = monstre d origine.
+##
+## POURQUOI UN CHAMP et pas une convention d id (`<boss>_echo`) : l acte 5 raconte
+## que « les anciens boss redeviennent des monstres ordinaires », et ce propos est
+## TESTE (test_campaign_acts). Une convention d id se casse au premier renommage
+## sans que rien ne rougisse ; un champ se lit, et le garde-fou de test_bosses
+## peut comparer la vermine a son boss d origine : moins de PV, jamais un boss.
+@export var demoted_from: StringName = &""
+
 
 ## Multiplicateur de degats subis pour UN tag. 1.0 si rien n est declare.
 func resistance_to(tag: int) -> float:

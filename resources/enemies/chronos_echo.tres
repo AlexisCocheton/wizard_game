@@ -1,30 +1,29 @@
 [gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_a5nty"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_3xsrb"]
 
 [resource]
-script = ExtResource("1_a5nty")
-id = &"forge_colossus"
-display_name = "Colosse des Forges"
-kind = 8
-power = 10
-max_hp = 150.0
-base_speed = 30.0
-base_xp = 30
+script = ExtResource("1_3xsrb")
+id = &"chronos_echo"
+display_name = "Echo de Chronos"
+kind = 0
+power = 4
+max_hp = 96.0
+base_speed = 36.0
+base_xp = 8
 contact_damage = 0
-anim_key = &"decepticle"
-sprite_scale = 1.15
-shape = 4
-color = Color(0.8, 0.55, 0.25, 1)
-base_radius = 80.0
+anim_key = &"juggernaut"
+sprite_scale = 1.0
+shape = 6
+color = Color(0.95, 0.2, 0.25, 1)
+base_radius = 40.0
 resistances = {
-0: 0.8,
-1: 0.6,
-2: 1.35,
-3: 1.1,
-4: 0.0,
-6: 0.0,
-7: 1.15
+0: 1.1,
+1: 1.1,
+2: 0.8,
+3: 0.95,
+4: 0.6,
+6: 1.05
 }
 immune_tags = Array[int]([])
 dodge_chance = 0.0
@@ -68,9 +67,9 @@ move_pattern = 0
 pattern_lateral_speed = 0.0
 pattern_width = 240.0
 pattern_interval = 1.5
-parts_count = 4
-part_hp = 50.0
-part_slow_pct = 18.0
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
 keeps_distance_at = 0.0
 summon_interval = 0.0
 summon_count = 1
@@ -102,4 +101,4 @@ mirror_speed_max = 2.0
 terrain_break_interval = 0.0
 terrain_break_reach = 520.0
 terrain_break_windup = 1.5
-demoted_from = &""
+demoted_from = &"chronos"

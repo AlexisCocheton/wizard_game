@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_vtuoo"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_chain.tres" id="2_cjf5j"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_circle.tres" id="3_3caal"]
-[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="4_gxb4w"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="4_gsf6m"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_gsf6m"]
 [ext_resource type="Resource" path="res://resources/enemies/adept_frost.tres" id="5_pffdu"]
 [ext_resource type="Resource" path="res://resources/enemies/adept_arcane.tres" id="6_ejtl4"]
@@ -26,7 +26,7 @@ start_offset = 12.0
 
 [sub_resource type="Resource" id="Resource_ejtl4"]
 script = ExtResource("1_vtuoo")
-enemy = ExtResource("4_gxb4w")
+enemy = ExtResource("4_gsf6m")
 count = 1
 spawn_delay = 1.0
 start_offset = 22.0

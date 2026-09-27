@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5ieor"]
-[ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="2_qlr7k"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="2_808tn"]
 [ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="3_808tn"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="4_t42rk"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_3soi1"]
@@ -10,7 +10,7 @@
 
 [sub_resource type="Resource" id="Resource_808tn"]
 script = ExtResource("1_5ieor")
-enemy = ExtResource("2_qlr7k")
+enemy = ExtResource("2_808tn")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0

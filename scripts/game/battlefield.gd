@@ -1724,7 +1724,9 @@ func _v3_fire_laser(e: Enemy) -> void:
 	var depart: Vector2 = e.position
 	var mage := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y)
 	lasers_fired += 1
-	e.play_attack()
+	# La pose de TIR de la feuille (le noyau du golem qui se charge), l attaque
+	# generique a defaut : voir Enemy.shot_anim().
+	e.play_shot_pose(true)
 	AudioBus.play_sfx(&"arrow")
 	# Un mur de pierre arrete le rayon comme il arrete les fleches : le joueur
 	# qui s abrite doit etre recompense, sinon le mur mentirait sur ce qu il protege.
@@ -1754,3 +1756,67 @@ func _v3_first_wall_on(from: Vector2, to: Vector2) -> Vector2:
 		if _blocked_by_wall(p):
 			return p
 	return Vector2.INF
+
+
+# =====================================================================
+# LE BRISEUR DE TERRAIN (chantier W3)
+#
+# L Enemy decide QUAND il frappe (minuterie, preparation, annulation par la
+# mort ou l etourdissement) ; le terrain sait QUOI il peut frapper. Le Briseur ne
+# connait ni `props` ni `walls` : il ne voit que les ANCRES du groupe
+# `TerrainProp.GROUP`, et `destroy()` est tout le contrat. Un futur objet de
+# terrain qui pose une ancre sera donc brisable sans une ligne ici.
+
+## Genres que le Briseur EPARGNE. L eau ne se brise pas : la nappe n a meme pas
+## de PV (voir TerrainProp.is_breakable), et la Riviere est une legendaire tres
+## chere, une seule par combat. La couper d un geste ferait du Briseur un contre
+## absolu de la carte la plus rare du jeu — le joueur qui l a tiree serait puni
+## de l avoir jouee. Une breche partielle (un gue) a ete envisagee et ecartee :
+## elle demandait un visuel de riviere entaillee que le pack n a pas, et une
+## breche invisible est pire qu aucune.
+const BREAKER_SPARED_KINDS: Array[int] = [TerrainProp.Kind.WATER, TerrainProp.Kind.RIVER]
+
+## Objets de terrain brises par un Briseur depuis la creation du champ (lecture
+## pour les tests et le banc, comme `lasers_fired`).
+var terrain_broken: int = 0
+
+
+## L ancre la plus PROCHE du Briseur a moins de `reach` px, null s il n y en a pas.
+## La plus proche, pas la plus precieuse : le joueur doit pouvoir PREVOIR ce qui
+## va tomber en regardant l ecran, sans connaitre une table de priorites.
+func breaker_target(e: Enemy, reach: float) -> Node:
+	if e == null or reach <= 0.0:
+		return null
+	var best: Node = null
+	var best_d: float = reach
+	for a in terrain_anchors():
+		if not breaker_can_break(a):
+			continue
+		var d: float = e.position.distance_to((a as Node2D).position)
+		if d <= best_d:
+			best_d = d
+			best = a
+	return best
+
+
+## Cette ancre est-elle une cible valable ? Encore dans le groupe (une ancre
+## retiree attend son `queue_free` jusqu a la fin de l image) et pas de l eau.
+func breaker_can_break(a: Node) -> bool:
+	if a == null or not is_instance_valid(a) or not (a is Node2D):
+		return false
+	if not a.is_in_group(TerrainProp.GROUP) or not a.has_method("destroy"):
+		return false
+	return not (int(a.get("kind")) in BREAKER_SPARED_KINDS)
+
+
+## Le coup lui-meme. La fissure part AVANT le `destroy()` : c est l ancre qui
+## porte la position, et elle est liberee par la destruction.
+func breaker_strike(e: Enemy, a: Node) -> bool:
+	if not _alive(e) or not breaker_can_break(a):
+		return false
+	var ou: Vector2 = (a as Node2D).position
+	Fx.ground_crack(self, e.position, ou)
+	AudioBus.play_sfx(&"impact_heavy")
+	a.call("destroy")
+	terrain_broken += 1
+	return true
