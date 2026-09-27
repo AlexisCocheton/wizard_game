@@ -32,6 +32,7 @@ func run() -> void:
 	_test_prendre_n_arme_pas()
 	_test_le_toucher_refuse_dit_pourquoi()
 	_test_la_fiche_affiche_la_raison()
+	_test_defiler_ou_prendre()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 
@@ -201,3 +202,46 @@ func _test_la_fiche_affiche_la_raison() -> void:
 			trouve = true
 	ok(trouve, "la fiche ecrit la raison du refus : '%s'" % attendu)
 	detach(p)
+
+
+## DEFILER OU PRENDRE : la regle qui departage un doigt pose sur une vignette.
+##
+## Le defaut corrige : sur un deck qui deborde de sa zone, un pouce qui voulait
+## faire defiler soulevait la carte (le glisser-deposer la prenait des le seuil,
+## dans toutes les directions). Le geste est rejoue au doigt dans le SMOKE ; ici
+## on verrouille la regle elle-meme, cas par cas, sans nombre en dur : tout est
+## exprime en multiples du seuil.
+func _test_defiler_ou_prendre() -> void:
+	var s: float = DeckPanel.DRAG_START_PX
+	var haut := Vector2(0.0, -s * 2.0)
+	var bas := Vector2(0.0, s * 2.0)
+	var cote := Vector2(s * 2.0, 0.0)
+	var biais_vertical := Vector2(s * 0.8, s * 1.6)
+
+	# Sous le seuil, rien n est decide : le relachement reste un toucher.
+	eq(DeckPanel.gesture_for(true, true, Vector2(0.0, s * 0.5)), DeckPanel.Geste.AUCUN,
+		"sous le seuil, un doigt qui derive n a encore rien decide")
+	eq(DeckPanel.gesture_for(false, false, Vector2(s * 0.5, 0.0)), DeckPanel.Geste.AUCUN,
+		"sous le seuil, meme en collection")
+
+	# Zone du deck qui deborde : la verticale defile, dans les deux sens.
+	eq(DeckPanel.gesture_for(true, true, haut), DeckPanel.Geste.DEFILER,
+		"deck qui deborde, doigt vers le haut : la zone defile")
+	eq(DeckPanel.gesture_for(true, true, bas), DeckPanel.Geste.DEFILER,
+		"deck qui deborde, doigt vers le bas : la zone defile")
+	eq(DeckPanel.gesture_for(true, true, biais_vertical), DeckPanel.Geste.DEFILER,
+		"deck qui deborde, surtout vertical : la zone defile")
+	# ... et le cote prend la carte : retirer par glisser reste possible.
+	eq(DeckPanel.gesture_for(true, true, cote), DeckPanel.Geste.PRENDRE,
+		"deck qui deborde, doigt de cote : la carte est prise")
+
+	# Deck CONFORME (ne deborde pas) : UI-006 a l identique, tout prend la carte,
+	# y compris vers le bas, vers la collection.
+	for d in [haut, bas, cote, biais_vertical]:
+		eq(DeckPanel.gesture_for(true, false, d), DeckPanel.Geste.PRENDRE,
+			"deck conforme, geste %s : la carte est prise comme avant" % d)
+	# La collection ne defile jamais : c est d elle que partent les ajouts, dans
+	# toutes les directions.
+	for d2 in [haut, bas, cote, biais_vertical]:
+		eq(DeckPanel.gesture_for(false, true, d2), DeckPanel.Geste.PRENDRE,
+			"collection, geste %s : la carte est prise" % d2)

@@ -620,6 +620,22 @@ func _check_menu_screens() -> void:
 		# des OMBRES. Le mode testeur ouvre tout sans rien ecrire au profil :
 		# on voit alors chaque illustration en couleurs, puis on le referme pour
 		# ne rien changer a la suite du smoke.
+		#
+		# Les ETOILES aussi ont deux etats a juger, sur chacun des cinq fonds : un
+		# profil neuf n en montre que des vides. On accorde donc a chaque niveau
+		# 0, 1, 2... objectifs (en tournant), sur une COPIE du profil restauree
+		# juste apres : la suite du smoke retrouve le profil d avant, a l octet.
+		var avant_etoiles: Dictionary = SaveData.to_dictionary()
+		var rang_etoiles: int = 0
+		for id_e in ContentDB.levels.keys():
+			var lv_e: LevelDef = ContentDB.levels[id_e]
+			if lv_e.objectives.is_empty():
+				continue
+			var faits: Dictionary = {}
+			for o_i in rang_etoiles % (lv_e.objectives.size() + 1):
+				faits[lv_e.objectives[o_i].id] = true
+			SaveData.record_victory(lv_e, GameEnums.Mode.EXPLORATION, faits, 1)
+			rang_etoiles += 1
 		SaveData.set_tester_mode(true)
 		carte.rebuild()
 		for a in carte.acts():
@@ -629,6 +645,7 @@ func _check_menu_screens() -> void:
 					_fail("le niveau %s n a pas de medaillon sur la carte" % id)
 			await _shot("campagne_ouvert_acte%d" % a)
 		SaveData.set_tester_mode(false)
+		SaveData.load_from_dictionary(avant_etoiles)
 		carte.rebuild()
 		# Le detail d un niveau : c est l ecran que le testeur voulait conserver,
 		# et il n est atteignable que par un toucher sur un point de la carte.
@@ -683,6 +700,7 @@ func _check_menu_screens() -> void:
 		deck_ecran.delete_current_deck()
 		await _shot("deck_plein")
 		await _check_deck_drag_refused(deck_ecran)
+		await _check_deck_scroll(deck_ecran)
 
 	# Le profil a quitte la barre du bas pour l en-tete : sans cette capture il
 	# ne serait plus verifie du tout.
@@ -723,25 +741,45 @@ func _check_menu_screens() -> void:
 ## chemin que le doigt (_input, puis l interface) ; appeler les methodes
 ## prouverait la regle, pas le geste. Les tests unitaires couvrent la regle.
 func _glisser(depart: Vector2, arrivee: Vector2, capture: String) -> void:
+	# Trois pas : le premier franchit le seuil de demarrage, les suivants
+	# promenent la carte jusqu a la zone.
+	await _glisser_par([depart, depart.lerp(arrivee, 0.15), depart.lerp(arrivee, 0.6),
+		arrivee], capture)
+
+
+## Le meme geste le long d un CHEMIN : appui sur le premier point, un mouvement
+## par point suivant, relachement sur le dernier. Sert aux gestes qui changent
+## de direction (partir de cote pour prendre une carte, puis descendre).
+##
+## `pendant` est appele AVANT le relachement : c est le seul moment ou l on
+## peut constater qu une carte est prise (le relachement la depose).
+func _glisser_par(points: Array[Vector2], capture: String,
+		pendant: Callable = Callable()) -> void:
 	var vp: Viewport = get_viewport()
+	var depart: Vector2 = points[0]
+	var arrivee: Vector2 = points[points.size() - 1]
 	var appui := InputEventMouseButton.new()
 	appui.button_index = MOUSE_BUTTON_LEFT
 	appui.pressed = true
+	appui.button_mask = MOUSE_BUTTON_MASK_LEFT
 	appui.position = depart
 	appui.global_position = depart
 	vp.push_input(appui, true)
 	await get_tree().process_frame
-	# Trois pas : le premier franchit le seuil de demarrage, les suivants
-	# promenent la carte jusqu a la zone.
-	for t in [0.15, 0.6, 1.0]:
+	var avant: Vector2 = depart
+	for i in range(1, points.size()):
 		var bouge := InputEventMouseMotion.new()
 		bouge.button_mask = MOUSE_BUTTON_MASK_LEFT
-		bouge.position = depart.lerp(arrivee, t)
+		bouge.position = points[i]
 		bouge.global_position = bouge.position
+		bouge.relative = points[i] - avant
+		avant = points[i]
 		vp.push_input(bouge, true)
 		await get_tree().process_frame
 	if capture != "":
 		await _shot(capture)
+	if pendant.is_valid():
+		pendant.call()
 	var lache := InputEventMouseButton.new()
 	lache.button_index = MOUSE_BUTTON_LEFT
 	lache.pressed = false
@@ -749,6 +787,11 @@ func _glisser(depart: Vector2, arrivee: Vector2, capture: String) -> void:
 	lache.global_position = arrivee
 	vp.push_input(lache, true)
 	await get_tree().process_frame
+
+
+## Un toucher simple (appui puis relachement au meme point).
+func _toucher(point: Vector2) -> void:
+	await _glisser_par([point], "")
 
 
 ## Laisse les conteneurs se disposer. Les vignettes sont reconstruites a chaque
@@ -839,6 +882,99 @@ func _check_deck_drag_refused(panel: DeckPanel) -> void:
 	# capture doit montrer le bandeau seul : la carte qui revient passe dessus.
 	await get_tree().create_timer(DeckPanel.RETURN_S + 0.1).timeout
 	await _shot("deck_refus")
+
+
+## DEFILEMENT AU DOIGT de la zone du deck, geste commence SUR une vignette.
+##
+## Le defaut : les vignettes sont des Button, qui gardent l appui pour eux ; et
+## le glisser-deposer (UI-006) prenait la carte des 28 px de mouvement, dans
+## toutes les directions. Un pouce qui voulait faire defiler un deck trop long
+## soulevait donc une carte — il ne pouvait defiler qu en visant l interstice
+## de 8 px entre deux vignettes.
+##
+## Ce qui est verifie, au doigt et par la vraie file d evenements :
+##  - glisser VERTICAL sur une vignette -> la zone defile, aucune carte prise,
+##    et le relachement n est pas pris pour un toucher (rien n est retire) ;
+##  - partir DE COTE -> la carte est prise, et deposee sur la collection elle
+##    quitte le deck (le glisser-deposer survit) ;
+##  - toucher simple -> retire toujours un exemplaire.
+func _check_deck_scroll(panel: DeckPanel) -> void:
+	# Un deck a DEUX FOIS plus de cartes differentes que la regle n en permet :
+	# c est un deck hors regle (profil anterieur a la regle des six), le seul
+	# qui depasse de sa zone. Il est cree a part et supprime a la fin.
+	panel.create_deck()
+	var ids: Array = []
+	for c: SpellCard in panel.collection():
+		ids.append(String(c.id))
+		if ids.size() >= DeckRules.MAX_DISTINCT * 2:
+			break
+	SaveData.set_massacre_deck(ids)
+	panel.refresh()
+	await _disposer()
+	var zone: ScrollContainer = panel.deck_scroll()
+	if not panel.deck_can_scroll():
+		_fail("un deck de %d cartes differentes devrait faire defiler sa zone" % ids.size())
+		panel.delete_current_deck()
+		return
+
+	# 1) Vertical, commence sur une vignette : la zone defile.
+	var tuiles: Array[Button] = panel.draggable_tiles(true)
+	var t: Button = tuiles[DeckPanel.COLS]   # deuxieme rangee : il y a de quoi remonter
+	var depart: Vector2 = t.get_global_rect().get_center()
+	var haut: Vector2 = depart - Vector2(0.0, DeckPanel.TILE_H)
+	var avant_defil: int = zone.scroll_vertical
+	var n: int = SaveData.massacre_deck().size()
+	await _glisser_par([depart, depart.lerp(haut, 0.15), depart.lerp(haut, 0.6), haut],
+		"deck_defiler", func() -> void:
+			if panel.is_dragging():
+				_fail("glisser verticalement sur une vignette du deck prend la carte au lieu de defiler"))
+	if zone.scroll_vertical <= avant_defil:
+		_fail("glisser verticalement sur une vignette ne fait pas defiler le deck (%d -> %d)" % [
+			avant_defil, zone.scroll_vertical])
+	if SaveData.massacre_deck().size() != n:
+		_fail("le relachement d un defilement a ete pris pour un toucher (%d -> %d cartes)" % [
+			n, SaveData.massacre_deck().size()])
+
+	# 2) De cote puis vers la collection : le glisser-deposer tient toujours.
+	await _disposer()
+	var d: Button = _tuile_visible(panel)
+	if d == null:
+		_fail("aucune vignette du deck n est entierement visible apres le defilement")
+		panel.delete_current_deck()
+		return
+	var id_d: StringName = d.get_meta(&"card_id")
+	var avant_d: int = DeckRules.count_of(SaveData.massacre_deck(), id_d)
+	var p0: Vector2 = d.get_global_rect().get_center()
+	var cible: Vector2 = panel.collection_zone_rect().get_center()
+	await _glisser_par([p0, p0 + Vector2(DeckPanel.DRAG_START_PX * 2.0, 0.0),
+		cible.lerp(p0, 0.5), cible], "")
+	if DeckRules.count_of(SaveData.massacre_deck(), id_d) != avant_d - 1:
+		_fail("prendre une carte du deck de cote puis la deposer sur la collection ne la retire plus")
+
+	# 3) Toucher simple : retire un exemplaire, comme avant.
+	await get_tree().create_timer(DeckPanel.RETURN_S + 0.1).timeout
+	await _disposer()
+	var v: Button = _tuile_visible(panel)
+	var n2: int = SaveData.massacre_deck().size()
+	if v == null:
+		_fail("aucune vignette du deck visible pour le toucher simple")
+	else:
+		await _toucher(v.get_global_rect().get_center())
+	if SaveData.massacre_deck().size() != n2 - 1:
+		_fail("un toucher sur une vignette du deck ne retire plus d exemplaire (%d -> %d)" % [
+			n2, SaveData.massacre_deck().size()])
+	panel.delete_current_deck()
+	print("[SMOKE] deck : defilement au doigt, glisser-deposer et toucher")
+
+
+## Une vignette du deck ENTIEREMENT dans la partie visible de la zone qui
+## defile : une vignette a moitie sortie se toucherait sur ce qui la recouvre.
+func _tuile_visible(panel: DeckPanel) -> Button:
+	var vue: Rect2 = panel.deck_scroll().get_global_rect()
+	for t in panel.draggable_tiles(true):
+		if vue.encloses(t.get_global_rect()):
+			return t
+	return null
 
 
 ## Pre-cast : un second sort doit pouvoir etre prepare pendant le chargement du
