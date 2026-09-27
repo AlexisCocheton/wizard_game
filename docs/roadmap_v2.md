@@ -65,9 +65,15 @@ pixel-art-animated-slime (rvros), cacodaemon (elthen), lords-of-pain, nightborne
 warrior, free-animated-enemy-sprites (robertpinero), evil-wizard, c3-3dobject-alpha,
 npc-mage-free, fox sprites (elthen), mecha-golem, fire-worm, boss-frost-guardian,
 undead-executioner, boss-demon-slime.
+*(28/09 : la plupart sont arrives et servent, voir §11. Restent ABSENTS :
+boss-frost-guardian, c3-3dobject-alpha, sci-fi-character-pack-9 ; lords-of-pain et
+free-animated-enemy-sprites sont ECARTES ; slime rvros, fox et cacodaemon sont
+branches sans licence confirmee.)*
 
 **Debloquent les nouveaux sorts physiques (chantier H)** : free-undead-tileset
 (craftpix), epic-rpg-world ancient ruins.
+*(28/09 : Ancient Ruins est extrait et sert aux sorts de terrain ; le pack undead
+n est toujours PAS recupere, la session craftpix n est pas ouverte, voir §11.)*
 
 **Effets et fonds** : forest-battle-backgrounds (craftpix), pipoya time-magic /
 bell / light-pillar, animated-explosion-sprite-pack, codemanu pixelart-effect-pack,
@@ -78,8 +84,9 @@ dark-spell-effect (pimen), sc-anime-essentials (seraphcircle).
 ### Licences — AUDITEES le 2026-09-21 (chantier A)
 
 Les 23 entrees ont ete auditees. Tableau complet : **`docs/assets_index.md`**.
-Aucun pack n'est a retirer ; il reste **trois points a regler avant de VENDRE**
-le jeu (rien ne bloque le developpement) :
+Aucun pack n'est a retirer ; il restait **trois points a regler avant de VENDRE**
+le jeu (rien ne bloque le developpement). *La liste s est allongee depuis
+(Batareya, rvros, elthen, voix) : la liste a jour est au §11.* Les trois du 21/09 :
 
 1. **Effect and FX Pixel All Free** (BDragon1727) — les 45 feuilles de sorts,
    donc l'ossature visuelle du jeu. Gratuit en non-commercial ; en commercial
@@ -117,7 +124,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Police plus lisible, tout un peu plus grand | **FAIT** (la cause etait le contour de 6 px, pas la taille) | C |
 | Vraies icones de menu (pas un steak) | **FAIT** | C |
 | Titre stylise, nom "Time Wizard" | **FAIT** | C |
-| Deck : 15 cartes exactement, 0-3 passifs, ≤3 legendaires, ≤3 epiques | **FAIT** (verifie aussi sur les 7 decks de campagne) | K |
+| Deck : 15 cartes exactement, 0-3 passifs, ~~≤3 legendaires, ≤3 epiques~~ | **FAIT**, puis **remplace le 27/09** par la regle des 6 cartes differentes (plafonds de rarete retires, voir §11) | K |
 | Plusieurs onglets de deck | **FAIT** | K |
 | Profil : succes par rarete au lieu des defis | **FAIT** (16 succes, XP deduite de la rarete) | L |
 | Contour de couleur par rarete (cartes, monstres, succes) | **FAIT** (epaisseur croissante en plus de la couleur) | L |
@@ -128,11 +135,11 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Demande | Etat | Chantier |
 |---|---|---|
 | Carte de campagne sur les fonds de combat, points jaunes, fleches d'acte | **FAIT** (5 actes, une page par acte) | E |
-| 3 objectifs par niveau | FAIT (3 par niveau, 4 types) ; types a enrichir | H |
+| 3 objectifs par niveau | ~~FAIT (3 par niveau, 4 types)~~ **FAUX au 27/09** : 3 types seulement, le meme trio sur les 21 niveaux. **FAIT le 28/09** : 16 controles, 3 objectifs coherents par niveau (§11) | H |
 | Histoire : prologue, 5 actes, plot twist de l'enfant | **FAIT** (docs/histoire.md) | D |
 | Sequences visual novel entre les niveaux | **FAIT** (systeme + 9 scenes : prologue et acte 1) | D |
 | Niveau 1 tutoriel, deck 9 cartes, 3 vagues ; niveau 2 en 4 vagues ; puis 6 | **PARTIEL** (niveau 2 raccourci ; le niveau 1 resiste, voir section 9) | H |
-| Pool de cartes qui grandit de 3 par niveau | **FAIT** (6 -> 11 cartes differentes, plus aucun recul) | H |
+| Pool de cartes qui grandit de 3 par niveau | **ABANDONNE le 27/09** : incompatible avec la regle des 6 cartes differentes. Remplace par « chaque niveau fait decouvrir au moins une carte » (§9, §11) | H |
 | Fin : deblocage du mode infini | **FAIT** (`SaveData.campaign_cleared()`) | — |
 
 ### Mode infini
@@ -158,8 +165,8 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Apparition plus bas + fondu de 0,5 s | **FAIT** | B1 |
 | Feu follet -> Planogo, vole par-dessus les murs, boule de poison 10 PV | **FAIT** | B1 |
 | Nuee de rats -> Oiseau mirage, sprite qui ne tourne plus | **FAIT** | B1 |
-| Boss a mecaniques originales (...) | **PARTIEL** (6 boss a mecanique : 3 anciens + ressuscite, N coups immunises, bouclier renvoi) ; le reste BLOQUE par les packs absents | I |
-| Boss d'un acte devenant monstre courant ensuite | **PARTIEL** (`totem_guardian` : boss en lvl_02, mini-boss en lvl_05) | I |
+| Boss a mecaniques originales (...) | **FAIT le 27/09** : mecaniques de monstres v3 et de boss v3, 23 monstres neufs, Briseur de tertres (§11) | I |
+| Boss d'un acte devenant monstre courant ensuite | **FAIT le 27/09** : `EnemyDef.demoted_from`, echos du Gardien et de Chronos, vermine du trio, du Coagule et du Miroir (§11) | I |
 
 ### Combat
 | Demande | Etat | Chantier |
@@ -463,12 +470,18 @@ Ne pas le regler sur une seule mesure.
 
 ## 9. Structure des premiers niveaux — 25 septembre
 
-**Le pool de cartes GRANDIT** desormais sans jamais reculer : 6, 10, 10, 10, 10,
-11, 11 cartes differentes du niveau 1 au niveau 7, pour des decks qui font
-toujours 15 cartes. Il reculait avant (dix au niveau 4, huit au niveau 5) : un
-joueur qui avance recevait moins d outils qu au niveau precedent.
+~~**Le pool de cartes GRANDIT** desormais sans jamais reculer : 6, 10, 10, 10, 10,
+11, 11 cartes differentes du niveau 1 au niveau 7.~~ **Corrige le 28/09 — ce principe
+n a plus cours.** La regle du co-auteur du 27/09 limite un deck a **6 cartes
+differentes** (15 cartes, exemplaires 4/3/2/1), en campagne comme en deck construit :
+un pool qui grandit jusqu a 11 ids ne peut plus exister. Les 20 decks qui depassaient
+6 ids ont ete recomposes, et le principe devient **« chaque niveau fait decouvrir au
+moins une carte qu aucun deck joue avant lui n avait montree »**, verifie dans l ordre
+de jeu par `test_deck_rules`. La variete vient du CHOIX des six cartes selon le niveau,
+des sorts choisis en combat et des cartes gagnees en recompense. Aucun test ne
+verifiait l ancien principe.
 
-Les ajouts collent au LIEU, ils ne remplissent pas : aux Forges, Golem, Colosse
+Ce qui reste vrai : les cartes collent au LIEU, elles ne remplissent pas : aux Forges, Golem, Colosse
 et Behemoth sont immunises au ralentissement, donc le controle n y sert a rien
 et la Pluie de givre y apporte des DEGATS de givre que le Colosse craint. A la
 Cour brisee, le Chevalier du vide avale l arcane et le Seigneur Spectre se tient
@@ -526,3 +539,73 @@ triviale, mais son interet tient a ce que le joueur DECIDE quand commencer —
 donc a un geste de reveil, qui passe par le ciblage. Livree sans ce geste, elle
 se reduit a "un monstre qui demarre en retard", ce qui n est pas une question
 posee au joueur.
+*(28/09 : un AUTRE renard est livre, `sleepy_fox` — il s arrete 2 s pour dormir et,
+pendant ce temps, aucun sort n est jouable. La question posee au joueur est « lancer
+avant qu il s endorme », pas « quand le reveiller ».)*
+
+
+---
+
+## 11. Etat au 28 septembre, apres trois vagues de chantiers (27-28/09)
+
+Reference : le retour du co-auteur du 27/09 (regle de deck, objectifs, Riviere,
+monstres, terrain permanent, apprentis, boss, packs). Chaque chantier a tourne dans
+son worktree git ; seul l orchestrateur a fusionne dans `main`, une branche a la fois,
+en relancant le harnais. Le detail et les chiffres sont dans les messages des commits de fusion
+(`git log --first-parent main`) ; cette section ne dit que l etat.
+
+### Fait
+
+| Demande | Livre |
+|---|---|
+| Regle de deck : 6 cartes differentes | `DeckRules.MAX_DISTINCT = 6` ; plafonds de rarete retires (la regle borne deja a 3 legendaires, 4 epiques) ; `is_valid()` verifie enfin les exemplaires ; 20 decks de campagne recomposes ; deck sauvegarde hors regle garde et explique, refuse en Massacre |
+| Trois objectifs par niveau, coherents | Moteur a 16 controles parametres, libelle genere, AUDIT impossible/gratuit ; 63 objectifs sur 21 niveaux, 15 controles differents, chacun appuye sur le contenu du niveau ; exemples du co-auteur presents ; progression suivie EN COMBAT (bandeau, echec annonce) |
+| Riviere (legendaire) | ligne d eau, un pont au hasard qui garde toujours un chemin, une seule a la fois, volants et projectiles passent dessus |
+| Sorts de terrain permanents | `duration <= 0` = fin du combat, 6 objets au plus (le plus ancien cede), garantie de chemin avant et apres la pose (Mur et Bastion compris) ; Autel d appel, Ronces, Fosse ; Totem a 3500 PV (mesure), Semis permanent qui n attire plus |
+| Monstres (§0.4 du plan) | mecaniques v3 : vies multiples depuis le haut, renaissance differee avec marque au sol (slime fantome -> squelette), reanimateur, laser de riposte, sommeil qui coupe la magie, zigzag / rebond / sauts |
+| Boss (§0.7) | mecaniques v3 : Horloger, Jumeaux, Cameleon, Voleur de sorts, Devoreur-invocateur, Miroir du mage, chacune avec sa garantie de fin ; Briseur de tertres (epargne l eau) |
+| Packs de monstres (§0.8) | 23 monstres et boss neufs : trio de mages, Mecha-golem, slimes geants (colossal -> enorme -> moyen), renard dormeur, cacodemon, Malyk le Seigneur demon (Duelyst), Fossoyeur, Horloger, Greffier, Cameleon ; les tetes manquantes des actes 3 a 5 |
+| Anciens boss en vermine | champ `EnemyDef.demoted_from` ; echos du Gardien et de Chronos a l acte 5 ; vermine du trio, du Coagule et du Miroir |
+| Apprentis du mage | `RewardKind.CHARACTER` data-driven ; Apprentie d azur au niveau de compte 9 ; robe et chapeau mis de cote ; la Sorciere des fosses change de silhouette |
+| UI-006, UI-007 | glisser-deposer au deck avec raison de refus ; medaillon du monstre signature sur chaque niveau ; acte IV en eventail ; etoiles vides lisibles sur tous les fonds ; defilement du deck au doigt |
+| Copies petrifiees | la petrification et le vol visent un EXEMPLAIRE (carte + position), plus toutes les copies d une carte |
+
+### En cours
+
+- **Equilibrage fin** des 21 niveaux (agent `balance-tester`, worktree separe). Point de
+  depart : six niveaux sous 60 % (`lvl_13` 2/30, `lvl_16` 8, `lvl_18` 10, `lvl_21` 10,
+  `lvl_14` 14, `lvl_11` 18). Apres la regle des 6 : 509 victoires sur 630.
+
+### Reste — actions du testeur (l assistant ne peut pas les faire)
+
+1. **URGENT : licence Batareya** — 42 des 60 icones de cartes en dependent
+   (`docs/assets_index.md` §1.5).
+2. `python tools/assets/fetch_craftpix.py login`, pour que l assistant recupere le pack
+   **Free Undead Tileset** (les sorts de terrain utilisent Ancient Ruins en attendant).
+3. **Witches Pack complet** (itch.io, 9e0) : les 5 autres apprenties.
+4. Archives completes du **renard** et du **cacodemon** (elthen) : branches sur des PNG
+   nus, licence a confirmer.
+5. **Licence rvros** du `Slime.zip` (slimes geants).
+6. Packs absents demandes pour des boss : **frost-guardian, c3-3dobject, sci-fi-9**.
+7. **L image du necromancien** citee par le co-auteur n a jamais ete transmise.
+8. **ART-004** (taille des monstres) et **AUDIO-003** (volumes) : a juger a l oeil et a
+   l oreille.
+9. Avant toute vente : contribution a BDragon1727, courriel a John Carroll (voix),
+   origine de FreeSFX.
+
+### Reste — limites connues signalees par les chantiers
+
+- Le **Voleur de sorts** ne retient que la carte volee, pas sa position en main.
+- La **bande d objectifs** en combat chevauche la zone d apparition en haut a droite.
+- Le **Slime colossal** est une feuille agrandie a gros pixels : a juger en jeu.
+- Les quatre nouvelles cartes de terrain ne sont dans aucun deck de campagne.
+- Toujours vrai : niveau 1 en 6 vagues au lieu de 3 (§9) ; le mage apparait en demon
+  cornu dans les scenes d histoire (§6).
+
+### Ce que ces vagues ont appris sur le travail en parallele
+
+Une fusion SANS conflit n est pas une fusion sans defaut : git a garde deux
+`refusal_reason` homonymes posees par deux chantiers, et un recalcul de teinte par
+image aurait repeint en gris le rouge des cartes volees. Les worktrees peuvent partir
+d une base ancienne : les fichiers generes se regenerent apres fusion, ils ne se
+resolvent pas a la main. Detail dans la memoire projet (`gotchas.md`).
