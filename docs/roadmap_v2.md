@@ -570,11 +570,19 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
 | UI-006, UI-007 | glisser-deposer au deck avec raison de refus ; medaillon du monstre signature sur chaque niveau ; acte IV en eventail ; etoiles vides lisibles sur tous les fonds ; defilement du deck au doigt |
 | Copies petrifiees | la petrification et le vol visent un EXEMPLAIRE (carte + position), plus toutes les copies d une carte |
 
-### En cours
+### Equilibrage (BAL-002, 28/09) : ruptures franches corrigees, reglage fin au testeur
 
-- **Equilibrage fin** des 21 niveaux (agent `balance-tester`, worktree separe). Point de
-  depart : six niveaux sous 60 % (`lvl_13` 2/30, `lvl_16` 8, `lvl_18` 10, `lvl_21` 10,
-  `lvl_14` 14, `lvl_11` 18). Apres la regle des 6 : 509 victoires sur 630.
+- **Corrige** : les quatre seigneurs de l acte 4 descendaient dans des vagues ordinaires
+  avec leurs PV de boss ; ils ont des echos (`demoted_from`). `lvl_13` 44 -> 68 %,
+  `lvl_16` 48 -> 78 % (series cumulees). Garde-fou : aucune tete en vague ordinaire,
+  six exceptions nommees. **Tutoriel `lvl_01` en 3 vagues** (106 -> 189 -> 356 PV,
+  ~96 s au lieu de 173, 98 %). Le banc accuse desormais la vraie source des coups.
+  Total : 571 victoires sur 630, aucun niveau sous 60 %.
+- **A trancher** (leviers chiffres dans le message de fusion BAL-002) : le **Massacre est
+  beaucoup trop facile** (vague 17 en moyenne, repere 4-8) ; une douzaine de niveaux a
+  29-30/30 (PV x1,5 + espacement x0,7 les ramene vers 82-88 %) ; l arbre appat a 3500 PV
+  quasi automatique dans `lvl_04` (~800 propose) ; Boule de feu a 26 reels = +14 points
+  de victoire sur les niveaux durs.
 
 ### Reste — actions du testeur (l assistant ne peut pas les faire)
 
@@ -599,8 +607,8 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
 - La **bande d objectifs** en combat chevauche la zone d apparition en haut a droite.
 - Le **Slime colossal** est une feuille agrandie a gros pixels : a juger en jeu.
 - Les quatre nouvelles cartes de terrain ne sont dans aucun deck de campagne.
-- Toujours vrai : niveau 1 en 6 vagues au lieu de 3 (§9) ; le mage apparait en demon
-  cornu dans les scenes d histoire (§6).
+- Regles depuis : le niveau 1 est en 3 vagues (BAL-002) ; le mage a un vrai portrait
+  humain dans les scenes d histoire depuis le 26/09 (commit `b5535d7`).
 
 ### Ce que ces vagues ont appris sur le travail en parallele
 
