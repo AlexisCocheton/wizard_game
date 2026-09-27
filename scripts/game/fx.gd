@@ -1105,3 +1105,70 @@ static func mech_label(parent: Node2D, radius: float) -> Label:
 	l.position = Vector2(-large * 0.5, -radius * 0.95 - haut)
 	parent.add_child(l)
 	return l
+
+
+# --- Briseur de terrain (chantier W3) ------------------------------------------
+
+## Couleur du geste du Briseur : brun de terre rougie. Ni le rouge du laser (le
+## mage n est pas vise), ni le gris des murs (c est une MENACE sur le mur, pas le
+## mur lui-meme).
+const COL_BREAK := Color(0.95, 0.50, 0.22)
+
+
+## LA MARQUE DU BRISEUR : posee sur l objet de terrain qu il s apprete a briser,
+## pendant toute sa preparation.
+##
+## ENFANT DE L ANCRE, et non du champ de bataille : si l objet disparait avant le
+## coup (expire, abattu par la vague), la marque part avec lui sans que personne
+## ait a y penser. Un anneau qui SE RESSERRE sur la duree de la preparation : le
+## joueur lit « ca va tomber, et bientot » sans chiffre, et le compte a rebours
+## ecrit au-dessus du Briseur dit le reste.
+static func break_marker(target: Node2D, seconds: float, radius: float = 90.0) -> Node:
+	if not enabled() or target == null:
+		return null
+	var root := Node2D.new()
+	root.name = "BreakMark"
+	root.z_index = 6
+	target.add_child(root)
+	var ring := ZoneRing.new()
+	ring.setup(radius, COL_BREAK)
+	root.add_child(ring)
+	sprite(root, "stone_peak", Vector2.ZERO, radius * 1.3, true,
+		Color(COL_BREAK.r, COL_BREAK.g, COL_BREAK.b, 0.85))
+	root.scale = Vector2.ONE * 1.35
+	var tw: Tween = root.create_tween()
+	tw.tween_property(root, "scale", Vector2.ONE * 0.8, maxf(seconds, 0.1))
+	return root
+
+
+## LE COUP DU BRISEUR : une fissure qui court du Briseur a l objet brise.
+##
+## C est le trait qui repond a « pourquoi mon mur a disparu ? » : sans lui, le mur
+## tombe a 500 px d un monstre qui n a rien touche, et le joueur accuse le jeu.
+## Une ligne BRISEE (et non droite, comme le laser) : on lit une faille dans le
+## sol, pas un rayon.
+static func ground_crack(parent: Node2D, from: Vector2, to: Vector2) -> void:
+	if not enabled() or parent == null:
+		return
+	var l := Line2D.new()
+	var pts := PackedVector2Array()
+	var n: int = maxi(4, int(from.distance_to(to) / 45.0))
+	var normale: Vector2 = (to - from).orthogonal().normalized()
+	for i in n + 1:
+		var t: float = float(i) / float(n)
+		# Le zigzag s eteint aux deux bouts : la faille part bien DU pied du
+		# Briseur et arrive bien SUR l objet.
+		var ecart: float = 0.0 if i == 0 or i == n else (18.0 if i % 2 == 0 else -18.0)
+		pts.append(from.lerp(to, t) + normale * ecart)
+	l.points = pts
+	l.width = 12.0
+	l.default_color = COL_BREAK
+	l.joint_mode = Line2D.LINE_JOINT_SHARP
+	l.z_index = 5
+	parent.add_child(l)
+	var tw: Tween = l.create_tween()
+	tw.tween_interval(0.25)
+	tw.tween_property(l, "modulate:a", 0.0, 0.45)
+	tw.tween_callback(l.queue_free)
+	sprite(parent, "dust", from, 150.0, false, Color(0.85, 0.75, 0.60))
+	sprite(parent, "shatter_burst", to, 190.0, false, COL_BREAK.lightened(0.2))

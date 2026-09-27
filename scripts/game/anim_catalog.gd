@@ -210,6 +210,15 @@ const MODULATE: Dictionary = {
 	## On joue donc la VALEUR : robe sombre, visage blafard, flamme eteinte — un
 	## scribe qui ne sort pas de ses registres, la ou le Mage noir flamboie.
 	"spell_clerk": Color(0.50, 0.60, 1.0),
+	## CHANTIER W3 — Le Briseur de tertres partage `golem_orange` avec le Behemoth,
+	## qui descend dans le MEME niveau (`lvl_04`, vague 5). Pierre de tombe
+	## moussue : les pointes orange virent au vert-de-gris.
+	"terrain_breaker": Color(0.62, 0.95, 0.62),
+	## Les ECHOS des anciens boss (acte 5) : la feuille de leur boss, pale et
+	## translucide. C est ce qui les separe de l Enfant, qui porte la feuille de
+	## Chronos a pleine taille : le boss final ne doit pas sembler arriver en vague 1.
+	"warden_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"chronos_echo": Color(0.72, 0.85, 1.0, 0.82),
 }
 
 

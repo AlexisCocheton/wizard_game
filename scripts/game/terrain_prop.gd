@@ -147,6 +147,20 @@ class Anchor extends Node2D:
 			cb.call()
 
 
+## Nom en clair d un genre d objet, -1 = mur (convention de `Anchor.kind`). Sert a
+## la legende du Briseur de terrain : « BRISE : ARBRE » dit au joueur ce qu il va
+## perdre avant de le perdre.
+static func kind_label(k: int) -> String:
+	match k:
+		Kind.TREE: return "arbre"
+		Kind.WATER: return "nappe"
+		Kind.RIVER: return "riviere"
+		Kind.BRAMBLE: return "ronces"
+		Kind.PIT: return "fosse"
+		Kind.ALTAR: return "autel"
+	return "mur"
+
+
 ## Destructible ? Une nappe d eau ne se frappe pas : on ne peut pas casser une
 ## flaque, et laisser les monstres la taper leur donnerait une cible ou ils
 ## devraient simplement patauger.

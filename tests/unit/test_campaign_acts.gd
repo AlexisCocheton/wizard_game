@@ -402,8 +402,18 @@ func _test_lacte_5_suit_le_document() -> void:
 ## deux regles ne se contredisent pas, elles se completent — il revient en
 ## vermine, pas en evenement, et c est exactement la difference que l acte 5
 ## raconte.
+##
+## CHANTIER W3 — « redevenir un monstre ordinaire » veut dire en avoir les PV.
+## Le premier jet faisait descendre `warden.tres` et `chronos.tres` EUX-MEMES,
+## avec leurs PV de boss, et ce test le validait. Un ancien boss est desormais
+## reconnu par `EnemyDef.demoted_from` : la version allegee qui porte son id. Et
+## le .tres du boss lui-meme est INTERDIT dans ces vagues — sans cette seconde
+## moitie, le propos redeviendrait faux en silence au premier copier-coller.
 func _test_lacte_5_renvoie_les_anciens_boss_en_vague_normale() -> void:
+	## ancien boss -> niveau ou sa version allegee descend en vague normale.
 	var en_vermine: Dictionary = {}
+	## ancien boss -> niveau ou son .tres de BOSS descend en vague normale.
+	var boss_brut: Dictionary = {}
 	for lv: LevelDef in ContentDB.levels.values():
 		if lv.act != 5:
 			continue
@@ -411,12 +421,19 @@ func _test_lacte_5_renvoie_les_anciens_boss_en_vague_normale() -> void:
 			if w == null or w.is_boss or w.is_miniboss:
 				continue
 			for e: WaveEntry in w.entries:
-				if e != null and e.enemy != null:
-					en_vermine[e.enemy.id] = lv.id
+				if e == null or e.enemy == null:
+					continue
+				if e.enemy.demoted_from != &"":
+					en_vermine[e.enemy.demoted_from] = lv.id
+				boss_brut[e.enemy.id] = lv.id
 	for ancien: StringName in [&"warden", &"chronos"]:
 		ok(en_vermine.has(ancien),
-			("%s descend en vague NORMALE a l acte 5 : ce qui etait un" % ancien)
-			+ " evenement devient de la vermine (docs/histoire.md section 7)")
+			("%s descend en vague NORMALE a l acte 5, en version allegee : ce qui" % ancien)
+			+ " etait un evenement devient de la vermine (docs/histoire.md section 7)")
+		not_ok(boss_brut.has(ancien),
+			("%s descend en vague normale de %s avec ses PV de BOSS : la vermine doit"
+			% [ancien, boss_brut.get(ancien, &"?")])
+			+ " etre un .tres derive (EnemyDef.demoted_from), jamais le boss lui-meme")
 
 
 ## LA CAMPAGNE FINIT DANS L ESPACE DIVIN, et finir la campagne ouvre le
