@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=72 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=67 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_xuvbo"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_lyna4"]
@@ -20,16 +20,11 @@
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="17_muspt"]
 [ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="18_qnhb2"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="18_smtlg"]
-[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="19_a5r0e"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="20_ij338"]
-[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="21_jnc4j"]
 [ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="22_6xcos"]
-[ext_resource type="Resource" path="res://resources/cards/rare/bone_recall.tres" id="23_rewrk"]
 [ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="24_6volu"]
 [ext_resource type="Resource" path="res://resources/cards/epic/void_grip.tres" id="25_jwiqm"]
-[ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="26_yim71"]
-[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="27_808q8"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="28_780l5"]
+[ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="26_vmfe3"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="29_pq4nw"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="30_0hr58"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="31_ksdft"]
@@ -94,7 +89,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_2enmq"]
+[sub_resource type="Resource" id="Resource_vmfe3"]
 script = ExtResource("32_raevg")
 id = &"w7_1"
 duration = 28.0
@@ -124,7 +119,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_qnhb2"]
+[sub_resource type="Resource" id="Resource_h0tn6"]
 script = ExtResource("32_raevg")
 id = &"w7_2"
 duration = 29.0
@@ -154,7 +149,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_u1eb3"]
+[sub_resource type="Resource" id="Resource_dfx8a"]
 script = ExtResource("32_raevg")
 id = &"w7_3_miniboss"
 duration = 36.0
@@ -191,7 +186,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_63ls2"]
+[sub_resource type="Resource" id="Resource_xuvbo"]
 script = ExtResource("32_raevg")
 id = &"w7_4"
 duration = 32.0
@@ -242,7 +237,7 @@ count = 3
 spawn_delay = 1.5
 start_offset = 30.0
 
-[sub_resource type="Resource" id="Resource_wlt05"]
+[sub_resource type="Resource" id="Resource_lyna4"]
 script = ExtResource("32_raevg")
 id = &"w7_5"
 duration = 34.0
@@ -279,7 +274,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 38.0
 
-[sub_resource type="Resource" id="Resource_ov2ma"]
+[sub_resource type="Resource" id="Resource_2enmq"]
 script = ExtResource("32_raevg")
 id = &"w7_6_boss"
 duration = 55.0
@@ -300,9 +295,9 @@ intro_story = &""
 outro_story = &""
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("32_raevg")]([SubResource("Resource_2enmq"), SubResource("Resource_qnhb2"), SubResource("Resource_u1eb3"), SubResource("Resource_63ls2"), SubResource("Resource_wlt05"), SubResource("Resource_ov2ma")])
+waves = Array[ExtResource("32_raevg")]([SubResource("Resource_vmfe3"), SubResource("Resource_h0tn6"), SubResource("Resource_dfx8a"), SubResource("Resource_xuvbo"), SubResource("Resource_lyna4"), SubResource("Resource_2enmq")])
 enemy_pool = Array[ExtResource("1_xuvbo")]([ExtResource("2_lyna4"), ExtResource("3_2enmq"), ExtResource("4_qnhb2"), ExtResource("5_u1eb3"), ExtResource("6_63ls2"), ExtResource("7_wlt05"), ExtResource("8_ov2ma"), ExtResource("9_a43ve"), ExtResource("10_x6hq0"), ExtResource("11_vewni"), ExtResource("12_sc3o3"), ExtResource("13_p6aea"), ExtResource("14_55kjb"), ExtResource("15_ibebx"), ExtResource("16_uvtgg"), ExtResource("17_2enmq"), ExtResource("18_qnhb2"), ExtResource("37_2enmq")])
-exploration_deck = Array[ExtResource("17_muspt")]([ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("19_a5r0e"), ExtResource("19_a5r0e"), ExtResource("20_ij338"), ExtResource("20_ij338"), ExtResource("21_jnc4j"), ExtResource("22_6xcos"), ExtResource("23_rewrk"), ExtResource("24_6volu"), ExtResource("25_jwiqm"), ExtResource("26_yim71"), ExtResource("27_808q8"), ExtResource("28_780l5")])
+exploration_deck = Array[ExtResource("17_muspt")]([ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("20_ij338"), ExtResource("20_ij338"), ExtResource("20_ij338"), ExtResource("22_6xcos"), ExtResource("22_6xcos"), ExtResource("24_6volu"), ExtResource("24_6volu"), ExtResource("25_jwiqm"), ExtResource("25_jwiqm"), ExtResource("26_vmfe3"), ExtResource("26_vmfe3")])
 objectives = Array[ExtResource("30_0hr58")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("29_pq4nw")
 next_levels = Array[StringName]([&"lvl_13"])

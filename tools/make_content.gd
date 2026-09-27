@@ -2368,29 +2368,28 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# le joueur affronte deux fois plus avec les memes outils. Plus de zones, qui
 	# sont la seule facon de traiter plusieurs monstres par sort.
 	# La Nappe montante entre ICI, au premier niveau qui envoie des groupes RAPIDES
-	# (sprites, nuees). Contre un monstre lent, faire reculer de 45 px/s ne se voit
-	# pas ; contre un sprite qui descend vite, la nappe rend au joueur les trois
-	# secondes qu il vient de perdre. Elle prend la place d un Trait arcanique : le
-	# deck reste a 15 cartes, et ce qu il perd en degats il le regagne en terrain —
-	# exactement l arbitrage que la carte existe pour poser.
+	# (sprites, nuees) : contre un sprite qui descend vite, la nappe rend au joueur
+	# les trois secondes qu il vient de perdre.
 	#
-	# UN exemplaire et pas deux. Mesure au banc, 30 parties : a deux exemplaires le
-	# niveau 2 montait a 30 victoires sur 30, soit hors de la bande 60-95 % que le
-	# jeu vise. Ce n etait pas du bruit de mesure — c est le seul niveau qui bougeait
-	# de cette facon, et le seul ou la carte etait doublee. Avec un exemplaire la
-	# carte se joue encore une fois par partie sans transformer le niveau en
-	# promenade.
+	# UN exemplaire de Nappe et pas deux. Mesure au banc, 30 parties : a deux
+	# exemplaires le niveau 2 montait a 30 victoires sur 30, hors de la bande
+	# 60-95 %. Avec un exemplaire la carte se joue encore une fois par partie sans
+	# transformer le niveau en promenade.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Meteore et Nappe. Sortent le Champ de givre, le Mur, l Entrave
+	# et le Brasier (un exemplaire chacun) : leurs places vont aux zones de feu et
+	# au Trait, pour que le deck garde le meme poids de degats.
 	lvl2.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 1],
-		[C + "common/piercing_arrow.tres", 2],
-		[C + "common/frost_field.tres", 1],
-		[C + "common/ember_pool.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "common/tidal_pool.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "rare/temporal_drag.tres", 1],
+		[C + "common/ember_pool.tres", 3],
+		[C + "common/piercing_arrow.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/brazier.tres", 1],
+		[C + "common/tidal_pool.tres", 1],
 	])
 	lvl2.objectives = [o1, o2, o3]
 	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
@@ -2584,47 +2583,32 @@ func _acte_2(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	]
 	# DECK ANTI-NOMBRE. Le contenu du niveau est fait de monstres qui se divisent et
 	# qui pullulent : le mono-cible y est un piege (tuer une Gelee au Trait, c est
-	# creer deux Gelees). D ou une majorite de cartes de zone, et la Spirale de sel
-	# qui rassemble avant la frappe. Un seul Trait subsiste, pour achever les Pretres.
+	# creer deux Gelees). D ou des cartes de zone et la Spirale de sel, la carte
+	# d histoire de l Ossuaire, qui rassemble avant la frappe.
 	#
-	# POURQUOI DEUX ZONES DE FEU EN MOINS. Mesure au banc : lvl_03 gagnait
-	# 29 fois sur 30, tres au-dessus de la cible 60-95 %. La cause n etait ni la
-	# vitesse ni le budget des vagues, mais un croisement : CINQ des dix monstres
-	# du niveau craignent le feu (Nuee x1.30, Feu follet x1.35, Gelee, Gnome et
-	# Pretre x1.15) et un TIERS du deck etait du feu. Le joueur ne pouvait pas se
-	# tromper d element — il n avait aucun choix a faire.
-	#
-	# UNE carte de feu devient donc une zone ARCANIQUE (mesure : en en
-	# remplacant DEUX, le niveau tombait a 53 %, sous la cible — la correction
-	# etait alors plus grosse que le defaut). L arcane est plus
-	# neutre sur ce bestiaire (moyenne 1.04 contre 1.08 pour le feu) et surtout
-	# elle frappe d AUTRES monstres : l Ombre resiste au feu (0.90) mais craint
-	# l arcane (1.30), l Archer resiste au feu (0.80) et pas a l arcane. Le deck
-	# reste anti-nombre, mais il faut maintenant choisir QUELLE zone poser.
+	# PEU DE FEU, ET C EST MESURE. lvl_03 gagnait 29 fois sur 30 : CINQ des dix
+	# monstres du niveau craignent le feu (Nuee x1.30, Feu follet x1.35, Gelee,
+	# Gnome et Pretre x1.15) et un TIERS du deck etait du feu. Le joueur ne pouvait
+	# pas se tromper d element. La Resonance (arcane) frappe d AUTRES monstres :
+	# l Ombre resiste au feu mais craint l arcane, l Archer aussi.
 	# Le Semis de fletrissure entre ICI parce que l Ossuaire envoie des nuees
-	# DISPERSEES : une zone seule y frappe un monstre a la fois. L arbre empoisonne
-	# resout les deux moities du probleme d un coup — il les rassemble a son pied,
-	# et son poison les use pendant qu ils tapent le bois.
+	# DISPERSEES : l arbre les rassemble a son pied et son poison les use. Les
+	# goules y sont immunisees au venin : la carte vaut plus au niveau suivant.
 	#
-	# Il remplace une Boule de feu : le deck reste a 15 cartes et a 3 epiques, le
-	# plafond de DeckRules. La Spirale de sel reste a cote, et les deux se completent
-	# — aspirer PUIS provoquer tient un couloir entier.
-	#
-	# Reserve : les goules de ce niveau sont immunisees au poison. L arbre y garde sa
-	# provocation, mais sa mare ne mord que sur les gelees et les rats. C est
-	# volontaire : la carte gagne en valeur au niveau suivant, elle n est pas gratuite
-	# ici.
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Spirale de sel et Semis. Sortent les Braises, le Trait, la
+	# Lumiere purifiante et le Mur : le feu tombe a deux Boules, et la Pluie de
+	# givre et la Fleche prennent le fond du deck.
 	lvl3.exploration_deck = _deck([
+		[C + "common/frost_rain.tres", 4],
+		[C + "common/piercing_arrow.tres", 4],
 		[C + "common/fireball.tres", 2],
-		[C + "common/ember_pool.tres", 1],
-		[C + "common/frost_rain.tres", 2],
-		[C + "common/arcane_bolt.tres", 1],
-		[C + "common/piercing_arrow.tres", 2],
 		[C + "rare/salt_spiral.tres", 2],
-		[C + "rare/purifying_light.tres", 1],
 		[C + "epic/resonance.tres", 2],
 		[C + "epic/blight_sapling.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl3.objectives = [o1, o2, o3]
 	lvl3.legendary_reward = load(C + "legendary/tide_ledger.tres")
@@ -2767,29 +2751,27 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		load(E + "risen_ghoul.tres"),
 	]
 	# DECK CHARNIERE. Le niveau commence en registre "nombre" et finit en registre
-	# "masse" : le deck doit tenir les deux moities. Zones pour les goules, Meteore
-	# et Marque de faiblesse pour les deux P4 de la vague 5. Le Rappel d ossements
-	# repond au vrai probleme du niveau : c est le plus long de la campagne, on y
-	# manque de cartes avant d y manquer de PV.
-	# Le Totem de coeur-de-bois entre ICI, au niveau du GRAND APPEL : c est le plus
-	# long du jeu et son boss INVOQUE sans arret. Contre un flux, on ne gagne pas en
-	# tuant plus vite, on gagne en donnant au flux autre chose a faire. L arbre est
-	# la seule carte du jeu qui le permette.
+	# "masse" : le deck doit tenir les deux moities. Braises pour les goules,
+	# Meteore et Marque de faiblesse pour les deux P4 de la vague 5. Le Rappel
+	# d ossements, carte d histoire du niveau, repond au vrai probleme : c est le
+	# plus long de la campagne, on y manque de cartes avant d y manquer de PV.
+	# Le Totem de coeur-de-bois entre ICI, au niveau du GRAND APPEL : son boss
+	# INVOQUE sans arret, et contre un flux on gagne en donnant au flux autre chose
+	# a faire. L arbre est la seule carte du jeu qui le permette.
 	#
-	# Deux exemplaires, contre une Boule de feu et une Fleche percante : 15 cartes,
-	# 2 epiques, la regle tient. Le deck perd deux sorts de degats et gagne vingt
-	# secondes cumulees de repit — a ce niveau-la, le temps vaut plus que les PV.
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Totem et Rappel. Sortent la Boule de feu, la Fleche, la Spirale
+	# et le Mur ; le Trait monte a 4 pour achever ce que les zones entament.
 	lvl4.exploration_deck = _deck([
-		[C + "common/fireball.tres", 1],
-		[C + "common/ember_pool.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/piercing_arrow.tres", 1],
+		[C + "common/arcane_bolt.tres", 4],
+		[C + "common/ember_pool.tres", 3],
+		[C + "rare/meteor.tres", 3],
 		[C + "rare/heartwood_totem.tres", 2],
-		[C + "rare/bone_recall.tres", 1],
-		[C + "rare/meteor.tres", 2],
-		[C + "rare/salt_spiral.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
+		[C + "rare/bone_recall.tres", 1],
 	])
 	lvl4.objectives = [o1, o2, o3]
 	lvl4.legendary_reward = load(C + "legendary/summoners_key.tres")
@@ -2969,34 +2951,28 @@ func _acte_3(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# DECK ANTI-BLINDAGE. Contre 55 a 130 PV par corps, une zone a 8 degats/s est
 	# du gaspillage : il faut des paquets de degats. Meteore (60 d un coup),
 	# Focalisation (x2 sur le sort suivant) et Marque de faiblesse (x2 en zone) se
-	# combinent — c est la combo que le niveau veut enseigner.
-	# La Rupture de chaine est la reponse d urgence : elle n a pas besoin de tuer,
-	# elle rend du temps en repoussant ce qu on n a pas fini.
-	# DIX cartes differentes et non huit. La variete du deck reculait ici — le
-	# niveau 4 en offrait dix, le 5 huit — alors que le testeur demandait un
-	# pool qui GRANDIT de niveau en niveau. Un joueur qui avance ne doit pas
-	# recevoir moins d outils qu au niveau precedent.
+	# combinent : c est la combo que le niveau veut enseigner. La Rupture de chaine,
+	# carte d histoire du niveau, est la reponse d urgence : elle repousse ce qu on
+	# n a pas fini.
+	# Aux Forges, Golem, Colosse et Behemoth sont IMMUNISES au ralentissement : le
+	# controle n y sert a rien. La Pluie de givre reste pour ses DEGATS de givre,
+	# que le Colosse craint. Mesure : a une Focalisation et un Meteore de moins, le
+	# niveau tombait a 53-63 %. On garde donc leurs exemplaires entiers.
 	#
-	# Les deux ajouts collent au lieu : aux Forges, Golem, Colosse et Behemoth
-	# sont IMMUNISES au ralentissement, donc le controle ne sert a rien et il
-	# faut des reponses directes. Le Champ de givre y perd son sens, la Boule de
-	# feu et la Lumiere purifiante le gardent — et le Colosse craint justement
-	# le givre en DEGATS, ce que la Pluie de givre apporte sans ralentir.
-	# Mesure : a une seule Focalisation et un seul Meteore de moins, le niveau
-	# est tombe a 53-63 % sur trois passages, sous le plancher de 60 %. La
-	# variete ne doit pas se payer en puissance — on rend les exemplaires aux
-	# cartes qui PORTENT le niveau (Meteore contre les gros, Focalisation qui
-	# accelere) et on prend la variete sur le fond commun.
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Rupture de chaine. Sortent la Lumiere, la Fleche et le Mur (un
+	# exemplaire chacun) : le Trait monte a 4, l arcane etant ce que les Forges
+	# craignent le plus (x1.11 en moyenne ponderee par les PV).
 	lvl5.exploration_deck = _deck([
 		[C + "rare/meteor.tres", 3],
+		[C + "common/arcane_bolt.tres", 4],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
 		[C + "rare/chain_break.tres", 2],
-		[C + "common/frost_rain.tres", 1],
-		[C + "rare/purifying_light.tres", 1],
-		[C + "common/piercing_arrow.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
+		[C + "common/frost_rain.tres", 2],
 	])
 	lvl5.objectives = [o1, o2, o3]
 	lvl5.legendary_reward = load(C + "legendary/forge_dial.tres")
@@ -3150,43 +3126,31 @@ cadran, et ils ignorent qui la passe."
 	]
 	# DECK DE DEGATS + DISSIPATION. Deux hypotheses testees au banc et rejetees :
 	#  - "il faut du cast court" (Etincelle + Givre) -> 13 % de victoires. Une
-	#    Etincelle a 15 degats ne tue aucun corps de la Cour (30 a 60 PV) : le
-	#    mage lance vite et ne tue rien.
-	#  - "il faut moins de monstres" -> sans effet, le niveau a deja MOINS de PV
-	#    totaux que les Forges (1340 contre 2054).
-	# Ce qui marche : de la densite de degats par sort. Boule de feu et Resonance
-	# frappent tout un groupe, Brasier tient un couloir, et le Vide d emprise
-	# reste la carte signature — seule reponse au trio totem/berserker/chevalier
-	# qui se protege mutuellement.
-	# La Racine de tonnerre entre ICI et pas aux Forges, ce qui est contre-intuitif
-	# puisque les Forges sont le niveau des gros. C est justement la raison : les
-	# Forges alignent des Golems et un Colosse, tous IMMUNISES au ralentissement,
-	# donc a l etourdissement. Un stun y serait une carte morte, et la carte aurait
-	# menti au joueur.
+	#    Etincelle ne tue aucun corps de la Cour (30 a 60 PV).
+	#  - "il faut moins de monstres" -> sans effet.
+	# Ce qui marche : de la densite de degats par sort. La Boule de feu frappe un
+	# groupe, le Brasier tient un couloir, et le Vide d emprise, carte d histoire
+	# du niveau, reste la seule reponse au trio totem/berserker/chevalier qui se
+	# protege mutuellement.
+	# La Racine de tonnerre entre ICI et pas aux Forges : les Forges alignent des
+	# monstres IMMUNISES au ralentissement, donc a l etourdissement, et la carte y
+	# aurait menti au joueur. La Cour, elle, empile des monstres a effets qui
+	# craignent tous d etre arretes une seconde.
 	#
-	# La Cour brisee, elle, empile des monstres a effets qui craignent tous d etre
-	# arretes une seconde : le Berserker qui s enrage, le Chevalier du vide, le
-	# Gardien-totem dont il faut couper l aura. Arreter le porteur d aura une
-	# seconde, c est la fenetre qui manquait pour tuer ce qu il protege.
-	#
-	# Elle prend la place d une Resonance : 15 cartes, 3 epiques, le plafond tenu.
-	# ONZE cartes differentes : la variete doit CROITRE d un niveau a l autre
-	# (dix au niveau 5). Les deux ajouts repondent au lieu — la Cour brisee
-	# envoie le Chevalier du vide, dont l armure AVALE l arcane (0,65), et le
-	# Seigneur Spectre, qui resiste au physique et se tient hors de portee. Le
-	# Totem attire ce qui refuse d avancer, la Nappe rend du terrain.
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Racine de tonnerre et Brasier. Sortent la Resonance, la Nappe,
+	# le Totem, la Rupture et le Mur ; la Fleche monte a 4 parce que le Chevalier
+	# du vide AVALE l arcane (0,65) et que le physique le traverse.
 	lvl6.exploration_deck = _deck([
+		[C + "common/fireball.tres", 4],
+		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "rare/brazier.tres", 2],
 		[C + "epic/void_grip.tres", 1],
-		[C + "epic/resonance.tres", 1],
 		[C + "epic/thunder_root.tres", 1],
-		[C + "common/fireball.tres", 3],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
-		[C + "common/tidal_pool.tres", 1],
-		[C + "rare/heartwood_totem.tres", 1],
-		[C + "rare/brazier.tres", 1],
-		[C + "rare/chain_break.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
 	])
 	lvl6.objectives = [o1, o2, o3]
 	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")
@@ -3388,21 +3352,26 @@ func _acte_final(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "demon_anvil.tres"),
 	]
 	# DECK DE SYNTHESE. Le final envoie les DEUX registres, donc le deck porte les
-	# deux : Meteore et Trait pour le blindage, Boule de feu et Resonance pour le
-	# nombre. Les quatre cartes d histoire sont toutes la — c est leur paiement
-	# narratif : le mage entre dans la matrice avec les sorts de ses quatre allies.
+	# deux : Meteore pour le blindage, Boule de feu pour le nombre.
+	# Les quatre cartes d histoire ne tiennent plus ensemble avec la regle des 6 :
+	# on garde les trois qui COMBATTENT (Spirale, Rupture, Vide d emprise) et le
+	# Rappel d ossements sort — c est la seule des quatre qui ne touche aucun
+	# monstre. L Apprenti miroir entre ICI : le mage entre dans la matrice avec
+	# ses allies, et c est le premier allie qu il invoque lui-meme.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Apprenti miroir. Sortent le Trait, la Resonance, la Marque, le
+	# Rappel, la Fleche et le Mur.
 	lvl7.exploration_deck = _deck([
-		[C + "common/fireball.tres", 3],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "rare/meteor.tres", 2],
-		[C + "epic/resonance.tres", 1],
-		[C + "rare/salt_spiral.tres", 1],
-		[C + "rare/bone_recall.tres", 1],
-		[C + "rare/chain_break.tres", 1],
-		[C + "epic/void_grip.tres", 1],
-		[C + "epic/weakness_mark.tres", 1],
-		[C + "common/piercing_arrow.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
+		[C + "common/fireball.tres", 4],
+		[C + "rare/meteor.tres", 3],
+		[C + "rare/salt_spiral.tres", 2],
+		[C + "rare/chain_break.tres", 2],
+		[C + "epic/void_grip.tres", 2],
+		[C + "epic/mirror_apprentice.tres", 2],
 	])
 	lvl7.objectives = [o1, o2, o3]
 	lvl7.legendary_reward = load(C + "legendary/world_loom.tres")
@@ -3541,17 +3510,22 @@ func _acte_1_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "hopper.tres"), load(E + "gnome.tres"),
 		load(E + "totem_elder.tres"),
 	]
-	# Le deck du niveau du NOMBRE est un deck de ZONES. Il compte 15 cartes, au
-	# plus 3 epiques et 3 legendaires (DeckRules) : ici 2 epiques, 0 legendaire —
-	# la legendaire se GAGNE aux objectifs, elle n est pas offerte au depart.
+	# Le deck du niveau du NOMBRE est un deck de ZONES, et 0 legendaire : la
+	# legendaire se GAGNE aux objectifs, elle n est pas offerte au depart.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Pluie de givre et Maelstrom. Sortent le Trait et le Brasier ;
+	# le Champ de givre monte a 3 pour que le feu ne passe pas la moitie du deck
+	# (feu x1.15 ici : la lecon de lvl_03).
 	lvl8.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 1],
-		[C + "common/frost_field.tres", 2],
-		[C + "common/ember_pool.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "common/frost_rain.tres", 2],
+		[C + "common/ember_pool.tres", 2],
+		[C + "common/frost_field.tres", 3],
+		[C + "common/frost_rain.tres", 3],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/brazier.tres", 1],
 		[C + "epic/maelstrom.tres", 2],
 	])
 	lvl8.objectives = [o1, o2, o3]
@@ -3671,17 +3645,21 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 		load(E + "hornblower.tres"),
 		load(E + "emberlord.tres"), load(E + "warden.tres"),
 	]
-	# Le deck de la fin d acte : il garde les zones du niveau precedent mais
-	# rend du MONO-CIBLE lourd, parce qu un boss de 140 PV ne tombe pas a la
-	# nappe de givre. 15 cartes, 2 epiques, 1 legendaire.
+	# Le deck de la fin d acte : il garde des zones mais rend du MONO-CIBLE lourd,
+	# parce qu un boss de 140 PV ne tombe pas a la nappe de givre.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Concentration et Sablier fendu. Sortent les Braises, le Mur et
+	# la Focalisation (un exemplaire chacun) : le Meteore monte a 3, c est lui qui
+	# abat le boss.
 	lvl9.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/piercing_arrow.tres", 3],
 		[C + "common/fireball.tres", 3],
-		[C + "common/ember_pool.tres", 1],
-		[C + "rare/meteor.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "rare/focus.tres", 1],
+		[C + "rare/meteor.tres", 3],
 		[C + "epic/deep_focus.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
@@ -3831,20 +3809,25 @@ func _acte_2_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 		load(E + "imp_archer.tres"), load(E + "sand_serpent.tres"),
 		load(E + "shade.tres"), load(E + "great_eye.tres"),
 	]
-	# DECK ANTI-VOL. 15 cartes, 2 epiques, 0 legendaire (elle se GAGNE aux
-	# objectifs). Pas UN Mur de pierre dans ce deck, et c est le message : contre
-	# du vol le decor ne repond pas. A la place, des zones larges qui couvrent le
-	# ciel ou les cibles vont passer, et deux Traits pour achever l Archer qui
-	# campe au fond.
+	# DECK ANTI-VOL, 0 legendaire (elle se GAGNE aux objectifs). Pas UN Mur de
+	# pierre, et c est le message : contre du vol le decor ne repond pas. A la
+	# place, des zones larges qui couvrent le ciel ou les cibles vont passer, et
+	# des Traits pour achever l Archer qui campe au fond.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Resonance et Onde de repulsion. Sortent la Spirale de sel (elle
+	# reste la carte d histoire de l Ossuaire, qui se joue plus tard et doit
+	# pouvoir la faire DECOUVRIR) et la Precipitation.
 	lvl17.exploration_deck = _deck([
-		[C + "common/frost_rain.tres", 3],
+		[C + "common/frost_rain.tres", 4],
+		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/fireball.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/frost_field.tres", 2],
-		[C + "rare/salt_spiral.tres", 2],
-		[C + "rare/repulsion_wave.tres", 1],
-		[C + "rare/quickening.tres", 1],
 		[C + "epic/resonance.tres", 2],
+		[C + "rare/repulsion_wave.tres", 2],
 	])
 	lvl17.objectives = [o1, o2, o3]
 	lvl17.legendary_reward = load(C + "legendary/twin_channeling.tres")
@@ -3947,15 +3930,20 @@ atelier."
 	# volontaire : contre un Chevalier qui avale le premier coup et un Berserker
 	# que chaque coup accelere, une nappe est un piege. Meteore et Focalisation
 	# donnent le paquet de degats ; la Marque de faiblesse double ce qui suit.
-	# 15 cartes, 2 epiques, 0 legendaire.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Focalisation et Marque de faiblesse. Sortent le Mur et la
+	# Rupture de chaine (carte d histoire des Forges, qui doit s y decouvrir) ;
+	# le Trait et la Boule de feu prennent leur place.
 	lvl18.exploration_deck = _deck([
 		[C + "rare/meteor.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/fireball.tres", 3],
 		[C + "rare/focus.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/piercing_arrow.tres", 2],
-		[C + "common/fireball.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "rare/chain_break.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
 	])
 	lvl18.objectives = [o1, o2, o3]
@@ -4083,20 +4071,23 @@ func _acte_3_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	]
 	# DECK ANTI-SOIN. Un soigneur ne se bat pas au total de degats, il se bat au
 	# DEBIT : il faut passer sa barre plus vite qu il ne la remonte. D ou trois
-	# Meteores et une Focalisation, et la Lumiere purifiante qui frappe les
-	# morts-vivants en plein. Le Semis de fletrissure est ici la carte qui ne
-	# marche PAS — les goules sont immunisees au venin — et c est pour ca qu il
-	# n y est pas. 15 cartes, 2 epiques, 1 legendaire.
+	# Meteores et la Focalisation, et la Lumiere purifiante qui efface ce que les
+	# morts-vivants se donnent. Le Semis de fletrissure n y est pas : les goules
+	# sont immunisees au venin.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Lumiere purifiante. Sortent le Registre des marees (la
+	# legendaire se gagne, elle n est plus offerte ici), la Fleche et le Mur.
 	lvl19.exploration_deck = _deck([
 		[C + "rare/meteor.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/fireball.tres", 3],
+		[C + "rare/focus.tres", 2],
 		[C + "rare/purifying_light.tres", 2],
-		[C + "rare/focus.tres", 1],
-		[C + "common/fireball.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/piercing_arrow.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "legendary/tide_ledger.tres", 1],
 	])
 	lvl19.objectives = [o1, o2, o3]
 	lvl19.legendary_reward = load(C + "legendary/venom_mire.tres")
@@ -4196,19 +4187,22 @@ laisse une GARDE, et une garde ne protege pas un fuyard, elle retarde un poursui
 	# DECK DE PERCEE. Contre une aura, il faut atteindre le PORTEUR : d ou la
 	# Fleche percante, qui traverse la ligne, et le Trait pour finir. Contre les
 	# ruches, deux zones — pas plus, sinon le joueur retombe dans le reflexe que
-	# les totems punissent. L Etreinte du vide est la reponse d urgence quand le
-	# porteur est trop loin : elle le tire hors de sa propre garde.
-	# 15 cartes, 3 epiques (le plafond de DeckRules), 0 legendaire.
+	# les totems punissent. Le Vide d emprise est la reponse d urgence : il efface
+	# l aura du porteur.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Vide d emprise. Sortent la Spirale, le Mur et la Focalisation ;
+	# la Fleche monte a 4, c est la carte du niveau.
 	lvl20.exploration_deck = _deck([
-		[C + "common/piercing_arrow.tres", 3],
-		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/fireball.tres", 2],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/salt_spiral.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "rare/focus.tres", 1],
-		[C + "epic/void_grip.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
+		[C + "epic/void_grip.tres", 2],
 	])
 	lvl20.objectives = [o1, o2, o3]
 	lvl20.legendary_reward = load(C + "legendary/meteor_storm.tres")
@@ -4338,19 +4332,22 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 	# DECK DE SYNTHESE DE L ACTE 3, et il doit resoudre TROIS problemes que rien
 	# ne resout ensemble : une aura qu il faut percer, un boss qui ne bouge pas,
 	# et un Ver de feu immunise au feu.
-	#
 	# D ou la Fleche percante en nombre (elle traverse jusqu au porteur d aura),
 	# le Trait arcanique — l element que le Sceau craint le plus (1,30) — et la
-	# Pluie de givre, la seule zone que le Ver ne rende pas inutile. Une seule
-	# Boule de feu subsiste, pour la vermine : le feu n est plus la reponse ici,
-	# et c est le niveau qui le dit. 15 cartes, 2 epiques, 1 legendaire.
+	# Pluie de givre, la seule zone que le Ver ne rende pas inutile. Plus AUCUNE
+	# Boule de feu : le feu n est plus la reponse ici, et c est le niveau qui le dit.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Pluie de meteorites. Sortent la derniere Boule de feu et la
+	# Focalisation ; Trait et Fleche montent a 4.
 	lvl21.exploration_deck = _deck([
-		[C + "common/piercing_arrow.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/frost_rain.tres", 2],
-		[C + "common/fireball.tres", 1],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/focus.tres", 1],
 		[C + "epic/deep_focus.tres", 2],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
@@ -4530,18 +4527,23 @@ func _acte_4_suite(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# DECK DE ZONE, parce que le niveau est fait de nombre. Mais le Slime
 	# demoniaque etant immunise au feu, le deck porte AUSSI du givre et de
 	# l arcane : un deck mono-feu gagnerait les quatre premieres vagues et
-	# perdrait le mini-boss, ce qui est la lecon.
-	# 15 cartes, 2 epiques, 0 legendaire (elle se gagne aux objectifs).
+	# perdrait le mini-boss, ce qui est la lecon. 0 legendaire (elle se gagne).
+	# La Volte-face entre ICI : contre une fosse qui deborde, faire remonter tout
+	# le monde trois secondes rend le temps de poser la zone suivante.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Volte-face. Sortent le Champ de givre, le Meteore, la Spirale
+	# et le Mur ; la Pluie de givre et le Trait montent a 4.
 	lvl10.exploration_deck = _deck([
+		[C + "common/frost_rain.tres", 4],
+		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 3],
-		[C + "common/frost_rain.tres", 2],
-		[C + "common/frost_field.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "rare/meteor.tres", 2],
-		[C + "rare/salt_spiral.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
+		[C + "epic/resonance.tres", 2],
 		[C + "epic/maelstrom.tres", 1],
-		[C + "epic/resonance.tres", 1],
+		[C + "rare/about_face.tres", 1],
 	])
 	lvl10.objectives = [o1, o2, o3]
 	lvl10.legendary_reward = load(C + "legendary/venom_mire.tres")
@@ -4650,19 +4652,22 @@ Gardien. Il n a jamais donne d ordre a personne : il en a recu un."
 	# DECK DE CONTROLE, et c est la reponse que le niveau recompense : on ne bat
 	# pas la rage en frappant plus fort, on la FREINE. Givre et entrave portent
 	# pleinement sur Kaltek (c est le seul boss du jeu qu on peut reellement
-	# ralentir), et le Mur de pierre donne au mage le temps que l arene lui
-	# refuse. 15 cartes, 2 epiques, 1 legendaire.
+	# ralentir).
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Entrave temporelle et Gel profond. Sortent le Mur, le Meteore,
+	# la Concentration et la Faille temporelle (la legendaire se gagne) ; la
+	# Fleche monte a 4 et porte les degats.
 	lvl11.exploration_deck = _deck([
-		[C + "common/frost_field.tres", 2],
+		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/frost_field.tres", 3],
 		[C + "common/frost_rain.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/fireball.tres", 2],
 		[C + "rare/temporal_drag.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "rare/meteor.tres", 1],
-		[C + "epic/deep_freeze.tres", 1],
-		[C + "epic/deep_focus.tres", 1],
-		[C + "legendary/time_rift.tres", 1],
+		[C + "epic/deep_freeze.tres", 2],
 	])
 	lvl11.objectives = [o1, o2, o3]
 	lvl11.legendary_reward = load(C + "legendary/forge_dial.tres")
@@ -4786,17 +4791,22 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 	# DECK DE PORTEE ET DE PERCEE. Le boss campe au fond : il faut des cartes qui
 	# vont LOIN (Fleche percante, Meteore) et de l arcane, qui fend le cristal.
 	# La Focalisation et la Concentration sont la pour le coup unique qui atteint
-	# le protecteur — c est le niveau ou le mono-cible lourd est enfin la reponse.
-	# 15 cartes, 3 epiques (le plafond), 0 legendaire.
+	# le protecteur : c est le niveau ou le mono-cible lourd est enfin la reponse.
+	# L Intuition arcanique entre ICI : piocher trois cartes, c est reunir plus vite la
+	# Focalisation et le Meteore qui doivent partir ensemble.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Intuition arcanique. Sortent la Boule de feu, le Mur et la Marque.
 	lvl12.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/piercing_arrow.tres", 3],
-		[C + "common/fireball.tres", 1],
-		[C + "rare/meteor.tres", 2],
+		[C + "rare/meteor.tres", 3],
 		[C + "rare/focus.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
 		[C + "epic/deep_focus.tres", 2],
-		[C + "epic/weakness_mark.tres", 1],
+		[C + "rare/arcane_insight.tres", 1],
 	])
 	lvl12.objectives = [o1, o2, o3]
 	lvl12.legendary_reward = load(C + "legendary/twin_channeling.tres")
@@ -4952,20 +4962,23 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 		load(E + "demon_chain.tres"), load(E + "demon_circle.tres"),
 	]
 	# DECK DE SYNTHESE DE L ACTE : il doit repondre aux quatre registres, donc il
-	# n excelle dans aucun. C est voulu — le joueur qui veut mieux doit avoir
+	# n excelle dans aucun. C est voulu : le joueur qui veut mieux doit avoir
 	# gagne ses legendaires sur les quatre demons.
-	# 15 cartes, 2 epiques, 1 legendaire.
+	# L Etincelle entre ICI : la foudre est neutre sur ce bestiaire, et un sort
+	# rapide acheve ce que la Boule de feu laisse debout.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Etincelle. Sortent la Fleche, le Champ de givre, le Mur, la
+	# Focalisation, la Resonance et la Concentration.
 	lvl13.exploration_deck = _deck([
-		[C + "common/fireball.tres", 2],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
-		[C + "common/frost_field.tres", 1],
+		[C + "common/arcane_bolt.tres", 4],
+		[C + "common/fireball.tres", 3],
+		[C + "common/spark.tres", 3],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "rare/focus.tres", 1],
-		[C + "epic/resonance.tres", 1],
-		[C + "epic/deep_focus.tres", 1],
-		[C + "epic/weakness_mark.tres", 1],
+		[C + "epic/weakness_mark.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	lvl13.objectives = [o1, o2, o3]
@@ -5148,16 +5161,21 @@ func _acte_5(o1: ObjectiveDef, o2: ObjectiveDef, o3: ObjectiveDef,
 	# LE DECK DU RETOUR. Il est fait des cartes de l acte 1 : le joueur refait la
 	# galerie avec la main qu il avait au premier matin, et il decouvre qu elle
 	# suffit — ce qui est le compliment le plus dur que le jeu puisse lui faire.
-	# 15 cartes, 1 epique, 1 legendaire.
+	# Le Flux de mana entre ICI : il ne change pas la main, il la fait revenir
+	# plus vite.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Flux de mana. Sortent le Champ de givre, le Brasier, le Mur et
+	# la Resonance.
 	lvl14.exploration_deck = _deck([
+		[C + "common/arcane_bolt.tres", 4],
+		[C + "common/piercing_arrow.tres", 3],
 		[C + "common/fireball.tres", 3],
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/frost_field.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/brazier.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "epic/resonance.tres", 1],
+		[C + "rare/mana_flow.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	lvl14.objectives = [o1, o2, o3]
@@ -5296,17 +5314,21 @@ depuis le pentacle, et il marche devant."
 	]
 	# LE DECK DU REGISTRE. Le Reliquaire compte les coups, donc il faut des sorts
 	# LOURDS et peu nombreux : c est le seul deck de la campagne construit contre
-	# le spam, et la Concentration y est doublee pour ca. 15 cartes, 3 epiques
-	# (le plafond), 1 legendaire.
+	# le spam, et la Concentration y est doublee pour ca. La Precipitation entre
+	# ICI : elle raccourcit l incantation des gros sorts au lieu d en ajouter.
+	#
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouverte : Precipitation. Sortent le Trait, la Fleche, le Mur et la Marque ;
+	# la Focalisation monte a 3, c est elle qui fait d un sort deux coups.
 	lvl15.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 2],
-		[C + "common/fireball.tres", 2],
-		[C + "common/piercing_arrow.tres", 2],
-		[C + "rare/meteor.tres", 2],
-		[C + "rare/focus.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
+		[C + "common/fireball.tres", 4],
+		[C + "rare/meteor.tres", 3],
+		[C + "rare/focus.tres", 3],
 		[C + "epic/deep_focus.tres", 2],
-		[C + "epic/weakness_mark.tres", 1],
+		[C + "rare/quickening.tres", 2],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	lvl15.objectives = [o1, o2, o3]
@@ -5457,25 +5479,27 @@ courir pour voir jusqu ou tu irais."
 		load(E + "sprite.tres"), load(E + "hopper.tres"),
 		load(E + "void_knight.tres"), load(E + "hive.tres"),
 	]
-	# LE DECK DE LA DERNIERE MAIN. Trois legendaires — le plafond — et c est le
-	# seul niveau de la campagne a les poser toutes les trois : le mage entre au
-	# siege vide avec tout ce qu il a appris a faire du temps, parce que c est la
-	# seule chose que l Enfant n a pas prevue.
+	# LE DECK DE LA DERNIERE MAIN. Trois legendaires, et c est le seul niveau de
+	# la campagne a les poser toutes les trois : le mage entre au siege vide avec
+	# tout ce qu il a appris a faire du temps, parce que c est la seule chose que
+	# l Enfant n a pas prevue.
+	# C est aussi, a la lettre, le deck-limite de la regle des 6 : trois
+	# legendaires a un exemplaire obligent les trois autres ids a quatre communes
+	# chacun (3 x 1 + 3 x 4 = 15). Une quatrieme legendaire serait impossible.
+	# L ARCANE DOMINE parce que c est la seule faille de la divinite (+40 %). La
+	# Faille et le Sablier ne servent pas a frapper : ils servent a survivre a la
+	# garde de renvoi, et c est au joueur de le trouver.
 	#
-	# L ARCANE DOMINE parce que c est la seule faille de la divinite (+40 %) : le
-	# deck fourni EST la reponse, ce qui est assume pour la derniere vague du jeu.
-	# Mais la Faille temporelle et le Sablier ne servent pas a frapper — ils
-	# servent a survivre a la garde de renvoi, et c est au joueur de le trouver.
-	# 15 cartes, 2 epiques, 3 legendaires.
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
+	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
+	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
+	# Decouvertes : Faille temporelle et Metier du monde. Sortent le Meteore, la
+	# Focalisation, le Mur, la Concentration et la Marque.
 	lvl16.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 3],
-		[C + "common/fireball.tres", 2],
-		[C + "common/piercing_arrow.tres", 1],
-		[C + "rare/meteor.tres", 2],
-		[C + "rare/focus.tres", 1],
-		[C + "rare/stone_wall.tres", 1],
-		[C + "epic/deep_focus.tres", 1],
-		[C + "epic/weakness_mark.tres", 1],
+		[C + "common/arcane_bolt.tres", 4],
+		[C + "common/fireball.tres", 4],
+		[C + "common/piercing_arrow.tres", 4],
 		[C + "legendary/time_rift.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 		[C + "legendary/world_loom.tres", 1],

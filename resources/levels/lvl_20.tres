@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=44 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_m5jln"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_ofd6q"]
@@ -13,9 +13,6 @@
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="11_140t5"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="12_hb22i"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="13_8y18n"]
-[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="14_x42ey"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="15_d0a3n"]
-[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="16_qi804"]
 [ext_resource type="Resource" path="res://resources/cards/epic/void_grip.tres" id="17_34pj6"]
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="18_r8wa0"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/meteor_storm.tres" id="19_dj4w2"]
@@ -66,7 +63,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_m5jln"]
+[sub_resource type="Resource" id="Resource_4h1l7"]
 script = ExtResource("22_ffhrg")
 id = &"w20_1"
 duration = 26.0
@@ -96,7 +93,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_ofd6q"]
+[sub_resource type="Resource" id="Resource_spkf3"]
 script = ExtResource("22_ffhrg")
 id = &"w20_2"
 duration = 28.0
@@ -133,7 +130,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 23.0
 
-[sub_resource type="Resource" id="Resource_77re2"]
+[sub_resource type="Resource" id="Resource_qloi7"]
 script = ExtResource("22_ffhrg")
 id = &"w20_3"
 duration = 29.0
@@ -163,7 +160,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_81gl4"]
+[sub_resource type="Resource" id="Resource_m5jln"]
 script = ExtResource("22_ffhrg")
 id = &"w20_4_miniboss"
 duration = 33.0
@@ -184,9 +181,9 @@ intro_story = &"lvl_20_intro"
 outro_story = &"lvl_20_outro"
 terrain = "sand"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("22_ffhrg")]([SubResource("Resource_m5jln"), SubResource("Resource_ofd6q"), SubResource("Resource_77re2"), SubResource("Resource_81gl4")])
+waves = Array[ExtResource("22_ffhrg")]([SubResource("Resource_4h1l7"), SubResource("Resource_spkf3"), SubResource("Resource_qloi7"), SubResource("Resource_m5jln")])
 enemy_pool = Array[ExtResource("1_m5jln")]([ExtResource("2_ofd6q"), ExtResource("3_77re2"), ExtResource("4_81gl4"), ExtResource("5_pd0cl"), ExtResource("6_m0qgh"), ExtResource("7_so1u1"), ExtResource("8_811w5")])
-exploration_deck = Array[ExtResource("9_h0w5p")]([ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("11_140t5"), ExtResource("11_140t5"), ExtResource("12_hb22i"), ExtResource("12_hb22i"), ExtResource("13_8y18n"), ExtResource("13_8y18n"), ExtResource("14_x42ey"), ExtResource("15_d0a3n"), ExtResource("16_qi804"), ExtResource("17_34pj6"), ExtResource("18_r8wa0"), ExtResource("18_r8wa0")])
+exploration_deck = Array[ExtResource("9_h0w5p")]([ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("11_140t5"), ExtResource("11_140t5"), ExtResource("11_140t5"), ExtResource("12_hb22i"), ExtResource("12_hb22i"), ExtResource("13_8y18n"), ExtResource("13_8y18n"), ExtResource("18_r8wa0"), ExtResource("18_r8wa0"), ExtResource("17_34pj6"), ExtResource("17_34pj6")])
 objectives = Array[ExtResource("20_yb17v")]([SubResource("Resource_6vmxt"), SubResource("Resource_07mnm"), SubResource("Resource_hb77b")])
 legendary_reward = ExtResource("19_dj4w2")
 next_levels = Array[StringName]([&"lvl_05", &"lvl_06"])
