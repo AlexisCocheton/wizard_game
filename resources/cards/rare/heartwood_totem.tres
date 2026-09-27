@@ -7,18 +7,18 @@
 script = ExtResource("1_4ifg3")
 key = &"taunt_prop"
 magnitude = 0.0
-duration = 10.0
+duration = 0.0
 radius = 460.0
 params = {
 &"kind": "tree",
-&"prop_hp": 90.0
+&"prop_hp": 3500.0
 }
 
 [resource]
 script = ExtResource("2_cvvau")
 id = &"heartwood_totem"
 display_name = "Totem de coeur-de-bois"
-description = "Plante un arbre de 90 PV pendant 10 s. Les monstres a portee le prennent pour cible au lieu du mage et s acharnent dessus."
+description = "Plante un arbre de 3500 PV qui reste jusqu a ce qu on l abatte. Les monstres a portee le prennent pour cible au lieu du mage et s acharnent dessus : une vague entiere le fait tomber en quelques secondes."
 rarity = 1
 base_cast_time = 1.6
 targeting = 1

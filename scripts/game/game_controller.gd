@@ -206,6 +206,10 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 	# lancer le sort a un endroit arbitraire.
 	if requires_aim(card) and target_pos == Vector2.INF:
 		return false
+	# Un objet qui BLOQUE ne se pose pas la ou il couperait tout chemin des
+	# monstres au sol : la carte reste en main plutot que d etre depensee pour rien.
+	if not aim_allowed(card, target_pos):
+		return false
 	if not RunState.play_card(card):
 		return false
 
@@ -235,6 +239,12 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 			ctx.target_enemy = target_enemy
 
 	return caster.queue_next(card, ctx)
+
+
+## La carte peut-elle etre lachee a ce point ? Lu par le HUD pour peindre
+## l apercu en rouge AVANT le lacher. Voir EffectHandlers.placement_allowed.
+func aim_allowed(card: SpellCard, point: Vector2) -> bool:
+	return EffectHandlers.placement_allowed(card, point, battlefield)
 
 
 ## Vrai si la carte doit etre glissee sur le terrain pour etre jouee.
