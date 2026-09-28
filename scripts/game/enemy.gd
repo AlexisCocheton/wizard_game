@@ -1474,9 +1474,17 @@ var _cham_timer: float = 0.0
 var _cham_index: int = 0
 var _cham_table: Dictionary = {}
 
-## VOLEUR DE SORTS : compte a rebours du prochain vol, carte tenue, et temps
-## restant avant de la lancer sur le mage.
+## VOLEUR DE SORTS : compte a rebours du prochain vol, exemplaire tenu, et temps
+## restant avant de le lancer sur le mage.
+##
+## `_stolen_hold` est l id de SON exemplaire dans RunState (0 = mains vides) :
+## c est lui, et non la carte, qui designe ce qu il relache ou lance. Deux
+## voleurs sur deux copies d une meme carte tiennent la meme ressource ; par la
+## carte, l un relachait ou lancait la copie de l autre. `_stolen_card` n est
+## qu une copie pour l affichage et les degats (la carte a quitte la main quand
+## le coup part).
 var _steal_timer: float = 0.0
+var _stolen_hold: int = 0
 var _stolen_card: SpellCard = null
 var _steal_cast_left: float = 0.0
 
@@ -1506,6 +1514,7 @@ func _setup_v3(def: EnemyDef) -> void:
 	# Premier vol a l intervalle PLEIN : le joueur doit voir le voleur entrer avant
 	# de perdre une carte, sinon la perte se lit comme un bug de la main.
 	_steal_timer = def.steal_interval
+	_stolen_hold = 0
 	_stolen_card = null
 	_steal_cast_left = 0.0
 
@@ -1894,6 +1903,12 @@ func stolen_card() -> SpellCard:
 	return _stolen_card
 
 
+## Id de l exemplaire tenu dans RunState (0 si aucun). Les tests s en servent
+## pour demander a la main OU est l exemplaire de CE voleur.
+func stolen_hold() -> int:
+	return _stolen_hold
+
+
 func steal_cast_left() -> float:
 	return _steal_cast_left if _stolen_card != null else 0.0
 
@@ -1911,10 +1926,12 @@ static func stolen_card_damage(def: EnemyDef, card: SpellCard) -> int:
 func _tick_thief(world_delta: float) -> void:
 	if definition.steal_interval <= 0.0:
 		return
-	if _stolen_card != null:
-		# La carte a quitte la main par un autre chemin (defausse forcee, fin de
-		# vague) : il n a plus rien a lancer, il retourne a la chasse.
-		if not RunState.is_card_stolen(_stolen_card):
+	if _stolen_hold != 0:
+		# SON exemplaire a quitte la main par un autre chemin (defausse forcee, fin
+		# de vague) : il n a plus rien a lancer, il retourne a la chasse. Demande par
+		# id : une copie jumelle tenue par un autre voleur ne le retient pas.
+		if not RunState.is_hold_stolen(_stolen_hold):
+			_stolen_hold = 0
 			_stolen_card = null
 			_steal_timer = definition.steal_interval
 			return
@@ -1926,9 +1943,11 @@ func _tick_thief(world_delta: float) -> void:
 	if _steal_timer > 0.0:
 		return
 	_steal_timer = definition.steal_interval
-	var c: SpellCard = RunState.steal_card()
-	if c == null:
+	var prise: int = RunState.steal_hold()
+	if prise == 0:
 		return
+	var c: SpellCard = RunState.stolen_card_of(prise)
+	_stolen_hold = prise
 	_stolen_card = c
 	_steal_cast_left = maxf(definition.steal_cast_delay, 0.1)
 	play_attack()
@@ -1940,9 +1959,11 @@ func _tick_thief(world_delta: float) -> void:
 
 func _cast_stolen_card() -> void:
 	var card: SpellCard = _stolen_card
+	var prise: int = _stolen_hold
+	_stolen_hold = 0
 	_stolen_card = null
 	_steal_timer = definition.steal_interval
-	if card == null or not RunState.spend_stolen_card(card):
+	if card == null or not RunState.spend_stolen_hold(prise):
 		return
 	var degats: int = stolen_card_damage(definition, card)
 	play_attack()
@@ -1961,9 +1982,10 @@ func _cast_stolen_card() -> void:
 
 
 func _release_stolen() -> void:
-	if _stolen_card == null:
+	if _stolen_hold == 0:
 		return
-	RunState.release_stolen_card(_stolen_card)
+	RunState.release_stolen_hold(_stolen_hold)
+	_stolen_hold = 0
 	_stolen_card = null
 
 

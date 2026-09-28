@@ -100,6 +100,9 @@ func run() -> void:
 	_test_voleur_tue_a_temps_rend_la_carte()
 	_test_voleur_laisse_toujours_une_carte_jouable()
 	_test_voleur_qui_quitte_le_terrain_rend_la_carte()
+	_test_deux_voleurs_rendent_chacun_leur_exemplaire()
+	_test_deux_voleurs_lancent_chacun_leur_exemplaire()
+	_test_voleur_dont_l_exemplaire_part_ne_prend_pas_celui_du_voisin()
 	_test_devoration_soigne_en_pourcentage()
 	_test_glouton_historique_grossit_toujours()
 	_test_devoreur_invocateur_laisse_murir_puis_avale()
@@ -444,6 +447,101 @@ func _test_voleur_qui_quitte_le_terrain_rend_la_carte() -> void:
 	_bf.enemies.erase(v)
 	detach(v)
 	not_ok(RunState.is_card_stolen(longue), "le voleur parti, la carte est rendue")
+
+
+## DEUX VOLEURS, DEUX COPIES D UNE MEME CARTE. Les copies partagent la meme
+## ressource : un voleur qui ne retenait que la carte relachait ou lancait la
+## PREMIERE copie volee trouvee, donc parfois celle de son voisin. La main est
+## [longue, courte, longue, moyenne] : la carte courte entre les deux copies rend
+## l erreur VISIBLE, car la copie qui part ou se rallume change de position.
+##
+## Rend [voleur de gauche, voleur de droite, la carte longue].
+func _deux_voleurs(prefixe: String) -> Array:
+	_fresh()
+	SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)
+	var longue := _card("longue", 3.0)
+	RunState.hand.clear()
+	RunState.hand.append(longue)
+	RunState.hand.append(_card("courte", 1.0))
+	RunState.hand.append(longue)
+	RunState.hand.append(_card("moyenne", 2.0))
+	var d1 := _voleur(prefixe + "_1")
+	var d2 := _voleur(prefixe + "_2")
+	var v1: Enemy = _bf.spawn_enemy(d1, 500.0, 1.0, Vector2(400.0, 300.0))
+	v1.advance(d1.steal_interval + DT)
+	var v2: Enemy = _bf.spawn_enemy(d2, 500.0, 1.0, Vector2(600.0, 300.0))
+	v2.advance(d2.steal_interval + DT)
+	return [v1, v2, longue]
+
+
+## Position dans la main de l exemplaire que tient ce voleur (-1 : plus rien).
+func _place(v: Enemy) -> int:
+	return RunState.stolen_slot_of(v.stolen_hold())
+
+
+func _test_deux_voleurs_rendent_chacun_leur_exemplaire() -> void:
+	var r: Array = _deux_voleurs("voleur_rend")
+	var v1: Enemy = r[0]
+	var v2: Enemy = r[1]
+	var longue: SpellCard = r[2]
+	eq(v1.stolen_card(), longue, "(le premier voleur prend une copie de la longue)")
+	eq(v2.stolen_card(), longue, "(le second prend l autre copie)")
+	var gauche: int = _place(v1)
+	var droite: int = _place(v2)
+	ok(gauche >= 0 and droite >= 0 and gauche != droite,
+		"chaque voleur tient un exemplaire DIFFERENT")
+	v2.take_damage(9999.0, [])
+	ok(v2.is_dead(), "(le second voleur tombe)")
+	not_ok(RunState.is_slot_stolen(droite), "SON exemplaire se rallume, a sa place")
+	ok(RunState.is_slot_stolen(gauche), "celui du premier voleur reste tenu")
+	eq(_place(v1), gauche, "et le premier voleur le sait toujours au meme endroit")
+	ok(RunState.play_card(longue, droite), "le joueur lance la copie rendue")
+	ok(RunState.is_slot_stolen(_place(v1)), "la copie du premier voleur, elle, reste grisee")
+
+
+func _test_deux_voleurs_lancent_chacun_leur_exemplaire() -> void:
+	var r: Array = _deux_voleurs("voleur_lance")
+	var v1: Enemy = r[0]
+	var v2: Enemy = r[1]
+	var longue: SpellCard = r[2]
+	var gauche: int = _place(v1)
+	var droite: int = _place(v2)
+	ok(gauche < droite, "(le premier voleur tient la copie de gauche)")
+	var entre: SpellCard = RunState.hand[gauche + 1]
+	ok(entre != longue, "(une autre carte separe les deux copies)")
+	var taille: int = RunState.hand.size()
+	# Seul le second voleur arrive au bout de son delai.
+	v2.advance(v2.definition.steal_cast_delay + DT)
+	eq(v2.stolen_card(), null, "(le second voleur a lance)")
+	eq(RunState.hand.size(), taille - 1, "une seule carte a quitte la main")
+	eq(RunState.hand[gauche], longue, "la copie de GAUCHE, celle du premier voleur, est restee")
+	eq(RunState.hand[gauche + 1], entre, "la carte voisine n a pas bouge : c est bien la droite qui est partie")
+	eq(_place(v1), gauche, "le premier voleur tient toujours sa copie, a sa place")
+	# Au tour du premier : c est sa copie qui part, pas une autre.
+	v1.advance(v1.definition.steal_cast_delay + DT)
+	eq(RunState.hand.size(), taille - 2, "le premier voleur lance a son tour")
+	not_ok(RunState.hand.has(longue), "et plus aucune copie de la longue n est en main")
+
+
+## Un exemplaire vole quitte la main par un autre chemin : SON voleur doit le
+## savoir, meme si une copie jumelle reste tenue par l autre. Par la carte, il se
+## croyait encore arme et lancait ensuite la copie du voisin.
+func _test_voleur_dont_l_exemplaire_part_ne_prend_pas_celui_du_voisin() -> void:
+	var r: Array = _deux_voleurs("voleur_perd")
+	var v1: Enemy = r[0]
+	var v2: Enemy = r[1]
+	var gauche: int = _place(v1)
+	var droite: int = _place(v2)
+	# La main change sans passer par RunState (un test, une reconstruction).
+	RunState.hand[droite] = _card("remplacante", 1.0)
+	v2.advance(DT)
+	eq(v2.stolen_card(), null, "le second voleur voit que SA copie est partie")
+	ok(v1.stolen_card() != null, "le premier garde la sienne")
+	eq(_place(v1), gauche, "a la meme place")
+	var taille: int = RunState.hand.size()
+	v2.advance(v2.definition.steal_cast_delay + DT)
+	eq(RunState.hand.size(), taille, "le second voleur ne lance pas la copie du premier")
+	eq(_place(v1), gauche, "qui est toujours tenue par son voleur")
 
 
 # --- 5. LE DEVOREUR-INVOCATEUR -------------------------------------------------

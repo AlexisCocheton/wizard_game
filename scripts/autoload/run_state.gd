@@ -40,13 +40,31 @@ var _stolen: Array[Tenue] = []
 ## designer — deux copies sont la meme ressource — et la position seule ne
 ## suffit pas a le verifier : la carte sert de controle quand la main bouge
 ## par un chemin que RunState ne voit pas (un test qui la reconstruit).
+##
+## `id` est l identite STABLE de l exemplaire tenu, celle que garde un voleur :
+## la position se decale des qu une carte part a sa gauche, et la carte est
+## partagee par ses copies. Seul l id designe toujours le meme exemplaire.
 class Tenue:
 	var card: SpellCard
 	var slot: int
+	var id: int
 
-	func _init(c: SpellCard, i: int) -> void:
+	func _init(c: SpellCard, i: int, ident: int) -> void:
 		card = c
 		slot = i
+		id = ident
+
+
+## Compteur des ids de Tenue. Jamais remis a zero, meme par reset() : un voleur
+## d une partie precedente qui garderait un vieil id ne doit pas pouvoir
+## designer par hasard un exemplaire de la nouvelle main.
+var _next_hold_id: int = 1
+
+
+func _new_hold(c: SpellCard, i: int) -> Tenue:
+	var t := Tenue.new(c, i, _next_hold_id)
+	_next_hold_id += 1
+	return t
 var discard: Array[SpellCard] = []
 var exiled: Array[SpellCard] = []
 
@@ -388,7 +406,7 @@ func set_card_block_count(wanted: int) -> void:
 			if _blocked.size() >= cible:
 				break
 			if hand[i] != null and not is_slot_blocked(i):
-				_blocked.append(Tenue.new(hand[i], i))
+				_blocked.append(_new_hold(hand[i], i))
 				change = true
 	if change:
 		hand_changed.emit()
@@ -419,18 +437,22 @@ func is_silenced() -> bool:
 # petrification : c est la MAIN qui est touchee, et `play_card` est le seul
 # passage de toutes les facons de lancer.
 #
-# Le voleur ne connait que la CARTE (Enemy._stolen_card). Deux voleurs qui
-# tiennent deux copies d une meme carte partagent donc ce nom : celui qui meurt
-# rend UNE des deux copies, pas forcement celle qu il avait prise. Les deux
-# copies etant identiques, la seule difference est laquelle se rallume.
+# UN VOLEUR = UN EXEMPLAIRE, designe par l id de sa Tenue. Ni la carte ni la
+# position ne suffisent : deux voleurs sur deux copies d une meme carte tiennent
+# la MEME ressource, et la position se decale des qu une carte part a gauche.
+# Quand le voleur ne retenait que la carte, celui qui mourait rallumait la
+# PREMIERE copie volee trouvee — celle de l autre — et celui qui lancait faisait
+# partir la copie de son voisin : la carte sautait de place sous les yeux du
+# joueur. Liberation, lancement et « tiens-tu encore ? » passent donc par l id.
 
-## Prend une carte pour un voleur. Renvoie null s il ne peut rien prendre sans
-## violer le plafond (il reste toujours MIN_PLAYABLE_CARDS carte jouable).
+## Prend un exemplaire pour un voleur et rend l id qui le designe, ou 0 s il ne
+## peut rien prendre sans violer le plafond (il reste toujours
+## MIN_PLAYABLE_CARDS carte jouable). 0 n est jamais un id : le compteur part de 1.
 ##
 ## LA CARTE PRISE est la plus LONGUE a incanter (a egalite, la plus a gauche) :
 ## c est la plus precieuse, donc le vol se lit comme un vol, et c est celle qui
 ## fera le plus mal — ce que le joueur doit pouvoir anticiper en regardant sa main.
-func steal_card() -> SpellCard:
+func steal_hold() -> int:
 	_heal_holds()
 	var libres: Array[int] = []
 	for i in hand.size():
@@ -438,14 +460,44 @@ func steal_card() -> SpellCard:
 		if c != null and not c.is_passive and not is_slot_blocked(i):
 			libres.append(i)
 	if libres.size() <= MIN_PLAYABLE_CARDS:
-		return null
+		return 0
 	var choix: int = libres[0]
 	for i in libres:
 		if hand[i].base_cast_time > hand[choix].base_cast_time:
 			choix = i
-	_stolen.append(Tenue.new(hand[choix], choix))
+	var t: Tenue = _new_hold(hand[choix], choix)
+	_stolen.append(t)
 	hand_changed.emit()
-	return hand[choix]
+	return t.id
+
+
+## Raccourci pour qui n a besoin que de la carte (tests de la main) : le voleur
+## en jeu, lui, garde l id rendu par steal_hold().
+func steal_card() -> SpellCard:
+	return stolen_card_of(steal_hold())
+
+
+## La carte de l exemplaire vole `hold_id`, ou null s il n est plus tenu.
+func stolen_card_of(hold_id: int) -> SpellCard:
+	_heal_holds()
+	var k: int = _find_hold_id(_stolen, hold_id)
+	return _stolen[k].card if k != -1 else null
+
+
+## L exemplaire `hold_id` est-il encore tenu ? Faux des qu il a quitte la main
+## par un autre chemin (defausse forcee, fin de vague) : son voleur n a plus
+## rien a lancer, meme si une copie jumelle est tenue par un autre.
+func is_hold_stolen(hold_id: int) -> bool:
+	_heal_holds()
+	return _find_hold_id(_stolen, hold_id) != -1
+
+
+## Position actuelle de l exemplaire `hold_id` dans la main, -1 s il n est plus
+## tenu. Sert au HUD comme aux tests : c est la ou la carte grisee est dessinee.
+func stolen_slot_of(hold_id: int) -> int:
+	_heal_holds()
+	var k: int = _find_hold_id(_stolen, hold_id)
+	return _stolen[k].slot if k != -1 else -1
 
 
 func is_card_stolen(card: SpellCard) -> bool:
@@ -459,31 +511,31 @@ func stolen_cards() -> Array[SpellCard]:
 	return _cards_of(_stolen)
 
 
-## Le voleur est mort (ou a quitte le terrain) avant de lancer : la carte redevient
-## jouable, a sa place dans la main.
-func release_stolen_card(card: SpellCard) -> void:
+## Le voleur est mort (ou a quitte le terrain) avant de lancer : SON exemplaire
+## redevient jouable, a sa place dans la main. Celui d un autre voleur reste tenu.
+func release_stolen_hold(hold_id: int) -> void:
 	_heal_holds()
-	var k: int = _find_hold(_stolen, card)
+	var k: int = _find_hold_id(_stolen, hold_id)
 	if k == -1:
 		return
 	_stolen.remove_at(k)
 	hand_changed.emit()
 
 
-## Le voleur LANCE la carte : elle quitte la main pour la defausse, comme si le
-## joueur l avait jouee. Renvoie false si la carte n etait plus tenue (partie
-## de la main entre-temps) : rien n est alors lance.
-func spend_stolen_card(card: SpellCard) -> bool:
+## Le voleur LANCE son exemplaire : il quitte la main pour la defausse, comme si
+## le joueur l avait joue. Renvoie false s il n etait plus tenu (parti de la
+## main entre-temps) : rien n est alors lance.
+func spend_stolen_hold(hold_id: int) -> bool:
 	_heal_holds()
-	var k: int = _find_hold(_stolen, card)
+	var k: int = _find_hold_id(_stolen, hold_id)
 	if k == -1:
 		return false
 	# C est l exemplaire TENU qui part, pas la premiere copie venue : sinon la
-	# copie libre disparaitrait et la volee resterait grisee en main.
-	var idx: int = _stolen[k].slot
+	# copie libre (ou celle d un autre voleur) disparaitrait a sa place.
+	var t: Tenue = _stolen[k]
 	_stolen.remove_at(k)
-	_remove_from_hand(idx)
-	discard.append(card)
+	_remove_from_hand(t.slot)
+	discard.append(t.card)
 	hand_changed.emit()
 	return true
 
@@ -534,6 +586,15 @@ static func _find_hold(ledger: Array[Tenue], card: SpellCard) -> int:
 		return -1
 	for k in ledger.size():
 		if ledger[k].card == card:
+			return k
+	return -1
+
+
+static func _find_hold_id(ledger: Array[Tenue], hold_id: int) -> int:
+	if hold_id <= 0:
+		return -1
+	for k in ledger.size():
+		if ledger[k].id == hold_id:
 			return k
 	return -1
 
