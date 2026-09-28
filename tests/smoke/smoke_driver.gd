@@ -1369,11 +1369,32 @@ func _showcase_mecaniques_v3() -> void:
 ## interdiction qu on fait perdre — pour que les trois etats du bandeau soient
 ## captures a chaque passage, et on passe par le VRAI chemin : GameController.simulate ->
 ## RunState.advance_clock -> objective_failed -> HUD.
+##
+## UN COMBAT CHARGE, sur le premier et le dernier acte : main de 6 cartes, rail
+## des passifs plein, monstres sur la ligne d apparition ET en fin de course a
+## cote du bandeau. Le bandeau a quitte le haut de l ecran parce qu il cachait
+## les apparitions ; la capture doit montrer qu il ne cache plus rien d utile, et
+## qu il se lit sur le fond clair de l acte I comme sur l espace de l acte V.
 func _check_objectifs_en_combat() -> void:
-	var base: LevelDef = ContentDB.levels.get(&"lvl_01")
-	if base == null:
-		_fail("objectifs en combat : lvl_01 introuvable")
-		return
+	var niveaux: Array = ContentDB.levels.values()
+	niveaux.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
+		return String(a.id) < String(b.id))
+	var dernier_acte: int = 0
+	for l: LevelDef in niveaux:
+		dernier_acte = maxi(dernier_acte, l.act)
+	for acte: int in [1, dernier_acte]:
+		var base: LevelDef = null
+		for l: LevelDef in niveaux:
+			if l.act == acte:
+				base = l
+				break
+		if base == null:
+			_fail("objectifs en combat : aucun niveau dans l acte %d" % acte)
+			continue
+		await _vitrine_objectifs(base, acte)
+
+
+func _vitrine_objectifs(base: LevelDef, acte: int) -> void:
 	var level: LevelDef = base.duplicate()
 	var meme := _objectif_vitrine(&"vitrine_meme_sort", &"same_card_casts", {"count": 30})
 	var vol := _objectif_vitrine(&"vitrine_volants", &"kill_flying", {"count": 5})
@@ -1385,13 +1406,47 @@ func _check_objectifs_en_combat() -> void:
 	add_child(g)
 	g.start_level(level, GameEnums.Mode.EXPLORATION)
 	g.running = false          # apres start_level, voir _check_cartes_petrifiees
-	# Des monstres sous le bandeau : c est la qu ils apparaissent, la capture
-	# doit montrer que le texte ne les cache pas.
+
+	# Main PLEINE : les sorts du deck du niveau, en boucle jusqu au plafond.
+	var sorts: Array[SpellCard] = []
+	for c: SpellCard in level.exploration_deck:
+		if c != null and not c.is_passive:
+			sorts.append(c)
+	if not sorts.is_empty():
+		RunState.hand.clear()
+		var k: int = 0
+		while RunState.hand.size() < GameConfig.MAX_HAND_SIZE:
+			RunState.hand.append(sorts[k % sorts.size()])
+			k += 1
+		RunState.hand_changed.emit()
+	# Rail des passifs PLEIN.
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and c.is_passive and RunState.equipped_passives.size() < GameConfig.PASSIVE_SLOTS:
+			RunState.equipped_passives.append(c)
+	RunState.passives_changed.emit()
+
+	# Les monstres du niveau : une rangee sur la ligne d apparition, une au milieu,
+	# et deux en fin de course sur la droite, la ou vit le bandeau.
+	var defs: Array[EnemyDef] = []
+	for w: WaveDef in level.waves:
+		for e: WaveEntry in w.entries:
+			var est_boss: bool = e != null and e.enemy != null and e.enemy.kind == GameEnums.EnemyKind.BOSS
+			if e != null and e.enemy != null and not defs.has(e.enemy) and not est_boss:
+				defs.append(e.enemy)
 	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
-	if gnome != null:
-		for k in 4:
-			g.battlefield.spawn_enemy(gnome, 600.0 + k * 130.0, 1.0,
-				Vector2(600.0 + k * 130.0, 230.0 + (k % 2) * 60.0))
+	if defs.is_empty() and gnome != null:
+		defs.append(gnome)
+	var places: Array[Vector2] = []
+	for i in 5:
+		places.append(Vector2(160.0 + i * 190.0, GameConfig.SPAWN_LINE_Y))
+	for i in 4:
+		places.append(Vector2(220.0 + i * 220.0, GameConfig.MAGE_LINE_Y * 0.5))
+	places.append(Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.75, GameConfig.MAGE_LINE_Y - 160.0))
+	places.append(Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.9, GameConfig.MAGE_LINE_Y - 60.0))
+	for i in places.size():
+		if not defs.is_empty():
+			g.battlefield.spawn_enemy(defs[i % defs.size()], places[i].x, 1.0, places[i])
+
 	var carte: SpellCard = RunState.hand[0] if not RunState.hand.is_empty() else null
 	# Un lancer de MOINS que le palier d amelioration : au palier, l ecran modal
 	# d amelioration s ouvre et recouvre la capture (vu au premier essai).
@@ -1420,7 +1475,9 @@ func _check_objectifs_en_combat() -> void:
 		if not l_int.visible or not l_int.text.ends_with("rate"):
 			_fail("objectifs en combat : l echec ne s affiche pas ('%s')" % l_int.text)
 	await get_tree().process_frame
-	await _shot("objectifs_en_combat")
+	await _shot("objectifs_en_combat_acte%d" % acte)
+	RunState.equipped_passives.clear()
+	RunState.passives_changed.emit()
 	g.queue_free()
 	await get_tree().process_frame
 	SpeedGauge.reset()

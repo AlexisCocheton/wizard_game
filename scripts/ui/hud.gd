@@ -1030,52 +1030,98 @@ func _on_wave_changed(index: int) -> void:
 # Une interdiction encore tenue n affiche rien : « Sans degats » ecrit en
 # permanence serait une ligne de plus que l oeil apprend a ignorer.
 #
-# EN HAUT A DROITE, sous le bouton pause : la seule bande libre du HUD. A gauche
-# courent la barre de vitesse et le rail des passifs, en bas la main et le
-# compte a rebours de pioche. Texte aligne a droite, sans fond, qui laisse
-# passer le doigt : il ne cache ni ne bloque rien du terrain.
+# EN BAS A DROITE, entre la tour du mage et le bord, juste au-dessus du compte a
+# rebours de pioche. Il etait en haut a droite, sous le bouton pause : c est la
+# que naissent les monstres (GameConfig.SPAWN_LINE_Y), et le texte cachait les
+# premieres secondes de chaque vague. En bas, les monstres ont fini leur
+# course (ils frappent en atteignant MAGE_LINE_Y) ; a gauche courent la jauge et
+# le rail des passifs, dessous la main et la barre d incantation. C est le seul
+# coin que rien de tout cela n occupe.
+#
+# Le bandeau pousse VERS LE HAUT et VERS LA GAUCHE depuis son coin (ancre en bas
+# a droite, croissance inversee) : une ligne de plus ne descend jamais sur la
+# pioche, un libelle plus long ne sort jamais de l ecran.
+#
+# UN FOND, desormais. Sans fond, texte + contour ne tenaient pas 4,5:1 sur les
+# tons moyens des fonds peints (2,8:1 mesure sur l acte II : ni le remplissage
+# ni le contour ne se detachent d une herbe grise). Une plaque sombre sous le
+# texte, a la taille des lignes, regle le contraste pour les cinq actes ; elle
+# ne couvre que la fin de course a droite de la tour, et laisse passer le doigt.
 #
 # Police : FONT_SMALL, le plancher du theme — rien en dessous, c est la plainte
 # du testeur sur les polices. Un objectif deja acquis dans une partie precedente
 # n est pas repete : il n y a plus rien a y gagner.
 
-## Bord superieur du bandeau : sous la barre du haut (TopBar finit a 140).
-const OBJ_TOP: float = 150.0
-## Largeur : la moitie droite de l ecran, moins la marge.
-const OBJ_WIDTH: float = 520.0
 const OBJ_MARGIN: float = 24.0
+## Ecart entre le bas du bandeau et le haut du compte a rebours de pioche.
+const OBJ_GAP: float = 6.0
 const OBJ_ECHEC := Color(1.0, 0.48, 0.42)
+## Plaque sous le texte. L alpha est ce qui tient le contraste : le test du
+## bandeau le mesure sur les fonds des cinq actes.
+const OBJ_PLAQUE := Color(0.05, 0.04, 0.08, 0.8)
 
+## La plaque (PanelContainer) ; c est elle qui est ancree et qui grandit.
+var _obj_panel: PanelContainer = null
 var _obj_box: VBoxContainer = null
 ## ObjectiveDef -> Label, dans l ordre du niveau.
 var _obj_lines: Dictionary = {}
 
 
 func _build_objective_strip() -> void:
-	if _obj_box != null and is_instance_valid(_obj_box):
-		_obj_box.queue_free()
+	if _obj_panel != null and is_instance_valid(_obj_panel):
+		_obj_panel.queue_free()
+	_obj_panel = null
 	_obj_box = null
 	_obj_lines.clear()
 	var lvl: LevelDef = RunState.current_level_def
 	if lvl == null or RunState.mode != GameEnums.Mode.EXPLORATION or lvl.objectives.is_empty():
 		return
+	_obj_panel = PanelContainer.new()
+	_obj_panel.name = "ObjectiveStrip"
+	_obj_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = OBJ_PLAQUE
+	sb.set_corner_radius_all(10)
+	sb.content_margin_left = 14.0
+	sb.content_margin_right = 14.0
+	sb.content_margin_top = 4.0
+	sb.content_margin_bottom = 4.0
+	_obj_panel.add_theme_stylebox_override(&"panel", sb)
+	# Coin bas-droit, sur le compte a rebours de pioche : on lit sa position dans
+	# la scene plutot que de la recopier, pour que les deux ne divergent pas.
+	_obj_panel.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_obj_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_obj_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	var bas: float = _draw_label.offset_top - OBJ_GAP
+	_obj_panel.offset_right = -OBJ_MARGIN
+	_obj_panel.offset_left = -OBJ_MARGIN
+	_obj_panel.offset_bottom = bas
+	_obj_panel.offset_top = bas
+	_obj_panel.visible = false
+	_root.add_child(_obj_panel)
 	_obj_box = VBoxContainer.new()
-	_obj_box.name = "ObjectiveStrip"
 	_obj_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_obj_box.add_theme_constant_override(&"separation", 2)
-	_obj_box.position = Vector2(1080.0 - OBJ_MARGIN - OBJ_WIDTH, OBJ_TOP)
-	_obj_box.size = Vector2(OBJ_WIDTH, 0.0)
-	_root.add_child(_obj_box)
+	_obj_panel.add_child(_obj_box)
 	for o: ObjectiveDef in lvl.objectives:
 		if o == null or SaveData.is_objective_done(lvl.id, o.id):
 			continue
 		var l: Label = UiTheme.label_hud("", UiTheme.FONT_SMALL, UiTheme.TEXT,
 			HORIZONTAL_ALIGNMENT_RIGHT)
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		l.custom_minimum_size = Vector2(OBJ_WIDTH, 0.0)
 		l.visible = false
 		_obj_box.add_child(l)
 		_obj_lines[o] = l
+
+
+## Emprise du bandeau a l ecran, recalculee sur ses lignes ACTUELLES. Le
+## conteneur ne se redimensionne qu a l image suivante ; on force le calcul pour
+## que la reponse soit juste tout de suite (le test la lit sans attendre).
+func objective_strip_rect() -> Rect2:
+	if _obj_panel == null or not is_instance_valid(_obj_panel):
+		return Rect2()
+	_obj_panel.reset_size()
+	return _obj_panel.get_global_rect()
 
 
 func _refresh_objective_strip() -> void:
@@ -1086,12 +1132,12 @@ func _refresh_objective_strip() -> void:
 		var texte: String = ""
 		var couleur: Color = UiTheme.TEXT
 		if RunState.is_objective_failed(o.id):
-			texte = "%s : rate" % ObjectiveChecker.short_label(o)
+			texte = objective_line_text(o, true, {})
 			couleur = OBJ_ECHEC
 		else:
 			var p: Dictionary = ObjectiveChecker.progress(o)
 			if not p.is_empty():
-				texte = "%s  %s" % [ObjectiveChecker.short_label(o), _obj_count(p)]
+				texte = objective_line_text(o, false, p)
 				# Un compte qui a atteint sa cible passe a l or : l etoile est a
 				# portee, il reste a gagner. (Un plafond atteint, lui, reste neutre :
 				# max_distinct_cast pile a la limite n est pas un succes, c est un
@@ -1102,10 +1148,32 @@ func _refresh_objective_strip() -> void:
 		if l.text != texte:
 			l.text = texte
 		l.add_theme_color_override(&"font_color", couleur)
+	# La plaque n existe que s il y a quelque chose a lire : une plaque vide au
+	# coin de l ecran serait un bouton qui ne fait rien.
+	if _obj_panel != null and is_instance_valid(_obj_panel):
+		var une: bool = false
+		for o: ObjectiveDef in _obj_lines:
+			var l: Label = _obj_lines[o]
+			if l != null and is_instance_valid(l) and l.visible:
+				une = true
+				break
+		if _obj_panel.visible != une:
+			_obj_panel.visible = une
+
+
+## Le texte d une ligne : « <libelle> : rate » si l objectif est perdu,
+## « <libelle>  <compte> » s il se compte, vide sinon. Seul endroit ou ce texte
+## s ecrit : le test d emprise du bandeau mesure les memes chaines que l ecran.
+static func objective_line_text(o: ObjectiveDef, failed: bool, p: Dictionary) -> String:
+	if failed:
+		return "%s : rate" % ObjectiveChecker.short_label(o)
+	if p.is_empty():
+		return ""
+	return "%s  %s" % [ObjectiveChecker.short_label(o), _obj_count(p)]
 
 
 ## "12/30", ou "1:23 / 3:00" pour un chrono.
-func _obj_count(p: Dictionary) -> String:
+static func _obj_count(p: Dictionary) -> String:
 	if bool(p.get("time", false)):
 		return "%s / %s" % [_mmss(float(p["current"])), _mmss(float(p["target"]))]
 	return "%d/%d" % [int(p["current"]), int(p["target"])]

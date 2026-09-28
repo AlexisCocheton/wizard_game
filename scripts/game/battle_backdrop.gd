@@ -187,6 +187,23 @@ func _scatter_decor() -> void:
 			add_child(a)
 
 
+## Pose de la tour du mage. Nommees pour que le HUD (et son test) sache ou
+## elle est sans recopier les nombres : le bandeau d objectifs vit a cote.
+const TOWER_SCALE: float = 1.6
+const TOWER_DROP: float = 40.0
+
+
+## Emprise a l ecran de la tour equipee (terrain = ecran, le Battlefield est a
+## l origine). Rect vide si aucune texture.
+static func tower_rect() -> Rect2:
+	var tex: Texture2D = UiTheme.tower_texture()
+	if tex == null:
+		return Rect2()
+	var taille: Vector2 = tex.get_size() * TOWER_SCALE
+	var centre := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y + TOWER_DROP)
+	return Rect2(centre - taille * 0.5, taille)
+
+
 func _mage_tower() -> void:
 	# La tour est un cosmetique de compte : elle suit ce que le joueur a equipe.
 	var tex: Texture2D = UiTheme.tower_texture()
@@ -194,7 +211,7 @@ func _mage_tower() -> void:
 		return
 	var s := Sprite2D.new()
 	s.texture = tex
-	s.position = Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y + 40.0)
-	s.scale = Vector2(1.6, 1.6)
+	s.position = Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y + TOWER_DROP)
+	s.scale = Vector2(TOWER_SCALE, TOWER_SCALE)
 	s.z_index = -5
 	add_child(s)

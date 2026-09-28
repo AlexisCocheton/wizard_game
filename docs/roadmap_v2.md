@@ -603,8 +603,11 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
 
 ### Reste — limites connues signalees par les chantiers
 
-- Le **Voleur de sorts** ne retient que la carte volee, pas sa position en main.
-- La **bande d objectifs** en combat chevauche la zone d apparition en haut a droite.
+- ~~Le **Voleur de sorts** ne retient que la carte volee~~ : il retient SON exemplaire
+  (id stable de la Tenue) depuis `339dd41`.
+- ~~La **bande d objectifs** chevauche la zone d apparition~~ : elle vit en bas a droite,
+  entre la tour et le bord, sur une plaque sombre ; son emprise et son contraste
+  sont testes (`test_objective_progress`).
 - Le **Slime colossal** est une feuille agrandie a gros pixels : a juger en jeu.
 - Les quatre nouvelles cartes de terrain ne sont dans aucun deck de campagne.
 - Regles depuis : le niveau 1 est en 3 vagues (BAL-002) ; le mage a un vrai portrait

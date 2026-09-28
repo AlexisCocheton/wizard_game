@@ -44,6 +44,7 @@ func run() -> void:
 	_test_le_signal_d_echec_part_une_seule_fois()
 	_test_pas_d_echec_annonce_en_massacre()
 	_test_le_bandeau_du_hud()
+	_test_le_bandeau_ne_cache_rien_et_se_lit()
 	RunState.current_level_def = null
 	RunState.mode = GameEnums.Mode.EXPLORATION
 	RunState.reset()
@@ -306,3 +307,244 @@ func _test_le_bandeau_du_hud() -> void:
 	eq(l_meme.get_theme_font_size(&"font_size"), UiTheme.FONT_SMALL,
 		"a la plus petite police du theme, pas en dessous")
 	detach(hud)
+
+
+## OU EST LE BANDEAU. Il etait sous le bouton pause, en plein dans la bande ou
+## naissent les monstres : le texte cachait le debut de chaque vague. On pose des
+## objectifs, on force chaque ligne a son texte le plus long (compte plein ou
+## « rate ») et on verifie que la plaque ne recouvre ni la bande d apparition, ni
+## la main, ni la jauge, ni le rail des passifs, ni la tour, ni la pioche, ni la
+## barre d incantation, et qu elle tient dans l ecran. Deux passes :
+##   - chaque niveau LIVRE, avec ses trois objectifs et son fond peint ;
+##   - TOUTES les lignes que le moteur sait ecrire (chaque cle, chaque effet
+##     interdisable, chaque element), trois par trois comme dans un niveau : un
+##     objectif ajoute demain ne doit pas pouvoir deborder sur la tour.
+##
+## La bande d apparition se deduit des constantes de spawn et du catalogue : de
+## la ligne d apparition moins la plus grande demi-silhouette, jusqu au plus bas
+## point ou un monstre peut naitre (entree par le cote comprise) plus sa
+## demi-silhouette. Aucun y ecrit en dur.
+##
+## LE CONTRASTE, sur le fond peint du niveau, sous la plaque : les tons sombre et
+## clair (10e et 90e centiles) de la zone, recouverts de la plaque, doivent
+## laisser chaque couleur de texte a 4,5:1 au moins (plancher du projet, en dur).
+func _test_le_bandeau_ne_cache_rien_et_se_lit() -> void:
+	_fresh()
+	SaveData.reset_profile()
+	RunState.mode = GameEnums.Mode.EXPLORATION
+	var niveaux: Array = ContentDB.levels.values()
+	niveaux.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
+		return String(a.id) < String(b.id))
+	if niveaux.is_empty():
+		ok(false, "des niveaux livres a controler")
+		return
+	# Un niveau quelconque pour que le HUD construise son bandeau des l entree.
+	RunState.current_level_def = niveaux[0]
+	# Le rail des passifs a son plein : autant de passifs que d emplacements, aux
+	# seuils livres.
+	var passifs: Array = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and c.is_passive and passifs.size() < GameConfig.PASSIVE_SLOTS:
+			passifs.append(c)
+	for p: SpellCard in passifs:
+		RunState.equipped_passives.append(p)
+	var hud: Node = load("res://scenes/hud/HUD.tscn").instantiate()
+	attach(hud)
+	hud.call("_build_passive_rail")
+
+	var interdits: Dictionary = _zones_du_hud(hud)
+	var bande: Vector2 = _bande_d_apparition()
+	ok(bande.y > GameConfig.SPAWN_LINE_Y, "(la bande d apparition a une epaisseur : %.0f..%.0f)"
+		% [bande.x, bande.y])
+	var plaque: StyleBoxFlat = null
+	var actes_vus: Dictionary = {}
+	var actes_livres: Dictionary = {}
+	var controles: int = 0
+	for lvl: LevelDef in niveaux:
+		actes_livres[lvl.act] = true
+		var r: Rect2 = _bandeau_de(hud, lvl, bande, interdits)
+		if r.size == Vector2.ZERO:
+			continue
+		controles += 1
+		var panneau: Control = hud.get("_obj_panel")
+		if plaque == null:
+			plaque = panneau.get_theme_stylebox(&"panel") as StyleBoxFlat
+		# Contraste sur le fond de CE niveau, dans l emprise de CE bandeau.
+		if lvl.backdrop != "" and plaque != null:
+			var tons: Array[Color] = _tons_sous(lvl.backdrop, r)
+			ok(tons.size() == 2, "%s : le fond %s se lit sur le disque" % [lvl.id, lvl.backdrop])
+			for ton in tons:
+				var fond: Color = ton.lerp(Color(plaque.bg_color, 1.0), plaque.bg_color.a)
+				for encre: Color in [UiTheme.TEXT, UiTheme.GOLD, hud.OBJ_ECHEC]:
+					var ratio: float = _ratio(encre, fond)
+					ok(ratio >= 4.5, "%s (acte %d) : texte %s a %.2f:1 sur %s sous la plaque"
+						% [lvl.id, lvl.act, encre.to_html(false), ratio, fond.to_html(false)])
+			actes_vus[lvl.act] = true
+	ok(controles > 0, "au moins un niveau livre a un bandeau")
+	ok(plaque != null and plaque.bg_color.a < 1.0,
+		"la plaque laisse deviner le terrain (alpha < 1)")
+	for a in actes_livres:
+		ok(actes_vus.has(a), "le contraste est mesure sur le fond de l acte %d" % a)
+
+	# Toutes les lignes possibles, trois par trois.
+	var toutes: Array[ObjectiveDef] = _tous_les_objectifs_ecrivables()
+	var i: int = 0
+	while i < toutes.size():
+		var lvl := _niveau(toutes.slice(i, i + 3))
+		lvl.id = StringName("lvl_toutes_les_lignes_%d" % i)
+		_bandeau_de(hud, lvl, bande, interdits)
+		i += 3
+
+	for p: SpellCard in passifs:
+		RunState.equipped_passives.erase(p)
+	detach(hud)
+	SaveData.reset_profile()
+
+
+## Construit le bandeau de `lvl`, force chaque ligne a son texte le plus long,
+## verifie l emprise et la rend (Rect2 vide si le niveau n a pas de bandeau).
+func _bandeau_de(hud: Node, lvl: LevelDef, bande: Vector2, interdits: Dictionary) -> Rect2:
+	RunState.current_level_def = lvl
+	hud.call("_build_objective_strip")
+	var lignes: Dictionary = hud.get("_obj_lines")
+	if lignes.is_empty():
+		return Rect2()
+	var textes: Array[String] = []
+	for o: ObjectiveDef in lignes:
+		var l: Label = lignes[o]
+		var plein: Dictionary = ObjectiveChecker.progress(o).duplicate()
+		if not plein.is_empty():
+			plein["current"] = plein["target"]
+		var t_rate: String = hud.objective_line_text(o, true, {})
+		var t_compte: String = hud.objective_line_text(o, false, plein)
+		l.text = t_rate if t_rate.length() >= t_compte.length() else t_compte
+		l.visible = true
+		textes.append(l.text)
+	var panneau: Control = hud.get("_obj_panel")
+	panneau.visible = true
+	var r: Rect2 = hud.objective_strip_rect()
+	var ecran := Rect2(0.0, 0.0, GameConfig.BATTLEFIELD_WIDTH, GameConfig.BATTLEFIELD_HEIGHT)
+	ok(r.size.x > 0.0 and r.size.y > 0.0, "%s : le bandeau a une emprise" % lvl.id)
+	ok(r.position.y > bande.y,
+		"%s : le bandeau (haut a y=%.0f) est sous la bande d apparition (bas a y=%.0f)"
+		% [lvl.id, r.position.y, bande.y])
+	ok(ecran.encloses(r), "%s : le bandeau tient dans l ecran (%s)" % [lvl.id, r])
+	for nom: String in interdits:
+		var z: Rect2 = interdits[nom]
+		not_ok(r.intersects(z), "%s : le bandeau %s %s ne recouvre pas %s %s"
+			% [lvl.id, textes, r, nom, z])
+	return r
+
+
+## Un objectif par cle, plus un par effet interdisable, un par tag interdisable
+## et un par element compte : tout ce que short_label() sait ecrire.
+func _tous_les_objectifs_ecrivables() -> Array[ObjectiveDef]:
+	var out: Array[ObjectiveDef] = []
+	for key: StringName in ObjectiveChecker.KEYS:
+		out.append(_obj(key))
+	for k: StringName in ObjectiveChecker.EFFECT_PHRASES:
+		var o: ObjectiveDef = _obj(&"no_card_key")
+		o.id = StringName("p_no_card_key_%s" % k)
+		o.params["key"] = String(k)
+		out.append(o)
+	# Interdiction : tout tag est permis (ralentissement et invocation compris).
+	for nom: String in GameEnums.DamageTag.keys():
+		var sans: ObjectiveDef = _obj(&"no_card_tag")
+		sans.id = StringName("p_no_card_tag_%s" % nom)
+		sans.params["tag"] = nom
+		out.append(sans)
+	# Compte : les seuls elements.
+	for t: int in GameEnums.ELEMENTS:
+		var nom: String = String(GameEnums.DamageTag.find_key(t))
+		var avec: ObjectiveDef = _obj(&"element_casts")
+		avec.id = StringName("p_element_casts_%s" % nom)
+		avec.params["element"] = nom
+		out.append(avec)
+	for o in out:
+		ok(ObjectiveChecker.validate(o).is_empty(), "(objectif ecrivable %s valide)" % o.id)
+	return out
+
+
+## Les zones que le bandeau ne doit JAMAIS recouvrir, lues sur les noeuds du HUD
+## (et sur la tour pour la seule qui n est pas au HUD).
+func _zones_du_hud(hud: Node) -> Dictionary:
+	var z: Dictionary = {}
+	var main: Control = hud.get("_hand")
+	z["la main"] = main.get_global_rect()
+	# La jauge est TOURNEE de -90 deg : son rectangle non tourne mentirait.
+	var jauge: Control = hud.get("_enemy_bar")
+	z["la jauge"] = jauge.get_global_transform() * Rect2(Vector2.ZERO, jauge.size)
+	var pioche: Control = hud.get("_draw_label")
+	z["la pioche"] = pioche.get_global_rect()
+	var incant: Control = hud.get("_cast_bar")
+	z["la barre d incantation"] = incant.get_global_rect()
+	var rail := Rect2()
+	var noeuds: Array = hud.get("_passive_nodes")
+	for n: Control in noeuds:
+		var nr := Rect2(n.global_position, n.size.max(n.get_combined_minimum_size()))
+		rail = nr if rail.size == Vector2.ZERO else rail.merge(nr)
+	ok(noeuds.size() > 0, "(le rail des passifs est garni pour le controle)")
+	z["le rail des passifs"] = rail
+	var tour: Rect2 = BattleBackdrop.tower_rect()
+	ok(tour.size != Vector2.ZERO, "(la tour du mage a une emprise)")
+	z["la tour du mage"] = tour
+	return z
+
+
+## (haut, bas) de la bande ou un monstre du catalogue peut apparaitre, silhouette
+## affichee comprise. Meme calcul de naissance que le jeu (Battlefield.v3_spawn_y).
+func _bande_d_apparition() -> Vector2:
+	var bf := Battlefield.new()
+	var haut: float = GameConfig.SPAWN_LINE_Y
+	var bas: float = GameConfig.SPAWN_LINE_Y
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d == null:
+			continue
+		var demi: float = d.base_radius * Enemy.VISUAL_FACTOR * maxf(d.sprite_scale, 0.1)
+		var y: float = bf.v3_spawn_y(d)
+		haut = minf(haut, y - demi)
+		bas = maxf(bas, y + demi)
+	bf.free()
+	return Vector2(haut, bas)
+
+
+func _lin(c: float) -> float:
+	return c / 12.92 if c <= 0.03928 else pow((c + 0.055) / 1.055, 2.4)
+
+
+## Luminance relative WCAG (Color.get_luminance() ne lineairise pas).
+func _lum(c: Color) -> float:
+	return 0.2126 * _lin(c.r) + 0.7152 * _lin(c.g) + 0.0722 * _lin(c.b)
+
+
+func _ratio(a: Color, b: Color) -> float:
+	var la: float = _lum(a)
+	var lb: float = _lum(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+## Tons sombre et clair (10e et 90e centiles de luminance) du fond peint dans
+## l emprise `r` de l ecran. Le fond est peint a la taille de l ecran ; on
+## rapporte quand meme les coordonnees a la taille reelle de l image.
+func _tons_sous(backdrop: String, r: Rect2) -> Array[Color]:
+	var out: Array[Color] = []
+	var img: Image = Image.load_from_file(ProjectSettings.globalize_path(
+		"res://assets/backdrops/%s.png" % backdrop))
+	if img == null or img.is_empty():
+		return out
+	if img.is_compressed():
+		img.decompress()
+	var sx: float = float(img.get_width()) / GameConfig.BATTLEFIELD_WIDTH
+	var sy: float = float(img.get_height()) / GameConfig.BATTLEFIELD_HEIGHT
+	var px: Array = []
+	for y in range(int(r.position.y * sy), int(r.end.y * sy), 4):
+		for x in range(int(r.position.x * sx), int(r.end.x * sx), 4):
+			var c: Color = img.get_pixel(clampi(x, 0, img.get_width() - 1),
+				clampi(y, 0, img.get_height() - 1))
+			px.append([_lum(c), c])
+	if px.is_empty():
+		return out
+	px.sort_custom(func(p: Array, q: Array) -> bool: return float(p[0]) < float(q[0]))
+	out.append(px[int(px.size() * 0.10)][1])
+	out.append(px[int(px.size() * 0.90)][1])
+	return out

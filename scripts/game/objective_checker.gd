@@ -135,6 +135,29 @@ const EFFECT_PHRASES: Dictionary = {
 	&"double_cast": "double incantation",
 }
 
+## La meme interdiction dite en UN nom, pour le bandeau de combat ("Sans appat").
+## La phrase complete tient dans l ecran de fin, pas dans le coin ou vit le
+## bandeau : « Sans planter d appat : rate » debordait sur la tour du mage, alors
+## que les autres libelles courts sont deja des noms (« Sans passif », « Sans
+## renvoi »). Une cle absente d ici retombe sur sa phrase complete ; le test
+## d emprise du bandeau mesure toutes les cles, il dira si elle deborde.
+const EFFECT_SHORT: Dictionary = {
+	&"build_wall": "mur",
+	&"summon_ally": "allie",
+	&"knockback": "repousser",
+	&"vortex_pull": "vortex",
+	&"stun_zone": "etourdir",
+	&"taunt_prop": "appat",
+	&"water_flood": "inonder",
+	&"ground_zone": "zone au sol",
+	&"pierce_line": "sort en ligne",
+	&"meteor_storm": "meteores",
+	&"slow_enemy_gauge": "ralentir",
+	&"reverse_enemies": "faire reculer",
+	&"draw_cards": "pioche bonus",
+	&"double_cast": "double sort",
+}
+
 
 static func has_key(key: StringName) -> bool:
 	return key in KEYS
@@ -345,9 +368,13 @@ static func short_label(o: ObjectiveDef) -> String:
 		&"same_card_casts": return "Meme sort"
 		&"win_below_speed": return "Sous %d %%" % _int(o, "pct")
 		&"multi_kill": return "Serie en %s" % _duration(_num(o, "window"))
-		&"no_card_key": return "Sans %s" % EFFECT_PHRASES[StringName(_param(o, "key"))]
+		&"no_card_key":
+			var k: StringName = StringName(_param(o, "key"))
+			return "Sans %s" % EFFECT_SHORT.get(k, EFFECT_PHRASES[k])
 		&"no_card_tag":
-			return "Sans sort %s" % _of_tag(tag_from_name(_param(o, "tag")), false)
+			# Le nom seul, comme « Sans passif » : « Sans sort de foudre : rate » ne
+			# tenait pas entre la tour du mage et le bord de l ecran.
+			return "Sans %s" % _tag_short(tag_from_name(_param(o, "tag")))
 		&"element_casts":
 			return "Sorts %s" % _of_tag(tag_from_name(_param(o, "element")), true)
 		&"kill_flying": return "Volants"
@@ -496,6 +523,13 @@ static func label(o: ObjectiveDef) -> String:
 
 
 ## "de feu", "d arcane", "physique(s)" : le complement d un sort de cet element.
+## Nom d un tag pour le bandeau : celui de GameEnums, sauf le seul trop long.
+static func _tag_short(tag: int) -> String:
+	if tag == GameEnums.DamageTag.SLOW:
+		return "ralentir"
+	return GameEnums.tag_name(tag)
+
+
 static func _of_tag(tag: int, pluriel: bool) -> String:
 	if tag == GameEnums.DamageTag.PHYSICAL:
 		return "physiques" if pluriel else "physique"
