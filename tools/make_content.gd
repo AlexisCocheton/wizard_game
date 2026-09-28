@@ -5935,15 +5935,12 @@ func _acte_5(C: String, E: String) -> void:
 	# propos de l acte. Il n est PAS en tete d affiche : il arrive au milieu d une
 	# vague ordinaire, escorte de la vermine qu il escortait lui-meme autrefois.
 	#
-	# DEUX exemplaires et non trois : 140 PV chacun, et la vague precedente en
-	# totalise environ 120. Trois Gardiens auraient triple les PV d un coup, ce
-	# que le garde-fou d equilibrage refuse a juste titre. Deux suffisent
-	# largement a faire passer le message — voir un SECOND Gardien est deja
-	# l information.
-	#
-	# (CHANTIER W3 : ce sont des ECHOS du Gardien, 56 PV et non 140 — voir
-	# `_enemies_v3`. Les comptes de la vague sont gardes tels quels : le chantier
-	# remplace la piece, il ne regle pas la courbe.)
+	# Ce sont des ECHOS du Gardien (`warden_echo`, voir `_enemies_v3`), pas le
+	# .tres du boss : un Gardien avec ses PV de boss dans une vague de troupes
+	# etait un mur, pas une decheance. DEUX exemplaires et non trois : le compte
+	# date du premier jet, ou chaque Gardien pesait ses PV de boss, et il a ete
+	# garde tel quel quand l echo a remplace la piece — voir un SECOND Gardien
+	# suffit deja a porter le message.
 	g2.entries = [
 		_entry(E + "warden_echo.tres", 2, 4.0),
 		_entry(E + "rat_swarm.tres", 3, 2.2, 12.0),
@@ -6137,14 +6134,10 @@ depuis le pentacle, et il marche devant."
 	# qu on a affronte deux fois comme un evenement, arrive ici SANS titre, au
 	# milieu d une vague, accompagne de vermine.
 	#
-	# UN SEUL Chronos dans cette vague (320 PV) : la vague precedente en totalise
-	# environ 150, et deux Chronos auraient quadruple le poids d un coup. Le
-	# SECOND arrive a la vague 4, quand la courbe l a rattrape — c est la
-	# progression qui porte le propos, pas l entassement.
-	#
-	# (CHANTIER W3 : c est l ECHO de Chronos, 96 PV et non 320 — voir
-	# `_enemies_v3`. Les comptes sont gardes, les chiffres ci-dessus datent du
-	# premier jet qui envoyait le boss lui-meme.)
+	# C est l ECHO de Chronos (`chronos_echo`, voir `_enemies_v3`), pas le boss.
+	# UN SEUL dans cette vague, un SECOND a la vague 4 : c est la progression qui
+	# porte le propos, pas l entassement. Le compte date du premier jet, ou
+	# Chronos pesait ses PV de boss, et il a ete garde quand l echo l a remplace.
 	r2.entries = [
 		_entry(E + "chronos_echo.tres", 1, 1.0),
 		_entry(E + "shade.tres", 4, 2.0, 12.0),
@@ -6352,8 +6345,8 @@ courir pour voir jusqu ou tu irais."
 	#
 	# CHANTIER W3 — leurs ECHOS, plus eux : `warden.tres` et `chronos.tres` avec
 	# leurs PV de boss faisaient de cette vague d ouverture la plus lourde du
-	# niveau (2 x 140 + 320 PV avant la moindre escorte) ; le banc y voyait mourir le
-	# joueur 25 fois sur 30. La densite, elle, reste ici : ce sont les echos qui
+	# niveau (deux Gardiens et un Chronos avant la moindre escorte) ; le banc y
+	# voyait mourir le joueur 25 fois sur 30. La densite, elle, reste ici : ce sont les echos qui
 	# appartiennent au monde 5, et le Gardien et Chronos retournent dans le monde de
 	# leur acte, ou le Massacre les tire comme tetes.
 	f1.entries = [

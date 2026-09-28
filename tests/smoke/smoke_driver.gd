@@ -1363,11 +1363,11 @@ func _showcase_mecaniques_v3() -> void:
 
 ## LE BANDEAU D OBJECTIFS EN COMBAT, sur un vrai HUD.
 ##
-## Aucun niveau de la partie autoplay n a d objectif qui se compte (lvl_01 n a
-## que des interdictions, qui ne s affichent qu une fois perdues) : la capture
-## de bataille ne montrait donc jamais le bandeau. On pose ici un niveau aux
-## trois objectifs representatifs — deux comptes et une interdiction qu on fait
-## perdre — et on passe par le VRAI chemin : GameController.simulate ->
+## La partie autoplay ne montre le bandeau que dans l etat ou elle le laisse :
+## elle ne garantit ni un compte en cours ni un objectif PERDU. On pose donc ici
+## un niveau aux trois objectifs representatifs — deux comptes et une
+## interdiction qu on fait perdre — pour que les trois etats du bandeau soient
+## captures a chaque passage, et on passe par le VRAI chemin : GameController.simulate ->
 ## RunState.advance_clock -> objective_failed -> HUD.
 func _check_objectifs_en_combat() -> void:
 	var base: LevelDef = ContentDB.levels.get(&"lvl_01")

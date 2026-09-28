@@ -21,6 +21,9 @@ export/
 
 # Local
 .claude/settings.local.json
+# Worktrees des agents paralleles : chaque chantier y a sa copie du depot, fusionnee
+# dans main par l orchestrateur puis supprimee. Jamais versionnes.
+.claude/worktrees/
 *.log
 Thumbs.db
 .DS_Store
