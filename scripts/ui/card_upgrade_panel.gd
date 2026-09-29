@@ -2,29 +2,38 @@ class_name CardUpgradePanel
 extends Control
 ## ECRAN DE CHOIX D AMELIORATION — "XP par lancer, choix parmi 3".
 ##
-## Un sort lance GameConfig.CARD_UPGRADE_CASTS fois propose trois voies. Le
-## joueur en retient une, POUR LA PARTIE EN COURS.
+## Un sort lance GameConfig.CARD_UPGRADE_CASTS fois propose jusqu a trois voies
+## PROPRES A CE SORT (RunState.upgrade_paths_for). Le joueur en retient une, POUR
+## LA PARTIE EN COURS.
 ##
 ##   +--------------------------------------------------+
-##   |                                                  |
 ##   |             CE SORT A MURI                       |  <- titre
 ##   |         Boule de feu  -  8 lancers               |  <- de quel sort on parle
 ##   |                                                  |
 ##   |   +------------------------------------------+   |
-##   |   |  PUISSANCE                               |   |  <- 3 voies empilees
-##   |   |  +45% de degats, incantation +30%        |   |     (190 px de haut)
+##   |   |  DEGATS                           FORTE  |   |  <- 3 voies empilees
+##   |   |  +30 % degats                    (vert)  |   |     gain en VERT, signe +
+##   |   |  -15 % vitesse de lancement      (rouge) |   |     prix en ROUGE, signe -
 ##   |   +------------------------------------------+   |
 ##   |   +------------------------------------------+   |
-##   |   |  CELERITE                                |   |
-##   |   |  incantation -35%, -20% de degats        |   |
+##   |   |  ZONE                            LEGERE  |   |
+##   |   |  +10 % zone                      (vert)  |   |
+##   |   |  sans contrepartie               (gris)  |   |
 ##   |   +------------------------------------------+   |
 ##   |   +------------------------------------------+   |
-##   |   |  AMPLEUR                                 |   |
-##   |   |  +40% de rayon et duree, incantation +10%|   |
+##   |   |  VITESSE                          FORTE  |   |
+##   |   |  +30 % vitesse de lancement      (vert)  |   |
+##   |   |  -15 % degats                    (rouge) |   |
 ##   |   +------------------------------------------+   |
-##   |                                                  |
 ##   |              [ garder tel quel ]                 |  <- renoncer
 ##   +--------------------------------------------------+
+##
+## LE SIGNE ET LA COULEUR, PAS LA COULEUR SEULE
+## --------------------------------------------
+## Un joueur sur douze distingue mal le vert du rouge. Le gain porte donc son "+"
+## et le prix son "-" : la couleur double l information, elle ne la porte pas.
+## Une voie legere ECRIT qu elle ne coute rien : sans cette ligne, le joueur
+## cherche un prix qu il croit avoir mal lu.
 ##
 ## POURQUOI EMPILE ET NON TROIS COLONNES
 ## -------------------------------------
@@ -34,7 +43,7 @@ extends Control
 ## trois colonnes laissent 340 px par voie, soit sept ou huit caracteres par
 ## ligne : le prix se retrouve a la ligne, detache de son gain, et le joueur
 ## compare des bouts de phrases. Empilees, chaque voie dispose de toute la
-## largeur et se lit d un trait — et la cible tactile fait 190 px de haut, bien
+## largeur et se lit d un trait — et la cible tactile fait 200 px de haut, bien
 ## au-dela des 90 px exiges.
 ##
 ## POURQUOI UN ECRAN MODAL QUI ARRETE LE JEU
@@ -58,8 +67,17 @@ signal declined()
 
 ## Hauteur d une voie. Trois fois cette valeur plus les titres tiennent dans
 ## 1920 px de haut, et chaque cible depasse largement les 90 px tactiles.
-const PATH_HEIGHT: float = 190.0
+## 200 et non plus 190 : une voie porte maintenant TROIS lignes (titre, gain,
+## prix) au lieu de deux.
+const PATH_HEIGHT: float = 200.0
 const MIN_TOUCH: float = 90.0
+## Encres du gain et du prix, eclaircies pour tenir sur le fond sombre d une voie.
+const COULEUR_GAIN := Color(0.52, 0.92, 0.56)
+const COULEUR_PRIX := Color(1.0, 0.52, 0.52)
+## Fond commun aux voies. SOMBRE, et non plus une teinte pastel par voie : le vert
+## du gain et le rouge du prix doivent se lire sur le meme fond, et sur un aplat
+## clair l un des deux disparaissait toujours.
+const FOND_VOIE := Color(0.14, 0.11, 0.19, 0.97)
 
 var _box: VBoxContainer = null
 
@@ -104,6 +122,12 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_box)
 
+	# RESSORTS HAUT ET BAS. BoxContainer.ALIGNMENT_CENTER ne centre que l espace
+	# LIBRE ; des que les boutons demandent a s etendre (size_flags EXPAND par
+	# defaut sur un Button dans un VBox), il n y a plus d espace libre et tout se
+	# colle en haut — sur la capture, le titre etait coupe par le bord superieur
+	# et la moitie basse de l ecran restait vide. Deux Controls vides qui prennent
+	# la place restante, un de chaque cote, centrent pour de bon.
 	_box.add_child(_ressort())
 	_box.add_child(UiTheme.label("CE SORT A MURI", UiTheme.FONT_TITLE, UiTheme.GOLD,
 		HORIZONTAL_ALIGNMENT_CENTER, false))
@@ -117,17 +141,11 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	for i in paths.size():
 		_box.add_child(_path_button(paths[i], i))
 
-	# RESSORTS HAUT ET BAS. BoxContainer.ALIGNMENT_CENTER ne centre que l espace
-	# LIBRE ; des que les boutons demandent a s etendre (size_flags EXPAND par
-	# defaut sur un Button dans un VBox), il n y a plus d espace libre et tout se
-	# colle en haut — sur la capture, le titre etait coupe par le bord superieur
-	# et la moitie basse de l ecran restait vide. Deux Controls vides qui prennent
-	# la place restante, un de chaque cote, centrent pour de bon.
-
 	# RENONCER. Sans ce bouton, un joueur qui ne veut pas d un compromis serait
-	# force d en prendre un : les trois voies coutent quelque chose, donc aucune
-	# n est gratuite et refuser est un choix legitime.
+	# force d en prendre un. Meme face a une voie legere gratuite, refuser reste
+	# legitime : le joueur peut vouloir garder le sort qu il connait.
 	var garder := Button.new()
+	garder.name = "Garder"
 	garder.text = "GARDER TEL QUEL"
 	garder.custom_minimum_size = Vector2(0, MIN_TOUCH)
 	garder.size_flags_vertical = Control.SIZE_FILL
@@ -156,43 +174,46 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	visible = true
 
 
-## Une voie : un bouton haut, titre en gras au-dessus du compromis en clair.
+## Une voie : un bouton haut. Titre et forme sur la premiere ligne, puis le GAIN
+## (vert, "+") et le PRIX (rouge, "-") chacun sur sa ligne.
 ##
-## Le titre est extrait du libelle (tout ce qui precede le deux-points) pour que
-## RunState reste la SEULE source du texte : dupliquer les noms ici les ferait
-## divergerdu jour ou une voie serait renommee.
+## Les textes viennent tout faits de RunState (title, gain_text, cost_text) :
+## RunState reste la SEULE source des libelles, l ecran ne fait que les poser.
+## Si un appelant ne fournit que `text`, on retombe sur le decoupage au
+## deux-points, pour ne jamais afficher un bouton vide.
 func _path_button(path: Dictionary, index: int) -> Control:
-	var texte: String = String(path.get("text", ""))
-	var titre: String = texte
-	var detail: String = ""
-	var coupe: int = texte.find(":")
-	if coupe > 0:
-		titre = texte.substr(0, coupe).strip_edges()
-		detail = texte.substr(coupe + 1).strip_edges()
+	var titre: String = String(path.get("title", ""))
+	var gain: String = String(path.get("gain_text", ""))
+	var prix: String = String(path.get("cost_text", ""))
+	var forte: bool = StringName(path.get("form", &"")) == &"strong"
+	if titre == "":
+		var texte: String = String(path.get("text", ""))
+		var coupe: int = texte.find(":")
+		titre = texte.substr(0, coupe).strip_edges() if coupe > 0 else texte
+		gain = texte.substr(coupe + 1).strip_edges() if coupe > 0 else ""
 
 	var b := Button.new()
+	b.name = "Voie%d" % index
 	b.custom_minimum_size = Vector2(0, PATH_HEIGHT)
 	# FILL et non EXPAND_FILL : la hauteur d une voie est une CIBLE TACTILE, elle
 	# ne doit pas varier avec la place disponible. C est ce qui laisse aux deux
 	# ressorts de quoi centrer le bloc.
 	b.size_flags_vertical = Control.SIZE_FILL
-	# Le Button porte le fond et la zone tactile ; le texte est pose par-dessus
-	# en deux Labels, parce qu un Button n a qu une seule taille de police et
-	# qu il faut deux niveaux de lecture (le nom, puis le compromis).
+	# Le Button porte le fond et la zone tactile ; le texte est pose par-dessus en
+	# Labels, parce qu un Button n a qu une taille et qu une couleur de police, et
+	# qu il faut ici trois lignes de trois couleurs.
 	b.text = ""
-	# TEINTE PAR VOIE. UiTheme.style_paper() ne convient pas ici : il teinte une
-	# planche de papier deja coloree, et les trois voies sortaient IDENTIQUES sur
-	# la capture — le code couleur annonce n existait tout simplement pas. Un
-	# StyleBoxFlat pose sur les quatre etats donne la couleur voulue, et seulement
-	# elle.
-	var couleur: Color = _teinte(path)
+	# La FORME se lit au cadre : or pour une voie forte, bleu-vert pour une
+	# legere. Un StyleBoxFlat pose sur les quatre etats : UiTheme.style_paper()
+	# teinte une planche deja coloree, et les voies en sortaient identiques.
+	var bord: Color = UiTheme.GOLD if forte else UiTheme.TEAL
 	for etat: StringName in [&"normal", &"hover", &"pressed", &"disabled"]:
-		var facteur: float = 1.0
+		var fond: Color = FOND_VOIE
 		if etat == &"hover":
-			facteur = 1.08
+			fond = FOND_VOIE.lightened(0.08)
 		elif etat == &"pressed":
-			facteur = 0.90
-		b.add_theme_stylebox_override(etat, _fond(couleur * facteur))
+			fond = FOND_VOIE.darkened(0.25)
+		b.add_theme_stylebox_override(etat, _fond(fond, bord))
 	b.pressed.connect(func() -> void:
 		AudioBus.play_sfx(&"card_pick")
 		path_chosen.emit(index))
@@ -201,26 +222,44 @@ func _path_button(path: Dictionary, index: int) -> Control:
 	inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	inner.offset_left = 34.0
 	inner.offset_right = -34.0
-	inner.offset_top = 22.0
-	inner.offset_bottom = -22.0
+	inner.offset_top = 14.0
+	inner.offset_bottom = -14.0
 	inner.alignment = BoxContainer.ALIGNMENT_CENTER
-	inner.add_theme_constant_override(&"separation", 10)
+	inner.add_theme_constant_override(&"separation", 4)
 	# IGNORE partout a l interieur : un Label en MOUSE_FILTER_STOP avalerait le
 	# clic et le bouton ne se declencherait jamais. Piege deja rencontre sur la
 	# barre de vitesse du HUD.
 	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	b.add_child(inner)
 
-	inner.add_child(UiTheme.label(titre.to_upper(), UiTheme.FONT_BUTTON,
-		Color(0.10, 0.07, 0.14), HORIZONTAL_ALIGNMENT_CENTER, false))
-	# Le compromis est LE contenu de la decision : sur la premiere capture il etait
-	# en FONT_SMALL et en brun sombre sur fond colore, donc le texte le MOINS
-	# lisible de l ecran alors que c est le seul qu il faut lire. FONT_BODY, et une
-	# encre tres sombre qui tient sur les trois teintes.
-	var l: Label = UiTheme.label(detail, UiTheme.FONT_BODY,
-		Color(0.12, 0.09, 0.16), HORIZONTAL_ALIGNMENT_CENTER, true)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inner.add_child(l)
+	# Ligne de titre : le NOM de l axe a gauche, la FORME a droite, en toutes
+	# lettres pour ne pas dependre de la couleur du cadre.
+	var tete := HBoxContainer.new()
+	tete.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(tete)
+	var l_titre: Label = UiTheme.label(titre.to_upper(), UiTheme.FONT_BUTTON,
+		UiTheme.GOLD if forte else Color(0.92, 0.90, 0.95), HORIZONTAL_ALIGNMENT_LEFT, false)
+	l_titre.name = "Titre"
+	l_titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l_titre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tete.add_child(l_titre)
+	var l_forme: Label = UiTheme.label("FORTE" if forte else "LEGERE", UiTheme.FONT_SMALL,
+		bord, HORIZONTAL_ALIGNMENT_RIGHT, false)
+	l_forme.name = "Forme"
+	l_forme.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tete.add_child(l_forme)
+
+	var l_gain: Label = UiTheme.label(gain, UiTheme.FONT_BODY, COULEUR_GAIN,
+		HORIZONTAL_ALIGNMENT_LEFT, true)
+	l_gain.name = "Gain"
+	l_gain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(l_gain)
+	var l_prix: Label = UiTheme.label(prix if prix != "" else "sans contrepartie",
+		UiTheme.FONT_BODY, COULEUR_PRIX if prix != "" else UiTheme.TEXT_DIM,
+		HORIZONTAL_ALIGNMENT_LEFT, true)
+	l_prix.name = "Prix"
+	l_prix.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(l_prix)
 	return b
 
 
@@ -233,26 +272,12 @@ func _ressort() -> Control:
 	return c
 
 
-## Chaque voie porte sa couleur : le joueur reconnait le compromis avant de lire.
-## Rouge = frappe fort, bleu = va vite, vert = couvre large. Ce sont les teintes
-## deja employees par le jeu pour les degats, la vitesse et les zones.
-func _teinte(path: Dictionary) -> Color:
-	match StringName(path.get("id", &"")):
-		&"power":
-			return UiTheme.RED.lightened(0.62)
-		&"haste":
-			return UiTheme.BLUE.lightened(0.62)
-		&"area":
-			return UiTheme.GREEN.lightened(0.62)
-	return Color(0.88, 0.86, 0.90)
-
-
-## Le fond d une voie : une couleur pleine, bordee d or comme les panneaux du jeu.
-func _fond(couleur: Color) -> StyleBoxFlat:
+## Le fond d une voie : une couleur pleine, bordee selon sa forme.
+func _fond(couleur: Color, bord: Color) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = couleur
 	sb.set_corner_radius_all(18)
 	sb.set_border_width_all(4)
-	sb.border_color = UiTheme.GOLD.darkened(0.25)
+	sb.border_color = bord
 	sb.set_content_margin_all(18.0)
 	return sb
