@@ -18,7 +18,7 @@ func run() -> void:
 	_test_reglages()
 	_test_les_credits_obligatoires_sont_affiches()
 	_test_victoire_debloque_le_niveau_suivant()
-	_test_legendaire_cumulative()
+	_test_objectifs_cumulatifs_sans_legendaire()
 	_test_niveau_courant()
 	_test_deck_exploration_contient_le_mur()
 	_test_deck_explicite_conserve_les_exemplaires()
@@ -131,7 +131,7 @@ func _test_victoire_debloque_le_niveau_suivant() -> void:
 	not_ok(SaveData.is_level_unlocked(&"lvl_02"), "le niveau 2 est verrouille au depart")
 
 	var newly: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {}, 6)
-	not_ok(newly, "sans objectif, pas de legendaire")
+	not_ok(newly, "sans objectif reussi, aucune carte debloquee")
 	ok(SaveData.is_level_cleared(&"lvl_01"), "le niveau 1 est marque termine")
 	ok(SaveData.is_level_unlocked(&"lvl_02"), "la victoire debloque le niveau 2")
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "meilleure vague enregistree")
@@ -142,7 +142,9 @@ func _test_victoire_debloque_le_niveau_suivant() -> void:
 
 
 ## Les objectifs s accumulent d un run a l autre : 2 puis 1 = les 3.
-func _test_legendaire_cumulative() -> void:
+## Depuis le chantier P, les trois reussis ne DONNENT plus de legendaire : la
+## progression est dans le pool de montee de niveau (voir test_card_progression).
+func _test_objectifs_cumulatifs_sans_legendaire() -> void:
 	SaveData.reset_profile()
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
 	var ids: Array[StringName] = []
@@ -150,20 +152,18 @@ func _test_legendaire_cumulative() -> void:
 		ids.append(o.id)
 	eq(ids.size(), 3, "3 objectifs sur le niveau 1")
 
-	var first: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
+	var avant: int = SaveData.discovered_count()
+	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
 		{ids[0]: true, ids[1]: true, ids[2]: false}, 6)
-	not_ok(first, "2 objectifs sur 3 : pas encore la legendaire")
 	eq(SaveData.objectives_done_count(lvl1), 2, "2 objectifs acquis")
 
-	var second: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
-		{ids[2]: true}, 6)
-	ok(second, "le 3e objectif, meme sur un autre run, debloque la legendaire")
-	ok(SaveData.is_discovered(lvl1.legendary_reward.id), "la legendaire est decouverte")
-	ok(SaveData.unlocked_legendaries().has(String(lvl1.legendary_reward.id)), "et listee")
-
-	var third: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
-		{ids[0]: true, ids[1]: true, ids[2]: true}, 6)
-	not_ok(third, "deja obtenue : pas signalee comme nouvelle")
+	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {ids[2]: true}, 6)
+	eq(SaveData.objectives_done_count(lvl1), ids.size(),
+		"le 3e objectif, meme sur un autre run, complete la serie")
+	eq(SaveData.discovered_count(), avant,
+		"trois objectifs ne DONNENT plus aucune carte : elles entrent au pool")
+	eq(SaveData.unlocked_legendaries().size(), 0,
+		"aucune legendaire obtenue sans l avoir prise en combat")
 
 
 func _test_niveau_courant() -> void:

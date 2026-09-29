@@ -8,6 +8,7 @@ extends Node2D
 ## Modes :
 ##   Exploration : vagues ecrites du niveau, choix de carte a chaque montee de niveau.
 ##   Massacre    : vagues infinies par budget, choix de carte toutes les N vagues.
+## Dans les deux cas les cartes proposees viennent de RunState.levelup_pool().
 
 signal level_won()
 signal level_lost()
@@ -62,6 +63,10 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 
 	RunState.build_deck_from_list(_build_deck())
 	RunState.draw(GameConfig.START_HAND_SIZE)
+	# PASSIFS EQUIPES (chantier P) : actifs DES LE DEBUT du combat, a partir de
+	# l acte 2 en campagne, des l acte 2 atteint hors campagne. APRES reset(), qui
+	# vide la barre, et apres current_level_def / mode, dont depend la regle.
+	RunState.equip_saved_passives()
 
 	if mode == GameEnums.Mode.MASSACRE:
 		spawner.setup_procedural(battlefield, _procedural_pool(), _boss_pool())
@@ -457,30 +462,19 @@ func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:
 
 
 func _on_wave_cleared(index: int) -> void:
-	var wave: WaveDef = spawner.waves[index] if index < spawner.waves.size() else null
 	RunState.wave_index = index + 1
 	RunState.wave_changed.emit(RunState.wave_index)
 	ChallengeTracker.record_best(&"max_speed_reached", SpeedGauge.speed_percent)
 	if mode == GameEnums.Mode.MASSACRE:
 		ChallengeTracker.record_best(&"massacre_wave", RunState.wave_index)
-	# Recompense de boss (cahier des charges) : le mini-boss lache de l epique,
-	# le boss final de la legendaire. Sans cela, vaincre un boss ne rapportait rien
-	# et la seule source de cartes etait la montee de niveau.
-	if wave != null and (wave.is_boss or wave.is_miniboss):
-		_offer_boss_reward(wave.is_boss)
-		return
-	if mode == GameEnums.Mode.MASSACRE and RunState.wave_index % WAVES_PER_CHOICE == 0:
+	# PLUS DE RECOMPENSE DE BOSS D OFFICE (chantier P). Un mini-boss offrait trois
+	# epiques et un boss trois legendaires, tirees dans TOUT le catalogue : le
+	# pool de montee de niveau n aurait rien voulu dire, et un niveau d acte 1
+	# distribuait des legendaires. Les cartes fortes s obtiennent maintenant par
+	# les objectifs du niveau (LevelDef.objective_rewards). La vague de boss suit
+	# donc la cadence ordinaire.
+	if mode != GameEnums.Mode.EXPLORATION and RunState.wave_index % WAVES_PER_CHOICE == 0:
 		_offer_cards()
-
-
-## Le boss final donne de la legendaire, le mini-boss de l epique.
-func _offer_boss_reward(final_boss: bool) -> void:
-	var rarity: GameEnums.Rarity = GameEnums.Rarity.LEGENDARY if final_boss 		else GameEnums.Rarity.EPIC
-	var cards: Array[SpellCard] = RunState.offer_of_rarity(rarity, GameConfig.LEVEL_UP_CHOICES)
-	if cards.is_empty():
-		return
-	AudioBus.play_sfx(&"level_up")
-	cards_offered.emit(cards)
 
 
 func _on_all_cleared() -> void:

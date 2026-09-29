@@ -165,13 +165,15 @@ func _thumb(def: EnemyDef, taille: float) -> TextureRect:
 	return rect
 
 
-## Pourquoi : les trois objectifs du niveau et la legendaire qu ils debloquent.
+## Pourquoi : les trois objectifs du niveau et la carte que chacun debloque
+## (chantier P : plus de legendaire "3/3", une carte par objectif).
 ## Le joueur doit les connaitre AVANT de jouer, sinon il ne peut pas les viser.
 func _build_objectives() -> void:
 	if _level == null or _mode == GameEnums.Mode.MASSACRE or _level.objectives.is_empty():
 		return
 	_waves.add_child(UiTheme.label("OBJECTIFS", UiTheme.FONT_BODY, UiTheme.GOLD))
-	for obj: ObjectiveDef in _level.objectives:
+	for i in _level.objectives.size():
+		var obj: ObjectiveDef = _level.objectives[i]
 		if obj == null:
 			continue
 		var fait: bool = SaveData.is_objective_done(_level.id, obj.id)
@@ -182,9 +184,10 @@ func _build_objectives() -> void:
 			"%s  -  %s" % ["Acquis" if fait else "A faire", ObjectiveChecker.label(obj)],
 			UiTheme.FONT_BODY,
 			Color(0.16, 0.46, 0.22) if fait else UiTheme.TEXT_DARK))
-	if _level.legendary_reward != null:
-		_waves.add_child(UiTheme.label("Recompense : %s" % _level.legendary_reward.display_name,
-			UiTheme.FONT_BODY, UiTheme.GOLD))
+		# Meme phrase que la fiche de campagne : une seule source.
+		if _level.objective_reward(i) != null:
+			_waves.add_child(UiTheme.label(CampaignPanel.objective_reward_line(_level, i),
+				UiTheme.FONT_SMALL, UiTheme.rarity_ink(_level.objective_reward(i).rarity)))
 
 
 ## Aucune taille de police LITTERALE dans cet ecran : elles echappent au theme.

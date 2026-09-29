@@ -645,9 +645,12 @@ func exile_from_deck(count: int) -> int:
 	return n
 
 
+## N obtient PLUS la carte (chantier P) : c est pick_offer(), le geste de
+## prendre, qui l ajoute au livre. Une carte qui arriverait dans la defausse par
+## un autre chemin ne doit pas rejoindre la collection sans que le joueur l ait
+## choisie.
 func add_card_to_discard(card: SpellCard) -> void:
 	discard.append(card)
-	SaveData.discover_card(card.id)
 	deck_changed.emit()
 
 
@@ -965,10 +968,17 @@ func take_next_spell_multiplier() -> float:
 	return m
 
 
-## Propose `count` cartes distinctes : la rarete est tiree (80/15/5), puis on
-## complete avec d autres raretes si le pool est trop petit.
+## Propose `count` cartes distinctes, TIREES DANS levelup_pool() du niveau et du
+## mode en cours : la rarete est tiree (80/15/5 pour un sort, table des passifs
+## pour un passif), puis on complete avec d autres raretes si le pool est court.
+##
+## Il n y a plus d offre de rarete imposee (l ancienne recompense de boss) : TOUTE
+## offre passe par ici, donc par le pool. C est ce qui rend le pool vrai — une
+## seconde porte d entree proposerait des cartes que le joueur ne peut pas voir
+## dans son grimoire.
 func offer_choices(count: int = 3) -> Array[SpellCard]:
 	var chosen: Array[SpellCard] = []
+	var pool: Array[SpellCard] = levelup_pool(current_level_def, mode)
 	# "Les passifs sont plus rares que les cartes durant les montees de niveau :
 	# 20 pourcent de passifs." Chaque proposition tire d abord SA FAMILLE, puis sa
 	# rarete. Tirer la famille une seule fois pour toute l offre donnerait des
@@ -978,28 +988,45 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 	# raretes differentes. Avec une seule rarete pour toute l offre, les trois
 	# options se ressemblaient et le tirage n avait aucun relief.
 	for i in count:
-		var passif: bool = _rng.randf() < GameConfig.PASSIVE_OFFER_CHANCE
-		var voulue: GameEnums.Rarity = roll_rarity()
+		# Le tirage de famille a TOUJOURS lieu, meme quand les passifs sont
+		# exclus : une graine donnee produit alors la meme suite de tirages avec
+		# ou sans passifs, et un test seme ne change pas de sens selon l acte.
+		var tirage: float = _rng.randf()
+		var passif: bool = tirage < GameConfig.PASSIVE_OFFER_CHANCE \
+			and passives_allowed(current_level_def, mode)
+		# CORRECTIF (chantier P) : un passif tire SA rarete dans la table des
+		# passifs, qui connait la COMMUNE. La table des sorts ne la tire jamais et
+		# le repli passait par RARE, jamais epuisee : les quatre passifs communs
+		# n etaient JAMAIS proposes.
+		var voulue: GameEnums.Rarity = roll_passive_rarity() if passif else roll_rarity()
 		# Replis, du plus proche au plus lointain, si la rarete voulue est epuisee.
+		# LIMITE ASSUMEE (chantier P) : la table des SORTS (DEC-004) ne tire
+		# jamais la commune. Dans un pool de campagne, les communes du deck ne
+		# sortent donc qu en repli, quand rare et epique sont epuisees dans
+		# l offre. C est la regle d avant, gardee : ajouter la commune a la
+		# table des sorts changerait l equilibrage mesure. A trancher par le
+		# co-auteur si le deck doit peser davantage.
 		var order: Array = [voulue, GameEnums.Rarity.RARE, GameEnums.Rarity.EPIC,
 			GameEnums.Rarity.COMMON, GameEnums.Rarity.LEGENDARY]
 		for r in order:
 			if chosen.size() > i:
 				break
-			var pool: Array[SpellCard] = _pool_of(r, passif)
-			_shuffle_cards(pool)
-			for c in pool:
+			var candidats: Array[SpellCard] = _pool_of(pool, r, passif)
+			_shuffle_cards(candidats)
+			for c in candidats:
 				if not chosen.has(c) and not _deja_equipe(c):
 					chosen.append(c)
 					break
 		# Repli de DERNIER recours : si la famille voulue est epuisee a toutes les
 		# raretes (peu de passifs, ou tous deja equipes), on prend dans l autre.
-		# Une case vide dans l offre vaut moins qu un choix hors famille.
+		# Une case vide dans l offre vaut moins qu un choix hors famille. Le pool
+		# ne contient deja AUCUN passif quand l acte les exclut : ce repli ne peut
+		# donc pas en faire rentrer un par la bande.
 		if chosen.size() <= i:
 			for r2 in order:
 				if chosen.size() > i:
 					break
-				var autre: Array[SpellCard] = _pool_of(r2, not passif)
+				var autre: Array[SpellCard] = _pool_of(pool, r2, not passif)
 				_shuffle_cards(autre)
 				for c2 in autre:
 					if not chosen.has(c2) and not _deja_equipe(c2):
@@ -1013,31 +1040,109 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 	return chosen
 
 
-## Offre d une rarete IMPOSEE : recompense de boss. A la difference de
-## offer_choices(), la rarete n est pas tiree au sort — le cahier des charges
-## promet de l epique au mini-boss et de la legendaire au boss final.
-## Si la rarete demandee est vide, on descend d un cran plutot que de ne rien
-## donner : un boss vaincu doit toujours rapporter quelque chose.
-func offer_of_rarity(rarity: GameEnums.Rarity, count: int = 3) -> Array[SpellCard]:
-	var chosen: Array[SpellCard] = []
-	var repli: Array = [rarity, GameEnums.Rarity.EPIC, GameEnums.Rarity.RARE,
-		GameEnums.Rarity.COMMON]
-	for r in repli:
-		if chosen.size() >= count:
-			break
-		# Un boss recompense en SORTS : l offre de rarete imposee promet une carte
-		# forte a jouer tout de suite, pas un passif qui dort sous son seuil.
-		var pool: Array[SpellCard] = _pool_of(r, false)
-		_shuffle_cards(pool)
-		for c in pool:
-			if chosen.size() >= count:
-				break
-			if not chosen.has(c):
-				chosen.append(c)
-	pending_offer = chosen.duplicate()
-	if not chosen.is_empty():
-		offer_ready.emit(chosen.duplicate())
-	return chosen
+# --- POOL DE MONTEE DE NIVEAU ET PASSIFS PAR ACTE (vague 5, chantier P) -------
+#
+# Regle du co-auteur :
+#   CAMPAGNE (Mode.EXPLORATION) : le deck du niveau + ses cartes NOUVELLES
+#     (LevelDef.levelup_cards) + les cartes des objectifs DEJA REUSSIS de ce
+#     niveau (SaveData.objective_rewards_unlocked). Les passifs s y ajoutent,
+#     tout le catalogue, mais seulement a partir de l acte 2.
+#   HORS CAMPAGNE (tout autre mode : l infini par niveau, le Massacre) : toutes
+#     les cartes deja OBTENUES, passifs compris si l acte 2 est atteint.
+#
+# Un objectif reussi n enrichit le pool que pour les parties SUIVANTES : les
+# objectifs se jugent a la victoire (voir system_objectives), il n existe donc
+# aucun instant de la partie en cours ou la carte pourrait y entrer.
+
+## Table de rarete des PASSIFS a la montee de niveau. Le haut de la table est
+## celui des sorts (epique 15 %, legendaire 5 %) ; les 80 % de "rare" des sorts
+## sont partages entre commune et rare, parce que les passifs communs sont les
+## plus LISIBLES (un mur par vague, une pioche plus rapide) : ce sont eux qui
+## doivent apprendre au joueur ce qu est un passif.
+const PASSIVE_RARITY_WEIGHTS: Dictionary = {
+	GameEnums.Rarity.COMMON: 0.50,
+	GameEnums.Rarity.RARE: 0.30,
+	GameEnums.Rarity.EPIC: 0.15,
+	GameEnums.Rarity.LEGENDARY: 0.05,
+}
+
+
+## LE pool de montee de niveau. Toutes les offres de cartes passent par ici
+## (offer_choices), le grimoire et l ecran de deck aussi (SaveData.obtainable_ids)
+## — un seul endroit ou la regle est ecrite.
+##
+## Sans niveau (tests a froid, outils du banc qui tirent hors partie), tout le
+## catalogue : c est le comportement d avant la regle, et il n existe aucun
+## niveau dont lire un pool. Une partie reelle a TOUJOURS un niveau.
+func levelup_pool(level_def: LevelDef, level_mode: GameEnums.Mode) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	var passifs_ok: bool = passives_allowed(level_def, level_mode)
+	if level_def == null:
+		for c: SpellCard in ContentDB.cards.values():
+			_pool_add(out, c, passifs_ok)
+		return out
+	if level_mode == GameEnums.Mode.EXPLORATION:
+		for c: SpellCard in level_def.exploration_deck:
+			_pool_add(out, c, passifs_ok)
+		for c: SpellCard in level_def.levelup_cards:
+			_pool_add(out, c, passifs_ok)
+		for c: SpellCard in SaveData.objective_rewards_unlocked(level_def):
+			_pool_add(out, c, passifs_ok)
+		if passifs_ok:
+			for c: SpellCard in ContentDB.cards.values():
+				if c != null and c.is_passive:
+					_pool_add(out, c, passifs_ok)
+		return out
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and SaveData.is_discovered(c.id):
+			_pool_add(out, c, passifs_ok)
+	return out
+
+
+func _pool_add(out: Array[SpellCard], c: SpellCard, passifs_ok: bool) -> void:
+	if c == null or out.has(c):
+		return
+	if c.is_passive and not passifs_ok:
+		return
+	out.append(c)
+
+
+## Les passifs existent-ils dans cette partie ? "Rien avant l acte 2" : en
+## campagne c est l acte DU NIVEAU qui decide ; hors campagne, il faut avoir
+## ouvert un niveau de l acte 2. Sans niveau (tests a froid), oui.
+func passives_allowed(level_def: LevelDef, level_mode: GameEnums.Mode) -> bool:
+	if level_def == null:
+		return true
+	if level_mode == GameEnums.Mode.EXPLORATION:
+		return level_def.allows_passives()
+	return SaveData.passives_unlocked()
+
+
+## Tire une rarete de PASSIF (voir PASSIVE_RARITY_WEIGHTS). Consomme un seul
+## tirage, comme roll_rarity : la suite des tirages ne depend pas de la famille.
+func roll_passive_rarity() -> GameEnums.Rarity:
+	var r: float = _rng.randf()
+	var acc: float = 0.0
+	for rarity: GameEnums.Rarity in PASSIVE_RARITY_WEIGHTS:
+		acc += PASSIVE_RARITY_WEIGHTS[rarity]
+		if r < acc:
+			return rarity
+	return GameEnums.Rarity.COMMON
+
+
+## Equipe, au DEPART du combat, les passifs que le joueur a choisis dans l ecran
+## de deck (SaveData.equipped_passive_cards). Rien si l acte ne les admet pas :
+## un niveau d acte 1 part toujours sans passif, meme si le profil en a equipe.
+## Appele par GameController.start_level() APRES reset(), qui vide la barre.
+## Rend le nombre de passifs equipes.
+func equip_saved_passives() -> int:
+	if not passives_allowed(current_level_def, mode):
+		return 0
+	var n: int = 0
+	for c: SpellCard in SaveData.equipped_passive_cards():
+		if equip_passive(c):
+			n += 1
+	return n
 
 
 ## Carte brulee en attente de lancement, lue par GameController. Null si aucune.
@@ -1047,6 +1152,8 @@ var burned_card: SpellCard = null
 ## BRULER une carte proposee : elle est lancee immediatement mais n entre jamais
 ## dans le deck. C est un choix de puissance TOUT DE SUITE contre une valeur sur
 ## la duree — sans ce prix, bruler serait toujours le bon choix.
+## Elle n est pas non plus OBTENUE (chantier P) : la collection fait partie de la
+## valeur durable a laquelle on renonce en brulant.
 func burn_offer(i: int) -> SpellCard:
 	if i < 0 or i >= pending_offer.size():
 		return null
@@ -1068,6 +1175,13 @@ func pick_offer(i: int) -> SpellCard:
 		return null
 	var card: SpellCard = pending_offer[i]
 	pending_offer.clear()
+	# OBTENTION (chantier P) : la PREMIERE prise en combat fait entrer la carte
+	# dans le livre, utilisable au deck. Ecrit ICI, au geste de prendre, et pas
+	# dans add_card_to_discard : c est le choix du joueur qui obtient, pas le fait
+	# qu une carte transite par la defausse. Un passif choisi est obtenu meme si
+	# le joueur refuse ensuite l echange : il l a pris, il pourra l equiper depuis
+	# l ecran de deck. Une carte BRULEE, elle, n est pas obtenue (burn_offer).
+	SaveData.discover_card(card.id)
 	# Un PASSIF choisi s EQUIPE, il n entre pas dans le deck. Le faire passer par
 	# la defausse le rendrait piochable et annulerait tout le principe : les
 	# passifs sont hors deck. S il n y a plus de place, gain_passive() le met en
@@ -1080,13 +1194,14 @@ func pick_offer(i: int) -> SpellCard:
 	return card
 
 
-## Les cartes d une rarete, dans UNE SEULE famille : sorts ou passifs. Les deux
-## familles ne se melangent jamais dans un meme tirage, sinon les 20 % promis
-## seraient dilues par la taille relative des deux catalogues.
-func _pool_of(rarity: GameEnums.Rarity, passifs: bool) -> Array[SpellCard]:
+## Les cartes d une rarete DU POOL, dans UNE SEULE famille : sorts ou passifs.
+## Les deux familles ne se melangent jamais dans un meme tirage, sinon les 20 %
+## promis seraient dilues par la taille relative des deux catalogues.
+func _pool_of(pool: Array[SpellCard], rarity: GameEnums.Rarity,
+		passifs: bool) -> Array[SpellCard]:
 	var out: Array[SpellCard] = []
-	for c: SpellCard in ContentDB.cards_of_rarity(rarity):
-		if c != null and c.is_passive == passifs:
+	for c: SpellCard in pool:
+		if c != null and c.rarity == rarity and c.is_passive == passifs:
 			out.append(c)
 	return out
 

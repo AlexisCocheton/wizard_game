@@ -798,6 +798,7 @@ func _check_menu_screens() -> void:
 		# et il n est atteignable que par un toucher sur un point de la carte.
 		campagne.open_level(SaveData.current_level())
 		await _shot("campagne_detail")
+		await _vitrine_recompenses_campagne(campagne)
 		campagne.back_to_map()
 
 	# Le grimoire (onglet Galerie) a trois SECTIONS et une fiche detaillee : un
@@ -818,6 +819,7 @@ func _check_menu_screens() -> void:
 		grimoire.show_section(GalleryPanel.Section.SPELLS)
 		grimoire.open_detail(0)
 		await _shot("livre_fiche")
+		await _vitrine_grimoire_visibilite(grimoire)
 		# Une fiche de MONSTRE aussi : elle est bien plus longue (competences),
 		# c est elle qui deborde si la mise en page est trop serree.
 		grimoire.show_section(GalleryPanel.Section.BEASTS)
@@ -848,6 +850,7 @@ func _check_menu_screens() -> void:
 		await _shot("deck_plein")
 		await _check_deck_drag_refused(deck_ecran)
 		await _check_deck_scroll(deck_ecran)
+		await _vitrine_passifs_deck(deck_ecran)
 
 	# Le profil a quitte la barre du bas pour l en-tete : sans cette capture il
 	# ne serait plus verifie du tout.
@@ -1659,8 +1662,10 @@ func _check_precast() -> void:
 	await get_tree().process_frame
 
 
-## Vaincre un mini-boss ou un boss doit proposer une carte : c est la recompense
-## promise par le cahier des charges, et elle ne passait par aucun code.
+## CHANTIER P : vaincre un mini-boss ou un boss ne propose PLUS de carte d office
+## (trois epiques / trois legendaires tirees hors de tout pool). Les cartes
+## fortes viennent des objectifs du niveau. Joue sur une vraie partie : la
+## vague de boss nettoyee ne doit mettre aucune offre en attente.
 func _check_boss_reward() -> void:
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()
@@ -1682,10 +1687,11 @@ func _check_boss_reward() -> void:
 	else:
 		RunState.pending_offer.clear()
 		g._on_wave_cleared(index)
-		if RunState.pending_offer.is_empty():
-			_fail("vaincre un boss n offre aucune carte")
+		if not RunState.pending_offer.is_empty():
+			_fail("vaincre un boss offre encore %d cartes d office"
+				% RunState.pending_offer.size())
 		else:
-			print("[SMOKE] recompense de boss : %d cartes proposees" % RunState.pending_offer.size())
+			print("[SMOKE] vague de boss nettoyee : aucune carte d office")
 		RunState.pending_offer.clear()
 	g.queue_free()
 	await get_tree().process_frame
@@ -1759,9 +1765,22 @@ func _check_end_screens() -> void:
 	ContentDB.discover_starters()
 	RunState.mode = GameEnums.Mode.EXPLORATION
 	SceneRouter.payload = {"level_id": &"lvl_01"}
+	# CHANTIER P : l ecran dit ce que CHAQUE objectif rapporte. Le contenu des
+	# recompenses n est pas encore ecrit : on en pose trois le temps de la
+	# capture (rare, epique, legendaire, comme le veut le rang), puis on rend
+	# au niveau ses recompenses d origine.
+	var lv_v: LevelDef = ContentDB.levels[&"lvl_01"]
+	var rec_v: Array[SpellCard] = lv_v.objective_rewards.duplicate()
+	lv_v.objective_rewards = _recompenses_de_vitrine(lv_v)
 	var v: PackedScene = load("res://scenes/endgame/VictoryScreen.tscn")
 	var vs: Control = v.instantiate()
 	add_child(vs)
+	var dit_rapporte: bool = false
+	for n2 in _tous_les_noeuds(vs):
+		if n2 is Label and (n2 as Label).text.contains(lv_v.objective_rewards[0].display_name):
+			dit_rapporte = true
+	if not dit_rapporte:
+		_fail("ecran de victoire : la carte du premier objectif n est pas nommee")
 	if not SaveData.is_level_unlocked(&"lvl_02"):
 		_fail("l ecran de victoire n a pas debloque le niveau suivant")
 	# Les ETOILES sont ce que le joueur regarde en premier. Une rangee vide
@@ -1783,6 +1802,7 @@ func _check_end_screens() -> void:
 		_fail("ecran de victoire : aucune barre d avancement de compte")
 	await _shot("victoire")
 	vs.queue_free()
+	lv_v.objective_rewards = rec_v
 
 	# Le bilan de defaite ne s affiche que s il y a des coups a montrer.
 	RunState.note_damage_taken(ContentDB.enemies.get(&"gnome"))
@@ -1945,3 +1965,114 @@ func _tous_les_noeuds(racine: Node) -> Array[Node]:
 		out.append(c)
 		out.append_array(_tous_les_noeuds(c))
 	return out
+
+
+# --- VITRINES DU CHANTIER P : progression des cartes et passifs ------------
+
+## Trois sorts pour les trois objectifs d un niveau, de la rarete de leur rang
+## (LevelDef.REWARD_RARITY_BY_RANK), hors du deck. Seulement pour les captures :
+## le vrai contenu viendra du chantier suivant.
+func _recompenses_de_vitrine(level: LevelDef) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	var ids: Array = ContentDB.cards.keys()
+	ids.sort_custom(func(a, b) -> bool: return String(a) < String(b))
+	for i in level.objectives.size():
+		var voulue: int = LevelDef.reward_rarity_for_rank(LevelDef.objective_rank(i))
+		for id in ids:
+			var c: SpellCard = ContentDB.cards[id]
+			if c.is_passive or c.rarity != voulue or out.has(c) \
+					or level.exploration_deck.has(c):
+				continue
+			out.append(c)
+			break
+	return out
+
+
+## La fiche de campagne nomme la carte de chaque objectif.
+func _vitrine_recompenses_campagne(campagne: CampaignPanel) -> void:
+	var level: LevelDef = ContentDB.levels.get(SaveData.current_level())
+	if level == null:
+		return
+	var avant: Array[SpellCard] = level.objective_rewards.duplicate()
+	var profil: Dictionary = SaveData.to_dictionary()
+	level.objective_rewards = _recompenses_de_vitrine(level)
+	# Le premier objectif est acquis : sa ligne doit dire "a prendre en combat".
+	if not level.objectives.is_empty():
+		SaveData.record_victory(level, GameEnums.Mode.EXPLORATION,
+			{level.objectives[0].id: true}, 1)
+	campagne.open_level(level.id)
+	# La fiche precedente attend sa liberation en fin d image : sans cette
+	# attente, ses lignes seraient comptees avec celles de la fiche affichee.
+	await get_tree().process_frame
+	var lignes: int = 0
+	for n in _tous_les_noeuds(campagne):
+		if n is Label and (n as Label).text.contains("rapporte :"):
+			lignes += 1
+	if lignes != level.objectives.size():
+		_fail("fiche de campagne : %d lignes de recompense pour %d objectifs"
+			% [lignes, level.objectives.size()])
+	await _shot("campagne_recompenses")
+	level.objective_rewards = avant
+	SaveData.load_from_dictionary(profil)
+	campagne.open_level(level.id)
+
+
+## Le grimoire ne montre aucune carte INVISIBLE, et une fiche OBTENABLE dit ou
+## l obtenir.
+func _vitrine_grimoire_visibilite(grimoire: GalleryPanel) -> void:
+	grimoire.close_detail()
+	grimoire.show_section(GalleryPanel.Section.SPELLS)
+	var liste: Array = grimoire.entries()
+	var grisee: int = -1
+	for i in liste.size():
+		var c: SpellCard = liste[i]
+		var etat: int = SaveData.card_visibility(c.id)
+		if etat == SaveData.CARD_HIDDEN:
+			_fail("le grimoire montre %s, qui devrait etre invisible" % c.id)
+		if etat == SaveData.CARD_OBTAINABLE and grisee < 0:
+			grisee = i
+	if grisee < 0:
+		_fail("le grimoire ne montre aucune carte a obtenir apres une partie")
+		return
+	grimoire.open_detail(grisee)
+	await _shot("livre_fiche_a_obtenir")
+	grimoire.close_detail()
+
+
+## La bande des passifs de l ecran de deck : verrouillee avant l acte 2, puis
+## trois emplacements equipables et le choix du passif sur la page.
+func _vitrine_passifs_deck(panel: DeckPanel) -> void:
+	var profil: Dictionary = SaveData.to_dictionary()
+	panel.refresh()
+	if SaveData.passives_unlocked():
+		_fail("profil de smoke : l acte 2 ne devrait pas encore etre atteint")
+	panel.open_passive_picker(0)
+	if panel.picker_slot() != -1:
+		_fail("avant l acte 2, les emplacements de passif ne s ouvrent pas")
+	await _shot("deck_passifs_verrou")
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv.allows_passives():
+			SaveData.unlock_level(lv.id)
+			break
+	var passifs: Array[SpellCard] = []
+	var ids: Array = ContentDB.cards.keys()
+	ids.sort_custom(func(a, b) -> bool: return String(a) < String(b))
+	for id in ids:
+		var c: SpellCard = ContentDB.cards[id]
+		if c.is_passive and passifs.size() < DeckRules.MAX_PASSIVES + 1:
+			passifs.append(c)
+			SaveData.discover_card(c.id)
+	panel.refresh()
+	if not panel.equip_passive_in_slot(0, passifs[0]) \
+			or not panel.equip_passive_in_slot(1, passifs[1]):
+		_fail("l ecran de deck n equipe pas un passif obtenu")
+	if SaveData.equipped_passive_cards().size() != 2:
+		_fail("deux passifs equipes attendus, %d lus" % SaveData.equipped_passive_cards().size())
+	await _shot("deck_passifs")
+	panel.open_passive_picker(2)
+	if panel.picker_slot() != 2:
+		_fail("le choix du troisieme emplacement ne s ouvre pas")
+	await _shot("deck_passifs_choix")
+	panel.close_passive_picker()
+	SaveData.load_from_dictionary(profil)
+	panel.refresh()
