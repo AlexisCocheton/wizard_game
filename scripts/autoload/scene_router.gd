@@ -87,8 +87,9 @@ func plan_level_start(level_id: StringName, mode: GameEnums.Mode) -> Dictionary:
 
 
 ## Les scenes a jouer avant ce niveau, dans l ordre, en sautant celles deja vues.
-## Seule l Exploration raconte l histoire : le Massacre est le mode infini,
-## diegetiquement la boucle APRES la fin (docs/histoire.md, epilogue).
+## Seule l Exploration raconte l histoire : l Infini et le Massacre sont les
+## modes sans fin, diegetiquement la boucle APRES la fin (docs/histoire.md,
+## epilogue). Le test `!= EXPLORATION` couvre les deux.
 func stories_before_level(level_id: StringName, mode: GameEnums.Mode) -> Array[StringName]:
 	var out: Array[StringName] = []
 	if not stories_enabled or mode != GameEnums.Mode.EXPLORATION:

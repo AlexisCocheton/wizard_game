@@ -12,7 +12,7 @@ func run() -> void:
 	_test_persistance_coupee()
 	_test_cartes_de_depart_decouvertes()
 	_test_deck_massacre()
-	_test_le_massacre_s_ouvre_a_la_fin_de_la_campagne()
+	_test_la_campagne_se_finit_au_dernier_niveau()
 	_test_plusieurs_decks()
 	_test_migration_ancien_deck_unique()
 	_test_reglages()
@@ -136,7 +136,7 @@ func _test_victoire_debloque_le_niveau_suivant() -> void:
 	ok(SaveData.is_level_unlocked(&"lvl_02"), "la victoire debloque le niveau 2")
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "meilleure vague enregistree")
 
-	SaveData.record_victory(lvl1, GameEnums.Mode.MASSACRE, {}, 3)
+	SaveData.record_victory(lvl1, GameEnums.Mode.INFINITE, {}, 3)
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "la meilleure vague ne regresse pas")
 	ok(bool(SaveData.level_record(&"lvl_01").get("cleared_massacre", false)), "massacre marque aussi")
 
@@ -251,13 +251,15 @@ func _test_coquille_du_menu() -> void:
 	attach(menu)
 
 	var tabs: Array = menu.get("TABS")
-	eq(tabs.size(), 4, "quatre onglets : le bestiaire a fusionne, le profil est monte")
+	eq(tabs.size(), 5, "cinq onglets : le Massacre a rejoint les quatre d avant")
 	not_ok(tabs.has("BESTIAIRE"), "plus d onglet BESTIAIRE dans la barre du bas")
 	not_ok(tabs.has("PROFIL"), "le profil n est plus un onglet du bas")
-	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "REGLAGES"]:
+	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "REGLAGES"]:
 		ok(tabs.has(attendu), "l onglet %s est present" % attendu)
 	eq(tabs[int(menu.get("HOME_TAB"))], "CAMPAGNE",
-		"l onglet central sureleve reste la CAMPAGNE")
+		"l onglet d accueil sureleve reste la CAMPAGNE")
+	# Au CENTRE, pas seulement "d accueil" : autant d onglets de chaque cote.
+	eq(int(menu.get("HOME_TAB")), tabs.size() / 2, "la CAMPAGNE est au milieu de la barre")
 
 	# Une icone par onglet, et AUCUNE des icones de materiel de Tiny Swords que
 	# le testeur a refusees ("pas un steak pour la campagne" : icon_04).
@@ -322,15 +324,14 @@ func _test_profil_en_superposition() -> void:
 	detach(menu)
 
 
-## Le Massacre est une RECOMPENSE, pas une alternative offerte des la premiere
-## seconde. Sans ce verrou, un joueur pouvait passer a cote de toute l histoire
-## sans s en apercevoir — le mode sans fin etant juste a cote, des le depart.
+## `campaign_cleared()` mesure la FIN DE CAMPAGNE. Elle ouvrait le mode infini
+## jusqu au 29/09 ; depuis, l Infini s ouvre avec son niveau et le Massacre au
+## premier niveau gagne (test_modes.gd). La mesure reste, pour le profil et les
+## succes : c est elle qui est verrouillee ici.
 ##
-## Le test porte sur la DONNEE (`campaign_cleared()`) et non sur l etat du
-## bouton : une regle qui ne vit que dans un ecran disparait avec lui. C est la
-## lecon des decks de campagne, qui violaient la regle des 15 cartes parce que
-## seul le mode Massacre passait par la validation.
-func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
+## Le test porte sur la DONNEE et non sur l etat d un bouton : une regle qui ne
+## vit que dans un ecran disparait avec lui.
+func _test_la_campagne_se_finit_au_dernier_niveau() -> void:
 	SaveData.reset_profile()
 	not_ok(SaveData.campaign_cleared(),
 		"un profil neuf n a pas fini la campagne")
@@ -346,14 +347,16 @@ func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
 			continue
 		SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, {}, 6)
 	not_ok(SaveData.campaign_cleared(),
-		"il reste un niveau : le Massacre est encore ferme")
+		"il reste un niveau : la campagne n est pas finie")
+	ok(SaveData.massacre_unlocked(),
+		"mais le Massacre, lui, est ouvert depuis le premier niveau gagne")
 	eq(int(SaveData.campaign_progress()[0]), niveaux.size() - 1,
 		"tous les niveaux sauf un sont finis")
 
 	SaveData.record_victory(niveaux[niveaux.size() - 1],
 		GameEnums.Mode.EXPLORATION, {}, 6)
 	ok(SaveData.campaign_cleared(),
-		"le dernier niveau fini ouvre le Massacre")
+		"le dernier niveau fini termine la campagne")
 	SaveData.reset_profile()
 
 
