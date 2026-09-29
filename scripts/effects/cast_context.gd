@@ -11,6 +11,10 @@ var target_enemy: Object = null
 var card: SpellCard = null
 ## Multiplicateur de degats du sort (Focalisation : x2 sur le prochain sort).
 var damage_mult: float = 1.0
+## Numero de CE lancer, pose par EffectRegistry.cast() (0 = pas encore lance).
+## Les degats du lancer, et ceux de ce qu il pose, lui sont attribues par
+## RunState.damage_source : voir LANCER en tete de objective_checker.gd.
+var cast_id: int = 0
 
 
 static func make(bf: Object, card_ref: SpellCard = null) -> CastContext:
