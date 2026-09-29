@@ -61,6 +61,12 @@ func _defaults() -> Dictionary:
 			## Scenes d histoire deja vues : une scene ne se rejoue pas quand on
 			## refait un niveau. _migrate() ajoute la cle aux vieux profils.
 			"stories_seen": [],
+			## Record du MASSACRE (onglet du menu) : meilleure vague survecue.
+			## Il n appartient a aucun niveau, donc il ne peut pas vivre dans
+			## "levels" : un faux niveau "massacre" y serait compte par la
+			## campagne. Le record INFINI, lui, est rattache a son niveau
+			## ("best_wave_infinite" dans level_record). _migrate() ajoute la cle.
+			"massacre_best_wave": 0,
 		},
 		"settings": {
 			"master_volume": 0.8,
@@ -545,15 +551,65 @@ func campaign_progress() -> Array:
 	return [finis, total]
 
 
-## La campagne est-elle terminee ? C est ce qui OUVRE le mode Massacre.
+## La campagne est-elle terminee ?
 ##
-## Pourquoi verrouiller : le Massacre etait accessible des la premiere seconde,
-## donc le mode sans fin n etait pas une recompense mais une alternative a la
-## campagne — un joueur pouvait passer a cote de toute l histoire sans s en
-## rendre compte. Le testeur a tranche : "Fin : deblocage du mode infini".
+## Elle OUVRAIT le mode infini jusqu au 29/09. Decision du co-auteur et
+## d Alexis : l INFINI d un niveau s ouvre des que ce niveau est debloque, et le
+## MASSACRE des le premier niveau gagne (massacre_unlocked). La fonction reste
+## la mesure de "fin de campagne" pour le profil et les succes.
 func campaign_cleared() -> bool:
 	var p: Array = campaign_progress()
 	return int(p[1]) > 0 and int(p[0]) >= int(p[1])
+
+
+# --- Modes sans fin : ouverture et records (chantier M) ---
+
+## L INFINI d un niveau est ouvert des que le niveau l est. Pas de verrou de
+## fin de campagne : le mode sans fin d un niveau deja atteint ne devoile rien
+## de l histoire, et le cacher coupait le joueur du seul mode ou son deck compte.
+func infinite_unlocked(level_id: StringName) -> bool:
+	return ContentDB.levels.has(level_id) and is_level_unlocked(level_id)
+
+
+## Le MASSACRE s ouvre au PREMIER niveau gagne. Avant, le joueur n a ni deck
+## eprouve ni idee de ce qu est un palier ; le mode le plus dur du jeu serait son
+## premier combat. Passe par is_level_cleared(), donc le mode testeur l ouvre
+## aussi, comme il ouvre tout le reste.
+func massacre_unlocked() -> bool:
+	return int(campaign_progress()[0]) >= 1
+
+
+## Record INFINI d un niveau. Distinct de "best_wave", qui est celui de
+## l Exploration : les deux se melangeaient, et une partie infinie de 14 vagues
+## affichait "Meilleure vague : 14" sur un niveau qui n en compte que six.
+func infinite_best_wave(level_id: StringName) -> int:
+	if not ContentDB.levels.has(level_id):
+		return 0
+	return int(level_record(level_id).get("best_wave_infinite", 0))
+
+
+func massacre_best_wave() -> int:
+	return int(profile().get("massacre_best_wave", 0))
+
+
+## Record de vague d une partie, rangee selon son MODE. Rend vrai si c est un
+## nouveau record. Un seul point d ecriture, appele par GameController a chaque
+## vague nettoyee et par l ecran de defaite : sans lui, l ecran de defaite
+## creait une fiche de niveau "massacre" fantome dans "levels".
+func record_run_waves(level_id: StringName, mode: GameEnums.Mode, waves: int) -> bool:
+	if mode == GameEnums.Mode.MASSACRE:
+		if waves <= massacre_best_wave():
+			return false
+		profile()["massacre_best_wave"] = waves
+		return true
+	if not ContentDB.levels.has(level_id):
+		return false
+	var rec: Dictionary = level_record(level_id)
+	var cle: String = "best_wave_infinite" if mode == GameEnums.Mode.INFINITE else "best_wave"
+	if waves <= int(rec.get(cle, 0)):
+		return false
+	rec[cle] = waves
+	return true
 
 
 ## Un objectif precis est-il acquis ? (cumule sur toutes les parties du niveau)

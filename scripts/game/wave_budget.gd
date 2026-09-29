@@ -248,16 +248,22 @@ static func pick_boss(bosses: Array[EnemyDef], kind: GameEnums.EnemyKind,
 	# audit ne le voyait — un monstre existe, il est rattache a un monde, et il
 	# ne sort jamais.
 	var candidats: Array[EnemyDef] = []
-	var repli: EnemyDef = null
+	var tous: Array[EnemyDef] = []
 	for d in bosses:
 		if d == null or d.kind != kind:
 			continue
-		if repli == null:
-			repli = d
+		tous.append(d)
 		if world >= 0 and int(membership.get(d.id, -1)) == world:
 			candidats.append(d)
+	# SANS MONDE (Massacre, world = -1) ou monde sans boss attitre : on tire
+	# parmi TOUS les boss du genre. Le repli rendait le premier du pool, soit le
+	# meme boss a chaque palier — exactement le defaut repare ci-dessus pour les
+	# mondes, qui revenait par cette porte-ci. Le Massacre promet les boss de tout
+	# le jeu : il ne peut pas en servir un seul.
 	if candidats.is_empty():
-		return repli
+		candidats = tous
+	if candidats.is_empty():
+		return null
 	if rng == null or candidats.size() == 1:
 		return candidats[0]
 	return candidats[rng.randi() % candidats.size()]

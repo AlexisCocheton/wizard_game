@@ -179,7 +179,7 @@ func _run_all() -> void:
 	await _showcase_miroir()
 	await _check_end_screens()
 	await _check_cosmetics_in_battle()
-	_check_massacre_deck()
+	await _check_massacre_deck()
 
 	# 4) La defaite doit aussi fonctionner.
 	_check_defeat_path()
@@ -688,9 +688,12 @@ func _check_premier_lancement() -> void:
 	if not SaveData.is_level_unlocked(&"lvl_01"):
 		_fail("premier lancement : le niveau 1 n est pas ouvert")
 
-	# Le mode sans fin est une recompense, pas une porte ouverte.
-	if SaveData.campaign_cleared():
+	# Le Massacre (onglet) s ouvre au premier niveau GAGNE : sur un profil
+	# vierge il est ferme. L Infini du niveau 1, lui, est ouvert d office.
+	if SaveData.massacre_unlocked():
 		_fail("premier lancement : le Massacre est deja ouvert")
+	if not SaveData.infinite_unlocked(&"lvl_01"):
+		_fail("premier lancement : l Infini du niveau 1 est ferme")
 
 	# Le deck de depart doit etre JOUABLE sans rien toucher : un joueur neuf qui
 	# tombe sur "Ajoute 7 cartes" avant sa premiere partie ne comprend pas.
@@ -799,7 +802,21 @@ func _check_menu_screens() -> void:
 		campagne.open_level(SaveData.current_level())
 		await _shot("campagne_detail")
 		await _vitrine_recompenses_campagne(campagne)
+		# La meme fiche en INFINI : le second bouton du segment, sa ligne de
+		# record et son aide. Le mot MASSACRE ne doit plus y figurer.
+		campagne.select_mode(GameEnums.Mode.INFINITE)
+		if campagne.current_mode() != GameEnums.Mode.INFINITE:
+			_fail("la fiche de niveau refuse le mode INFINI")
+		if campagne.mode_labels().has("MASSACRE"):
+			_fail("la fiche de niveau affiche encore MASSACRE")
+		await _shot("campagne_detail_infini")
+		campagne.select_mode(GameEnums.Mode.EXPLORATION)
 		campagne.back_to_map()
+
+	# L onglet MASSACRE dans ses deux etats : ferme (profil neuf, deja capture
+	# par le passage des onglets) et OUVERT, avec un record et un deck. Sur une
+	# COPIE du profil, restauree ensuite, comme les etoiles ci-dessus.
+	await _check_massacre_tab(menu)
 
 	# Le grimoire (onglet Galerie) a trois SECTIONS et une fiche detaillee : un
 	# seul passage par l onglet n en montrerait qu un neuvieme. On les parcourt
@@ -1703,8 +1720,11 @@ func _check_briefing() -> void:
 	if packed == null:
 		_fail("LoadingScreen.tscn introuvable")
 		return
-	for mode in [GameEnums.Mode.EXPLORATION, GameEnums.Mode.MASSACRE]:
-		SceneRouter.payload = {"level_id": &"lvl_01", "mode": mode}
+	for mode in [GameEnums.Mode.EXPLORATION, GameEnums.Mode.INFINITE, GameEnums.Mode.MASSACRE]:
+		var niveau: StringName = &"lvl_01"
+		if mode == GameEnums.Mode.MASSACRE:
+			niveau = MassacreMode.LEVEL_ID
+		SceneRouter.payload = {"level_id": niveau, "mode": mode}
 		var screen: Control = packed.instantiate()
 		add_child(screen)
 		await get_tree().process_frame
@@ -1714,12 +1734,14 @@ func _check_briefing() -> void:
 			_fail("le briefing n affiche aucune menace (mode %d)" % mode)
 		if mode == GameEnums.Mode.EXPLORATION:
 			await _shot("briefing")
+		elif mode == GameEnums.Mode.MASSACRE:
+			await _shot("briefing_massacre")
 		screen.queue_free()
 		await get_tree().process_frame
 	# La route du menu passe bien par le briefing, pas directement par la partie.
 	if SceneRouter.LOADING == SceneRouter.GAME:
 		_fail("la route de briefing pointe sur la partie")
-	print("[SMOKE] briefing construit pour les deux modes")
+	print("[SMOKE] briefing construit pour les trois modes")
 
 
 ## Une scene de visual novel doit se construire et se derouler jusqu au bout.
@@ -1814,10 +1836,22 @@ func _check_end_screens() -> void:
 	add_child(ds)
 	await _shot("defaite")
 	ds.queue_free()
+	# La defaite d un MASSACRE : son level_id n est pas dans ContentDB, et sa
+	# ligne de resume porte le record. REJOUER doit y ramener, pas au niveau 1.
+	RunState.mode = GameEnums.Mode.MASSACRE
+	SceneRouter.payload = {"level_id": MassacreMode.LEVEL_ID, "waves": 11}
+	var dm: Control = d.instantiate()
+	add_child(dm)
+	if SaveData.massacre_best_wave() < 11:
+		_fail("defaite en Massacre : record non enregistre (%d)" % SaveData.massacre_best_wave())
+	await _shot("defaite_massacre")
+	dm.queue_free()
+	RunState.mode = GameEnums.Mode.EXPLORATION
 	print("[SMOKE] ecrans de fin construits")
 
 
-## Une partie en Massacre doit demarrer avec le deck du joueur.
+## Une partie INFINIE (un niveau prolonge) doit demarrer avec le deck du joueur.
+## Ancien "Massacre par niveau", renomme au chantier M.
 func _check_massacre_deck() -> void:
 	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
@@ -1825,8 +1859,16 @@ func _check_massacre_deck() -> void:
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
 	add_child(g)
-	g.start_level(level, GameEnums.Mode.MASSACRE)
+	g.start_level(level, GameEnums.Mode.INFINITE)
 	g.running = false
+	# Le bandeau du monde s annonce a la premiere vague : on laisse le fondu se
+	# faire en temps reel (la partie, elle, est arretee) pour la capture.
+	var hud: Node = g.get_node_or_null("HUD")
+	if hud != null and String(hud.call("world_banner_text")) != WaveBudget.world_name_for(1):
+		_fail("mode infini : le bandeau n annonce pas le premier monde")
+	if _visual:
+		await _laisser_jouer(0.5)
+		await _shot("bataille_infini_monde")
 	if RunState.total_cards() < DeckRules.MIN_CARDS:
 		_fail("deck Massacre trop petit en partie : %d" % RunState.total_cards())
 	if RunState.hand.is_empty():
@@ -1848,6 +1890,114 @@ func _check_massacre_deck() -> void:
 	g.queue_free()
 	print("[SMOKE] mode infini : %d vagues, %d choix de sorts, deck de %d cartes"
 		% [RunState.wave_index, offers[0], RunState.total_cards()])
+	await _check_massacre_run()
+
+
+## LE MASSACRE (onglet) joue pour de vrai : son niveau fabrique, le deck du
+## joueur, et des monstres de PLUSIEURS mondes sur le terrain. Un pool qui
+## retomberait sur celui d un seul niveau passerait tous les controles de
+## construction ; seul le jeu le montre.
+func _check_massacre_run() -> void:
+	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	add_child(g)
+	g.start_level(MassacreMode.level_def(), GameEnums.Mode.MASSACRE)
+	g.running = false
+	if RunState.total_cards() < DeckRules.MIN_CARDS:
+		_fail("Massacre : deck trop petit en partie (%d)" % RunState.total_cards())
+	var membres: Dictionary = WaveSpawner.build_membership()
+	var mondes: Dictionary = {}
+	var capture_faite: bool = false
+	var perdu: Array[bool] = [false]
+	g.level_lost.connect(func() -> void: perdu[0] = true)
+	var steps: int = 0
+	var cible: int = WaveBudget.MINIBOSS_EVERY * 2
+	# BALAYEUR : l autoplay ne frappe que ce qui approche du mage. Le Massacre
+	# tire dans TOUT le bestiaire, dont des tireurs et des boss qui tiennent le
+	# haut de l ecran ; un joueur les viserait, l autoplay non, et la vague ne
+	# finissait jamais (vu une fois en fenetre reelle, 5 vagues en 28 800 pas).
+	# Ce controle juge le MODE (il tourne, il melange les mondes), pas
+	# l equilibrage : passe une minute simulee sur la meme vague, on nettoie.
+	var vague_vue: int = -1
+	var pas_dans_la_vague: int = 0
+	var balayes: Array[String] = []
+	while RunState.wave_index < cible and steps < 60 * 60 * 8 and not perdu[0]:
+		if RunState.wave_index != vague_vue:
+			vague_vue = RunState.wave_index
+			pas_dans_la_vague = 0
+		pas_dans_la_vague += 1
+		if pas_dans_la_vague > 60 * 60:
+			pas_dans_la_vague = 0
+			for e in g.battlefield.enemies.duplicate():
+				if e != null and is_instance_valid(e) and not e.is_dead():
+					if e.definition != null:
+						balayes.append(String(e.definition.id))
+					e.take_damage(999999.0, [])
+		var a_l_ecran: Dictionary = {}
+		for e in g.battlefield.enemies:
+			if e == null or not is_instance_valid(e) or e.definition == null:
+				continue
+			if membres.has(e.definition.id):
+				mondes[int(membres[e.definition.id])] = true
+				if e.position.y < GameConfig.MAGE_LINE_Y - 500.0:
+					a_l_ecran[int(membres[e.definition.id])] = true
+		# La capture quand TROIS mondes sont a l ecran en meme temps : c est ce
+		# que la photo doit prouver, et a la premiere vague (6 points de budget)
+		# il n y a que deux monstres, trop peu pour juger quoi que ce soit.
+		if _visual and not capture_faite and a_l_ecran.size() >= 3:
+			capture_faite = true
+			await _shot("bataille_massacre")
+		_autoplay_for(g)
+		g.simulate(FIXED_DELTA)
+		steps += 1
+	if _visual and not capture_faite:
+		await _shot("bataille_massacre")
+	if RunState.wave_index < cible:
+		var restants: Array[String] = []
+		for e in g.battlefield.enemies:
+			if e != null and is_instance_valid(e) and e.definition != null:
+				restants.append("%s@%d" % [e.definition.id, int(e.position.y)])
+		_fail("Massacre : seulement %d vagues en %d pas (restent : %s)"
+			% [RunState.wave_index, steps, ", ".join(restants)])
+	if mondes.size() < 2:
+		_fail("Massacre : les monstres ne viennent que de %d monde(s)" % mondes.size())
+	if g.spawner.is_finished():
+		_fail("le Massacre ne doit jamais se terminer")
+	if SaveData.massacre_best_wave() < RunState.wave_index:
+		_fail("Massacre : record %d sous les %d vagues jouees"
+			% [SaveData.massacre_best_wave(), RunState.wave_index])
+	RunState.pending_offer.clear()
+	g.queue_free()
+	await get_tree().process_frame
+	print("[SMOKE] Massacre : %d vagues, monstres de %d mondes, record %d, balayes : %s"
+		% [RunState.wave_index, mondes.size(), SaveData.massacre_best_wave(),
+		", ".join(balayes) if not balayes.is_empty() else "aucun"])
+
+
+## L onglet MASSACRE ouvert : record, regle, deck utilise, JOUER actif.
+func _check_massacre_tab(menu: Control) -> void:
+	var panneau: MassacrePanel = null
+	for p in menu.get_node("%Content").get_children():
+		if p is MassacrePanel:
+			panneau = p
+	if panneau == null:
+		_fail("l onglet Massacre est introuvable")
+		return
+	var avant: Dictionary = SaveData.to_dictionary()
+	SaveData.record_victory(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION, {}, 6)
+	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
+	SaveData.record_run_waves(MassacreMode.LEVEL_ID, GameEnums.Mode.MASSACRE, 14)
+	menu.select_tab(menu.get("TABS").find("MASSACRE"))
+	panneau.refresh()
+	if not panneau.can_play():
+		_fail("onglet Massacre : JOUER coupe malgre un niveau gagne et un deck valide (%s)"
+			% MassacrePanel.block_reason())
+	await _shot("massacre_ouvert")
+	SaveData.load_from_dictionary(avant)
+	panneau.refresh()
+	menu.select_tab(menu.HOME_TAB)
 
 
 ## Verifie qu un mur devie reellement les monstres puis libere le passage.

@@ -200,6 +200,13 @@ func _test_pool_hors_campagne_egal_aux_cartes_obtenues() -> void:
 	eq(_ids(pool), _ids(obtenues),
 		"hors campagne : exactement les cartes obtenues (sans passif avant l acte 2)")
 	ok(pool.has(rare), "une carte obtenue ailleurs est proposable hors campagne")
+	# Le MASSACRE joue un niveau FABRIQUE (sans deck, sans acte de campagne) :
+	# meme regle, toutes les cartes obtenues, dans CHAQUE mode sans fin.
+	for m in GameEnums.Mode.values():
+		if not GameEnums.is_endless(m):
+			continue
+		eq(_ids(RunState.levelup_pool(MassacreMode.level_def(), m)), _ids(obtenues),
+			"mode sans fin %d, niveau du Massacre : les cartes obtenues" % m)
 
 
 ## Toutes les offres tirent dans le pool du niveau en cours : aucune carte

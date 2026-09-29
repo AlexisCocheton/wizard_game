@@ -15,14 +15,26 @@ func _ready() -> void:
 	_title.add_theme_font_size_override(&"font_size", UiTheme.FONT_TITLE)
 	_summary.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
 	var waves: int = SceneRouter.payload.get("waves", RunState.wave_index)
-	_summary.text = "%d vagues survecues   -   niveau joueur %d" % [waves, RunState.level]
 	var level_id: StringName = SceneRouter.payload.get("level_id", &"lvl_01")
+	# MODES (chantier M) : le record est range selon le MODE. L ancienne ligne
+	# ecrivait dans level_record(level_id) quel que soit le mode, ce qui creait
+	# une fiche de niveau "massacre" fantome et melangeait les vagues de
+	# l Infini a celles de l Exploration.
+	SaveData.record_run_waves(level_id, RunState.mode, waves)
+	var resume: String = "%d vagues survecues" % waves
+	if RunState.mode == GameEnums.Mode.MASSACRE:
+		resume += "   -   record %d" % SaveData.massacre_best_wave()
+	elif RunState.mode == GameEnums.Mode.INFINITE:
+		resume += "   -   record %d" % SaveData.infinite_best_wave(level_id)
+	# Le record sur la MEME ligne debordait du papier (vu sur la capture
+	# defaite_massacre) : en mode sans fin, le niveau du joueur passe dessous.
+	var sep: String = "
+" if GameEnums.is_endless(RunState.mode) else "   -   "
+	_summary.text = "%s%sniveau joueur %d" % [resume, sep, RunState.level]
 	_retry_btn.pressed.connect(func() -> void:
 		SceneRouter.start_level(level_id, RunState.mode))
 	_menu_btn.pressed.connect(func() -> void: SceneRouter.goto(SceneRouter.MAIN_MENU))
 	_build_breakdown()
-	var record: Dictionary = SaveData.level_record(level_id)
-	record["best_wave"] = maxi(int(record.get("best_wave", 0)), waves)
 	SaveData.save_profile()
 
 
