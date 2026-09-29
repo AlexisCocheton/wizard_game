@@ -442,12 +442,15 @@ func _tile(entry: Object, index: int) -> Control:
 	var art: Control = _art(entry, ICON_PX, known or grisee)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		if grisee:
+			art.modulate = GREY_ART
 		box.add_child(art)
-	# Toute la vignette est grisee, comme dans l ecran de deck : une teinte
-	# posee sur le seul nom rendait la carte illisible sur le bleu du bouton
-	# (lu sur capture) sans mieux la distinguer d une carte obtenue.
+	# Le FOND de la vignette et l icone sont grises, pas le texte :
+	# self_modulate ne descend pas aux enfants. Griser toute la vignette
+	# (modulate) assombrissait aussi le nom, illisible sur le bleu du bouton
+	# (lu sur capture) ; la carte doit rester LISIBLE.
 	if grisee:
-		tile.modulate = GREY_TILE
+		tile.self_modulate = GREY_TILE
 
 	var nom: Label = UiTheme.label(_name_of(entry) if known or grisee else "???",
 		UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
@@ -495,8 +498,10 @@ func _sub_of(entry: Object, known: bool) -> String:
 ## et de puissance y sont delavees : sur la capture, "lance 1 fois" en bleu de
 ## rare etait un pave gris illisible. On ecrit donc en clair, et la rarete se lit
 ## sur l icone et sur la fiche, ou le fond est du papier.
-func _sub_color(_entry: Object, known: bool) -> Color:
-	return UiTheme.TEXT if known else UiTheme.TEXT_DIM
+func _sub_color(entry: Object, known: bool) -> Color:
+	# Une carte OBTENABLE est deja grisee par la teinte de sa vignette : un
+	# second assombrissement rendait "a obtenir" illisible (lu sur capture).
+	return UiTheme.TEXT if known or is_obtainable(entry) else UiTheme.TEXT_DIM
 
 
 ## L image d une entree. Pour une carte : SON icone de sort (CardIcons), qui est
