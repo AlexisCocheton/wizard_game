@@ -9,7 +9,7 @@ extends Control
 ##   |            panneau de l onglet actif             |
 ##   |                                                  |
 ##   +--------------------------------------------------+
-##   | GALERIE |  DECK  | [CAMPAGNE] | REGLAGES         |  <- centre sureleve
+##   | GALERIE | DECK | [CAMPAGNE] | MASSACRE | REGLAGES |  <- centre sureleve
 ##   +--------------------------------------------------+
 ##
 ## Les onglets changent le panneau sans changer de scene : la navigation est
@@ -25,7 +25,13 @@ extends Control
 ##
 ## 4 boutons sur 1080 px = 270 px chacun, au lieu de 170 : le nom de l onglet
 ## tient enfin en entier ("CAMPA" etait tronque sur la capture d avant).
-const TABS: Array[String] = ["GALERIE", "DECK", "CAMPAGNE", "REGLAGES"]
+##
+## CINQ depuis le 29/09 (chantier M) : le MASSACRE, niveau infini a part, a son
+## onglet. Place a DROITE du centre pour que la CAMPAGNE reste au milieu, deux
+## onglets de chaque cote : c est la symetrie d Archero, et le pouce retrouve le
+## centre sans regarder. 216 px par onglet : "MASSACRE" et "REGLAGES" (8 lettres)
+## tiennent a FONT_SMALL, verifie sur la capture menu_massacre.
+const TABS: Array[String] = ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "REGLAGES"]
 const HOME_TAB: int = 2
 
 ## Icone de chaque onglet. Retour du testeur : "utilise les bonnes icones pour
@@ -35,8 +41,10 @@ const HOME_TAB: int = 2
 ##   - GALERIE  : la couverture du grimoire (pack magic book) ;
 ##   - DECK     : des cartes empilees ;
 ##   - CAMPAGNE : une carte au tresor marquee d une croix ;
+##   - MASSACRE : l epee de Tiny Swords (icon_05), de la meme planche que
+##                l engrenage des reglages : le combat sans fin, dit par l objet ;
 ##   - REGLAGES : l engrenage, le seul `icon_*` qui convienne (icon_10).
-const TAB_ICONS: Array[String] = ["tab_gallery", "tab_deck", "tab_campaign", "icon_10"]
+const TAB_ICONS: Array[String] = ["tab_gallery", "tab_deck", "tab_campaign", "icon_05", "icon_10"]
 
 ## Le panneau PROFIL n est plus un onglet mais une superposition, ouverte par
 ## l avatar en haut a droite. Il se ferme par son propre bouton.
@@ -77,6 +85,7 @@ func _build_panels() -> void:
 		GalleryPanel.new(),
 		DeckPanel.new(),
 		CampaignPanel.new(),
+		MassacrePanel.new(),
 		SettingsPanel.new(),
 	]
 	for p in _panels:
@@ -98,6 +107,12 @@ func _build_tabs() -> void:
 		if i == HOME_TAB:
 			b.custom_minimum_size = Vector2(0, 210)
 			b.add_theme_font_size_override(&"font_size", UiTheme.FONT_BODY)
+			# PLUS LARGE aussi, pas seulement plus haut. A cinq onglets egaux
+			# (211 px), "CAMPAGNE" en corps 36 etait coupe en "CAMPAG" sur la
+			# capture menu_massacre. Mesure a l ecran : ~216 px de texte pour
+			# "CAMPAGNE", ~161 px pour "MASSACRE" en corps 30, contour compris.
+			# A 1,25 le centre prend ~251 px et les cotes ~201 px.
+			b.size_flags_stretch_ratio = 1.25
 		else:
 			b.custom_minimum_size = Vector2(0, 160)
 		b.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -110,7 +125,27 @@ func _build_tabs() -> void:
 			AudioBus.play_sfx(&"ui_tap")
 			select_tab(idx))
 		_tab_bar.add_child(b)
+		# Marges laterales reduites a 8 px (20 dans le theme) : a cinq onglets,
+		# ce sont elles qui coupaient "MASSACR" meme avec le centre elargi. Le
+		# haut et le bas gardent celles du theme, l icone ne bouge pas. APRES
+		# l ajout a l arbre : avant, le bouton ne voit pas encore le theme du
+		# menu et copierait la boite par defaut de Godot.
+		_serrer_marges(b)
 		_tab_buttons.append(b)
+
+
+const TAB_SIDE_MARGIN: float = 8.0
+
+
+func _serrer_marges(b: Button) -> void:
+	for etat in [&"normal", &"hover", &"pressed", &"disabled"]:
+		var sb: StyleBox = b.get_theme_stylebox(etat)
+		if sb == null:
+			continue
+		var copie: StyleBox = sb.duplicate()
+		copie.content_margin_left = TAB_SIDE_MARGIN
+		copie.content_margin_right = TAB_SIDE_MARGIN
+		b.add_theme_stylebox_override(etat, copie)
 
 
 ## Le profil en superposition PLEIN ECRAN sous la barre du haut : il couvre le

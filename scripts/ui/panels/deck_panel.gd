@@ -87,6 +87,22 @@ extends Control
 ## Ils s equipent a part (0 a 3, chantier F). Cet ecran les montre dans une bande
 ## SOUS les onglets, bien separee des 15 cartes, pour que le joueur ne cherche
 ## jamais un passif dans sa collection de sorts.
+##
+## Depuis le chantier P la bande est EQUIPABLE : trois emplacements, un toucher
+## ouvre sur la page la liste des passifs OBTENUS, un second equipe. Ils sont
+## actifs des le debut du combat (RunState.equip_saved_passives). Avant l acte 2
+## la bande le dit au lieu de montrer des emplacements inutilisables.
+##
+##   +--------------------------------------------------+
+##   | PASSIFS [Celerite] [Ecorce vive] [ + libre ]     |  <- 3 emplacements
+##   +--------------------------------------------------+
+##   |  PASSIF - emplacement 2 / 3                      |  <- la page devient
+##   |  [icone Celerite  ] [icone Ecorce   ] [ ... ]    |     le choix du passif
+##   |  [ RETIRER ]                    [ FERMER ]       |
+##
+## VISIBILITE (chantier P) : la collection ne montre que les cartes OBTENUES
+## (utilisables) et OBTENABLES (grisees, fiche lisible, bouton AJOUTER refuse avec
+## le geste qui les obtient). Les autres sont invisibles : plus de "???".
 
 ## Grille 3 colonnes, comme le grimoire. Deux lignes par zone : le deck et la
 ## collection doivent tenir ENSEMBLE sur une page portrait.
@@ -107,6 +123,10 @@ const ICON_PX: float = 86.0
 const ARROW_W: float = 170.0
 const ARROW_H: float = 120.0
 const TAB_H: float = 110.0
+## Teinte d une vignette OBTENABLE (lisible, grisee, non utilisable).
+const OBTAINABLE_TINT: Color = Color(0.62, 0.62, 0.66, 0.9)
+## Hauteur d un emplacement de passif : une cible tactile (>= 90 px).
+const PASSIVE_SLOT_H: float = 100.0
 
 ## Deplacement a partir duquel un appui devient un glisser. Un doigt qui touche
 ## « sans bouger » derive de 5 a 15 px sur un ecran de 1080 : en dessous de ce
@@ -164,6 +184,8 @@ var _body: VBoxContainer
 var _cale: Control
 var _detail_box: VBoxContainer
 var _detail_card: SpellCard = null
+## Emplacement de passif dont le choix est ouvert sur la page, -1 = aucun.
+var _picker_slot: int = -1
 
 ## Appui en cours sur une vignette, pas encore un glisser :
 ## {card, from_deck, start, tile}. Vide = aucun doigt pose sur une carte.
@@ -375,6 +397,7 @@ func refresh() -> void:
 	# oubliee d une visite precedente s ajouterait au premier toucher suivant.
 	_armed_id = &""
 	_detail_card = null
+	_picker_slot = -1
 	# Un glisser ou un bandeau d une visite precedente n a plus de sens : les
 	# vignettes qu ils designent vont etre reconstruites.
 	cancel_drag()
@@ -397,6 +420,9 @@ func _save() -> void:
 func _render() -> void:
 	_render_tabs()
 	_render_passives()
+	if _picker_slot >= 0:
+		_render_passive_picker()
+		return
 	if _detail_card != null:
 		_render_detail()
 		return
@@ -482,27 +508,208 @@ func _render_tabs() -> void:
 		_tab_bar.add_child(suppr)
 
 
-## Les passifs EQUIPES, en lecture seule ici : 0 a 3 emplacements, montres hors
-## de la page du deck pour qu ils ne se confondent jamais avec les 15 cartes.
+## Les passifs EQUIPES : trois emplacements TOUCHABLES (chantier P), hors de la
+## page du deck pour qu ils ne se confondent jamais avec les 15 cartes.
+## Toucher un emplacement ouvre sur la page le choix parmi les passifs obtenus.
 func _render_passives() -> void:
 	for c in _passive_row.get_children():
 		_passive_row.remove_child(c)
 		c.queue_free()
 	_passive_row.add_child(UiTheme.label("PASSIFS", UiTheme.FONT_SMALL,
 		UiTheme.TEAL, HORIZONTAL_ALIGNMENT_LEFT, false))
-	var equipes: Array = SaveData.equipped_passives()
+	# Rien avant l acte 2 : trois emplacements qui ne serviraient a rien se
+	# liraient comme une fonction cassee. On dit plutot QUAND ils s ouvrent.
+	if not SaveData.passives_unlocked():
+		var verrou: Label = UiTheme.label("s ouvrent a l acte %d" % LevelDef.PASSIVES_FROM_ACT,
+			UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
+		verrou.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_passive_row.add_child(verrou)
+		return
+	var equipes: Array[SpellCard] = equipped_passive_cards()
 	for slot in DeckRules.MAX_PASSIVES:
-		var l: Label
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(0, PASSIVE_SLOT_H)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.clip_text = true
+		b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		b.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
 		if slot < equipes.size():
-			var c2: SpellCard = ContentDB.cards.get(StringName(equipes[slot]))
-			l = UiTheme.label(c2.display_name if c2 != null else "?",
-				UiTheme.FONT_SMALL, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER, false)
+			b.text = equipes[slot].display_name
+			b.add_theme_color_override(&"font_color", UiTheme.GOLD)
 		else:
-			l = UiTheme.label("- vide -", UiTheme.FONT_SMALL, UiTheme.TEXT_DIM,
-				HORIZONTAL_ALIGNMENT_CENTER, false)
-		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		_passive_row.add_child(l)
+			b.text = "+ libre"
+			b.add_theme_color_override(&"font_color", UiTheme.TEXT_DIM)
+		# L emplacement dont le choix est ouvert est encadre : le joueur sait
+		# lequel il est en train de remplir.
+		if slot == _picker_slot:
+			b.add_theme_stylebox_override(&"normal", UiTheme.flat_box(
+				UiTheme.PANEL_LIGHT, 12, 12.0, UiTheme.GOLD, 5))
+		var idx: int = slot
+		b.pressed.connect(func() -> void:
+			AudioBus.play_sfx(&"ui_tap")
+			open_passive_picker(idx))
+		_passive_row.add_child(b)
+
+
+## Les passifs equipes et valides, dans l ordre des emplacements.
+func equipped_passive_cards() -> Array[SpellCard]:
+	return SaveData.equipped_passive_cards()
+
+
+## Les passifs que le joueur PEUT equiper : obtenus, tries comme la collection.
+func passive_choices() -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and c.is_passive and SaveData.is_discovered(c.id):
+			out.append(c)
+	out.sort_custom(_sort_cards)
+	return out
+
+
+## La liste d ids equipes apres avoir mis `card_id` dans l emplacement `slot`.
+## Logique pure, testee a froid. Un passif deja equipe AILLEURS change de place
+## au lieu d etre en double (deux fois le meme passif ne fait rien de plus et
+## volerait un emplacement). Un emplacement au-dela de la fin se range a la
+## suite : les emplacements sont une liste, pas des trous.
+static func passives_with(ids: Array, slot: int, card_id: StringName) -> Array:
+	var out: Array = []
+	for id in ids:
+		out.append(String(id))
+	var deja: int = out.find(String(card_id))
+	if deja != -1:
+		out.remove_at(deja)
+		if deja < slot:
+			slot -= 1
+	slot = clampi(slot, 0, out.size())
+	if slot < out.size():
+		out[slot] = String(card_id)
+	else:
+		out.append(String(card_id))
+	while out.size() > DeckRules.MAX_PASSIVES:
+		out.pop_back()
+	return out
+
+
+## Emplacement dont le choix est ouvert, -1 si aucun.
+func picker_slot() -> int:
+	return _picker_slot
+
+
+func open_passive_picker(slot: int) -> void:
+	if not SaveData.passives_unlocked():
+		return
+	_picker_slot = clampi(slot, 0, DeckRules.MAX_PASSIVES - 1)
+	_armed_id = &""
+	_detail_card = null
+	_render()
+
+
+func close_passive_picker() -> void:
+	_picker_slot = -1
+	_render()
+
+
+## Equipe `card` dans l emplacement `slot`. Refuse un passif non obtenu ou un
+## sort : l ecran ne doit jamais ecrire au profil ce que le combat refuserait.
+func equip_passive_in_slot(slot: int, card: SpellCard) -> bool:
+	if card == null or not card.is_passive or not SaveData.is_discovered(card.id):
+		return false
+	if not SaveData.passives_unlocked():
+		return false
+	var ids: Array = []
+	for c in equipped_passive_cards():
+		ids.append(String(c.id))
+	SaveData.set_equipped_passives(passives_with(ids, slot, card.id))
+	SaveData.save_profile()
+	_picker_slot = -1
+	_render()
+	return true
+
+
+## Vide l emplacement `slot` ; les suivants remontent d un cran.
+func clear_passive_slot(slot: int) -> void:
+	var ids: Array = []
+	for c in equipped_passive_cards():
+		ids.append(String(c.id))
+	if slot >= 0 and slot < ids.size():
+		ids.remove_at(slot)
+	SaveData.set_equipped_passives(ids)
+	SaveData.save_profile()
+	_picker_slot = -1
+	_render()
+
+
+## Le choix d un passif, a la place des grilles sur la MEME page (comme la fiche
+## d une carte) : une grille des passifs obtenus, l equipe en or.
+func _render_passive_picker() -> void:
+	_deck_scroll.visible = false
+	_coll_label.visible = false
+	_grid.visible = false
+	_filters.visible = false
+	_cale.visible = false
+	_detail_box.visible = true
+	for c in _detail_box.get_children():
+		_detail_box.remove_child(c)
+		c.queue_free()
+	_header.text = "PASSIF  -  emplacement %d / %d" % [_picker_slot + 1, DeckRules.MAX_PASSIVES]
+	_header.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
+	_page_label.text = "actifs des le debut du combat"
+	_page_label.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
+
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_detail_box.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_theme_constant_override(&"separation", 10)
+	scroll.add_child(box)
+
+	var choix: Array[SpellCard] = passive_choices()
+	if choix.is_empty():
+		box.add_child(UiTheme.label(
+			"Aucun passif obtenu. Ils se gagnent a la montee de niveau, a partir de l acte %d."
+			% LevelDef.PASSIVES_FROM_ACT, UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
+			HORIZONTAL_ALIGNMENT_CENTER))
+	var grille := GridContainer.new()
+	grille.columns = COLS
+	grille.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grille.add_theme_constant_override(&"h_separation", 8)
+	grille.add_theme_constant_override(&"v_separation", 8)
+	box.add_child(grille)
+	var equipes: Array[SpellCard] = equipped_passive_cards()
+	for p in choix:
+		var ou: int = equipes.find(p)
+		# Le SEUIL en pied de vignette : c est la seule chose qui distingue deux
+		# passifs d un coup d oeil, et ce qui dit quand il agira.
+		var pied: String = "des %d %%" % p.speed_threshold
+		if ou != -1:
+			pied = "equipe (%d)" % (ou + 1)
+		var t: Button = _tile(p, pied, UiTheme.GOLD if ou != -1 else UiTheme.TEXT,
+			equip_passive_in_slot.bind(_picker_slot, p), p.description)
+		grille.add_child(t)
+
+	var boutons := HBoxContainer.new()
+	boutons.add_theme_constant_override(&"separation", 12)
+	_detail_box.add_child(boutons)
+	var retirer := Button.new()
+	retirer.text = "RETIRER"
+	retirer.custom_minimum_size = Vector2(0, 110)
+	retirer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	retirer.disabled = _picker_slot >= equipes.size()
+	var slot: int = _picker_slot
+	retirer.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		clear_passive_slot(slot))
+	boutons.add_child(retirer)
+	var fermer := Button.new()
+	fermer.text = "FERMER"
+	fermer.custom_minimum_size = Vector2(0, 110)
+	fermer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fermer.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		close_passive_picker())
+	boutons.add_child(fermer)
 
 
 ## Le deck : une vignette par carte DISTINCTE, avec son nombre d exemplaires.
@@ -566,8 +773,12 @@ func _render_filters() -> void:
 ## Les PASSIFS en sont exclus : ils ne se mettent plus dans le deck.
 func collection() -> Array:
 	var out: Array = []
+	var pool: Dictionary = SaveData.obtainable_ids()
 	for card: SpellCard in ContentDB.cards.values():
 		if card == null or card.is_passive:
+			continue
+		# INVISIBLE tant qu elle n est ni obtenue ni obtenable (chantier P).
+		if not SaveData.is_discovered(card.id) and not pool.has(card.id):
 			continue
 		if _filter != -1 and card.rarity != _filter:
 			continue
@@ -590,21 +801,13 @@ func _render_collection() -> void:
 		var card: SpellCard = cards[i]
 		var discovered: bool = SaveData.is_discovered(card.id)
 		if not discovered:
-			# Non decouverte : silhouette et "???", exactement comme le grimoire.
-			var muet := Button.new()
-			muet.custom_minimum_size = Vector2(0, TILE_H)
-			muet.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			muet.disabled = true
-			var boite := VBoxContainer.new()
-			boite.set_anchors_preset(Control.PRESET_FULL_RECT)
-			boite.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			boite.alignment = BoxContainer.ALIGNMENT_CENTER
-			muet.add_child(boite)
-			boite.add_child(UiTheme.label("???", UiTheme.FONT_SMALL, UiTheme.TEXT_DIM,
-				HORIZONTAL_ALIGNMENT_CENTER, false))
-			boite.add_child(UiTheme.label(GameEnums.rarity_name(card.rarity),
-				UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER, false))
-			_grid.add_child(muet)
+			# OBTENABLE : lisible mais GRISEE. Elle reste touchable pour que sa
+			# fiche dise ou l obtenir ; AJOUTER y est refuse par DeckRules. Pas
+			# glissable : un glisser montrerait la meme raison, sans la fiche.
+			var grise: Button = _tile(card, "a obtenir", UiTheme.TEXT_DIM,
+				_on_collection_tap.bind(card), "")
+			grise.modulate = OBTAINABLE_TINT
+			_grid.add_child(grise)
 			continue
 		var have: int = DeckRules.count_of(_ids, card.id)
 		var cap: int = DeckRules.max_copies(card.rarity)
@@ -1233,6 +1436,10 @@ func _render_detail() -> void:
 	add.disabled = raison != ""
 	# Un bouton grise sans raison est une impasse : on dit POURQUOI juste dessous.
 	if add.disabled:
+		# Pour une carte OBTENABLE, le pourquoi est aussi un OU : la meme phrase
+		# que le grimoire, qui nomme les niveaux ou la prendre.
+		if not SaveData.is_discovered(card.id):
+			raison = GalleryPanel.where_to_obtain(card)
 		box.add_child(UiTheme.label(raison, UiTheme.FONT_SMALL,
 			Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
 	add.pressed.connect(func() -> void:

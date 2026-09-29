@@ -26,7 +26,11 @@ func _defaults() -> Dictionary:
 	return {
 		"schema_version": CURRENT_VERSION,
 		"profile": {
+			## Les cartes OBTENUES (voir PROGRESSION DES CARTES plus bas).
 			"discovered_cards": [],
+			## HERITAGE : la legendaire "3/3 objectifs" n existe plus. La cle est
+			## gardee pour que _migrate() verse son contenu dans discovered_cards ;
+			## plus rien ne l ecrit.
 			"unlocked_legendaries": [],
 			"campaign": {"current_node": "lvl_01", "unlocked_levels": ["lvl_01"]},
 			"levels": {},
@@ -57,6 +61,12 @@ func _defaults() -> Dictionary:
 			## Scenes d histoire deja vues : une scene ne se rejoue pas quand on
 			## refait un niveau. _migrate() ajoute la cle aux vieux profils.
 			"stories_seen": [],
+			## Record du MASSACRE (onglet du menu) : meilleure vague survecue.
+			## Il n appartient a aucun niveau, donc il ne peut pas vivre dans
+			## "levels" : un faux niveau "massacre" y serait compte par la
+			## campagne. Le record INFINI, lui, est rattache a son niveau
+			## ("best_wave_infinite" dans level_record). _migrate() ajoute la cle.
+			"massacre_best_wave": 0,
 		},
 		"settings": {
 			"master_volume": 0.8,
@@ -119,6 +129,12 @@ func _migrate(d: Dictionary) -> Dictionary:
 	for key: String in base["settings"]:
 		if not d["settings"].has(key):
 			d["settings"][key] = base["settings"][key]
+	# PROGRESSION DES CARTES (chantier P) : la legendaire "3/3 objectifs" n existe
+	# plus, mais on ne RETIRE RIEN a un profil existant. Une legendaire gagnee
+	# ainsi etait deja ecrite dans discovered_cards par l ancien record_victory ;
+	# on la reverse quand meme, pour un profil edite ou ecrit par une version plus
+	# ancienne. Pas de hausse de schema_version : c est une union, idempotente.
+	_merge_legacy_legendaries(d["profile"])
 	# Meme completion UN CRAN PLUS BAS, pour les cosmetiques : un profil d avant
 	# les apprentis a bien un dictionnaire "cosmetics", donc la boucle ci-dessus
 	# le garde tel quel, sans la cle "character". Sans cette passe, la cle
@@ -203,13 +219,17 @@ func discovered_count() -> int:
 	return profile().get("discovered_cards", []).size()
 
 
+## Les legendaires OBTENUES (ids en String). Ce n est plus une liste a part :
+## depuis le chantier P une legendaire s obtient comme toute carte, en la prenant
+## en combat, et l ancienne liste "unlocked_legendaries" a ete versee dans les
+## cartes obtenues par la migration. Le profil affiche donc "legendaires N / M"
+## avec la meme regle que tout le reste.
 func unlocked_legendaries() -> Array:
-	if tester_mode():
-		var tout: Array = []
-		for c: SpellCard in ContentDB.cards_of_rarity(GameEnums.Rarity.LEGENDARY):
-			tout.append(String(c.id))
-		return tout
-	return profile().get("unlocked_legendaries", [])
+	var out: Array = []
+	for c: SpellCard in ContentDB.cards_of_rarity(GameEnums.Rarity.LEGENDARY):
+		if is_discovered(c.id):
+			out.append(String(c.id))
+	return out
 
 
 # --- Bestiaire ---
@@ -416,6 +436,23 @@ func equipped_passives() -> Array:
 	return (profile().get("equipped_passives", []) as Array).duplicate()
 
 
+## Les passifs equipes qui peuvent REELLEMENT servir : passifs connus du
+## contenu, obtenus, sans doublon, au plus DeckRules.MAX_PASSIVES. Relu a chaque
+## depart de combat (RunState.equip_saved_passives) : un profil edite, un passif
+## retire du catalogue ou equipe en mode testeur puis mode eteint ne doivent ni
+## planter ni donner un passif que le joueur n a pas gagne (chantier P).
+func equipped_passive_cards() -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	for id in equipped_passives():
+		var c: SpellCard = ContentDB.cards.get(StringName(id))
+		if c == null or not c.is_passive or out.has(c) or not is_discovered(c.id):
+			continue
+		out.append(c)
+		if out.size() >= DeckRules.MAX_PASSIVES:
+			break
+	return out
+
+
 func set_equipped_passives(ids: Array) -> void:
 	var clean: Array = []
 	for id in ids:
@@ -514,15 +551,65 @@ func campaign_progress() -> Array:
 	return [finis, total]
 
 
-## La campagne est-elle terminee ? C est ce qui OUVRE le mode Massacre.
+## La campagne est-elle terminee ?
 ##
-## Pourquoi verrouiller : le Massacre etait accessible des la premiere seconde,
-## donc le mode sans fin n etait pas une recompense mais une alternative a la
-## campagne — un joueur pouvait passer a cote de toute l histoire sans s en
-## rendre compte. Le testeur a tranche : "Fin : deblocage du mode infini".
+## Elle OUVRAIT le mode infini jusqu au 29/09. Decision du co-auteur et
+## d Alexis : l INFINI d un niveau s ouvre des que ce niveau est debloque, et le
+## MASSACRE des le premier niveau gagne (massacre_unlocked). La fonction reste
+## la mesure de "fin de campagne" pour le profil et les succes.
 func campaign_cleared() -> bool:
 	var p: Array = campaign_progress()
 	return int(p[1]) > 0 and int(p[0]) >= int(p[1])
+
+
+# --- Modes sans fin : ouverture et records (chantier M) ---
+
+## L INFINI d un niveau est ouvert des que le niveau l est. Pas de verrou de
+## fin de campagne : le mode sans fin d un niveau deja atteint ne devoile rien
+## de l histoire, et le cacher coupait le joueur du seul mode ou son deck compte.
+func infinite_unlocked(level_id: StringName) -> bool:
+	return ContentDB.levels.has(level_id) and is_level_unlocked(level_id)
+
+
+## Le MASSACRE s ouvre au PREMIER niveau gagne. Avant, le joueur n a ni deck
+## eprouve ni idee de ce qu est un palier ; le mode le plus dur du jeu serait son
+## premier combat. Passe par is_level_cleared(), donc le mode testeur l ouvre
+## aussi, comme il ouvre tout le reste.
+func massacre_unlocked() -> bool:
+	return int(campaign_progress()[0]) >= 1
+
+
+## Record INFINI d un niveau. Distinct de "best_wave", qui est celui de
+## l Exploration : les deux se melangeaient, et une partie infinie de 14 vagues
+## affichait "Meilleure vague : 14" sur un niveau qui n en compte que six.
+func infinite_best_wave(level_id: StringName) -> int:
+	if not ContentDB.levels.has(level_id):
+		return 0
+	return int(level_record(level_id).get("best_wave_infinite", 0))
+
+
+func massacre_best_wave() -> int:
+	return int(profile().get("massacre_best_wave", 0))
+
+
+## Record de vague d une partie, rangee selon son MODE. Rend vrai si c est un
+## nouveau record. Un seul point d ecriture, appele par GameController a chaque
+## vague nettoyee et par l ecran de defaite : sans lui, l ecran de defaite
+## creait une fiche de niveau "massacre" fantome dans "levels".
+func record_run_waves(level_id: StringName, mode: GameEnums.Mode, waves: int) -> bool:
+	if mode == GameEnums.Mode.MASSACRE:
+		if waves <= massacre_best_wave():
+			return false
+		profile()["massacre_best_wave"] = waves
+		return true
+	if not ContentDB.levels.has(level_id):
+		return false
+	var rec: Dictionary = level_record(level_id)
+	var cle: String = "best_wave_infinite" if mode == GameEnums.Mode.INFINITE else "best_wave"
+	if waves <= int(rec.get(cle, 0)):
+		return false
+	rec[cle] = waves
+	return true
 
 
 ## Un objectif precis est-il acquis ? (cumule sur toutes les parties du niveau)
@@ -543,12 +630,19 @@ func objectives_done_count(level: LevelDef) -> int:
 
 
 ## Enregistre une victoire : niveau marque, objectifs acquis, niveaux suivants
-## debloques, legendaire si les 3 objectifs sont reussis (cumules sur les runs).
-## Renvoie true si la legendaire du niveau vient d etre debloquee.
+## debloques. Renvoie true si un objectif vient de debloquer une carte NOUVELLE
+## dans le pool de montee de niveau du niveau (LevelDef.objective_rewards).
+##
+## Plus de legendaire "3/3 objectifs" (chantier P) : chaque objectif rapporte sa
+## propre carte, et elle n est pas DONNEE — elle entre dans le pool du niveau et
+## s obtient en la prenant en combat. Rien n est ecrit pour elle ici : le pool se
+## deduit des objectifs acquis (objective_rewards_unlocked), si bien qu un
+## changement de contenu suit sans migration.
 func record_victory(level: LevelDef, mode: GameEnums.Mode,
 		objectives_done: Dictionary, waves: int) -> bool:
 	if level == null:
 		return false
+	var cartes_avant: Array[SpellCard] = objective_rewards_unlocked(level)
 	var rec: Dictionary = level_record(level.id)
 	if mode == GameEnums.Mode.EXPLORATION:
 		rec["cleared_exploration"] = true
@@ -566,22 +660,115 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 	for nxt in level.next_levels:
 		unlock_level(nxt)
 
-	var all_done: bool = not level.objectives.is_empty()
-	for obj in level.objectives:
-		if obj == null or not bool(objs.get(String(obj.id), false)):
-			all_done = false
-
 	var newly: bool = false
-	if all_done and level.legendary_reward != null:
-		var unlocked: Array = profile().get("unlocked_legendaries", [])
-		var lid: String = String(level.legendary_reward.id)
-		if not unlocked.has(lid):
-			unlocked.append(lid)
+	for c in objective_rewards_unlocked(level):
+		if not cartes_avant.has(c):
 			newly = true
-		profile()["unlocked_legendaries"] = unlocked
-		discover_card(level.legendary_reward.id)
 	profile_changed.emit()
 	return newly
+
+
+# --- PROGRESSION DES CARTES (vague 5, chantier P) -----------------------------
+#
+# TROIS ETATS POUR UNE CARTE, lus par le grimoire ET l ecran de deck :
+#   OBTENUE    : dans discovered_cards. Lisible, utilisable au deck. On l obtient
+#                en la PRENANT en combat (RunState.pick_offer), en jouant le deck
+#                d un niveau (build_deck_from_list), en equipant un passif, et les
+#                communes de depart le sont d office.
+#   OBTENABLE  : pas obtenue, mais dans le pool de montee de niveau d un niveau
+#                OUVERT (son deck, ses cartes nouvelles, les cartes des objectifs
+#                deja reussis, et les passifs si l acte les admet). Lisible mais
+#                grisee : le joueur sait ce qu il peut aller chercher, et ou.
+#   INVISIBLE  : ni l un ni l autre. Plus de silhouette "???" : une carte qu on
+#                ne peut pas encore obtenir n a rien a dire au joueur.
+#
+# Une carte BRULEE (lancee depuis l offre sans entrer dans le deck) n est PAS
+# obtenue : bruler est un choix de puissance immediate contre la valeur durable,
+# et la collection fait partie de cette valeur. Si bruler faisait aussi obtenir,
+# ce serait toujours le bon choix sur une carte nouvelle.
+
+const CARD_HIDDEN: int = 0
+const CARD_OBTAINABLE: int = 1
+const CARD_OBTAINED: int = 2
+
+
+## Union de l ancienne liste des legendaires debloquees dans les cartes obtenues.
+## Appelee par la migration ; ne retire jamais rien.
+func _merge_legacy_legendaries(p: Dictionary) -> void:
+	var found: Array = p.get("discovered_cards", [])
+	for id in p.get("unlocked_legendaries", []):
+		if not found.has(String(id)):
+			found.append(String(id))
+	p["discovered_cards"] = found
+
+
+## Les cartes que les objectifs DEJA REUSSIS de ce niveau ont ajoutees a son
+## pool de montee de niveau, dans l ordre des objectifs (rang 1 d abord).
+## Deduit a chaque appel des objectifs acquis : rien d autre n est stocke.
+func objective_rewards_unlocked(level: LevelDef) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	if level == null:
+		return out
+	for i in level.objectives.size():
+		var obj: ObjectiveDef = level.objectives[i]
+		var carte: SpellCard = level.objective_reward(i)
+		if obj == null or carte == null or out.has(carte):
+			continue
+		if is_objective_done(level.id, obj.id):
+			out.append(carte)
+	return out
+
+
+## Le joueur a-t-il atteint l acte ou les passifs existent ? Vrai des qu un
+## niveau de cet acte est OUVERT (pas forcement fini) : c est ce qui les ouvre
+## dans les modes infinis et dans l ecran de deck.
+func passives_unlocked() -> bool:
+	for id in unlocked_levels():
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv != null and lv.allows_passives():
+			return true
+	return false
+
+
+## Etat d une carte : CARD_OBTAINED, CARD_OBTAINABLE ou CARD_HIDDEN.
+func card_visibility(card_id: StringName) -> int:
+	if is_discovered(card_id):
+		return CARD_OBTAINED
+	if obtainable_ids().has(card_id):
+		return CARD_OBTAINABLE
+	return CARD_HIDDEN
+
+
+## Ids (StringName -> true) de toutes les cartes presentes dans le pool de
+## montee de niveau d au moins un niveau OUVERT, obtenues ou non. Recalcule a
+## chaque appel : 21 niveaux x une douzaine de cartes, et c est la seule facon
+## que le grimoire suive un objectif reussi sans cache a invalider.
+func obtainable_ids() -> Dictionary:
+	var out: Dictionary = {}
+	for id in unlocked_levels():
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv == null:
+			continue
+		for c: SpellCard in RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION):
+			out[c.id] = true
+	return out
+
+
+## Les niveaux OUVERTS dont le pool de montee de niveau contient cette carte,
+## tries par id. C est la reponse a "ou l obtenir ?" pour une carte grisee.
+func levels_offering(card_id: StringName) -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for id in unlocked_levels():
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv == null:
+			continue
+		for c: SpellCard in RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION):
+			if c.id == card_id:
+				out.append(lv)
+				break
+	out.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
+		return String(a.id) < String(b.id))
+	return out
 
 
 ## --- Progression de COMPTE ---

@@ -645,9 +645,12 @@ func exile_from_deck(count: int) -> int:
 	return n
 
 
+## N obtient PLUS la carte (chantier P) : c est pick_offer(), le geste de
+## prendre, qui l ajoute au livre. Une carte qui arriverait dans la defausse par
+## un autre chemin ne doit pas rejoindre la collection sans que le joueur l ait
+## choisie.
 func add_card_to_discard(card: SpellCard) -> void:
 	discard.append(card)
-	SaveData.discover_card(card.id)
 	deck_changed.emit()
 
 
@@ -965,10 +968,17 @@ func take_next_spell_multiplier() -> float:
 	return m
 
 
-## Propose `count` cartes distinctes : la rarete est tiree (80/15/5), puis on
-## complete avec d autres raretes si le pool est trop petit.
+## Propose `count` cartes distinctes, TIREES DANS levelup_pool() du niveau et du
+## mode en cours : la rarete est tiree (80/15/5 pour un sort, table des passifs
+## pour un passif), puis on complete avec d autres raretes si le pool est court.
+##
+## Il n y a plus d offre de rarete imposee (l ancienne recompense de boss) : TOUTE
+## offre passe par ici, donc par le pool. C est ce qui rend le pool vrai — une
+## seconde porte d entree proposerait des cartes que le joueur ne peut pas voir
+## dans son grimoire.
 func offer_choices(count: int = 3) -> Array[SpellCard]:
 	var chosen: Array[SpellCard] = []
+	var pool: Array[SpellCard] = levelup_pool(current_level_def, mode)
 	# "Les passifs sont plus rares que les cartes durant les montees de niveau :
 	# 20 pourcent de passifs." Chaque proposition tire d abord SA FAMILLE, puis sa
 	# rarete. Tirer la famille une seule fois pour toute l offre donnerait des
@@ -978,28 +988,45 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 	# raretes differentes. Avec une seule rarete pour toute l offre, les trois
 	# options se ressemblaient et le tirage n avait aucun relief.
 	for i in count:
-		var passif: bool = _rng.randf() < GameConfig.PASSIVE_OFFER_CHANCE
-		var voulue: GameEnums.Rarity = roll_rarity()
+		# Le tirage de famille a TOUJOURS lieu, meme quand les passifs sont
+		# exclus : une graine donnee produit alors la meme suite de tirages avec
+		# ou sans passifs, et un test seme ne change pas de sens selon l acte.
+		var tirage: float = _rng.randf()
+		var passif: bool = tirage < GameConfig.PASSIVE_OFFER_CHANCE \
+			and passives_allowed(current_level_def, mode)
+		# CORRECTIF (chantier P) : un passif tire SA rarete dans la table des
+		# passifs, qui connait la COMMUNE. La table des sorts ne la tire jamais et
+		# le repli passait par RARE, jamais epuisee : les quatre passifs communs
+		# n etaient JAMAIS proposes.
+		var voulue: GameEnums.Rarity = roll_passive_rarity() if passif else roll_rarity()
 		# Replis, du plus proche au plus lointain, si la rarete voulue est epuisee.
+		# LIMITE ASSUMEE (chantier P) : la table des SORTS (DEC-004) ne tire
+		# jamais la commune. Dans un pool de campagne, les communes du deck ne
+		# sortent donc qu en repli, quand rare et epique sont epuisees dans
+		# l offre. C est la regle d avant, gardee : ajouter la commune a la
+		# table des sorts changerait l equilibrage mesure. A trancher par le
+		# co-auteur si le deck doit peser davantage.
 		var order: Array = [voulue, GameEnums.Rarity.RARE, GameEnums.Rarity.EPIC,
 			GameEnums.Rarity.COMMON, GameEnums.Rarity.LEGENDARY]
 		for r in order:
 			if chosen.size() > i:
 				break
-			var pool: Array[SpellCard] = _pool_of(r, passif)
-			_shuffle_cards(pool)
-			for c in pool:
+			var candidats: Array[SpellCard] = _pool_of(pool, r, passif)
+			_shuffle_cards(candidats)
+			for c in candidats:
 				if not chosen.has(c) and not _deja_equipe(c):
 					chosen.append(c)
 					break
 		# Repli de DERNIER recours : si la famille voulue est epuisee a toutes les
 		# raretes (peu de passifs, ou tous deja equipes), on prend dans l autre.
-		# Une case vide dans l offre vaut moins qu un choix hors famille.
+		# Une case vide dans l offre vaut moins qu un choix hors famille. Le pool
+		# ne contient deja AUCUN passif quand l acte les exclut : ce repli ne peut
+		# donc pas en faire rentrer un par la bande.
 		if chosen.size() <= i:
 			for r2 in order:
 				if chosen.size() > i:
 					break
-				var autre: Array[SpellCard] = _pool_of(r2, not passif)
+				var autre: Array[SpellCard] = _pool_of(pool, r2, not passif)
 				_shuffle_cards(autre)
 				for c2 in autre:
 					if not chosen.has(c2) and not _deja_equipe(c2):
@@ -1013,31 +1040,109 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 	return chosen
 
 
-## Offre d une rarete IMPOSEE : recompense de boss. A la difference de
-## offer_choices(), la rarete n est pas tiree au sort — le cahier des charges
-## promet de l epique au mini-boss et de la legendaire au boss final.
-## Si la rarete demandee est vide, on descend d un cran plutot que de ne rien
-## donner : un boss vaincu doit toujours rapporter quelque chose.
-func offer_of_rarity(rarity: GameEnums.Rarity, count: int = 3) -> Array[SpellCard]:
-	var chosen: Array[SpellCard] = []
-	var repli: Array = [rarity, GameEnums.Rarity.EPIC, GameEnums.Rarity.RARE,
-		GameEnums.Rarity.COMMON]
-	for r in repli:
-		if chosen.size() >= count:
-			break
-		# Un boss recompense en SORTS : l offre de rarete imposee promet une carte
-		# forte a jouer tout de suite, pas un passif qui dort sous son seuil.
-		var pool: Array[SpellCard] = _pool_of(r, false)
-		_shuffle_cards(pool)
-		for c in pool:
-			if chosen.size() >= count:
-				break
-			if not chosen.has(c):
-				chosen.append(c)
-	pending_offer = chosen.duplicate()
-	if not chosen.is_empty():
-		offer_ready.emit(chosen.duplicate())
-	return chosen
+# --- POOL DE MONTEE DE NIVEAU ET PASSIFS PAR ACTE (vague 5, chantier P) -------
+#
+# Regle du co-auteur :
+#   CAMPAGNE (Mode.EXPLORATION) : le deck du niveau + ses cartes NOUVELLES
+#     (LevelDef.levelup_cards) + les cartes des objectifs DEJA REUSSIS de ce
+#     niveau (SaveData.objective_rewards_unlocked). Les passifs s y ajoutent,
+#     tout le catalogue, mais seulement a partir de l acte 2.
+#   HORS CAMPAGNE (tout autre mode : l infini par niveau, le Massacre) : toutes
+#     les cartes deja OBTENUES, passifs compris si l acte 2 est atteint.
+#
+# Un objectif reussi n enrichit le pool que pour les parties SUIVANTES : les
+# objectifs se jugent a la victoire (voir system_objectives), il n existe donc
+# aucun instant de la partie en cours ou la carte pourrait y entrer.
+
+## Table de rarete des PASSIFS a la montee de niveau. Le haut de la table est
+## celui des sorts (epique 15 %, legendaire 5 %) ; les 80 % de "rare" des sorts
+## sont partages entre commune et rare, parce que les passifs communs sont les
+## plus LISIBLES (un mur par vague, une pioche plus rapide) : ce sont eux qui
+## doivent apprendre au joueur ce qu est un passif.
+const PASSIVE_RARITY_WEIGHTS: Dictionary = {
+	GameEnums.Rarity.COMMON: 0.50,
+	GameEnums.Rarity.RARE: 0.30,
+	GameEnums.Rarity.EPIC: 0.15,
+	GameEnums.Rarity.LEGENDARY: 0.05,
+}
+
+
+## LE pool de montee de niveau. Toutes les offres de cartes passent par ici
+## (offer_choices), le grimoire et l ecran de deck aussi (SaveData.obtainable_ids)
+## — un seul endroit ou la regle est ecrite.
+##
+## Sans niveau (tests a froid, outils du banc qui tirent hors partie), tout le
+## catalogue : c est le comportement d avant la regle, et il n existe aucun
+## niveau dont lire un pool. Une partie reelle a TOUJOURS un niveau.
+func levelup_pool(level_def: LevelDef, level_mode: GameEnums.Mode) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	var passifs_ok: bool = passives_allowed(level_def, level_mode)
+	if level_def == null:
+		for c: SpellCard in ContentDB.cards.values():
+			_pool_add(out, c, passifs_ok)
+		return out
+	if level_mode == GameEnums.Mode.EXPLORATION:
+		for c: SpellCard in level_def.exploration_deck:
+			_pool_add(out, c, passifs_ok)
+		for c: SpellCard in level_def.levelup_cards:
+			_pool_add(out, c, passifs_ok)
+		for c: SpellCard in SaveData.objective_rewards_unlocked(level_def):
+			_pool_add(out, c, passifs_ok)
+		if passifs_ok:
+			for c: SpellCard in ContentDB.cards.values():
+				if c != null and c.is_passive:
+					_pool_add(out, c, passifs_ok)
+		return out
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and SaveData.is_discovered(c.id):
+			_pool_add(out, c, passifs_ok)
+	return out
+
+
+func _pool_add(out: Array[SpellCard], c: SpellCard, passifs_ok: bool) -> void:
+	if c == null or out.has(c):
+		return
+	if c.is_passive and not passifs_ok:
+		return
+	out.append(c)
+
+
+## Les passifs existent-ils dans cette partie ? "Rien avant l acte 2" : en
+## campagne c est l acte DU NIVEAU qui decide ; hors campagne, il faut avoir
+## ouvert un niveau de l acte 2. Sans niveau (tests a froid), oui.
+func passives_allowed(level_def: LevelDef, level_mode: GameEnums.Mode) -> bool:
+	if level_def == null:
+		return true
+	if level_mode == GameEnums.Mode.EXPLORATION:
+		return level_def.allows_passives()
+	return SaveData.passives_unlocked()
+
+
+## Tire une rarete de PASSIF (voir PASSIVE_RARITY_WEIGHTS). Consomme un seul
+## tirage, comme roll_rarity : la suite des tirages ne depend pas de la famille.
+func roll_passive_rarity() -> GameEnums.Rarity:
+	var r: float = _rng.randf()
+	var acc: float = 0.0
+	for rarity: GameEnums.Rarity in PASSIVE_RARITY_WEIGHTS:
+		acc += PASSIVE_RARITY_WEIGHTS[rarity]
+		if r < acc:
+			return rarity
+	return GameEnums.Rarity.COMMON
+
+
+## Equipe, au DEPART du combat, les passifs que le joueur a choisis dans l ecran
+## de deck (SaveData.equipped_passive_cards). Rien si l acte ne les admet pas :
+## un niveau d acte 1 part toujours sans passif, meme si le profil en a equipe.
+## Appele par GameController.start_level() APRES reset(), qui vide la barre.
+## Rend le nombre de passifs equipes.
+func equip_saved_passives() -> int:
+	if not passives_allowed(current_level_def, mode):
+		return 0
+	var n: int = 0
+	for c: SpellCard in SaveData.equipped_passive_cards():
+		if equip_passive(c):
+			n += 1
+	return n
 
 
 ## Carte brulee en attente de lancement, lue par GameController. Null si aucune.
@@ -1047,6 +1152,8 @@ var burned_card: SpellCard = null
 ## BRULER une carte proposee : elle est lancee immediatement mais n entre jamais
 ## dans le deck. C est un choix de puissance TOUT DE SUITE contre une valeur sur
 ## la duree — sans ce prix, bruler serait toujours le bon choix.
+## Elle n est pas non plus OBTENUE (chantier P) : la collection fait partie de la
+## valeur durable a laquelle on renonce en brulant.
 func burn_offer(i: int) -> SpellCard:
 	if i < 0 or i >= pending_offer.size():
 		return null
@@ -1068,6 +1175,13 @@ func pick_offer(i: int) -> SpellCard:
 		return null
 	var card: SpellCard = pending_offer[i]
 	pending_offer.clear()
+	# OBTENTION (chantier P) : la PREMIERE prise en combat fait entrer la carte
+	# dans le livre, utilisable au deck. Ecrit ICI, au geste de prendre, et pas
+	# dans add_card_to_discard : c est le choix du joueur qui obtient, pas le fait
+	# qu une carte transite par la defausse. Un passif choisi est obtenu meme si
+	# le joueur refuse ensuite l echange : il l a pris, il pourra l equiper depuis
+	# l ecran de deck. Une carte BRULEE, elle, n est pas obtenue (burn_offer).
+	SaveData.discover_card(card.id)
 	# Un PASSIF choisi s EQUIPE, il n entre pas dans le deck. Le faire passer par
 	# la defausse le rendrait piochable et annulerait tout le principe : les
 	# passifs sont hors deck. S il n y a plus de place, gain_passive() le met en
@@ -1080,13 +1194,14 @@ func pick_offer(i: int) -> SpellCard:
 	return card
 
 
-## Les cartes d une rarete, dans UNE SEULE famille : sorts ou passifs. Les deux
-## familles ne se melangent jamais dans un meme tirage, sinon les 20 % promis
-## seraient dilues par la taille relative des deux catalogues.
-func _pool_of(rarity: GameEnums.Rarity, passifs: bool) -> Array[SpellCard]:
+## Les cartes d une rarete DU POOL, dans UNE SEULE famille : sorts ou passifs.
+## Les deux familles ne se melangent jamais dans un meme tirage, sinon les 20 %
+## promis seraient dilues par la taille relative des deux catalogues.
+func _pool_of(pool: Array[SpellCard], rarity: GameEnums.Rarity,
+		passifs: bool) -> Array[SpellCard]:
 	var out: Array[SpellCard] = []
-	for c: SpellCard in ContentDB.cards_of_rarity(rarity):
-		if c != null and c.is_passive == passifs:
+	for c: SpellCard in pool:
+		if c != null and c.rarity == rarity and c.is_passive == passifs:
 			out.append(c)
 	return out
 
@@ -1113,6 +1228,8 @@ func note_damage_taken(source: EnemyDef = null) -> void:
 	took_any_damage = true
 	var nom: String = source.display_name if source != null else "Projectile"
 	hits_by_source[nom] = int(hits_by_source.get(nom, 0)) + 1
+	# OBJECTIFS (no_hit_from, hit_from) : le meme coup, range par id d espece.
+	_note_hit_from(source)
 
 
 ## Le monstre qui a le plus coute de vitesse sur la partie, "" si aucun coup recu.
@@ -1183,6 +1300,8 @@ func _reset_objective_counters() -> void:
 	victory_speed_percent = -1
 	victory_time = -1.0
 	_failed_objectives.clear()
+	# Objectifs lies aux cartes et aux monstres (section du meme nom).
+	_reset_card_monster_counters()
 
 
 ## Avance l horloge des objectifs. delta BRUT : voir l en-tete de la section.
@@ -1357,6 +1476,176 @@ func final_speed_percent() -> int:
 
 func final_time() -> float:
 	return victory_time if victory_time >= 0.0 else run_time
+
+
+# --- OBJECTIFS LIES AUX CARTES ET AUX MONSTRES ------------------------------
+#
+# Les faits que lisent card_casts, no_card, kill_type_one_cast,
+# kill_type_with_card, no_hit_from, hit_from et enemy_travel. Les regles
+# (qu est-ce qu un lancer, un coup recu, un chemin) sont ecrites une seule fois,
+# en tete de objective_checker.gd.
+#
+# LA SOURCE DES DEGATS. `damage_source` dit a qui appartient le coup qui part EN
+# CE MOMENT : {"cast": numero de lancer, "card": id de carte}, vide si personne.
+# EffectRegistry.cast() l ouvre pendant la resolution d un sort ; ce que le sort
+# pose (zone, allie, autel) la recopie a sa creation et la remet en place
+# chaque fois qu il frappe (Battlefield). Une mort etant SYNCHRONE du coup qui
+# la cause (take_damage -> kill -> died), la source lue au moment de la mort
+# est celle du coup de grace.
+#
+# Pourquoi une source AMBIANTE plutot qu un parametre de plus a damage_enemy() :
+# les handlers, les zones et les allies frappent deja par ce chemin, et un
+# parametre aurait demande de toucher chacun d eux — donc d en oublier un, et
+# une carte aurait tue sans jamais etre creditee.
+
+## Meta posee sur chaque Enemy : le chemin parcouru, en pixels (Battlefield).
+const TRAVEL_META: StringName = &"obj_travel"
+
+## Numero du dernier lancer ouvert. Jamais remis a zero entre deux parties :
+## seul l ordre compte, et un numero neuf ne peut pas heriter d un vieux compte.
+var _cast_serial: int = 0
+var damage_source: Dictionary = {}
+## Morts par lancer et par espece : {numero: {id d espece: nombre}}.
+var _kills_by_cast: Dictionary = {}
+## Record par espece : le plus de morts de cette espece dues a UN lancer.
+var _best_kills_one_cast: Dictionary = {}
+## Morts par carte et par espece : {id de carte: {id d espece: nombre}}.
+var _kills_by_card: Dictionary = {}
+## Coups recus par espece (id d EnemyDef). Distinct de hits_by_source, range
+## par NOM affiche pour le bilan de defaite : deux especes peuvent partager un
+## nom, un objectif doit viser l une sans l autre.
+var hits_by_enemy_id: Dictionary = {}
+## Plus long chemin d un monstre TUE : par espece, et toutes especes.
+var _travel_record: Dictionary = {}
+var _travel_record_any: float = 0.0
+## Plus long chemin d un monstre VIVANT, releve a chaque image (affichage seul).
+var _travel_live: Dictionary = {}
+var _travel_live_any: float = 0.0
+
+
+func _reset_card_monster_counters() -> void:
+	damage_source = {}
+	_kills_by_cast.clear()
+	_best_kills_one_cast.clear()
+	_kills_by_card.clear()
+	hits_by_enemy_id.clear()
+	_travel_record.clear()
+	_travel_record_any = 0.0
+	_travel_live.clear()
+	_travel_live_any = 0.0
+
+
+## Ouvre un lancer : un numero neuf devient la source courante. Rend la source
+## precedente, que l appelant remet en place a la fin (swap_damage_source) : un
+## sort resolu pendant un autre ne doit pas lui voler la suite de ses coups.
+func open_cast_source(card: SpellCard) -> Dictionary:
+	_cast_serial += 1
+	var avant: Dictionary = damage_source
+	damage_source = {"cast": _cast_serial, "card": card.id if card != null else &""}
+	return avant
+
+
+## Remplace la source courante et rend l ancienne. Vide = coup sans source.
+func swap_damage_source(src: Dictionary) -> Dictionary:
+	var avant: Dictionary = damage_source
+	damage_source = src
+	return avant
+
+
+## Numero du lancer en cours, 0 hors lancer.
+func current_cast_id() -> int:
+	return int(damage_source.get("cast", 0))
+
+
+## Un monstre vient de mourir (Battlefield._on_enemy_died, memes morts que
+## note_kill) : on le credite au lancer et a la carte de la source courante.
+func note_kill_by_source(def: EnemyDef) -> void:
+	if def == null or damage_source.is_empty():
+		return
+	var espece: StringName = def.id
+	var lancer: int = int(damage_source.get("cast", 0))
+	if lancer > 0:
+		var par_lancer: Dictionary = _kills_by_cast.get(lancer, {})
+		par_lancer[espece] = int(par_lancer.get(espece, 0)) + 1
+		_kills_by_cast[lancer] = par_lancer
+		_best_kills_one_cast[espece] = maxi(int(_best_kills_one_cast.get(espece, 0)),
+			int(par_lancer[espece]))
+	var carte: StringName = damage_source.get("card", &"")
+	if carte != &"":
+		var par_carte: Dictionary = _kills_by_card.get(carte, {})
+		par_carte[espece] = int(par_carte.get(espece, 0)) + 1
+		_kills_by_card[carte] = par_carte
+
+
+func best_kills_in_one_cast(enemy_id: StringName) -> int:
+	return int(_best_kills_one_cast.get(enemy_id, 0))
+
+
+func kills_with_card(card_id: StringName, enemy_id: StringName) -> int:
+	return int((_kills_by_card.get(card_id, {}) as Dictionary).get(enemy_id, 0))
+
+
+## Lancers de la carte `card_id` dans la partie (tous exemplaires).
+func casts_of_id(card_id: StringName) -> int:
+	return int(casts_by_card.get(card_id, 0))
+
+
+## Branche dans note_damage_taken : chaque coup impute a un monstre.
+func _note_hit_from(source: EnemyDef) -> void:
+	if source == null:
+		return
+	hits_by_enemy_id[source.id] = int(hits_by_enemy_id.get(source.id, 0)) + 1
+
+
+## Coups recus de l espece `enemy_id`, ses projectiles-monstres compris (une
+## boule de poison touche au nom de son lanceur : voir COUP RECU).
+func hits_from_enemy(enemy_id: StringName) -> int:
+	var n: int = int(hits_by_enemy_id.get(enemy_id, 0))
+	var def: EnemyDef = ContentDB.enemies.get(enemy_id)
+	if def != null and def.summon_def != null and def.summon_def.projectile \
+			and def.summon_def.id != enemy_id:
+		n += int(hits_by_enemy_id.get(def.summon_def.id, 0))
+	return n
+
+
+## Un monstre meurt apres avoir parcouru `px` pixels de chemin.
+func note_travel_at_death(def: EnemyDef, px: float) -> void:
+	if def == null or def.projectile:
+		return
+	_travel_record[def.id] = maxf(float(_travel_record.get(def.id, 0.0)), px)
+	_travel_record_any = maxf(_travel_record_any, px)
+
+
+## Plus long chemin d un monstre tue (de l espece, ou toutes si &"").
+func travel_record_of(enemy_id: StringName) -> float:
+	if enemy_id == &"":
+		return _travel_record_any
+	return float(_travel_record.get(enemy_id, 0.0))
+
+
+## Releve le chemin des monstres vivants (GameController, une fois par image).
+## Tableau NON type, meme raison que note_enemy_depths.
+func note_enemy_travel_live(enemies: Array) -> void:
+	_travel_live.clear()
+	_travel_live_any = 0.0
+	for e in enemies:
+		if e == null or not is_instance_valid(e):
+			continue
+		var n: Node = e as Node
+		if n == null or not n.has_meta(TRAVEL_META):
+			continue
+		var def: EnemyDef = n.get("definition") as EnemyDef
+		if def == null or def.projectile:
+			continue
+		var px: float = float(n.get_meta(TRAVEL_META))
+		_travel_live[def.id] = maxf(float(_travel_live.get(def.id, 0.0)), px)
+		_travel_live_any = maxf(_travel_live_any, px)
+
+
+func travel_live_of(enemy_id: StringName) -> float:
+	if enemy_id == &"":
+		return _travel_live_any
+	return float(_travel_live.get(enemy_id, 0.0))
 
 
 # --- Sorts demandes par le testeur : echo de la main, double incantation ---
