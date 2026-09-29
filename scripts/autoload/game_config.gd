@@ -178,10 +178,13 @@ const CARD_UPGRADE_CASTS: int = 8
 ## l INVERSE du temps d incantation, donc "+10 % de vitesse" divise le temps par
 ## 1,10 — le libelle dit exactement ce que fait le sort.
 ##
-## REGLAGE : l ancien jeu de trois pactes (+30/+25/+28 contre 35/25/15) laissait la
-## moyenne du banc a 81,9 %, contre 80,9 % sans amelioration. Les nouveaux
-## chiffres restent dans le meme ordre de grandeur ; le banc avant/apres est dans
-## le rapport du chantier U (vague 5).
+## REGLAGE MESURE (21 niveaux x 30 parties, 29/09/2026). Le bot du banc prend la
+## PREMIERE voie, donc l identite du sort en forme forte (+30 % degats contre
+## -15 % de vitesse, soit un temps x1,18) la ou l ancien pacte Puissance coutait
+## +35 % de temps. Resultat : 559 -> 583 victoires sur 630, Massacre vague 14,9 ->
+## 18,2. Les hausses se concentrent sur les niveaux durs (lvl_18 18 -> 26,
+## lvl_20 16 -> 24, qui rentre dans la fenetre 60-95 %) ; aucun niveau n en sort
+## par le haut. Pas de rupture franche : rien n a ete retouche ailleurs.
 const UPGRADE_LIGHT_GAIN: float = 0.10     # forme legere : +10 %, rien a payer
 const UPGRADE_STRONG_GAIN: float = 0.30    # forme forte : +30 % ...
 const UPGRADE_STRONG_COST: float = 0.15    # ... contre -15 % sur un autre axe
