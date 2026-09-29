@@ -31,7 +31,9 @@ func _ready() -> void:
 
 	var level_id: StringName = SceneRouter.payload.get("level_id", &"lvl_01")
 	_mode = SceneRouter.payload.get("mode", GameEnums.Mode.EXPLORATION)
-	_level = ContentDB.levels.get(level_id)
+	# MODES (chantier M) : le Massacre n est pas dans ContentDB, son niveau est
+	# fabrique par MassacreMode.
+	_level = MassacreMode.resolve_level(level_id, _mode)
 	_build()
 
 	# Le bouton ne repond pas instantanement : sans ce delai, un double appui sur
@@ -49,7 +51,9 @@ func _build() -> void:
 	_title.add_theme_font_size_override(&"font_size", UiTheme.FONT_TITLE)
 
 	if _mode == GameEnums.Mode.MASSACRE:
-		_subtitle.text = "Massacre  -  vagues sans fin, ton deck"
+		_subtitle.text = "Massacre  -  tous les mondes a la fois, ton deck"
+	elif _mode == GameEnums.Mode.INFINITE:
+		_subtitle.text = "Infini  -  vagues sans fin a travers les mondes, ton deck"
 	else:
 		_subtitle.text = "Exploration  -  %d vagues, deck du niveau" % _level.waves.size()
 	_subtitle.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
@@ -62,6 +66,9 @@ func _build() -> void:
 ## Ce qui arrive : les monstres du niveau, du plus faible au plus fort, et le boss.
 func _build_threats() -> void:
 	_waves.add_child(UiTheme.label("CE QUI T ATTEND", UiTheme.FONT_BODY, UiTheme.GOLD))
+	if _mode == GameEnums.Mode.MASSACRE:
+		_build_massacre_threats()
+		return
 
 	var boss: EnemyDef = null
 	var miniboss: EnemyDef = null
@@ -90,7 +97,7 @@ func _threat_pool() -> Array[EnemyDef]:
 	var out: Array[EnemyDef] = []
 	if _level == null:
 		return out
-	var source: Array = _level.enemy_pool if _mode == GameEnums.Mode.MASSACRE else []
+	var source: Array = _level.enemy_pool if GameEnums.is_endless(_mode) else []
 	if source.is_empty():
 		for wave: WaveDef in _level.waves:
 			for entry: WaveEntry in wave.entries:
@@ -101,6 +108,36 @@ func _threat_pool() -> Array[EnemyDef]:
 		if def != null and not out.has(def):
 			out.append(def)
 	return out
+
+
+## MASSACRE : tout le bestiaire des niveaux, trop pour une rangee de portraits
+## (plus de soixante vignettes pousseraient le deck hors de l ecran). On DIT
+## l ampleur en chiffres reels, et on montre un echantillon : les plus puissants,
+## soit ce qui fait peur, pas les gnomes.
+const MASSACRE_SAMPLE: int = 10
+
+
+func _build_massacre_threats() -> void:
+	var pool: Array[EnemyDef] = MassacreMode.enemy_pool()
+	var boss: Array[EnemyDef] = MassacreMode.boss_pool()
+	_waves.add_child(UiTheme.label(
+		"%d monstres de tous les mondes, melanges  -  %d boss et mini-boss aux paliers" % [
+			pool.size(), boss.size()], UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
+	var tries: Array[EnemyDef] = pool.duplicate()
+	tries.sort_custom(func(a: EnemyDef, b: EnemyDef) -> bool:
+		if a.power != b.power:
+			return a.power > b.power
+		return String(a.id) < String(b.id))
+	var echantillon: Array[EnemyDef] = []
+	for d in tries:
+		if echantillon.size() >= MASSACRE_SAMPLE:
+			break
+		# Sans feuille d animation, pas de vignette : on ne montre que des
+		# silhouettes, un nom seul dans la rangee se lirait comme un trou.
+		if d.anim_key != &"" and AnimCatalog.has(d.anim_key):
+			echantillon.append(d)
+	if not echantillon.is_empty():
+		_waves.add_child(_portraits(echantillon))
 
 
 ## Rangee de vignettes : la silhouette de chaque monstre, a sa taille relative.
@@ -168,7 +205,7 @@ func _thumb(def: EnemyDef, taille: float) -> TextureRect:
 ## Pourquoi : les trois objectifs du niveau et la legendaire qu ils debloquent.
 ## Le joueur doit les connaitre AVANT de jouer, sinon il ne peut pas les viser.
 func _build_objectives() -> void:
-	if _level == null or _mode == GameEnums.Mode.MASSACRE or _level.objectives.is_empty():
+	if _level == null or GameEnums.is_endless(_mode) or _level.objectives.is_empty():
 		return
 	_waves.add_child(UiTheme.label("OBJECTIFS", UiTheme.FONT_BODY, UiTheme.GOLD))
 	for obj: ObjectiveDef in _level.objectives:
@@ -222,7 +259,7 @@ func _build_deck() -> void:
 ## Rend des SpellCard. Attention : SaveData.massacre_deck() stocke des IDENTIFIANTS
 ## texte, pas des cartes — les melanger faisait planter la boucle typee.
 func _deck_list() -> Array:
-	if _mode != GameEnums.Mode.MASSACRE:
+	if not GameEnums.is_endless(_mode):
 		return _level.exploration_deck if _level != null else []
 	var out: Array = []
 	for id in SaveData.massacre_deck():

@@ -27,6 +27,10 @@ var bosses: Array[EnemyDef] = []
 ## id de monstre -> index de monde (voir WaveBudget.WORLDS). C est ce qui fait
 ## que le LIEU pese sur le tirage : un cimetiere envoie des morts-vivants.
 var membership: Dictionary = {}
+## Faux en MASSACRE (chantier M) : aucun monde, donc ni poids local au tirage ni
+## annonce `world_changed` — le fond reste celui du niveau et le HUD n affiche
+## aucun bandeau de monde. Vrai en Infini, qui traverse les cinq mondes.
+var worlds_enabled: bool = true
 ## Dernier monde annonce, pour n emettre `world_changed` qu au vrai changement.
 var _world: int = -1
 
@@ -46,16 +50,21 @@ func setup(bf: Battlefield, wave_list: Array[WaveDef], rng_seed: int = 0) -> voi
 
 ## Mode infini. `world_map` (id de monstre -> index de monde) est FACULTATIF :
 ## omis, il est deduit du contenu par `build_membership()`. Un appelant de test
-## peut imposer sa propre table.
+## peut imposer sa propre table. `worlds` a faux (Massacre) retire les mondes :
+## tirage uniforme sur tout le pool, aucun changement de lieu.
 func setup_procedural(bf: Battlefield, enemy_pool: Array[EnemyDef],
 		boss_pool: Array[EnemyDef], rng_seed: int = 0,
-		world_map: Dictionary = {}) -> void:
+		world_map: Dictionary = {}, worlds: bool = true) -> void:
 	battlefield = bf
 	waves = []
 	procedural = true
 	pool = enemy_pool
 	bosses = boss_pool
-	membership = world_map if not world_map.is_empty() else build_membership()
+	worlds_enabled = worlds
+	if not worlds:
+		membership = {}
+	else:
+		membership = world_map if not world_map.is_empty() else build_membership()
 	index = -1
 	active = false
 	_world = -1
@@ -135,7 +144,7 @@ func start_next() -> bool:
 	# Le LIEU s annonce avant la vague : le fond doit avoir change quand les
 	# premiers monstres arrivent, pas apres. On n emet qu au vrai changement,
 	# sinon le decor se reconstruirait a chaque vague.
-	if procedural:
+	if procedural and worlds_enabled:
 		var w_new: int = WaveBudget.world_index_for(index + 1)
 		if w_new != _world:
 			_world = w_new

@@ -14,7 +14,7 @@ func _ready() -> void:
 	add_child(g)
 	await get_tree().process_frame
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
-	g.start_level(level, GameEnums.Mode.MASSACRE)
+	g.start_level(level, GameEnums.Mode.INFINITE)
 	g.running = false
 	var vu: Array[String] = []
 	print("[MONDES] fond au demarrage : %s" % g.backdrop.backdrop)

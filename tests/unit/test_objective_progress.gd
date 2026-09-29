@@ -258,13 +258,17 @@ func _test_le_signal_d_echec_part_une_seule_fois() -> void:
 func _test_pas_d_echec_annonce_en_massacre() -> void:
 	_fresh()
 	RunState.current_level_def = _niveau([_obj(&"no_damage_taken")])
-	RunState.mode = GameEnums.Mode.MASSACRE
-	_echecs.clear()
-	RunState.objective_failed.connect(_note_echec)
-	RunState.note_damage_taken()
-	RunState.advance_clock(0.1)
-	eq(_echecs.size(), 0, "le Massacre n a pas d objectifs : rien a annoncer")
-	RunState.objective_failed.disconnect(_note_echec)
+	# Les DEUX modes sans fin : l Infini (ancien Massacre par niveau) et le
+	# nouveau Massacre.
+	for m in [GameEnums.Mode.INFINITE, GameEnums.Mode.MASSACRE]:
+		RunState.mode = m
+		_echecs.clear()
+		RunState.objective_failed.connect(_note_echec)
+		RunState.note_damage_taken()
+		RunState.advance_clock(0.1)
+		eq(_echecs.size(), 0, "le mode %s n a pas d objectifs : rien a annoncer"
+			% GameEnums.mode_name(m))
+		RunState.objective_failed.disconnect(_note_echec)
 	RunState.mode = GameEnums.Mode.EXPLORATION
 
 

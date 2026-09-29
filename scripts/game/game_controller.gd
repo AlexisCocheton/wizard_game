@@ -5,15 +5,19 @@ extends Node2D
 ## IMPORTANT : SpeedGauge.tick() n est appele QUE d ici. Un second appelant
 ## doublerait silencieusement la montee automatique du multiplicateur.
 ##
-## Modes :
+## Modes (GameEnums.Mode) :
 ##   Exploration : vagues ecrites du niveau, choix de carte a chaque montee de niveau.
-##   Massacre    : vagues infinies par budget, choix de carte toutes les N vagues.
+##   Infini      : UN niveau prolonge sans fin, vagues par budget a travers les
+##                 cinq mondes, choix de carte toutes les N vagues.
+##   Massacre    : le niveau infini A PART (MassacreMode) : monstres de tous les
+##                 niveaux melanges, boss de tout le jeu, fond fixe.
 
 signal level_won()
 signal level_lost()
 signal cards_offered(cards: Array[SpellCard])
 
-## Massacre : un choix de 3 cartes toutes les N vagues nettoyees.
+## Modes sans fin (Infini et Massacre) : un choix de 3 cartes toutes les N
+## vagues nettoyees.
 const WAVES_PER_CHOICE: int = 2
 
 @onready var battlefield: Battlefield = $Battlefield
@@ -38,7 +42,8 @@ func _ready() -> void:
 	var payload: Dictionary = SceneRouter.payload
 	var level_id: StringName = payload.get("level_id", &"lvl_01")
 	mode = payload.get("mode", GameEnums.Mode.EXPLORATION)
-	var def: LevelDef = ContentDB.levels.get(level_id)
+	# MODES (chantier M) : le Massacre n a pas de .tres, son niveau est fabrique.
+	var def: LevelDef = MassacreMode.resolve_level(level_id, mode)
 	if def == null:
 		push_error("Niveau introuvable : %s" % level_id)
 		return
@@ -63,8 +68,15 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	RunState.build_deck_from_list(_build_deck())
 	RunState.draw(GameConfig.START_HAND_SIZE)
 
-	if mode == GameEnums.Mode.MASSACRE:
+	# MODES (chantier M). L Infini traverse les cinq mondes (le lieu pese sur le
+	# tirage, le fond change) ; le Massacre les MELANGE : aucun monde, donc aucun
+	# poids local et aucun changement de fond, et ses paliers tirent dans les
+	# boss de tout le jeu.
+	if mode == GameEnums.Mode.INFINITE:
 		spawner.setup_procedural(battlefield, _procedural_pool(), _boss_pool())
+	elif mode == GameEnums.Mode.MASSACRE:
+		spawner.setup_procedural(battlefield, _procedural_pool(),
+			MassacreMode.boss_pool(), 0, {}, false)
 	else:
 		spawner.setup(battlefield, def.waves)
 
@@ -102,10 +114,11 @@ func _connect_once(sig: Signal, callable: Callable) -> void:
 
 ## Deck de la partie selon le mode.
 ##   Exploration : la liste pre-etablie du niveau (une entree = un exemplaire).
-##   Massacre    : deck de depart SIMPLE — le deck compose par le joueur s il est
-##                 valide, sinon les communes. Les cartes fortes arrivent par les choix.
+##   Infini et Massacre : deck de depart SIMPLE — le deck compose par le joueur
+##                 s il est valide, sinon les communes. Les cartes fortes arrivent
+##                 par les choix.
 func _build_deck() -> Array[SpellCard]:
-	if mode == GameEnums.Mode.MASSACRE:
+	if GameEnums.is_endless(mode):
 		var ids: Array = SaveData.massacre_deck()
 		if DeckRules.is_valid(ids):
 			var chosen: Array[SpellCard] = DeckRules.resolve(ids)
@@ -123,7 +136,9 @@ func _build_deck() -> Array[SpellCard]:
 	return DeckRules.resolve(DeckRules.default_deck_ids())
 
 
-## Pool du mode infini : les monstres du niveau, boss exclus.
+## Pool des modes sans fin : les monstres du niveau, boss exclus. Pour le
+## Massacre, le "niveau" est celui de MassacreMode, dont le pool reunit deja les
+## monstres de tous les niveaux.
 func _procedural_pool() -> Array[EnemyDef]:
 	var out: Array[EnemyDef] = []
 	var source: Array = level_def.enemy_pool if level_def != null else []
@@ -461,15 +476,25 @@ func _on_wave_cleared(index: int) -> void:
 	RunState.wave_index = index + 1
 	RunState.wave_changed.emit(RunState.wave_index)
 	ChallengeTracker.record_best(&"max_speed_reached", SpeedGauge.speed_percent)
-	if mode == GameEnums.Mode.MASSACRE:
+	# MODES (chantier M) : les deux modes sans fin comptent pour les succes de
+	# survie, et chaque vague nettoyee met le record a jour tout de suite. Le
+	# tenir ici plutot qu a l ecran de defaite, c est ne pas le perdre quand le
+	# joueur ABANDONNE depuis la pause, qui ne passe par aucun ecran de fin.
+	if GameEnums.is_endless(mode):
 		ChallengeTracker.record_best(&"massacre_wave", RunState.wave_index)
+		SaveData.record_run_waves(level_def.id if level_def != null else &"",
+			mode, RunState.wave_index)
 	# Recompense de boss (cahier des charges) : le mini-boss lache de l epique,
 	# le boss final de la legendaire. Sans cela, vaincre un boss ne rapportait rien
 	# et la seule source de cartes etait la montee de niveau.
 	if wave != null and (wave.is_boss or wave.is_miniboss):
 		_offer_boss_reward(wave.is_boss)
 		return
-	if mode == GameEnums.Mode.MASSACRE and RunState.wave_index % WAVES_PER_CHOICE == 0:
+	# Les offres des modes sans fin passent par RunState.offer_choices(). Le
+	# chantier P y branche le pool "toutes les cartes obtenues" hors campagne
+	# (RunState.levelup_pool(level_def, mode)) : a brancher sur levelup_pool a
+	# la fusion si offer_choices ne le lit pas deja. Rien a changer ici.
+	if GameEnums.is_endless(mode) and RunState.wave_index % WAVES_PER_CHOICE == 0:
 		_offer_cards()
 
 
@@ -509,6 +534,10 @@ func _on_all_cleared() -> void:
 func abandon_run() -> void:
 	_ended = true
 	running = false
+	# Le record d un mode sans fin est deja a jour (_on_wave_cleared) ; il faut
+	# encore l ECRIRE, puisqu aucun ecran de fin ne le fera.
+	if GameEnums.is_endless(mode):
+		SaveData.save_profile()
 
 
 func _on_died() -> void:

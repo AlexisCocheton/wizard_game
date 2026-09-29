@@ -116,6 +116,10 @@ func bind(controller: GameController) -> void:
 			game.caster.cast_finished.connect(_on_cast_finished)
 		if not game.cards_offered.is_connected(_show_choice):
 			game.cards_offered.connect(_show_choice)
+		# MODES (chantier M) : le bandeau du monde, en Infini seulement (le
+		# spawner du Massacre n emet jamais ce signal).
+		if game.spawner != null and not game.spawner.world_changed.is_connected(_on_world_changed):
+			game.spawner.world_changed.connect(_on_world_changed)
 	_refresh_all()
 
 
@@ -1203,3 +1207,105 @@ func _on_objective_failed(objective_id: StringName) -> void:
 			tw.tween_property(l, "modulate", Color(2.2, 2.0, 2.0), 0.12)
 			tw.tween_property(l, "modulate", Color.WHITE, 0.28)
 		return
+
+
+# --- Bandeau de MONDE, mode Infini (chantier M) ---
+#
+# Le fond changeait toutes les six vagues et rien ne disait OU l on etait : le
+# joueur voyait un cimetiere apparaitre sans savoir que les morts-vivants allaient
+# peser sur le tirage. Le bandeau nomme le lieu au moment ou il change, puis
+# s efface : c est une annonce, pas un panneau permanent qui mangerait le terrain.
+#
+# Pose au TIERS HAUT du terrain, sous la barre du haut : la zone du pouce (main,
+# XP) reste libre, et il ne couvre pas la ligne du mage ou se joue le danger.
+# Il laisse passer le doigt (MOUSE_FILTER_IGNORE) : un glisser de carte qui
+# passerait dessus ne doit pas etre avale.
+
+## Duree de l annonce, fondus compris. Assez pour lire deux lignes, assez court
+## pour ne pas masquer les premiers monstres du nouveau lieu.
+const WORLD_BANNER_SECONDS: float = 2.6
+const WORLD_BANNER_Y: float = 380.0
+
+var _world_banner: PanelContainer = null
+var _world_title: Label = null
+var _world_sub: Label = null
+var _world_tween: Tween = null
+
+
+func _on_world_changed(world_index: int, _backdrop_key: String, world_name: String) -> void:
+	# Le spawner a DEJA avance son index sur la vague qui s ouvre.
+	var vague: int = game.spawner.index + 1 if game != null and game.spawner != null else 1
+	show_world_banner(world_name, world_subtitle(world_index, WaveBudget.cycle_for(vague)))
+
+
+## Deuxieme ligne du bandeau : le rang du monde, et le TOUR quand on repasse par
+## un lieu deja vu — c est la seule chose qui distingue le deuxieme cimetiere du
+## premier, alors que ses monstres ont trois fois plus de points.
+static func world_subtitle(world_index: int, cycle: int) -> String:
+	var t: String = "Monde %d / %d" % [world_index + 1, WaveBudget.WORLDS.size()]
+	if cycle > 1:
+		t += "   -   tour %d" % cycle
+	return t
+
+
+func show_world_banner(title: String, subtitle: String) -> void:
+	if title.is_empty():
+		return
+	_ensure_world_banner()
+	_world_title.text = title
+	_world_sub.text = subtitle
+	_world_banner.visible = true
+	_world_banner.modulate = Color(1, 1, 1, 0)
+	if _world_tween != null and _world_tween.is_valid():
+		_world_tween.kill()
+	var tw: Tween = _world_banner.create_tween()
+	tw.tween_property(_world_banner, "modulate:a", 1.0, 0.25)
+	tw.tween_interval(WORLD_BANNER_SECONDS - 0.75)
+	tw.tween_property(_world_banner, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(func() -> void: _world_banner.visible = false)
+	_world_tween = tw
+
+
+func hide_world_banner() -> void:
+	if _world_tween != null and _world_tween.is_valid():
+		_world_tween.kill()
+	if _world_banner != null and is_instance_valid(_world_banner):
+		_world_banner.visible = false
+
+
+## Pour les tests et le SMOKE : le texte affiche, "" si le bandeau est cache.
+func world_banner_text() -> String:
+	if _world_banner == null or not _world_banner.visible:
+		return ""
+	return _world_title.text
+
+
+func _ensure_world_banner() -> void:
+	if _world_banner != null and is_instance_valid(_world_banner):
+		return
+	_world_banner = PanelContainer.new()
+	_world_banner.name = "WorldBanner"
+	_world_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Aplat SOMBRE sous le texte : les cinq fonds vont du ciel clair au rouge
+	# demoniaque, un texte pose a nu y serait illisible sur l un ou l autre.
+	_world_banner.add_theme_stylebox_override(&"panel",
+		UiTheme.flat_box(Color(UiTheme.BG, 0.82), 18, 22.0))
+	_world_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_world_banner.anchor_left = 0.08
+	_world_banner.anchor_right = 0.92
+	_world_banner.offset_left = 0.0
+	_world_banner.offset_right = 0.0
+	_world_banner.offset_top = WORLD_BANNER_Y
+	_world_banner.offset_bottom = WORLD_BANNER_Y
+	_world_banner.visible = false
+	var col := VBoxContainer.new()
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_theme_constant_override(&"separation", 6)
+	_world_banner.add_child(col)
+	_world_title = UiTheme.label_hud("", UiTheme.FONT_TITLE, UiTheme.GOLD,
+		HORIZONTAL_ALIGNMENT_CENTER)
+	_world_sub = UiTheme.label_hud("", UiTheme.FONT_BODY, UiTheme.TEXT,
+		HORIZONTAL_ALIGNMENT_CENTER)
+	col.add_child(_world_title)
+	col.add_child(_world_sub)
+	_root.add_child(_world_banner)

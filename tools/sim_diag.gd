@@ -108,7 +108,7 @@ func _run_massacre_many(runs: int) -> void:
 	for i in runs:
 		var g: GameController = _make_game()
 		RunState.set_seed(2000 + i * 53)
-		g.start_level(level, GameEnums.Mode.MASSACRE)
+		g.start_level(level, GameEnums.Mode.INFINITE)
 		var st: Dictionary = _play(g, 30)
 		vagues.append(st["vague"])
 		g.queue_free()
@@ -142,7 +142,7 @@ func _run_massacre(waves: int) -> void:
 	if level == null:
 		return
 	var g: GameController = _make_game()
-	g.start_level(level, GameEnums.Mode.MASSACRE)
+	g.start_level(level, GameEnums.Mode.INFINITE)
 	var stats: Dictionary = _play(g, waves)
 	_print_stats("Massacre", stats)
 	g.queue_free()
