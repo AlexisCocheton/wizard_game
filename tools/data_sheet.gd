@@ -210,13 +210,21 @@ func _index_cross_references() -> void:
 				_card_decks[c.id] = []
 			if not (String(level.id) in _card_decks[c.id]):
 				_card_decks[c.id].append(String(level.id))
-		if level.legendary_reward != null:
-			var lid: StringName = level.legendary_reward.id
-			if not _card_decks.has(lid):
-				_card_decks[lid] = []
-			var tag: String = "%s(recompense)" % level.id
-			if not (tag in _card_decks[lid]):
-				_card_decks[lid].append(tag)
+		# Chantier P : plus de legendaire de niveau, mais des cartes de montee de
+		# niveau et une carte par objectif. Meme index, deux etiquettes.
+		var sources: Array = []
+		for c2: SpellCard in level.levelup_cards:
+			sources.append([c2, "%s(montee)" % level.id])
+		for c3: SpellCard in level.objective_rewards:
+			sources.append([c3, "%s(objectif)" % level.id])
+		for src in sources:
+			var carte: SpellCard = src[0]
+			if carte == null:
+				continue
+			if not _card_decks.has(carte.id):
+				_card_decks[carte.id] = []
+			if not (String(src[1]) in _card_decks[carte.id]):
+				_card_decks[carte.id].append(String(src[1]))
 
 
 ## Monstres engendres par un autre (invocation, division), en profondeur bornee.
@@ -568,7 +576,7 @@ func _table_levels() -> Array:
 		"duree_vagues_s", "puissance_totale", "pv_cumules", "nb_monstres",
 		"puissance_max_vague", "saut_max", "boss", "minibosses",
 		"taille_deck", "deck", "elements_deck", "nb_objectifs", "objectifs",
-		"recompense", "suivants"])
+		"progression", "suivants"])
 
 	for level: LevelDef in _levels_sorted():
 		var puissance: int = 0
@@ -639,7 +647,7 @@ func _table_levels() -> Array:
 			level.exploration_deck.size(), " ".join(deck),
 			" ".join(elements.keys()),
 			level.objectives.size(), " ".join(objs),
-			String(level.legendary_reward.id) if level.legendary_reward != null else "",
+			" ".join(_ids_of(level.levelup_cards + level.objective_rewards)),
 			" ".join(suivants),
 		])
 
@@ -664,8 +672,8 @@ func _table_levels() -> Array:
 		if level.objectives.size() != 3:
 			_anomalies.append("OBJECTIFS : %s en porte %d au lieu de 3"
 				% [level.id, level.objectives.size()])
-		if level.legendary_reward == null:
-			_anomalies.append("SANS RECOMPENSE : %s ne debloque aucune legendaire" % level.id)
+		for manque in level.missing_progression():
+			_anomalies.append("PROGRESSION INCOMPLETE : %s — %s" % [level.id, manque])
 		if level.exploration_deck.is_empty():
 			_anomalies.append("DECK VIDE : %s n impose aucun deck d exploration" % level.id)
 		# Un deck qui ne couvre pas un element ne peut rien faire contre un
@@ -1028,3 +1036,12 @@ func _cell(v: Variant) -> String:
 	if s.contains(";") or s.contains("\"") or s.contains(","):
 		s = "\"%s\"" % s.replace("\"", "\"\"")
 	return s
+
+
+## Ids d une liste de cartes, cases vides ignorees.
+func _ids_of(cards: Array) -> Array[String]:
+	var out: Array[String] = []
+	for c in cards:
+		if c != null:
+			out.append(String((c as SpellCard).id))
+	return out

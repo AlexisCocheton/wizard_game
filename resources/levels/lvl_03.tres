@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=59 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=58 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_m52cv"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_7sh5u"]
@@ -20,7 +20,6 @@
 [ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="18_106ca"]
 [ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="19_olpus"]
 [ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="21_0sax4"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/tide_ledger.tres" id="21_b8j3m"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="22_wfffn"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="23_ldkuw"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_8xb40"]
@@ -29,7 +28,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/bonewarden.tres" id="29_0sax4"]
 [ext_resource type="Resource" path="res://resources/enemies/bone_reliquary.tres" id="30_0sax4"]
 
-[sub_resource type="Resource" id="Resource_m52cv"]
+[sub_resource type="Resource" id="Resource_eor8d"]
 script = ExtResource("22_wfffn")
 id = &"obj_multi_kill_8_1"
 description = "Tuer 8 monstres en moins de 1 s"
@@ -39,7 +38,7 @@ params = {
 "window": 1
 }
 
-[sub_resource type="Resource" id="Resource_7sh5u"]
+[sub_resource type="Resource" id="Resource_m52cv"]
 script = ExtResource("22_wfffn")
 id = &"obj_same_card_casts_30"
 description = "Lancer 30 fois le meme sort"
@@ -48,7 +47,7 @@ params = {
 "count": 30
 }
 
-[sub_resource type="Resource" id="Resource_0sax4"]
+[sub_resource type="Resource" id="Resource_7sh5u"]
 script = ExtResource("22_wfffn")
 id = &"obj_max_distinct_cast_5"
 description = "Gagner avec 5 sorts differents au plus"
@@ -78,7 +77,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 15.0
 
-[sub_resource type="Resource" id="Resource_76r2s"]
+[sub_resource type="Resource" id="Resource_0sax4"]
 script = ExtResource("24_8xb40")
 id = &"w3_1"
 duration = 26.0
@@ -115,7 +114,7 @@ count = 2
 spawn_delay = 1.6
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_ufmgy"]
+[sub_resource type="Resource" id="Resource_76r2s"]
 script = ExtResource("24_8xb40")
 id = &"w3_2"
 duration = 27.0
@@ -145,7 +144,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_4ljjb"]
+[sub_resource type="Resource" id="Resource_ufmgy"]
 script = ExtResource("24_8xb40")
 id = &"w3_3"
 duration = 28.0
@@ -182,7 +181,7 @@ count = 2
 spawn_delay = 1.8
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_keyfv"]
+[sub_resource type="Resource" id="Resource_4ljjb"]
 script = ExtResource("24_8xb40")
 id = &"w3_4_miniboss"
 duration = 32.0
@@ -219,7 +218,7 @@ count = 3
 spawn_delay = 1.8
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_eqdet"]
+[sub_resource type="Resource" id="Resource_keyfv"]
 script = ExtResource("24_8xb40")
 id = &"w3_5"
 duration = 30.0
@@ -249,7 +248,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_vtmka"]
+[sub_resource type="Resource" id="Resource_eqdet"]
 script = ExtResource("24_8xb40")
 id = &"w3_6_boss"
 duration = 42.0
@@ -270,9 +269,10 @@ intro_story = &"lvl_03_intro"
 outro_story = &"lvl_03_outro"
 terrain = "sand"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("24_8xb40")]([SubResource("Resource_76r2s"), SubResource("Resource_ufmgy"), SubResource("Resource_4ljjb"), SubResource("Resource_keyfv"), SubResource("Resource_eqdet"), SubResource("Resource_vtmka")])
+waves = Array[ExtResource("24_8xb40")]([SubResource("Resource_0sax4"), SubResource("Resource_76r2s"), SubResource("Resource_ufmgy"), SubResource("Resource_4ljjb"), SubResource("Resource_keyfv"), SubResource("Resource_eqdet")])
 enemy_pool = Array[ExtResource("1_m52cv")]([ExtResource("2_7sh5u"), ExtResource("3_0sax4"), ExtResource("4_76r2s"), ExtResource("5_ufmgy"), ExtResource("6_4ljjb"), ExtResource("7_keyfv"), ExtResource("8_eqdet"), ExtResource("9_vtmka"), ExtResource("10_sct6h"), ExtResource("11_i6hfk"), ExtResource("12_m52cv"), ExtResource("13_7sh5u")])
 exploration_deck = Array[ExtResource("12_a7l5k")]([ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("17_of0y1"), ExtResource("17_of0y1"), ExtResource("17_of0y1"), ExtResource("17_of0y1"), ExtResource("13_p1ef3"), ExtResource("13_p1ef3"), ExtResource("18_106ca"), ExtResource("18_106ca"), ExtResource("19_olpus"), ExtResource("19_olpus"), ExtResource("21_0sax4")])
-objectives = Array[ExtResource("22_wfffn")]([SubResource("Resource_m52cv"), SubResource("Resource_7sh5u"), SubResource("Resource_0sax4")])
-legendary_reward = ExtResource("21_b8j3m")
+objectives = Array[ExtResource("22_wfffn")]([SubResource("Resource_eor8d"), SubResource("Resource_m52cv"), SubResource("Resource_7sh5u")])
+levelup_cards = Array[ExtResource("12_a7l5k")]([])
+objective_rewards = Array[ExtResource("12_a7l5k")]([])
 next_levels = Array[StringName]([&"lvl_04"])

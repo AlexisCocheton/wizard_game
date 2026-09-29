@@ -294,12 +294,14 @@ func _render_detail() -> void:
 		_card_body.add_child(UiTheme.label(status, UiTheme.FONT_BODY,
 			status_ink, HORIZONTAL_ALIGNMENT_CENTER))
 
-		# Objectifs : les 3 badges qui debloquent la legendaire.
+		# Objectifs, classes du plus facile au plus dur, chacun avec LA CARTE
+		# qu il ajoute au pool de montee de niveau du niveau (chantier P).
 		var objs: Dictionary = rec.get("objectives", {})
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override(&"separation", 6)
 		_card_body.add_child(box)
-		for obj in level.objectives:
+		for i in level.objectives.size():
+			var obj: ObjectiveDef = level.objectives[i]
 			if obj == null:
 				continue
 			var done: bool = bool(objs.get(String(obj.id), false))
@@ -308,10 +310,8 @@ func _render_detail() -> void:
 			box.add_child(UiTheme.label(
 				"%s  -  %s" % ["Acquis" if done else "A faire", ObjectiveChecker.label(obj)],
 				UiTheme.FONT_SMALL, UiTheme.GREEN if done else UiTheme.TEXT_DARK))
-		if level.legendary_reward != null:
-			var got: bool = SaveData.unlocked_legendaries().has(String(level.legendary_reward.id))
-			box.add_child(UiTheme.label("Recompense : %s%s" % [level.legendary_reward.display_name,
-				"  (obtenue)" if got else ""], UiTheme.FONT_SMALL, UiTheme.rarity_ink(GameEnums.Rarity.LEGENDARY)))
+			box.add_child(UiTheme.label(objective_reward_line(level, i),
+				UiTheme.FONT_SMALL, _reward_ink(level, i)))
 
 	# Le vide restant se met en BAS, une fois tout dit.
 	var spacer := Control.new()
@@ -352,3 +352,33 @@ func _on_play() -> void:
 	SaveData.set_current_level(level.id)
 	SaveData.save_profile()
 	SceneRouter.start_level(level.id, _mode)
+
+
+## --- RECOMPENSES D OBJECTIF SUR LA FICHE (chantier P) ---
+##
+## Une ligne sous chaque objectif dit ce qu il rapporte. La carte est NOMMEE
+## meme avant d etre gagnee : c est la promesse qui donne envie de tenter
+## l objectif. Elle n est pas donnee, elle rejoint le pool de montee de niveau.
+## Statique : le test et l ecran de victoire lisent la meme phrase.
+static func objective_reward_line(level: LevelDef, index: int) -> String:
+	var carte: SpellCard = level.objective_reward(index) if level != null else null
+	if carte == null:
+		return "      rapporte : carte a venir"
+	var obj: ObjectiveDef = level.objectives[index] if index < level.objectives.size() else null
+	var acquis: bool = obj != null and SaveData.is_objective_done(level.id, obj.id)
+	var etat: String = ""
+	if SaveData.is_discovered(carte.id):
+		etat = "  (obtenue)"
+	elif acquis:
+		etat = "  (a prendre en combat)"
+	return "      rapporte : %s, %s%s" % [carte.display_name,
+		GameEnums.rarity_name(carte.rarity), etat]
+
+
+func _reward_ink(level: LevelDef, index: int) -> Color:
+	var carte: SpellCard = level.objective_reward(index)
+	if carte == null:
+		# Brun du papier et non TEXT_DIM : ce gris clair est fait pour les fonds
+		# sombres et disparait sur la page creme.
+		return Color(0.45, 0.35, 0.25)
+	return UiTheme.rarity_ink(carte.rarity)

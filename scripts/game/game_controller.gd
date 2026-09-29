@@ -11,6 +11,7 @@ extends Node2D
 ##                 cinq mondes, choix de carte toutes les N vagues.
 ##   Massacre    : le niveau infini A PART (MassacreMode) : monstres de tous les
 ##                 niveaux melanges, boss de tout le jeu, fond fixe.
+## Dans tous les modes, les cartes proposees viennent de RunState.levelup_pool().
 
 signal level_won()
 signal level_lost()
@@ -67,6 +68,10 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 
 	RunState.build_deck_from_list(_build_deck())
 	RunState.draw(GameConfig.START_HAND_SIZE)
+	# PASSIFS EQUIPES (chantier P) : actifs DES LE DEBUT du combat, a partir de
+	# l acte 2 en campagne, des l acte 2 atteint hors campagne. APRES reset(), qui
+	# vide la barre, et apres current_level_def / mode, dont depend la regle.
+	RunState.equip_saved_passives()
 
 	# MODES (chantier M). L Infini traverse les cinq mondes (le lieu pese sur le
 	# tirage, le fond change) ; le Massacre les MELANGE : aucun monde, donc aucun
@@ -474,7 +479,6 @@ func _on_enemy_killed_for_challenges(_def: EnemyDef) -> void:
 
 
 func _on_wave_cleared(index: int) -> void:
-	var wave: WaveDef = spawner.waves[index] if index < spawner.waves.size() else null
 	RunState.wave_index = index + 1
 	RunState.wave_changed.emit(RunState.wave_index)
 	ChallengeTracker.record_best(&"max_speed_reached", SpeedGauge.speed_percent)
@@ -486,28 +490,17 @@ func _on_wave_cleared(index: int) -> void:
 		ChallengeTracker.record_best(&"massacre_wave", RunState.wave_index)
 		SaveData.record_run_waves(level_def.id if level_def != null else &"",
 			mode, RunState.wave_index)
-	# Recompense de boss (cahier des charges) : le mini-boss lache de l epique,
-	# le boss final de la legendaire. Sans cela, vaincre un boss ne rapportait rien
-	# et la seule source de cartes etait la montee de niveau.
-	if wave != null and (wave.is_boss or wave.is_miniboss):
-		_offer_boss_reward(wave.is_boss)
-		return
-	# Les offres des modes sans fin passent par RunState.offer_choices(). Le
-	# chantier P y branche le pool "toutes les cartes obtenues" hors campagne
-	# (RunState.levelup_pool(level_def, mode)) : a brancher sur levelup_pool a
-	# la fusion si offer_choices ne le lit pas deja. Rien a changer ici.
+	# PLUS DE RECOMPENSE DE BOSS D OFFICE (chantier P). Un mini-boss offrait trois
+	# epiques et un boss trois legendaires, tirees dans TOUT le catalogue : le
+	# pool de montee de niveau n aurait rien voulu dire, et un niveau d acte 1
+	# distribuait des legendaires. Les cartes fortes s obtiennent maintenant par
+	# les objectifs du niveau (LevelDef.objective_rewards). La vague de boss suit
+	# donc la cadence ordinaire.
+	# Les offres des modes sans fin passent par RunState.offer_choices(), qui
+	# tire dans RunState.levelup_pool(level_def, mode) : hors campagne, toutes
+	# les cartes obtenues (niveau fabrique du Massacre compris).
 	if GameEnums.is_endless(mode) and RunState.wave_index % WAVES_PER_CHOICE == 0:
 		_offer_cards()
-
-
-## Le boss final donne de la legendaire, le mini-boss de l epique.
-func _offer_boss_reward(final_boss: bool) -> void:
-	var rarity: GameEnums.Rarity = GameEnums.Rarity.LEGENDARY if final_boss 		else GameEnums.Rarity.EPIC
-	var cards: Array[SpellCard] = RunState.offer_of_rarity(rarity, GameConfig.LEVEL_UP_CHOICES)
-	if cards.is_empty():
-		return
-	AudioBus.play_sfx(&"level_up")
-	cards_offered.emit(cards)
 
 
 func _on_all_cleared() -> void:

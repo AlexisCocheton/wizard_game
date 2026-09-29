@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=52 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=51 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_phey4"]
 [ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="2_phey4"]
@@ -23,13 +23,12 @@
 [ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="21_pegq6"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="22_00s4r"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="23_fn1rf"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="24_k3q17"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="25_kvakk"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="26_1l5ws"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="27_noohh"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="28_yjxix"]
 
-[sub_resource type="Resource" id="Resource_phey4"]
+[sub_resource type="Resource" id="Resource_1s7b8"]
 script = ExtResource("25_kvakk")
 id = &"obj_boss_quick_after_revive_9"
 description = "Achever un boss releve en moins de 9 s"
@@ -38,14 +37,14 @@ params = {
 "seconds": 9
 }
 
-[sub_resource type="Resource" id="Resource_84rjn"]
+[sub_resource type="Resource" id="Resource_bhpch"]
 script = ExtResource("25_kvakk")
 id = &"obj_no_legendary"
 description = "Gagner sans utiliser de carte legendaire"
 check_key = &"no_legendary_used"
 params = {}
 
-[sub_resource type="Resource" id="Resource_1uh55"]
+[sub_resource type="Resource" id="Resource_phey4"]
 script = ExtResource("25_kvakk")
 id = &"obj_element_casts_60_arcane"
 description = "Lancer 60 sorts d arcane"
@@ -83,7 +82,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_v27ae"]
+[sub_resource type="Resource" id="Resource_1uh55"]
 script = ExtResource("27_noohh")
 id = &"w16_1"
 duration = 28.0
@@ -120,7 +119,7 @@ count = 2
 spawn_delay = 2.5
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_iqwbf"]
+[sub_resource type="Resource" id="Resource_v27ae"]
 script = ExtResource("27_noohh")
 id = &"w16_2"
 duration = 30.0
@@ -178,7 +177,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_0beht"]
+[sub_resource type="Resource" id="Resource_iqwbf"]
 script = ExtResource("27_noohh")
 id = &"w16_3"
 duration = 31.0
@@ -194,7 +193,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_pegq6"]
+[sub_resource type="Resource" id="Resource_0beht"]
 script = ExtResource("27_noohh")
 id = &"w16_4_boss"
 duration = 60.0
@@ -215,9 +214,10 @@ intro_story = &"lvl_16_intro"
 outro_story = &"lvl_16_outro"
 terrain = "sand"
 backdrop = "act5_divine"
-waves = Array[ExtResource("27_noohh")]([SubResource("Resource_v27ae"), SubResource("Resource_iqwbf"), SubResource("Resource_0beht"), SubResource("Resource_pegq6")])
+waves = Array[ExtResource("27_noohh")]([SubResource("Resource_1uh55"), SubResource("Resource_v27ae"), SubResource("Resource_iqwbf"), SubResource("Resource_0beht")])
 enemy_pool = Array[ExtResource("1_phey4")]([ExtResource("2_phey4"), ExtResource("3_1uh55"), ExtResource("4_phey4"), ExtResource("5_1uh55"), ExtResource("6_v27ae"), ExtResource("7_iqwbf"), ExtResource("10_h83vr"), ExtResource("11_4s603"), ExtResource("12_0beht"), ExtResource("13_pegq6"), ExtResource("12_phey4"), ExtResource("15_fn1rf"), ExtResource("14_phey4"), ExtResource("15_1uh55"), ExtResource("16_v27ae")])
 exploration_deck = Array[ExtResource("17_1uh55")]([ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("21_pegq6"), ExtResource("22_00s4r"), ExtResource("23_fn1rf")])
-objectives = Array[ExtResource("25_kvakk")]([SubResource("Resource_phey4"), SubResource("Resource_84rjn"), SubResource("Resource_1uh55")])
-legendary_reward = ExtResource("24_k3q17")
+objectives = Array[ExtResource("25_kvakk")]([SubResource("Resource_1s7b8"), SubResource("Resource_bhpch"), SubResource("Resource_phey4")])
+levelup_cards = Array[ExtResource("17_1uh55")]([])
+objective_rewards = Array[ExtResource("17_1uh55")]([])
 next_levels = Array[StringName]([])
