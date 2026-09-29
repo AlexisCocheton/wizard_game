@@ -157,38 +157,48 @@ const STARTING_PASSIVES: int = PASSIVE_SLOTS
 ## restent dans la meme fourchette.
 const CARD_UPGRADE_CASTS: int = 8
 
-## Ce que chaque voie d amelioration donne, et ce qu elle coute. Un seul jeu de
-## trois nombres pour tout le catalogue : les voies sont DERIVEES des effets de
-## la carte (voir RunState.upgrade_paths_for), pas ecrites carte par carte.
+## Ce que chaque voie d amelioration donne, et ce qu elle coute. UN SEUL endroit
+## pour tout le catalogue : les voies sont DERIVEES des effets de chaque carte
+## (voir RunState.upgrade_paths_for), pas ecrites carte par carte.
 ##
-## POURQUOI DES PACTES ET NON DES BONUS
-## ------------------------------------
-## Trois lignes de "+10 %" ne sont pas un choix, c est un classement : le joueur
-## prend la plus grosse et l ecran ne sert a rien. Chaque voie DONNE et PREND,
-## sur des axes differents, pour que le sort change d IDENTITE :
-##   PUISSANCE : il frappe fort mais se charge lentement
-##   CELERITE  : il part vite mais tape moins
-##   AMPLEUR   : il couvre large, un peu plus lentement
-## Aucune ne domine les autres sur les trois axes a la fois — c est ce que
-## verrouille test_upgrades.gd (_test_les_trois_voies_sont_des_choix_pas_un_classement).
+## DEUX FORMES, demandees par le co-auteur
+## ---------------------------------------
+##   LEGERE : un petit gain SANS contrepartie     (+10 % degats)
+##   FORTE  : un gros gain qui se PAIE ailleurs   (+30 % degats, -15 % vitesse de
+##            lancement)
+## Trois lignes de "+10 %" ne seraient pas un choix mais un classement. Le melange
+## des deux formes donne deux facons de gagner : un bonus sur, ou un pari qui
+## change l identite du sort. Aucune voie ne domine une autre sur tous les axes a
+## la fois — verrouille par test_upgrades.gd.
 ##
-## REGLAGE MESURE AU BANC (30 parties par niveau, sept niveaux)
-## -----------------------------------------------------------
-## Le banc a une variance LARGE par niveau : deux passages du meme contenu ont
-## rendu 96,7 % puis 83,3 % au niveau 2. On ne regle donc PAS sur un niveau, mais
-## sur la MOYENNE des sept, qui s est revelee stable a 0,1 point pres.
-##   sans amelioration            : moyenne 80,9 %
-##   gains 45/35/40, prix 30/20/10 : moyenne 87,7 % puis 87,6 % — trop fort, et
-##                                   le niveau 2 sortait de la bande par le haut
-##   gains 30/25/28, prix 35/25/15 : moyenne 81,9 % puis 82,4 % — retenu
-## L amelioration reste un vrai gain (le joueur sent son sort changer) mais elle
-## se paie assez cher pour que la difficulte mesuree ne bouge pas.
-const UPGRADE_POWER_GAIN: float = 0.30    # +30 % de degats
-const UPGRADE_POWER_COST: float = 0.35    # +35 % de temps d incantation
-const UPGRADE_HASTE_GAIN: float = 0.25    # -25 % de temps d incantation
-const UPGRADE_HASTE_COST: float = 0.25    # -25 % de degats
-const UPGRADE_AREA_GAIN: float = 0.28     # +28 % de rayon et de duree
-const UPGRADE_AREA_COST: float = 0.15     # +15 % de temps d incantation
+## AXES : degats, ralentissement, acceleration, force (aspiration, courant,
+## recul), amplification (vulnerabilite, Focalisation), PV d un objet, nombre
+## (cibles, impacts, cartes), zone, duree, vitesse de lancement. Chaque axe est un
+## multiplicateur "plus c est haut, mieux c est" : la vitesse de lancement est
+## l INVERSE du temps d incantation, donc "+10 % de vitesse" divise le temps par
+## 1,10 — le libelle dit exactement ce que fait le sort.
+##
+## REGLAGE : l ancien jeu de trois pactes (+30/+25/+28 contre 35/25/15) laissait la
+## moyenne du banc a 81,9 %, contre 80,9 % sans amelioration. Les nouveaux
+## chiffres restent dans le meme ordre de grandeur ; le banc avant/apres est dans
+## le rapport du chantier U (vague 5).
+const UPGRADE_LIGHT_GAIN: float = 0.10     # forme legere : +10 %, rien a payer
+const UPGRADE_STRONG_GAIN: float = 0.30    # forme forte : +30 % ...
+const UPGRADE_STRONG_COST: float = 0.15    # ... contre -15 % sur un autre axe
+## Ralentissement maximal atteignable par une amelioration, en %. C est le
+## plancher de vitesse de Battlefield.apply_global_enemy_slow (facteur 0,1) : au
+## dela, un ralentissement de zone ferait RECULER les monstres, ce que seul le
+## courant de la Nappe d eau a le droit de faire. Un sort deja trop pres du plafond
+## (Gel profond, 85 %) ne recoit pas la voie : elle promettrait +10 % et en
+## donnerait trois.
+const UPGRADE_SLOW_CAP: float = 90.0
+## Duree minimale pour qu un effet "dure". Une Boule de feu (0,6 s) ou un Meteore
+## (0,3 s) ne sont pas des effets de duree : leur zone n existe que pour porter
+## l impact, et la rallonger ajouterait des degats sous un faux nom.
+const UPGRADE_MIN_DURATION: float = 1.0
+## Au-dela de ce nombre de cibles, une ligne perce "tout" (Faille temporelle : 99).
+## Lui promettre "+1 cible" serait un mensonge : la voie n est pas proposee.
+const UPGRADE_COUNT_UNLIMITED: int = 20
 
 ## Part de PASSIFS dans les cartes proposees a la montee de niveau.
 ## "Les passifs sont plus rares que les cartes : 20 pourcent de passifs."
