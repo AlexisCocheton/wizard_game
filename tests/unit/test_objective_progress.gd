@@ -20,17 +20,22 @@ const FAILABLE: Array[StringName] = [
 	&"no_card_key", &"no_card_tag", &"boss_quick_after_revive",
 	&"never_hit_reflect", &"no_enemy_past", &"win_under_time",
 	&"max_distinct_cast", &"no_passive",
+	&"no_card", &"no_hit_from",
 ]
 ## Cles qui ne sont JAMAIS perdues avant la fin : on peut toujours compter plus,
 ## ou elles se jugent sur l etat final.
 const NEVER_FAILED: Array[StringName] = [
 	&"same_card_casts", &"win_below_speed", &"multi_kill", &"element_casts",
 	&"kill_flying",
+	&"card_casts", &"win_above_speed", &"kill_type_one_cast", &"kill_type_with_card",
+	&"hit_from", &"enemy_travel",
 ]
 ## Cles qui ont un compte a afficher.
 const COUNTED: Array[StringName] = [
 	&"same_card_casts", &"multi_kill", &"element_casts", &"kill_flying",
 	&"max_distinct_cast", &"win_under_time",
+	&"card_casts", &"kill_type_one_cast", &"kill_type_with_card", &"hit_from",
+	&"enemy_travel",
 ]
 
 
@@ -150,6 +155,16 @@ func _test_perdu_implique_echec_a_la_victoire() -> void:
 				pc.id = &"passif_test"
 				pc.is_passive = true
 				RunState.equipped_passives.append(pc)
+			&"no_card":
+				RunState.note_cast(_card("une_autre_carte", [], ["damage_single"]))
+				not_ok(ObjectiveChecker.is_failed(o), "no_card : une autre carte ne ruine rien")
+				RunState.note_cast(_card(String(_p(o, "card")), [], ["damage_single"]))
+			&"no_hit_from":
+				var autre_espece := EnemyDef.new()
+				autre_espece.id = &"une_autre_espece"
+				RunState.note_damage_taken(autre_espece)
+				not_ok(ObjectiveChecker.is_failed(o), "no_hit_from : une autre espece ne ruine rien")
+				RunState.note_damage_taken(ContentDB.enemies.get(StringName(_p(o, "enemy"))))
 		ok(ObjectiveChecker.is_failed(o), "%s : perdu apres le fait qui le ruine" % key)
 		# La victoire arrive ensuite, dans les meilleures conditions possibles.
 		SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)

@@ -180,6 +180,8 @@ func simulate(delta: float) -> void:
 	battlefield.simulate(delta)
 	# OBJECTIFS : profondeur atteinte par les monstres (no_enemy_past).
 	RunState.note_enemy_depths(battlefield.enemies)
+	# OBJECTIFS : chemin des monstres vivants, pour le bandeau (enemy_travel).
+	RunState.note_enemy_travel_live(battlefield.enemies)
 	# Une carte lancee peut tuer le dernier monstre et terminer le niveau : on
 	# reverifie avant de faire apparaitre la vague suivante.
 	if _ended:

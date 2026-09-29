@@ -1228,6 +1228,8 @@ func note_damage_taken(source: EnemyDef = null) -> void:
 	took_any_damage = true
 	var nom: String = source.display_name if source != null else "Projectile"
 	hits_by_source[nom] = int(hits_by_source.get(nom, 0)) + 1
+	# OBJECTIFS (no_hit_from, hit_from) : le meme coup, range par id d espece.
+	_note_hit_from(source)
 
 
 ## Le monstre qui a le plus coute de vitesse sur la partie, "" si aucun coup recu.
@@ -1298,6 +1300,8 @@ func _reset_objective_counters() -> void:
 	victory_speed_percent = -1
 	victory_time = -1.0
 	_failed_objectives.clear()
+	# Objectifs lies aux cartes et aux monstres (section du meme nom).
+	_reset_card_monster_counters()
 
 
 ## Avance l horloge des objectifs. delta BRUT : voir l en-tete de la section.
@@ -1472,6 +1476,176 @@ func final_speed_percent() -> int:
 
 func final_time() -> float:
 	return victory_time if victory_time >= 0.0 else run_time
+
+
+# --- OBJECTIFS LIES AUX CARTES ET AUX MONSTRES ------------------------------
+#
+# Les faits que lisent card_casts, no_card, kill_type_one_cast,
+# kill_type_with_card, no_hit_from, hit_from et enemy_travel. Les regles
+# (qu est-ce qu un lancer, un coup recu, un chemin) sont ecrites une seule fois,
+# en tete de objective_checker.gd.
+#
+# LA SOURCE DES DEGATS. `damage_source` dit a qui appartient le coup qui part EN
+# CE MOMENT : {"cast": numero de lancer, "card": id de carte}, vide si personne.
+# EffectRegistry.cast() l ouvre pendant la resolution d un sort ; ce que le sort
+# pose (zone, allie, autel) la recopie a sa creation et la remet en place
+# chaque fois qu il frappe (Battlefield). Une mort etant SYNCHRONE du coup qui
+# la cause (take_damage -> kill -> died), la source lue au moment de la mort
+# est celle du coup de grace.
+#
+# Pourquoi une source AMBIANTE plutot qu un parametre de plus a damage_enemy() :
+# les handlers, les zones et les allies frappent deja par ce chemin, et un
+# parametre aurait demande de toucher chacun d eux — donc d en oublier un, et
+# une carte aurait tue sans jamais etre creditee.
+
+## Meta posee sur chaque Enemy : le chemin parcouru, en pixels (Battlefield).
+const TRAVEL_META: StringName = &"obj_travel"
+
+## Numero du dernier lancer ouvert. Jamais remis a zero entre deux parties :
+## seul l ordre compte, et un numero neuf ne peut pas heriter d un vieux compte.
+var _cast_serial: int = 0
+var damage_source: Dictionary = {}
+## Morts par lancer et par espece : {numero: {id d espece: nombre}}.
+var _kills_by_cast: Dictionary = {}
+## Record par espece : le plus de morts de cette espece dues a UN lancer.
+var _best_kills_one_cast: Dictionary = {}
+## Morts par carte et par espece : {id de carte: {id d espece: nombre}}.
+var _kills_by_card: Dictionary = {}
+## Coups recus par espece (id d EnemyDef). Distinct de hits_by_source, range
+## par NOM affiche pour le bilan de defaite : deux especes peuvent partager un
+## nom, un objectif doit viser l une sans l autre.
+var hits_by_enemy_id: Dictionary = {}
+## Plus long chemin d un monstre TUE : par espece, et toutes especes.
+var _travel_record: Dictionary = {}
+var _travel_record_any: float = 0.0
+## Plus long chemin d un monstre VIVANT, releve a chaque image (affichage seul).
+var _travel_live: Dictionary = {}
+var _travel_live_any: float = 0.0
+
+
+func _reset_card_monster_counters() -> void:
+	damage_source = {}
+	_kills_by_cast.clear()
+	_best_kills_one_cast.clear()
+	_kills_by_card.clear()
+	hits_by_enemy_id.clear()
+	_travel_record.clear()
+	_travel_record_any = 0.0
+	_travel_live.clear()
+	_travel_live_any = 0.0
+
+
+## Ouvre un lancer : un numero neuf devient la source courante. Rend la source
+## precedente, que l appelant remet en place a la fin (swap_damage_source) : un
+## sort resolu pendant un autre ne doit pas lui voler la suite de ses coups.
+func open_cast_source(card: SpellCard) -> Dictionary:
+	_cast_serial += 1
+	var avant: Dictionary = damage_source
+	damage_source = {"cast": _cast_serial, "card": card.id if card != null else &""}
+	return avant
+
+
+## Remplace la source courante et rend l ancienne. Vide = coup sans source.
+func swap_damage_source(src: Dictionary) -> Dictionary:
+	var avant: Dictionary = damage_source
+	damage_source = src
+	return avant
+
+
+## Numero du lancer en cours, 0 hors lancer.
+func current_cast_id() -> int:
+	return int(damage_source.get("cast", 0))
+
+
+## Un monstre vient de mourir (Battlefield._on_enemy_died, memes morts que
+## note_kill) : on le credite au lancer et a la carte de la source courante.
+func note_kill_by_source(def: EnemyDef) -> void:
+	if def == null or damage_source.is_empty():
+		return
+	var espece: StringName = def.id
+	var lancer: int = int(damage_source.get("cast", 0))
+	if lancer > 0:
+		var par_lancer: Dictionary = _kills_by_cast.get(lancer, {})
+		par_lancer[espece] = int(par_lancer.get(espece, 0)) + 1
+		_kills_by_cast[lancer] = par_lancer
+		_best_kills_one_cast[espece] = maxi(int(_best_kills_one_cast.get(espece, 0)),
+			int(par_lancer[espece]))
+	var carte: StringName = damage_source.get("card", &"")
+	if carte != &"":
+		var par_carte: Dictionary = _kills_by_card.get(carte, {})
+		par_carte[espece] = int(par_carte.get(espece, 0)) + 1
+		_kills_by_card[carte] = par_carte
+
+
+func best_kills_in_one_cast(enemy_id: StringName) -> int:
+	return int(_best_kills_one_cast.get(enemy_id, 0))
+
+
+func kills_with_card(card_id: StringName, enemy_id: StringName) -> int:
+	return int((_kills_by_card.get(card_id, {}) as Dictionary).get(enemy_id, 0))
+
+
+## Lancers de la carte `card_id` dans la partie (tous exemplaires).
+func casts_of_id(card_id: StringName) -> int:
+	return int(casts_by_card.get(card_id, 0))
+
+
+## Branche dans note_damage_taken : chaque coup impute a un monstre.
+func _note_hit_from(source: EnemyDef) -> void:
+	if source == null:
+		return
+	hits_by_enemy_id[source.id] = int(hits_by_enemy_id.get(source.id, 0)) + 1
+
+
+## Coups recus de l espece `enemy_id`, ses projectiles-monstres compris (une
+## boule de poison touche au nom de son lanceur : voir COUP RECU).
+func hits_from_enemy(enemy_id: StringName) -> int:
+	var n: int = int(hits_by_enemy_id.get(enemy_id, 0))
+	var def: EnemyDef = ContentDB.enemies.get(enemy_id)
+	if def != null and def.summon_def != null and def.summon_def.projectile \
+			and def.summon_def.id != enemy_id:
+		n += int(hits_by_enemy_id.get(def.summon_def.id, 0))
+	return n
+
+
+## Un monstre meurt apres avoir parcouru `px` pixels de chemin.
+func note_travel_at_death(def: EnemyDef, px: float) -> void:
+	if def == null or def.projectile:
+		return
+	_travel_record[def.id] = maxf(float(_travel_record.get(def.id, 0.0)), px)
+	_travel_record_any = maxf(_travel_record_any, px)
+
+
+## Plus long chemin d un monstre tue (de l espece, ou toutes si &"").
+func travel_record_of(enemy_id: StringName) -> float:
+	if enemy_id == &"":
+		return _travel_record_any
+	return float(_travel_record.get(enemy_id, 0.0))
+
+
+## Releve le chemin des monstres vivants (GameController, une fois par image).
+## Tableau NON type, meme raison que note_enemy_depths.
+func note_enemy_travel_live(enemies: Array) -> void:
+	_travel_live.clear()
+	_travel_live_any = 0.0
+	for e in enemies:
+		if e == null or not is_instance_valid(e):
+			continue
+		var n: Node = e as Node
+		if n == null or not n.has_meta(TRAVEL_META):
+			continue
+		var def: EnemyDef = n.get("definition") as EnemyDef
+		if def == null or def.projectile:
+			continue
+		var px: float = float(n.get_meta(TRAVEL_META))
+		_travel_live[def.id] = maxf(float(_travel_live.get(def.id, 0.0)), px)
+		_travel_live_any = maxf(_travel_live_any, px)
+
+
+func travel_live_of(enemy_id: StringName) -> float:
+	if enemy_id == &"":
+		return _travel_live_any
+	return float(_travel_live.get(enemy_id, 0.0))
 
 
 # --- Sorts demandes par le testeur : echo de la main, double incantation ---
