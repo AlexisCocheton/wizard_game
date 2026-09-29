@@ -104,6 +104,11 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 	# affiche au grimoire : celui-la est remis a zero a chaque niveau.
 	RunState.note_cast(card)
 	ctx.card = card
+	# OBJECTIFS (kill_type_one_cast, kill_type_with_card) : ce lancer recoit un
+	# numero, et tout degat de sa resolution — seconde resolution de Debordement
+	# comprise — lui est attribue. Refermee en fin de fonction.
+	var obj_source_avant: Dictionary = RunState.open_cast_source(card)
+	ctx.cast_id = RunState.current_cast_id()
 	# Le son PROPRE au sort. Trois sons generiques couvraient 45 cartes : a
 	# l oreille, tous les sorts etaient le meme.
 	if card.sfx_key != &"":
@@ -127,6 +132,8 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 		for spec2 in specs:
 			dispatch(spec2, ctx)
 		_resolving = false
+	# OBJECTIFS : le lancer est fini, ses coups directs aussi.
+	RunState.swap_damage_source(obj_source_avant)
 
 
 ## Vrai pendant la seconde resolution de "Debordement" : voir cast().
