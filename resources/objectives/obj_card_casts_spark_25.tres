@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_xxe0t"]
+
+[resource]
+script = ExtResource("1_xxe0t")
+id = &"obj_card_casts_spark_25"
+description = "Lancer 25 fois Etincelle"
+check_key = &"card_casts"
+params = {
+"card": "spark",
+"count": 25
+}

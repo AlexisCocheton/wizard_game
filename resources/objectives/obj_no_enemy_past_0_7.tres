@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_f5ms7"]
+
+[resource]
+script = ExtResource("1_f5ms7")
+id = &"obj_no_enemy_past_0_7"
+description = "Aucun monstre au-dela de 70 % du terrain"
+check_key = &"no_enemy_past"
+params = {
+"ratio": 0.7
+}

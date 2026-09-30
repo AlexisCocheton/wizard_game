@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_rthqa"]
+
+[resource]
+script = ExtResource("1_rthqa")
+id = &"obj_kill_type_one_cast_4_hopper"
+description = "Sauterelle : en tuer 4 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 4,
+"enemy": "hopper"
+}

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_s5e32"]
+
+[resource]
+script = ExtResource("1_s5e32")
+id = &"obj_kill_type_with_card_fireball_8_jelly_small"
+description = "Gelee (petite) : en tuer 8 avec Boule de feu"
+check_key = &"kill_type_with_card"
+params = {
+"card": "fireball",
+"count": 8,
+"enemy": "jelly_small"
+}

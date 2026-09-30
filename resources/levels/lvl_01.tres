@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=40 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=46 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_vmxm3"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_4lqvx"]
@@ -23,34 +23,40 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="17_smbsg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="18_d8uqj"]
 [ext_resource type="Resource" path="res://resources/enemies/warden.tres" id="19_ilyg2"]
+[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="19_jmste"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="20_mjm5p"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos.tres" id="20_tnbgt"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="21_31cm4"]
+[ext_resource type="Resource" path="res://resources/cards/rare/temporal_drag.tres" id="22_6wclg"]
+[ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="23_01qir"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="24_8t5s7"]
 
-[sub_resource type="Resource" id="Resource_ckexf"]
+[sub_resource type="Resource" id="Resource_jmste"]
 script = ExtResource("15_01qir")
-id = &"obj_kill_flying_3"
-description = "Abattre 3 monstres volants"
-check_key = &"kill_flying"
+id = &"obj_card_casts_piercing_arrow_6"
+description = "Lancer 6 fois Fleche percante"
+check_key = &"card_casts"
 params = {
-"count": 3
+"card": "piercing_arrow",
+"count": 6
 }
 
-[sub_resource type="Resource" id="Resource_6vmxt"]
+[sub_resource type="Resource" id="Resource_mjm5p"]
 script = ExtResource("15_01qir")
-id = &"obj_multi_kill_5_2"
-description = "Tuer 5 monstres en moins de 2 s"
-check_key = &"multi_kill"
+id = &"obj_no_card_fireball"
+description = "Gagner sans lancer Boule de feu"
+check_key = &"no_card"
 params = {
-"count": 5,
-"window": 2
+"card": "fireball"
 }
 
-[sub_resource type="Resource" id="Resource_07mnm"]
+[sub_resource type="Resource" id="Resource_31cm4"]
 script = ExtResource("15_01qir")
-id = &"obj_no_card_key_build_wall"
-description = "Gagner sans poser de mur"
-check_key = &"no_card_key"
+id = &"obj_win_above_speed_250"
+description = "Gagner avec plus de 250 % de vitesse"
+check_key = &"win_above_speed"
 params = {
-"key": "build_wall"
+"pct": 250
 }
 
 [sub_resource type="Resource" id="Resource_gibdu"]
@@ -74,7 +80,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_hb77b"]
+[sub_resource type="Resource" id="Resource_6wclg"]
 script = ExtResource("17_smbsg")
 id = &"w1"
 duration = 26.0
@@ -111,7 +117,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_elxgn"]
+[sub_resource type="Resource" id="Resource_01qir"]
 script = ExtResource("17_smbsg")
 id = &"w1_miniboss"
 duration = 30.0
@@ -134,7 +140,7 @@ count = 6
 spawn_delay = 1.2
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_vs6mp"]
+[sub_resource type="Resource" id="Resource_8t5s7"]
 script = ExtResource("17_smbsg")
 id = &"w1_boss"
 duration = 40.0
@@ -155,10 +161,10 @@ intro_story = &"lvl_01_intro"
 outro_story = &"lvl_01_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("17_smbsg")]([SubResource("Resource_hb77b"), SubResource("Resource_elxgn"), SubResource("Resource_vs6mp")])
+waves = Array[ExtResource("17_smbsg")]([SubResource("Resource_6wclg"), SubResource("Resource_01qir"), SubResource("Resource_8t5s7")])
 enemy_pool = Array[ExtResource("1_vmxm3")]([ExtResource("2_4lqvx"), ExtResource("3_8wkm5"), ExtResource("4_67x60"), ExtResource("5_ckexf"), ExtResource("6_6vmxt"), ExtResource("7_6vmxt"), ExtResource("8_07mnm"), ExtResource("9_hb77b"), ExtResource("7_07mnm"), ExtResource("8_hb77b")])
 exploration_deck = Array[ExtResource("9_elxgn")]([ExtResource("10_vs6mp"), ExtResource("10_vs6mp"), ExtResource("10_vs6mp"), ExtResource("10_vs6mp"), ExtResource("11_jmste"), ExtResource("11_jmste"), ExtResource("11_jmste"), ExtResource("12_mjm5p"), ExtResource("12_mjm5p"), ExtResource("13_31cm4"), ExtResource("13_31cm4"), ExtResource("14_8wkm5"), ExtResource("14_8wkm5"), ExtResource("15_67x60"), ExtResource("15_67x60")])
-objectives = Array[ExtResource("15_01qir")]([SubResource("Resource_ckexf"), SubResource("Resource_6vmxt"), SubResource("Resource_07mnm")])
-levelup_cards = Array[ExtResource("9_elxgn")]([])
-objective_rewards = Array[ExtResource("9_elxgn")]([])
+objectives = Array[ExtResource("15_01qir")]([SubResource("Resource_jmste"), SubResource("Resource_mjm5p"), SubResource("Resource_31cm4")])
+levelup_cards = Array[ExtResource("9_elxgn")]([ExtResource("19_jmste"), ExtResource("20_mjm5p"), ExtResource("21_31cm4")])
+objective_rewards = Array[ExtResource("9_elxgn")]([ExtResource("22_6wclg"), ExtResource("23_01qir"), ExtResource("24_8t5s7")])
 next_levels = Array[StringName]([&"lvl_02"])

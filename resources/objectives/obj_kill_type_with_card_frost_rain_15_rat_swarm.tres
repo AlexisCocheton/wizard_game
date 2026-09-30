@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_xo43f"]
+
+[resource]
+script = ExtResource("1_xo43f")
+id = &"obj_kill_type_with_card_frost_rain_15_rat_swarm"
+description = "Oiseau mirage : en tuer 15 avec Pluie de givre"
+check_key = &"kill_type_with_card"
+params = {
+"card": "frost_rain",
+"count": 15,
+"enemy": "rat_swarm"
+}

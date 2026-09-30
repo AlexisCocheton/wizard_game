@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_xox3b"]
+
+[resource]
+script = ExtResource("1_xox3b")
+id = &"obj_hit_from_sleepy_fox"
+description = "Renard dormeur : gagner apres en avoir ete touche"
+check_key = &"hit_from"
+params = {
+"enemy": "sleepy_fox"
+}
