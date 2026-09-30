@@ -370,6 +370,12 @@ func _test_le_grimoire_et_le_deck_cachent_l_invisible() -> void:
 			not_ok(GalleryPanel.is_known(c), "%s n y est pas comptee obtenue" % c.id)
 	ok(vu_obtenable, "un profil neuf a deja des cartes a obtenir")
 	# ORDRE : les obtenues d abord, les grisees ensuite (retouche du 30/09).
+	# Une LEGENDAIRE obtenue (rarete la plus haute) : trier tout ensemble par
+	# rarete la placerait APRES les grisees, c est ce que ce test doit voir.
+	var legendaire: SpellCard = _sorts(GameEnums.Rarity.LEGENDARY)[0]
+	SaveData.discover_card(legendaire.id)
+	sorts = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
+	ok(sorts.has(legendaire), "la legendaire obtenue est au grimoire")
 	var vu_grisee: bool = false
 	for c4: SpellCard in sorts:
 		var obtenue: bool = SaveData.is_discovered(c4.id)
