@@ -63,6 +63,38 @@ d autres processus Godot tournent mesure une machine chargee, pas le jeu.
   en phase, et reste visible en transparence.
 - Le **niveau 2 envoyait le double de PV** du niveau 1 avec le meme deck.
 
+- Un **Berserker s enrageait a chaque frame** passee dans une zone de degats
+  (la zone frappe a chaque image) : rage maximale en un cinquieme de seconde.
+  La rage se compte maintenant au plus une fois par `Enemy.ENRAGE_HIT_INTERVAL`
+  (lvl_11 : 44 -> 73 victoires sur 90).
+
+## Le bot du banc (chantier W7)
+
+Le banc joue avec un bot qui doit ressembler a un joueur RAISONNABLE, pas a un
+joueur parfait. Ses choix vivent dans `scripts/game/auto_pick.gd` (`AutoPick` ; les parties
+headless des tests les utilisent aussi) et dans `_try_play` du banc :
+
+| Choix | Regle | Pourquoi |
+|---|---|---|
+| Amelioration de sort | identite du sort en forte, sinon vitesse forte, sinon identite legere, sinon la premiere | l offre est melangee : "la premiere" etait une voie au hasard (lvl_16 43 -> 59 / 90) |
+| Carte a la montee de niveau | la premiere proposee, sauf si les monstres deja croises la resistent | chaque case est un tirage du pool ; "sort qui frappe puis rarete" coutait 11 a 21 points (deck referme sur une carte) |
+| Cible | le monstre le plus avance que le halo d un Gardien-totem ne protege pas | viser un monstre intouchable videait la main sur la cour des rois morts (lvl_20 29 -> 59 / 90) |
+
+Options (apres `--`) : `--niveaux=lvl_16,lvl_20`, `--parties=60`,
+`--massacre=0`, `--graine=30` (decale les graines), `--premiere` (ancien bot,
+ou `--premiere=cartes` / `=ameliorations`), `--visee-naive`, `--sans-vagues`.
+Plusieurs bancs peuvent tourner en parallele sur des niveaux differents.
+
+**Le Massacre depend du profil.** Hors campagne, le pool de montee de niveau est
+fait des cartes OBTENUES. Le banc complet mesure le Massacre APRES avoir joue
+les 21 niveaux, avec les cartes que le bot y a prises (13,4 vagues avant W7) ;
+lance seul (`--niveaux=none`), il part d un profil neuf et le pool est vide
+(7,7 vagues). Comparer deux Massacres mesures de la meme facon.
+
+Le rapport par niveau donne aussi : vitesse retiree par source (cumul et par
+vague), vague de la mort, cartes et ameliorations prises, temps pour abattre
+le boss, et l adequation du deck au lieu (facteur moyen pondere par les PV).
+
 Les garde-fous sont dans `tests/unit/test_balance.gd` : ils verrouillent les
 rapports (pas de saut superieur a x2 entre deux vagues, enchainement des niveaux,
 pioche suffisante). Le banc reste la mesure de verite.

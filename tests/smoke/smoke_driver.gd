@@ -1175,7 +1175,7 @@ func _tuile_visible(panel: DeckPanel) -> Button:
 ## L ecran d AMELIORATION, pose sur un vrai combat.
 ##
 ## Pourquoi il faut le forcer : en headless `GameController` tranche tout de
-## suite (`pick_upgrade(0)`) pour ne pas bloquer le banc, donc le panneau ne
+## suite (`AutoPick.upgrade_index`) pour ne pas bloquer le banc, donc le panneau ne
 ## s affiche JAMAIS dans une partie de test. Sans ce controle, le seul regard
 ## porte sur lui venait de `tools/make_upgrades`, qui le pose sur un fond neutre
 ## — on ne pouvait donc pas juger ce que le joueur voit reellement : un voile

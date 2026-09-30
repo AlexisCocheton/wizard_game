@@ -68,6 +68,7 @@ func run() -> void:
 	_test_division()
 	_test_bouclier_premier_coup()
 	_test_enrage()
+	_test_enrage_ne_depend_pas_des_images()
 	_test_aura_protectrice()
 	_test_soigneur()
 	_test_glouton()
@@ -141,10 +142,13 @@ func _test_enrage() -> void:
 	d.enrage_cap = 0.5
 	var e: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 300.0))
 	feq(e.enrage_bonus(), 0.0, "pas enrage au depart")
+	# Deux coups SEPARES (une incantation dure plus que l intervalle de rage).
 	e.take_damage(1.0, [])
+	e.advance(Enemy.ENRAGE_HIT_INTERVAL)
 	e.take_damage(1.0, [])
 	feq(e.enrage_bonus(), 0.4, "+20 pourcent par coup")
 	for i in 10:
+		e.advance(Enemy.ENRAGE_HIT_INTERVAL)
 		e.take_damage(1.0, [])
 	feq(e.enrage_bonus(), 0.5, "plafonne au cap")
 	# Le test porte sur le RAPPORT, pas sur une distance absolue : GameConfig
@@ -153,6 +157,32 @@ func _test_enrage() -> void:
 	e.advance(1.0)
 	var attendu: float = 60.0 * GameConfig.ENEMY_SPEED_SCALE * 1.5
 	feq(e.position.y - y0, attendu, "enrage a fond : la vitesse est multipliee par 1.5")
+
+
+## Une ZONE inflige ses degats a chaque frame (Battlefield._simulate_zones). La
+## rage se comptait par appel : un Berserker qui traversait une Nappe de braise
+## etait au maximum en un cinquieme de seconde, et deux fois plus vite a 120 images
+## par seconde qu a 60. La meme seconde de zone doit enrager pareil quelle que
+## soit la cadence, et loin du plafond.
+func _test_enrage_ne_depend_pas_des_images() -> void:
+	var rages: Array[float] = []
+	var d := _def("berserk_zone", 1000.0, 60.0)
+	d.enrage_speed_pct = 20.0
+	d.enrage_cap = 5.0
+	for images in [30, 60, 120]:
+		_fresh()
+		var e: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 300.0))
+		var pas: float = 1.0 / float(images)
+		for i in images:
+			e.take_damage(0.1, [])
+			e.advance(pas)
+		rages.append(e.enrage_bonus())
+	var un_coup: float = d.enrage_speed_pct * 0.01
+	for r in rages:
+		ok(absf(r - rages[0]) <= un_coup + 0.0001,
+			"une seconde de zone enrage pareil a toute cadence (%.2f contre %.2f)" % [r, rages[0]])
+		ok(r <= un_coup * ceilf(1.0 / Enemy.ENRAGE_HIT_INTERVAL) + 0.0001,
+			"une seconde de zone ne vaut pas plus de coups que l intervalle n en permet (%.2f)" % r)
 
 
 func _test_aura_protectrice() -> void:

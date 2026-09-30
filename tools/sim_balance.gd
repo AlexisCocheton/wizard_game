@@ -8,6 +8,19 @@ extends Node
 ## a tenir, un joueur humain ne le tiendra pas non plus.
 ##
 ## Usage : Godot --headless --path . tools/sim_balance.tscn
+##
+## Options, apres `--` (toutes facultatives) :
+##   --niveaux=lvl_16,lvl_20   ne mesurer que ces niveaux (defaut : tous)
+##   --parties=60              parties par niveau (defaut : 30)
+##   --massacre=20             parties de Massacre (0 : aucune ; defaut : 20)
+##   --premiere                l ANCIEN bot : toujours la premiere option
+##   --premiere=cartes         ... pour les cartes seulement (ou =ameliorations)
+##   --graine=1000             decale les graines (bancs paralleles d un niveau)
+##   --visee-naive             vise aussi les monstres proteges par un halo
+##   --sans-vagues             sans le releve du contenu des vagues
+## Plusieurs bancs peuvent tourner en parallele sur des niveaux differents : le
+## pas de temps est FIXE et les graines aussi, la charge de la machine change la
+## duree du banc, pas son resultat.
 
 const FIXED_DELTA: float = 1.0 / 60.0
 ## Garde-fou anti-blocage, pas une limite de jeu. Une partie qui l atteint est
@@ -76,15 +89,51 @@ var _killed: int = 0
 
 func _ready() -> void:
 	await get_tree().process_frame
+	var opts: Dictionary = _options()
+	var premiere: String = String(opts.get("premiere", ""))
+	if opts.get("premiere", "") is bool:
+		premiere = "tout"
+	AutoPick.first_upgrade = premiere in ["tout", "ameliorations"]
+	AutoPick.first_offer = premiere in ["tout", "cartes"]
+	_graine = int(opts.get("graine", 0))
+	_visee_naive = opts.has("visee-naive")
 	print("=== BANC D EQUILIBRAGE ===")
-	_report_waves()
+	print("  choix automatiques : ameliorations %s, cartes %s"
+		% ["PREMIERE option" if AutoPick.first_upgrade else "regle AutoPick",
+			"PREMIERE option" if AutoPick.first_offer else "regle AutoPick"])
+	if not opts.has("sans-vagues"):
+		_report_waves()
+	var niveaux: Array[String] = _levels()
+	if opts.has("niveaux"):
+		niveaux.assign(Array(String(opts["niveaux"]).split(",", false)))
+	var parties: int = int(opts.get("parties", 30))
 	# Une seule partie ne prouve rien : le tirage des cartes et la composition des
 	# vagues varient. On mesure un TAUX DE REUSSITE sur plusieurs graines.
-	for level_id in _levels():
-		await _run_level_many(StringName(level_id), 30)
-	await _run_massacre_many(20)
+	for level_id in niveaux:
+		await _run_level_many(StringName(level_id), parties)
+	var massacre: int = int(opts.get("massacre", 20))
+	if massacre > 0:
+		await _run_massacre_many(massacre)
 	print("=== FIN ===")
 	get_tree().quit(0)
+
+
+## Decalage des graines (--graine) : deux bancs paralleles du meme niveau ne
+## rejouent pas les memes tirages.
+var _graine: int = 0
+
+
+## Options de la ligne de commande (apres `--`) : {nom -> valeur ou true}.
+func _options() -> Dictionary:
+	var out: Dictionary = {}
+	for a in OS.get_cmdline_user_args():
+		var t: String = String(a).trim_prefix("--")
+		var i: int = t.find("=")
+		if i < 0:
+			out[t] = true
+		else:
+			out[t.substr(0, i)] = t.substr(i + 1)
+	return out
 
 
 ## Ce que chaque vague envoie, avant meme de jouer.
@@ -111,6 +160,31 @@ func _report_waves() -> void:
 				hp += entry.enemy.max_hp * corps * wave.difficulty
 			print("    %-14s puissance %3d, %2d monstres, %5.0f PV cumules, %.0f s"
 				% [wave.id, power, count, hp, wave.duration])
+		_report_deck_fit(level)
+
+
+## ADEQUATION DU DECK AU LIEU : pour chaque carte du deck de campagne, le facteur
+## de degats moyen contre les monstres des vagues, pondere par leurs PV. Depuis
+## que la resistance coute double (degats ET effets, vague 5), un deck qui ne
+## repond plus a son lieu se lit ici avant de se lire dans le taux de victoire.
+func _report_deck_fit(level: LevelDef) -> void:
+	var vus: Dictionary = {}
+	var parts: Array[String] = []
+	for c: SpellCard in level.exploration_deck:
+		if c == null or c.is_passive or vus.has(c.id):
+			continue
+		vus[c.id] = true
+		var somme: float = 0.0
+		var poids: float = 0.0
+		for wave: WaveDef in level.waves:
+			for entry: WaveEntry in wave.entries:
+				if entry.enemy == null:
+					continue
+				var pv: float = entry.enemy.max_hp * entry.count * maxi(1, entry.enemy.swarm_count)
+				somme += entry.enemy.resistance_to_tags(c.tags) * pv
+				poids += pv
+		parts.append("%s %.2f" % [c.id, somme / maxf(poids, 1.0)])
+	print("      deck contre le lieu (facteur moyen pondere par les PV) : " + ", ".join(parts))
 
 
 ## Rejoue le meme niveau avec des graines differentes et resume.
@@ -124,21 +198,46 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 	## 26 septembre : les deux nombres n en font plus qu un.
 	var pv: Array[int] = []
 	# AMELIORATIONS PRISES, par voie. En headless GameController tranche seul
-	# (la PREMIERE voie proposee, comme un joueur qui ne lit pas) : sans ce
+	# (AutoPick.upgrade_index, la regle d un joueur raisonnable) : sans ce
 	# releve, on ne savait pas si le banc mesurait des sorts ameliores ni
 	# lesquels, et un ecart de taux ne se rattachait a rien.
 	_prises.clear()
+	_cartes_prises.clear()
 	if not RunState.upgrade_taken.is_connected(_on_upgrade_taken):
 		RunState.upgrade_taken.connect(_on_upgrade_taken)
+	# CUMULS sur toutes les parties du niveau : une partie seule ne dit pas ce
+	# qui tue, trente le disent. Vitesse retiree par source, vague de la mort,
+	# temps d incantation, interception, et le temps pour abattre le boss.
+	var src_total: Dictionary = {}
+	var morts_par_vague: Dictionary = {}
+	var incant: float = 0.0
+	var duree: float = 0.0
+	var tues: int = 0
+	var passes: int = 0
+	var boss_temps: Array[float] = []
+	var boss_vus: int = 0
+	_src_par_vague = {}
 	for i in runs:
 		var g: GameController = _make_game()
-		RunState.set_seed(1000 + i * 37)
+		RunState.set_seed(1000 + (_graine + i) * 37)
 		g.start_level(level, GameEnums.Mode.EXPLORATION)
 		var st: Dictionary = _play(g)
 		if not st["mort"]:
 			wins += 1
 			pv.append(st["vitesse"])
+		else:
+			morts_par_vague[st["vague"]] = int(morts_par_vague.get(st["vague"], 0)) + 1
 		vagues.append(st["vague"])
+		for k in st["degats_par_source"]:
+			src_total[k] = int(src_total.get(k, 0)) + int(st["degats_par_source"][k])
+		incant += st["temps_incantation"]
+		duree += st["temps"]
+		tues += st["tues"]
+		passes += st["passes"]
+		if st["boss_apparu"] >= 0.0:
+			boss_vus += 1
+			if st["boss_abattu"] >= 0.0:
+				boss_temps.append(st["boss_abattu"] - st["boss_apparu"])
 		_drop_game(g)
 		await get_tree().process_frame
 	var moy: float = 0.0
@@ -161,6 +260,49 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 		parts.append("%s x%d" % [k, int(_prises[k])])
 	print("    ameliorations prises : %d (%.1f par partie) : %s"
 		% [total, float(total) / maxf(runs, 1), ", ".join(parts)])
+	print("    cartes prises a la montee : " + _top(_cartes_prises, 8))
+	print("    vitesse retiree par source (cumul) : " + _top(src_total, 6))
+	var vk: Array = _src_par_vague.keys()
+	vk.sort()
+	for v in vk:
+		print("      en vague %d : %s" % [int(v) + 1, _top(_src_par_vague[v], 4)])
+	var mv: Array = morts_par_vague.keys()
+	mv.sort()
+	var mparts: Array[String] = []
+	for k in mv:
+		mparts.append("v%d x%d" % [int(k) + 1, morts_par_vague[k]])
+	print("    morts par vague : " + (", ".join(mparts) if not mparts.is_empty() else "aucune"))
+	print("    incantation %.0f %% du temps, interception %.0f %%"
+		% [100.0 * incant / maxf(duree, 0.01), 100.0 * tues / maxf(tues + passes, 1.0)])
+	if boss_vus > 0:
+		var bt: float = 0.0
+		for x in boss_temps:
+			bt += x
+		print("    boss : abattu %d fois sur %d apparitions, en %.1f s en moyenne"
+			% [boss_temps.size(), boss_vus, bt / maxf(boss_temps.size(), 1)])
+
+
+## Les `n` plus grosses entrees d un compteur {nom -> nombre}, decroissant.
+func _top(d: Dictionary, n: int) -> String:
+	var cles: Array = d.keys()
+	cles.sort_custom(func(a: Variant, b: Variant) -> bool: return int(d[a]) > int(d[b]))
+	var parts: Array[String] = []
+	for k in cles.slice(0, n):
+		parts.append("%s %d" % [k, int(d[k])])
+	return ", ".join(parts) if not parts.is_empty() else "rien"
+
+
+## Cartes prises a la montee de niveau pendant les parties d un niveau.
+var _cartes_prises: Dictionary = {}
+## Vitesse retiree par VAGUE puis par source, cumulee sur les parties d un
+## niveau : {vague -> {source -> vitesse}}. Dit QUELLE vague tue, et avec quoi.
+var _src_par_vague: Dictionary = {}
+## Monstres DEJA croises dans la partie en cours : ce qu un joueur a vu a l ecran,
+## seule information que le choix automatique des cartes a le droit de lire.
+var _vus: Dictionary = {}
+var _boss_apparu: float = -1.0
+var _boss_abattu: float = -1.0
+var _t: float = 0.0
 
 
 ## Voies retenues pendant les parties d un niveau : {id de voie -> nombre}.
@@ -175,6 +317,13 @@ func _on_upgrade_taken(_card: SpellCard, path: Dictionary) -> void:
 ## `plafond_vagues` borne la partie : une partie qui l atteint n est PAS morte,
 ## elle a survecu a la mesure. Les compter a part evite de lire "vague 30" comme
 ## une difficulte alors que c est une absence de difficulte.
+##
+## LE RESULTAT DEPEND DU PROFIL. Hors campagne, le pool de montee de niveau est
+## fait des cartes OBTENUES (RunState.levelup_pool). Apres les 21 niveaux, le
+## profil (en memoire, jamais ecrit en headless) contient ce que le bot y a pris ;
+## lance seul (--niveaux=none), le Massacre part d un profil neuf, sans aucune
+## carte a proposer. Mesure : 13,4 vagues dans le premier cas, 7,7 dans le second,
+## au meme code. Ne comparer que deux Massacres mesures de la meme facon.
 func _run_massacre_many(runs: int, plafond_vagues: int = 30) -> void:
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
 	if level == null:
@@ -182,7 +331,7 @@ func _run_massacre_many(runs: int, plafond_vagues: int = 30) -> void:
 	var vagues: Array[int] = []
 	for i in runs:
 		var g: GameController = _make_game()
-		RunState.set_seed(2000 + i * 53)
+		RunState.set_seed(2000 + (_graine + i) * 53)
 		g.start_level(level, GameEnums.Mode.INFINITE)
 		var st: Dictionary = _play(g, plafond_vagues)
 		vagues.append(st["vague"])
@@ -293,6 +442,10 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 	_dmg_by_enemy = {}
 	_passed = 0
 	_killed = 0
+	_vus = {}
+	_boss_apparu = -1.0
+	_boss_abattu = -1.0
+	_t = 0.0
 	if not g.battlefield.enemy_killed.is_connected(_on_enemy_killed):
 		g.battlefield.enemy_killed.connect(_on_enemy_killed)
 	if not g.battlefield.mage_hit.is_connected(_on_mage_hit):
@@ -319,6 +472,12 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 
 		if SpeedGauge.speed_percent < before_hp:
 			hits += 1
+		_t = t
+		for e in g.battlefield.enemies:
+			if e != null and is_instance_valid(e) and e.definition != null:
+				_vus[e.definition.id] = e.definition
+				if _boss_apparu < 0.0 and e.definition.kind == GameEnums.EnemyKind.BOSS:
+					_boss_apparu = t
 		max_enemies = maxi(max_enemies, g.battlefield.enemies.size())
 		_alive_sum += g.battlefield.enemies.size()
 		_samples += 1
@@ -337,7 +496,10 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 				cards_missed += 1
 
 		if RunState.pending_offer.size() > 0:
-			RunState.pick_offer(0)
+			var k: int = AutoPick.offer_index(RunState.pending_offer, _vus.values())
+			var prise: SpellCard = RunState.pending_offer[k]
+			_cartes_prises[String(prise.id)] = int(_cartes_prises.get(String(prise.id), 0)) + 1
+			RunState.pick_offer(k)
 		if SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0:
 			break
 		if g.spawner.is_finished():
@@ -359,6 +521,7 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 		# n est pas une victoire : elle ne compte pas comme un succes.
 		"mort": (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0) or not fini,
 		"fini": fini, "vitesse_par_vague": hp_at,
+		"boss_apparu": _boss_apparu, "boss_abattu": _boss_abattu,
 	}
 
 
@@ -367,8 +530,10 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 ## La partie observee, pour le repli d attribution d un coup sans source.
 var _watch: GameController = null
 
-func _on_enemy_killed(_def: EnemyDef) -> void:
+func _on_enemy_killed(def: EnemyDef) -> void:
 	_killed += 1
+	if def != null and def.kind == GameEnums.EnemyKind.BOSS and _boss_abattu < 0.0:
+		_boss_abattu = _t
 
 
 func _on_mage_hit(dmg: int, source: EnemyDef = null) -> void:
@@ -390,7 +555,28 @@ func _on_mage_hit(dmg: int, source: EnemyDef = null) -> void:
 					nom = "sans source (%s)" % (String(e.definition.id) if e.definition != null else "?")
 	_by_enemy[nom] = int(_by_enemy.get(nom, 0)) + 1
 	_dmg_by_enemy[nom] = int(_dmg_by_enemy.get(nom, 0)) + dmg
+	var v: int = RunState.wave_index
+	if not _src_par_vague.has(v):
+		_src_par_vague[v] = {}
+	_src_par_vague[v][nom] = int(_src_par_vague[v].get(nom, 0)) + dmg
 	_passed += 1
+
+
+## Le monstre peut-il prendre des degats, a ce qu en voit le joueur ?
+##
+## Un monstre dans le HALO d un Gardien-totem est intouchable (Battlefield.
+## is_shielded_by_aura) et le halo est dessine a l ecran. Le bot visait pourtant
+## le plus avance, protege ou non : sur la cour des rois morts, dont toute la
+## lecon est « abats d abord celui qui protege », il vidait sa main sur des
+## monstres intouchables pendant que le totem avancait. C est l erreur qu un
+## joueur fait une fois. `--visee-naive` rend l ancien comportement, pour mesurer.
+func _touchable(g: GameController, e: Enemy) -> bool:
+	if e == null or not is_instance_valid(e) or e.hp <= 0.0:
+		return false
+	return _visee_naive or not g.battlefield.is_shielded_by_aura(e)
+
+
+var _visee_naive: bool = false
 
 
 func _try_play(g: GameController) -> bool:
@@ -398,10 +584,19 @@ func _try_play(g: GameController) -> bool:
 		return false
 	var cible: Enemy = null
 	var y_max: float = -1e9
-	for e in g.battlefield.enemies:
-		if e != null and is_instance_valid(e) and e.hp > 0.0 and e.position.y > y_max:
-			y_max = e.position.y
-			cible = e
+	# Le plus avance des monstres TOUCHABLES ; a defaut (tous proteges), le plus
+	# avance tout court.
+	for passe in 2:
+		for e in g.battlefield.enemies:
+			if e == null or not is_instance_valid(e) or e.hp <= 0.0:
+				continue
+			if passe == 0 and not _touchable(g, e):
+				continue
+			if e.position.y > y_max:
+				y_max = e.position.y
+				cible = e
+		if cible != null:
+			break
 	if cible == null:
 		return false
 	for card: SpellCard in RunState.hand.duplicate():
@@ -428,11 +623,11 @@ func _best_cluster(g: GameController, radius: float, defaut: Vector2) -> Vector2
 	var best: Vector2 = defaut
 	var best_n: int = 0
 	for e in g.battlefield.enemies:
-		if e == null or not is_instance_valid(e) or e.hp <= 0.0:
+		if not _touchable(g, e):
 			continue
 		var n: int = 0
 		for o in g.battlefield.enemies:
-			if o != null and is_instance_valid(o) and o.hp > 0.0 					and o.position.distance_to(e.position) <= radius:
+			if _touchable(g, o) and o.position.distance_to(e.position) <= radius:
 				n += 1
 		# A nombre egal, on prefere le groupe le plus avance.
 		if n > best_n or (n == best_n and e.position.y > best.y):

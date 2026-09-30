@@ -339,11 +339,12 @@ func _on_upgrade_ready(card: SpellCard, paths: Array) -> void:
 		# sur 30 aux SEPT niveaux, toutes les parties mourant sur le garde-fou de
 		# 900 s. Le choix doit donc etre tranche ici, tout de suite.
 		#
-		# On prend la voie que prendrait un joueur qui ne veut pas reflechir :
-		# LA PREMIERE. Ce n est pas un choix optimal, et c est voulu — le banc
-		# doit mesurer ce que le systeme donne a un joueur ordinaire, pas ce
-		# qu un joueur parfait en tirerait.
-		RunState.pick_upgrade(0)
+		# On prend la voie que prendrait un joueur RAISONNABLE (AutoPick) :
+		# l identite du sort en forme forte, sinon la vitesse. Ce n etait plus
+		# "la premiere" depuis que l offre est tiree et melangee : la premiere
+		# etait une voie au hasard, et le banc mesurait un joueur qui choisit
+		# a pile ou face (lvl_16 : 25 -> 14 victoires sur 30, jeu inchange).
+		RunState.pick_upgrade(AutoPick.upgrade_index(card, paths))
 		return
 	var panel: CardUpgradePanel = _ensure_upgrade_panel()
 	panel.show_paths(card, paths)
