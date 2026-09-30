@@ -24,8 +24,8 @@ func run() -> void:
 	_test_la_main_tient_pleine()
 	_test_le_nom_de_main_ne_depasse_pas_deux_lignes()
 	_test_l_icone_corrige_l_occupation_de_la_case()
-	_test_l_encre_rare_se_lit_sur_tous_ses_papiers()
-	_test_l_encre_rare_reste_bleue()
+	_test_chaque_encre_se_lit_sur_tous_ses_papiers()
+	_test_les_encres_restent_distinctes()
 
 
 ## La police est le point le plus important du retour. Un fichier absent ferait
@@ -259,54 +259,75 @@ func _descendants(root: Node) -> Array[Node]:
 	return sortie
 
 
-## L ENCRE RARE (retouche du 30/09). Mesuree sur capture : 4,58:1 sur le papier
-## creme du briefing mais 4,08:1 sur la page du grimoire, sous le plancher du
-## projet. Et une carte RARE en main est imprimee sur un papier BLEUTE (le papier
-## multiplie par rarity_bg), le plus sombre des trois : le calcul la donnait a
-## 3,1:1. Les papiers sont LUS dans les textures du jeu, pas recopies ici : si un
-## papier change, ce test mesure le nouveau.
-func _test_l_encre_rare_se_lit_sur_tous_ses_papiers() -> void:
-	var encre: Color = UiTheme.rarity_ink(GameEnums.Rarity.RARE)
+## LES ENCRES DE RARETE (retouches du 30/09). Chaque encre se lit sur trois
+## papiers : le papier creme (briefing, victoire), la page du grimoire, et le
+## papier de SA carte en main ou en detail, teinte par rarity_bg — le plus sombre
+## des trois. Mesure sur capture avant correction : rare 4,08:1 sur le grimoire
+## et 3,05:1 en main, epique 3,36:1, commune 3,96:1 et legendaire 4,34:1 en
+## main, commune 4,19:1 sur le grimoire. Les papiers sont LUS dans les textures
+## du jeu, pas recopies ici : si un papier change, ce test mesure le nouveau.
+func _test_chaque_encre_se_lit_sur_tous_ses_papiers() -> void:
 	var creme: Color = _ton_du_papier("paper9")
 	var livre: Color = _ton_du_papier("book_page9")
 	ok(creme.a > 0.0 and livre.a > 0.0, "(les textures de papier se lisent)")
 	if creme.a <= 0.0 or livre.a <= 0.0:
 		return
-	var papiers: Dictionary = {
-		"papier creme": creme,
-		"page du grimoire": livre,
-		"papier d une carte rare en main": creme * UiTheme.rarity_bg(GameEnums.Rarity.RARE),
-	}
-	for nom in papiers:
-		var r: float = _ratio(encre, papiers[nom])
-		ok(r >= UiTheme.CONTRAST_MIN, "encre rare sur %s : %.2f:1 (plancher %.1f:1)"
-			% [nom, r, UiTheme.CONTRAST_MIN])
+	for r in _raretes():
+		var nom_r: String = GameEnums.rarity_name(r)
+		var encre: Color = UiTheme.rarity_ink(r)
+		var papiers: Dictionary = {
+			"papier creme": creme,
+			"page du grimoire": livre,
+			"papier de sa carte en main": creme * UiTheme.rarity_bg(r),
+		}
+		for nom in papiers:
+			var ratio: float = _ratio(encre, papiers[nom])
+			ok(ratio >= UiTheme.CONTRAST_MIN, "encre %s sur %s : %.2f:1 (plancher %.1f:1)"
+				% [nom_r, nom, ratio, UiTheme.CONTRAST_MIN])
 
 
-## Plus sombre, l encre rare doit rester LA RARE : un bleu, pas un gris (la
-## commune) ni un violet (l epique). Sa teinte est plus proche de celle du contour
-## rare que de celle de tout autre contour, et elle est plus saturee que l encre
-## commune. La rarete se lit aussi sans la couleur : l epaisseur du contour croit.
-func _test_l_encre_rare_reste_bleue() -> void:
-	var raretes: Array = [GameEnums.Rarity.COMMON, GameEnums.Rarity.RARE,
-		GameEnums.Rarity.EPIC, GameEnums.Rarity.LEGENDARY]
-	var encre: Color = UiTheme.rarity_ink(GameEnums.Rarity.RARE)
-	var la_plus_proche: int = -1
-	var ecart_min: float = INF
+## Assombries, les encres doivent rester DISTINCTES. La rarete GRISE est celle
+## dont le contour est le moins sature (deduite, pas nommee) : son encre doit
+## etre la moins saturee de toutes. Chaque autre encre garde la teinte de son
+## propre contour (la plus proche parmi les contours colores) et reste plus
+## saturee que l encre grise. Et la rarete se lit aussi sans la couleur :
+## l epaisseur du contour croit avec elle.
+func _test_les_encres_restent_distinctes() -> void:
+	var raretes: Array = _raretes()
+	var grise: int = raretes[0]
 	for r in raretes:
-		var e: float = _ecart_de_teinte(encre.h, UiTheme.rarity_color(r).h)
-		if e < ecart_min:
-			ecart_min = e
-			la_plus_proche = r
-	eq(la_plus_proche, GameEnums.Rarity.RARE,
-		"l encre rare a la teinte du contour rare (plus proche : %s)"
-		% GameEnums.rarity_name(la_plus_proche))
-	ok(encre.s > UiTheme.rarity_ink(GameEnums.Rarity.COMMON).s,
-		"l encre rare est plus saturee que la commune (un bleu, pas un gris)")
+		if UiTheme.rarity_color(r).s < UiTheme.rarity_color(grise).s:
+			grise = r
+	var encre_grise: Color = UiTheme.rarity_ink(grise)
+	for r in raretes:
+		if r == grise:
+			continue
+		var encre: Color = UiTheme.rarity_ink(r)
+		var nom_r: String = GameEnums.rarity_name(r)
+		ok(encre.s > encre_grise.s, "l encre %s (s=%.2f) est plus saturee que l encre %s (s=%.2f)"
+			% [nom_r, encre.s, GameEnums.rarity_name(grise), encre_grise.s])
+		var la_plus_proche: int = -1
+		var ecart_min: float = INF
+		for autre in raretes:
+			if autre == grise:
+				continue
+			var e: float = _ecart_de_teinte(encre.h, UiTheme.rarity_color(autre).h)
+			if e < ecart_min:
+				ecart_min = e
+				la_plus_proche = autre
+		eq(la_plus_proche, r, "l encre %s a la teinte de son contour (plus proche : %s)"
+			% [nom_r, GameEnums.rarity_name(la_plus_proche)])
 	for i in range(1, raretes.size()):
 		ok(UiTheme.rarity_border_width(raretes[i]) > UiTheme.rarity_border_width(raretes[i - 1]),
 			"le contour %s est plus epais que le contour %s"
 			% [GameEnums.rarity_name(raretes[i]), GameEnums.rarity_name(raretes[i - 1])])
+
+
+## Les raretes dans l ordre croissant de l enum.
+func _raretes() -> Array:
+	var out: Array = GameEnums.Rarity.values()
+	out.sort()
+	return out
 
 
 ## Ecart de teinte sur le cercle (h dans [0, 1]).
