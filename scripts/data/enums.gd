@@ -67,7 +67,36 @@ enum EnemyKind {
 ## Forme dessinee du monstre tant qu il n a pas de sprite.
 enum Shape { SQUARE, CIRCLE, TRIANGLE, DIAMOND, HEXAGON, CAPSULE, STAR }
 
-enum Mode { EXPLORATION, MASSACRE }
+## Les trois facons de jouer.
+##   EXPLORATION : le niveau de campagne, ses vagues ecrites, son deck impose.
+##   INFINITE    : "INFINI" a l ecran. UN niveau de campagne prolonge sans fin
+##                 (ses monstres, la descente a travers les cinq mondes), avec le
+##                 deck du joueur. S ouvre des que le niveau est debloque.
+##   MASSACRE    : l onglet MASSACRE du menu. Un niveau infini A PART, hors
+##                 campagne : les monstres de tous les niveaux melanges, les boss
+##                 de tout le jeu aux paliers (voir MassacreMode).
+##
+## INFINITE garde la valeur 1 de l ancien MASSACRE, qui designait deja le mode
+## infini par niveau : une valeur entiere retenue quelque part (charge utile de
+## scene, profil ancien) garde son sens. Le nouveau mode s ajoute EN FIN, pour la
+## meme raison que DamageTag et RewardKind.
+enum Mode { EXPLORATION, INFINITE, MASSACRE }
+
+
+## Vrai pour les deux modes sans fin : pas de vague finale, pas d objectifs,
+## pas d histoire, un record de vague. Un seul test plutot que deux comparaisons
+## recopiees partout, qui finiraient par oublier l un des deux modes.
+static func is_endless(mode: int) -> bool:
+	return mode == Mode.INFINITE or mode == Mode.MASSACRE
+
+
+## Nom du mode tel qu il s ecrit a l ecran.
+static func mode_name(mode: int) -> String:
+	match mode:
+		Mode.EXPLORATION: return "Exploration"
+		Mode.INFINITE: return "Infini"
+		Mode.MASSACRE: return "Massacre"
+	return "?"
 
 ## Recompenses de compte : COSMETIQUES uniquement. Ajouter ici un type qui
 ## donnerait de la puissance perimerait l equilibrage mesure des niveaux.

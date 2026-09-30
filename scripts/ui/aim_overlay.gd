@@ -67,13 +67,15 @@ func hide_aim() -> void:
 
 ## Lit le rayon / la largeur directement dans les effets de la carte :
 ## l apercu reflete les vraies valeurs, pas une estimation.
+## Via RunState.cast_specs et non `card.effects` : un sort ameliore en ZONE
+## s affichait avec son ancien rayon, et le joueur visait avec un cercle faux.
 func _read_shape() -> void:
 	zone_radius = 0.0
 	wall_half_width = 0.0
 	river = false
 	if card == null:
 		return
-	for spec in card.effects:
+	for spec in RunState.cast_specs(card):
 		if spec == null:
 			continue
 		if spec.key == &"terrain_river":

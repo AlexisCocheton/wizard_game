@@ -182,10 +182,13 @@ func _test_le_massacre_na_pas_dhistoire() -> void:
 	SaveData.reset_profile()
 	var avant: bool = SceneRouter.stories_enabled
 	SceneRouter.stories_enabled = true
-	eq(SceneRouter.stories_before_level(&"lvl_01", GameEnums.Mode.MASSACRE).size(), 0,
-		"le Massacre ne joue aucune intro")
-	eq(SceneRouter.story_outro_for(&"lvl_01", GameEnums.Mode.MASSACRE), &"",
-		"le Massacre ne joue aucune outro")
+	for m in [GameEnums.Mode.INFINITE, GameEnums.Mode.MASSACRE]:
+		eq(SceneRouter.stories_before_level(&"lvl_01", m).size(), 0,
+			"le mode %s ne joue aucune intro" % GameEnums.mode_name(m))
+		eq(SceneRouter.story_outro_for(&"lvl_01", m), &"",
+			"le mode %s ne joue aucune outro" % GameEnums.mode_name(m))
+	eq(SceneRouter.stories_before_level(MassacreMode.LEVEL_ID, GameEnums.Mode.MASSACRE).size(), 0,
+		"le niveau du Massacre n a pas d histoire")
 	SceneRouter.stories_enabled = avant
 	SaveData.reset_profile()
 

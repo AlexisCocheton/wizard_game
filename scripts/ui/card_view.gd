@@ -115,7 +115,7 @@ func _build_hand(box: VBoxContainer, c: SpellCard, width: float, height: float) 
 		var centre := HBoxContainer.new()
 		centre.alignment = BoxContainer.ALIGNMENT_CENTER
 		centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		centre.add_child(_with_type_badge(icone, c, taille))
+		centre.add_child(with_type_badge(icone, c, taille))
 		box.add_child(centre)
 
 	# Nom court, autowrap COUPE : c est ce repli qui produisait "Double
@@ -147,7 +147,7 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 		var centre := HBoxContainer.new()
 		centre.alignment = BoxContainer.ALIGNMENT_CENTER
 		centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		centre.add_child(_with_type_badge(icone, c, 84.0))
+		centre.add_child(with_type_badge(icone, c, 84.0))
 		# Le NOM du type, A COTE de l icone : c est en pause, carte en grand, que
 		# le joueur apprend a quoi correspond le logo pose dessus. A cote et non
 		# sur une ligne de plus : une ligne ajoutait ~47 px a des cartes de choix
@@ -194,13 +194,15 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 ## que les icones du pack laissent le plus souvent vide, et celui que l oeil lit
 ## en premier.
 ##
-## Taille : deux cinquiemes de l icone, jamais sous 32 px — en dessous la FORME du cadre,
+## Taille : la moitie de l icone, jamais sous 40 px (relu en capture : a 32 px le
+## sceau se lisait mal sur une carte de main) — en dessous la FORME du cadre,
 ## qui porte l information pour un joueur daltonien, ne se lit plus.
-const BADGE_RATIO: float = 0.42
-const BADGE_MIN: float = 32.0
+const BADGE_RATIO: float = 0.5
+const BADGE_MIN: float = 40.0
 
 
-func _with_type_badge(icone: TextureRect, c: SpellCard, taille: float) -> Control:
+## Statique : le grimoire pose le meme sceau sur ses vignettes.
+static func with_type_badge(icone: TextureRect, c: SpellCard, taille: float) -> Control:
 	var holder := Control.new()
 	holder.custom_minimum_size = Vector2(taille, taille)
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE

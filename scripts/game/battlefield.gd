@@ -92,12 +92,14 @@ func simulate(delta: float) -> void:
 		if e == null or not is_instance_valid(e) or e.is_dead():
 			continue
 		e.speed_scale = _global_slow_for(e) * buff
+		var obj_depart: Array = _obj_travel_begin(e)  # OBJECTIFS (enemy_travel)
 		e.advance(wd)
 		# COURANT : applique APRES le deplacement, et pas comme un facteur de
 		# vitesse. Un facteur ne peut que freiner (il tend vers zero) ; le
 		# courant, lui, doit pouvoir RENVERSER la descente, ce qui est toute la
 		# difference entre la nappe d eau et le Champ de givre.
 		_apply_current(e, wd)
+		_obj_travel_end(e, obj_depart)  # OBJECTIFS (enemy_travel)
 
 	# REGARD PETRIFIANT : releve APRES le tour des monstres, donc une gorgone
 	# morte pendant cette image a deja relache la main quand le HUD se
@@ -194,6 +196,8 @@ func _simulate_zones(wd: float) -> void:
 	for i in range(zones.size() - 1, -1, -1):
 		var z: Dictionary = zones[i]
 		z["time"] -= wd
+		# OBJECTIFS : la zone frappe au nom du lancer qui l a posee.
+		var obj_src_avant: Dictionary = RunState.swap_damage_source(z.get("src", {}))
 		for e in enemies.duplicate():
 			if not _targetable(e):
 				continue
@@ -203,6 +207,7 @@ func _simulate_zones(wd: float) -> void:
 				_hit(e, z["dps"] * wd, z["tags"])
 			if z["slow_pct"] > 0.0:
 				e.apply_slow(1.0 - z["slow_pct"] * 0.01, 0.4, z["tags"])
+		RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 		if z["time"] <= 0.0:
 			var vn: Node = z.get("node")
 			if vn != null and is_instance_valid(vn):
@@ -221,7 +226,10 @@ func _simulate_allies(wd: float) -> void:
 				# Le tir se voit partir de l allie : sans cela le joueur ne fait
 				# pas le lien entre l invocation et les degats.
 				Fx.projectile(self, a.get("pos", Vector2.ZERO), target.position, Fx.COL_SUMMON)
+				# OBJECTIFS : l allie frappe au nom du lancer qui l a invoque.
+				var obj_src_avant: Dictionary = RunState.swap_damage_source(a.get("src", {}))
 				_hit(target, a["damage"], [GameEnums.DamageTag.SUMMON])
+				RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 			a["cooldown"] = 1.0
 		if a["time"] <= 0.0:
 			var node: Node = a.get("node")
@@ -458,6 +466,7 @@ func _on_enemy_died(e: Enemy) -> void:
 		if not def.projectile and not e.is_reanimated():
 			RunState.gain_xp(def.base_xp)
 			enemy_killed.emit(def)
+			_obj_note_death(e, def)  # OBJECTIFS : lancer, carte, chemin
 		# Division / explosion : les enfants naissent la ou le parent est mort.
 		# PASSIF "Combustion" (le "fire boom" du testeur) : le monstre explose en
 		# mourant et blesse ses voisins. C est ici et pas dans un handler d effet
@@ -503,6 +512,9 @@ func _passive_death_blast(where: Vector2, rayon_mort: float) -> void:
 	var rayon: float = maxf(rayon_mort, 40.0) * 2.6
 	# Teinte de braise : l explosion doit se lire comme du feu, pas comme un sort.
 	Fx.impact(self, where, Color(1.0, 0.55, 0.15), rayon)
+	# OBJECTIFS : l explosion est celle du PASSIF, pas du sort qui a tue. Sans
+	# source, ses victimes ne sont creditees a aucune carte ni aucun lancer.
+	var obj_src_avant: Dictionary = RunState.swap_damage_source({})
 	_chain_depth += 1
 	# Copie : _hit() peut tuer, donc modifier `enemies` pendant l iteration.
 	for voisin in enemies_in_radius(where, rayon):
@@ -514,6 +526,7 @@ func _passive_death_blast(where: Vector2, rayon_mort: float) -> void:
 		var tags: Array = []
 		_hit(cible, degats, tags)
 	_chain_depth -= 1
+	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 
 
 ## RENVOI : conversion des degats de SORT en degats de MAGE, et plafond par coup.
@@ -787,6 +800,8 @@ func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
 		"vuln_mult": vuln_mult,
 		"tags": (card.tags if card != null else []) as Array,
 		"node": vis,
+		# OBJECTIFS : le lancer qui la pose, remis en place a chaque morsure.
+		"src": RunState.damage_source,
 	}
 	zones.append(z)
 	return z
@@ -832,7 +847,9 @@ func spawn_ally(duration: float, damage: float, at: Vector2 = Vector2.INF) -> vo
 	var node: Node = Fx.sprite(self, "magicbubbles", pos, 130.0, true,
 		Color(Fx.COL_SUMMON.r, Fx.COL_SUMMON.g, Fx.COL_SUMMON.b, 0.95))
 	allies.append({"time": duration, "damage": damage, "cooldown": 0.5,
-		"pos": pos, "node": node})
+		"pos": pos, "node": node,
+		# OBJECTIFS : le lancer qui l invoque (vide pour un allie de passif).
+		"src": RunState.damage_source})
 
 
 ## Pose un mur qui bloque le pathfinding pendant `duration` secondes.
@@ -1101,6 +1118,7 @@ func spawn_prop(kind: int, center: Vector2, duration: float, hp: float,
 	AudioBus.play_sfx(&"drip_frost" if kind == TerrainProp.Kind.WATER else &"wall")
 	props.append(p)
 	_anchor_prop(p)
+	p.set_meta(&"obj_src", RunState.damage_source)  # OBJECTIFS : allies d autel
 	return p
 
 
@@ -1380,7 +1398,10 @@ func _tick_generator(p: TerrainProp, wd: float) -> void:
 	if p.summon_timer > 0.0:
 		return
 	p.summon_timer += p.summon_every
+	# OBJECTIFS : l allie d un autel appartient au lancer qui a pose l autel.
+	var obj_src_avant: Dictionary = RunState.swap_damage_source(p.get_meta(&"obj_src", {}))
 	spawn_ally(p.summon_duration, p.summon_damage, p.position)
+	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 	Fx.impact(self, p.position, Fx.COL_SUMMON, 60.0)
 
 
@@ -1903,3 +1924,39 @@ func breaker_strike(e: Enemy, a: Node) -> bool:
 	a.call("destroy")
 	terrain_broken += 1
 	return true
+
+
+# =====================================================================
+# OBJECTIFS LIES AUX MONSTRES — chemin parcouru, morts attribuees
+#
+# Les regles sont en tete de objective_checker.gd (LANCER, CHEMIN) ; ici, les
+# seuls releves que Battlefield est le seul a voir.
+
+## Photo avant le deplacement de l image : position et nombre de retours dans
+## le temps deja faits (un retour de Chronos est un saut, pas un chemin).
+func _obj_travel_begin(e: Enemy) -> Array:
+	return [e.position, e.rewinds_done()]
+
+
+## Ajoute au compteur du monstre la distance couverte PENDANT son deplacement
+## (marche et courant). Les repousses et vortex agissent hors de cette fenetre,
+## ils ne comptent donc pas ; un retour dans le temps survenu dans la fenetre
+## est ecarte par son compteur.
+func _obj_travel_end(e: Enemy, depart: Array) -> void:
+	if e == null or not is_instance_valid(e) or depart.size() < 2:
+		return
+	if e.rewinds_done() != int(depart[1]):
+		return
+	var pas: float = e.position.distance_to(depart[0])
+	if pas <= 0.0:
+		return
+	e.set_meta(RunState.TRAVEL_META, float(e.get_meta(RunState.TRAVEL_META, 0.0)) + pas)
+
+
+## Une mort qui compte (memes morts que enemy_killed) : on la credite a la source
+## des degats en cours — le coup de grace vient de partir, dans cette meme pile
+## d appels — et on retient le chemin qu il avait fait.
+func _obj_note_death(e: Enemy, def: EnemyDef) -> void:
+	RunState.note_kill_by_source(def)
+	if e != null and is_instance_valid(e):
+		RunState.note_travel_at_death(def, float(e.get_meta(RunState.TRAVEL_META, 0.0)))

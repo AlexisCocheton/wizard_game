@@ -1,6 +1,9 @@
 class_name ObjectiveDef
 extends Resource
-## Un objectif optionnel de niveau. Les 3 objectifs debloquent la legendaire.
+## Un objectif optionnel de niveau. Reussi, il debloque une carte dans le pool
+## de montee de niveau de SON niveau : la carte et le rang (difficulte) sont
+## portes par LevelDef.objective_rewards, pas ici, parce qu un meme objectif est
+## partage par plusieurs niveaux (voir level_def.gd).
 
 @export var id: StringName = &""
 ## Note d auteur. Le joueur voit ObjectiveChecker.label(), GENERE depuis la cle

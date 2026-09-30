@@ -2888,7 +2888,6 @@ lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne.
 guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher \
 qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl.objectives = _objectifs_de(lvl.id)
-	lvl.legendary_reward = load("res://resources/cards/legendary/time_rift.tres")
 	_save(lvl, "res://resources/levels/lvl_01.tres")
 
 	# --- Niveau 2 : plus dense, plus rapide, le boss escorte ---
@@ -3136,7 +3135,6 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 		[C + "common/tidal_pool.tres", 1],
 	])
 	lvl2.objectives = _objectifs_de(lvl2.id)
-	lvl2.legendary_reward = load(C + "legendary/hourglass_shard.tres")
 	# CHANTIER N — le village mene maintenant a LA ROUTE DU MAIRE (`lvl_08`), qui
 	# est le troisieme niveau de l acte 1 dans docs/histoire.md. C est `lvl_09`,
 	# fin de l acte, qui rendra la main a l acte 2 en `lvl_03`. Le numero ne suit
@@ -3364,7 +3362,6 @@ func _acte_2(C: String, E: String) -> void:
 		[C + "epic/blight_sapling.tres", 1],
 	])
 	lvl3.objectives = _objectifs_de(lvl3.id)
-	lvl3.legendary_reward = load(C + "legendary/tide_ledger.tres")
 	lvl3.next_levels = [&"lvl_04"]
 	lvl3.act = 2
 	lvl3.subtitle = "Une administration, pas un cimetiere"
@@ -3533,7 +3530,6 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 		[C + "rare/bone_recall.tres", 1],
 	])
 	lvl4.objectives = _objectifs_de(lvl4.id)
-	lvl4.legendary_reward = load(C + "legendary/summoners_key.tres")
 	# PREMIERE FOURCHE de la campagne : la porte s ouvre sur deux entrees du monde
 	# demoniaque, equivalentes en difficulte mais opposees en nature.
 	# CHANTIER N2 — l acte 2 rend la main a `lvl_19`, LES FOSSES BASSES : le
@@ -3733,7 +3729,6 @@ func _acte_3(C: String, E: String) -> void:
 		[C + "common/frost_rain.tres", 2],
 	])
 	lvl5.objectives = _objectifs_de(lvl5.id)
-	lvl5.legendary_reward = load(C + "legendary/forge_dial.tres")
 	# CHANTIER N2 — la fourche retombe dans `lvl_21`, LE PENTACLE, qui ferme
 	# l acte 3 et ouvre seul les quatre grands demons de l acte 4. Elle sautait
 	# auparavant directement a `lvl_07`, ce qui donnait DEUX entrees dans
@@ -3911,7 +3906,6 @@ cadran, et ils ignorent qui la passe."
 		[C + "epic/thunder_root.tres", 1],
 	])
 	lvl6.objectives = _objectifs_de(lvl6.id)
-	lvl6.legendary_reward = load(C + "legendary/forge_dial.tres")
 	# Meme raison que pour `lvl_05` : les deux branches de la fourche se
 	# rejoignent devant le pentacle.
 	lvl6.next_levels = [&"lvl_21"]
@@ -4139,7 +4133,6 @@ func _acte_final(C: String, E: String) -> void:
 		[C + "epic/mirror_apprentice.tres", 2],
 	])
 	lvl7.objectives = _objectifs_de(lvl7.id)
-	lvl7.legendary_reward = load(C + "legendary/world_loom.tres")
 	# IL MENE AU PENTACLE, comme les trois autres grands demons, et a rien
 	# d autre. Ce niveau etait le cul-de-sac de la campagne ; il est desormais
 	# l une de ses quatre portes ouvertes en meme temps.
@@ -4293,7 +4286,6 @@ func _acte_1_suite(C: String, E: String) -> void:
 		[C + "epic/maelstrom.tres", 2],
 	])
 	lvl8.objectives = _objectifs_de(lvl8.id)
-	lvl8.legendary_reward = load(C + "legendary/hourglass_shard.tres")
 	lvl8.next_levels = [&"lvl_09"]
 	lvl8.act = 1
 	lvl8.subtitle = "Ce n est pas la foret qui est attaquee"
@@ -4435,7 +4427,6 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	lvl9.objectives = _objectifs_de(lvl9.id)
-	lvl9.legendary_reward = load(C + "legendary/time_rift.tres")
 	# L acte 1 debouche sur l acte 2, qui commence a `lvl_03` (Ossuaire des
 	# Marees). Le chainage suit les ACTES, pas les numeros : c est exactement le
 	# prix de la decision de ne pas renumeroter, et il est paye ici, en un
@@ -4600,7 +4591,6 @@ func _acte_2_suite(C: String, E: String) -> void:
 		[C + "rare/repulsion_wave.tres", 2],
 	])
 	lvl17.objectives = _objectifs_de(lvl17.id)
-	lvl17.legendary_reward = load(C + "legendary/twin_channeling.tres")
 	lvl17.next_levels = [&"lvl_18"]
 	lvl17.act = 2
 	lvl17.subtitle = "Le mur ne sert plus a rien"
@@ -4717,7 +4707,6 @@ atelier."
 		[C + "epic/weakness_mark.tres", 2],
 	])
 	lvl18.objectives = _objectifs_de(lvl18.id)
-	lvl18.legendary_reward = load(C + "legendary/echo_of_the_hand.tres")
 	# Le port rend la main a `lvl_03`, l ossuaire de bordure : c est le moment ou
 	# le document fait passer le fond de `act1_sky` a `act2_graveyard`.
 	lvl18.next_levels = [&"lvl_03"]
@@ -4902,7 +4891,6 @@ func _acte_3_suite(C: String, E: String) -> void:
 		[C + "epic/weakness_mark.tres", 2],
 	])
 	lvl19.objectives = _objectifs_de(lvl19.id)
-	lvl19.legendary_reward = load(C + "legendary/venom_mire.tres")
 	lvl19.next_levels = [&"lvl_20"]
 	lvl19.act = 3
 	lvl19.subtitle = "Ce qui remonte les barres de vie"
@@ -5017,7 +5005,6 @@ laisse une GARDE, et une garde ne protege pas un fuyard, elle retarde un poursui
 		[C + "epic/void_grip.tres", 2],
 	])
 	lvl20.objectives = _objectifs_de(lvl20.id)
-	lvl20.legendary_reward = load(C + "legendary/meteor_storm.tres")
 	# LA FOURCHE EXISTANTE. `lvl_05` (les Forges, des blindes) et `lvl_06` (la
 	# Cour brisee, des monstres a effets) etaient deja une fourche equilibree au
 	# banc : meme place dans la courbe, exigences opposees. Elle prend ici le
@@ -5177,7 +5164,6 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	lvl21.objectives = _objectifs_de(lvl21.id)
-	lvl21.legendary_reward = load(C + "legendary/summoners_key.tres")
 	# LE PORTAIL DE L ACTE 4, et le seul. Le document (section 6) veut les quatre
 	# grands demons ouverts d emblee : c est le pentacle de Tombol qui les ouvre,
 	# puisque c est par lui qu on descend.
@@ -5376,7 +5362,6 @@ func _acte_4_suite(C: String, E: String) -> void:
 		[C + "rare/about_face.tres", 1],
 	])
 	lvl10.objectives = _objectifs_de(lvl10.id)
-	lvl10.legendary_reward = load(C + "legendary/venom_mire.tres")
 	# CHACUN DES QUATRE DEMONS MENE AU PENTACLE, et a lui seul. Aucun ne cite un
 	# autre demon : c est ce qui rend l ordre libre.
 	lvl10.next_levels = [&"lvl_13"]
@@ -5500,7 +5485,6 @@ Gardien. Il n a jamais donne d ordre a personne : il en a recu un."
 		[C + "epic/deep_freeze.tres", 2],
 	])
 	lvl11.objectives = _objectifs_de(lvl11.id)
-	lvl11.legendary_reward = load(C + "legendary/forge_dial.tres")
 	lvl11.next_levels = [&"lvl_13"]
 	lvl11.act = 4
 	lvl11.subtitle = "Plus tu frappes, plus vite il vient"
@@ -5651,7 +5635,6 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 		[C + "rare/arcane_insight.tres", 1],
 	])
 	lvl12.objectives = _objectifs_de(lvl12.id)
-	lvl12.legendary_reward = load(C + "legendary/twin_channeling.tres")
 	lvl12.next_levels = [&"lvl_13"]
 	lvl12.act = 4
 	lvl12.subtitle = "Rien ne meurt tant que le cercle tient"
@@ -5856,7 +5839,6 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	lvl13.objectives = _objectifs_de(lvl13.id)
-	lvl13.legendary_reward = load(C + "legendary/world_loom.tres")
 	# LA SORTIE DE L ACTE 4 : l espace divin. Un seul niveau de l acte 4 ouvre
 	# l acte 5, et c est celui-la.
 	lvl13.next_levels = [&"lvl_14"]
@@ -6108,7 +6090,6 @@ func _acte_5(C: String, E: String) -> void:
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	lvl14.objectives = _objectifs_de(lvl14.id)
-	lvl14.legendary_reward = load(C + "legendary/echo_of_the_hand.tres")
 	lvl14.next_levels = [&"lvl_15"]
 	lvl14.act = 5
 	lvl14.subtitle = "Ce qui a deja ete efface, expose"
@@ -6304,7 +6285,6 @@ depuis le pentacle, et il marche devant."
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	lvl15.objectives = _objectifs_de(lvl15.id)
-	lvl15.legendary_reward = load(C + "legendary/tide_ledger.tres")
 	lvl15.next_levels = [&"lvl_16"]
 	lvl15.act = 5
 	lvl15.subtitle = "Ton nom y est, avec une date"
@@ -6496,7 +6476,6 @@ courir pour voir jusqu ou tu irais."
 	# LA DERNIERE RECOMPENSE DE LA CAMPAGNE. L Echo de la main : le sort qui
 	# rejoue ce qu on vient de lancer. Le mage scelle dans une boucle repart avec
 	# la carte qui repete — c est le seul cadeau que cette fin pouvait faire.
-	lvl16.legendary_reward = load(C + "legendary/summoners_key.tres")
 	# FIN DE LA CAMPAGNE. La liste est VIDE, et c est ce qui fait de ce niveau la
 	# derniere feuille du graphe : `test_campaign_acts` exige qu il n y en ait
 	# qu une et qu elle tombe dans l acte 5.

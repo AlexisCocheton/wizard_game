@@ -316,10 +316,58 @@ func _test_la_fiche_annonce_les_resistances() -> void:
 		for item in g["items"]:
 			ok(ElementIcons.texture_for_tag(int(item["tag"])) != null,
 				"chaque case de resistance a son logo (%d)" % int(item["tag"]))
+	# La ligne dit que la resistance vaut AUSSI pour les effets (retour du
+	# co-auteur : « je ne sais pas si c est fait »). Une faiblesse, elle, ne
+	# promet que des degats : elle ne renforce pas le controle.
+	var T := GameEnums.DamageTag
+	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("degats et effets"),
+		"une resistance annonce degats ET effets")
+	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("-50"), "chiffree")
+	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("Givre"), "l element est nomme a cote du logo")
+	not_ok(ElementIcons.effect_text(T.FIRE, 1.5).contains("effets"),
+		"une faiblesse ne promet pas d effets renforces")
+	ok(ElementIcons.effect_text(T.POISON, 0.0).contains("ni degats ni effets"),
+		"une immunite annonce qu aucun effet ne passe")
+	ok(ElementIcons.effect_text(T.SLOW, 0.0).contains("ralenti"),
+		"l immunite au ralentissement se dit en clair")
+	ok(BestiaryLore.RESIST_RULE_TEXT.contains("EFFETS"), "la regle est ecrite en tete du bloc")
+	_la_fiche_affiche_logos_et_regle()
 	# Plus de phrase en double dans les competences : le logo l a remplacee.
 	var lignes: Array[String] = BestiaryLore.behaviours(d)
 	not_ok(_contient(lignes, "Resiste :"), "la phrase de resistance n est plus ecrite")
 	not_ok(_contient(lignes, "resistances"), "aucun nom de champ technique ne fuit")
+
+
+## La VRAIE fiche du grimoire, construite : la regle en tete, une ligne a logo
+## par ecart. Sans ce test, la fiche pouvait revenir a la phrase sans que rien
+## ne rougisse — c est exactement ce que le co-auteur n a pas vu a l ecran.
+func _la_fiche_affiche_logos_et_regle() -> void:
+	var golem: EnemyDef = ContentDB.enemies.get(&"golem")
+	if golem == null:
+		return
+	var gp := GalleryPanel.new()
+	gp.size = Vector2(1000, 1500)
+	attach(gp)
+	gp.show_section(GalleryPanel.Section.BEASTS)
+	var idx: int = gp.entries().find(golem)
+	ok(idx >= 0, "le golem est au bestiaire")
+	gp.open_detail(idx)
+	ok(gp.find_child("ResistRule", true, false) != null, "la fiche ecrit la regle des effets")
+	var lignes: int = 0
+	for t in golem.resistances.keys():
+		var r: float = float(golem.resistances[t])
+		if is_equal_approx(r, 1.0):
+			continue
+		var ligne: Node = gp.find_child("Resist_%d" % int(t), true, false)
+		ok(ligne != null, "golem : l ecart %d a sa ligne" % int(t))
+		if ligne != null:
+			lignes += 1
+			var logo: bool = false
+			for c in ligne.get_children():
+				logo = logo or (c is TextureRect and (c as TextureRect).texture != null)
+			ok(logo, "golem : la ligne %d porte le logo de l element" % int(t))
+	ok(lignes >= 3, "le golem montre ses ecarts")
+	detach(gp)
 
 
 func _a_le_tag(items: Array, tag: int) -> bool:

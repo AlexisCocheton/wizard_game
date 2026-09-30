@@ -6,7 +6,11 @@ extends VBoxContainer
 ##      de l acte, avec les points des niveaux, leurs noms et leurs etoiles.
 ##      On change d acte avec les fleches de bord. C est l ecran d accueil.
 ##   2. LE DETAIL : exactement l ecran qui existait avant (nom, vagues, boss,
-##      objectifs, segment Exploration/Massacre, gros JOUER), plus un RETOUR.
+##      objectifs, segment Exploration/Infini, gros JOUER), plus un RETOUR.
+##
+## Le second bouton du segment s appelait MASSACRE et ne s ouvrait qu a la fin
+## de la campagne. Depuis le 29/09 c est l INFINI du niveau, ouvert des que le
+## niveau l est ; le Massacre est devenu un niveau a part, dans son onglet.
 ##
 ## POURQUOI garder le detail tel quel : le testeur a demande que le niveau
 ## « amene a une interface qui ressemble a l actuelle ». On ne refait pas la
@@ -25,7 +29,7 @@ var _detail_id: StringName = &""
 var _card: PanelContainer
 var _card_body: VBoxContainer
 var _explore_btn: Button
-var _massacre_btn: Button
+var _infinite_btn: Button
 var _hint: Label
 var _play_btn: Button
 var _back_btn: Button
@@ -83,17 +87,14 @@ func _build() -> void:
 	_explore_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_explore_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.EXPLORATION))
 	modes.add_child(_explore_btn)
-	_massacre_btn = Button.new()
-	_massacre_btn.text = "MASSACRE"
-	_massacre_btn.toggle_mode = true
-	_massacre_btn.custom_minimum_size = Vector2(0, 100)
-	_massacre_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_massacre_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.MASSACRE))
-	modes.add_child(_massacre_btn)
-	# Le Massacre est une RECOMPENSE de fin de campagne, pas une alternative
-	# offerte des la premiere seconde (demande du testeur : "Fin : deblocage du
-	# mode infini"). L etat reel est pose dans refresh(), qui connait
-	# l avancement ; ici on ne fait que le declarer verrouillable.
+	_infinite_btn = Button.new()
+	_infinite_btn.name = "InfiniteButton"
+	_infinite_btn.text = "INFINI"
+	_infinite_btn.toggle_mode = true
+	_infinite_btn.custom_minimum_size = Vector2(0, 100)
+	_infinite_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_infinite_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.INFINITE))
+	modes.add_child(_infinite_btn)
 
 	_hint = UiTheme.label("", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
 	_detail.add_child(_hint)
@@ -133,8 +134,29 @@ func detail_level_id() -> StringName:
 
 ## Le detail garde bien les commandes de l ancien ecran.
 func has_detail_controls() -> bool:
-	return _play_btn != null and _explore_btn != null and _massacre_btn != null \
+	return _play_btn != null and _explore_btn != null and _infinite_btn != null \
 		and _explore_btn.get_parent() != null and _play_btn.get_parent() != null
+
+
+## Pour les tests et le SMOKE : le segment de mode, pilotable sans toucher.
+func select_mode(mode: GameEnums.Mode) -> void:
+	_set_mode(mode)
+
+
+func current_mode() -> GameEnums.Mode:
+	return _mode
+
+
+func mode_labels() -> Array[String]:
+	return [_explore_btn.text, _infinite_btn.text]
+
+
+func infinite_available() -> bool:
+	return _infinite_btn != null and not _infinite_btn.disabled
+
+
+func play_enabled() -> bool:
+	return _play_btn != null and not _play_btn.disabled
 
 
 func back_to_map() -> void:
@@ -177,7 +199,7 @@ func _render_detail() -> void:
 	for c in _card_body.get_children():
 		c.queue_free()
 	_explore_btn.button_pressed = _mode == GameEnums.Mode.EXPLORATION
-	_massacre_btn.button_pressed = _mode == GameEnums.Mode.MASSACRE
+	_infinite_btn.button_pressed = _mode == GameEnums.Mode.INFINITE
 
 	var level: LevelDef = _current()
 	if level == null:
@@ -259,15 +281,27 @@ func _render_detail() -> void:
 		var rec: Dictionary = SaveData.level_record(level.id)
 		var best: int = int(rec.get("best_wave", 0))
 		var status: String = "Termine" if cleared else "Meilleure vague : %d" % best
+		var status_ink: Color = UiTheme.GREEN if cleared else UiTheme.TEXT_DARK
+		# En INFINI, la ligne d etat porte le RECORD INFINI du niveau : c est le
+		# seul chiffre qui compte pour ce mode, et celui de l Exploration (6
+		# vagues au plus) n en dit rien.
+		if _mode == GameEnums.Mode.INFINITE:
+			var record: int = SaveData.infinite_best_wave(level.id)
+			status = "Record Infini : aucun"
+			if record > 0:
+				status = "Record Infini : vague %d" % record
+			status_ink = UiTheme.TEXT_DARK
 		_card_body.add_child(UiTheme.label(status, UiTheme.FONT_BODY,
-			UiTheme.GREEN if cleared else UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+			status_ink, HORIZONTAL_ALIGNMENT_CENTER))
 
-		# Objectifs : les 3 badges qui debloquent la legendaire.
+		# Objectifs, classes du plus facile au plus dur, chacun avec LA CARTE
+		# qu il ajoute au pool de montee de niveau du niveau (chantier P).
 		var objs: Dictionary = rec.get("objectives", {})
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override(&"separation", 6)
 		_card_body.add_child(box)
-		for obj in level.objectives:
+		for i in level.objectives.size():
+			var obj: ObjectiveDef = level.objectives[i]
 			if obj == null:
 				continue
 			var done: bool = bool(objs.get(String(obj.id), false))
@@ -276,44 +310,36 @@ func _render_detail() -> void:
 			box.add_child(UiTheme.label(
 				"%s  -  %s" % ["Acquis" if done else "A faire", ObjectiveChecker.label(obj)],
 				UiTheme.FONT_SMALL, UiTheme.GREEN if done else UiTheme.TEXT_DARK))
-		if level.legendary_reward != null:
-			var got: bool = SaveData.unlocked_legendaries().has(String(level.legendary_reward.id))
-			box.add_child(UiTheme.label("Recompense : %s%s" % [level.legendary_reward.display_name,
-				"  (obtenue)" if got else ""], UiTheme.FONT_SMALL, UiTheme.rarity_ink(GameEnums.Rarity.LEGENDARY)))
+			box.add_child(UiTheme.label(objective_reward_line(level, i),
+				UiTheme.FONT_SMALL, _reward_ink(level, i)))
 
 	# Le vide restant se met en BAS, une fois tout dit.
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_card_body.add_child(spacer)
 
-	# Le Massacre s ouvre a la FIN de la campagne.
-	var infini_ouvert: bool = SaveData.campaign_cleared()
-	_massacre_btn.disabled = not infini_ouvert
-	if not infini_ouvert and _mode == GameEnums.Mode.MASSACRE:
+	# L INFINI s ouvre avec le NIVEAU, sans attendre la fin de la campagne
+	# (decision du 29/09). La regle vit dans SaveData.infinite_unlocked().
+	var infini_ouvert: bool = SaveData.infinite_unlocked(level.id)
+	_infinite_btn.disabled = not infini_ouvert
+	if not infini_ouvert and _mode == GameEnums.Mode.INFINITE:
 		# Un mode verrouille ne doit pas rester selectionne : sinon le joueur
 		# voit un bouton JOUER mort sans comprendre pourquoi.
 		_mode = GameEnums.Mode.EXPLORATION
 		_explore_btn.button_pressed = true
-		_massacre_btn.button_pressed = false
+		_infinite_btn.button_pressed = false
 
 	# Bouton JOUER et message d aide selon le mode.
 	var reason: String = ""
 	if not unlocked:
 		reason = "Niveau verrouille"
-	elif _mode == GameEnums.Mode.MASSACRE:
+	elif _mode == GameEnums.Mode.INFINITE:
 		reason = DeckRules.validation_message(SaveData.massacre_deck())
 	_play_btn.disabled = reason != ""
 	if reason != "":
 		_hint.text = reason
 	elif _mode == GameEnums.Mode.EXPLORATION:
-		if not infini_ouvert:
-			# On annonce le Massacre AVANT de l avoir : un verrou muet se lit
-			# comme un bug, un verrou qui dit son prix se lit comme un but.
-			var p: Array = SaveData.campaign_progress()
-			_hint.text = "Deck pre-etabli (%d cartes)  -  Massacre a %d / %d niveaux" % [
-				level.exploration_deck.size(), int(p[0]), int(p[1])]
-		else:
-			_hint.text = "Deck pre-etabli du niveau (%d cartes)" % level.exploration_deck.size()
+		_hint.text = "Deck pre-etabli du niveau (%d cartes)" % level.exploration_deck.size()
 	else:
 		_hint.text = "Vagues INFINIES avec ton deck (%d cartes)  -  un sort a choisir toutes les %d vagues" % [
 			SaveData.massacre_deck().size(), GameController.WAVES_PER_CHOICE]
@@ -326,3 +352,33 @@ func _on_play() -> void:
 	SaveData.set_current_level(level.id)
 	SaveData.save_profile()
 	SceneRouter.start_level(level.id, _mode)
+
+
+## --- RECOMPENSES D OBJECTIF SUR LA FICHE (chantier P) ---
+##
+## Une ligne sous chaque objectif dit ce qu il rapporte. La carte est NOMMEE
+## meme avant d etre gagnee : c est la promesse qui donne envie de tenter
+## l objectif. Elle n est pas donnee, elle rejoint le pool de montee de niveau.
+## Statique : le test et l ecran de victoire lisent la meme phrase.
+static func objective_reward_line(level: LevelDef, index: int) -> String:
+	var carte: SpellCard = level.objective_reward(index) if level != null else null
+	if carte == null:
+		return "      rapporte : carte a venir"
+	var obj: ObjectiveDef = level.objectives[index] if index < level.objectives.size() else null
+	var acquis: bool = obj != null and SaveData.is_objective_done(level.id, obj.id)
+	var etat: String = ""
+	if SaveData.is_discovered(carte.id):
+		etat = "  (obtenue)"
+	elif acquis:
+		etat = "  (a prendre en combat)"
+	return "      rapporte : %s, %s%s" % [carte.display_name,
+		GameEnums.rarity_name(carte.rarity), etat]
+
+
+func _reward_ink(level: LevelDef, index: int) -> Color:
+	var carte: SpellCard = level.objective_reward(index)
+	if carte == null:
+		# Brun du papier et non TEXT_DIM : ce gris clair est fait pour les fonds
+		# sombres et disparait sur la page creme.
+		return Color(0.45, 0.35, 0.25)
+	return UiTheme.rarity_ink(carte.rarity)

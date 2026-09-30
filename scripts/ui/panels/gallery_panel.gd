@@ -59,6 +59,12 @@ const ARROW_W: float = 200.0
 const ARROW_H: float = 150.0
 const TILE_H: float = 310.0
 const ICON_PX: float = 110.0
+## Teinte d une carte OBTENABLE : assez sombre pour se distinguer d un coup
+## d oeil d une carte obtenue, assez claire pour que l icone reste lisible.
+const GREY_ART: Color = Color(0.42, 0.42, 0.46, 0.85)
+## Teinte d une VIGNETTE obtenable : la meme que dans l ecran de deck, pour que
+## le joueur lise le meme etat de la meme facon sur les deux ecrans.
+const GREY_TILE: Color = DeckPanel.OBTAINABLE_TINT
 const ICON_PX_BIG: float = 230.0
 
 var _section: int = Section.SPELLS
@@ -249,7 +255,29 @@ func entries() -> Array:
 	return entries_of(_section)
 
 
+## VISIBILITE DES CARTES (chantier P) : les sections SORTS et PASSIFS ne listent
+## que les cartes OBTENUES et OBTENABLES (SaveData.card_visibility). Une carte
+## qu on ne peut pas encore obtenir est INVISIBLE — plus de silhouette "???" :
+## elle ne disait rien d utile au joueur et remplissait des pages de trous.
+## Le bestiaire, lui, garde ses ombres : un monstre se rencontre, il ne s obtient
+## pas, et son ombre annonce ce qui descendra un jour.
 static func entries_of(section: int) -> Array:
+	var out: Array = []
+	match section:
+		Section.SPELLS, Section.PASSIVES:
+			var pool: Dictionary = SaveData.obtainable_ids()
+			for card: SpellCard in catalog_of(section):
+				if SaveData.is_discovered(card.id) or pool.has(card.id):
+					out.append(card)
+		Section.BEASTS:
+			out = catalog_of(section)
+	return out
+
+
+## TOUT le catalogue d une section, visible ou non : c est le denominateur
+## honnete du compteur ("N / M obtenues" dit combien il en existe, sans dire
+## lesquelles).
+static func catalog_of(section: int) -> Array:
 	var out: Array = []
 	match section:
 		Section.SPELLS:
@@ -286,8 +314,14 @@ static func _sort_cards(a: SpellCard, b: SpellCard) -> bool:
 	return a.display_name < b.display_name
 
 
-## Une entree est-elle decouverte ? Les cartes et les monstres ont deux
-## registres distincts dans SaveData, le livre les unifie.
+## Une carte OBTENABLE : visible et lisible, mais grisee (pas encore prise).
+static func is_obtainable(entry: Object) -> bool:
+	return entry is SpellCard and SaveData.card_visibility((entry as SpellCard).id) 		== SaveData.CARD_OBTAINABLE
+
+
+## Une entree est-elle decouverte (carte OBTENUE, monstre rencontre) ? Les
+## cartes et les monstres ont deux registres distincts dans SaveData, le livre
+## les unifie.
 static func is_known(entry: Object) -> bool:
 	if entry is SpellCard:
 		return SaveData.is_discovered((entry as SpellCard).id)
@@ -334,11 +368,7 @@ func refresh() -> void:
 	for c in _grid.get_children():
 		c.queue_free()
 
-	var known: int = 0
-	for e in list:
-		if is_known(e):
-			known += 1
-	_header.text = "%d / %d decouverts" % [known, list.size()]
+	_header.text = header_text(_section)
 	_page_label.text = "page %d / %d" % [_page + 1, _pages]
 
 	var start: int = _page * PER_PAGE
@@ -362,8 +392,40 @@ func refresh() -> void:
 
 
 
+## Le compteur d en-tete. Pour les cartes : N OBTENUES sur M EXISTANTES (tout le
+## catalogue de la section, cartes invisibles comprises : le joueur sait
+## combien il en reste sans savoir lesquelles), et combien sont a obtenir, soit
+## les tuiles grisees qu il a sous les yeux. Pour le bestiaire, inchange.
+static func header_text(section: int) -> String:
+	var tout: Array = catalog_of(section)
+	if section == Section.BEASTS:
+		var vus: int = 0
+		for e in tout:
+			if is_known(e):
+				vus += 1
+		return "%d / %d decouverts" % [vus, tout.size()]
+	var obtenues: int = 0
+	var a_obtenir: int = 0
+	for e in entries_of(section):
+		if is_known(e):
+			obtenues += 1
+		else:
+			a_obtenir += 1
+	var texte: String = "%d / %d obtenues" % [obtenues, tout.size()]
+	if a_obtenir > 0:
+		texte += "   -   %d a obtenir" % a_obtenir
+	# Une page de passifs VIDE se lisait comme un chargement rate (capture) :
+	# avant l acte 2 on dit pourquoi elle est vide.
+	if section == Section.PASSIVES and not SaveData.passives_unlocked():
+		texte += "\nLes passifs s ouvrent a l acte %d" % LevelDef.PASSIVES_FROM_ACT
+	return texte
+
+
 func _tile(entry: Object, index: int) -> Control:
 	var known: bool = is_known(entry)
+	# Une carte OBTENABLE se lit et s ouvre comme une obtenue ; seule sa teinte
+	# (et son sous-titre) dit qu elle reste a prendre.
+	var grisee: bool = is_obtainable(entry)
 	var tile := Button.new()
 	tile.custom_minimum_size = Vector2(0, TILE_H)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -377,19 +439,27 @@ func _tile(entry: Object, index: int) -> Control:
 	box.add_theme_constant_override(&"separation", 4)
 	tile.add_child(box)
 
-	var art: Control = _art(entry, ICON_PX, known)
+	var art: Control = _art(entry, ICON_PX, known or grisee)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		if grisee:
+			art.modulate = GREY_ART
 		box.add_child(art)
+	# Le FOND de la vignette et l icone sont grises, pas le texte :
+	# self_modulate ne descend pas aux enfants. Griser toute la vignette
+	# (modulate) assombrissait aussi le nom, illisible sur le bleu du bouton
+	# (lu sur capture) ; la carte doit rester LISIBLE.
+	if grisee:
+		tile.self_modulate = GREY_TILE
 
-	var nom: Label = UiTheme.label("???" if not known else _name_of(entry),
+	var nom: Label = UiTheme.label(_name_of(entry) if known or grisee else "???",
 		UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
 	nom.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(nom)
 	box.add_child(UiTheme.label(_sub_of(entry, known), UiTheme.FONT_SMALL,
 		_sub_color(entry, known), HORIZONTAL_ALIGNMENT_CENTER, false))
 
-	if known:
+	if known or grisee:
 		tile.pressed.connect(func() -> void:
 			AudioBus.play_sfx(&"ui_tap")
 			open_detail(index))
@@ -410,7 +480,7 @@ func _sub_of(entry: Object, known: bool) -> String:
 	if entry is SpellCard:
 		var c := entry as SpellCard
 		if not known:
-			return GameEnums.rarity_name(c.rarity)
+			return "a obtenir"
 		var n: int = card_uses(c.id)
 		return "lance %d fois" % n if n > 0 else GameEnums.rarity_name(c.rarity)
 	if entry is EnemyDef:
@@ -428,8 +498,10 @@ func _sub_of(entry: Object, known: bool) -> String:
 ## et de puissance y sont delavees : sur la capture, "lance 1 fois" en bleu de
 ## rare etait un pave gris illisible. On ecrit donc en clair, et la rarete se lit
 ## sur l icone et sur la fiche, ou le fond est du papier.
-func _sub_color(_entry: Object, known: bool) -> Color:
-	return UiTheme.TEXT if known else UiTheme.TEXT_DIM
+func _sub_color(entry: Object, known: bool) -> Color:
+	# Une carte OBTENABLE est deja grisee par la teinte de sa vignette : un
+	# second assombrissement rendait "a obtenir" illisible (lu sur capture).
+	return UiTheme.TEXT if known or is_obtainable(entry) else UiTheme.TEXT_DIM
 
 
 ## L image d une entree. Pour une carte : SON icone de sort (CardIcons), qui est
@@ -443,7 +515,10 @@ func _art(entry: Object, px: float, known: bool) -> Control:
 		if not known:
 			# Silhouette : la forme reste, les couleurs disparaissent.
 			tr.modulate = Color(0.0, 0.0, 0.0, 0.5)
-		return tr
+			return tr
+		# Le sceau de TYPE (vague 5), le meme que sur la carte en main : c est
+		# dans le grimoire que le joueur apprend a le lire.
+		return CardView.with_type_badge(tr, entry as SpellCard, px)
 	if entry is EnemyDef:
 		return BestiaryLore.portrait_of(entry as EnemyDef, px, known)
 	return null
@@ -499,6 +574,8 @@ func _render_detail() -> void:
 	var art: Control = _art(entry, ICON_PX_BIG, true)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		if is_obtainable(entry):
+			art.modulate = GREY_ART
 		box.add_child(art)
 
 	if entry is SpellCard:
@@ -544,6 +621,11 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 
 	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY,
 		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+	# OU L OBTENIR : une carte grisee doit dire au joueur ou aller la chercher,
+	# sinon la montrer ne sert qu a frustrer.
+	if not SaveData.is_discovered(card.id):
+		box.add_child(UiTheme.label(where_to_obtain(card), UiTheme.FONT_BODY,
+			Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
 	_fill_upgrades(box, card)
 
 
@@ -565,6 +647,17 @@ func _fill_card_type(box: VBoxContainer, card: SpellCard) -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, false)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	ligne.add_child(l)
+
+
+## La phrase qui dit ou obtenir une carte grisee : les niveaux OUVERTS dont le
+## pool de montee de niveau la contient, dans l ordre des ids.
+static func where_to_obtain(card: SpellCard) -> String:
+	var noms: Array[String] = []
+	for lv: LevelDef in SaveData.levels_offering(card.id):
+		noms.append(lv.display_name)
+	if noms.is_empty():
+		return "A OBTENIR en combat"
+	return "A OBTENIR : prends-la a la montee de niveau de %s" % ", ".join(noms)
 
 
 ## Section AMELIORATIONS. Les ameliorations de sort n existent pas encore (elles
@@ -635,13 +728,20 @@ func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:
 	_fill_resistances(box, def)
 
 
-## RESISTANCES en logos (vague 5) : une ligne par groupe, le mot du groupe puis
-## les logos d element suivis de leur pourcentage. Le mot reste ecrit : c est
-## lui qui dit si le chiffre est une chance ou un obstacle, et un joueur qui ne
-## distingue pas les couleurs lit « Resiste » aussi bien qu un autre.
+## RESISTANCES en logos (vague 5) : sous chaque mot de groupe (Immunise /
+## Resiste / Vulnerable), une ligne par element — son LOGO, puis ce qu il fait
+## en clair : « -53 % degats et effets », « +58 % degats », « ni degats ni
+## effets ». Le mot reste ecrit : c est lui qui dit si le chiffre est une chance
+## ou un obstacle, et un joueur qui ne distingue pas les couleurs lit
+## « Resiste » aussi bien qu un autre.
 ##
-## HFlowContainer et non HBox : un monstre a cinq ecarts deborderait des 460 px
-## de la fiche ; le flux passe a la ligne au lieu de rogner le dernier logo.
+## POURQUOI « ET EFFETS » ECRIT SUR CHAQUE LIGNE (retour du co-auteur : « je ne
+## sais pas si c est fait ») : depuis la vague 5, une resistance freine aussi le
+## ralentissement, l etourdissement, l aspiration, la provocation et le
+## repoussement de l element. Une regle qu on ne lit nulle part n existe pas pour
+## le joueur ; une phrase d en-tete la pose, et chaque ligne la rappelle la ou
+## l oeil se pose. Une FAIBLESSE ne dit que « degats » : elle ne renforce pas
+## le controle (EnemyDef.control_factor, plafond a 1).
 const RESIST_ICON_PX: float = 56.0
 
 
@@ -651,20 +751,24 @@ func _fill_resistances(box: VBoxContainer, def: EnemyDef) -> void:
 		return
 	box.add_child(UiTheme.label("RESISTANCES", UiTheme.FONT_SMALL,
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	var regle: Label = UiTheme.label(BestiaryLore.RESIST_RULE_TEXT, UiTheme.FONT_SMALL,
+		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER)
+	regle.name = "ResistRule"
+	box.add_child(regle)
 	for g in groupes:
-		var ligne := HFlowContainer.new()
-		ligne.name = "Resist_" + str(g["title"])
-		ligne.alignment = FlowContainer.ALIGNMENT_CENTER
-		ligne.add_theme_constant_override(&"h_separation", 22)
-		ligne.add_theme_constant_override(&"v_separation", 6)
-		box.add_child(ligne)
-		var titre: Label = UiTheme.label(str(g["title"]) + " :", UiTheme.FONT_BODY,
-			_resist_ink(str(g["title"])), HORIZONTAL_ALIGNMENT_LEFT, false)
-		titre.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		ligne.add_child(titre)
+		var bloc := VBoxContainer.new()
+		bloc.name = "Resist_" + str(g["title"])
+		bloc.add_theme_constant_override(&"separation", 4)
+		box.add_child(bloc)
+		bloc.add_child(UiTheme.label(str(g["title"]) + " :", UiTheme.FONT_BODY,
+			_resist_ink(str(g["title"])), HORIZONTAL_ALIGNMENT_LEFT, false))
 		for item in g["items"]:
-			ligne.add_child(ElementIcons.resistance_chip(int(item["tag"]),
-				float(item["mult"]), RESIST_ICON_PX, UiTheme.TEXT_DARK, UiTheme.FONT_BODY))
+			var tag: int = int(item["tag"])
+			var mult: float = float(item["mult"])
+			var ligne: HBoxContainer = ElementIcons.resistance_row(tag, mult, RESIST_ICON_PX,
+				UiTheme.TEXT_DARK, UiTheme.FONT_BODY)
+			ligne.name = "Resist_%d" % tag
+			bloc.add_child(ligne)
 
 
 ## Encre du mot de groupe, sur PAPIER : rouge sombre pour ce qui gene le joueur,

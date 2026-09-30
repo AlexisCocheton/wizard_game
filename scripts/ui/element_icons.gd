@@ -124,6 +124,53 @@ static func resistance_chip(tag: int, mult: float, px: float, ink: Color,
 	return h
 
 
+## Une ligne de fiche de monstre : logo + ce que la resistance fait EN CLAIR.
+## Voir `effect_text` ; c est la version longue de `resistance_chip`, pour la
+## fiche du bestiaire ou l on a le temps de lire.
+static func resistance_row(tag: int, mult: float, px: float, ink: Color,
+		font_size: int) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override(&"separation", 12)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var logo: TextureRect = make(SpellCard.type_of_tag(tag), px)
+	if logo != null:
+		h.add_child(logo)
+	var l: Label = UiTheme.label(effect_text(tag, mult), font_size, ink,
+		HORIZONTAL_ALIGNMENT_LEFT, false)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(l)
+	return h
+
+
+## Ce qu une resistance fait, en clair, avec le NOM de l element (le logo seul ne
+## s apprend pas sans lui) :
+##   element resiste    « Givre : -53 % degats et effets »
+##   element immunise   « Poison : ni degats ni effets »
+##   element faible     « Feu : +58 % degats » — une faiblesse ne renforce pas
+##                      le controle (EnemyDef.control_factor, plafond a 1)
+##   ralentissement     « Ralentissement : jamais ralenti ni fige » / « -70 % »
+## Les seuils suivent Enemy.STUN_RESIST_THRESHOLD : a partir de la, le monstre
+## n est plus fige par cet element, et la ligne le dit.
+static func effect_text(tag: int, mult: float) -> String:
+	var nom: String = type_name(SpellCard.type_of_tag(tag))
+	if tag == GameEnums.DamageTag.SLOW:
+		if mult <= 0.0:
+			return "%s : jamais ralenti ni fige" % nom
+		var txt: String = "%s : %s" % [nom, percent_text(mult)]
+		if mult <= Enemy.STUN_RESIST_THRESHOLD:
+			txt += ", jamais fige"
+		return txt
+	if mult <= 0.0:
+		return "%s : ni degats ni effets" % nom
+	if mult < 1.0:
+		var t: String = "%s : %s degats et effets" % [nom, percent_text(mult)]
+		if mult <= Enemy.STUN_RESIST_THRESHOLD:
+			t += ", jamais fige"
+		return t
+	return "%s : %s degats" % [nom, percent_text(mult)]
+
+
 ## « -53 % » / « +58 % » / "" (immunite ou neutre).
 static func percent_text(mult: float) -> String:
 	if mult <= 0.0 or is_equal_approx(mult, 1.0):

@@ -250,8 +250,10 @@ func _contient(lignes: Array[String], motif: String) -> bool:
 ## somme des deux sections de cartes doit couvrir TOUT le contenu. Sans ce test,
 ## une carte passive ajoutee plus tard pourrait n apparaitre nulle part.
 func _test_grimoire_trois_sections() -> void:
-	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
-	var passifs: Array = GalleryPanel.entries_of(GalleryPanel.Section.PASSIVES)
+	# Le CATALOGUE des sections couvre tout le contenu ; ce qui s AFFICHE depend
+	# du profil depuis le chantier P (cartes invisibles), d ou catalog_of ici.
+	var sorts: Array = GalleryPanel.catalog_of(GalleryPanel.Section.SPELLS)
+	var passifs: Array = GalleryPanel.catalog_of(GalleryPanel.Section.PASSIVES)
 	var betes: Array = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS)
 	eq(sorts.size() + passifs.size(), ContentDB.cards.size(),
 		"sorts + passifs = toutes les cartes du jeu, aucune carte orpheline")
@@ -278,6 +280,9 @@ func _test_grimoire_trois_sections() -> void:
 ## La pagination est la regle de l ecran : 9 par page, au moins une page meme
 ## vide, et tourner revient au debut apres la derniere page.
 func _test_grimoire_pagination() -> void:
+	# Mode testeur : tout est obtenu, donc toutes les cartes s affichent et les
+	# sorts couvrent plusieurs pages quel que soit l etat du profil.
+	SaveData.set_tester_mode(true)
 	eq(GalleryPanel.pages_for(0), 1, "une section vide garde une page, pas zero")
 	eq(GalleryPanel.pages_for(9), 1, "9 entrees tiennent sur une page")
 	eq(GalleryPanel.pages_for(10), 2, "la 10e entree ouvre une deuxieme page")
@@ -307,11 +312,13 @@ func _test_grimoire_pagination() -> void:
 	eq(panel.current_page(), 0, "changer de section remet a la page 1")
 	eq(panel.current_section(), GalleryPanel.Section.PASSIVES, "la section a bien change")
 	detach(panel)
+	SaveData.set_tester_mode(false)
 
 
 ## Demande explicite du testeur : "les memes fleches defilent au suivant dans le
 ## detail". Dans la fiche, tourner ne change donc pas de page mais d ENTREE.
 func _test_grimoire_fleches_dans_la_fiche() -> void:
+	SaveData.set_tester_mode(true)
 	var panel := GalleryPanel.new()
 	attach(panel)
 	panel.show_section(GalleryPanel.Section.SPELLS)
@@ -339,6 +346,7 @@ func _test_grimoire_fleches_dans_la_fiche() -> void:
 	panel.open_detail(9999)
 	eq(panel.detail_index(), -1, "un index hors liste n ouvre rien")
 	detach(panel)
+	SaveData.set_tester_mode(false)
 
 
 ## Les deux compteurs demandes : usages d un sort et monstres tues par espece.

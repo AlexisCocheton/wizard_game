@@ -352,6 +352,12 @@ static func v3_lines(def: EnemyDef) -> Array[String]:
 ## Le RALENTISSEMENT n est pas un element mais se lit au meme endroit, avec son
 ## logo (le sablier) : c est la moitie des cartes de controle qui en depend, et
 ## la carte Entrave temporelle porte le meme sablier.
+## La regle, en une phrase, en tete du bloc des resistances : ce qu il faut
+## savoir pour lire « -53 % degats et effets » sans l avoir devine.
+const RESIST_RULE_TEXT: String = ("Une resistance vaut aussi contre les EFFETS de"
+	+ " l element : ralentir, figer, attirer, aspirer, repousser")
+
+
 static func resistance_groups(def: EnemyDef) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if def == null:

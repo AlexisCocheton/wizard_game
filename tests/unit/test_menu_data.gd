@@ -12,13 +12,13 @@ func run() -> void:
 	_test_persistance_coupee()
 	_test_cartes_de_depart_decouvertes()
 	_test_deck_massacre()
-	_test_le_massacre_s_ouvre_a_la_fin_de_la_campagne()
+	_test_la_campagne_se_finit_au_dernier_niveau()
 	_test_plusieurs_decks()
 	_test_migration_ancien_deck_unique()
 	_test_reglages()
 	_test_les_credits_obligatoires_sont_affiches()
 	_test_victoire_debloque_le_niveau_suivant()
-	_test_legendaire_cumulative()
+	_test_objectifs_cumulatifs_sans_legendaire()
 	_test_niveau_courant()
 	_test_deck_exploration_contient_le_mur()
 	_test_deck_explicite_conserve_les_exemplaires()
@@ -131,18 +131,20 @@ func _test_victoire_debloque_le_niveau_suivant() -> void:
 	not_ok(SaveData.is_level_unlocked(&"lvl_02"), "le niveau 2 est verrouille au depart")
 
 	var newly: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {}, 6)
-	not_ok(newly, "sans objectif, pas de legendaire")
+	not_ok(newly, "sans objectif reussi, aucune carte debloquee")
 	ok(SaveData.is_level_cleared(&"lvl_01"), "le niveau 1 est marque termine")
 	ok(SaveData.is_level_unlocked(&"lvl_02"), "la victoire debloque le niveau 2")
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "meilleure vague enregistree")
 
-	SaveData.record_victory(lvl1, GameEnums.Mode.MASSACRE, {}, 3)
+	SaveData.record_victory(lvl1, GameEnums.Mode.INFINITE, {}, 3)
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "la meilleure vague ne regresse pas")
 	ok(bool(SaveData.level_record(&"lvl_01").get("cleared_massacre", false)), "massacre marque aussi")
 
 
 ## Les objectifs s accumulent d un run a l autre : 2 puis 1 = les 3.
-func _test_legendaire_cumulative() -> void:
+## Depuis le chantier P, les trois reussis ne DONNENT plus de legendaire : la
+## progression est dans le pool de montee de niveau (voir test_card_progression).
+func _test_objectifs_cumulatifs_sans_legendaire() -> void:
 	SaveData.reset_profile()
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
 	var ids: Array[StringName] = []
@@ -150,20 +152,18 @@ func _test_legendaire_cumulative() -> void:
 		ids.append(o.id)
 	eq(ids.size(), 3, "3 objectifs sur le niveau 1")
 
-	var first: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
+	var avant: int = SaveData.discovered_count()
+	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
 		{ids[0]: true, ids[1]: true, ids[2]: false}, 6)
-	not_ok(first, "2 objectifs sur 3 : pas encore la legendaire")
 	eq(SaveData.objectives_done_count(lvl1), 2, "2 objectifs acquis")
 
-	var second: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
-		{ids[2]: true}, 6)
-	ok(second, "le 3e objectif, meme sur un autre run, debloque la legendaire")
-	ok(SaveData.is_discovered(lvl1.legendary_reward.id), "la legendaire est decouverte")
-	ok(SaveData.unlocked_legendaries().has(String(lvl1.legendary_reward.id)), "et listee")
-
-	var third: bool = SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
-		{ids[0]: true, ids[1]: true, ids[2]: true}, 6)
-	not_ok(third, "deja obtenue : pas signalee comme nouvelle")
+	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {ids[2]: true}, 6)
+	eq(SaveData.objectives_done_count(lvl1), ids.size(),
+		"le 3e objectif, meme sur un autre run, complete la serie")
+	eq(SaveData.discovered_count(), avant,
+		"trois objectifs ne DONNENT plus aucune carte : elles entrent au pool")
+	eq(SaveData.unlocked_legendaries().size(), 0,
+		"aucune legendaire obtenue sans l avoir prise en combat")
 
 
 func _test_niveau_courant() -> void:
@@ -251,13 +251,15 @@ func _test_coquille_du_menu() -> void:
 	attach(menu)
 
 	var tabs: Array = menu.get("TABS")
-	eq(tabs.size(), 4, "quatre onglets : le bestiaire a fusionne, le profil est monte")
+	eq(tabs.size(), 5, "cinq onglets : le Massacre a rejoint les quatre d avant")
 	not_ok(tabs.has("BESTIAIRE"), "plus d onglet BESTIAIRE dans la barre du bas")
 	not_ok(tabs.has("PROFIL"), "le profil n est plus un onglet du bas")
-	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "REGLAGES"]:
+	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "REGLAGES"]:
 		ok(tabs.has(attendu), "l onglet %s est present" % attendu)
 	eq(tabs[int(menu.get("HOME_TAB"))], "CAMPAGNE",
-		"l onglet central sureleve reste la CAMPAGNE")
+		"l onglet d accueil sureleve reste la CAMPAGNE")
+	# Au CENTRE, pas seulement "d accueil" : autant d onglets de chaque cote.
+	eq(int(menu.get("HOME_TAB")), tabs.size() / 2, "la CAMPAGNE est au milieu de la barre")
 
 	# Une icone par onglet, et AUCUNE des icones de materiel de Tiny Swords que
 	# le testeur a refusees ("pas un steak pour la campagne" : icon_04).
@@ -322,15 +324,14 @@ func _test_profil_en_superposition() -> void:
 	detach(menu)
 
 
-## Le Massacre est une RECOMPENSE, pas une alternative offerte des la premiere
-## seconde. Sans ce verrou, un joueur pouvait passer a cote de toute l histoire
-## sans s en apercevoir — le mode sans fin etant juste a cote, des le depart.
+## `campaign_cleared()` mesure la FIN DE CAMPAGNE. Elle ouvrait le mode infini
+## jusqu au 29/09 ; depuis, l Infini s ouvre avec son niveau et le Massacre au
+## premier niveau gagne (test_modes.gd). La mesure reste, pour le profil et les
+## succes : c est elle qui est verrouillee ici.
 ##
-## Le test porte sur la DONNEE (`campaign_cleared()`) et non sur l etat du
-## bouton : une regle qui ne vit que dans un ecran disparait avec lui. C est la
-## lecon des decks de campagne, qui violaient la regle des 15 cartes parce que
-## seul le mode Massacre passait par la validation.
-func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
+## Le test porte sur la DONNEE et non sur l etat d un bouton : une regle qui ne
+## vit que dans un ecran disparait avec lui.
+func _test_la_campagne_se_finit_au_dernier_niveau() -> void:
 	SaveData.reset_profile()
 	not_ok(SaveData.campaign_cleared(),
 		"un profil neuf n a pas fini la campagne")
@@ -346,14 +347,16 @@ func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
 			continue
 		SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, {}, 6)
 	not_ok(SaveData.campaign_cleared(),
-		"il reste un niveau : le Massacre est encore ferme")
+		"il reste un niveau : la campagne n est pas finie")
+	ok(SaveData.massacre_unlocked(),
+		"mais le Massacre, lui, est ouvert depuis le premier niveau gagne")
 	eq(int(SaveData.campaign_progress()[0]), niveaux.size() - 1,
 		"tous les niveaux sauf un sont finis")
 
 	SaveData.record_victory(niveaux[niveaux.size() - 1],
 		GameEnums.Mode.EXPLORATION, {}, 6)
 	ok(SaveData.campaign_cleared(),
-		"le dernier niveau fini ouvre le Massacre")
+		"le dernier niveau fini termine la campagne")
 	SaveData.reset_profile()
 
 

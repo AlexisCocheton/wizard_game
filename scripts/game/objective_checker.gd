@@ -20,6 +20,10 @@ extends RefCounted
 ##   elem   = un tag qui est un vrai element (GameEnums.ELEMENTS : PHYSICAL,
 ##            FIRE, FROST, ARCANE, POISON, LIGHTNING)
 ##   effet  = cle d effet de EFFECT_PHRASES ci-dessous (celles qui ont un libelle)
+##   carte  = id String d une SpellCard du catalogue (ContentDB), jamais un passif
+##   monstre= id String d un EnemyDef du catalogue, jamais un projectile (une
+##            boule de poison n est pas une espece : voir no_hit_from)
+##   [x]    = parametre FACULTATIF (absent = "n importe lequel")
 ##
 ## | cle                     | params                 | definition exacte (reussi si...)                               |
 ## |-------------------------|------------------------|----------------------------------------------------------------|
@@ -44,6 +48,20 @@ extends RefCounted
 ## | win_under_time          | seconds:nombre > 0     | victoire en strictement moins de seconds s de combat           |
 ## | max_distinct_cast       | count:int >= 1         | au plus count sorts DIFFERENTS lances (par id)                 |
 ## | no_passive              | -                      | aucun pouvoir passif equipe de toute la partie                 |
+## | card_casts              | card:carte,            | la carte `card` (par id, tous exemplaires confondus) lancee    |
+## |                         | count:int >= 1         | au moins count fois                                            |
+## | no_card                 | card:carte             | la carte `card` n est JAMAIS lancee                            |
+## | win_above_speed         | pct:int ]100, max[     | vitesse A LA VICTOIRE strictement au-dessus de pct %           |
+## | kill_type_one_cast      | enemy:monstre,         | un meme LANCER tue au moins count monstres de l espece `enemy` |
+## |                         | count:int >= 2         | (zones, poisons et allies de ce lancer compris : voir LANCER)  |
+## | kill_type_with_card     | enemy:monstre,         | au moins count monstres de l espece `enemy` tues par la carte  |
+## |                         | card:carte,            | `card`, tous lancers et exemplaires confondus (meme regle      |
+## |                         | count:int >= 1         | d attribution que ci-dessus)                                   |
+## | no_hit_from             | enemy:monstre          | aucun coup recu de l espece `enemy` (voir COUP RECU)           |
+## | hit_from                | enemy:monstre          | au moins un coup recu de l espece `enemy`                      |
+## | enemy_travel            | [enemy:monstre],       | un monstre (de l espece `enemy`, ou de n importe laquelle si   |
+## |                         | distance:nombre        | absent) a parcouru au moins `distance` px de CHEMIN avant de   |
+## |                         | ]0, 20 longueurs]      | mourir (voir CHEMIN). Libelle en longueurs de terrain.         |
 ##
 ## "Secondes de combat" = temps REEL, pauses exclues (RunState.run_time) : le
 ## seul temps que le joueur percoit. Le temps du monde court 5 fois plus vite a
@@ -61,6 +79,51 @@ extends RefCounted
 ## - no_passive par l etat a la victoire : aucun chemin ne RETIRE un passif en
 ##   combat (equip ajoute, swap remplace), donc "aucun a la fin" = "jamais".
 ## - no_enemy_past borne a 0,95 : voir RunState.note_enemy_depths.
+## - card_casts / no_card visent une CARTE (son id), la ou same_card_casts compte
+##   "n importe quel sort" et no_card_key une cle d EFFET partagee par plusieurs
+##   cartes. "Jouer Fleche 6 fois" et "gagner sans Boule de feu" ne se disaient
+##   pas avec ces deux-la.
+## - win_above_speed est le miroir de win_below_speed : meme photo a la victoire.
+##   100 est exclu parce qu un mage vivant est toujours au-dessus du plancher.
+##
+## LANCER (kill_type_one_cast, kill_type_with_card). Un lancer = UN passage dans
+## EffectRegistry.cast(), qui lui donne un numero (CastContext.cast_id). Tout
+## degat inflige pendant sa resolution lui est attribue, et ce que le lancer
+## POSE emporte son numero : zone au sol, pluie de meteores, arbre empoisonne,
+## ronces, allie invoque, allies d un autel. Une mort causee par une zone
+## trois secondes plus tard appartient donc au lancer qui l a posee.
+##   Pourquoi pas une fenetre de temps (comme multi_kill) : le co-auteur demande
+##   "en UNE attaque" et "avec TELLE carte", ce qui est une question de source,
+##   pas d horloge. Une zone qui tue sur la duree reste l attaque du joueur.
+##   Consequence assumee : un objet PERMANENT (ronces, autel) est un seul lancer
+##   de toute la partie. Le chantier de contenu doit donc eviter kill_type_one_cast
+##   dans un niveau dont le deck pose un terrain permanent qui tue.
+##   Ce qui n est PAS un lancer : les passifs (Combustion, Reaction en chaine,
+##   Compagnon fidele), les renvois, et tout coup porte hors de ces chemins. Une
+##   mort sans source ne compte pour aucune carte. "Debordement" resout la carte
+##   deux fois : c est le MEME lancer.
+##   Le coup de grace decide : un monstre entame par un sort puis acheve par un
+##   autre appartient au second.
+##
+## COUP RECU (no_hit_from, hit_from). Tout ce qui fait baisser la jauge et que
+## le jeu impute a un monstre (Battlefield.mage_hit) : contact, fleche, onde de
+## choc, laser, sort vole, renvoi de garde. Par id d EnemyDef, pas par nom
+## affiche. Les projectiles-monstres (boule de poison) comptent pour l espece
+## qui les invoque (EnemyDef.summon_def) : "ne pas etre touche par le Planogo"
+## doit inclure ses boules. Si deux especes invoquent le meme projectile, un
+## coup de boule compte pour les deux (angle mort assume : aucun contenu ne le
+## fait, et l alternative etait de marquer chaque boule a sa naissance).
+##
+## CHEMIN (enemy_travel). La distance que le monstre a reellement couverte, image
+## par image, pendant SON deplacement : descente, detours autour des murs et de
+## la riviere, zigzag, marche vers un arbre qui provoque, remontee par Volte-face
+## et deplacement par le courant d une nappe. C est tout l interet avec les sorts
+## de terrain : un mur bien pose allonge le chemin. Ne comptent PAS : les
+## deplacements instantanes ou subis d un bloc (repousse, vortex, retour dans le
+## temps de Chronos, vie supplementaire qui renvoie en haut), qui ne sont pas un
+## chemin. Juge a la MORT du monstre (tue, pas arrive au mage). Le joueur lit des
+## LONGUEURS DE TERRAIN : une longueur = la descente apparition -> mage
+## (terrain_length()), "Faire marcher un monstre sur 3 longueurs de terrain".
 ##
 ## L AUDIT refuse une cle inconnue, un parametre manquant, en trop ou mal type
 ## (validate), un objectif IMPOSSIBLE dans son niveau (impossible_reasons) et
@@ -83,6 +146,14 @@ const KEYS: Array[StringName] = [
 	&"win_under_time",
 	&"max_distinct_cast",
 	&"no_passive",
+	&"card_casts",
+	&"no_card",
+	&"win_above_speed",
+	&"kill_type_one_cast",
+	&"kill_type_with_card",
+	&"no_hit_from",
+	&"hit_from",
+	&"enemy_travel",
 ]
 
 const T_INT: String = "int"
@@ -90,6 +161,30 @@ const T_NUM: String = "nombre"
 const T_TAG: String = "tag"
 const T_ELEM: String = "elem"
 const T_EFFECT: String = "effet"
+const T_CARD: String = "carte"
+const T_ENEMY: String = "monstre"
+
+## Parametres FACULTATIFS par cle. Absent = "n importe lequel" ; present, il
+## doit quand meme etre du bon type. Une liste a part plutot qu un type
+## "optionnel" : le SCHEMA reste la liste complete de ce qu une cle accepte.
+const OPTIONAL: Dictionary = {
+	&"enemy_travel": ["enemy"],
+}
+
+## Plafond de enemy_travel, en longueurs de terrain. Au-dela ce n est plus un
+## defi de placement mais une attente : il faudrait tenir un monstre en vie des
+## minutes entieres.
+const MAX_TRAVEL_LENGTHS: float = 20.0
+
+## Les cles d effet qui peuvent TUER (magnitude > 0) : sert a l AUDIT de
+## kill_type_with_card, une carte qui ne blesse personne ne peut rien achever.
+## Un nouveau verbe de degats non range ici rendrait l objectif "impossible" et
+## l AUDIT rougirait : l oubli se voit, il ne passe pas en silence.
+const KILLING_EFFECTS: Array[StringName] = [
+	&"damage_single", &"pierce_line", &"ground_zone", &"damage_per_enemy",
+	&"knockback", &"meteor_storm", &"stun_zone", &"taunt_prop", &"place_terrain",
+	&"summon_ally",
+]
 
 ## Parametres attendus par cle : {nom: type}. Une cle sans parametre a {}.
 const SCHEMA: Dictionary = {
@@ -109,6 +204,14 @@ const SCHEMA: Dictionary = {
 	&"win_under_time": {"seconds": T_NUM},
 	&"max_distinct_cast": {"count": T_INT},
 	&"no_passive": {},
+	&"card_casts": {"card": T_CARD, "count": T_INT},
+	&"no_card": {"card": T_CARD},
+	&"win_above_speed": {"pct": T_INT},
+	&"kill_type_one_cast": {"enemy": T_ENEMY, "count": T_INT},
+	&"kill_type_with_card": {"enemy": T_ENEMY, "card": T_CARD, "count": T_INT},
+	&"no_hit_from": {"enemy": T_ENEMY},
+	&"hit_from": {"enemy": T_ENEMY},
+	&"enemy_travel": {"enemy": T_ENEMY, "distance": T_NUM},
 }
 
 ## Fenetre maximale de multi_kill : au-dela, ce n est plus "en meme temps".
@@ -182,6 +285,25 @@ static func _num(o: ObjectiveDef, name: String) -> float:
 	return float(_param(o, name))
 
 
+## Id de carte ou de monstre ecrit dans le parametre, &"" s il est absent.
+static func _id(o: ObjectiveDef, name: String) -> StringName:
+	var v: Variant = _param(o, name)
+	if typeof(v) != TYPE_STRING and typeof(v) != TYPE_STRING_NAME:
+		return &""
+	return StringName(v)
+
+
+static func _optional(key: StringName, name: String) -> bool:
+	return (OPTIONAL.get(key, []) as Array).has(name)
+
+
+## Une longueur de terrain, en pixels : la descente de la ligne d apparition a
+## la ligne du mage. C est l unite de enemy_travel cote joueur ; le chantier de
+## contenu ecrit `distance = n * terrain_length()` pour demander n longueurs.
+static func terrain_length() -> float:
+	return GameConfig.MAGE_LINE_Y - GameConfig.SPAWN_LINE_Y
+
+
 ## Valeur entiere du tag nomme ("FIRE" -> DamageTag.FIRE), -1 si inconnu.
 static func tag_from_name(name: Variant) -> int:
 	if typeof(name) != TYPE_STRING and typeof(name) != TYPE_STRING_NAME:
@@ -210,7 +332,8 @@ static func validate(o: ObjectiveDef) -> Array[String]:
 	for nom: String in attendus:
 		var v: Variant = _param(o, nom)
 		if v == null:
-			errs.append("parametre manquant '%s'" % nom)
+			if not _optional(o.check_key, nom):
+				errs.append("parametre manquant '%s'" % nom)
 			continue
 		var erreur: String = _type_error(String(attendus[nom]), v)
 		if erreur != "":
@@ -243,6 +366,26 @@ static func _type_error(type: String, v: Variant) -> String:
 				return "cle d effet attendue"
 			if not EFFECT_PHRASES.has(StringName(v)):
 				return "cle d effet sans libelle (voir EFFECT_PHRASES)"
+		T_CARD:
+			# Contre le CATALOGUE : un id mal orthographie ferait un objectif que
+			# rien ne peut jamais mordre (no_card gratuit, card_casts impossible).
+			if typeof(v) != TYPE_STRING and typeof(v) != TYPE_STRING_NAME:
+				return "id de carte attendu"
+			var c: SpellCard = ContentDB.cards.get(StringName(v))
+			if c == null:
+				return "carte inconnue '%s'" % v
+			if c.is_passive:
+				return "'%s' est un passif : il s equipe, il ne se lance pas" % v
+		T_ENEMY:
+			if typeof(v) != TYPE_STRING and typeof(v) != TYPE_STRING_NAME:
+				return "id de monstre attendu"
+			var d: EnemyDef = ContentDB.enemies.get(StringName(v))
+			if d == null:
+				return "monstre inconnu '%s'" % v
+			# Un projectile n est ni tue (aucune mort notee) ni une espece que le
+			# joueur reconnait : ses coups comptent pour celui qui l invoque.
+			if d.projectile:
+				return "'%s' est un projectile, viser l espece qui le lance" % v
 	return ""
 
 
@@ -269,9 +412,24 @@ static func _bounds_error(o: ObjectiveDef) -> String:
 			var w: float = _num(o, "window")
 			if w <= 0.0 or w > MULTI_KILL_MAX_WINDOW:
 				return "window doit etre dans ]0, %s]" % _fmt(MULTI_KILL_MAX_WINDOW)
-		&"element_casts", &"kill_flying", &"max_distinct_cast":
+		&"element_casts", &"kill_flying", &"max_distinct_cast", &"card_casts", \
+				&"kill_type_with_card":
 			if _int(o, "count") < 1:
 				return "count doit valoir au moins 1"
+		&"kill_type_one_cast":
+			# Un seul monstre d un seul sort, c est n importe quelle mort : "en une
+			# attaque" ne veut dire quelque chose qu a partir de deux.
+			if _int(o, "count") < 2:
+				return "count doit valoir au moins 2"
+		&"win_above_speed":
+			var pct2: int = _int(o, "pct")
+			if pct2 <= 100 or pct2 >= GameConfig.SPEED_MAX_PERCENT:
+				return "pct doit etre dans ]100, %d[" % GameConfig.SPEED_MAX_PERCENT
+		&"enemy_travel":
+			var dist: float = _num(o, "distance")
+			if dist <= 0.0 or dist > MAX_TRAVEL_LENGTHS * terrain_length():
+				return "distance doit etre dans ]0, %s] px (%s longueurs de terrain)" \
+					% [_fmt(MAX_TRAVEL_LENGTHS * terrain_length()), _fmt(MAX_TRAVEL_LENGTHS)]
 		&"boss_quick_after_revive", &"win_under_time":
 			if _num(o, "seconds") <= 0.0:
 				return "seconds doit etre positif"
@@ -346,6 +504,25 @@ static func evaluate(objective: ObjectiveDef) -> bool:
 			return RunState.distinct_cards_cast() <= _int(o, "count")
 		&"no_passive":
 			return RunState.equipped_passives.is_empty()
+		&"card_casts":
+			return RunState.casts_of_id(_id(o, "card")) >= _int(o, "count")
+		&"no_card":
+			return RunState.casts_of_id(_id(o, "card")) == 0
+		&"win_above_speed":
+			return RunState.final_speed_percent() > _int(o, "pct")
+		&"kill_type_one_cast":
+			return RunState.best_kills_in_one_cast(_id(o, "enemy")) >= _int(o, "count")
+		&"kill_type_with_card":
+			return RunState.kills_with_card(_id(o, "card"), _id(o, "enemy")) \
+				>= _int(o, "count")
+		&"no_hit_from":
+			return RunState.hits_from_enemy(_id(o, "enemy")) == 0
+		&"hit_from":
+			return RunState.hits_from_enemy(_id(o, "enemy")) >= 1
+		&"enemy_travel":
+			# Seuls les monstres TUES comptent : un monstre arrive au mage n a pas
+			# fini son chemin, il a fini le joueur.
+			return RunState.travel_record_of(_id(o, "enemy")) >= _num(o, "distance")
 	return false
 
 
@@ -384,6 +561,17 @@ static func short_label(o: ObjectiveDef) -> String:
 		&"win_under_time": return "Chrono"
 		&"max_distinct_cast": return "Sorts differents"
 		&"no_passive": return "Sans passif"
+		# Un ou deux mots, SANS le nom de la carte ou du monstre : « Sans Totem de
+		# coeur-de-bois : rate » ne tient pas entre la tour et le bord. Le nom se
+		# lit au briefing et a la victoire (label()), le bandeau dit ou on en est.
+		&"card_casts": return "Sort impose"
+		&"no_card": return "Sort interdit"
+		&"win_above_speed": return "Plus de %d %%" % _int(o, "pct")
+		&"kill_type_one_cast": return "Un seul sort"
+		&"kill_type_with_card": return "Chasse"
+		&"no_hit_from": return "Esquive"
+		&"hit_from": return "Coup subi"
+		&"enemy_travel": return "Longue marche"
 	return o.description
 
 
@@ -418,6 +606,28 @@ static func progress(o: ObjectiveDef) -> Dictionary:
 				"time": false}
 		&"win_under_time":
 			return {"current": RunState.run_time, "target": _num(o, "seconds"), "time": true}
+		&"card_casts":
+			return {"current": RunState.casts_of_id(_id(o, "card")), "target": _int(o, "count"),
+				"time": false}
+		&"kill_type_one_cast":
+			return {"current": RunState.best_kills_in_one_cast(_id(o, "enemy")),
+				"target": _int(o, "count"), "time": false}
+		&"kill_type_with_card":
+			return {"current": RunState.kills_with_card(_id(o, "card"), _id(o, "enemy")),
+				"target": _int(o, "count"), "time": false}
+		&"hit_from":
+			# Borne a 1 : « Coup subi 3/1 » se lirait comme une erreur.
+			return {"current": mini(RunState.hits_from_enemy(_id(o, "enemy")), 1),
+				"target": 1, "time": false}
+		&"enemy_travel":
+			# En POURCENT de la distance demandee : le bandeau ecrit des entiers, et
+			# « 1843/4140 » (des pixels) ne dit rien au joueur. Le meilleur monstre
+			# VIVANT compte dans l affichage — c est lui qu il faut garder en vie
+			# puis achever — mais seule une mort valide (evaluate).
+			var meilleur: float = maxf(RunState.travel_record_of(_id(o, "enemy")),
+				RunState.travel_live_of(_id(o, "enemy")))
+			return {"current": int(floor(100.0 * meilleur / maxf(_num(o, "distance"), 1.0))),
+				"target": 100, "time": false}
 	return {}
 
 
@@ -465,6 +675,11 @@ static func is_failed(o: ObjectiveDef) -> bool:
 			return RunState.distinct_cards_cast() > _int(o, "count")
 		&"no_passive":
 			return not RunState.equipped_passives.is_empty()
+		# Un lancer et un coup recu ne s effacent jamais : irreversibles.
+		&"no_card":
+			return RunState.casts_of_id(_id(o, "card")) > 0
+		&"no_hit_from":
+			return RunState.hits_from_enemy(_id(o, "enemy")) > 0
 	return false
 
 
@@ -519,7 +734,48 @@ static func label(o: ObjectiveDef) -> String:
 				"s" if n > 1 else "", "s" if n > 1 else ""]
 		&"no_passive":
 			return "Gagner sans pouvoir passif"
+		&"card_casts":
+			return "Lancer %d fois %s" % [_int(o, "count"), _card_name(_id(o, "card"))]
+		&"no_card":
+			return "Gagner sans lancer %s" % _card_name(_id(o, "card"))
+		&"win_above_speed":
+			return "Gagner avec plus de %d %% de vitesse" % _int(o, "pct")
+		# « <Monstre> : ... » : le nom en tete evite d accorder un article et un
+		# pluriel a un nom propre (« une Sorciere », « 4 Oiseaux mirage »).
+		&"kill_type_one_cast":
+			return "%s : en tuer %d d un seul sort" % [_enemy_name(_id(o, "enemy")),
+				_int(o, "count")]
+		&"kill_type_with_card":
+			return "%s : en tuer %d avec %s" % [_enemy_name(_id(o, "enemy")),
+				_int(o, "count"), _card_name(_id(o, "card"))]
+		&"no_hit_from":
+			return "%s : gagner sans en etre touche" % _enemy_name(_id(o, "enemy"))
+		&"hit_from":
+			return "%s : gagner apres en avoir ete touche" % _enemy_name(_id(o, "enemy"))
+		&"enemy_travel":
+			var longueurs: String = _lengths(_num(o, "distance"))
+			var qui: StringName = _id(o, "enemy")
+			if qui == &"":
+				return "Faire marcher un monstre sur %s" % longueurs
+			return "%s : en faire marcher un sur %s" % [_enemy_name(qui), longueurs]
 	return o.description
+
+
+static func _card_name(id: StringName) -> String:
+	var c: SpellCard = ContentDB.cards.get(id)
+	return c.display_name if c != null and c.display_name != "" else String(id)
+
+
+static func _enemy_name(id: StringName) -> String:
+	var d: EnemyDef = ContentDB.enemies.get(id)
+	return d.display_name if d != null and d.display_name != "" else String(id)
+
+
+## 4140 px -> "3 longueurs de terrain", 2070 -> "1,5 longueur de terrain".
+## Au dixieme : "2,17 longueurs" ne se lit pas mieux que "2,2".
+static func _lengths(px: float) -> String:
+	var n: float = snappedf(px / terrain_length(), 0.1)
+	return "%s longueur%s de terrain" % [_fmt(n), "s" if n >= 2.0 else ""]
 
 
 ## "de feu", "d arcane", "physique(s)" : le complement d un sort de cet element.
@@ -596,6 +852,36 @@ static func impossible_reasons(o: ObjectiveDef, level: LevelDef) -> Array[String
 					plus_grosse = maxi(plus_grosse, w.total_enemies())
 			if plus_grosse < _int(o, "count"):
 				out.append("aucune vague ne compte %d monstres" % _int(o, "count"))
+		&"card_casts":
+			if not card_obtainable(level, _id(o, "card")):
+				out.append("la carte %s n est ni dans le deck ni dans les cartes de niveau"
+					% _id(o, "card"))
+		&"kill_type_one_cast", &"kill_type_with_card":
+			var qui: StringName = _id(o, "enemy")
+			if not monstres.any(func(d: EnemyDef) -> bool: return d.id == qui):
+				out.append("le monstre %s n apparait pas dans ce niveau" % qui)
+			else:
+				var cap: int = type_capacity(level, qui)
+				if cap >= 0 and cap < _int(o, "count"):
+					out.append("%d %s au plus pour %d demandes" % [cap, qui, _int(o, "count")])
+			if o.check_key == &"kill_type_with_card":
+				var carte: StringName = _id(o, "card")
+				if not card_obtainable(level, carte):
+					out.append("la carte %s n est ni dans le deck ni dans les cartes de niveau"
+						% carte)
+				elif not card_can_kill(ContentDB.cards.get(carte), ContentDB.enemies.get(qui)):
+					out.append("la carte %s ne peut pas tuer %s (aucun degat, ou immunite)"
+						% [carte, qui])
+		&"hit_from":
+			var qui2: StringName = _id(o, "enemy")
+			if not monstres.any(func(d: EnemyDef) -> bool: return d.id == qui2):
+				out.append("le monstre %s n apparait pas dans ce niveau" % qui2)
+			elif not can_hurt_mage(ContentDB.enemies.get(qui2)):
+				out.append("le monstre %s ne touche jamais le mage" % qui2)
+		&"enemy_travel":
+			var qui3: StringName = _id(o, "enemy")
+			if qui3 != &"" and not monstres.any(func(d: EnemyDef) -> bool: return d.id == qui3):
+				out.append("le monstre %s n apparait pas dans ce niveau" % qui3)
 	return out
 
 
@@ -629,11 +915,114 @@ static func trivial_reasons(o: ObjectiveDef, level: LevelDef) -> Array[String]:
 					ids[c.id] = true
 			if ids.size() <= _int(o, "count"):
 				out.append("le deck ne compte que %d sorts differents" % ids.size())
+		&"no_card":
+			if not card_obtainable(level, _id(o, "card")):
+				out.append("la carte %s ne peut pas etre jouee dans ce niveau" % _id(o, "card"))
+		&"no_hit_from":
+			var qui: StringName = _id(o, "enemy")
+			if not level_enemies(level).any(func(d: EnemyDef) -> bool: return d.id == qui):
+				out.append("le monstre %s n apparait pas dans ce niveau" % qui)
+			elif not can_hurt_mage(ContentDB.enemies.get(qui)):
+				out.append("le monstre %s ne touche jamais le mage" % qui)
 	return out
 
 
+## La carte peut-elle se retrouver en main dans ce niveau ? Deck du niveau, plus
+## le pool de montee de niveau `LevelDef.levelup_cards` s il existe.
+##
+## Le champ est ajoute par un autre chantier (progression) : il est lu par NOM
+## (`get`) pour que ce fichier compile avec ou sans lui. Tant qu il n existe pas,
+## le deck seul fait foi — les offres de montee de niveau piochent alors dans
+## tout le catalogue, et un objectif qui reposerait sur elles serait un pari, pas
+## une etoile garantie.
+static func card_obtainable(level: LevelDef, card_id: StringName) -> bool:
+	if level == null or card_id == &"":
+		return false
+	for c: SpellCard in level.exploration_deck:
+		if c != null and c.id == card_id:
+			return true
+	var pool: Variant = level.get("levelup_cards")
+	if pool is Array:
+		for c in pool:
+			if c is SpellCard and (c as SpellCard).id == card_id:
+				return true
+	return false
+
+
+## La carte peut-elle achever ce monstre ? Il lui faut un effet qui blesse
+## (KILLING_EFFECTS avec une magnitude, ou un generateur d allies), et que le
+## monstre n y soit pas totalement insensible. Les allies frappent en SUMMON,
+## qu aucune resistance elementaire ne couvre : leur carte peut toujours tuer.
+static func card_can_kill(card: SpellCard, def: EnemyDef) -> bool:
+	if card == null or def == null:
+		return false
+	for spec: EffectSpec in card.effects:
+		if spec == null:
+			continue
+		var allies: bool = (spec.key == &"summon_ally" and spec.magnitude > 0.0) \
+			or (float(spec.get_param(&"summon_every", 0.0)) > 0.0
+				and float(spec.get_param(&"ally_damage", 0.0)) > 0.0)
+		if allies:
+			return true
+		if spec.key in KILLING_EFFECTS and spec.magnitude > 0.0 \
+				and def.resistance_to_tags(card.tags) > 0.0:
+			return true
+	return false
+
+
+## Le monstre peut-il faire baisser la jauge ? Contact (s il avance et ne
+## s arrete pas a une ligne de tir), fleche, onde, laser, vol de sort, garde de
+## renvoi, ou un projectile-monstre qu il invoque et qui, lui, touche.
+static func can_hurt_mage(def: EnemyDef, profondeur: int = 0) -> bool:
+	if def == null or profondeur > 4:
+		return false
+	if def.base_speed > 0.0 and def.keeps_distance_at <= 0.0:
+		return true
+	if def.shoot_interval > 0.0 and def.shot_damage > 0:
+		return true
+	if def.shockwave_interval > 0.0 and def.shockwave_radius > 0.0 and def.shockwave_damage > 0:
+		return true
+	if def.laser_damage > 0 or def.steal_interval > 0.0:
+		return true
+	if def.reflect_pct > 0.0 and def.reflect_window > 0.0 and def.reflect_interval > 0.0:
+		return true
+	return def.summon_def != null and def.summon_def.projectile \
+		and can_hurt_mage(def.summon_def, profondeur + 1)
+
+
+## Exemplaires de l espece `id` que le niveau peut produire au plus. -1 = sans
+## borne (un monstre du niveau l invoque tant qu il vit). Divisions et
+## renaissances suivies sur toute leur chaine, comme flying_capacity.
+static func type_capacity(level: LevelDef, id: StringName) -> int:
+	for d: EnemyDef in level_enemies(level):
+		if d.summon_def != null and d.summon_def.id == id:
+			return -1
+	var total: int = 0
+	for w: WaveDef in level.waves:
+		if w == null:
+			continue
+		for e: WaveEntry in w.entries:
+			if e == null or e.enemy == null:
+				continue
+			total += e.count * maxi(1, e.enemy.swarm_count) * _type_from(e.enemy, id, 0)
+	return total
+
+
+## Exemplaires de `id` produits par UN exemplaire de `d`, lui compris.
+static func _type_from(d: EnemyDef, id: StringName, profondeur: int) -> int:
+	if d == null or profondeur > 8:
+		return 0
+	var n: int = 1 if d.id == id else 0
+	if d.split_into != null and d.split_count > 0:
+		n += d.split_count * _type_from(d.split_into, id, profondeur + 1)
+	if d.rebirth_def != null and d.rebirth_count > 0:
+		n += d.rebirth_count * _type_from(d.rebirth_def, id, profondeur + 1)
+	return n
+
+
 ## Toutes les especes que le niveau peut faire apparaitre : vagues, plus leurs
-## divisions et invocations (un volant peut n arriver que par invocation).
+## divisions, invocations et renaissances (un volant peut n arriver que par
+## invocation, un monstre vise par un objectif que par renaissance).
 static func level_enemies(level: LevelDef) -> Array[EnemyDef]:
 	var out: Array[EnemyDef] = []
 	var pile: Array[EnemyDef] = []
@@ -649,6 +1038,8 @@ static func level_enemies(level: LevelDef) -> Array[EnemyDef]:
 			pile.append(d.split_into)
 		if d.summon_def != null:
 			pile.append(d.summon_def)
+		if d.rebirth_def != null:
+			pile.append(d.rebirth_def)
 	return out
 
 

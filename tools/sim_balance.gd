@@ -123,6 +123,13 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 	## Vitesse restante a l arrivee. C est la reserve de VIE du mage depuis le
 	## 26 septembre : les deux nombres n en font plus qu un.
 	var pv: Array[int] = []
+	# AMELIORATIONS PRISES, par voie. En headless GameController tranche seul
+	# (la PREMIERE voie proposee, comme un joueur qui ne lit pas) : sans ce
+	# releve, on ne savait pas si le banc mesurait des sorts ameliores ni
+	# lesquels, et un ecart de taux ne se rattachait a rien.
+	_prises.clear()
+	if not RunState.upgrade_taken.is_connected(_on_upgrade_taken):
+		RunState.upgrade_taken.connect(_on_upgrade_taken)
 	for i in runs:
 		var g: GameController = _make_game()
 		RunState.set_seed(1000 + i * 37)
@@ -145,6 +152,24 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 	print("
   %s (%s) : %d victoires sur %d, vague atteinte %.1f en moyenne, %.0f %% de vitesse restants quand ca passe (plancher 100)"
 		% [level_id, level.display_name, wins, runs, moy, pv_moy])
+	var total: int = 0
+	var parts: Array[String] = []
+	var cles: Array = _prises.keys()
+	cles.sort_custom(func(a: Variant, b: Variant) -> bool: return String(a) < String(b))
+	for k in cles:
+		total += int(_prises[k])
+		parts.append("%s x%d" % [k, int(_prises[k])])
+	print("    ameliorations prises : %d (%.1f par partie) : %s"
+		% [total, float(total) / maxf(runs, 1), ", ".join(parts)])
+
+
+## Voies retenues pendant les parties d un niveau : {id de voie -> nombre}.
+var _prises: Dictionary = {}
+
+
+func _on_upgrade_taken(_card: SpellCard, path: Dictionary) -> void:
+	var id: String = String(path.get("id", "?"))
+	_prises[id] = int(_prises.get(id, 0)) + 1
 
 
 ## `plafond_vagues` borne la partie : une partie qui l atteint n est PAS morte,
@@ -158,7 +183,7 @@ func _run_massacre_many(runs: int, plafond_vagues: int = 30) -> void:
 	for i in runs:
 		var g: GameController = _make_game()
 		RunState.set_seed(2000 + i * 53)
-		g.start_level(level, GameEnums.Mode.MASSACRE)
+		g.start_level(level, GameEnums.Mode.INFINITE)
 		var st: Dictionary = _play(g, plafond_vagues)
 		vagues.append(st["vague"])
 		_drop_game(g)
@@ -221,7 +246,7 @@ func _run_massacre(waves: int) -> void:
 	if level == null:
 		return
 	var g: GameController = _make_game()
-	g.start_level(level, GameEnums.Mode.MASSACRE)
+	g.start_level(level, GameEnums.Mode.INFINITE)
 	var stats: Dictionary = _play(g, waves)
 	_print_stats("Massacre", stats)
 	_drop_game(g)

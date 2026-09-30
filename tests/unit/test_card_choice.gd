@@ -6,17 +6,27 @@ func get_suite_name() -> String:
 
 
 func run() -> void:
+	# SANS NIVEAU, le pool de montee de niveau est tout le catalogue (voir
+	# RunState.levelup_pool) : c est le cadre de ces tests historiques. Une
+	# suite precedente peut avoir laisse un niveau d acte 1 en cours, dont le
+	# pool n a ni passif ni variete : on repart d un contexte explicite.
+	RunState.current_level_def = null
+	RunState.mode = GameEnums.Mode.EXPLORATION
 	_test_offre_de_trois()
 	_test_choix_rejoint_la_defausse()
 	_test_choix_invalide()
 	_test_montee_de_niveau_propose()
+	# La partie lancee ci-dessus a laisse SON niveau en cours : retour au cadre.
+	RunState.current_level_def = null
+	RunState.mode = GameEnums.Mode.EXPLORATION
 	_test_cadence_massacre()
-	_test_un_boss_vaincu_offre_une_carte()
+	_test_un_boss_vaincu_n_offre_plus_rien_d_office()
 	_test_les_trois_choix_melangent_les_raretes()
 	_test_bruler_une_carte_proposee()
 	_test_un_cinquieme_de_passifs_a_la_montee_de_niveau()
 	_test_un_passif_choisi_s_equipe_au_lieu_d_aller_dans_le_deck()
 	_test_un_quatrieme_passif_choisi_attend_un_echange()
+	RunState.current_level_def = null
 
 
 func _test_offre_de_trois() -> void:
@@ -91,42 +101,42 @@ func _test_cadence_massacre() -> void:
 	eq(GameController.WAVES_PER_CHOICE, 2, "un choix toutes les 2 vagues en Massacre")
 
 
-## Le cahier des charges : "Mini-boss a mi-parcours (drop d une carte legendaire)"
-## et "Recompenses de boss : cartes rares ou legendaires". Vaincre un boss ne
-## rapportait rien du tout : la seule source de cartes etait la montee de niveau.
-func _test_un_boss_vaincu_offre_une_carte() -> void:
+## CHANTIER P : les recompenses de boss d office (trois epiques au mini-boss,
+## trois legendaires au boss, tirees dans TOUT le catalogue) sont supprimees.
+## Les cartes fortes viennent des objectifs du niveau. Vaincre la vague de boss
+## en campagne ne met donc aucune offre en attente, et la fonction qui imposait
+## une rarete n existe plus : elle aurait ete une porte hors du pool.
+func _test_un_boss_vaincu_n_offre_plus_rien_d_office() -> void:
+	not_ok(RunState.has_method("offer_of_rarity"),
+		"plus d offre de rarete imposee : toute offre passe par le pool")
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	g.headless_mode = true
+	attach(g)
+	var lvl: LevelDef = null
+	var idx_boss: int = -1
+	for id in ContentDB.levels:
+		var l: LevelDef = ContentDB.levels[id]
+		for i in l.waves.size():
+			if l.waves[i] != null and (l.waves[i].is_boss or l.waves[i].is_miniboss):
+				lvl = l
+				idx_boss = i
+				break
+		if lvl != null:
+			break
+	ok(lvl != null, "un niveau de campagne a une vague de boss")
+	if lvl != null:
+		g.start_level(lvl, GameEnums.Mode.EXPLORATION)
+		g.running = false
+		RunState.pending_offer.clear()
+		g._on_wave_cleared(idx_boss)
+		eq(RunState.pending_offer.size(), 0,
+			"la vague de boss nettoyee n offre aucune carte en campagne")
+	detach(g)
 	RunState.reset()
-	RunState.set_seed(42)
-
-	# Mini-boss : choix parmi des EPIQUES.
-	var epiques: Array[SpellCard] = RunState.offer_of_rarity(GameEnums.Rarity.EPIC, 3)
-	ok(not epiques.is_empty(), "le mini-boss propose des cartes")
-	for c in epiques:
-		eq(c.rarity, GameEnums.Rarity.EPIC, "le mini-boss propose bien de l epique")
-	eq(RunState.pending_offer.size(), epiques.size(),
-		"l offre est en attente : la partie se met en pause dessus")
-
-	# Le joueur choisit : la carte rejoint la defausse, comme a la montee de niveau.
-	var avant: int = RunState.discard.size()
-	var prise: SpellCard = RunState.pick_offer(0)
-	ok(prise != null, "une carte est bien prise")
-	eq(RunState.discard.size(), avant + 1, "la carte du boss rejoint la defausse")
-	ok(RunState.pending_offer.is_empty(), "l offre est consommee")
-
-	# Boss final : la LEGENDAIRE d abord. Il n en existe que 2 au catalogue, donc
-	# demander 3 choix complete forcement avec la rarete du dessous — mieux qu une
-	# offre incomplete, mais la premiere doit etre legendaire.
-	var legendaires: Array[SpellCard] = RunState.offer_of_rarity(GameEnums.Rarity.LEGENDARY, 3)
-	ok(not legendaires.is_empty(), "le boss final propose des cartes")
-	eq(legendaires[0].rarity, GameEnums.Rarity.LEGENDARY,
-		"le premier choix du boss final est legendaire")
-	var toutes: Array[SpellCard] = ContentDB.cards_of_rarity(GameEnums.Rarity.LEGENDARY)
-	var n_leg: int = 0
-	for c in legendaires:
-		if c.rarity == GameEnums.Rarity.LEGENDARY:
-			n_leg += 1
-	eq(n_leg, mini(3, toutes.size()), "toutes les legendaires disponibles sont proposees")
-	RunState.reset()
+	RunState.current_level_def = null
+	RunState.mode = GameEnums.Mode.EXPLORATION
+	reset_gauge_at_normal_speed()
 
 
 ## Les trois cartes proposees a la montee de niveau peuvent etre de RARETES

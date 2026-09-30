@@ -272,12 +272,46 @@ func _check_levels() -> void:
 	for level: LevelDef in ContentDB.levels.values():
 		if level.objectives.size() != 3:
 			fail("niveau %s : %d objectifs (3 attendus)" % [level.id, level.objectives.size()])
-		if level.legendary_reward == null:
-			fail("niveau %s : pas de recompense legendaire" % level.id)
+		# PROGRESSION DES CARTES (chantier P). Ce qui est FAUX est un echec (carte
+		# de montee deja dans le deck, recompense de mauvaise rarete pour son
+		# rang, passif avant l acte 2...). Ce qui MANQUE n est qu un avertissement
+		# tant que le chantier de contenu n a pas ecrit les 3 cartes par niveau et
+		# la carte de chaque objectif : un niveau incomplet tourne quand meme, son
+		# pool se reduit a son deck.
+		for err in level.progression_errors():
+			fail("niveau %s : %s" % [level.id, err])
+		var manques: Array[String] = level.missing_progression()
+		if not manques.is_empty():
+			_soft.append("niveau %s incomplet : %s" % [level.id, " ; ".join(manques)])
 		for next_id in level.next_levels:
 			if not ContentDB.levels.has(next_id):
 				fail("niveau %s : next_levels pointe vers '%s' qui n'existe pas"
 					% [level.id, next_id])
+	_check_cards_obtainable()
+
+
+## Un SORT qu aucun pool de campagne ne contient (deck, cartes nouvelles,
+## recompenses d objectif) et qui n est pas une carte de depart ne peut plus
+## JAMAIS etre obtenu : le pool hors campagne ne contient que des cartes deja
+## obtenues. Contenu mort, mais avertissement seulement tant que le chantier
+## de contenu n a pas distribue les cartes nouvelles (chantier P).
+func _check_cards_obtainable() -> void:
+	var joignables: Dictionary = {}
+	for level: LevelDef in ContentDB.levels.values():
+		for liste: Array in [level.exploration_deck, level.levelup_cards,
+				level.objective_rewards]:
+			for c in liste:
+				if c != null:
+					joignables[(c as SpellCard).id] = true
+	var morts: Array[String] = []
+	for card: SpellCard in ContentDB.cards.values():
+		if card.is_passive or card.copies_in_starter > 0 or joignables.has(card.id):
+			continue
+		morts.append(String(card.id))
+	morts.sort()
+	if not morts.is_empty():
+		_soft.append("%d sort(s) jamais obtenable(s) en campagne : %s"
+			% [morts.size(), ", ".join(morts)])
 
 
 ## LES APPRENTIS DU MAGE. Un apprenti est une recompense CHARACTER qui designe une
