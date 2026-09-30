@@ -1986,14 +1986,26 @@ func _check_massacre_tab(menu: Control) -> void:
 		_fail("l onglet Massacre est introuvable")
 		return
 	var avant: Dictionary = SaveData.to_dictionary()
+	# Un niveau gagne ne suffit plus : le Massacre s ouvre a la FIN de la
+	# campagne (retouche du 30/09). L onglet ferme doit le dire, dans le lieu.
 	SaveData.record_victory(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION, {}, 6)
 	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
-	SaveData.record_run_waves(MassacreMode.LEVEL_ID, GameEnums.Mode.MASSACRE, 14)
 	menu.select_tab(menu.get("TABS").find("MASSACRE"))
 	panneau.refresh()
+	if panneau.can_play():
+		_fail("onglet Massacre : JOUER actif apres un seul niveau gagne")
+	if not panneau.lock_shown():
+		_fail("onglet Massacre ferme : le bandeau du verrou n est pas affiche")
+	await _shot("massacre_ferme")
+	for lv: LevelDef in ContentDB.levels.values():
+		SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, {}, 6)
+	SaveData.record_run_waves(MassacreMode.LEVEL_ID, GameEnums.Mode.MASSACRE, 14)
+	panneau.refresh()
 	if not panneau.can_play():
-		_fail("onglet Massacre : JOUER coupe malgre un niveau gagne et un deck valide (%s)"
+		_fail("onglet Massacre : JOUER coupe malgre la campagne finie et un deck valide (%s)"
 			% MassacrePanel.block_reason())
+	if panneau.lock_shown():
+		_fail("onglet Massacre ouvert : le bandeau du verrou est reste")
 	await _shot("massacre_ouvert")
 	SaveData.load_from_dictionary(avant)
 	panneau.refresh()
@@ -2187,6 +2199,24 @@ func _vitrine_grimoire_visibilite(grimoire: GalleryPanel) -> void:
 	grimoire.open_detail(grisee)
 	await _shot("livre_fiche_a_obtenir")
 	grimoire.close_detail()
+	# BESTIAIRE EN TROIS ETATS (retouche du 30/09) : aucun monstre d un niveau
+	# pas encore atteint, et une fiche A RENCONTRER lisible.
+	grimoire.show_section(GalleryPanel.Section.BEASTS)
+	var betes: Array = grimoire.entries()
+	var a_voir: int = -1
+	for j in betes.size():
+		var e: EnemyDef = betes[j]
+		var etat_e: int = SaveData.enemy_visibility(e.id)
+		if etat_e == SaveData.ENEMY_HIDDEN:
+			_fail("le bestiaire montre %s, d un niveau pas encore atteint" % e.id)
+		if etat_e == SaveData.ENEMY_REACHABLE and a_voir < 0:
+			a_voir = j
+	await _shot("livre_bestiaire_trois_etats")
+	if a_voir >= 0:
+		grimoire.open_detail(a_voir)
+		await _shot("livre_fiche_a_rencontrer")
+		grimoire.close_detail()
+	grimoire.show_section(GalleryPanel.Section.SPELLS)
 
 
 ## La bande des passifs de l ecran de deck : verrouillee avant l acte 2, puis
@@ -2218,6 +2248,8 @@ func _vitrine_passifs_deck(panel: DeckPanel) -> void:
 		_fail("l ecran de deck n equipe pas un passif obtenu")
 	if SaveData.equipped_passive_cards().size() != 2:
 		_fail("deux passifs equipes attendus, %d lus" % SaveData.equipped_passive_cards().size())
+	if not panel.passive_scope_text().contains("campagne"):
+		_fail("l ecran de deck ne dit pas que les passifs equipes ne valent pas en campagne")
 	await _shot("deck_passifs")
 	panel.open_passive_picker(2)
 	if panel.picker_slot() != 2:

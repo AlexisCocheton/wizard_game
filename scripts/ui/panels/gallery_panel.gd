@@ -6,10 +6,10 @@ extends Control
 ##   |  [comete] SORTS  [aile] PASSIFS  [griffe] BESTES |  <- 3 sections
 ##   +--------------------------------------------------+
 ##   | ,----------------------------------------------. |
-##   |(|  Sorts        page 2/4        18/26 connus   |)|  <- page de livre
+##   |(|           8 / 14 obtenues                    |)|  <- page de livre
 ##   |(|  +-------+  +-------+  +-------+             |)|
-##   |(|  | icone |  | icone |  |  ???  |             |)|  grille 3 x 3
-##   |(|  |  nom  |  |  nom  |  |       |             |)|
+##   |(|  | icone |  | icone |  | grise |             |)|  grille 3 x 3
+##   |(|  |  nom  |  |  nom  |  |  nom  |             |)|  acquis, puis grises
 ##   | [<]                                        [>]  |  <- changer de page
 ##   | `----------------------------------------------' |
 ##   +--------------------------------------------------+
@@ -59,12 +59,11 @@ const ARROW_W: float = 200.0
 const ARROW_H: float = 150.0
 const TILE_H: float = 310.0
 const ICON_PX: float = 110.0
-## Teinte d une carte OBTENABLE : assez sombre pour se distinguer d un coup
-## d oeil d une carte obtenue, assez claire pour que l icone reste lisible.
-const GREY_ART: Color = Color(0.42, 0.42, 0.46, 0.85)
-## Teinte d une VIGNETTE obtenable : la meme que dans l ecran de deck, pour que
-## le joueur lise le meme etat de la meme facon sur les deux ecrans.
-const GREY_TILE: Color = DeckPanel.OBTAINABLE_TINT
+## Teintes d une entree GRISEE (carte a obtenir, monstre a rencontrer). Elles
+## vivent dans CollectionStyle, partagees avec l ecran de deck : le meme etat se
+## lit de la meme facon partout.
+const GREY_ART: Color = CollectionStyle.GREY_ART
+const GREY_TILE: Color = CollectionStyle.GREY_TILE
 const ICON_PX_BIG: float = 230.0
 
 var _section: int = Section.SPELLS
@@ -255,28 +254,36 @@ func entries() -> Array:
 	return entries_of(_section)
 
 
-## VISIBILITE DES CARTES (chantier P) : les sections SORTS et PASSIFS ne listent
-## que les cartes OBTENUES et OBTENABLES (SaveData.card_visibility). Une carte
-## qu on ne peut pas encore obtenir est INVISIBLE — plus de silhouette "???" :
-## elle ne disait rien d utile au joueur et remplissait des pages de trous.
-## Le bestiaire, lui, garde ses ombres : un monstre se rencontre, il ne s obtient
-## pas, et son ombre annonce ce qui descendra un jour.
+## VISIBILITE EN TROIS ETATS, pour les trois sections (chantier P, puis retouche
+## du 30/09 pour le bestiaire) :
+##   - SORTS / PASSIFS : les cartes OBTENUES, puis les OBTENABLES grisees
+##     (SaveData.visible_cards, la MEME liste et le MEME ordre que l ecran de
+##     deck). Une carte qu on ne peut pas encore obtenir est INVISIBLE.
+##   - BESTIAIRE : les monstres RENCONTRES, puis ceux A RENCONTRER dans un niveau
+##     ouvert, grises (SaveData.enemy_visibility). Les ombres "???" de tout le
+##     bestiaire ont disparu : un monstre d un niveau pas encore atteint n a rien
+##     a dire au joueur, et 85 silhouettes devoilaient la taille du jeu entier.
+## Acquis d abord, grises ensuite : la premiere page montre ce que le joueur a.
 static func entries_of(section: int) -> Array:
 	var out: Array = []
 	match section:
 		Section.SPELLS, Section.PASSIVES:
-			var pool: Dictionary = SaveData.obtainable_ids()
-			for card: SpellCard in catalog_of(section):
-				if SaveData.is_discovered(card.id) or pool.has(card.id):
-					out.append(card)
+			out.assign(SaveData.visible_cards(section == Section.PASSIVES))
 		Section.BEASTS:
-			out = catalog_of(section)
+			var grises: Array = []
+			var atteints: Dictionary = SaveData.reachable_enemy_ids()
+			for e: EnemyDef in catalog_of(section):
+				if SaveData.is_enemy_discovered(e.id):
+					out.append(e)
+				elif atteints.has(e.id):
+					grises.append(e)
+			out.append_array(grises)
 	return out
 
 
-## TOUT le catalogue d une section, visible ou non : c est le denominateur
-## honnete du compteur ("N / M obtenues" dit combien il en existe, sans dire
-## lesquelles).
+## TOUT le catalogue d une section, visible ou non, dans l ordre d affichage.
+## Ce n est PLUS le denominateur du compteur (retouche du 30/09) : "8 / 50"
+## annoncait 50 cartes dont 36 invisibles. Le compteur compte ce qui se voit.
 static func catalog_of(section: int) -> Array:
 	var out: Array = []
 	match section:
@@ -317,6 +324,17 @@ static func _sort_cards(a: SpellCard, b: SpellCard) -> bool:
 ## Une carte OBTENABLE : visible et lisible, mais grisee (pas encore prise).
 static func is_obtainable(entry: Object) -> bool:
 	return entry is SpellCard and SaveData.card_visibility((entry as SpellCard).id) 		== SaveData.CARD_OBTAINABLE
+
+
+## Un monstre A RENCONTRER : dans un niveau ouvert, jamais combattu.
+static func is_reachable(entry: Object) -> bool:
+	return entry is EnemyDef and SaveData.enemy_visibility((entry as EnemyDef).id) \
+		== SaveData.ENEMY_REACHABLE
+
+
+## Une entree GRISEE, quelle que soit la section : lisible, pas encore acquise.
+static func is_greyed(entry: Object) -> bool:
+	return is_obtainable(entry) or is_reachable(entry)
 
 
 ## Une entree est-elle decouverte (carte OBTENUE, monstre rencontre) ? Les
@@ -392,28 +410,18 @@ func refresh() -> void:
 
 
 
-## Le compteur d en-tete. Pour les cartes : N OBTENUES sur M EXISTANTES (tout le
-## catalogue de la section, cartes invisibles comprises : le joueur sait
-## combien il en reste sans savoir lesquelles), et combien sont a obtenir, soit
-## les tuiles grisees qu il a sous les yeux. Pour le bestiaire, inchange.
+## Le compteur d en-tete : ACQUIS / VISIBLES (retouche du 30/09), le meme sur les
+## trois sections et sur l ecran de deck (CollectionStyle.counter).
+##
+## Il annoncait "8 / 50 obtenues" : 50 etait tout le catalogue, dont 36 cartes
+## qu aucune page ne montre. Le compteur contredisait la regle "une carte non
+## obtenable est invisible" et faisait chercher au joueur des cartes absentes.
+## "8 / 14" dit ce que les pages contiennent : 14 vignettes, dont 6 grisees.
 static func header_text(section: int) -> String:
-	var tout: Array = catalog_of(section)
 	if section == Section.BEASTS:
-		var vus: int = 0
-		for e in tout:
-			if is_known(e):
-				vus += 1
-		return "%d / %d decouverts" % [vus, tout.size()]
-	var obtenues: int = 0
-	var a_obtenir: int = 0
-	for e in entries_of(section):
-		if is_known(e):
-			obtenues += 1
-		else:
-			a_obtenir += 1
-	var texte: String = "%d / %d obtenues" % [obtenues, tout.size()]
-	if a_obtenir > 0:
-		texte += "   -   %d a obtenir" % a_obtenir
+		return CollectionStyle.counter(SaveData.enemy_counts(), "rencontres")
+	var texte: String = CollectionStyle.counter(
+		SaveData.card_counts(1 if section == Section.PASSIVES else 0), "obtenues")
 	# Une page de passifs VIDE se lisait comme un chargement rate (capture) :
 	# avant l acte 2 on dit pourquoi elle est vide.
 	if section == Section.PASSIVES and not SaveData.passives_unlocked():
@@ -423,9 +431,10 @@ static func header_text(section: int) -> String:
 
 func _tile(entry: Object, index: int) -> Control:
 	var known: bool = is_known(entry)
-	# Une carte OBTENABLE se lit et s ouvre comme une obtenue ; seule sa teinte
-	# (et son sous-titre) dit qu elle reste a prendre.
-	var grisee: bool = is_obtainable(entry)
+	# Une entree GRISEE (carte a obtenir, monstre a rencontrer) se lit et s ouvre
+	# comme une acquise ; seule sa teinte (et son sous-titre) dit qu elle reste
+	# a prendre ou a croiser.
+	var grisee: bool = is_greyed(entry)
 	var tile := Button.new()
 	tile.custom_minimum_size = Vector2(0, TILE_H)
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -442,15 +451,11 @@ func _tile(entry: Object, index: int) -> Control:
 	var art: Control = _art(entry, ICON_PX, known or grisee)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		if grisee:
-			art.modulate = GREY_ART
 		box.add_child(art)
-	# Le FOND de la vignette et l icone sont grises, pas le texte :
-	# self_modulate ne descend pas aux enfants. Griser toute la vignette
-	# (modulate) assombrissait aussi le nom, illisible sur le bleu du bouton
-	# (lu sur capture) ; la carte doit rester LISIBLE.
+	# Le FOND de la vignette et l image sont grises, pas le texte : la meme
+	# regle que l ecran de deck, ecrite une fois dans CollectionStyle.
 	if grisee:
-		tile.self_modulate = GREY_TILE
+		CollectionStyle.grey(tile, art)
 
 	var nom: Label = UiTheme.label(_name_of(entry) if known or grisee else "???",
 		UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
@@ -480,13 +485,13 @@ func _sub_of(entry: Object, known: bool) -> String:
 	if entry is SpellCard:
 		var c := entry as SpellCard
 		if not known:
-			return "a obtenir"
+			return CollectionStyle.FOOT_OBTAINABLE
 		var n: int = card_uses(c.id)
 		return "lance %d fois" % n if n > 0 else GameEnums.rarity_name(c.rarity)
 	if entry is EnemyDef:
 		var e := entry as EnemyDef
 		if not known:
-			return "jamais croise"
+			return CollectionStyle.FOOT_REACHABLE
 		var k: int = kills_of(e.id)
 		return "%d vaincus" % k if k > 0 else "P%d  %d PV" % [e.power, int(e.max_hp)]
 	return ""
@@ -499,9 +504,9 @@ func _sub_of(entry: Object, known: bool) -> String:
 ## rare etait un pave gris illisible. On ecrit donc en clair, et la rarete se lit
 ## sur l icone et sur la fiche, ou le fond est du papier.
 func _sub_color(entry: Object, known: bool) -> Color:
-	# Une carte OBTENABLE est deja grisee par la teinte de sa vignette : un
-	# second assombrissement rendait "a obtenir" illisible (lu sur capture).
-	return UiTheme.TEXT if known or is_obtainable(entry) else UiTheme.TEXT_DIM
+	# Une entree grisee l est deja par la teinte de sa vignette : un second
+	# assombrissement rendait "a obtenir" illisible (lu sur capture).
+	return UiTheme.TEXT if known or is_greyed(entry) else UiTheme.TEXT_DIM
 
 
 ## L image d une entree. Pour une carte : SON icone de sort (CardIcons), qui est
@@ -571,12 +576,14 @@ func _render_detail() -> void:
 	var art: Control = _art(entry, ICON_PX_BIG, true)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		if is_obtainable(entry):
-			art.modulate = GREY_ART
+		if is_greyed(entry):
+			CollectionStyle.grey(null, art)
 		box.add_child(art)
 
 	if entry is SpellCard:
 		_fill_card(box, entry as SpellCard)
+	elif entry is EnemyDef and not is_known(entry):
+		_fill_enemy_unmet(box, entry as EnemyDef)
 	elif entry is EnemyDef:
 		_fill_enemy(box, entry as EnemyDef)
 
@@ -625,15 +632,10 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 	_fill_upgrades(box, card)
 
 
-## La phrase qui dit ou obtenir une carte grisee : les niveaux OUVERTS dont le
-## pool de montee de niveau la contient, dans l ordre des ids.
+## La phrase qui dit ou obtenir une carte grisee. Elle vit dans CollectionStyle,
+## partagee avec l ecran de deck ; gardee ici pour les appelants existants.
 static func where_to_obtain(card: SpellCard) -> String:
-	var noms: Array[String] = []
-	for lv: LevelDef in SaveData.levels_offering(card.id):
-		noms.append(lv.display_name)
-	if noms.is_empty():
-		return "A OBTENIR en combat"
-	return "A OBTENIR : prends-la a la montee de niveau de %s" % ", ".join(noms)
+	return CollectionStyle.where_to_obtain(card)
 
 
 ## Section AMELIORATIONS. Les ameliorations de sort n existent pas encore (elles
@@ -701,6 +703,26 @@ func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
 	for line in BestiaryLore.behaviours(def):
 		box.add_child(UiTheme.label("- " + line, UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
+
+
+## Fiche d un monstre A RENCONTRER (retouche du 30/09) : lisible mais grisee.
+## Son nom, sa nature et sa puissance se lisent, et surtout OU le rencontrer.
+## Ses chiffres et ses competences restent a decouvrir en le combattant : c est
+## la recompense de la rencontre (voir SaveData, BESTIAIRE EN TROIS ETATS). Une
+## fonction a part plutot qu un drapeau dans _fill_enemy, qui porte la fiche
+## complete et que d autres chantiers enrichissent.
+func _fill_enemy_unmet(box: VBoxContainer, def: EnemyDef) -> void:
+	box.add_child(UiTheme.label(def.display_name, UiTheme.FONT_TITLE,
+		BestiaryLore.power_ink(def.power), HORIZONTAL_ALIGNMENT_CENTER, false))
+	box.add_child(UiTheme.label("%s   -   puissance %d" % [
+		BestiaryLore.kind_name(def.kind), def.power], UiTheme.FONT_SMALL,
+		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	box.add_child(UiTheme.label(CollectionStyle.where_to_meet(def), UiTheme.FONT_BODY,
+		Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
+	box.add_child(UiTheme.label("COMPETENCES", UiTheme.FONT_SMALL,
+		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	box.add_child(UiTheme.label("a decouvrir en le combattant", UiTheme.FONT_BODY,
+		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
 
 
 func _stat(titre: String, valeur: String, ink: Color) -> Control:

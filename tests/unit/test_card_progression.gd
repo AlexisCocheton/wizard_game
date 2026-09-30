@@ -41,6 +41,12 @@ func run() -> void:
 	_test_passifs_equipes_actifs_au_depart()
 	_test_passifs_communs_proposables()
 	_test_ecran_de_deck_equipe_les_passifs()
+	# Retouches du co-auteur apres test (30/09).
+	_test_communes_proposees_en_campagne()
+	_test_hors_campagne_la_table_des_sorts_ne_change_pas()
+	_test_contenu_de_niveau_construit_en_code()
+	_test_ou_obtenir_distingue_deck_et_montee()
+	_test_meme_gris_au_grimoire_et_au_deck()
 	# Etat propre pour les suites suivantes.
 	RunState.reset()
 	RunState.current_level_def = null
@@ -228,12 +234,11 @@ func _test_toute_offre_vient_du_pool() -> void:
 				hors_pool += 1
 		RunState.pending_offer.clear()
 	eq(hors_pool, 0, "aucune carte offerte hors du pool de montee de niveau")
-	# Tout ce qui n est pas commun finit par sortir. Les COMMUNES du deck ne
-	# sortent qu en REPLI : la table des sorts (80/15/5, DEC-004) ne tire jamais
-	# la commune. Choix assume et signale, voir run_state.gd.
+	# TOUT le pool finit par sortir, communes comprises : en campagne la table
+	# des sorts connait la commune (RunState.CAMPAIGN_RARITY_WEIGHTS, retouche
+	# du 30/09). Avant, les communes du deck ne sortaient qu en repli.
 	for c2 in pool:
-		if c2.rarity != GameEnums.Rarity.COMMON:
-			ok(vues.has(c2.id), "%s, carte du pool, finit par etre proposee" % c2.id)
+		ok(vues.has(c2.id), "%s, carte du pool, finit par etre proposee" % c2.id)
 	# Un pool sans rien au-dessus de la commune (un niveau sans contenu de
 	# progression) propose bien ses communes : le repli les atteint toutes.
 	var maigre: LevelDef = _niveau(1)
@@ -364,25 +369,47 @@ func _test_le_grimoire_et_le_deck_cachent_l_invisible() -> void:
 			ok(GalleryPanel.is_obtainable(c), "%s est grisee au grimoire" % c.id)
 			not_ok(GalleryPanel.is_known(c), "%s n y est pas comptee obtenue" % c.id)
 	ok(vu_obtenable, "un profil neuf a deja des cartes a obtenir")
-	# Le compteur : obtenues sur TOUT le catalogue, et le nombre a obtenir.
+	# ORDRE : les obtenues d abord, les grisees ensuite (retouche du 30/09).
+	var vu_grisee: bool = false
+	for c4: SpellCard in sorts:
+		var obtenue: bool = SaveData.is_discovered(c4.id)
+		if not obtenue:
+			vu_grisee = true
+		elif vu_grisee:
+			ok(false, "%s obtenue apparait APRES une carte grisee" % c4.id)
+	# LE COMPTEUR HONNETE : obtenues / VISIBLES, jamais le catalogue. Le
+	# denominateur est le nombre de vignettes que les pages montrent.
 	var obtenues: int = 0
-	for c3: SpellCard in catalogue:
+	for c3: SpellCard in sorts:
 		if SaveData.is_discovered(c3.id):
 			obtenues += 1
-	ok(GalleryPanel.header_text(GalleryPanel.Section.SPELLS).begins_with(
-		"%d / %d" % [obtenues, catalogue.size()]),
-		"le compteur dit obtenues / catalogue : %s"
-		% GalleryPanel.header_text(GalleryPanel.Section.SPELLS))
-	# L ecran de deck applique la meme regle a sa collection.
+	var entete: String = GalleryPanel.header_text(GalleryPanel.Section.SPELLS)
+	ok(entete.begins_with("%d / %d " % [obtenues, sorts.size()]),
+		"le compteur dit obtenues / visibles : %s" % entete)
+	not_ok(entete.contains("/ %d " % catalogue.size()),
+		"le compteur ne devoile plus la taille du catalogue : %s" % entete)
+	# L ecran de deck montre LA MEME CHOSE, dans LE MEME ORDRE, avec LE MEME
+	# compteur que la section SORTS du grimoire.
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
+	eq(_ids_de(panel.collection()), _ids_de(sorts),
+		"la collection du deck = la section SORTS du grimoire, dans le meme ordre")
 	for c2: SpellCard in panel.collection():
 		ok(SaveData.card_visibility(c2.id) != SaveData.CARD_HIDDEN,
 			"la collection du deck ne montre pas %s, invisible" % c2.id)
 		if not SaveData.is_discovered(c2.id):
 			ok(panel.refusal_for(c2) != "", "%s grisee ne s ajoute pas au deck" % c2.id)
+	ok(entete.begins_with(DeckPanel.collection_counter()),
+		"le deck et le grimoire ont le meme compteur (%s / %s)"
+		% [DeckPanel.collection_counter(), entete])
 	detach(panel)
+	# La barre du menu compte de meme : sorts ET passifs visibles.
+	var menu_script: GDScript = load("res://scripts/ui/main_menu.gd")
+	var tous: int = sorts.size() + GalleryPanel.entries_of(GalleryPanel.Section.PASSIVES).size()
+	var haut: String = menu_script.cards_counter_text()
+	ok(haut.ends_with("/ %d" % tous),
+		"la barre du menu compte les cartes visibles (%s, %d visibles)" % [haut, tous])
 
 
 # --- B. Migration et recompenses --------------------------------------------
@@ -502,13 +529,19 @@ func _test_passifs_rien_avant_l_acte_2() -> void:
 	SaveData.set_equipped_passives([p.id])
 	RunState.reset()
 	RunState.current_level_def = acte1
+	RunState.mode = GameEnums.Mode.EXPLORATION
 	eq(RunState.equip_saved_passives(), 0, "acte 1 : aucun passif active au depart")
 	eq(RunState.equipped_passives.size(), 0, "la barre reste vide")
+	# Campagne, acte 2 : TOUJOURS rien au depart (retouche du 30/09). Les
+	# passifs de campagne viennent des montees de niveau, pas de l ecran de deck.
 	RunState.reset()
 	RunState.current_level_def = acte2
-	eq(RunState.equip_saved_passives(), 1, "acte 2 : le passif equipe est active")
+	RunState.mode = GameEnums.Mode.EXPLORATION
+	eq(RunState.equip_saved_passives(), 0,
+		"campagne, acte 2 : les passifs equipes au deck ne s activent PAS")
 	RunState.reset()
 	RunState.current_level_def = null
+	RunState.mode = GameEnums.Mode.EXPLORATION
 	SaveData.reset_profile()
 
 
@@ -562,28 +595,48 @@ func _test_passifs_equipes_actifs_au_depart() -> void:
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
 	attach(g)
-	# Trois passifs obtenus et equipes : les trois sont actifs DES LE DEPART.
+	# Le niveau d acte 2 doit etre OUVERT pour que les passifs existent hors
+	# campagne (SaveData.passives_unlocked).
+	SaveData.unlock_level(acte2.id)
+	# Trois passifs obtenus et equipes : en INFINI, les trois sont actifs DES LE
+	# DEPART, dans l ordre.
 	SaveData.set_equipped_passives(voulus)
-	g.start_level(acte2, GameEnums.Mode.EXPLORATION)
+	g.start_level(acte2, GameEnums.Mode.INFINITE)
 	g.running = false
 	eq(_ids_de(RunState.equipped_passives), voulus,
-		"acte 2 : les passifs equipes au deck sont actifs DES LE DEPART, dans l ordre")
+		"Infini, acte 2 : les passifs equipes au deck sont actifs DES LE DEPART, dans l ordre")
 	# Rejouer ne les empile pas (reset puis re-equipement).
-	g.start_level(acte2, GameEnums.Mode.EXPLORATION)
+	g.start_level(acte2, GameEnums.Mode.INFINITE)
 	g.running = false
 	eq(RunState.equipped_passives.size(), voulus.size(), "rejouer ne double pas les passifs")
 	# Un passif NON obtenu glisse dans la liste (profil edite) ne s equipe pas,
 	# et ne prend pas la place des autres.
 	var intrus: SpellCard = p[DeckRules.MAX_PASSIVES]
 	SaveData.set_equipped_passives([voulus[0], String(intrus.id), voulus[1]])
-	g.start_level(acte2, GameEnums.Mode.EXPLORATION)
+	g.start_level(acte2, GameEnums.Mode.INFINITE)
 	g.running = false
 	eq(_ids_de(RunState.equipped_passives), [voulus[0], voulus[1]],
 		"un passif non obtenu n est jamais active")
 	SaveData.set_equipped_passives(voulus)
+	# CAMPAGNE : le meme profil part SANS passif, meme a l acte 2 (retouche du
+	# co-auteur, 30/09). Verifie sur une vraie partie, pas seulement sur la regle.
+	g.start_level(acte2, GameEnums.Mode.EXPLORATION)
+	g.running = false
+	eq(RunState.equipped_passives.size(), 0,
+		"campagne, acte 2 : les passifs equipes au deck ne s appliquent pas")
 	g.start_level(acte1, GameEnums.Mode.EXPLORATION)
 	g.running = false
-	eq(RunState.equipped_passives.size(), 0, "acte 1 : le meme profil part sans passif")
+	eq(RunState.equipped_passives.size(), 0, "campagne, acte 1 : le meme profil part sans passif")
+	# Tous les modes SANS FIN les appliquent, le Massacre compris (niveau
+	# fabrique, sans acte : c est l acte 2 ATTEINT qui compte).
+	for m in GameEnums.Mode.values():
+		if not GameEnums.is_endless(m):
+			continue
+		var lv_m: LevelDef = MassacreMode.level_def() if m == GameEnums.Mode.MASSACRE else acte2
+		g.start_level(lv_m, m)
+		g.running = false
+		eq(RunState.equipped_passives.size(), voulus.size(),
+			"mode sans fin %s : les passifs equipes s appliquent" % GameEnums.mode_name(m))
 	detach(g)
 	RunState.reset()
 	RunState.current_level_def = null
@@ -656,6 +709,293 @@ func _test_ecran_de_deck_equipe_les_passifs() -> void:
 	eq(SaveData.equipped_passives(), [String(p[0].id)], "le profil le retient")
 	panel.clear_passive_slot(0)
 	eq(SaveData.equipped_passives().size(), 0, "RETIRER vide l emplacement")
+	# La phrase qui dit OU ils servent se lit pres des emplacements.
+	ok(panel.passive_scope_text().contains("campagne"),
+		"l ecran de deck dit que les passifs equipes ne valent pas en campagne (%s)"
+		% panel.passive_scope_text())
 	detach(panel)
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
+
+
+# --- F. Retouches du 30/09 ---------------------------------------------------
+
+## Les COMMUNES du pool de campagne sont proposees, et pas seulement en repli :
+## sur un niveau ou rare, epique et legendaire existent aussi, une commune
+## occupe une part des propositions proche de sa part dans la table.
+func _test_communes_proposees_en_campagne() -> void:
+	var total: float = 0.0
+	for r in RunState.CAMPAIGN_RARITY_WEIGHTS:
+		total += float(RunState.CAMPAIGN_RARITY_WEIGHTS[r])
+	feq(total, 1.0, "la table de campagne somme a 1")
+	var part_commune: float = float(RunState.CAMPAIGN_RARITY_WEIGHTS.get(
+		GameEnums.Rarity.COMMON, 0.0))
+	ok(part_commune > 0.0, "la table de campagne connait la commune")
+	# Le HAUT de la courbe ne bouge pas : epique et legendaire comme DEC-004.
+	for haut in [GameEnums.Rarity.EPIC, GameEnums.Rarity.LEGENDARY]:
+		feq(float(RunState.CAMPAIGN_RARITY_WEIGHTS.get(haut, -1.0)),
+			float(GameConfig.RARITY_WEIGHTS.get(haut, -2.0)),
+			"rarete %d : meme poids qu en DEC-004" % haut)
+	SaveData.reset_profile()
+	var lv: LevelDef = _niveau(1)
+	# Tous les objectifs reussis : le pool a des cartes de chaque rarete, donc
+	# aucune rarete voulue n est epuisee et aucun repli ne fausse la mesure.
+	var faits: Dictionary = {}
+	for o in lv.objectives:
+		faits[o.id] = true
+	SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, faits, 1)
+	var pool: Array[SpellCard] = RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION)
+	var raretes: Dictionary = {}
+	for c in pool:
+		raretes[c.rarity] = true
+	eq(raretes.size(), GameEnums.Rarity.size(), "le pool du test a les quatre raretes")
+	RunState.reset()
+	RunState.current_level_def = lv
+	RunState.mode = GameEnums.Mode.EXPLORATION
+	var communes: int = 0
+	var sorts: int = 0
+	var vues: Dictionary = {}
+	for essai in TIRAGES:
+		RunState.set_seed(8100 + essai)
+		# Une seule proposition par offre : la premiere carte d une offre n a
+		# jamais subi l exclusion des cartes deja choisies, sa rarete est donc
+		# exactement celle tiree.
+		for c2 in RunState.offer_choices(1):
+			if c2.is_passive:
+				continue
+			sorts += 1
+			if c2.rarity == GameEnums.Rarity.COMMON:
+				communes += 1
+				vues[c2.id] = true
+		RunState.pending_offer.clear()
+	var part: float = float(communes) / float(maxi(sorts, 1))
+	between(part, part_commune * 0.6, part_commune * 1.4,
+		"part des communes proposees en campagne (%d / %d)" % [communes, sorts])
+	for c3 in pool:
+		if c3.rarity == GameEnums.Rarity.COMMON:
+			ok(vues.has(c3.id), "la commune %s du pool est proposee EN PREMIER choix" % c3.id)
+	RunState.reset()
+	RunState.current_level_def = null
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+
+## Hors campagne (Infini, Massacre) et sans niveau, la table de DEC-004 reste la
+## seule : jamais une commune tiree quand le pool a des rares.
+func _test_hors_campagne_la_table_des_sorts_ne_change_pas() -> void:
+	var lv: LevelDef = _niveau(1)
+	for m in GameEnums.Mode.values():
+		if not GameEnums.is_endless(m):
+			continue
+		var communes: int = 0
+		for essai in TIRAGES:
+			RunState.set_seed(8600 + essai)
+			if RunState.roll_spell_rarity(lv, m) == GameEnums.Rarity.COMMON:
+				communes += 1
+		eq(communes, 0, "%s : la table des sorts ne tire jamais la commune"
+			% GameEnums.mode_name(m))
+	var sans_niveau: int = 0
+	for essai2 in TIRAGES:
+		RunState.set_seed(8900 + essai2)
+		if RunState.roll_spell_rarity(null, GameEnums.Mode.EXPLORATION) == GameEnums.Rarity.COMMON:
+			sans_niveau += 1
+	eq(sans_niveau, 0, "sans niveau (tests a froid, banc hors partie) : table de DEC-004")
+	# UN seul tirage consomme, quel que soit le mode : la suite ne se decale pas.
+	RunState.set_seed(4242)
+	RunState.roll_spell_rarity(lv, GameEnums.Mode.EXPLORATION)
+	var apres_campagne: float = RunState._rng.randf()
+	RunState.set_seed(4242)
+	RunState.roll_spell_rarity(lv, GameEnums.Mode.INFINITE)
+	feq(RunState._rng.randf(), apres_campagne,
+		"la table de campagne consomme autant de tirages que celle de DEC-004")
+
+
+## Le contenu (3 cartes nouvelles par niveau, cartes des objectifs) n est pas
+## encore ecrit : la logique doit marcher des qu il le sera. On le fabrique en
+## code sur deux VRAIS niveaux, l un ouvert, l autre ferme.
+func _test_contenu_de_niveau_construit_en_code() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+	var ouvert: LevelDef = ContentDB.levels.get(&"lvl_01")
+	var ferme: LevelDef = null
+	for id in ouvert.next_levels:
+		ferme = ContentDB.levels.get(id)
+	ok(ferme != null and not SaveData.is_level_unlocked(ferme.id),
+		"le niveau qui suit le premier est ferme sur un profil neuf")
+	if ferme == null:
+		return
+	# Des cartes qu aucun pool ouvert ni ferme ne contient deja.
+	var partout: Dictionary = {}
+	for lv0: LevelDef in ContentDB.levels.values():
+		for c0 in RunState.levelup_pool(lv0, GameEnums.Mode.EXPLORATION):
+			partout[c0.id] = true
+	var libres: Array[SpellCard] = []
+	for c1: SpellCard in _sorts():
+		if not partout.has(c1.id) and not SaveData.is_discovered(c1.id):
+			libres.append(c1)
+	ok(libres.size() >= 2 * LevelDef.LEVELUP_NEW_CARDS + 1,
+		"assez de cartes libres pour fabriquer le contenu (%d)" % libres.size())
+	if libres.size() < 2 * LevelDef.LEVELUP_NEW_CARDS + 1:
+		return
+	var sauve_o: Array[SpellCard] = ouvert.levelup_cards.duplicate()
+	var sauve_f: Array[SpellCard] = ferme.levelup_cards.duplicate()
+	var sauve_r: Array[SpellCard] = ouvert.objective_rewards.duplicate()
+	var nouv_o: Array[SpellCard] = []
+	var nouv_f: Array[SpellCard] = []
+	for i in LevelDef.LEVELUP_NEW_CARDS:
+		nouv_o.append(libres[i])
+		nouv_f.append(libres[LevelDef.LEVELUP_NEW_CARDS + i])
+	var recompense: SpellCard = libres[2 * LevelDef.LEVELUP_NEW_CARDS]
+	ouvert.levelup_cards = nouv_o
+	ferme.levelup_cards = nouv_f
+	var rec: Array[SpellCard] = [recompense]
+	ouvert.objective_rewards = rec
+	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
+	for c in nouv_o:
+		eq(SaveData.card_visibility(c.id), SaveData.CARD_OBTAINABLE,
+			"carte nouvelle d un niveau OUVERT : obtenable (%s)" % c.id)
+		ok(sorts.has(c), "et montree grisee au grimoire (%s)" % c.id)
+	for c2 in nouv_f:
+		eq(SaveData.card_visibility(c2.id), SaveData.CARD_HIDDEN,
+			"carte nouvelle d un niveau FERME : invisible (%s)" % c2.id)
+		not_ok(sorts.has(c2), "et absente du grimoire (%s)" % c2.id)
+	eq(SaveData.card_visibility(recompense.id), SaveData.CARD_HIDDEN,
+		"carte d un objectif pas encore reussi : invisible")
+	# Le niveau 1 gagne avec son premier objectif : la carte de l objectif
+	# devient obtenable, et le niveau suivant s ouvre avec ses cartes nouvelles.
+	SaveData.record_victory(ouvert, GameEnums.Mode.EXPLORATION,
+		{ouvert.objectives[0].id: true}, 1)
+	eq(SaveData.card_visibility(recompense.id), SaveData.CARD_OBTAINABLE,
+		"objectif reussi : sa carte devient obtenable")
+	for c3 in nouv_f:
+		eq(SaveData.card_visibility(c3.id), SaveData.CARD_OBTAINABLE,
+			"niveau suivant ouvert : ses cartes nouvelles deviennent obtenables (%s)" % c3.id)
+	# La compteur suit : une carte PRISE passe d une vignette grisee a une
+	# obtenue, le total visible ne bouge pas.
+	var avant: Array = SaveData.card_counts(0)
+	RunState.reset()
+	RunState.pending_offer = [nouv_o[0]]
+	RunState.pick_offer(0)
+	var apres: Array = SaveData.card_counts(0)
+	eq(int(apres[0]), int(avant[0]) + 1, "prendre une carte grisee : une obtenue de plus")
+	eq(int(apres[1]), int(avant[1]), "et le nombre de cartes visibles ne change pas")
+	ouvert.levelup_cards = sauve_o
+	ferme.levelup_cards = sauve_f
+	ouvert.objective_rewards = sauve_r
+	RunState.reset()
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+
+## "Ou l obtenir" ne dit pas la meme chose pour une carte du DECK d un niveau
+## (il suffit de le jouer) et pour une carte de sa montee de niveau.
+func _test_ou_obtenir_distingue_deck_et_montee() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	var du_deck: SpellCard = null
+	for c: SpellCard in lvl1.exploration_deck:
+		if c != null and not SaveData.is_discovered(c.id):
+			du_deck = c
+			break
+	ok(du_deck != null, "le deck du niveau 1 a une carte pas encore obtenue")
+	if du_deck == null:
+		return
+	var phrase: String = CollectionStyle.where_to_obtain(du_deck)
+	ok(phrase.contains("joue") and phrase.contains(lvl1.display_name),
+		"carte du deck : jouer le niveau suffit (%s)" % phrase)
+	not_ok(phrase.contains("montee"), "et pas de montee de niveau a guetter (%s)" % phrase)
+	var sauve: Array[SpellCard] = lvl1.levelup_cards.duplicate()
+	var nouvelle: SpellCard = null
+	for c2: SpellCard in _sorts(GameEnums.Rarity.RARE):
+		if SaveData.card_visibility(c2.id) == SaveData.CARD_HIDDEN:
+			nouvelle = c2
+			break
+	var nouv: Array[SpellCard] = [nouvelle]
+	lvl1.levelup_cards = nouv
+	var phrase2: String = CollectionStyle.where_to_obtain(nouvelle)
+	ok(phrase2.contains("montee") and phrase2.contains(lvl1.display_name),
+		"carte nouvelle : a prendre a la montee de niveau (%s)" % phrase2)
+	lvl1.levelup_cards = sauve
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+
+## Une carte grisee a LE MEME ASPECT au grimoire et a l ecran de deck : fond et
+## icone grises, texte intact. Le defaut releve : le deck voilait tout le texte.
+func _test_meme_gris_au_grimoire_et_au_deck() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
+	var cible: SpellCard = null
+	var index: int = -1
+	for i in sorts.size():
+		if GalleryPanel.is_obtainable(sorts[i]):
+			cible = sorts[i]
+			index = i
+			break
+	ok(cible != null, "un profil neuf a une carte grisee a comparer")
+	if cible == null:
+		return
+	var grimoire := GalleryPanel.new()
+	attach(grimoire)
+	grimoire.show_section(GalleryPanel.Section.SPELLS)
+	while grimoire.current_page() != index / GalleryPanel.PER_PAGE:
+		grimoire.turn_page(1)
+	var t_g: Button = _vignette_de(grimoire, cible.display_name)
+	var deck := DeckPanel.new()
+	attach(deck)
+	deck.refresh()
+	var j: int = deck.collection().find(cible)
+	while deck.current_page() != j / DeckPanel.PER_PAGE:
+		deck.turn_page(1)
+	var t_d: Button = _vignette_de(deck, cible.display_name)
+	ok(t_g != null and t_d != null, "la carte grisee a sa vignette sur les deux ecrans")
+	if t_g != null and t_d != null:
+		for t: Button in [t_g, t_d]:
+			eq(t.modulate, Color.WHITE, "la vignette n est pas voilee en entier (texte intact)")
+			eq(t.self_modulate, CollectionStyle.GREY_TILE, "le fond est grise")
+			var art: TextureRect = _premier(t, "TextureRect") as TextureRect
+			ok(art != null and art.modulate == CollectionStyle.GREY_ART, "l icone est grisee")
+			var pied: Label = _label_de(t, CollectionStyle.FOOT_OBTAINABLE)
+			ok(pied != null, "le pied dit '%s'" % CollectionStyle.FOOT_OBTAINABLE)
+			if pied != null:
+				eq(pied.get_theme_color(&"font_color"), UiTheme.TEXT,
+					"le pied est ecrit en clair, pas assombri une seconde fois")
+	detach(deck)
+	detach(grimoire)
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+
+func _vignette_de(racine: Node, nom: String) -> Button:
+	for n in _descendants(racine):
+		if n is Label and (n as Label).text == nom:
+			var p: Node = n.get_parent()
+			while p != null and not (p is Button):
+				p = p.get_parent()
+			if p != null and not p.is_queued_for_deletion():
+				return p as Button
+	return null
+
+
+func _label_de(racine: Node, texte: String) -> Label:
+	for n in _descendants(racine):
+		if n is Label and (n as Label).text == texte:
+			return n as Label
+	return null
+
+
+func _premier(racine: Node, classe: String) -> Node:
+	for n in _descendants(racine):
+		if n.is_class(classe):
+			return n
+	return null
+
+
+func _descendants(racine: Node) -> Array:
+	var out: Array = []
+	for c in racine.get_children():
+		out.append(c)
+		out.append_array(_descendants(c))
+	return out

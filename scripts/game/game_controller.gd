@@ -68,9 +68,11 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 
 	RunState.build_deck_from_list(_build_deck())
 	RunState.draw(GameConfig.START_HAND_SIZE)
-	# PASSIFS EQUIPES (chantier P) : actifs DES LE DEBUT du combat, a partir de
-	# l acte 2 en campagne, des l acte 2 atteint hors campagne. APRES reset(), qui
-	# vide la barre, et apres current_level_def / mode, dont depend la regle.
+	# PASSIFS EQUIPES AU DECK : actifs DES LE DEBUT du combat, mais SEULEMENT en
+	# Infini et en Massacre, et des l acte 2 atteint (retouche du 30/09). Un
+	# niveau de campagne part sans eux : ses passifs viennent des montees de
+	# niveau. APRES reset(), qui vide la barre, et apres current_level_def /
+	# mode, dont depend la regle.
 	RunState.equip_saved_passives()
 
 	# MODES (chantier M). L Infini traverse les cinq mondes (le lieu pese sur le
