@@ -215,12 +215,20 @@ func _toggle_profile() -> void:
 	show_profile(not profile_open())
 
 
+## Le compteur de cartes du haut : obtenues / VISIBLES, sorts et passifs
+## (SaveData.card_counts). Il affichait "Cartes 8 / 64", tout le catalogue :
+## la seule ligne de l ecran d accueil devoilait 50 cartes que la regle des
+## trois etats rend invisibles (retouche du 30/09).
+static func cards_counter_text() -> String:
+	var n: Array = SaveData.card_counts()
+	return "Cartes %d / %d" % [int(n[0]), int(n[1])]
+
+
 ## En-tete : le niveau de compte a gauche, le compteur de cartes sous le titre.
 ## Les deux viennent de SaveData, jamais d un compteur tenu par l interface.
 func _refresh_top_bar() -> void:
 	if _cards_label != null:
-		_cards_label.text = "Cartes %d / %d" % [
-			SaveData.discovered_count(), ContentDB.cards.size()]
+		_cards_label.text = cards_counter_text()
 	if _level_label != null:
 		_level_label.text = "Niv.\n%d" % SaveData.account_level()
 	# La banniere du titre suit le NIVEAU DE COMPTE : bois, argent, or, cristal.
