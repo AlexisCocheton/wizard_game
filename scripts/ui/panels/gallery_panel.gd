@@ -622,9 +622,9 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 	stats.add_theme_constant_override(&"separation", 96)
 	box.add_child(stats)
 	stats.add_child(_stat("Incantation", "%s s" % _fmt(card.base_cast_time),
-		Color(0.15, 0.38, 0.75)))
+		UiTheme.INK_RARE))
 	# Le compteur demande par le testeur : combien de fois ce sort a ete lance.
-	stats.add_child(_stat("Lance", str(card_uses(card.id)), Color(0.62, 0.45, 0.05)))
+	stats.add_child(_stat("Lance", str(card_uses(card.id)), UiTheme.INK_LEGENDARY))
 
 	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY,
 		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
@@ -725,10 +725,10 @@ func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:
 	box.add_child(stats)
 	stats.add_child(_stat("PV", str(int(def.max_hp)), Color(0.62, 0.12, 0.14)))
 	stats.add_child(_stat("Vitesse", BestiaryLore.speed_word(def.base_speed),
-		Color(0.15, 0.38, 0.75)))
+		UiTheme.INK_RARE))
 	stats.add_child(_stat("Degats", str(def.contact_hit()), Color(0.45, 0.30, 0.10)))
 	# Le compteur demande par le testeur : combien de ces monstres sont tombes.
-	stats.add_child(_stat("Vaincus", str(kills_of(def.id)), Color(0.62, 0.45, 0.05)))
+	stats.add_child(_stat("Vaincus", str(kills_of(def.id)), UiTheme.INK_LEGENDARY))
 
 	box.add_child(UiTheme.label("COMPETENCES", UiTheme.FONT_SMALL,
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))

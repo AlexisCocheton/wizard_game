@@ -95,9 +95,9 @@ static func power_ink(power: int) -> Color:
 	if power >= 8:
 		return Color(0.62, 0.12, 0.14)
 	if power >= 5:
-		return Color(0.48, 0.22, 0.72)
+		return UiTheme.INK_EPIC
 	if power >= 3:
-		return Color(0.62, 0.45, 0.05)
+		return UiTheme.INK_LEGENDARY
 	return Color(0.10, 0.42, 0.40)
 
 

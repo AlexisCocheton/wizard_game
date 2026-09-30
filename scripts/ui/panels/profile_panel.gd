@@ -264,7 +264,7 @@ func _achievement_card(d: ChallengeDef) -> void:
 		bas.add_child(chiffre)
 
 	var xp := UiTheme.label("+%d XP" % d.xp_reward, UiTheme.FONT_SMALL,
-		Color(0.62, 0.45, 0.05), HORIZONTAL_ALIGNMENT_RIGHT)
+		UiTheme.INK_LEGENDARY, HORIZONTAL_ALIGNMENT_RIGHT)
 	xp.autowrap_mode = TextServer.AUTOWRAP_OFF
 	bas.add_child(xp)
 
