@@ -37,6 +37,16 @@
 
 [sub_resource type="Resource" id="Resource_tefmi"]
 script = ExtResource("21_cvhwm")
+id = &"obj_element_casts_48_arcane"
+description = "Lancer 48 sorts d arcane"
+check_key = &"element_casts"
+params = {
+"count": 48,
+"element": "ARCANE"
+}
+
+[sub_resource type="Resource" id="Resource_nwfpf"]
+script = ExtResource("21_cvhwm")
 id = &"obj_kill_type_one_cast_2_golem"
 description = "Golem de pierre : en tuer 2 d un seul sort"
 check_key = &"kill_type_one_cast"
@@ -45,7 +55,7 @@ params = {
 "enemy": "golem"
 }
 
-[sub_resource type="Resource" id="Resource_nwfpf"]
+[sub_resource type="Resource" id="Resource_jbul7"]
 script = ExtResource("21_cvhwm")
 id = &"obj_win_above_speed_310"
 description = "Gagner avec plus de 310 % de vitesse"
@@ -53,13 +63,6 @@ check_key = &"win_above_speed"
 params = {
 "pct": 310
 }
-
-[sub_resource type="Resource" id="Resource_jbul7"]
-script = ExtResource("21_cvhwm")
-id = &"obj_never_hit_reflect"
-description = "Ne jamais frapper un monstre en garde de renvoi"
-check_key = &"never_hit_reflect"
-params = {}
 
 [sub_resource type="Resource" id="Resource_xn4cb"]
 script = ExtResource("24_4m5kv")

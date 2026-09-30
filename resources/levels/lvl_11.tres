@@ -22,7 +22,7 @@
 [ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="20_dtkdf"]
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="21_xahqv"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="22_3efo2"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/venom_mire.tres" id="22_y6l72"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/venom_mire.tres" id="22_6bhln"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="23_2j2mj"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_eswmg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="25_ihudj"]
@@ -38,11 +38,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_fw4au"]
 script = ExtResource("22_3efo2")
-id = &"obj_element_casts_30_frost"
-description = "Lancer 30 sorts de givre"
+id = &"obj_element_casts_32_frost"
+description = "Lancer 32 sorts de givre"
 check_key = &"element_casts"
 params = {
-"count": 30,
+"count": 32,
 "element": "FROST"
 }
 
@@ -215,5 +215,5 @@ enemy_pool = Array[ExtResource("1_q8cbb")]([ExtResource("2_6bhln"), ExtResource(
 exploration_deck = Array[ExtResource("10_3pn3o")]([ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("11_88php"), ExtResource("11_88php"), ExtResource("11_88php"), ExtResource("12_paeys"), ExtResource("12_paeys"), ExtResource("14_v6qrd"), ExtResource("14_v6qrd"), ExtResource("15_k2nie"), ExtResource("15_k2nie"), ExtResource("18_ifueo"), ExtResource("18_ifueo")])
 objectives = Array[ExtResource("22_3efo2")]([SubResource("Resource_6bhln"), SubResource("Resource_fw4au"), SubResource("Resource_pd0cl")])
 levelup_cards = Array[ExtResource("10_3pn3o")]([ExtResource("17_6bhln"), ExtResource("18_fw4au"), ExtResource("19_pucof")])
-objective_rewards = Array[ExtResource("10_3pn3o")]([ExtResource("20_dtkdf"), ExtResource("21_xahqv"), ExtResource("22_y6l72")])
+objective_rewards = Array[ExtResource("10_3pn3o")]([ExtResource("20_dtkdf"), ExtResource("21_xahqv"), ExtResource("22_6bhln")])
 next_levels = Array[StringName]([&"lvl_13"])

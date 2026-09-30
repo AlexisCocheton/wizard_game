@@ -21,23 +21,56 @@ func get_suite_name() -> String:
 
 
 ## Parties jouees par objectif au banc pour mesurer MESURES (voir plus bas).
-const PARTIES_DU_BANC: int = 30
+## 60 et non 30 : le banc n est pas deterministe d un processus a l autre
+## (README_equilibrage, « Le bot du banc »), et deux objectifs voisins se
+## departagent mal sur 30 parties.
+const PARTIES_DU_BANC: int = 60
 
 ## LES TAUX MESURES, qui verrouillent l ordre de difficulte.
 ##
 ## Un taux de reussite ne se calcule pas a froid : il faut JOUER. Chaque ligne
-## vient d une sonde de PARTIES_DU_BANC parties par objectif, avec le bot du banc
-## (tools/sim_balance.gd) qui VISE cet objectif : il joue d abord la carte
-## demandee, n ouvre jamais la carte interdite, vise d abord le monstre qu il ne
-## faut pas laisser tirer, laisse approcher celui dont il faut prendre un coup,
-## pose ses zones sur l espece a tuer d un seul sort. Un objectif est reussi si
-## la partie est GAGNEE et l objectif valide a la victoire.
+## vient d une sonde de PARTIES_DU_BANC parties par objectif (graines 1000 + 37 i),
+## avec le bot du banc (tools/sim_balance.gd : cible le plus avance hors du halo
+## des totems, zones sur le plus gros groupe, offres et ameliorations par
+## AutoPick) auquel on ajoute ce que ferait un joueur qui VISE cet objectif :
+##   card_casts / same_card_casts / element_casts : jouer d abord cette carte
+##     (la plus nombreuse du deck, cet element) ;
+##   no_card / no_card_tag / no_card_key / no_legendary_used : ne jamais la
+##     jouer, ni la prendre a une montee de niveau ;
+##   kill_type_one_cast : poser ses zones sur le plus gros groupe de l espece ;
+##   kill_type_with_card : jouer d abord la carte, viser d abord l espece ;
+##   no_hit_from : viser d abord l espece ; hit_from : ne jamais la viser ;
+##   no_passive : ne prendre aucun passif ; le reste : le bot du banc tel quel.
+## Un objectif est reussi si la partie est GAGNEE et l objectif valide a la
+## victoire (ObjectiveChecker.evaluate).
 ##
 ## Format : niveau -> [[id d objectif, parties reussies], ...] dans l ordre du
 ## niveau. Les ids sont DEDUITS du controle (DEC-023) : changer un seuil change
 ## l id, et ce test refuse alors la ligne — un objectif retouche doit etre
 ## re-mesure, sinon le classement ne serait plus qu une supposition.
-const MESURES: Dictionary = {}
+const MESURES: Dictionary = {
+	"lvl_01": [["obj_card_casts_piercing_arrow_6", 59], ["obj_no_card_fireball", 48], ["obj_win_above_speed_250", 28]],
+	"lvl_02": [["obj_boss_quick_after_revive_8", 50], ["obj_win_above_speed_300", 31], ["obj_kill_type_one_cast_4_hopper", 8]],
+	"lvl_08": [["obj_kill_type_one_cast_4_rat_swarm", 39], ["obj_kill_type_with_card_fireball_8_jelly_small", 29], ["obj_multi_kill_15_1", 16]],
+	"lvl_09": [["obj_no_legendary", 56], ["obj_hit_from_sleepy_fox", 19], ["obj_win_below_speed_200", 10]],
+	"lvl_17": [["obj_kill_flying_21", 51], ["obj_card_casts_resonance_7", 26], ["obj_no_enemy_past_0_7", 11]],
+	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 40], ["obj_win_below_speed_190", 21], ["obj_card_casts_weakness_mark_11", 10]],
+	"lvl_03": [["obj_multi_kill_8_1", 50], ["obj_card_casts_frost_rain_26", 20], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 16]],
+	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 47], ["obj_no_hit_from_imp_archer", 32], ["obj_untouched", 21]],
+	"lvl_19": [["obj_kill_type_one_cast_4_pit_ghoul", 31], ["obj_element_casts_44_fire", 10], ["obj_untouched", 6]],
+	"lvl_20": [["obj_no_card_void_grip", 55], ["obj_card_casts_piercing_arrow_21", 27], ["obj_win_below_speed_150", 12]],
+	"lvl_05": [["obj_element_casts_48_arcane", 46], ["obj_kill_type_one_cast_2_golem", 31], ["obj_win_above_speed_310", 17]],
+	"lvl_06": [["obj_element_casts_5_lightning", 53], ["obj_kill_type_one_cast_3_hopper", 36], ["obj_win_under_time_100", 9]],
+	"lvl_21": [["obj_kill_type_with_card_arcane_bolt_3_fire_worm", 47], ["obj_no_card_tag_fire", 33], ["obj_win_under_time_118", 15]],
+	"lvl_07": [["obj_no_card_mirror_apprentice", 56], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 24], ["obj_win_above_speed_350", 9]],
+	"lvl_10": [["obj_kill_flying_1", 49], ["obj_untouched", 44], ["obj_enemy_travel_1104_0_cacodaemon", 13]],
+	"lvl_11": [["obj_kill_flying_4", 46], ["obj_element_casts_32_frost", 26], ["obj_win_below_speed_150", 21]],
+	"lvl_12": [["obj_card_casts_focus_14", 45], ["obj_kill_type_with_card_arcane_bolt_7_shade", 30], ["obj_same_card_casts_38", 12]],
+	"lvl_13": [["obj_no_legendary", 51], ["obj_card_casts_spark_25", 35], ["obj_win_above_speed_300", 20]],
+	"lvl_14": [["obj_kill_type_one_cast_3_rat_swarm", 44], ["obj_hit_from_sleepy_fox", 21], ["obj_no_hit_from_imp_archer", 6]],
+	"lvl_15": [["obj_element_casts_50_fire", 37], ["obj_never_hit_reflect", 29], ["obj_win_above_speed_380", 12]],
+	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 56], ["obj_boss_quick_after_revive_9", 31], ["obj_element_casts_58_arcane", 13]],
+}
 
 
 func run() -> void:

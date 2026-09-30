@@ -48,11 +48,11 @@ params = {}
 
 [sub_resource type="Resource" id="Resource_xnxle"]
 script = ExtResource("23_aa37k")
-id = &"obj_enemy_travel_1380_0_cacodaemon"
-description = "Cacodemon : en faire marcher un sur 1 longueur de terrain"
+id = &"obj_enemy_travel_1104_0_cacodaemon"
+description = "Cacodemon : en faire marcher un sur 0,8 longueur de terrain"
 check_key = &"enemy_travel"
 params = {
-"distance": 1380.0,
+"distance": 1104.0,
 "enemy": "cacodaemon"
 }
 
