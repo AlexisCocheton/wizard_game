@@ -787,6 +787,7 @@ func _test_ecran_de_deck_equipe_les_passifs() -> void:
 	not_ok(panel.equip_passive_in_slot(0, p[0]), "avant l acte 2, l ecran n equipe rien")
 	panel.open_passive_picker(0)
 	eq(panel.picker_slot(), -1, "et n ouvre pas le choix")
+	_verrou_des_passifs_lisible(panel)
 	for lv: LevelDef in ContentDB.levels.values():
 		if lv.allows_passives():
 			SaveData.unlock_level(lv.id)
@@ -806,9 +807,46 @@ func _test_ecran_de_deck_equipe_les_passifs() -> void:
 	ok(panel.passive_scope_text().contains("campagne"),
 		"l ecran de deck dit que les passifs equipes ne valent pas en campagne (%s)"
 		% panel.passive_scope_text())
+	ok(panel.passive_lock_label() == null, "une fois l acte 2 atteint, plus de phrase de verrou")
 	detach(panel)
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
+
+
+## LA PHRASE DE VERROU SE LIT EN ENTIER (retouche du 30/09). Sur les captures du
+## smoke, la bande affichait "s ouvrent a l acte 2", centree loin du titre : on
+## lisait une phrase dont le debut avait ete coupe. La phrase doit donc se
+## suffire (majuscule, acte nomme) et ne jamais etre rognee : ni clip, ni points
+## de suspension, ni repli, et une largeur minimale au moins egale a son texte.
+func _verrou_des_passifs_lisible(panel: DeckPanel) -> void:
+	var verrou: Label = panel.passive_lock_label()
+	ok(verrou != null, "avant l acte 2, la bande des passifs affiche une phrase de verrou")
+	if verrou == null:
+		return
+	eq(verrou.text, DeckPanel.passive_lock_text(), "la phrase affichee est celle du panneau")
+	ok(verrou.text.contains(str(LevelDef.PASSIVES_FROM_ACT)),
+		"la phrase nomme l acte ou les passifs s ouvrent (%s)" % verrou.text)
+	var initiale: String = verrou.text.left(1)
+	ok(initiale != initiale.to_lower(),
+		"la phrase commence par une majuscule, elle se lit sans le titre voisin (%s)"
+		% verrou.text)
+	not_ok(verrou.clip_text, "la phrase de verrou n est pas rognee (clip_text)")
+	eq(verrou.text_overrun_behavior, TextServer.OVERRUN_NO_TRIMMING,
+		"ni tronquee par des points de suspension")
+	eq(verrou.autowrap_mode, TextServer.AUTOWRAP_OFF, "ni repliee sur deux lignes")
+	var f: Font = verrou.get_theme_font(&"font")
+	var taille: int = verrou.get_theme_font_size(&"font_size")
+	ok(taille >= UiTheme.FONT_SMALL, "taille lisible (%d)" % taille)
+	var largeur: float = f.get_string_size(verrou.text, HORIZONTAL_ALIGNMENT_LEFT, -1, taille).x
+	ok(verrou.get_minimum_size().x >= floorf(largeur),
+		"la largeur minimale du label (%d px) couvre son texte (%d px)"
+		% [verrou.get_minimum_size().x, largeur])
+	# La bande ENTIERE (titre + phrase) tient dans la largeur d un ecran portrait.
+	var bande: Control = verrou.get_parent() as Control
+	var ecran: float = float(ProjectSettings.get_setting("display/window/size/viewport_width"))
+	ok(bande != null and bande.get_combined_minimum_size().x <= ecran,
+		"la bande des passifs verrouillee tient dans %d px (%d px)"
+		% [ecran, bande.get_combined_minimum_size().x if bande != null else -1])
 
 
 # --- F. Retouches du 30/09 ---------------------------------------------------

@@ -23,6 +23,7 @@ func run_stage() -> void:
 	_check_gauge_tints()
 	_check_voice_keys()
 	_check_apprentices()
+	_check_rarity_colors()
 	for w in _soft:
 		print("  [AVERTISSEMENT] %s" % w)
 	print("[AUDIT] %d avertissement(s)" % _soft.size())
@@ -358,3 +359,73 @@ func _check_apprentices() -> void:
 				% [r.id, cle, monstres[String(cle)]])
 	if not mage_de_depart:
 		fail("aucune recompense CHARACTER ne rend le mage au niveau 1")
+
+
+## AUCUNE COULEUR DE RARETE ECRITE EN DUR HORS DE UiTheme.
+##
+## Le defaut reel : l encre legendaire a ete corrigee dans UiTheme.rarity_ink
+## (3,3:1 -> 5:1 sur le papier), mais l ancienne teinte restait recopiee a quatre
+## endroits (grimoire, bestiaire, profil). Rien ne plantait, aucun test ne
+## rougissait : seule une capture montrait l or pale qui ne se lisait pas.
+##
+## On releve donc chaque `Color(r, g, b` litteral des scripts et des scenes et on
+## le compare aux couleurs de rarete du theme (rarity_color, rarity_ink) et aux
+## encres retirees (UiTheme.RETIRED_INKS). Tout est lu dans le theme : aucune
+## valeur n est recopiee ici, sinon ce controle vieillirait comme les ecrans.
+##
+## Deux exclusions, et leurs raisons :
+##   - une couleur de la PALETTE commune (constante nommee de UiTheme hors INK_)
+##     reste libre : l or legendaire EST l accent du jeu (UiTheme.GOLD), repris
+##     par le HUD et la carte de campagne pour ce qu il est, pas pour une rarete ;
+##   - le papier teinte (rarity_bg) n est pas une encre, et ses teintes pales
+##     coincident avec des teintes de sprite (anim_catalog) sans rien a voir.
+func _check_rarity_colors() -> void:
+	var theme_path: String = "res://scripts/ui/ui_theme.gd"
+	var theme_script: Script = load(theme_path)
+	var palette: Array[Color] = []
+	var consts: Dictionary = theme_script.get_script_constant_map()
+	for nom in consts:
+		if consts[nom] is Color and not String(nom).begins_with("INK_"):
+			palette.append(consts[nom])
+	var interdites: Array = []  # de [Color, nom]
+	for r in GameEnums.Rarity.values():
+		var nom_r: String = GameEnums.rarity_name(r)
+		interdites.append([UiTheme.rarity_color(r), "rarity_color(%s)" % nom_r])
+		interdites.append([UiTheme.rarity_ink(r), "rarity_ink(%s)" % nom_r])
+	for c: Color in UiTheme.RETIRED_INKS:
+		interdites.append([c, "encre retiree de UiTheme.RETIRED_INKS"])
+	var gardees: Array = []
+	for paire in interdites:
+		if not _color_in(paire[0], palette):
+			gardees.append(paire)
+	if gardees.is_empty():
+		fail("controle des couleurs de rarete : rien a chercher (theme illisible ?)")
+		return
+
+	var re := RegEx.new()
+	re.compile("Color\\(\\s*([0-9]*\\.?[0-9]+)\\s*,\\s*([0-9]*\\.?[0-9]+)\\s*,\\s*([0-9]*\\.?[0-9]+)")
+	var files: Array[String] = []
+	_scan_text("res://scenes", files)
+	_scan_text("res://scripts", files)
+	for path in files:
+		if path == theme_path:
+			continue
+		var text: String = FileAccess.get_file_as_string(path)
+		for m: RegExMatch in re.search_all(text):
+			var lue := Color(float(m.get_string(1)), float(m.get_string(2)),
+				float(m.get_string(3)))
+			for paire in gardees:
+				if _color_in(lue, [paire[0]]):
+					var ligne: int = text.substr(0, m.get_start()).count("\n") + 1
+					fail("%s:%d : %s...) ecrite en dur (%s) — nommer l encre de UiTheme"
+						% [path, ligne, m.get_string(), paire[1]])
+
+
+## Egalite a l arrondi d un litteral a deux decimales : 0.62 et 0.621 sont la
+## meme teinte a l ecran, une recopie legerement retouchee ne doit pas passer.
+func _color_in(c: Color, liste: Array) -> bool:
+	var tol: float = 0.5 / 100.0 + 0.001
+	for o: Color in liste:
+		if absf(c.r - o.r) <= tol and absf(c.g - o.g) <= tol and absf(c.b - o.b) <= tol:
+			return true
+	return false

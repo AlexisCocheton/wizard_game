@@ -2252,6 +2252,31 @@ func _vitrine_grimoire_visibilite(grimoire: GalleryPanel) -> void:
 	grimoire.show_section(GalleryPanel.Section.SPELLS)
 
 
+## La phrase de verrou des passifs, DANS LA VRAIE MISE EN PAGE du menu (marges,
+## onglets, largeur portrait) : elle recoit au moins la largeur de son texte et
+## reste dans l ecran. Le test unitaire verifie la structure ; seul le menu
+## assemble dit si la bande a vraiment la place. Retouche du 30/09 : sur les
+## captures, la phrase se lisait comme amputee de son debut.
+func _verrou_des_passifs_en_entier(panel: DeckPanel) -> void:
+	# Deux images : en headless _shot() rend la main sans attendre, et les
+	# conteneurs ne placent leurs enfants qu a l image suivante.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var verrou: Label = panel.passive_lock_label()
+	if verrou == null:
+		_fail("avant l acte 2, la bande des passifs n affiche pas sa phrase de verrou")
+		return
+	var f: Font = verrou.get_theme_font(&"font")
+	var largeur: float = f.get_string_size(verrou.text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		verrou.get_theme_font_size(&"font_size")).x
+	var r: Rect2 = verrou.get_global_rect()
+	if r.size.x < floorf(largeur):
+		_fail("phrase de verrou des passifs rognee : %d px pour %d px de texte (%s)"
+			% [r.size.x, largeur, verrou.text])
+	if not panel.get_viewport_rect().encloses(r):
+		_fail("phrase de verrou des passifs hors de l ecran : %s" % r)
+
+
 ## La bande des passifs de l ecran de deck : verrouillee avant l acte 2, puis
 ## trois emplacements equipables et le choix du passif sur la page.
 func _vitrine_passifs_deck(panel: DeckPanel) -> void:
@@ -2263,6 +2288,7 @@ func _vitrine_passifs_deck(panel: DeckPanel) -> void:
 	if panel.picker_slot() != -1:
 		_fail("avant l acte 2, les emplacements de passif ne s ouvrent pas")
 	await _shot("deck_passifs_verrou")
+	await _verrou_des_passifs_en_entier(panel)
 	for lv: LevelDef in ContentDB.levels.values():
 		if lv.allows_passives():
 			SaveData.unlock_level(lv.id)

@@ -111,16 +111,57 @@ static func rarity_color(rarity: int) -> Color:
 	return TEXT_DIM
 
 
+## Plancher de contraste du projet pour du texte (WCAG AA, texte courant).
+const CONTRAST_MIN: float = 4.5
+
+## ENCRES DE RARETE, lisibles SUR LE PAPIER (plus sombres que rarity_color).
+## Ce sont des CONSTANTES pour que les ecrans qui veulent la meme teinte hors de
+## toute rarete (le bleu d une incantation, l or d un compteur) la NOMMENT au lieu
+## de la recopier : une teinte recopiee ne suit pas la correction suivante. C est
+## ce qui s est passe le 30/09 : l or legendaire corrige ici restait ecrit en dur
+## a quatre endroits. L AUDIT (_check_rarity_colors) interdit desormais toute
+## couleur de rarete ecrite en dur hors de ce fichier.
+##
+## LE PAPIER LE PLUS SOMBRE DECIDE. Une encre se lit sur trois papiers : le
+## papier creme (briefing, victoire), la page du grimoire, et le papier d une
+## carte en main ou en detail, TEINTE par rarity_bg de sa propre rarete — le
+## plus sombre des trois. Mesures sur capture le 30/09, papier teinte : commune
+## 3,96:1, rare 3,05:1, epique 3,36:1, legendaire 4,34:1, et la commune a 4,19:1
+## sur la page du grimoire. Toutes sous le plancher de 4,5:1.
+##
+## Les quatre encres ont donc ete assombries SANS perdre ce qui les distingue :
+## chacune garde la teinte de son contour (rarity_color), la commune reste la
+## seule encre grise (saturation minimale), et l epaisseur du contour
+## (rarity_border_width) porte la rarete meme sans la couleur. Verrouille par
+## test_card_view.gd, qui lit les papiers dans les textures du jeu.
+const INK_COMMON := Color(0.32, 0.32, 0.38)
+## Bleu nuit : l ancien bleu (0.15, 0.38, 0.75) faisait 4,08:1 sur la page du
+## grimoire et 3,05:1 sur le papier bleute d une carte rare en main.
+const INK_RARE := Color(0.08, 0.26, 0.60)
+const INK_EPIC := Color(0.36, 0.13, 0.58)
+## Bronze : se lit encore comme de l or. L or d origine (0.62, 0.45, 0.05) ne
+## faisait que 3,3:1 sur le papier creme.
+const INK_LEGENDARY := Color(0.44, 0.31, 0.02)
+## Encres RETIREES parce qu elles ne tenaient pas le contraste sur le papier.
+## L AUDIT les interdit dans tout script et toute scene hors de ce fichier : les
+## voir revenir voudrait dire qu un ecran a recopie une ancienne valeur au lieu
+## de nommer l encre.
+const RETIRED_INKS: Array[Color] = [
+	Color(0.62, 0.45, 0.05),  # or legendaire d origine, 3,3:1 sur le creme
+	Color(0.48, 0.34, 0.02),  # bronze legendaire, 4,34:1 en main
+	Color(0.15, 0.38, 0.75),  # bleu rare, 4,08:1 sur la page du grimoire
+	Color(0.38, 0.38, 0.44),  # gris commun, 3,96:1 en main, 4,19:1 sur le grimoire
+	Color(0.48, 0.22, 0.72),  # violet epique, 3,36:1 en main
+]
+
+
 ## Couleur de rarete lisible SUR LE PAPIER (plus sombre que rarity_color).
 static func rarity_ink(rarity: int) -> Color:
 	match rarity:
-		GameEnums.Rarity.COMMON: return Color(0.38, 0.38, 0.44)
-		GameEnums.Rarity.RARE: return Color(0.15, 0.38, 0.75)
-		GameEnums.Rarity.EPIC: return Color(0.48, 0.22, 0.72)
-		# Mesure sur la capture du profil (30/09) : l ancien or (0.62, 0.45,
-		# 0.05) ne faisait que 3,3:1 sur le papier creme, sous le seuil de 4,5.
-		# Ce bronze fait 5:1 et se lit encore comme de l or.
-		GameEnums.Rarity.LEGENDARY: return Color(0.48, 0.34, 0.02)
+		GameEnums.Rarity.COMMON: return INK_COMMON
+		GameEnums.Rarity.RARE: return INK_RARE
+		GameEnums.Rarity.EPIC: return INK_EPIC
+		GameEnums.Rarity.LEGENDARY: return INK_LEGENDARY
 	return TEXT_DARK
 
 

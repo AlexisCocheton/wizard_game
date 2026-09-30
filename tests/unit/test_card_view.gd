@@ -24,6 +24,8 @@ func run() -> void:
 	_test_la_main_tient_pleine()
 	_test_le_nom_de_main_ne_depasse_pas_deux_lignes()
 	_test_l_icone_corrige_l_occupation_de_la_case()
+	_test_chaque_encre_se_lit_sur_tous_ses_papiers()
+	_test_les_encres_restent_distinctes()
 
 
 ## La police est le point le plus important du retour. Un fichier absent ferait
@@ -255,3 +257,127 @@ func _descendants(root: Node) -> Array[Node]:
 		sortie.append(child)
 		sortie.append_array(_descendants(child))
 	return sortie
+
+
+## LES ENCRES DE RARETE (retouches du 30/09). Chaque encre se lit sur trois
+## papiers : le papier creme (briefing, victoire), la page du grimoire, et le
+## papier de SA carte en main ou en detail, teinte par rarity_bg — le plus sombre
+## des trois. Mesure sur capture avant correction : rare 4,08:1 sur le grimoire
+## et 3,05:1 en main, epique 3,36:1, commune 3,96:1 et legendaire 4,34:1 en
+## main, commune 4,19:1 sur le grimoire. Les papiers sont LUS dans les textures
+## du jeu, pas recopies ici : si un papier change, ce test mesure le nouveau.
+func _test_chaque_encre_se_lit_sur_tous_ses_papiers() -> void:
+	var creme: Color = _ton_du_papier("paper9")
+	var livre: Color = _ton_du_papier("book_page9")
+	ok(creme.a > 0.0 and livre.a > 0.0, "(les textures de papier se lisent)")
+	if creme.a <= 0.0 or livre.a <= 0.0:
+		return
+	for r in _raretes():
+		var nom_r: String = GameEnums.rarity_name(r)
+		var encre: Color = UiTheme.rarity_ink(r)
+		var papiers: Dictionary = {
+			"papier creme": creme,
+			"page du grimoire": livre,
+			"papier de sa carte en main": creme * UiTheme.rarity_bg(r),
+		}
+		for nom in papiers:
+			var ratio: float = _ratio(encre, papiers[nom])
+			ok(ratio >= UiTheme.CONTRAST_MIN, "encre %s sur %s : %.2f:1 (plancher %.1f:1)"
+				% [nom_r, nom, ratio, UiTheme.CONTRAST_MIN])
+
+
+## Assombries, les encres doivent rester DISTINCTES. La rarete GRISE est celle
+## dont le contour est le moins sature (deduite, pas nommee) : son encre doit
+## etre la moins saturee de toutes. Chaque autre encre garde la teinte de son
+## propre contour (la plus proche parmi les contours colores) et reste plus
+## saturee que l encre grise. Et la rarete se lit aussi sans la couleur :
+## l epaisseur du contour croit avec elle.
+func _test_les_encres_restent_distinctes() -> void:
+	var raretes: Array = _raretes()
+	var grise: int = raretes[0]
+	for r in raretes:
+		if UiTheme.rarity_color(r).s < UiTheme.rarity_color(grise).s:
+			grise = r
+	var encre_grise: Color = UiTheme.rarity_ink(grise)
+	for r in raretes:
+		if r == grise:
+			continue
+		var encre: Color = UiTheme.rarity_ink(r)
+		var nom_r: String = GameEnums.rarity_name(r)
+		ok(encre.s > encre_grise.s, "l encre %s (s=%.2f) est plus saturee que l encre %s (s=%.2f)"
+			% [nom_r, encre.s, GameEnums.rarity_name(grise), encre_grise.s])
+		var la_plus_proche: int = -1
+		var ecart_min: float = INF
+		for autre in raretes:
+			if autre == grise:
+				continue
+			var e: float = _ecart_de_teinte(encre.h, UiTheme.rarity_color(autre).h)
+			if e < ecart_min:
+				ecart_min = e
+				la_plus_proche = autre
+		eq(la_plus_proche, r, "l encre %s a la teinte de son contour (plus proche : %s)"
+			% [nom_r, GameEnums.rarity_name(la_plus_proche)])
+	for i in range(1, raretes.size()):
+		ok(UiTheme.rarity_border_width(raretes[i]) > UiTheme.rarity_border_width(raretes[i - 1]),
+			"le contour %s est plus epais que le contour %s"
+			% [GameEnums.rarity_name(raretes[i]), GameEnums.rarity_name(raretes[i - 1])])
+
+
+## Les raretes dans l ordre croissant de l enum.
+func _raretes() -> Array:
+	var out: Array = GameEnums.Rarity.values()
+	out.sort()
+	return out
+
+
+## Ecart de teinte sur le cercle (h dans [0, 1]).
+func _ecart_de_teinte(a: float, b: float) -> float:
+	var d: float = absf(a - b)
+	return minf(d, 1.0 - d)
+
+
+## Couleur la plus frequente du quart central d une texture de papier : c est le
+## fond sous le texte, hors bordure. Alpha nul = texture illisible.
+func _ton_du_papier(nom: String) -> Color:
+	var t: Texture2D = UiTheme.tex(nom)
+	if t == null:
+		return Color(0, 0, 0, 0)
+	var img: Image = t.get_image()
+	if img == null or img.is_empty():
+		return Color(0, 0, 0, 0)
+	if img.is_compressed():
+		img.decompress()
+	var w: int = img.get_width()
+	var h: int = img.get_height()
+	var compte: Dictionary = {}
+	for y in range(h >> 2, (h * 3) >> 2):
+		for x in range(w >> 2, (w * 3) >> 2):
+			var c: Color = img.get_pixel(x, y)
+			if c.a < 1.0:
+				continue
+			var cle: int = c.to_rgba32()
+			compte[cle] = int(compte.get(cle, 0)) + 1
+	var meilleur: int = -1
+	var n_max: int = 0
+	for cle in compte:
+		if int(compte[cle]) > n_max:
+			n_max = int(compte[cle])
+			meilleur = cle
+	if meilleur == -1:
+		return Color(0, 0, 0, 0)
+	return Color.hex(meilleur)
+
+
+func _lin(c: float) -> float:
+	return c / 12.92 if c <= 0.03928 else pow((c + 0.055) / 1.055, 2.4)
+
+
+## Luminance relative WCAG (Color.get_luminance() ne lineairise pas).
+func _lum(c: Color) -> float:
+	return 0.2126 * _lin(c.r) + 0.7152 * _lin(c.g) + 0.0722 * _lin(c.b)
+
+
+func _ratio(a: Color, b: Color) -> float:
+	var la: float = _lum(a)
+	var lb: float = _lum(b)
+	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)

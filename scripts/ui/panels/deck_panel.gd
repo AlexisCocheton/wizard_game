@@ -137,6 +137,8 @@ const OBTAINABLE_TINT: Color = CollectionStyle.GREY_TILE
 const PASSIVES_SCOPE_TEXT: String = "Actifs en Infini et en Massacre, pas en campagne"
 ## Hauteur d un emplacement de passif : une cible tactile (>= 90 px).
 const PASSIVE_SLOT_H: float = 100.0
+## Ecart entre le titre PASSIFS et la phrase de verrou (avant l acte 2).
+const LOCK_GAP: float = 20.0
 
 ## Deplacement a partir duquel un appui devient un glisser. Un doigt qui touche
 ## « sans bouger » derive de 5 a 15 px sur un ecran de 1080 : en dessous de ce
@@ -179,6 +181,8 @@ var _armed_id: StringName = &""
 var _tab_bar: HBoxContainer
 var _passive_row: HBoxContainer
 var _passive_note: Label
+## Phrase de verrou de la bande des passifs (avant l acte 2), null sinon.
+var _passive_lock: Label = null
 var _header: Label
 var _deck_grid: GridContainer
 var _deck_scroll: ScrollContainer
@@ -539,12 +543,31 @@ func _render_passives() -> void:
 		UiTheme.TEAL, HORIZONTAL_ALIGNMENT_LEFT, false))
 	# Rien avant l acte 2 : trois emplacements qui ne serviraient a rien se
 	# liraient comme une fonction cassee. On dit plutot QUAND ils s ouvrent.
+	#
+	# Une PHRASE ENTIERE, a cote du titre. L ancienne version ("s ouvrent a l
+	# acte 2") comptait sur le titre PASSIFS pour sujet, mais centree dans la
+	# largeur restante elle s en detachait de 300 px : sur la capture elle se
+	# lisait comme une phrase dont le debut avait ete coupe. Titre et phrase
+	# forment maintenant un GROUPE centre, comme la note de portee en dessous.
+	# Ni clip ni points de suspension, et pas d expansion : la largeur du label
+	# est celle de son texte, verifiee par test_card_progression et par le smoke
+	# dans la vraie mise en page.
 	if not SaveData.passives_unlocked():
-		var verrou: Label = UiTheme.label("s ouvrent a l acte %d" % LevelDef.PASSIVES_FROM_ACT,
-			UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
-		verrou.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		_passive_row.add_child(verrou)
+		_passive_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		# Une cale entre le titre et la phrase : a 8 px les contours des deux
+		# labels se touchaient et on lisait "PASSIFSEmplacements" (capture).
+		var cale := Control.new()
+		cale.custom_minimum_size = Vector2(LOCK_GAP, 0)
+		_passive_row.add_child(cale)
+		_passive_lock = UiTheme.label(passive_lock_text(), UiTheme.FONT_SMALL, UiTheme.TEXT,
+			HORIZONTAL_ALIGNMENT_LEFT, false)
+		_passive_lock.name = "PassiveLock"
+		_passive_lock.clip_text = false
+		_passive_lock.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+		_passive_row.add_child(_passive_lock)
 		return
+	_passive_row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	_passive_lock = null
 	var equipes: Array[SpellCard] = equipped_passive_cards()
 	for slot in DeckRules.MAX_PASSIVES:
 		var b := Button.new()
@@ -569,6 +592,18 @@ func _render_passives() -> void:
 			AudioBus.play_sfx(&"ui_tap")
 			open_passive_picker(idx))
 		_passive_row.add_child(b)
+
+
+## La phrase qui remplace les emplacements avant l acte des passifs. Elle se lit
+## SEULE, sans s appuyer sur le titre voisin : sujet, verbe, acte.
+static func passive_lock_text() -> String:
+	return "Emplacements ouverts a l acte %d" % LevelDef.PASSIVES_FROM_ACT
+
+
+## Le label de verrou affiche, ou null quand les emplacements sont ouverts.
+## Expose pour les tests : la phrase doit tenir en entier dans la bande.
+func passive_lock_label() -> Label:
+	return _passive_lock if is_instance_valid(_passive_lock) else null
 
 
 ## La phrase de portee des passifs equipes, telle qu elle est affichee.
