@@ -119,7 +119,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Fusionner bestiaire et galerie (onglets Sorts / Passifs / Bestiaire) | **FAIT** | C |
 | Livre a pages (asset magic book), fleches gauche/droite | **FAIT** | C |
 | Detail avec nb d'utilisations, monstres tues, ameliorations | **FAIT** (le crochet des ameliorations attend G) | C |
-| Inconnu = grise | FAIT | — |
+| Inconnu = grise | FAIT, **precise le 30/09** : trois etats (obtenu / obtenable grise / invisible) au grimoire, au deck et au bestiaire, compteur obtenues / visibles (§12) | — |
 | Icones de sort partout | FAIT (45 feuilles propres) ; a re-choisir dans les packs d'icones quand ils arriveront | C |
 | Police plus lisible, tout un peu plus grand | **FAIT** (la cause etait le contour de 6 px, pas la taille) | C |
 | Vraies icones de menu (pas un steak) | **FAIT** | C |
@@ -135,28 +135,28 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Demande | Etat | Chantier |
 |---|---|---|
 | Carte de campagne sur les fonds de combat, points jaunes, fleches d'acte | **FAIT** (5 actes, une page par acte) | E |
-| 3 objectifs par niveau | ~~FAIT (3 par niveau, 4 types)~~ **FAUX au 27/09** : 3 types seulement, le meme trio sur les 21 niveaux. **FAIT le 28/09** : 16 controles, 3 objectifs coherents par niveau (§11) | H |
+| 3 objectifs par niveau | ~~FAIT (3 par niveau, 4 types)~~ **FAUX au 27/09** : 3 types seulement, le meme trio sur les 21 niveaux. **FAIT le 28/09** : 16 controles, 3 objectifs coherents par niveau (§11). **Refait le 30/09** : 24 controles, objectifs lies au deck et aux monstres, classes par taux mesure, chacun debloque une carte (§12) | H |
 | Histoire : prologue, 5 actes, plot twist de l'enfant | **FAIT** (docs/histoire.md) | D |
 | Sequences visual novel entre les niveaux | **FAIT** (systeme + 9 scenes : prologue et acte 1) | D |
 | Niveau 1 tutoriel, deck 9 cartes, 3 vagues ; niveau 2 en 4 vagues ; puis 6 | **PARTIEL** (niveau 2 raccourci ; le niveau 1 resiste, voir section 9) | H |
 | Pool de cartes qui grandit de 3 par niveau | **ABANDONNE le 27/09** : incompatible avec la regle des 6 cartes differentes. Remplace par « chaque niveau fait decouvrir au moins une carte » (§9, §11) | H |
-| Fin : deblocage du mode infini | **FAIT** (`SaveData.campaign_cleared()`) | — |
+| Fin : deblocage du mode infini | ~~FAIT (`SaveData.campaign_cleared()`)~~ **Change le 29-30/09** : l Infini d un niveau s ouvre avec le niveau ; c est le nouvel onglet **Massacre** qui s ouvre a la fin de la campagne (§12) | — |
 
 ### Mode infini
 | Demande | Etat | Chantier |
 |---|---|---|
-| Tous monstres et boss, fond change toutes les 6 vagues, mini-boss v3 / boss v6, fond qui pese sur le tirage | **FAIT** (5 mondes qui bouclent, 47-70 % de monstres du lieu) | J |
+| Tous monstres et boss, fond change toutes les 6 vagues, mini-boss v3 / boss v6, fond qui pese sur le tirage | **FAIT** (5 mondes qui bouclent, 47-70 % de monstres du lieu). Depuis le 29/09 ce mode s appelle **Infini** ; le **Massacre** est un niveau a part, tous les monstres melanges sans monde (§12) | J |
 
 ### Sorts et passifs
 | Demande | Etat | Chantier |
 |---|---|---|
-| Passifs hors du deck, actifs des le debut, 3 emplacements, echange au 4e | **FAIT** | F |
+| Passifs hors du deck, actifs des le debut, 3 emplacements, echange au 4e | **FAIT**, **restreint le 30/09** : rien avant l acte 2, et les 3 emplacements n agissent qu en Infini et en Massacre, pas en campagne (§12) | F |
 | Passif actif seulement au-dela d'une vitesse (ex. 140 %) | **FAIT** | F |
 | Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | **FAIT** (14 passifs) | F |
 | Icone des passifs a cote de la barre de vitesse, a leur seuil | **FAIT** | F |
-| Amelioration des cartes en combat (XP par lancer, choix parmi 3) | **FAIT** (8 lancers, 3 pactes, per-partie) | G |
+| Amelioration des cartes en combat (XP par lancer, choix parmi 3) | **FAIT** (8 lancers, 3 pactes, per-partie). ~~3 pactes~~ **remplaces le 29-30/09** : pool de voies propre a chaque sort, 3 tirees, legeres ou fortes, deux maturations (§12) | G |
 | Arbre qui attire les ennemis ; sort de stun ; arbre a zone de poison ; eau qui ralentit | **FAIT** (4 cartes, 3 verbes d effet neufs) | H |
-| Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre) | B3 |
+| Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre). **30/09** : ecarts accentues, appliques aussi aux effets, logo d element et type sur chaque sort (§12) | B3 |
 
 ### Monstres
 | Demande | Etat | Chantier |
@@ -427,6 +427,9 @@ une campagne.
 
 ## 8. Mode infini et mini-boss — 25 septembre
 
+*(30/09 : ce mode par niveau s appelle desormais **Infini** ; le nom Massacre designe un
+niveau a part, sans monde, voir §12. Ce qui suit decrit l Infini.)*
+
 **Le Massacre traverse cinq mondes.** Le fond change toutes les 6 vagues, un
 mini-boss tous les 3 tours, un boss tous les 6, et le lieu pese sur le tirage
 (47 a 70 % de monstres de la famille locale). Apres le cinquieme monde on boucle
@@ -559,7 +562,7 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
 | Demande | Livre |
 |---|---|
 | Regle de deck : 6 cartes differentes | `DeckRules.MAX_DISTINCT = 6` ; plafonds de rarete retires (la regle borne deja a 3 legendaires, 4 epiques) ; `is_valid()` verifie enfin les exemplaires ; 20 decks de campagne recomposes ; deck sauvegarde hors regle garde et explique, refuse en Massacre |
-| Trois objectifs par niveau, coherents | Moteur a 16 controles parametres, libelle genere, AUDIT impossible/gratuit ; 63 objectifs sur 21 niveaux, 15 controles differents, chacun appuye sur le contenu du niveau ; exemples du co-auteur presents ; progression suivie EN COMBAT (bandeau, echec annonce) |
+| Trois objectifs par niveau, coherents | *(refait le 30/09, §12)* Moteur a 16 controles parametres, libelle genere, AUDIT impossible/gratuit ; 63 objectifs sur 21 niveaux, 15 controles differents, chacun appuye sur le contenu du niveau ; exemples du co-auteur presents ; progression suivie EN COMBAT (bandeau, echec annonce) |
 | Riviere (legendaire) | ligne d eau, un pont au hasard qui garde toujours un chemin, une seule a la fois, volants et projectiles passent dessus |
 | Sorts de terrain permanents | `duration <= 0` = fin du combat, 6 objets au plus (le plus ancien cede), garantie de chemin avant et apres la pose (Mur et Bastion compris) ; Autel d appel, Ronces, Fosse ; Totem a 3500 PV (mesure), Semis permanent qui n attire plus |
 | Monstres (§0.4 du plan) | mecaniques v3 : vies multiples depuis le haut, renaissance differee avec marque au sol (slime fantome -> squelette), reanimateur, laser de riposte, sommeil qui coupe la magie, zigzag / rebond / sauts |
@@ -579,12 +582,15 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
   ~96 s au lieu de 173, 98 %). Le banc accuse desormais la vraie source des coups.
   Total : 571 victoires sur 630, aucun niveau sous 60 %.
 - **A trancher** (leviers chiffres dans le message de fusion BAL-002) : le **Massacre est
-  beaucoup trop facile** (vague 17 en moyenne, repere 4-8) ; une douzaine de niveaux a
+  beaucoup trop facile** (vague 17 en moyenne, repere 4-8 ; *c etait l Infini d un niveau,
+  le Massacre du 30/09 est un autre mode, mesure a 10,4 vagues, voir §12*) ; une douzaine de niveaux a
   29-30/30 (PV x1,5 + espacement x0,7 les ramene vers 82-88 %) ; l arbre appat a 3500 PV
   quasi automatique dans `lvl_04` (~800 propose) ; Boule de feu a 26 reels = +14 points
   de victoire sur les niveaux durs.
 
 ### Reste — actions du testeur (l assistant ne peut pas les faire)
+
+*(Liste reprise et completee au §12, etat au 30/09.)*
 
 1. **URGENT : licence Batareya** — 42 des 60 icones de cartes en dependent
    (`docs/assets_index.md` §1.5).
@@ -609,7 +615,9 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
   entre la tour et le bord, sur une plaque sombre ; son emprise et son contraste
   sont testes (`test_objective_progress`).
 - Le **Slime colossal** est une feuille agrandie a gros pixels : a juger en jeu.
-- Les quatre nouvelles cartes de terrain ne sont dans aucun deck de campagne.
+- Les quatre nouvelles cartes de terrain ne sont dans aucun deck de campagne *(30/09 :
+  toujours vrai pour les decks, mais elles s obtiennent comme cartes nouvelles ou
+  recompenses d objectif, voir §12)*.
 - Regles depuis : le niveau 1 est en 3 vagues (BAL-002) ; le mage a un vrai portrait
   humain dans les scenes d histoire depuis le 26/09 (commit `b5535d7`).
 
@@ -620,3 +628,100 @@ Une fusion SANS conflit n est pas une fusion sans defaut : git a garde deux
 image aurait repeint en gris le rouge des cartes volees. Les worktrees peuvent partir
 d une base ancienne : les fichiers generes se regenerent apres fusion, ils ne se
 resolvent pas a la main. Detail dans la memoire projet (`gotchas.md`).
+
+
+---
+
+## 12. Etat au 30 septembre, apres les retours du co-auteur du 29 et du 30
+
+Deux retours : celui du 29/09 (vague 5 : modes, progression des cartes, passifs,
+resistances, logos, ameliorations, objectifs) et les retouches du 30/09 apres test
+(passifs hors campagne, Massacre en fin de campagne, collections honnetes, communes en
+campagne, objectifs « mal realises, pas encore lies aux cartes »). Chantiers M (modes),
+P (progression), O (objectifs), R (resistances et logos), U (ameliorations), W7 (bot du
+banc et contenu par niveau), puis lisibilite. Fusionnes dans `main` le 29 et le 30/09 par
+l orchestrateur, une branche a la fois. Les chiffres sont dans les messages des commits
+de branche (`git log <fusion>^2`) ; les raisons dans la memoire projet
+(`decisions.md`, DEC-028 a DEC-037).
+
+### Fait
+
+| Demande | Livre |
+|---|---|
+| Modes | `Mode { EXPLORATION, INFINITE, MASSACRE }`. **Exploration** = la campagne. **Infini** par niveau (l ancien « Massacre » par niveau, meme valeur enregistree), ouvert des que le niveau l est, a travers les 5 mondes. **Massacre** = nouvel onglet : niveau fabrique (aucun .tres), monstres de TOUS les niveaux sans monde, boss de tout le jeu, fond fixe du Seuil divin, deck du joueur ; ouvert seulement **campagne finie** (l onglet reste visible et dit ce qui l ouvre). Records separes par mode |
+| Cartes a la montee de niveau | Pool de campagne = deck du niveau + **3 cartes nouvelles** (`LevelDef.levelup_cards`) + cartes **debloquees par les objectifs reussis** (`objective_rewards`, rang 1 / 2 / 3 -> rare / epique / legendaire). Hors campagne : les cartes obtenues. Une carte est **obtenue** la premiere fois qu on la prend en combat. **Supprimes** : recompenses de boss d office et `legendary_reward` (« 3/3 objectifs ») ; les legendaires deja gagnees restent |
+| Visibilite | Cartes : obtenue (lisible) / obtenable (grisee, « ou l obtenir ») / invisible. Bestiaire : rencontre / a rencontrer (grise) / invisible, plus d ombres « ??? ». Compteurs obtenues / VISIBLES, les memes au grimoire, au deck, en haut du menu, au profil et dans les succes |
+| Communes | Proposees en campagne : commune 40 / rare 40 / epique 15 / legendaire 5. Hors campagne, la table 80/15/5 reste |
+| Passifs | **Rien avant l acte 2**. 3 emplacements equipables a l ecran de deck, **actifs seulement en Infini et en Massacre**, pas en campagne (combat mesure). Table de rarete propre : les 4 passifs communs sont enfin proposes |
+| Objectifs (moteur) | **24 cles** : 8 neuves (`card_casts`, `no_card`, `win_above_speed`, `kill_type_one_cast`, `kill_type_with_card`, `no_hit_from`, `hit_from`, `enemy_travel`). Chaque mort est **attribuee au lancer** qui l a causee (zones, meteores, allies poses compris) |
+| Objectifs (contenu) | 3 objectifs par niveau, **lies au deck et aux monstres** (deux sur trois au moins), **classes par difficulte** ; classement MESURE (60 parties par objectif, bot qui le vise) et verrouille par `test_level_progression.MESURES` ; tout le catalogue est obtenable en campagne |
+| Resistances | **Accentuees** par une regle unique (`EnemyDef.accentuate` : 0,5 -> 0,30 ; 1,2 -> 1,58 ; plafond x2) et **appliquees aux effets** (`control_factor` : ralentir, etourdir, repousser, aspirer, attirer, volte-face, vulnerabilite...). Defaut corrige : le Champ de givre ne faisait AUCUN degat a un monstre immunise au ralentissement (Chronos, golem, Behemoth). Berserker retouche (givre -> poison) |
+| Logos | Logo d element (forme + couleur + image, formes toutes differentes) sur la carte ET devant chaque pourcentage du bestiaire ; type de chaque sort (`SpellCard.spell_type()`) ; sceau de type aussi a l ecran de deck |
+| Ameliorations | Pool de voies **propre a chaque sort** (4 a 12, derive de ses effets), **3 tirees** a chaque maturation, **legeres** (+10 %, sans prix) ou **fortes** (+30 % contre -15 % ailleurs), **deux maturations** (8 puis 24 lancers) |
+| Banc | Bot **AutoPick** qui choisit comme un joueur raisonnable et vise hors de l aura des totems ; **rage des Berserkers** bornee dans le temps (elle dependait des images par seconde) ; **Chronos du tutoriel** allege (vague `w1_boss` a difficulte 0,6, 87 abattus sur 87) ; aucun niveau sous 60 % |
+| Lisibilite | Encres de rarete du theme partout (l AUDIT refuse une couleur de rarete ecrite en dur) ; les **4 encres >= 4,5:1** sur le papier creme, la page du grimoire et le papier de leur carte ; bandeau des passifs de l ecran de deck entier ; compteurs du profil alignes |
+
+### Ce qui etait faux dans ce document et a ete corrige
+
+- §2 « Fin : deblocage du mode infini » : l Infini ne se debloque plus en fin de
+  campagne ; c est le Massacre.
+- §2 et §8 : le « Massacre a travers cinq mondes » est l **Infini** ; le Massacre
+  actuel n a pas de monde.
+- §2 « Passifs actifs des le debut » : plus en campagne.
+- §2 « 3 pactes » d amelioration : remplaces par un pool par sort.
+- §11 « Massacre vague 17 » : mesure de l ancien mode par niveau.
+- §11 « cartes de terrain dans aucun deck » : vrai pour les decks, mais elles
+  s obtiennent desormais (cartes nouvelles ou recompenses de lvl_03, 04, 06, 07, 10,
+  11, 18, 21).
+
+### Equilibrage : leviers mesures mais NON appliques (decision du co-auteur)
+
+- Plusieurs niveaux **au-dessus de 95 %** : ils ne demandent plus de choix.
+- **`lvl_13`** : saut de PV **x2,28** d une vague a l autre (`w13_4` : 879 PV apres 385).
+- La regle « jamais plus de x2 entre deux vagues » n est verifiee par `test_balance`
+  que sur `lvl_01` et `lvl_02`. Mesure des .tres le 30/09 : **10 niveaux** la depassent
+  (lvl_03 x2,41, lvl_04, 06, 07, 10, lvl_12 x2,61, lvl_13, 14, 15, 17).
+- **Massacre** : 10,4 vagues au banc complet (repere 4-8), et le chiffre depend du
+  profil (cartes obtenues) : 7,7 vagues lance seul sur un profil neuf.
+- Anciens leviers du 28/09 encore ouverts : arbre appat a 3500 PV dans `lvl_04`,
+  Boule de feu a 26 reels.
+
+Le banc n est pas deterministe d un processus a l autre : 60 a 90 parties pour
+departager deux reglages proches (`--parties=60`).
+
+### Reste — actions du testeur (l assistant ne peut pas les faire)
+
+1. **URGENT : licence Batareya** — 42 des 60 icones de cartes en dependent.
+2. `python tools/assets/fetch_craftpix.py login` : l assistant recupere ensuite le
+   pack **Free Undead Tileset** (les sorts de terrain utilisent Ancient Ruins).
+3. **Witches Pack complet** (itch.io) : les 5 autres apprenties.
+4. Archives completes du **renard** et du **cacodemon** (elthen) : branches sur des PNG
+   nus, licence a confirmer.
+5. **Licence rvros** du `Slime.zip` (slimes geants).
+6. Packs absents demandes pour des boss : **frost-guardian, c3-3dobject, sci-fi-9**.
+7. **L image du necromancien** citee par le co-auteur n a jamais ete transmise.
+8. **ART-004** (taille des monstres) et **AUDIO-003** (volumes) : a l oeil et a l oreille.
+9. Avant toute vente : contribution a **BDragon1727**, courriel a **John Carroll** (voix),
+   origine de **FreeSFX**.
+10. Arreter les **4 processus Godot orphelins** signales le 30/09 : un
+    banc lance a cote d eux mesure une machine chargee.
+
+### Reste — decisions pour le co-auteur
+
+1. Les niveaux au-dessus de 95 %, `lvl_13` et son saut x2,28, la regle x2 depassee sur
+   10 niveaux (ci-dessus).
+2. Le **Massacre** : sa difficulte, et le fait qu il depende des cartes obtenues.
+3. Un boss croise en **Infini** passe directement a « rencontre » au bestiaire, avant
+   que la campagne ne l ait montre. Voulu ?
+4. **11 legendaires pour 21 niveaux** : la recompense de l objectif le plus dur revient
+   forcement sur plusieurs niveaux (elle entre alors dans le pool d un autre niveau).
+5. La **Riviere** ne murit presque jamais : une seule a la fois, peu lancee, et son
+   pool n a que 4 voies (vitesse, pioche au lancement).
+
+### Reste — limites connues
+
+- **Le banc des objectifs n a pas d outil permanent** : la sonde qui a produit la table
+  `MESURES` a ete supprimee. Retoucher un objectif change son id et fait rougir sa
+  ligne ; le re-mesurer demandera d ecrire une nouvelle sonde.
+- Le **Slime colossal** est une feuille agrandie a gros pixels : a juger en jeu.
+- Niveaux sans boss (`lvl_08`, `17`, `18`, `20`) et sans mini-boss (`lvl_16`) : voulu.
