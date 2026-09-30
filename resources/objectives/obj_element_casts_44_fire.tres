@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_a5gsp"]
+
+[resource]
+script = ExtResource("1_a5gsp")
+id = &"obj_element_casts_44_fire"
+description = "Lancer 44 sorts de feu"
+check_key = &"element_casts"
+params = {
+"count": 44,
+"element": "FIRE"
+}

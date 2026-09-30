@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_fjynp"]
+
+[resource]
+script = ExtResource("1_fjynp")
+id = &"obj_card_casts_weakness_mark_11"
+description = "Lancer 11 fois Marque de faiblesse"
+check_key = &"card_casts"
+params = {
+"card": "weakness_mark",
+"count": 11
+}

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_57is6"]
+
+[resource]
+script = ExtResource("1_57is6")
+id = &"obj_kill_type_with_card_mirror_apprentice_5_sprite"
+description = "Lutin fileur : en tuer 5 avec Apprenti miroir"
+check_key = &"kill_type_with_card"
+params = {
+"card": "mirror_apprentice",
+"count": 5,
+"enemy": "sprite"
+}

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_bfm42"]
+
+[resource]
+script = ExtResource("1_bfm42")
+id = &"obj_enemy_travel_1380_0_cacodaemon"
+description = "Cacodemon : en faire marcher un sur 1 longueur de terrain"
+check_key = &"enemy_travel"
+params = {
+"distance": 1380.0,
+"enemy": "cacodaemon"
+}

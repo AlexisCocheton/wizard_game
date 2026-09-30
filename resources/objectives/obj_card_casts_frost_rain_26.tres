@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_4f8ts"]
+
+[resource]
+script = ExtResource("1_4f8ts")
+id = &"obj_card_casts_frost_rain_26"
+description = "Lancer 26 fois Pluie de givre"
+check_key = &"card_casts"
+params = {
+"card": "frost_rain",
+"count": 26
+}

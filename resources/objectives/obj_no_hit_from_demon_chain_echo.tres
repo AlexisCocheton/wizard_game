@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_4hr53"]
+
+[resource]
+script = ExtResource("1_4hr53")
+id = &"obj_no_hit_from_demon_chain_echo"
+description = "Echo de Kaltek : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "demon_chain_echo"
+}

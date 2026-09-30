@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_tv8rm"]
+
+[resource]
+script = ExtResource("1_tv8rm")
+id = &"obj_no_card_fireball"
+description = "Gagner sans lancer Boule de feu"
+check_key = &"no_card"
+params = {
+"card": "fireball"
+}

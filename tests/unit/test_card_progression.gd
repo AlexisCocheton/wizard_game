@@ -44,7 +44,7 @@ func run() -> void:
 	# Retouches du co-auteur apres test (30/09).
 	_test_communes_proposees_en_campagne()
 	_test_hors_campagne_la_table_des_sorts_ne_change_pas()
-	_test_contenu_de_niveau_construit_en_code()
+	_test_contenu_de_niveau_reel()
 	_test_ou_obtenir_distingue_deck_et_montee()
 	_test_meme_gris_au_grimoire_et_au_deck()
 	# Etat propre pour les suites suivantes.
@@ -816,10 +816,12 @@ func _test_hors_campagne_la_table_des_sorts_ne_change_pas() -> void:
 		"la table de campagne consomme autant de tirages que celle de DEC-004")
 
 
-## Le contenu (3 cartes nouvelles par niveau, cartes des objectifs) n est pas
-## encore ecrit : la logique doit marcher des qu il le sera. On le fabrique en
-## code sur deux VRAIS niveaux, l un ouvert, l autre ferme.
-func _test_contenu_de_niveau_construit_en_code() -> void:
+## Le contenu LIVRE (chantier W7 : 3 cartes nouvelles par niveau, une carte par
+## objectif) sur les deux premiers niveaux, l un ouvert, l autre ferme. Ce test
+## fabriquait ce contenu en code tant qu il n etait pas ecrit ; il lit
+## maintenant le vrai. Les cartes deja obtenues (cartes de depart) ou deja
+## offertes par un pool ouvert sont ecartees : leur etat ne dit rien de la regle.
+func _test_contenu_de_niveau_reel() -> void:
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 	var ouvert: LevelDef = ContentDB.levels.get(&"lvl_01")
@@ -830,32 +832,25 @@ func _test_contenu_de_niveau_construit_en_code() -> void:
 		"le niveau qui suit le premier est ferme sur un profil neuf")
 	if ferme == null:
 		return
-	# Des cartes qu aucun pool ouvert ni ferme ne contient deja.
-	var partout: Dictionary = {}
-	for lv0: LevelDef in ContentDB.levels.values():
-		for c0 in RunState.levelup_pool(lv0, GameEnums.Mode.EXPLORATION):
-			partout[c0.id] = true
-	var libres: Array[SpellCard] = []
-	for c1: SpellCard in _sorts():
-		if not partout.has(c1.id) and not SaveData.is_discovered(c1.id):
-			libres.append(c1)
-	ok(libres.size() >= 2 * LevelDef.LEVELUP_NEW_CARDS + 1,
-		"assez de cartes libres pour fabriquer le contenu (%d)" % libres.size())
-	if libres.size() < 2 * LevelDef.LEVELUP_NEW_CARDS + 1:
-		return
-	var sauve_o: Array[SpellCard] = ouvert.levelup_cards.duplicate()
-	var sauve_f: Array[SpellCard] = ferme.levelup_cards.duplicate()
-	var sauve_r: Array[SpellCard] = ouvert.objective_rewards.duplicate()
+	var pool_ouvert: Dictionary = {}
+	for c0 in RunState.levelup_pool(ouvert, GameEnums.Mode.EXPLORATION):
+		pool_ouvert[c0.id] = true
 	var nouv_o: Array[SpellCard] = []
+	for c1: SpellCard in ouvert.levelup_cards:
+		if c1 != null and not SaveData.is_discovered(c1.id):
+			nouv_o.append(c1)
 	var nouv_f: Array[SpellCard] = []
-	for i in LevelDef.LEVELUP_NEW_CARDS:
-		nouv_o.append(libres[i])
-		nouv_f.append(libres[LevelDef.LEVELUP_NEW_CARDS + i])
-	var recompense: SpellCard = libres[2 * LevelDef.LEVELUP_NEW_CARDS]
-	ouvert.levelup_cards = nouv_o
-	ferme.levelup_cards = nouv_f
-	var rec: Array[SpellCard] = [recompense]
-	ouvert.objective_rewards = rec
+	for c1b: SpellCard in ferme.levelup_cards:
+		if c1b != null and not SaveData.is_discovered(c1b.id) and not pool_ouvert.has(c1b.id):
+			nouv_f.append(c1b)
+	var recompense: SpellCard = ouvert.objective_reward(0)
+	ok(not nouv_o.is_empty(), "le premier niveau fait decouvrir une carte pas encore obtenue")
+	ok(not nouv_f.is_empty(), "le second aussi, qu aucun pool ouvert ne montre")
+	ok(recompense != null and not pool_ouvert.has(recompense.id)
+		and not SaveData.is_discovered(recompense.id),
+		"la carte du premier objectif n est dans aucun pool ouvert")
+	if nouv_o.is_empty() or nouv_f.is_empty() or recompense == null:
+		return
 	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
 	for c in nouv_o:
 		eq(SaveData.card_visibility(c.id), SaveData.CARD_OBTAINABLE,
@@ -885,9 +880,6 @@ func _test_contenu_de_niveau_construit_en_code() -> void:
 	var apres: Array = SaveData.card_counts(0)
 	eq(int(apres[0]), int(avant[0]) + 1, "prendre une carte grisee : une obtenue de plus")
 	eq(int(apres[1]), int(avant[1]), "et le nombre de cartes visibles ne change pas")
-	ouvert.levelup_cards = sauve_o
-	ferme.levelup_cards = sauve_f
-	ouvert.objective_rewards = sauve_r
 	RunState.reset()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()

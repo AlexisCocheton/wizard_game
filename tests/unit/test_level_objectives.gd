@@ -33,6 +33,22 @@ const EXEMPLES_CO_AUTEUR: Array[StringName] = [
 	&"no_damage_taken", &"no_legendary_used", &"same_card_casts",
 	&"win_below_speed", &"multi_kill",
 ]
+## Les exemples du 30/09, qui LIENT les objectifs aux cartes et aux monstres :
+## "tuer 4 Oiseaux mirage en une attaque", "tuer 8 monstres en moins d une
+## seconde", "jouer Fleche 6 fois", "gagner sans jouer Boule de feu", "finir
+## avec plus de 300 %", "ne pas se faire toucher par un lutin archer", "gagner
+## en ayant pris des degats d un renard dormeur". Ecrits avec LEURS chiffres :
+## ce sont les phrases du co-auteur, pas des reglages. Un exemple dont le seuil
+## serait retouche au banc doit etre retire d ici en le disant, pas maquille.
+const EXEMPLES_30_09: Array[Dictionary] = [
+	{"key": &"kill_type_one_cast", "params": {"enemy": "rat_swarm", "count": 4}},
+	{"key": &"multi_kill", "params": {"count": 8, "window": 1}},
+	{"key": &"card_casts", "params": {"card": "piercing_arrow", "count": 6}},
+	{"key": &"no_card", "params": {"card": "fireball"}},
+	{"key": &"win_above_speed", "params": {"pct": 300}},
+	{"key": &"no_hit_from", "params": {"enemy": "imp_archer"}},
+	{"key": &"hit_from", "params": {"enemy": "sleepy_fox"}},
+]
 
 
 func run() -> void:
@@ -127,6 +143,25 @@ func _test_exemples_du_co_auteur() -> void:
 				vues[o.check_key] = true
 	for cle in EXEMPLES_CO_AUTEUR:
 		ok(vues.has(cle), "l exemple du co-auteur %s est dans la campagne" % cle)
+	for ex: Dictionary in EXEMPLES_30_09:
+		var trouve: bool = false
+		for lv in _niveaux():
+			for o: ObjectiveDef in lv.objectives:
+				if o != null and o.check_key == ex["key"] and _memes_params(o.params, ex["params"]):
+					trouve = true
+		ok(trouve, "l exemple du co-auteur %s %s est dans la campagne" % [ex["key"], ex["params"]])
+
+
+## Memes parametres, a la valeur pres (1 et 1.0 sont le meme seuil).
+static func _memes_params(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for k in b:
+		var v: Variant = a.get(k, a.get(StringName(k)))
+		if v == null or str(v) != str(b[k]):
+			if not (v is float or v is int) or not is_equal_approx(float(v), float(b[k])):
+				return false
+	return true
 
 
 ## La description d un .tres n est plus qu un repli : si elle divergeait du
