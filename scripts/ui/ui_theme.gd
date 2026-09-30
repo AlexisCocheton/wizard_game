@@ -111,16 +111,47 @@ static func rarity_color(rarity: int) -> Color:
 	return TEXT_DIM
 
 
+## Plancher de contraste du projet pour du texte (WCAG AA, texte courant).
+const CONTRAST_MIN: float = 4.5
+
+## ENCRES DE RARETE, lisibles SUR LE PAPIER (plus sombres que rarity_color).
+## Ce sont des CONSTANTES pour que les ecrans qui veulent la meme teinte hors de
+## toute rarete (le bleu d une incantation, l or d un compteur) la NOMMENT au lieu
+## de la recopier : une teinte recopiee ne suit pas la correction suivante. C est
+## ce qui s est passe le 30/09 : l or legendaire corrige ici restait ecrit en dur
+## a quatre endroits. L AUDIT (_check_rarity_colors) interdit desormais toute
+## couleur de rarete ecrite en dur hors de ce fichier.
+const INK_COMMON := Color(0.38, 0.38, 0.44)
+## Mesure sur capture (30/09) : l ancien bleu (0.15, 0.38, 0.75) faisait 4,58:1
+## sur le papier creme du briefing mais 4,08:1 sur la page du grimoire, et le
+## calcul le donnait a 3,1:1 sur le papier BLEUTE d une carte rare en main (le
+## papier est teinte par rarity_bg). Ce bleu nuit passe 4,5:1 sur les trois et
+## reste un bleu sature : il ne se confond ni avec le gris de la commune ni avec
+## le violet de l epique. L epaisseur du contour (rarity_border_width) porte de
+## toute facon la rarete sans la couleur.
+const INK_RARE := Color(0.08, 0.26, 0.60)
+const INK_EPIC := Color(0.48, 0.22, 0.72)
+## Mesure sur la capture du profil (30/09) : l ancien or (0.62, 0.45, 0.05) ne
+## faisait que 3,3:1 sur le papier creme, sous le seuil de 4,5. Ce bronze fait
+## 5:1 et se lit encore comme de l or.
+const INK_LEGENDARY := Color(0.48, 0.34, 0.02)
+## Encres RETIREES parce qu elles ne tenaient pas le contraste sur le papier.
+## L AUDIT les interdit dans tout script et toute scene hors de ce fichier : les
+## voir revenir voudrait dire qu un ecran a recopie une ancienne valeur au lieu
+## de nommer l encre.
+const RETIRED_INKS: Array[Color] = [
+	Color(0.62, 0.45, 0.05),  # ancien or legendaire, 3,3:1
+	Color(0.15, 0.38, 0.75),  # ancien bleu rare, 4,08:1 sur la page du grimoire
+]
+
+
 ## Couleur de rarete lisible SUR LE PAPIER (plus sombre que rarity_color).
 static func rarity_ink(rarity: int) -> Color:
 	match rarity:
-		GameEnums.Rarity.COMMON: return Color(0.38, 0.38, 0.44)
-		GameEnums.Rarity.RARE: return Color(0.15, 0.38, 0.75)
-		GameEnums.Rarity.EPIC: return Color(0.48, 0.22, 0.72)
-		# Mesure sur la capture du profil (30/09) : l ancien or (0.62, 0.45,
-		# 0.05) ne faisait que 3,3:1 sur le papier creme, sous le seuil de 4,5.
-		# Ce bronze fait 5:1 et se lit encore comme de l or.
-		GameEnums.Rarity.LEGENDARY: return Color(0.48, 0.34, 0.02)
+		GameEnums.Rarity.COMMON: return INK_COMMON
+		GameEnums.Rarity.RARE: return INK_RARE
+		GameEnums.Rarity.EPIC: return INK_EPIC
+		GameEnums.Rarity.LEGENDARY: return INK_LEGENDARY
 	return TEXT_DARK
 
 
