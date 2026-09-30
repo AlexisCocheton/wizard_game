@@ -834,7 +834,10 @@ static func _card_order(a: SpellCard, b: SpellCard) -> bool:
 ## rien ne montre. "8 / 14" dit exactement ce que les pages contiennent : 14
 ## vignettes, dont 6 grisees. On ne compte que le contenu REEL (ContentDB) : un
 ## id perime dans le profil gonflait l ancien compteur.
-func card_counts(passives: int = -1) -> Array:
+##
+## `rarity` (-1 = toutes) restreint le compte a une rarete : le profil s en sert
+## pour ses legendaires, sous la meme regle (obtenues / VISIBLES).
+func card_counts(passives: int = -1, rarity: int = -1) -> Array:
 	var obtenues: int = 0
 	var visibles: int = 0
 	var pool: Dictionary = obtainable_ids()
@@ -842,6 +845,8 @@ func card_counts(passives: int = -1) -> Array:
 		if c == null:
 			continue
 		if passives != -1 and c.is_passive != (passives == 1):
+			continue
+		if rarity != -1 and c.rarity != rarity:
 			continue
 		if is_discovered(c.id):
 			obtenues += 1

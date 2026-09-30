@@ -2796,7 +2796,7 @@ func _waves_and_level() -> void:
 	#   1. viser : gnomes espaces, puis trois feux follets qui VOLENT, puis une
 	#      nuee de rats — la premiere cible faite pour une zone ;
 	#   2. le Gardien, premiere grosse cible, escorte legere (difficulte 0,9) ;
-	#   3. Chronos et ses lutins, inchange.
+	#   3. Chronos et ses lutins (difficulte 0,6 depuis le chantier W7, voir w3).
 	# Mesure (60 parties, memes graines) : 59/60 et 257 % de vitesse a l arrivee,
 	# contre 57/60 et 280 % pour les six vagues. Le niveau dure ~96 s au lieu de
 	# ~173 s : c est le but.
@@ -2832,7 +2832,16 @@ func _waves_and_level() -> void:
 	var w3 := WaveDef.new()
 	w3.id = &"w1_boss"
 	w3.duration = 40.0
-	w3.difficulty = 1.0
+	# CHRONOS ALLEGE (chantier W7, demande du co-auteur : « trop de vie pour un
+	# tutoriel »). Mesure au banc avant, a difficulte 1,0 (320 PV) : 29 s pour
+	# l abattre avec le bot qui choisit, le plus long combat de boss du jeu apres
+	# le Sceau de Tombol (lvl_21) et la Sorciere des fosses (lvl_19), bien au-dela
+	# du boss de lvl_02 (18 s). Avec l ancien bot (premiere option partout), il
+	# n etait abattu que 8 fois sur 29 : le tutoriel se finissait sur un boss qui
+	# traverse. La difficulte de SA vague porte ses PV sans toucher sa fiche (le
+	# Massacre garde le Chronos entier) ; la courbe reste montante (189 -> 214 PV)
+	# et le saut sous x2.
+	w3.difficulty = 0.6
 	w3.is_boss = true
 	w3.entries = [
 		_entry(E + "chronos.tres", 1, 1.0),

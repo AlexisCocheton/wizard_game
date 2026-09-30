@@ -145,7 +145,7 @@ script = ExtResource("17_smbsg")
 id = &"w1_boss"
 duration = 40.0
 entries = Array[ExtResource("18_d8uqj")]([SubResource("Resource_5e45o"), SubResource("Resource_7m1ey")])
-difficulty = 1.0
+difficulty = 0.6
 is_miniboss = false
 is_boss = true
 

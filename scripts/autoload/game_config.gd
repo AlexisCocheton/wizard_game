@@ -237,6 +237,9 @@ const UPGRADE_DISCARD_PRICE: int = 1
 ## 14 (17 et 15 sur les deux autres variantes), un niveau qui ne passait que
 ## grace a "+30 % degats" pris a chaque fois. Non retouche ici : c est la
 ## politique du bot qui a change, pas le jeu (voir le rapport U2).
+## Depuis le chantier W7, le bot choisit par une REGLE (AutoPick.upgrade_index :
+## l identite du sort en forme forte, sinon la vitesse forte) et non plus la
+## premiere voie : lvl_16 43 -> 59 victoires sur 90 a jeu egal.
 const CARD_UPGRADE_TIERS: int = 2
 ## L ecart entre deux maturations est multiplie par ce facteur a chaque palier :
 ## 8 lancers, puis 16 de plus (paliers a 8 et 24). A ecart constant (8 et 16),
