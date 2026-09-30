@@ -58,18 +58,26 @@ func _enemy(id: String, dname: String, kind: GameEnums.EnemyKind, power: int,
 ## le niveau global.
 ##
 ## Cles : 0.0 = immunite, 0.5 = moitie des degats, 1.5 = degats majores.
+##
+## ACCENTUATION (vague 5) : les tables ci-dessous sont ECRITES dans l ancienne
+## echelle (+/- 35 %) et JOUEES apres `EnemyDef.accentuate()`, la regle unique
+## qui creuse les ecarts (0,5 -> 0,30 ; 1,2 -> 1,58 ; plafond x2 ; immunites
+## gardees). Une seule regle plutot que 82 retouches : l intention de chaque
+## table (le golem craint l arcane, le colosse le givre) reste lisible telle
+## qu elle a ete pensee, et le prochain reglage ne touchera qu une constante.
 func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
 	var T := GameEnums.DamageTag
 	var out: Dictionary = {}
 	for nom in table.keys():
+		var v: float = EnemyDef.accentuate(float(table[nom]))
 		match String(nom):
-			"phys": out[T.PHYSICAL] = float(table[nom])
-			"feu": out[T.FIRE] = float(table[nom])
-			"givre": out[T.FROST] = float(table[nom])
-			"arcane": out[T.ARCANE] = float(table[nom])
-			"poison": out[T.POISON] = float(table[nom])
-			"foudre": out[T.LIGHTNING] = float(table[nom])
-			"lent": out[T.SLOW] = float(table[nom])
+			"phys": out[T.PHYSICAL] = v
+			"feu": out[T.FIRE] = v
+			"givre": out[T.FROST] = v
+			"arcane": out[T.ARCANE] = v
+			"poison": out[T.POISON] = v
+			"foudre": out[T.LIGHTNING] = v
+			"lent": out[T.SLOW] = v
 			_: printerr("element inconnu dans une table de resistances : ", nom)
 	e.resistances = out
 	# L ancien champ est vide desormais : la table est la seule source de verite.
@@ -236,9 +244,18 @@ func _enemies() -> void:
 	berserker.anim_key = &"warrior_red"
 	berserker.enrage_speed_pct = 12.0
 	berserker.enrage_cap = 1.5
-	# Berserker : la rage le rechauffe, le gel ne l atteint plus, et sa peau
-	# tannee encaisse. Le feu et l arcane, eux, passent sous la fureur.
-	_resist(berserker, {&"phys": 0.9, &"feu": 1.15, &"givre": 0.8, &"arcane": 1.15, &"poison": 0.85})
+	# Berserker : sa peau tannee encaisse, et le sang qui bout brule le venin. Le
+	# feu et l arcane, eux, passent sous la fureur.
+	#
+	# Il RESISTAIT AU GIVRE (0,8, « la rage le rechauffe ») jusqu a la vague 5.
+	# Depuis que la resistance freine aussi les RALENTISSEMENTS, resister au givre
+	# coute double au joueur : moins de degats ET moins de controle. Sur le
+	# monstre le plus courant du jeu (21 vagues), c etait un mur contre tout deck
+	# de givre — l Arene de Kaltek, deck de givre face a des berserkers a chaque
+	# vague, tombait de ~63 % a ~40 % de victoires au banc (sonde : ~69 % en
+	# retirant la seule regle des effets). La resistance est reportee sur le
+	# poison, qu aucun deck de ces niveaux ne porte en masse.
+	_resist(berserker, {&"phys": 0.9, &"feu": 1.15, &"givre": 1.0, &"arcane": 1.1, &"poison": 0.75})
 	_save(berserker, E + "berserker.tres")
 
 	var knight := _enemy("void_knight", "Chevalier du vide", K.SHIELDED, 3, 34.0, 55.0, 4, S.HEXAGON, Color(0.55, 0.35, 0.85), 30.0)
@@ -1739,8 +1756,11 @@ func _enemies_v3(E: String) -> void:
 	chameleon.anim_key = &"wraith"
 	chameleon.chameleon_interval = 5.0
 	chameleon.chameleon_elements = [T.FIRE, T.POISON, T.FROST, T.LIGHTNING]
-	chameleon.chameleon_weak_mult = 1.5
-	chameleon.chameleon_resist_mult = 0.5
+	# Ses deux multiplicateurs tournants passent par la MEME accentuation que les
+	# tables : sinon le Cameleon, dont la faiblesse EST la mecanique, deviendrait
+	# le monstre aux ecarts les plus timides du bestiaire.
+	chameleon.chameleon_weak_mult = EnemyDef.accentuate(1.5)
+	chameleon.chameleon_resist_mult = EnemyDef.accentuate(0.5)
 	_resist(chameleon, {&"phys": 0.9, &"arcane": 1.1})
 	_save(chameleon, E + "season_chameleon.tres")
 

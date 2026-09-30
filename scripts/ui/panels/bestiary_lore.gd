@@ -276,7 +276,9 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 	if ancien != "":
 		out.append("Ancien boss (%s), revenu en simple monstre : moins de PV, moins de ruses"
 			% ancien)
-	out.append_array(resistance_lines(def))
+	# Les RESISTANCES ne sont plus des phrases (vague 5) : la fiche les pose en
+	# logos + pourcentages sous les competences (resistance_groups), le meme logo
+	# que celui de la carte qui les subit.
 
 	# Toujours une ligne, meme pour un monstre sans particularite : un encadre
 	# vide laisserait croire que la fiche est cassee.
@@ -336,40 +338,55 @@ static func v3_lines(def: EnemyDef) -> Array[String]:
 	return out
 
 
-## RESISTANCES en clair. Le joueur ne verra jamais la table : il lit des phrases,
-## triees du plus dangereux pour lui (immunite) au plus avantageux (faiblesse).
+## RESISTANCES, en trois groupes tries du plus dangereux pour le joueur
+## (immunite) au plus avantageux (faiblesse) :
+##   [{title: "Immunise"|"Resiste"|"Vulnerable", items: [{tag, mult}]}]
+## La fiche en fait des LOGOS + pourcentages (ElementIcons.resistance_chip), le
+## meme logo que celui de la carte qui les subit : on rapproche une image, plus
+## un mot ecrit ailleurs.
 ##
-## On n ecrit QUE les ecarts : une ligne "subit 100 % des degats de foudre" sur
-## chaque element non declare noierait les trois qui comptent sous six qui ne
-## disent rien. Une fiche de monstre se lit en deux secondes, entre deux vagues.
-static func resistance_lines(def: EnemyDef) -> Array[String]:
-	var out: Array[String] = []
+## On ne rend QUE les ecarts : une case « foudre 0 % » sur chaque element non
+## declare noierait les trois qui comptent sous six qui ne disent rien. Une fiche
+## de monstre se lit en deux secondes, entre deux vagues.
+##
+## Le RALENTISSEMENT n est pas un element mais se lit au meme endroit, avec son
+## logo (le sablier) : c est la moitie des cartes de controle qui en depend, et
+## la carte Entrave temporelle porte le meme sablier.
+## La regle, en une phrase, en tete du bloc des resistances : ce qu il faut
+## savoir pour lire « -53 % degats et effets » sans l avoir devine.
+const RESIST_RULE_TEXT: String = ("Une resistance vaut aussi contre les EFFETS de"
+	+ " l element : ralentir, figer, attirer, aspirer, repousser")
+
+
+static func resistance_groups(def: EnemyDef) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	if def == null:
 		return out
-	var immunites: Array[String] = []
-	var resistes: Array[String] = []
-	var faiblesses: Array[String] = []
-	for tag in GameEnums.ELEMENTS:
+	var immunites: Array = []
+	var resistes: Array = []
+	var faiblesses: Array = []
+	var tags: Array = GameEnums.ELEMENTS.duplicate()
+	tags.append(GameEnums.DamageTag.SLOW)
+	for tag in tags:
 		var r: float = def.resistance_to(tag)
+		var item: Dictionary = {"tag": tag, "mult": r}
 		if r <= 0.0:
-			immunites.append(GameEnums.tag_name(tag))
+			immunites.append(item)
 		elif r < 1.0:
-			resistes.append("%s (-%d %%)" % [GameEnums.tag_name(tag),
-				int(round((1.0 - r) * 100.0))])
+			resistes.append(item)
 		elif r > 1.0:
-			faiblesses.append("%s (+%d %%)" % [GameEnums.tag_name(tag),
-				int(round((r - 1.0) * 100.0))])
-	# Le ralentissement n est pas un element mais le joueur doit le lire au meme
-	# endroit : c est la moitie de ses cartes de controle qui en depend.
-	if def.resistance_to(GameEnums.DamageTag.SLOW) <= 0.0:
-		immunites.append("ralentissement")
-
+			faiblesses.append(item)
+	# Le plus fort ecart en tete de son groupe : c est celui qui change le deck.
+	resistes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a["mult"]) < float(b["mult"]))
+	faiblesses.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a["mult"]) > float(b["mult"]))
 	if not immunites.is_empty():
-		out.append("Immunise : %s" % ", ".join(immunites))
+		out.append({"title": "Immunise", "items": immunites})
 	if not resistes.is_empty():
-		out.append("Resiste : %s" % ", ".join(resistes))
+		out.append({"title": "Resiste", "items": resistes})
 	if not faiblesses.is_empty():
-		out.append("Vulnerable : %s" % ", ".join(faiblesses))
+		out.append({"title": "Vulnerable", "items": faiblesses})
 	return out
 
 

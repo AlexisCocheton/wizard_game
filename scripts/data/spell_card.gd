@@ -53,6 +53,75 @@ func effect_keys() -> Array[StringName]:
 	return out
 
 
+## --- TYPE DU SORT (vague 5) ---
+##
+## Chaque carte a UN type visible, avec son logo (ElementIcons) : son ELEMENT
+## quand elle en porte un, sinon un petit nombre de types non elementaires. Le
+## joueur lit sur la carte ce que le bestiaire lui dit des resistances : un
+## golem immunise au sablier n est pas ralenti par une carte au sablier.
+##
+## DERIVE et non stocke : le type se deduit des tags et des effets, deux choses
+## que la carte porte deja. Un champ ecrit a la main aurait pu contredire les
+## tags (une carte « feu » qui inflige du givre), et chaque carte neuve aurait
+## du penser a le remplir. test_elements interdit qu une carte reste sans type :
+## un verbe neuf sans famille rougit le harnais au lieu d afficher un blanc.
+##
+## ORDRE DE LECTURE, du plus utile au joueur au moins utile :
+##   1. le premier ELEMENT des tags — c est lui que les resistances lisent. Une
+##      Mare de venin est poison avant d etre ralentissante, un Totem physique
+##      avant d etre un objet de terrain ;
+##   2. un objet pose sur le terrain (mur, riviere, fosse, autel) : TERRAIN ;
+##   3. une invocation : INVOCATION ;
+##   4. un ralentissement sans element (Entrave temporelle) : RALENTISSEMENT,
+##      le meme logo que la ligne « immunise au ralentissement » du bestiaire ;
+##   5. tout ce qui agit sur la main, la pioche ou l incantation : GRIMOIRE.
+## Un passif est PASSIF, quelle que soit sa regle.
+const TYPE_TERRAIN_KEYS: Array[StringName] = [
+	&"build_wall", &"place_terrain", &"terrain_river", &"taunt_prop", &"water_flood",
+]
+const TYPE_GRIMOIRE_KEYS: Array[StringName] = [
+	&"draw_cards", &"discard_draw", &"retain_next", &"remove_cards", &"double_cast",
+	&"draw_boost", &"discard_hand_for_speed", &"cost_reduction", &"empower_next",
+	&"self_haste",
+]
+
+
+## Cle du type ("feu", "terrain"...), "" si aucune regle ne s applique.
+func spell_type() -> StringName:
+	if is_passive:
+		return &"passif"
+	for t in tags:
+		if t in GameEnums.ELEMENTS:
+			return type_of_tag(t)
+	var cles: Array[StringName] = effect_keys()
+	for k in cles:
+		if k in TYPE_TERRAIN_KEYS:
+			return &"terrain"
+	if GameEnums.DamageTag.SUMMON in tags or &"summon_ally" in cles:
+		return &"invocation"
+	if GameEnums.DamageTag.SLOW in tags:
+		return &"ralentissement"
+	for k in cles:
+		if k in TYPE_GRIMOIRE_KEYS:
+			return &"grimoire"
+	return &""
+
+
+## Cle de type d un tag : la meme pour une carte de feu et pour la ligne « feu »
+## d une fiche de monstre, donc le meme logo aux deux endroits.
+static func type_of_tag(tag: int) -> StringName:
+	match tag:
+		GameEnums.DamageTag.PHYSICAL: return &"physique"
+		GameEnums.DamageTag.FIRE: return &"feu"
+		GameEnums.DamageTag.FROST: return &"givre"
+		GameEnums.DamageTag.ARCANE: return &"arcane"
+		GameEnums.DamageTag.POISON: return &"poison"
+		GameEnums.DamageTag.LIGHTNING: return &"foudre"
+		GameEnums.DamageTag.SLOW: return &"ralentissement"
+		GameEnums.DamageTag.SUMMON: return &"invocation"
+	return &""
+
+
 ## --- AMELIORATION EN COMBAT ---
 ##
 ## Les trois voies d amelioration de ce sort, sous la forme attendue par le

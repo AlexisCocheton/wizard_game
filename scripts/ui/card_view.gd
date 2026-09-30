@@ -115,7 +115,7 @@ func _build_hand(box: VBoxContainer, c: SpellCard, width: float, height: float) 
 		var centre := HBoxContainer.new()
 		centre.alignment = BoxContainer.ALIGNMENT_CENTER
 		centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		centre.add_child(icone)
+		centre.add_child(with_type_badge(icone, c, taille))
 		box.add_child(centre)
 
 	# Nom court, autowrap COUPE : c est ce repli qui produisait "Double
@@ -147,7 +147,18 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 		var centre := HBoxContainer.new()
 		centre.alignment = BoxContainer.ALIGNMENT_CENTER
 		centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		centre.add_child(icone)
+		centre.add_child(with_type_badge(icone, c, 84.0))
+		# Le NOM du type, A COTE de l icone : c est en pause, carte en grand, que
+		# le joueur apprend a quoi correspond le logo pose dessus. A cote et non
+		# sur une ligne de plus : une ligne ajoutait ~47 px a des cartes de choix
+		# deja pleines (mesure par sonde), et en tete de la ligne de rarete
+		# « Ralentissement - rare - 2s » debordait des 300 px de la carte.
+		var type_l := UiTheme.label(" + ".join(ElementIcons.card_type_names(c)),
+			maxi(body_size - 4, 16), Color(0.30, 0.23, 0.15), HORIZONTAL_ALIGNMENT_LEFT, false)
+		type_l.name = "TypeName"
+		type_l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		type_l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		centre.add_child(type_l)
 		box.add_child(centre)
 
 	# Ici le nom COMPLET : c est l ecran ou on apprend a quoi correspond l icone
@@ -175,6 +186,45 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 			Color(0.18, 0.36, 0.70), HORIZONTAL_ALIGNMENT_CENTER)
 		aim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(aim)
+
+
+## LOGO DE TYPE (vague 5), pose EN SURIMPRESSION dans le coin haut-gauche de
+## l icone. Pas une ligne de plus : la carte de main fait 118 px et chaque ligne
+## y a ete gagnee de haute lutte (voir l en-tete). Le coin haut-gauche est celui
+## que les icones du pack laissent le plus souvent vide, et celui que l oeil lit
+## en premier.
+##
+## Taille : la moitie de l icone, jamais sous 40 px (relu en capture : a 32 px le
+## sceau se lisait mal sur une carte de main) — en dessous la FORME du cadre,
+## qui porte l information pour un joueur daltonien, ne se lit plus.
+const BADGE_RATIO: float = 0.5
+const BADGE_MIN: float = 40.0
+
+
+## Statique : le grimoire pose le meme sceau sur ses vignettes.
+static func with_type_badge(icone: TextureRect, c: SpellCard, taille: float) -> Control:
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(taille, taille)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Ancres ET marges : `set_anchors_preset` seul garde les anciennes marges, et
+	# l icone deborderait d une largeur entiere.
+	icone.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	holder.add_child(icone)
+	var cote: float = maxf(taille * BADGE_RATIO, BADGE_MIN)
+	var badge: TextureRect = ElementIcons.make(c.spell_type(), cote)
+	if badge != null:
+		badge.name = "TypeBadge"
+		# Deborde legerement du coin : colle a l icone, il la recouvrirait
+		# davantage ; decale, il se lit comme un sceau pose SUR la carte.
+		# Marges ecrites une a une : c est la seule forme que la mise en page ne
+		# reecrit pas dans un Control qui n est pas un conteneur.
+		badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		badge.offset_left = -cote * 0.22
+		badge.offset_top = -cote * 0.22
+		badge.offset_right = badge.offset_left + cote
+		badge.offset_bottom = badge.offset_top + cote
+		holder.add_child(badge)
+	return holder
 
 
 ## Nom court d une carte, pour la main. On retire les mots de liaison, qui ne

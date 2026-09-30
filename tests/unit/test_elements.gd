@@ -81,6 +81,11 @@ func run() -> void:
 	_test_la_fiche_annonce_les_resistances()
 	_test_la_fiche_annonce_le_vol()
 	_test_chaque_element_a_une_couleur_et_une_feuille()
+	_test_l_immunite_au_ralentissement_ne_protege_pas_du_givre()
+	_test_l_accentuation_creuse_les_ecarts()
+	_test_chaque_carte_a_un_type()
+	_test_les_logos_se_distinguent_par_la_forme()
+	_test_la_carte_porte_son_logo()
 
 
 ## La palette doit couvrir les six ELEMENTS de degats. SLOW et SUMMON restent
@@ -275,20 +280,246 @@ func _test_les_ecarts_de_design_demandes() -> void:
 
 ## Le joueur doit pouvoir LIRE tout cela : une resistance invisible est une
 ## resistance qui n existe pas pour lui.
+##
+## Vague 5 : la fiche ne l ECRIT plus en phrase, elle la pose en LOGO +
+## pourcentage, groupee sous un mot (Immunise / Resiste / Vulnerable). On verifie
+## donc les groupes que la fiche affiche, et que la phrase n est plus doublee
+## dans les competences.
 func _test_la_fiche_annonce_les_resistances() -> void:
 	var d := _def("cobaye")
 	d.resistances = {
 		GameEnums.DamageTag.FIRE: 0.5,
 		GameEnums.DamageTag.FROST: 1.5,
 		GameEnums.DamageTag.POISON: 0.0,
+		GameEnums.DamageTag.SLOW: 0.0,
 	}
+	var groupes: Array[Dictionary] = BestiaryLore.resistance_groups(d)
+	var par_titre: Dictionary = {}
+	for g in groupes:
+		par_titre[str(g["title"])] = g["items"]
+	eq(par_titre.keys().size(), 3, "trois groupes : immunite, resistance, faiblesse")
+	ok(_a_le_tag(par_titre.get("Immunise", []), GameEnums.DamageTag.POISON),
+		"une resistance a 0 se range sous Immunise")
+	ok(_a_le_tag(par_titre.get("Immunise", []), GameEnums.DamageTag.SLOW),
+		"l immunite au ralentissement se lit au meme endroit")
+	ok(_a_le_tag(par_titre.get("Resiste", []), GameEnums.DamageTag.FIRE),
+		"le feu resiste est range sous Resiste")
+	ok(_a_le_tag(par_titre.get("Vulnerable", []), GameEnums.DamageTag.FROST),
+		"la faiblesse au givre est rangee sous Vulnerable")
+	eq(ElementIcons.percent_text(d.resistance_to(GameEnums.DamageTag.FIRE)), "-50 %",
+		"la resistance est chiffree en pourcentage")
+	eq(ElementIcons.percent_text(d.resistance_to(GameEnums.DamageTag.FROST)), "+50 %",
+		"la faiblesse aussi")
+	eq(ElementIcons.percent_text(0.0), "",
+		"une immunite n a pas de chiffre : le mot du groupe la dit")
+	for g in groupes:
+		for item in g["items"]:
+			ok(ElementIcons.texture_for_tag(int(item["tag"])) != null,
+				"chaque case de resistance a son logo (%d)" % int(item["tag"]))
+	# La ligne dit que la resistance vaut AUSSI pour les effets (retour du
+	# co-auteur : « je ne sais pas si c est fait »). Une faiblesse, elle, ne
+	# promet que des degats : elle ne renforce pas le controle.
+	var T := GameEnums.DamageTag
+	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("degats et effets"),
+		"une resistance annonce degats ET effets")
+	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("-50"), "chiffree")
+	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("Givre"), "l element est nomme a cote du logo")
+	not_ok(ElementIcons.effect_text(T.FIRE, 1.5).contains("effets"),
+		"une faiblesse ne promet pas d effets renforces")
+	ok(ElementIcons.effect_text(T.POISON, 0.0).contains("ni degats ni effets"),
+		"une immunite annonce qu aucun effet ne passe")
+	ok(ElementIcons.effect_text(T.SLOW, 0.0).contains("ralenti"),
+		"l immunite au ralentissement se dit en clair")
+	ok(BestiaryLore.RESIST_RULE_TEXT.contains("EFFETS"), "la regle est ecrite en tete du bloc")
+	_la_fiche_affiche_logos_et_regle()
+	# Plus de phrase en double dans les competences : le logo l a remplacee.
 	var lignes: Array[String] = BestiaryLore.behaviours(d)
-	ok(_contient(lignes, "feu"), "le feu resiste est nomme")
-	ok(_contient(lignes, "50"), "la resistance est chiffree en pourcentage")
-	ok(_contient(lignes, "givre"), "la faiblesse au givre est nommee")
-	ok(_contient(lignes, "Immunise"), "une resistance a 0 se dit immunite")
-	not_ok(_contient(lignes, "resistances"),
-		"aucun nom de champ technique ne fuit")
+	not_ok(_contient(lignes, "Resiste :"), "la phrase de resistance n est plus ecrite")
+	not_ok(_contient(lignes, "resistances"), "aucun nom de champ technique ne fuit")
+
+
+## La VRAIE fiche du grimoire, construite : la regle en tete, une ligne a logo
+## par ecart. Sans ce test, la fiche pouvait revenir a la phrase sans que rien
+## ne rougisse — c est exactement ce que le co-auteur n a pas vu a l ecran.
+func _la_fiche_affiche_logos_et_regle() -> void:
+	var golem: EnemyDef = ContentDB.enemies.get(&"golem")
+	if golem == null:
+		return
+	# Un monstre JAMAIS CROISE n a qu une fiche d ombre (chantier P) : on le
+	# fait rencontrer, puis on rend le profil tel qu il etait.
+	var connu: bool = SaveData.is_enemy_discovered(golem.id)
+	SaveData.discover_enemy(golem.id)
+	var gp := GalleryPanel.new()
+	gp.size = Vector2(1000, 1500)
+	attach(gp)
+	gp.show_section(GalleryPanel.Section.BEASTS)
+	var idx: int = gp.entries().find(golem)
+	ok(idx >= 0, "le golem est au bestiaire")
+	gp.open_detail(idx)
+	ok(gp.find_child("ResistRule", true, false) != null, "la fiche ecrit la regle des effets")
+	var lignes: int = 0
+	for t in golem.resistances.keys():
+		var r: float = float(golem.resistances[t])
+		if is_equal_approx(r, 1.0):
+			continue
+		var ligne: Node = gp.find_child("Resist_%d" % int(t), true, false)
+		ok(ligne != null, "golem : l ecart %d a sa ligne" % int(t))
+		if ligne != null:
+			lignes += 1
+			var logo: bool = false
+			for c in ligne.get_children():
+				logo = logo or (c is TextureRect and (c as TextureRect).texture != null)
+			ok(logo, "golem : la ligne %d porte le logo de l element" % int(t))
+	ok(lignes >= 3, "le golem montre ses ecarts")
+	detach(gp)
+	if not connu:
+		(SaveData.profile().get("discovered_enemies", []) as Array).erase(String(golem.id))
+
+
+func _a_le_tag(items: Array, tag: int) -> bool:
+	for it in items:
+		if int(it["tag"]) == tag:
+			return true
+	return false
+
+
+## LE DEFAUT DE DEPART DE LA VAGUE 5. Enemy.take_damage refusait TOUT degat des
+## qu un tag du sort etait immunise, SLOW compris : un Champ de givre [givre,
+## ralentissement] faisait 0 a Chronos, au golem, au Behemoth. Le niveau 1 porte
+## deux Champs de givre et son boss est Chronos.
+func _test_l_immunite_au_ralentissement_ne_protege_pas_du_givre() -> void:
+	var lourd := _def("lourd")
+	lourd.resistances = {GameEnums.DamageTag.SLOW: 0.0}
+	feq(_pv_apres(lourd, 40.0, _tags([GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW])),
+		60.0, "immunise au RALENTISSEMENT, il encaisse le givre entier", 0.01)
+	var glace := _def("glace")
+	glace.resistances = {GameEnums.DamageTag.FROST: 0.0}
+	feq(_pv_apres(glace, 40.0, _tags([GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW])),
+		100.0, "immunise au GIVRE, rien ne passe", 0.01)
+	# Sur le contenu : chaque carte de degats du deck du niveau 1 mord sur son boss.
+	var lvl: LevelDef = ContentDB.levels.get(&"lvl_01")
+	if lvl == null:
+		return
+	var boss: EnemyDef = null
+	for id in ContentDB.enemies.keys():
+		var d: EnemyDef = ContentDB.enemies[id]
+		if d.kind == GameEnums.EnemyKind.BOSS and _niveau_contient(lvl, d):
+			boss = d
+	ok(boss != null, "le niveau 1 a un boss")
+	if boss == null:
+		return
+	ok(not _cartes_du_niveau(lvl).is_empty(), "le niveau 1 fournit un deck")
+	for card in _cartes_du_niveau(lvl):
+		if not _fait_des_degats(card):
+			continue
+		# A TRAVERS le Battlefield, comme en jeu : c est take_damage qui refusait.
+		var tags: Array[GameEnums.DamageTag] = _tags(card.tags)
+		ok(_pv_apres(boss, 10.0, tags) < _pv_apres(boss, 0.0, tags),
+			"%s mord sur %s, boss du niveau 1" % [card.id, boss.id])
+
+
+func _niveau_contient(lvl: LevelDef, d: EnemyDef) -> bool:
+	for w in lvl.waves:
+		if w == null:
+			continue
+		for s in w.entries:
+			if s != null and s.enemy != null and s.enemy.id == d.id:
+				return true
+	return false
+
+
+func _cartes_du_niveau(lvl: LevelDef) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	for c in lvl.exploration_deck:
+		if c != null:
+			out.append(c)
+	return out
+
+
+## LA REGLE D ACCENTUATION (vague 5) : une puissance, jamais au-dela de zero ni
+## du plafond, et dans le sens de l ecart. Les deux reperes du co-auteur
+## (« 0,5 -> ~0,3 », « 1,2 -> ~1,6 ») sont la specification : ils sont ecrits.
+func _test_l_accentuation_creuse_les_ecarts() -> void:
+	feq(EnemyDef.accentuate(0.0), 0.0, "une immunite reste une immunite")
+	feq(EnemyDef.accentuate(1.0), 1.0, "le neutre reste neutre")
+	between(EnemyDef.accentuate(0.5), 0.25, 0.35, "resiste ~0,5 devient ~0,3")
+	between(EnemyDef.accentuate(1.2), 1.5, 1.7, "vulnerable ~1,2 devient ~1,6")
+	var avant: float = -1.0
+	for i in range(1, 60):
+		var r: float = float(i) * 0.05
+		var a: float = EnemyDef.accentuate(r)
+		ok(a >= avant, "l accentuation garde l ordre (%.2f)" % r)
+		avant = a
+		if r < 0.97:
+			ok(a < r and a > 0.0, "une resistance %.2f est creusee sans devenir immunite" % r)
+		elif r > 1.03:
+			ok(a > r or is_equal_approx(a, EnemyDef.WEAK_CAP),
+				"une faiblesse %.2f est creusee" % r)
+			ok(a <= EnemyDef.WEAK_CAP, "une faiblesse ne depasse pas le plafond")
+	# Le CONTENU est bien passe par la regle : ecrit sur l ancienne echelle
+	# (+/- 35 %), il doit maintenant compter des ecarts au-dela.
+	var creuse: bool = false
+	var plafond: bool = false
+	for id in ContentDB.enemies.keys():
+		var d: EnemyDef = ContentDB.enemies[id]
+		for t in d.resistances.keys():
+			var v: float = float(d.resistances[t])
+			ok(v <= EnemyDef.WEAK_CAP, "%s : aucune faiblesse au-dela du plafond" % id)
+			if v > 0.0 and v < 0.5:
+				creuse = true
+			if is_equal_approx(v, EnemyDef.WEAK_CAP):
+				plafond = true
+	ok(creuse, "des resistances depassent -50 % (table accentuee et regeneree)")
+	ok(plafond, "des faiblesses atteignent le plafond (table accentuee et regeneree)")
+	var cam: EnemyDef = ContentDB.enemies.get(&"season_chameleon")
+	if cam != null:
+		ok(cam.chameleon_weak_mult > 1.5 and cam.chameleon_resist_mult < 0.5,
+			"le Cameleon est accentue comme les autres tables")
+
+
+## UN TYPE PAR SORT (vague 5) : aucune carte ne reste sans type ni sans logo.
+func _test_chaque_carte_a_un_type() -> void:
+	for id in ContentDB.cards.keys():
+		var card: SpellCard = ContentDB.cards[id]
+		var type: StringName = card.spell_type()
+		ok(type != &"", "%s a un type" % id)
+		ok(ElementIcons.texture(type) != null, "%s : le logo de son type existe (%s)" % [id, type])
+		ok(ElementIcons.type_name(type) != "", "%s : son type a un nom" % id)
+		# Une carte qui porte un element a cet element pour type : c est lui que
+		# les resistances lisent, le logo ne doit pas dire autre chose.
+		for t in card.tags:
+			if t in GameEnums.ELEMENTS:
+				eq(type, SpellCard.type_of_tag(t), "%s : son type est son premier element" % id)
+				break
+	# Une carte INVENTEE sans element ni verbe connu n a pas de type : c est ce
+	# qui fait rougir le harnais au lieu d afficher un blanc sur la carte.
+	var orpheline := SpellCard.new()
+	var sp := EffectSpec.new()
+	sp.key = &"verbe_inconnu"
+	orpheline.effects.append(sp)
+	eq(orpheline.spell_type(), &"", "un verbe sans famille ne recoit pas de type par defaut")
+
+
+## LOGOS : un par element, par le ralentissement et par type non elementaire ;
+## deux elements ne partagent JAMAIS une forme (joueurs daltoniens).
+func _test_les_logos_se_distinguent_par_la_forme() -> void:
+	var formes: Dictionary = {}
+	var cles: Array[StringName] = []
+	for t in GameEnums.ELEMENTS:
+		cles.append(SpellCard.type_of_tag(t))
+	cles.append(SpellCard.type_of_tag(GameEnums.DamageTag.SLOW))
+	for k in cles:
+		ok(ElementIcons.texture(k) != null, "le logo %s existe" % k)
+		ok(ElementIcons.SHAPES.has(k), "%s a une forme declaree" % k)
+		var f: String = str(ElementIcons.SHAPES.get(k, ""))
+		not_ok(formes.has(f), "%s ne partage pas la forme '%s'" % [k, f])
+		formes[f] = k
+	for k in ElementIcons.KEYS:
+		ok(ElementIcons.texture(k) != null, "le logo de type %s existe" % k)
+		# Un type non elementaire ne prend jamais la forme d un element.
+		if not (k in cles):
+			not_ok(formes.has(str(ElementIcons.SHAPES.get(k, ""))),
+				"le type %s ne se confond pas avec un element" % k)
 
 
 ## `flying` n etait traduit nulle part : le joueur posait un mur inutile sans
@@ -318,6 +549,28 @@ func _test_chaque_element_a_une_couleur_et_une_feuille() -> void:
 		ok(Fx.impact_sheet(c) != "", "l element %d a une feuille d impact" % t)
 		ok(Fx.zone_sheet(c) != "", "l element %d a une feuille de zone" % t)
 		ok(CardIcons.BY_TAG.has(t), "l element %d a une icone de repli" % t)
+
+
+## LE LOGO EST SUR LA CARTE, en main comme en detail, et c est celui de son type.
+## Il ne coute aucune ligne de texte : la carte de main reste a trois labels au
+## plus (test_card_view le verifie par ailleurs).
+func _test_la_carte_porte_son_logo() -> void:
+	for id in ContentDB.cards.keys():
+		var card: SpellCard = ContentDB.cards[id]
+		for mode in ["main", "detail"]:
+			var cv := CardView.new()
+			if mode == "main":
+				cv.setup_hand(card, 118.0, 230.0)
+			else:
+				cv.setup_detail(card, 300.0, 440.0)
+			var badge: Node = cv.find_child("TypeBadge", true, false)
+			ok(badge is TextureRect, "%s (%s) porte le logo de son type" % [id, mode])
+			if badge is TextureRect:
+				ok((badge as TextureRect).texture == ElementIcons.texture(card.spell_type()),
+					"%s (%s) : le logo est celui de son type" % [id, mode])
+				ok((badge as TextureRect).custom_minimum_size.x >= CardView.BADGE_MIN,
+					"%s (%s) : le logo reste lisible" % [id, mode])
+			cv.free()
 
 
 func _contient(lignes: Array[String], morceau: String) -> bool:

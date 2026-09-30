@@ -30,8 +30,18 @@ const FOOT_REACHABLE: String = "a rencontrer"
 static func grey(tile: Control, art: Control) -> void:
 	if tile != null:
 		tile.self_modulate = GREY_TILE
-	if art != null:
+	if art == null:
+		return
+	# Une icone de carte porte depuis la vague 5 son SCEAU DE TYPE : elle arrive
+	# dans un Control qui tient l icone et le sceau (CardView.with_type_badge).
+	# On grise alors chaque image, pas le porteur : le gris MULTIPLIE, et
+	# l appliquer aux deux niveaux assombrirait deux fois.
+	if art is TextureRect or art.get_child_count() == 0:
 		art.modulate = GREY_ART
+		return
+	for c in art.get_children():
+		if c is CanvasItem:
+			(c as CanvasItem).modulate = GREY_ART
 
 
 ## Le compteur d en-tete, le meme mot a mot sur les trois ecrans :

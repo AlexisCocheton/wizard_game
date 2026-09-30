@@ -520,7 +520,10 @@ func _art(entry: Object, px: float, known: bool) -> Control:
 		if not known:
 			# Silhouette : la forme reste, les couleurs disparaissent.
 			tr.modulate = Color(0.0, 0.0, 0.0, 0.5)
-		return tr
+			return tr
+		# Le sceau de TYPE (vague 5), le meme que sur la carte en main : c est
+		# dans le grimoire que le joueur apprend a le lire.
+		return CardView.with_type_badge(tr, entry as SpellCard, px)
 	if entry is EnemyDef:
 		return BestiaryLore.portrait_of(entry as EnemyDef, px, known)
 	return null
@@ -607,6 +610,7 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 	box.add_child(UiTheme.label("%s   -   %s" % [
 		GameEnums.rarity_name(card.rarity).capitalize(), _targeting_name(card.targeting)],
 		UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	_fill_card_type(box, card)
 
 	var stats := HBoxContainer.new()
 	stats.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -630,6 +634,26 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 		box.add_child(UiTheme.label(where_to_obtain(card), UiTheme.FONT_BODY,
 			Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
 	_fill_upgrades(box, card)
+
+
+## TYPE DU SORT (vague 5) : son logo et son nom, le meme logo que sur la carte en
+## main et devant les pourcentages du bestiaire. C est ICI que le joueur apprend
+## le logo : en combat il n aura que l image. Un sort bi-element nomme ses deux
+## elements, parce que la resistance lue est la pire des deux.
+func _fill_card_type(box: VBoxContainer, card: SpellCard) -> void:
+	var ligne := HBoxContainer.new()
+	ligne.name = "CardType"
+	ligne.alignment = BoxContainer.ALIGNMENT_CENTER
+	ligne.add_theme_constant_override(&"separation", 12)
+	box.add_child(ligne)
+	var logo: TextureRect = ElementIcons.make(card.spell_type(), 64.0)
+	if logo != null:
+		ligne.add_child(logo)
+	var noms: Array[String] = ElementIcons.card_type_names(card)
+	var l: Label = UiTheme.label(" + ".join(noms), UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
+		HORIZONTAL_ALIGNMENT_LEFT, false)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	ligne.add_child(l)
 
 
 ## La phrase qui dit ou obtenir une carte grisee. Elle vit dans CollectionStyle,
@@ -703,6 +727,60 @@ func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
 	for line in BestiaryLore.behaviours(def):
 		box.add_child(UiTheme.label("- " + line, UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
+	_fill_resistances(box, def)
+
+
+## RESISTANCES en logos (vague 5) : sous chaque mot de groupe (Immunise /
+## Resiste / Vulnerable), une ligne par element — son LOGO, puis ce qu il fait
+## en clair : « -53 % degats et effets », « +58 % degats », « ni degats ni
+## effets ». Le mot reste ecrit : c est lui qui dit si le chiffre est une chance
+## ou un obstacle, et un joueur qui ne distingue pas les couleurs lit
+## « Resiste » aussi bien qu un autre.
+##
+## POURQUOI « ET EFFETS » ECRIT SUR CHAQUE LIGNE (retour du co-auteur : « je ne
+## sais pas si c est fait ») : depuis la vague 5, une resistance freine aussi le
+## ralentissement, l etourdissement, l aspiration, la provocation et le
+## repoussement de l element. Une regle qu on ne lit nulle part n existe pas pour
+## le joueur ; une phrase d en-tete la pose, et chaque ligne la rappelle la ou
+## l oeil se pose. Une FAIBLESSE ne dit que « degats » : elle ne renforce pas
+## le controle (EnemyDef.control_factor, plafond a 1).
+const RESIST_ICON_PX: float = 56.0
+
+
+func _fill_resistances(box: VBoxContainer, def: EnemyDef) -> void:
+	var groupes: Array[Dictionary] = BestiaryLore.resistance_groups(def)
+	if groupes.is_empty():
+		return
+	box.add_child(UiTheme.label("RESISTANCES", UiTheme.FONT_SMALL,
+		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	var regle: Label = UiTheme.label(BestiaryLore.RESIST_RULE_TEXT, UiTheme.FONT_SMALL,
+		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER)
+	regle.name = "ResistRule"
+	box.add_child(regle)
+	for g in groupes:
+		var bloc := VBoxContainer.new()
+		bloc.name = "Resist_" + str(g["title"])
+		bloc.add_theme_constant_override(&"separation", 4)
+		box.add_child(bloc)
+		bloc.add_child(UiTheme.label(str(g["title"]) + " :", UiTheme.FONT_BODY,
+			_resist_ink(str(g["title"])), HORIZONTAL_ALIGNMENT_LEFT, false))
+		for item in g["items"]:
+			var tag: int = int(item["tag"])
+			var mult: float = float(item["mult"])
+			var ligne: HBoxContainer = ElementIcons.resistance_row(tag, mult, RESIST_ICON_PX,
+				UiTheme.TEXT_DARK, UiTheme.FONT_BODY)
+			ligne.name = "Resist_%d" % tag
+			bloc.add_child(ligne)
+
+
+## Encre du mot de groupe, sur PAPIER : rouge sombre pour ce qui gene le joueur,
+## vert sombre pour ce qui l aide. Le mot porte le sens, la couleur le confirme.
+func _resist_ink(titre: String) -> Color:
+	match titre:
+		"Immunise": return Color(0.55, 0.10, 0.12)
+		"Resiste": return Color(0.50, 0.28, 0.08)
+		"Vulnerable": return Color(0.12, 0.42, 0.16)
+	return UiTheme.TEXT_DARK
 
 
 ## Fiche d un monstre A RENCONTRER (retouche du 30/09) : lisible mais grisee.

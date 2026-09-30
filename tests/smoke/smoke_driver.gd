@@ -840,8 +840,34 @@ func _check_menu_screens() -> void:
 		# Une fiche de MONSTRE aussi : elle est bien plus longue (competences),
 		# c est elle qui deborde si la mise en page est trop serree.
 		grimoire.show_section(GalleryPanel.Section.BEASTS)
-		grimoire.open_detail(1)
+		# Un monstre DEJA CROISE (vague 5) : sa fiche montre les resistances en
+		# logos et la regle « degats et effets ». La premiere fiche de la liste
+		# peut etre une ombre « a rencontrer », qui ne montre rien de tout cela.
+		# A ce stade du smoke aucun monstre n est encore croise : on en fait
+		# rencontrer un (la persistance est coupee en vitrine), le plus riche en
+		# ecarts pour que la capture montre les trois groupes.
+		var vu: int = -1
+		var ecarts: int = 0
+		var betes_vues: Array = grimoire.entries()
+		for j in betes_vues.size():
+			var n: int = (betes_vues[j] as EnemyDef).resistances.size()
+			if n > ecarts:
+				ecarts = n
+				vu = j
+		if vu >= 0:
+			SaveData.discover_enemy((betes_vues[vu] as EnemyDef).id)
+			grimoire.show_section(GalleryPanel.Section.BEASTS)
+			vu = grimoire.entries().find(betes_vues[vu])
+		grimoire.open_detail(maxi(vu, 0))
 		await _shot("livre_fiche_monstre")
+		# La meme fiche defilee jusqu en bas : les groupes Resiste / Vulnerable.
+		var defile: ScrollContainer = null
+		for n in _tous_les_noeuds(grimoire):
+			if n is ScrollContainer and (n as ScrollContainer).is_visible_in_tree():
+				defile = n as ScrollContainer
+		if defile != null:
+			defile.scroll_vertical = 100000
+			await _shot("livre_fiche_monstre_resistances")
 		grimoire.close_detail()
 
 	# L ecran de deck a plusieurs ONGLETS DE DECKS et une fiche d effet qui prend
