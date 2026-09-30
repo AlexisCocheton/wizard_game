@@ -90,8 +90,10 @@ extends Control
 ##
 ## Depuis le chantier P la bande est EQUIPABLE : trois emplacements, un toucher
 ## ouvre sur la page la liste des passifs OBTENUS, un second equipe. Ils sont
-## actifs des le debut du combat (RunState.equip_saved_passives). Avant l acte 2
-## la bande le dit au lieu de montrer des emplacements inutilisables.
+## actifs des le debut du combat (RunState.equip_saved_passives), mais SEULEMENT
+## en Infini et en Massacre (retouche du 30/09) : un niveau de campagne part sans
+## eux. Une phrase sous la bande le dit. Avant l acte 2 la bande le dit aussi au
+## lieu de montrer des emplacements inutilisables.
 ##
 ##   +--------------------------------------------------+
 ##   | PASSIFS [Celerite] [Ecorce vive] [ + libre ]     |  <- 3 emplacements
@@ -103,6 +105,9 @@ extends Control
 ## VISIBILITE (chantier P) : la collection ne montre que les cartes OBTENUES
 ## (utilisables) et OBTENABLES (grisees, fiche lisible, bouton AJOUTER refuse avec
 ## le geste qui les obtient). Les autres sont invisibles : plus de "???".
+## Depuis la retouche du 30/09, la liste, son ordre (obtenues d abord), le
+## compteur et l aspect grise sont ceux du grimoire (SaveData.visible_cards,
+## CollectionStyle).
 
 ## Grille 3 colonnes, comme le grimoire. Deux lignes par zone : le deck et la
 ## collection doivent tenir ENSEMBLE sur une page portrait.
@@ -123,8 +128,13 @@ const ICON_PX: float = 86.0
 const ARROW_W: float = 170.0
 const ARROW_H: float = 120.0
 const TAB_H: float = 110.0
-## Teinte d une vignette OBTENABLE (lisible, grisee, non utilisable).
-const OBTAINABLE_TINT: Color = Color(0.62, 0.62, 0.66, 0.9)
+## Teinte du fond d une vignette OBTENABLE (lisible, grisee, non utilisable).
+## Elle vit dans CollectionStyle, partagee avec le grimoire.
+const OBTAINABLE_TINT: Color = CollectionStyle.GREY_TILE
+## La phrase sous les emplacements de passifs. Courte, parce qu elle est lue a
+## cote de trois boutons ; elle dit OU ils servent, c est la seule chose que le
+## joueur ne peut pas deviner (retouche du 30/09 : pas en campagne).
+const PASSIVES_SCOPE_TEXT: String = "Actifs en Infini et en Massacre, pas en campagne"
 ## Hauteur d un emplacement de passif : une cible tactile (>= 90 px).
 const PASSIVE_SLOT_H: float = 100.0
 
@@ -168,6 +178,7 @@ var _armed_id: StringName = &""
 
 var _tab_bar: HBoxContainer
 var _passive_row: HBoxContainer
+var _passive_note: Label
 var _header: Label
 var _deck_grid: GridContainer
 var _deck_scroll: ScrollContainer
@@ -237,6 +248,11 @@ func _build() -> void:
 	_passive_row = HBoxContainer.new()
 	_passive_row.add_theme_constant_override(&"separation", 8)
 	root.add_child(_passive_row)
+	# La portee des passifs equipes, juste sous leurs emplacements : sans elle,
+	# le joueur qui en equipe trois les attend en campagne, ou ils ne sont pas.
+	_passive_note = UiTheme.label(PASSIVES_SCOPE_TEXT, UiTheme.FONT_SMALL, UiTheme.TEXT,
+		HORIZONTAL_ALIGNMENT_CENTER, false)
+	root.add_child(_passive_note)
 
 	# --- La page du livre ---
 	var page := PanelContainer.new()
@@ -446,6 +462,10 @@ func _render() -> void:
 	_header.add_theme_color_override(&"font_color",
 		Color(0.62, 0.12, 0.14) if msg != "" else UiTheme.TEXT_DARK)
 
+	# Le MEME compteur que la section SORTS du grimoire : obtenues / visibles.
+	# L ecran de deck n en avait aucun, et le grimoire en avait un autre.
+	_coll_label.text = "COLLECTION   -   %s" % collection_counter()
+
 	_render_deck_grid()
 	_render_filters()
 	_render_collection()
@@ -551,6 +571,12 @@ func _render_passives() -> void:
 		_passive_row.add_child(b)
 
 
+## La phrase de portee des passifs equipes, telle qu elle est affichee.
+## Exposee pour les tests : la regle "pas en campagne" doit se LIRE a l ecran.
+func passive_scope_text() -> String:
+	return _passive_note.text if _passive_note != null and _passive_note.visible else ""
+
+
 ## Les passifs equipes et valides, dans l ordre des emplacements.
 func equipped_passive_cards() -> Array[SpellCard]:
 	return SaveData.equipped_passive_cards()
@@ -653,7 +679,7 @@ func _render_passive_picker() -> void:
 		c.queue_free()
 	_header.text = "PASSIF  -  emplacement %d / %d" % [_picker_slot + 1, DeckRules.MAX_PASSIVES]
 	_header.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
-	_page_label.text = "actifs des le debut du combat"
+	_page_label.text = "actifs des le debut, en Infini et en Massacre"
 	_page_label.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
 
 	var scroll := ScrollContainer.new()
@@ -771,20 +797,23 @@ func _render_filters() -> void:
 
 ## Les cartes offertes a la composition, filtrees par rarete et paginees.
 ## Les PASSIFS en sont exclus : ils ne se mettent plus dans le deck.
+##
+## La liste ET son ordre viennent de SaveData.visible_cards, la meme que le
+## grimoire (retouche du 30/09) : obtenues d abord, grisees ensuite. Avant, les
+## cartes grisees etaient melangees aux autres par rarete, si bien que le joueur
+## tournait des pages de cartes inutilisables pour trouver de quoi composer.
 func collection() -> Array:
 	var out: Array = []
-	var pool: Dictionary = SaveData.obtainable_ids()
-	for card: SpellCard in ContentDB.cards.values():
-		if card == null or card.is_passive:
-			continue
-		# INVISIBLE tant qu elle n est ni obtenue ni obtenable (chantier P).
-		if not SaveData.is_discovered(card.id) and not pool.has(card.id):
-			continue
+	for card: SpellCard in SaveData.visible_cards(false):
 		if _filter != -1 and card.rarity != _filter:
 			continue
 		out.append(card)
-	out.sort_custom(_sort_cards)
 	return out
+
+
+## Le compteur de la collection, mot pour mot celui du grimoire (section SORTS).
+static func collection_counter() -> String:
+	return CollectionStyle.counter(SaveData.card_counts(0), "obtenues")
 
 
 func _render_collection() -> void:
@@ -804,9 +833,12 @@ func _render_collection() -> void:
 			# OBTENABLE : lisible mais GRISEE. Elle reste touchable pour que sa
 			# fiche dise ou l obtenir ; AJOUTER y est refuse par DeckRules. Pas
 			# glissable : un glisser montrerait la meme raison, sans la fiche.
-			var grise: Button = _tile(card, "a obtenir", UiTheme.TEXT_DIM,
+			# Grisee comme au grimoire (CollectionStyle) : fond et icone, PAS le
+			# texte. L ancien `modulate` voilait aussi le nom, et le pied en
+			# TEXT_DIM etait assombri deux fois : illisible sur capture.
+			var grise: Button = _tile(card, CollectionStyle.FOOT_OBTAINABLE, UiTheme.TEXT,
 				_on_collection_tap.bind(card), "")
-			grise.modulate = OBTAINABLE_TINT
+			CollectionStyle.grey(grise, grise.get_meta(&"art", null) as Control)
 			_grid.add_child(grise)
 			continue
 		var have: int = DeckRules.count_of(_ids, card.id)
@@ -866,6 +898,8 @@ func _tile(card: SpellCard, pied: String, teinte: Color,
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		box.add_child(art)
+		# Retrouvee par l appelant pour griser l icone seule (CollectionStyle).
+		tile.set_meta(&"art", art)
 
 	var nom: Label = UiTheme.label(card.display_name, UiTheme.FONT_SMALL,
 		UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER, false)
@@ -1408,6 +1442,9 @@ func _render_detail() -> void:
 	var art: TextureRect = CardIcons.make_rect(card, 180.0)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		# Fiche d une carte grisee : l icone grisee, comme au grimoire.
+		if not SaveData.is_discovered(card.id):
+			CollectionStyle.grey(null, art)
 		box.add_child(art)
 
 	# Encre SOMBRE partout : fond de PAPIER.
@@ -1439,7 +1476,7 @@ func _render_detail() -> void:
 		# Pour une carte OBTENABLE, le pourquoi est aussi un OU : la meme phrase
 		# que le grimoire, qui nomme les niveaux ou la prendre.
 		if not SaveData.is_discovered(card.id):
-			raison = GalleryPanel.where_to_obtain(card)
+			raison = CollectionStyle.where_to_obtain(card)
 		box.add_child(UiTheme.label(raison, UiTheme.FONT_SMALL,
 			Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
 	add.pressed.connect(func() -> void:

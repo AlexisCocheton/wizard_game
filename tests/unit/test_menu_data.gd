@@ -300,10 +300,16 @@ func _test_entete_affiche_niveau_et_cartes() -> void:
 	var cartes: Label = menu.find_child("CardsLabel", true, false) as Label
 	ok(cartes != null, "le compteur de cartes est affiche en haut")
 	if cartes != null:
-		ok(cartes.text.contains(str(SaveData.discovered_count())),
-			"le compteur montre les cartes reellement decouvertes (%s)" % cartes.text)
-		ok(cartes.text.contains(str(ContentDB.cards.size())),
-			"et le total du contenu")
+		# Obtenues / VISIBLES (retouche du 30/09) : le total du catalogue n est
+		# plus annonce, il devoilait les cartes que la regle rend invisibles.
+		var n: Array = SaveData.card_counts()
+		eq(cartes.text, "Cartes %d / %d" % [int(n[0]), int(n[1])],
+			"le compteur montre les cartes obtenues sur les cartes visibles (%s)" % cartes.text)
+		ok(int(n[1]) < ContentDB.cards.size(),
+			"profil neuf : moins de cartes visibles que le catalogue (%d / %d)"
+			% [int(n[1]), ContentDB.cards.size()])
+		not_ok(cartes.text.ends_with("/ %d" % ContentDB.cards.size()),
+			"et le total du catalogue n est plus affiche (%s)" % cartes.text)
 	detach(menu)
 
 
@@ -325,8 +331,8 @@ func _test_profil_en_superposition() -> void:
 
 
 ## `campaign_cleared()` mesure la FIN DE CAMPAGNE. Elle ouvrait le mode infini
-## jusqu au 29/09 ; depuis, l Infini s ouvre avec son niveau et le Massacre au
-## premier niveau gagne (test_modes.gd). La mesure reste, pour le profil et les
+## jusqu au 29/09 ; depuis, l Infini s ouvre avec son niveau, et elle ouvre le
+## MASSACRE (retouche du 30/09, test_modes.gd). Elle sert aussi au profil et aux
 ## succes : c est elle qui est verrouillee ici.
 ##
 ## Le test porte sur la DONNEE et non sur l etat d un bouton : une regle qui ne
@@ -348,8 +354,10 @@ func _test_la_campagne_se_finit_au_dernier_niveau() -> void:
 		SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, {}, 6)
 	not_ok(SaveData.campaign_cleared(),
 		"il reste un niveau : la campagne n est pas finie")
-	ok(SaveData.massacre_unlocked(),
-		"mais le Massacre, lui, est ouvert depuis le premier niveau gagne")
+	# Le Massacre s ouvre a la fin de la campagne (retouche du 30/09) : il
+	# suit donc ce verrou au niveau pres.
+	not_ok(SaveData.massacre_unlocked(),
+		"il reste un niveau : le Massacre est toujours ferme")
 	eq(int(SaveData.campaign_progress()[0]), niveaux.size() - 1,
 		"tous les niveaux sauf un sont finis")
 
@@ -357,6 +365,7 @@ func _test_la_campagne_se_finit_au_dernier_niveau() -> void:
 		GameEnums.Mode.EXPLORATION, {}, 6)
 	ok(SaveData.campaign_cleared(),
 		"le dernier niveau fini termine la campagne")
+	ok(SaveData.massacre_unlocked(), "et ouvre le Massacre")
 	SaveData.reset_profile()
 
 
