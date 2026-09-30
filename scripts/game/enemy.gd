@@ -419,12 +419,16 @@ func advance(world_delta: float) -> void:
 			_burst_timer = 0.0
 		speed = speed * 1.7 if _burst_dashing else 0.0
 
-	# Volte-face : le monstre remonte vers le haut.
+	# Volte-face : le monstre remonte vers le haut, moins vite s il resiste a
+	# l element de la carte (vague 5). Totalement resistant, il n est pas
+	# retourne du tout et poursuit sa descente normale.
 	if battlefield != null and battlefield.is_reversed():
-		position.y = maxf(position.y - speed * world_delta, GameConfig.SPAWN_LINE_Y)
-		_path.clear()
-		_path_index = 0
-		return
+		var recul: float = battlefield.reverse_factor_for(self)
+		if recul > 0.0:
+			position.y = maxf(position.y - speed * recul * world_delta, GameConfig.SPAWN_LINE_Y)
+			_path.clear()
+			_path_index = 0
+			return
 
 	# PROVOCATION : un arbre plante a portee remplace le mage comme objectif. Le
 	# monstre marche droit dessus au lieu de descendre, et Battlefield lui fait
@@ -437,7 +441,7 @@ func advance(world_delta: float) -> void:
 	# des comportements de descente et n ont plus de sens quand la descente est
 	# abandonnee.
 	if battlefield != null:
-		var cible: TerrainProp = battlefield.taunt_target_for(position)
+		var cible: TerrainProp = battlefield.taunt_target_for(position, self)
 		if cible != null:
 			_walk_to_prop(cible, speed, world_delta)
 			return
@@ -579,13 +583,20 @@ func take_damage(amount: float, tags: Array) -> bool:
 		return false
 	if _twin_fallen:
 		return false
-	# Resistance TOTALE (0 %) a l un des elements du sort : rien ne passe, et
-	# `false` coupe aussi l eclair et le son de coup — le joueur voit que son
-	# sort n a pas mordu. La graduation entre 0 et 1 est appliquee en amont par
+	# Resistance TOTALE (0 %) a l ELEMENT du sort : rien ne passe, et `false`
+	# coupe aussi l eclair et le son de coup — le joueur voit que son sort n a
+	# pas mordu. La graduation entre 0 et 1 est appliquee en amont par
 	# Battlefield._hit(), le point de passage unique des degats.
-	for t in tags:
-		if definition.is_immune_to(t):
-			return false
+	#
+	# Seuls les ELEMENTS comptent ici, jamais SLOW ni SUMMON. L ancienne boucle
+	# refusait le coup des que le monstre etait immunise a N IMPORTE QUEL tag :
+	# un Champ de givre [givre, ralentissement] faisait 0 degat a Chronos, au
+	# golem et au Behemoth, tous immunises au RALENTISSEMENT — alors que le deck
+	# du niveau 1 porte deux Champs de givre et que son boss est Chronos. Une
+	# immunite au ralentissement annule le ralentissement (apply_slow), pas les
+	# degats de givre. Verrouille par test_elements.
+	if _immune_to_elements(tags):
+		return false
 	# L Ombre en phase encaisse MOINS, mais reste touchable. Une invulnerabilite
 	# totale sur un cycle de 2,5 s, plus long que la plupart des incantations,
 	# rendait le monstre impossible a gerer : le joueur lancait dans le vide sans
@@ -711,12 +722,17 @@ func grow(hp_gain: float, scale_gain: float) -> void:
 ## un monstre qui y resiste a 50 % est ralenti moitie moins, au lieu d etre
 ## insensible ou pas du tout. L immunite binaire ne laissait que tout ou rien,
 ## ce qui rendait les cartes de controle inutiles contre la moitie du bestiaire.
-func apply_slow(factor: float, duration: float) -> void:
+##
+## `tags` : l element du sort qui ralentit (vague 5, voir control_factor). Vide
+## pour un ralentissement sans element (passif Morsure de givre) : seule la
+## ligne SLOW compte alors, comme avant.
+func apply_slow(factor: float, duration: float, tags: Array = []) -> void:
 	if definition == null:
 		_slow_factor = clampf(factor, 0.05, 1.0)
 		_slow_time = duration
 		return
-	var effectif: float = definition.slow_factor(clampf(factor, 0.05, 1.0))
+	var effectif: float = clampf(
+		1.0 - (1.0 - clampf(factor, 0.05, 1.0)) * control_factor(tags, true), 0.05, 1.0)
 	# Totalement resiste : aucun effet, et surtout aucun compteur pose, sinon
 	# le monstre porterait un ralentissement de 0 % qui effacerait le precedent.
 	if effectif >= 1.0:
@@ -740,15 +756,20 @@ func apply_slow(factor: float, duration: float) -> void:
 const STUN_RESIST_THRESHOLD: float = 0.5
 
 
-func apply_stun(duration: float) -> bool:
+##
+## VAGUE 5 : l ELEMENT du sort compte aussi (`tags`, voir control_factor). Un
+## monstre qui resiste fort a la foudre echappe a la Racine de tonnerre comme un
+## golem echappe au givre ; au-dessus du seuil, la DUREE est raccourcie d autant
+## — on ne peut pas etre immobile a moitie, mais on peut l etre moins longtemps.
+func apply_stun(duration: float, tags: Array = []) -> bool:
 	if _dead or duration <= 0.0:
 		return false
-	if definition != null \
-			and definition.resistance_to(GameEnums.DamageTag.SLOW) <= STUN_RESIST_THRESHOLD:
+	var f: float = control_factor(tags, true)
+	if definition != null and f <= STUN_RESIST_THRESHOLD:
 		return false
 	# Le plus LONG gagne : deux etourdissements qui se superposent ne doivent pas
 	# raccourcir le premier.
-	_stun_time = maxf(_stun_time, duration)
+	_stun_time = maxf(_stun_time, duration * f)
 	# Etourdi pendant son geste, le Briseur le PERD : c est la reponse de controle.
 	_brk_cancel(true)
 	return true
@@ -756,6 +777,30 @@ func apply_stun(duration: float) -> bool:
 
 func is_stunned() -> bool:
 	return _stun_time > 0.0
+
+
+## RESISTANCE AUX EFFETS (vague 5) — facteur 0..1 applique a tout effet NON
+## DEGAT d un sort : ralentir, etourdir, repousser, aspirer, attirer, renverser
+## la marche, rendre vulnerable, dissiper. La regle est dans
+## EnemyDef.control_factor ; ici s y ajoute la table TOURNANTE du Cameleon, pour
+## que son element resiste du moment freine aussi les effets et pas seulement
+## les degats — sinon sa teinte mentirait une fois sur deux.
+func control_factor(tags: Array, slows: bool = false) -> float:
+	if definition == null:
+		return 1.0
+	var f: float = minf(definition.resistance_to_tags(tags) * _chameleon_factor(tags), 1.0)
+	if slows:
+		f = minf(f, definition.resistance_to(GameEnums.DamageTag.SLOW))
+	return clampf(f, 0.0, 1.0)
+
+
+## Immunise a l ELEMENT du sort (tags non elementaires ignores). Meme lecture que
+## les degats : le pire element du sort pour le joueur decide.
+func _immune_to_elements(tags: Array) -> bool:
+	for t in tags:
+		if t in GameEnums.ELEMENTS:
+			return definition.resistance_to_tags(tags) <= 0.0
+	return false
 
 
 func kill() -> void:
@@ -1885,6 +1930,66 @@ func _cham_retint() -> void:
 		_body.modulate = teinte
 
 
+## LEGENDE EN LOGOS (vague 5) : le logo de l element FAIBLE, grand, suivi de
+## « +100 % », puis celui de l element resiste, plus petit, suivi de « -70 % ».
+## Les memes logos que sur les cartes : le joueur cherche dans sa main l image
+## qu il voit au-dessus du boss, sans passer par un mot. La forme du cadre et le
+## signe du pourcentage suffisent a un joueur qui ne lit pas les couleurs.
+##
+## Reconstruite seulement quand le cycle TOURNE (`_cham_chips_for`) : cette
+## fonction est appelee a chaque image par _refresh_mech_caption.
+const CHAM_CHIP_WEAK_PX: float = 60.0
+const CHAM_CHIP_RESIST_PX: float = 42.0
+var _cham_chips: HBoxContainer = null
+var _cham_chips_for: int = -2
+
+
+func _cham_chips_shown() -> bool:
+	return _cham_chips != null and is_instance_valid(_cham_chips) and _cham_chips.visible
+
+
+func _cham_refresh_chips() -> void:
+	var faible: int = chameleon_weak()
+	if faible < 0 or _twin_fallen or ElementIcons.texture_for_tag(faible) == null:
+		if _cham_chips != null and is_instance_valid(_cham_chips):
+			_cham_chips.visible = false
+		return
+	if _cham_chips == null or not is_instance_valid(_cham_chips):
+		_cham_chips = HBoxContainer.new()
+		_cham_chips.name = "ChameleonChips"
+		_cham_chips.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_cham_chips.alignment = BoxContainer.ALIGNMENT_CENTER
+		_cham_chips.add_theme_constant_override(&"separation", 18)
+		_cham_chips.z_index = 6
+		add_child(_cham_chips)
+		_cham_chips_for = -2
+	_cham_chips.visible = true
+	if _cham_chips_for == faible:
+		return
+	_cham_chips_for = faible
+	for c in _cham_chips.get_children():
+		c.queue_free()
+	var faible_chip: HBoxContainer = ElementIcons.resistance_chip(faible,
+		float(_cham_table.get(faible, definition.chameleon_weak_mult)),
+		CHAM_CHIP_WEAK_PX, Color(0.80, 1.0, 0.75), UiTheme.FONT_SMALL)
+	_cham_chips.add_child(faible_chip)
+	var resiste: int = chameleon_resisted()
+	if resiste >= 0 and resiste != faible:
+		_cham_chips.add_child(ElementIcons.resistance_chip(resiste,
+			float(_cham_table.get(resiste, definition.chameleon_resist_mult)),
+			CHAM_CHIP_RESIST_PX, Color(1.0, 0.80, 0.70), UiTheme.FONT_SMALL))
+	# Contour sombre sur les pourcentages : le fond est le terrain, pas du papier.
+	for chip in _cham_chips.get_children():
+		for l in chip.get_children():
+			if l is Label:
+				(l as Label).add_theme_color_override(&"font_outline_color", Color(0.06, 0.05, 0.10))
+				(l as Label).add_theme_constant_override(&"outline_size", 10)
+	# Centre au-dessus du monstre, au pied de la boite de legende (Fx.mech_label).
+	var large: float = 420.0
+	_cham_chips.size = Vector2(large, CHAM_CHIP_WEAK_PX)
+	_cham_chips.position = Vector2(-large * 0.5, -visual_radius() * 0.95 - CHAM_CHIP_WEAK_PX)
+
+
 ## La legende ecrite : element faible en MAJUSCULES, element resiste en clair.
 func chameleon_caption() -> String:
 	var faible: int = chameleon_weak()
@@ -2059,7 +2164,10 @@ func mech_caption() -> String:
 	if _twin_fallen:
 		lignes.append("A TERRE : releve dans %d s" % ceili(maxf(_twin_timer, 0.0)))
 	var cam: String = chameleon_caption()
-	if cam != "":
+	# A l ecran, les LOGOS remplacent la phrase du Cameleon (vague 5, voir
+	# _cham_refresh_chips) ; la phrase reste le repli sans rendu et la reponse
+	# que lisent les tests.
+	if cam != "" and not _cham_chips_shown():
 		lignes.append(cam)
 	if _stolen_card != null:
 		lignes.append("VOLE : %s (%d s)" % [_stolen_card.display_name.to_upper(),
@@ -2069,12 +2177,18 @@ func mech_caption() -> String:
 	var brise: String = break_caption()
 	if brise != "":
 		lignes.append(brise)
+	# La legende est calee par le BAS : deux lignes vides laissent la place des
+	# logos du Cameleon, poses au pied de la boite, sous le texte.
+	if not lignes.is_empty() and _cham_chips_shown():
+		lignes.append("")
+		lignes.append("")
 	return "\n".join(lignes)
 
 
 func _refresh_mech_caption() -> void:
 	if not Fx.enabled():
 		return
+	_cham_refresh_chips()
 	var txt: String = mech_caption()
 	if txt == "":
 		if _mech_label != null and is_instance_valid(_mech_label):

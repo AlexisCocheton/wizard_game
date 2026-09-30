@@ -129,7 +129,14 @@ func _test_comportements_lisibles() -> void:
 	d.dodge_chance = 0.25
 	var lignes: Array[String] = BestiaryLore.behaviours(d)
 	ok(_contient(lignes, "Tire a distance"), "un tireur annonce sa portee")
-	ok(_contient(lignes, "ralentissement"), "une immunite est nommee en clair")
+	# Vague 5 : l immunite ne s ecrit plus en phrase, elle se range sous le mot
+	# « Immunise » avec le logo de l element (BestiaryLore.resistance_groups).
+	var immunise: bool = false
+	for g in BestiaryLore.resistance_groups(d):
+		if str(g["title"]) == "Immunise":
+			for it in g["items"]:
+				immunise = immunise or int(it["tag"]) == GameEnums.DamageTag.SLOW
+	ok(immunise, "une immunite est rangee sous Immunise, avec son logo")
 	ok(_contient(lignes, "25"), "le pourcentage d esquive est chiffre")
 	not_ok(_contient(lignes, "shoot_interval"),
 		"aucun nom de champ technique ne fuit dans le texte du joueur")

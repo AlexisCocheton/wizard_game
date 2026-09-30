@@ -18,13 +18,13 @@ shape = 4
 color = Color(0.8, 0.55, 0.25, 1)
 base_radius = 80.0
 resistances = {
-0: 0.8,
-1: 0.6,
-2: 1.35,
-3: 1.1,
+0: 0.68,
+1: 0.41,
+2: 2.0,
+3: 1.27,
 4: 0.0,
 6: 0.0,
-7: 1.15
+7: 1.42
 }
 immune_tags = Array[int]([])
 dodge_chance = 0.0

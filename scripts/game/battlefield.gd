@@ -44,6 +44,11 @@ var _global_slow_time: float = 0.0
 var cast_haste: float = 1.0
 var _cast_haste_time: float = 0.0
 var _reverse_time: float = 0.0
+## Element de la carte qui a pose le ralentissement global / la volte-face en
+## cours. Garde pour moduler l effet MONSTRE PAR MONSTRE (vague 5, voir
+## Enemy.control_factor) : l effet est global, la resistance ne l est pas.
+var _global_slow_tags: Array = []
+var _reverse_tags: Array = []
 
 ## Vitesse des tirs ennemis en px/s a x1.
 const SHOT_SPEED: float = 420.0
@@ -86,7 +91,7 @@ func simulate(delta: float) -> void:
 	for e in enemies.duplicate():
 		if e == null or not is_instance_valid(e) or e.is_dead():
 			continue
-		e.speed_scale = _global_slow_factor * buff
+		e.speed_scale = _global_slow_for(e) * buff
 		e.advance(wd)
 		# COURANT : applique APRES le deplacement, et pas comme un facteur de
 		# vitesse. Un facteur ne peut que freiner (il tend vers zero) ; le
@@ -197,7 +202,7 @@ func _simulate_zones(wd: float) -> void:
 			if z["dps"] > 0.0:
 				_hit(e, z["dps"] * wd, z["tags"])
 			if z["slow_pct"] > 0.0:
-				e.apply_slow(1.0 - z["slow_pct"] * 0.01, 0.4)
+				e.apply_slow(1.0 - z["slow_pct"] * 0.01, 0.4, z["tags"])
 		if z["time"] <= 0.0:
 			var vn: Node = z.get("node")
 			if vn != null and is_instance_valid(vn):
@@ -643,6 +648,45 @@ func damage_multiplier_at(pos: Vector2) -> float:
 	return m
 
 
+# --- Resistance aux EFFETS (vague 5) ---------------------------------------
+# Les degats passaient par la table de resistances, les effets non : une Marque
+# de faiblesse d arcane rendait le Chevalier du vide (dont l armure avale la
+# magie) aussi vulnerable qu une gelee. Chaque effet lit maintenant
+# `Enemy.control_factor` sur l element de la carte qui le porte.
+
+## Vulnerabilite du terrain pour CE monstre. Le bonus (et non le multiplicateur
+## entier) est attenue par sa resistance a l element de la zone : une Marque x2
+## sur un monstre qui resiste a moitie a l arcane donne x1,5.
+func _vuln_multiplier_for(e: Enemy) -> float:
+	var m: float = 1.0
+	for z in zones:
+		var vm: float = float(z.get("vuln_mult", 1.0))
+		if vm > 1.0 and e.position.distance_to(z["pos"]) <= z["radius"]:
+			m = maxf(m, 1.0 + (vm - 1.0) * e.control_factor(z.get("tags", [])))
+	return m
+
+
+## Facteur de vitesse du ralentissement GLOBAL pour ce monstre. Seul un
+## ralentissement est attenue : une acceleration des monstres (Pacte temeraire)
+## est un prix que paie le joueur, pas un effet que le monstre subit.
+func _global_slow_for(e: Enemy) -> float:
+	if _global_slow_factor >= 1.0:
+		return _global_slow_factor
+	return 1.0 - (1.0 - _global_slow_factor) * e.control_factor(_global_slow_tags, true)
+
+
+## Part de la volte-face que subit ce monstre (0 = il ne se retourne pas).
+func reverse_factor_for(e: Enemy) -> float:
+	if not is_reversed():
+		return 0.0
+	return e.control_factor(_reverse_tags) if e != null else 1.0
+
+
+## Element de la carte qui a pose un objet de terrain.
+func _prop_tags(p: TerrainProp) -> Array:
+	return p.get_meta(&"card_tags", []) as Array
+
+
 func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	if not _targetable(e):
 		return false
@@ -651,7 +695,7 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	# PASSIF "Apotheose" (legendaire) : la vitesse ne multiplie plus seulement
 	# l XP, elle multiplie les DEGATS. Applique ici, au point de passage unique
 	# des degats, pour qu aucune carte ni aucun autre passif n y echappe.
-	var total: float = amount * damage_multiplier_at(e.position) \
+	var total: float = amount * _vuln_multiplier_for(e) \
 		* RunState.passive_damage_multiplier()
 	# RESISTANCE ELEMENTAIRE du monstre. Elle s applique ICI, au point de passage
 	# unique des degats, et nulle part ailleurs : une source qui la contournerait
@@ -748,9 +792,12 @@ func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
 	return z
 
 
-func apply_global_enemy_slow(slow_pct: float, duration: float) -> void:
+## `tags` : element de la carte (vague 5). Un monstre qui y resiste, ou qui
+## resiste au ralentissement, est moins ralenti — voir `_global_slow_for`.
+func apply_global_enemy_slow(slow_pct: float, duration: float, tags: Array = []) -> void:
 	_global_slow_factor = clampf(1.0 - slow_pct * 0.01, 0.1, 3.0)
 	_global_slow_time = duration
+	_global_slow_tags = tags.duplicate()
 
 
 func apply_cast_haste(pct: float, duration: float) -> void:
@@ -759,8 +806,9 @@ func apply_cast_haste(pct: float, duration: float) -> void:
 
 
 ## Volte-face : tous les monstres remontent pendant `duration` secondes.
-func apply_reverse(duration: float) -> void:
+func apply_reverse(duration: float, tags: Array = []) -> void:
 	_reverse_time = maxf(_reverse_time, duration)
+	_reverse_tags = tags.duplicate()
 
 
 ## Invoque un allie qui frappe le monstre le plus proche.
@@ -836,15 +884,22 @@ func enemy_nearest_to(point: Vector2, max_dist: float = 260.0) -> Enemy:
 ##
 ## Le monstre est reclampe dans le terrain : pousse dehors il deviendrait
 ## invisible, increvable, et continuerait a descendre hors de portee des sorts.
-func knockback_from(center: Vector2, radius: float, push: float) -> int:
+##
+## `tags` : element de la carte (vague 5). Un monstre qui y resiste recule
+## d autant moins ; totalement resistant, il ne bouge pas et ne compte pas.
+func knockback_from(center: Vector2, radius: float, push: float, tags: Array = []) -> int:
 	var touches: int = 0
 	for e in enemies_in_radius(center, radius):
 		var enemy: Enemy = e as Enemy
+		var tenue: float = enemy.control_factor(tags)
+		if tenue <= 0.0:
+			continue
 		var away: Vector2 = enemy.position - center
 		# Pile au centre : on choisit le haut, la direction qui aide le joueur.
 		var dir: Vector2 = away.normalized() if away.length() > 1.0 else Vector2.UP
 		# Degressif : au bord de la zone le souffle ne porte presque plus.
-		var force: float = push * (1.0 - clampf(away.length() / maxf(radius, 1.0), 0.0, 1.0) * 0.5)
+		var force: float = tenue * push \
+			* (1.0 - clampf(away.length() / maxf(radius, 1.0), 0.0, 1.0) * 0.5)
 		var cible: Vector2 = enemy.position + dir * force
 		enemy.position = Vector2(
 			clampf(cible.x, 40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0),
@@ -855,13 +910,19 @@ func knockback_from(center: Vector2, radius: float, push: float) -> int:
 
 
 ## Pose une spirale qui aspire. `pull` est une vitesse d aspiration en px/s a x1.
-func spawn_vortex(center: Vector2, radius: float, duration: float, pull: float) -> void:
+##
+## `tags` : element de la carte. Il n existe pas d element « vent » : la spirale
+## prend celui de la carte qui la pose (voir EnemyDef.control_factor), et un
+## monstre qui y resiste est aspire d autant moins vite.
+func spawn_vortex(center: Vector2, radius: float, duration: float, pull: float,
+		tags: Array = []) -> void:
 	var vis: Node = Fx.zone_visual(self, center, maxf(radius, 10.0), duration, Fx.COL_ARCANE)
 	vortices.append({
 		"pos": center,
 		"radius": maxf(radius, 10.0),
 		"time": maxf(duration, 0.1),
 		"pull": pull,
+		"tags": tags.duplicate(),
 		"node": vis,
 	})
 
@@ -885,7 +946,10 @@ func _simulate_vortices(wd: float) -> void:
 			var d: float = vers.length()
 			if d > v["radius"] or d < 4.0:
 				continue
-			var pas: float = minf(float(v["pull"]) * wd, d)
+			var pas: float = minf(float(v["pull"]) * wd
+				* (e as Enemy).control_factor(v.get("tags", [])), d)
+			if pas <= 0.0:
+				continue
 			e.position += vers / d * pas
 			# Le chemin A* memorise vise depuis l ancienne position : sans
 			# recalcul le monstre revient tout droit vers son ancien couloir.
@@ -900,9 +964,16 @@ func _simulate_vortices(wd: float) -> void:
 ## Dissipation : retire aux monstres de la zone tout ce qu ils ont GAGNE
 ## (rage accumulee, bouclier de premier coup, ralentissement en cours).
 ## Renvoie le nombre de monstres nettoyes.
-func dispel_at(center: Vector2, radius: float) -> int:
+##
+## `tags` : element de la carte (vague 5). Dissiper est un effet TOUT OU RIEN,
+## comme l etourdissement : il passe sous le meme seuil
+## (`Enemy.STUN_RESIST_THRESHOLD`). Un Chevalier du vide, dont l armure avale la
+## magie, garde donc son bouclier face a une Lumiere purifiante d arcane.
+func dispel_at(center: Vector2, radius: float, tags: Array = []) -> int:
 	var n: int = 0
 	for e in enemies_in_radius(center, radius):
+		if (e as Enemy).control_factor(tags) <= Enemy.STUN_RESIST_THRESHOLD:
+			continue
 		(e as Enemy).dispel()
 		n += 1
 	if n > 0:
@@ -996,9 +1067,13 @@ func enemy_strikes_wall(e: Enemy, world_delta: float) -> void:
 ## lui accrocher une zone sans que Battlefield ait a connaitre le poison.
 func spawn_prop(kind: int, center: Vector2, duration: float, hp: float,
 		taunt_radius: float = 0.0, current: float = 0.0, area: float = 0.0,
-		sheet: String = "", tint: Color = Color.WHITE) -> TerrainProp:
+		sheet: String = "", tint: Color = Color.WHITE, tags: Array = []) -> TerrainProp:
 	var p := TerrainProp.new()
 	p.kind = kind
+	# Element de la carte qui a pose l objet (vague 5) : la provocation et le
+	# courant sont des effets, un monstre qui resiste a cet element y cede moins.
+	# En meta plutot qu en champ : TerrainProp n a pas a connaitre les sorts.
+	p.set_meta(&"card_tags", tags.duplicate())
 	# Jamais sur la ligne du mage ni hors terrain : un arbre plante sous le mage
 	# attirerait les monstres exactement la ou on veut qu ils n aillent pas, et un
 	# arbre hors cadre serait invisible et increvable.
@@ -1062,12 +1137,20 @@ func damage_prop_at(point: Vector2, amount: float) -> bool:
 ## Le PLUS PROCHE gagne : deux arbres plantes cote a cote ne doivent pas se
 ## disputer un monstre a chaque frame, ce qui le ferait osciller entre les deux
 ## sans jamais frapper ni l un ni l autre.
-func taunt_target_for(point: Vector2) -> TerrainProp:
+##
+## `who` (vague 5) : le monstre attire. Sa resistance a l element de la carte
+## raccourcit la portee de provocation — un golem qui encaisse le physique ne
+## sent l appel du Totem de coeur-de-bois que de pres. Sans `who`, portee pleine.
+func taunt_target_for(point: Vector2, who: Enemy = null) -> TerrainProp:
 	var best: TerrainProp = null
 	var best_d: float = INF
 	for p in props:
 		if not p.attracts(point) or not p.is_alive():
 			continue
+		if who != null:
+			var portee: float = p.taunt_radius * who.control_factor(_prop_tags(p))
+			if p.position.distance_to(point) > portee:
+				continue
 		# Pas de provocation A TRAVERS un obstacle : le monstre marche droit sur
 		# l arbre, sans A*, donc il traverserait la riviere ou le mur pour
 		# l atteindre. Il suit son chemin normal jusqu a ce que la voie soit libre
@@ -1104,11 +1187,9 @@ func _apply_current(e: Enemy, world_delta: float) -> void:
 	var poussee: float = 0.0
 	for p in props:
 		if p.floods(e.position):
-			poussee += p.current
-	if poussee == 0.0:
-		return
-	if e.definition != null:
-		poussee *= e.definition.resistance_to(GameEnums.DamageTag.SLOW)
+			# Ralentissement ET element de la carte (vague 5) : la Nappe montante
+			# est de givre, un monstre de glace y patauge sans reculer.
+			poussee += p.current * e.control_factor(_prop_tags(p), true)
 	if poussee == 0.0:
 		return
 	# Jamais au-dessus de la ligne d apparition : repousse plus haut, le monstre
@@ -1483,10 +1564,12 @@ func _wash_upstream(row: int, pont: int) -> void:
 ## monstres resistants au ralentissement. Un stun qui ignorerait cette table la
 ## viderait de tout sens — le golem serait insensible au givre et fige par la
 ## foudre, ce que le joueur lirait comme une incoherence.
-func stun_at(center: Vector2, radius: float, duration: float) -> int:
+##
+## `tags` : element de la carte (vague 5) — la Racine de tonnerre est de foudre.
+func stun_at(center: Vector2, radius: float, duration: float, tags: Array = []) -> int:
 	var n: int = 0
 	for e in enemies_in_radius(center, radius):
-		if (e as Enemy).apply_stun(duration):
+		if (e as Enemy).apply_stun(duration, tags):
 			n += 1
 	return n
 

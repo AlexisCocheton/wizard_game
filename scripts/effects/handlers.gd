@@ -70,7 +70,7 @@ static func plant(spec: EffectSpec, ctx: CastContext, taunt_radius: float,
 	var p: TerrainProp = ctx.battlefield.spawn_prop(
 		genre, ctx.target_position, spec.duration,
 		float(spec.get_param(&"prop_hp", 0.0)),
-		taunt_radius, 0.0, 0.0, Fx.card_sheet(ctx.card), col)
+		taunt_radius, 0.0, 0.0, Fx.card_sheet(ctx.card), col, _tags(ctx))
 	if p == null:
 		return null
 	if zone_radius > 0.0:
@@ -171,7 +171,8 @@ class SlowEnemyGauge extends EffectHandler:
 		if ctx.battlefield == null:
 			return
 		Fx.screen_tint(ctx.battlefield, Fx.COL_FROST, Fx.card_sheet(ctx.card))
-		ctx.battlefield.apply_global_enemy_slow(spec.magnitude, spec.duration)
+		ctx.battlefield.apply_global_enemy_slow(spec.magnitude, spec.duration,
+			EffectHandlers._tags(ctx))
 
 
 ## Volte-face : les monstres remontent pendant la duree.
@@ -183,7 +184,7 @@ class ReverseEnemies extends EffectHandler:
 		if ctx.battlefield == null:
 			return
 		Fx.screen_tint(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
-		ctx.battlefield.apply_reverse(spec.duration)
+		ctx.battlefield.apply_reverse(spec.duration, EffectHandlers._tags(ctx))
 
 
 ## Focalisation : le prochain sort inflige magnitude fois ses degats.
@@ -348,7 +349,7 @@ class Knockback extends EffectHandler:
 		for e in ctx.battlefield.enemies_in_radius(ctx.target_position, spec.radius):
 			ctx.battlefield.damage_enemy(e, spec.magnitude * ctx.damage_mult, ctx.card)
 		ctx.battlefield.knockback_from(ctx.target_position, spec.radius,
-			float(spec.get_param(&"push", 150.0)))
+			float(spec.get_param(&"push", 150.0)), EffectHandlers._tags(ctx))
 
 
 ## Spirale qui aspire les monstres vers son centre pendant toute sa duree.
@@ -366,7 +367,7 @@ class VortexPull extends EffectHandler:
 		Fx.impact(ctx.battlefield, ctx.target_position, Fx.COL_ARCANE,
 			spec.radius * 0.5, Fx.card_sheet(ctx.card))
 		ctx.battlefield.spawn_vortex(ctx.target_position, spec.radius,
-			spec.duration, spec.magnitude)
+			spec.duration, spec.magnitude, EffectHandlers._tags(ctx))
 
 
 ## Dissipation : efface les effets acquis par les monstres d une petite zone
@@ -391,7 +392,7 @@ class DispelZone extends EffectHandler:
 		# s affichaient d un seul et meme eclat arcanique.
 		Fx.impact(ctx.battlefield, ctx.target_position, Fx.COL_ARCANE,
 			spec.radius, Fx.card_sheet(ctx.card))
-		ctx.battlefield.dispel_at(ctx.target_position, spec.radius)
+		ctx.battlefield.dispel_at(ctx.target_position, spec.radius, EffectHandlers._tags(ctx))
 
 
 ## Pioche immediate, SANS defausser. C est toute la difference avec discard_draw :
@@ -594,7 +595,8 @@ class StunZone extends EffectHandler:
 		if spec.magnitude > 0.0:
 			for e in ctx.battlefield.enemies_in_radius(ctx.target_position, spec.radius):
 				ctx.battlefield.damage_enemy(e, spec.magnitude * ctx.damage_mult, ctx.card)
-		ctx.battlefield.stun_at(ctx.target_position, spec.radius, spec.duration)
+		ctx.battlefield.stun_at(ctx.target_position, spec.radius, spec.duration,
+			EffectHandlers._tags(ctx))
 
 
 ## Nappe d eau : un COURANT qui remonte les monstres vers le haut.
@@ -620,4 +622,4 @@ class WaterFlood extends EffectHandler:
 		# donnerait une cible alors qu ils devraient simplement patauger.
 		ctx.battlefield.spawn_prop(TerrainProp.Kind.WATER, ctx.target_position,
 			spec.duration, 0.0, 0.0, spec.magnitude, spec.radius,
-			Fx.card_sheet(ctx.card), Fx.COL_FROST)
+			Fx.card_sheet(ctx.card), Fx.COL_FROST, EffectHandlers._tags(ctx))

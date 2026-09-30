@@ -18,10 +18,10 @@ shape = 6
 color = Color(0.78, 0.95, 0.72, 1)
 base_radius = 28.0
 resistances = {
-0: 0.8,
-1: 1.15,
-2: 0.8,
-3: 1.1,
+0: 0.68,
+1: 1.42,
+2: 0.68,
+3: 1.27,
 6: 0.0
 }
 immune_tags = Array[int]([])

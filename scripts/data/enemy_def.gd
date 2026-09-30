@@ -471,13 +471,87 @@ func is_immune_to(tag: GameEnums.DamageTag) -> bool:
 ## Un monstre qui resiste a 50 % au ralentissement doit etre ralenti MOITIE
 ## MOINS, pas insensible : l immunite binaire ne laissait que tout ou rien, ce
 ## qui rendait les cartes de controle inutilisables contre la moitie du bestiaire.
-func slow_factor(factor: float) -> float:
-	var r: float = resistance_to(GameEnums.DamageTag.SLOW)
+##
+## `tags` : l element du sort qui ralentit. Un Champ de givre sur un monstre qui
+## resiste au GIVRE le ralentit moins, meme s il ne resiste pas au ralentissement
+## en soi (voir control_factor). Vide = seule la ligne SLOW compte (passifs).
+func slow_factor(factor: float, tags: Array = []) -> float:
+	var r: float = control_factor(tags, true)
 	if r <= 0.0:
 		return 1.0
 	# `factor` = 0.5 signifie « moitie de vitesse », soit 50 % de perte.
 	# On attenue la PERTE, pas la vitesse.
 	return clampf(1.0 - (1.0 - factor) * r, 0.05, 1.0)
+
+
+## LA RESISTANCE S APPLIQUE AUX EFFETS, PAS SEULEMENT AUX DEGATS (vague 5).
+##
+## Demande du co-auteur : « un monstre qui resiste a la glace resistera a ses
+## ralentissements ; un monstre qui resiste au vent sera moins attire ». Chaque
+## effet NON DEGAT d un sort (ralentir, etourdir, repousser, aspirer, attirer,
+## renverser la marche, rendre vulnerable, dissiper) est donc multiplie par ce
+## facteur, lu sur l ELEMENT de la carte qui le porte :
+##   - element du sort = resistance_to_tags (le PIRE element pour le joueur,
+##     meme regle que les degats, sinon un second element serait un passe-droit) ;
+##   - `slows` : l effet est un RALENTISSEMENT (zone, jauge, courant,
+##     etourdissement) ; la ligne SLOW garde alors son sens et le facteur retient
+##     le plus petit des deux. Un golem immunise au ralentissement n est donc
+##     pas plus ralenti par un sort d arcane que par un sort de givre.
+##
+## IL N Y A PAS D ELEMENT « VENT » : l aspiration, la provocation et le
+## repoussement se rattachent a l element de la CARTE qui les porte (Maelstrom et
+## Spirale de sel sont d arcane, Onde de repulsion d arcane et physique, Totem de
+## coeur-de-bois physique). Ajouter un septieme element pour trois cartes aurait
+## demande une ligne de plus a 82 monstres, et le joueur aurait du apprendre un
+## element qui ne fait jamais de degats.
+##
+## PLAFOND A 1 : une faiblesse accelere la mort, elle ne rend pas le controle
+## plus fort. Un monstre qui craint le givre a +100 % ne doit pas etre fige a
+## 95 % par un simple Champ de givre, ni aspire deux fois plus loin : le
+## controle est deja le levier le plus puissant du jeu (DEC etourdissement), et
+## une faiblesse qui le doublerait rendrait certaines vagues triviales.
+func control_factor(tags: Array, slows: bool = false) -> float:
+	var f: float = minf(resistance_to_tags(tags), 1.0)
+	if slows:
+		f = minf(f, resistance_to(GameEnums.DamageTag.SLOW))
+	return clampf(f, 0.0, 1.0)
+
+
+## ACCENTUATION DES RESISTANCES (vague 5) — la regle UNIQUE qui transforme la
+## table ecrite dans tools/make_content.gd (`_resist`) en table jouee.
+##
+##   resistance (r < 1) : r ^ RESIST_EXPONENT      0,5 -> 0,30 ; 0,85 -> 0,75
+##   faiblesse  (r > 1) : r ^ WEAK_EXPONENT, plafonnee a WEAK_CAP
+##                                                 1,2 -> 1,58 ; 1,35 -> 2,0
+##   immunite (0) et neutre (1) inchanges.
+##
+## POURQUOI UNE PUISSANCE et pas un ecart multiplie : elle ne franchit jamais
+## zero. Un ecart x1,4 aurait fait d une resistance de 0,25 une immunite, et
+## une immunite est une decision de design, pas un effet de bord d un reglage.
+##
+## POURQUOI DEUX EXPOSANTS : la lecon du banc (catalog_enemies) — le joueur ne
+## choisit pas l element qu il pioche, et resister coute plus de lancers que
+## craindre n en fait gagner (1/r est convexe). Accentuer les deux cotes a la
+## meme force aurait rendu le jeu plus dur a chaque niveau ; la faiblesse est
+## donc accentuee plus fort, et pour les petits ecarts (+/- 15 %) le cout moyen
+## en lancers reste celui d avant.
+##
+## LE PLAFOND x2 : au-dela, un sort de base tuerait un boss faible a son element
+## en deux fois moins de lancers qu un sort legendaire neutre — la rarete ne
+## voudrait plus rien dire. « Degats doubles » se lit aussi d un coup d oeil.
+const RESIST_EXPONENT: float = 1.75
+const WEAK_EXPONENT: float = 2.5
+const WEAK_CAP: float = 2.0
+
+
+static func accentuate(r: float) -> float:
+	if r <= 0.0:
+		return 0.0
+	if r < 1.0:
+		return snappedf(pow(r, RESIST_EXPONENT), 0.01)
+	if r > 1.0:
+		return minf(snappedf(pow(r, WEAK_EXPONENT), 0.01), WEAK_CAP)
+	return 1.0
 
 
 func is_boss() -> bool:
