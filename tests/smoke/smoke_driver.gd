@@ -1629,9 +1629,16 @@ func _check_upgrade_panel() -> void:
 		RunState.hand_changed.emit()
 		await get_tree().process_frame
 		await _shot("main_progression")
-	var voies: Array = RunState.upgrade_paths_for(carte)
-	if voies.size() != 3:
-		_fail("ecran d amelioration : %d voies au lieu de 3" % voies.size())
+	# SECONDE maturation, pour que la capture montre aussi le CUMUL : l entete
+	# "Maturation 2 sur 2" et la ligne "Deja acquis". C est l etat le plus charge
+	# de l ecran, donc celui ou un debordement se verrait.
+	var pool: Array = RunState.upgrade_pool_for(carte)
+	if GameConfig.CARD_UPGRADE_TIERS > 1 and not pool.is_empty():
+		RunState.upgrades_taken[carte.id] = [StringName(pool[0]["id"])]
+	var voies: Array = RunState.draw_upgrade_offer(carte)
+	if voies.size() != GameConfig.LEVEL_UP_CHOICES:
+		_fail("ecran d amelioration : %d voies au lieu de %d"
+			% [voies.size(), GameConfig.LEVEL_UP_CHOICES])
 	var panel: CardUpgradePanel = g.call(&"_ensure_upgrade_panel")
 	if panel == null:
 		_fail("ecran d amelioration : le panneau ne se construit pas")

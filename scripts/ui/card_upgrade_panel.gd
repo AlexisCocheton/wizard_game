@@ -2,9 +2,11 @@ class_name CardUpgradePanel
 extends Control
 ## ECRAN DE CHOIX D AMELIORATION — "XP par lancer, choix parmi 3".
 ##
-## Un sort lance GameConfig.CARD_UPGRADE_CASTS fois propose jusqu a trois voies
-## PROPRES A CE SORT (RunState.upgrade_paths_for). Le joueur en retient une, POUR
-## LA PARTIE EN COURS.
+## Un sort lance GameConfig.CARD_UPGRADE_CASTS fois MURIT : l ecran propose trois
+## voies TIREES dans le pool PROPRE A CE SORT (RunState.draw_upgrade_offer). Le
+## joueur en retient une, POUR LA PARTIE EN COURS. Un sort peut murir plusieurs
+## fois (GameConfig.CARD_UPGRADE_TIERS) : l ecran dit alors quelle maturation
+## c est et ce que le sort a deja acquis, pour que le cumul se lise.
 ##
 ##   +--------------------------------------------------+
 ##   |             CE SORT A MURI                       |  <- titre
@@ -56,9 +58,12 @@ extends Control
 ##   - Il y a trois compromis a LIRE, chacun avec un gain et un prix. Les lire
 ##     pendant que les monstres descendent, c est soit choisir au hasard, soit
 ##     prendre un coup en lisant. Les deux gachent le choix.
-##   - La cadence mesuree au banc (seuil 8 lancers) donne 4,7 a 6,4 ameliorations
-##     sur une partie de 160 s, soit une toutes les 25 a 35 secondes : c est
-##     l ordre de grandeur des montees de niveau. Une respiration, pas un hoquet.
+##   - La cadence mesuree au banc (paliers a 8 puis 24 lancers, deux maturations
+##     par sort) donne 3,1 a 8,7 ameliorations par partie, mediane 5,5, soit une
+##     toutes les 20 a 50 secondes : c est l ordre de grandeur des montees de
+##     niveau. Une respiration, pas un hoquet. Avec deux paliers a ecart egal (8
+##     et 16), les niveaux longs montaient a 10,5 : c est pour cela que l ecart
+##     grandit (GameConfig.CARD_UPGRADE_GAP_GROWTH).
 ## Le bouton "garder tel quel" existe pour cette raison : si le joueur ne veut
 ## pas s arreter, il ferme d un doigt sans rien lire.
 
@@ -104,7 +109,8 @@ func _ready() -> void:
 	add_child(dim)
 
 
-## Affiche les voies de `card`. `paths` vient de RunState.upgrade_paths_for().
+## Affiche les voies de `card`. `paths` vient de RunState.draw_upgrade_offer()
+## (le signal upgrade_ready les porte deja tirees).
 func show_paths(card: SpellCard, paths: Array) -> void:
 	if _box != null and is_instance_valid(_box):
 		_box.queue_free()
@@ -135,8 +141,31 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	var lancers: int = RunState.casts_of(card)
 	_box.add_child(UiTheme.label("%s  -  %d lancers" % [nom, lancers],
 		UiTheme.FONT_BODY, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER, false))
-	_box.add_child(UiTheme.label("Une seule voie, et seulement pour cette partie.",
-		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER, false))
+	# QUELLE maturation, et parmi combien de voies : sans le compte, le joueur
+	# croit que les trois voies montrees sont tout ce que le sort peut devenir,
+	# et ne sait pas qu une autre partie lui en proposera d autres.
+	var rang: int = RunState.maturations_done(card) + 1
+	var pool: int = RunState.upgrade_offerable_for(card).size()
+	var entete: String = "Une voie parmi %d, pour cette partie seulement." % pool
+	if GameConfig.CARD_UPGRADE_TIERS > 1:
+		entete = "Maturation %d sur %d  -  %s" % [rang, GameConfig.CARD_UPGRADE_TIERS,
+			entete.to_lower()]
+	_box.add_child(UiTheme.label(entete, UiTheme.FONT_SMALL, UiTheme.TEXT_DIM,
+		HORIZONTAL_ALIGNMENT_CENTER, true))
+	# LE CUMUL. A la seconde maturation, la nouvelle voie s AJOUTE a la premiere :
+	# le joueur doit voir ce qu il a deja pour juger ce qu il ajoute (un second
+	# "-15 % vitesse" se lit tout autrement quand le premier est sous ses yeux).
+	var acquis: Array[String] = []
+	for v in RunState.taken_paths(card):
+		var ligne: String = String(v.get("gain_text", ""))
+		if String(v.get("cost_text", "")) != "":
+			ligne += ", " + String(v.get("cost_text", ""))
+		acquis.append(ligne)
+	if not acquis.is_empty():
+		var l_acquis: Label = UiTheme.label("Deja acquis : " + " ; ".join(acquis),
+			UiTheme.FONT_SMALL, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER, true)
+		l_acquis.name = "Acquis"
+		_box.add_child(l_acquis)
 
 	for i in paths.size():
 		_box.add_child(_path_button(paths[i], i))
