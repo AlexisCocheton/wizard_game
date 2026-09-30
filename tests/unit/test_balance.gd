@@ -16,6 +16,7 @@ func run() -> void:
 	_test_le_joueur_pioche_assez_pour_repondre()
 	_test_le_mode_infini_laisse_le_temps_de_construire()
 	_test_le_tutoriel_est_le_niveau_le_plus_court()
+	_test_le_boss_du_tutoriel_reste_sous_la_mediane()
 
 
 ## Les PV d une vague ne doivent jamais plus que doubler d une vague a l autre :
@@ -101,6 +102,58 @@ func _test_le_tutoriel_est_le_niveau_le_plus_court() -> void:
 		ok(duree_l1 < _duree(lv),
 			"le tutoriel (%.0f s de vagues) dure moins que %s (%.0f s)"
 			% [duree_l1, lv.id, _duree(lv)])
+
+
+## Le boss du TUTORIEL ne depasse pas le boss MEDIAN de la campagne, en PV joues
+## (PV de la fiche x difficulte de sa vague), et reste sous celui du niveau qui
+## le suit.
+##
+## Chronos entrait a 320 PV joues : le boss le plus LOURD du jeu, au-dessus du
+## boss final (lvl_16). Au banc, 29 s pour l abattre avec le bot qui choisit, et
+## l ancien bot ne l abattait que 8 fois sur 29 : le tutoriel se finissait sur un
+## boss qui traversait. Sa vague porte maintenant ses PV (difficulte) ; ce test
+## empeche un reglage de la fiche ou de la vague de le refaire passer devant les
+## boss d acte. Mediane et non minimum : un boss de tutoriel reste un boss, et
+## plusieurs boss tardifs sont volontairement legers parce qu ils portent une
+## mecanique (parties, renaissance) que les PV ne disent pas.
+func _test_le_boss_du_tutoriel_reste_sous_la_mediane() -> void:
+	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	ok(l1 != null, "le tutoriel lvl_01 existe")
+	if l1 == null:
+		return
+	var tuto: float = _boss_hp(l1)
+	ok(tuto > 0.0, "le tutoriel a un boss")
+	var autres: Array[float] = []
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv == l1:
+			continue
+		var pv: float = _boss_hp(lv)
+		if pv > 0.0:
+			autres.append(pv)
+	ok(autres.size() >= 3, "d autres niveaux ont un boss a comparer")
+	if autres.size() < 3:
+		return
+	autres.sort()
+	var mediane: float = autres[autres.size() / 2]
+	ok(tuto <= mediane, "le boss du tutoriel (%.0f PV joues) ne depasse pas le boss median de la campagne (%.0f)"
+		% [tuto, mediane])
+	for suivant in l1.next_levels:
+		var lv2: LevelDef = ContentDB.levels.get(StringName(suivant))
+		if lv2 != null and _boss_hp(lv2) > 0.0:
+			ok(tuto < _boss_hp(lv2), "le boss du tutoriel (%.0f) est plus leger que celui de %s (%.0f)"
+				% [tuto, lv2.id, _boss_hp(lv2)])
+
+
+## PV joues du plus gros BOSS (pas mini-boss) des vagues de boss du niveau.
+func _boss_hp(lv: LevelDef) -> float:
+	var best: float = 0.0
+	for w: WaveDef in lv.waves:
+		if not w.is_boss:
+			continue
+		for entry: WaveEntry in w.entries:
+			if entry.enemy != null and entry.enemy.kind == GameEnums.EnemyKind.BOSS:
+				best = maxf(best, entry.enemy.max_hp * w.difficulty)
+	return best
 
 
 func _duree(lv: LevelDef) -> float:

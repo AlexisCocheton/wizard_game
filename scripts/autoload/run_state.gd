@@ -2076,8 +2076,9 @@ func upgrade_offerable_for(card: SpellCard) -> Array:
 ##   3. une troisieme, de preference sur un axe encore absent de l ecran.
 ## Trois voies du meme axe ("+10 % degats", "+30 % degats contre vitesse", "+30 %
 ## degats contre zone") seraient trois fois la meme question.
-## Puis l ordre est MELANGE : le banc prend la premiere voie comme un joueur qui
-## ne lit pas, et une legere toujours en tete aurait mesure un joueur prudent.
+## Puis l ordre est MELANGE : une legere toujours en tete aurait ete la voie
+## sous le pouce du joueur presse. (Le banc ne prend plus la premiere voie depuis
+## que l offre est melangee : il choisit par une regle, AutoPick.upgrade_index.)
 ##
 ## Un pool pas plus grand que l ecran est rendu tel quel, sans consommer le RNG.
 func draw_upgrade_offer(card: SpellCard) -> Array:
@@ -2124,6 +2125,17 @@ func _offer_has_axis(voies: Array, v: Dictionary) -> bool:
 		if StringName(w["axis"]) == StringName(v["axis"]):
 			return true
 	return false
+
+
+## L axe d IDENTITE du sort : le premier de ses axes d effet (degats pour une
+## Boule de feu, ralentissement pour un Champ de givre), la vitesse de lancement
+## pour un sort qui n a rien de chiffre. C est l axe que le grimoire presente en
+## tete, et celui que le choix automatique du banc renforce (AutoPick).
+func upgrade_identity_axis(card: SpellCard) -> StringName:
+	if card == null:
+		return UP_CAST
+	var axes: Array[StringName] = _effect_axes(card)
+	return axes[0] if not axes.is_empty() else UP_CAST
 
 
 ## Les axes d EFFET de la carte (sans la vitesse de lancement, que tout sort a),

@@ -45,6 +45,23 @@ var _nav_version: int = -1
 var _repath_timer: float = 0.0
 
 var _enrage_bonus: float = 0.0
+## Temps de MONDE restant avant qu un coup puisse de nouveau enrager (voir
+## ENRAGE_HIT_INTERVAL).
+var _enrage_lock: float = 0.0
+
+## UN COUP QUI ENRAGE, AU PLUS, PAR INTERVALLE (secondes de monde).
+##
+## "Accelere a chaque coup recu" etait compte a chaque APPEL de take_damage. Une
+## zone de degats (Nappe de braise, Champ de givre...) inflige ses degats a
+## CHAQUE FRAME : un Berserker qui la traversait recevait un "coup" toutes les
+## 1/60 s et atteignait sa rage maximale (x2,5 de vitesse) en un cinquieme de
+## seconde. Une regle qui dependait de la frequence d images, et qui faisait du
+## Berserker la premiere source de degats de l Arene de Kaltek (lvl_11), dont
+## le deck est fait de zones de givre. Mesure (90 parties, bot du banc) : lvl_11
+## 44 -> 73 victoires, lvl_16 64 -> 71 ; lvl_13 inchange (60).
+## Une demi-seconde : deux sorts lances a la suite comptent tous deux (une
+## incantation dure plus longtemps), une zone compte comme deux coups par seconde.
+const ENRAGE_HIT_INTERVAL: float = 0.5
 var _shield_up: bool = false
 var _burst_timer: float = 0.0
 var _burst_dashing: bool = true
@@ -328,6 +345,10 @@ func advance(world_delta: float) -> void:
 	# monde comme le reste, donc il se raccourcit avec le multiplicateur.
 	if _revive_grace > 0.0:
 		_revive_grace = maxf(0.0, _revive_grace - world_delta)
+	# Le verrou de rage suit le temps du MONDE, meme etourdi ou endormi : un coup
+	# recu pendant un sommeil doit pouvoir enrager au reveil.
+	if _enrage_lock > 0.0:
+		_enrage_lock = maxf(0.0, _enrage_lock - world_delta)
 	# CYCLE DE RENVOI. Place AVANT le retour d etourdissement, volontairement :
 	# si un stun figeait le cycle, etourdir le boss pendant sa garde la
 	# verrouillerait ouverte a jamais et le joueur serait puni d avoir joue la
@@ -661,8 +682,9 @@ func take_damage(amount: float, tags: Array) -> bool:
 
 	hp -= amount
 	_refresh_hp_bar()
-	if definition.enrage_speed_pct > 0.0:
+	if definition.enrage_speed_pct > 0.0 and _enrage_lock <= 0.0:
 		_enrage_bonus = minf(_enrage_bonus + definition.enrage_speed_pct * 0.01, definition.enrage_cap)
+		_enrage_lock = ENRAGE_HIT_INTERVAL
 	if hp <= 0.0:
 		kill()
 	elif _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "hurt"):
@@ -1108,6 +1130,7 @@ func dispel() -> void:
 	if _dead:
 		return
 	_enrage_bonus = 0.0
+	_enrage_lock = 0.0
 	_slow_factor = 1.0
 	_slow_time = 0.0
 	# L etourdissement est un effet SUBI, donc il part avec la dissipation. C est
