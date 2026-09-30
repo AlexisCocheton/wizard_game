@@ -864,8 +864,21 @@ func _render_collection() -> void:
 		_grid.add_child(vide)
 
 
-## Une vignette de carte : l icone du sort (CardIcons, la meme qu en jeu), son
-## nom, et une ligne de pied. Meme forme que celles du grimoire.
+## L image d une carte de cet ecran : son icone de sort (CardIcons) portant le
+## SCEAU DE TYPE (CardView.with_type_badge), comme au grimoire et sur la carte
+## en main. L ecran de deck etait le seul a montrer l icone nue : c est pourtant
+## ici qu on compose en comptant ses elements. Rend un porteur (icone + sceau)
+## que CollectionStyle.grey sait griser image par image. Nul si la carte n a
+## pas d icone. Statique : le test la lit sans construire l ecran.
+static func type_art(card: SpellCard, px: float) -> Control:
+	var icone: TextureRect = CardIcons.make_rect(card, px)
+	if icone == null:
+		return null
+	return CardView.with_type_badge(icone, card, px)
+
+
+## Une vignette de carte : l icone du sort (CardIcons, la meme qu en jeu) et son
+## sceau de type, son nom, et une ligne de pied. Meme forme que celles du grimoire.
 func _tile(card: SpellCard, pied: String, teinte: Color,
 		action: Callable, aide: String) -> Button:
 	var tile := Button.new()
@@ -873,6 +886,9 @@ func _tile(card: SpellCard, pied: String, teinte: Color,
 	tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tile.clip_contents = true
 	tile.tooltip_text = aide
+	# La carte de TOUTE vignette, grisee comprise (`card_id`, lui, ne marque que
+	# les vignettes glissables). Lue par le test du sceau de type.
+	tile.set_meta(&"tile_card_id", card.id)
 
 	# CONTOUR de rarete, comme dans le profil et la galerie. La rarete ne
 	# teintait jusqu ici que le compteur "x1" en pied de tuile : deux caracteres,
@@ -894,11 +910,12 @@ func _tile(card: SpellCard, pied: String, teinte: Color,
 	box.add_theme_constant_override(&"separation", 2)
 	tile.add_child(box)
 
-	var art: TextureRect = CardIcons.make_rect(card, ICON_PX)
+	var art: Control = type_art(card, ICON_PX)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		box.add_child(art)
-		# Retrouvee par l appelant pour griser l icone seule (CollectionStyle).
+		# Retrouvee par l appelant pour griser l image seule (CollectionStyle) :
+		# l icone ET le sceau, jamais le texte.
 		tile.set_meta(&"art", art)
 
 	var nom: Label = UiTheme.label(card.display_name, UiTheme.FONT_SMALL,
@@ -1287,7 +1304,8 @@ func _make_ghost(card: SpellCard) -> Control:
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	g.add_child(box)
-	var art: TextureRect = CardIcons.make_rect(card, ICON_PX)
+	# La carte transportee garde son sceau : c est la meme carte.
+	var art: Control = type_art(card, ICON_PX)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		box.add_child(art)
@@ -1439,10 +1457,10 @@ func _render_detail() -> void:
 	box.add_theme_constant_override(&"separation", 10)
 	scroll.add_child(box)
 
-	var art: TextureRect = CardIcons.make_rect(card, 180.0)
+	var art: Control = type_art(card, 180.0)
 	if art != null:
 		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		# Fiche d une carte grisee : l icone grisee, comme au grimoire.
+		# Fiche d une carte grisee : l icone et le sceau grises, comme au grimoire.
 		if not SaveData.is_discovered(card.id):
 			CollectionStyle.grey(null, art)
 		box.add_child(art)

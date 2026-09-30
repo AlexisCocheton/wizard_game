@@ -86,6 +86,7 @@ func run() -> void:
 	_test_chaque_carte_a_un_type()
 	_test_les_logos_se_distinguent_par_la_forme()
 	_test_la_carte_porte_son_logo()
+	_test_l_ecran_de_deck_porte_le_sceau()
 
 
 ## La palette doit couvrir les six ELEMENTS de degats. SLOW et SUMMON restent
@@ -571,6 +572,61 @@ func _test_la_carte_porte_son_logo() -> void:
 				ok((badge as TextureRect).custom_minimum_size.x >= CardView.BADGE_MIN,
 					"%s (%s) : le logo reste lisible" % [id, mode])
 			cv.free()
+
+
+## LE SCEAU EST AUSSI SUR LES VIGNETTES DE L ECRAN DE DECK (retouche du 30/09),
+## meme regle qu au grimoire : chaque vignette, du deck comme de la collection,
+## porte le logo du type de SA carte ; une carte a obtenir a son image ET son
+## sceau grises (CollectionStyle.GREY_ART), jamais son texte ; une carte obtenue
+## garde des couleurs intactes. On parcourt TOUTES les pages : sur un profil
+## neuf les grisees viennent apres les obtenues, donc pas en page 1.
+func _test_l_ecran_de_deck_porte_le_sceau() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+	var panel := DeckPanel.new()
+	attach(panel)
+	panel.refresh()
+	var vues: int = 0
+	var grisees: int = 0
+	for page in panel.page_count():
+		for n: Node in panel.find_children("*", "Button", true, false):
+			if not n.has_meta(&"tile_card_id"):
+				continue
+			var card: SpellCard = ContentDB.cards.get(n.get_meta(&"tile_card_id"))
+			if card == null:
+				continue
+			vues += 1
+			var badge: Node = n.find_child("TypeBadge", true, false)
+			ok(badge is TextureRect, "%s : sa vignette de deck porte un sceau" % card.id)
+			if not (badge is TextureRect):
+				continue
+			ok((badge as TextureRect).texture == ElementIcons.texture(card.spell_type()),
+				"%s : le sceau de sa vignette est celui de son type" % card.id)
+			var icone: Node = badge.get_parent().get_child(0)
+			if SaveData.is_discovered(card.id):
+				eq((badge as TextureRect).modulate, Color.WHITE,
+					"%s obtenue : sceau en couleurs" % card.id)
+				continue
+			grisees += 1
+			eq((badge as TextureRect).modulate, CollectionStyle.GREY_ART,
+				"%s a obtenir : sceau grise comme au grimoire" % card.id)
+			ok(icone is TextureRect and (icone as TextureRect).modulate == CollectionStyle.GREY_ART,
+				"%s a obtenir : icone grisee une seule fois" % card.id)
+			eq((badge.get_parent() as Control).modulate, Color.WHITE,
+				"%s a obtenir : le porteur n est pas grise (le gris multiplie)" % card.id)
+			for l: Node in n.find_children("*", "Label", true, false):
+				eq((l as Label).modulate, Color.WHITE,
+					"%s a obtenir : son texte reste intact" % card.id)
+		panel.turn_page(1)
+	# Les vignettes du DECK (en haut) passent aussi par la boucle : elles sont
+	# dans l arbre a chaque page.
+	ok(not panel.draggable_tiles(true).is_empty(), "le deck de depart a des vignettes")
+	ok(vues >= panel.collection().size() + panel.draggable_tiles(true).size(),
+		"toutes les vignettes du deck et de la collection ont ete vues (%d)" % vues)
+	ok(grisees > 0, "un profil neuf montre des cartes a obtenir dans l ecran de deck")
+	detach(panel)
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
 
 
 func _contient(lignes: Array[String], morceau: String) -> bool:
