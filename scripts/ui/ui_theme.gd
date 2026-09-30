@@ -117,7 +117,10 @@ static func rarity_ink(rarity: int) -> Color:
 		GameEnums.Rarity.COMMON: return Color(0.38, 0.38, 0.44)
 		GameEnums.Rarity.RARE: return Color(0.15, 0.38, 0.75)
 		GameEnums.Rarity.EPIC: return Color(0.48, 0.22, 0.72)
-		GameEnums.Rarity.LEGENDARY: return Color(0.62, 0.45, 0.05)
+		# Mesure sur la capture du profil (30/09) : l ancien or (0.62, 0.45,
+		# 0.05) ne faisait que 3,3:1 sur le papier creme, sous le seuil de 4,5.
+		# Ce bronze fait 5:1 et se lit encore comme de l or.
+		GameEnums.Rarity.LEGENDARY: return Color(0.48, 0.34, 0.02)
 	return TEXT_DARK
 
 

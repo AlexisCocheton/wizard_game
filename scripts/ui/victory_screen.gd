@@ -42,8 +42,16 @@ func _ready() -> void:
 	ChallengeTracker.record_best(&"levels_cleared", cleared + 1)
 	if not RunState.took_any_damage:
 		ChallengeTracker.bump(&"flawless_clears")
-	ChallengeTracker.record_best(&"cards_discovered", SaveData.discovered_count())
-	ChallengeTracker.record_best(&"enemies_discovered", SaveData.discovered_enemies().size())
+	# Succes de COLLECTION : ils comptent ce que le grimoire compte (retouche du
+	# 30/09). `cards_discovered` (« Collectionneur ») lit les cartes OBTENUES,
+	# sorts et passifs, par le compteur honnete de SaveData — le numerateur de
+	# la barre du menu. Il lisait discovered_count(), la liste brute du profil :
+	# un id perime la gonflait, et le succes pouvait tomber a un chiffre que
+	# le grimoire n affichait pas. Meme regle pour les monstres : le numerateur
+	# du bestiaire, qui ne compte pas les munitions (projectiles) comme des
+	# especes. record_best garde le maximum : un ancien profil ne perd rien.
+	ChallengeTracker.record_best(&"cards_discovered", cards_obtained())
+	ChallengeTracker.record_best(&"enemies_discovered", enemies_met())
 
 	# Ce que les objectifs avaient deja ouvert AVANT cette victoire : la
 	# difference avec l apres est ce qui vient de s ouvrir, et seul cela se fete.
@@ -56,6 +64,19 @@ func _ready() -> void:
 			nouvelles.append(c)
 
 	_remplir(level, done, nouvelles)
+
+
+## Le chiffre du succes « Collectionneur » : les cartes OBTENUES (sorts et
+## passifs), le numerateur de SaveData.card_counts() — celui du grimoire, du
+## deck, du profil et de la barre du menu. Statique pour le test.
+static func cards_obtained() -> int:
+	return int(SaveData.card_counts()[0])
+
+
+## Le chiffre des succes du bestiaire : les especes rencontrees, le numerateur
+## de SaveData.enemy_counts() — celui du grimoire et du profil.
+static func enemies_met() -> int:
+	return int(SaveData.enemy_counts()[0])
 
 
 ## L ecran de victoire est le moment de RECOMPENSE, et il ressemblait a un
