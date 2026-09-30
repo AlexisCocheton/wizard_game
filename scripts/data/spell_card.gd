@@ -147,7 +147,7 @@ var upgrades: Array:
 
 ## Vrai si ce sort peut etre elargi : seul un effet qui a un RAYON gagne quelque
 ## chose a etre "plus ample". Sur un trait a cible unique, la voie AMPLEUR
-## n aurait rien a agrandir et mentirait au joueur — RunState.upgrade_paths_for()
+## n aurait rien a agrandir et mentirait au joueur — RunState.upgrade_pool_for()
 ## lui substitue alors une autre voie.
 func has_area() -> bool:
 	for e in effects:

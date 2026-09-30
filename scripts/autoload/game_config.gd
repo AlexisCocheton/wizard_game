@@ -159,7 +159,9 @@ const CARD_UPGRADE_CASTS: int = 8
 
 ## Ce que chaque voie d amelioration donne, et ce qu elle coute. UN SEUL endroit
 ## pour tout le catalogue : les voies sont DERIVEES des effets de chaque carte
-## (voir RunState.upgrade_paths_for), pas ecrites carte par carte.
+## (voir RunState.upgrade_pool_for), pas ecrites carte par carte. Chaque
+## maturation TIRE trois voies de ce pool (RNG de la partie), si bien que la
+## proposition change d une partie a l autre.
 ##
 ## DEUX FORMES, demandees par le co-auteur
 ## ---------------------------------------
@@ -178,7 +180,8 @@ const CARD_UPGRADE_CASTS: int = 8
 ## l INVERSE du temps d incantation, donc "+10 % de vitesse" divise le temps par
 ## 1,10 — le libelle dit exactement ce que fait le sort.
 ##
-## REGLAGE MESURE (21 niveaux x 30 parties, 29/09/2026). Le bot du banc prend la
+## REGLAGE MESURE (21 niveaux x 30 parties, 29/09/2026, AVANT le pool tire : voir
+## CARD_UPGRADE_TIERS pour le banc U2). Le bot du banc prend la
 ## PREMIERE voie, donc l identite du sort en forme forte (+30 % degats contre
 ## -15 % de vitesse, soit un temps x1,18) la ou l ancien pacte Puissance coutait
 ## +35 % de temps. Resultat : 559 -> 583 victoires sur 630, Massacre vague 14,9 ->
@@ -202,6 +205,44 @@ const UPGRADE_MIN_DURATION: float = 1.0
 ## Au-dela de ce nombre de cibles, une ligne perce "tout" (Faille temporelle : 99).
 ## Lui promettre "+1 cible" serait un mensonge : la voie n est pas proposee.
 const UPGRADE_COUNT_UNLIMITED: int = 20
+## AXES DE COMPLEMENT, en CARTES, pour les sorts trop simples pour que leur pool
+## depasse les LEVEL_UP_CHOICES voies de l ecran (voir RunState.upgrade_pool_for).
+## Pioche au lancement (Riviere seulement) : la legere en donne une, la forte
+## deux contre UPGRADE_STRONG_COST de vitesse.
+const UPGRADE_DRAW_LIGHT: int = 1
+const UPGRADE_DRAW_STRONG: int = 2
+## Prix de la vitesse forte d un sort qui n a RIEN d autre a payer (sorts de
+## pioche ou de retour en main, Riviere) : une carte de la main defaussee a
+## chaque lancer. Une carte et non deux : ces sorts se lancent en moins d une
+## seconde, deux cartes par lancer videraient la main plus vite qu elle ne
+## se remplit.
+const UPGRADE_DISCARD_PRICE: int = 1
+## MATURATIONS par sort et par partie. Le sort murit a CARD_UPGRADE_CASTS lancers,
+## puis au double, etc. Le co-auteur parle de "montees de niveau des sorts" au
+## pluriel : un sort favori doit pouvoir s affirmer au fil de la partie.
+## Deux et pas plus : chaque maturation est un ecran modal, et un troisieme palier
+## (24 lancers) n est atteint que par un sort joue en boucle sur un niveau long.
+##
+## BANC U2 (21 niveaux x 30 parties + Massacre x 20, 30/09/2026, meme machine) :
+##                         victoires   Massacre   ameliorations / partie
+##   trio fixe, 1 palier    533 / 630    11,9       3,1 a 6,0
+##   pool tire, 1 palier    525 / 630    10,1       3,1 a 6,0
+##   pool, paliers 8+16     533 / 630    10,1       3,0 a 10,5
+##   pool, paliers 8+16*    532 / 630    10,4       3,1 a 8,7   <- retenu
+##   (* ecart qui grandit : paliers a 8 et 24, CARD_UPGRADE_GAP_GROWTH)
+## Le bot prend la PREMIERE voie de l offre : avec le trio fixe c etait toujours
+## l identite en forte (+30 % degats x94 sur lvl_16) ; avec le tirage c est une
+## voie au hasard (37 voies differentes prises au lieu de 10). Ce hasard coute
+## 8 victoires ; la seconde maturation les rend. Seul ecart franc : lvl_16 25 ->
+## 14 (17 et 15 sur les deux autres variantes), un niveau qui ne passait que
+## grace a "+30 % degats" pris a chaque fois. Non retouche ici : c est la
+## politique du bot qui a change, pas le jeu (voir le rapport U2).
+const CARD_UPGRADE_TIERS: int = 2
+## L ecart entre deux maturations est multiplie par ce facteur a chaque palier :
+## 8 lancers, puis 16 de plus (paliers a 8 et 24). A ecart constant (8 et 16),
+## le banc montait jusqu a 10,5 ecrans d amelioration par partie sur les niveaux
+## longs — la cadence d un ecran toutes les 15 s que CARD_UPGRADE_CASTS ecarte.
+const CARD_UPGRADE_GAP_GROWTH: int = 2
 
 ## Part de PASSIFS dans les cartes proposees a la montee de niveau.
 ## "Les passifs sont plus rares que les cartes : 20 pourcent de passifs."

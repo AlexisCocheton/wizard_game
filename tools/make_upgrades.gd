@@ -5,7 +5,7 @@ extends Node
 ## ----------------------------------------
 ## Les autres tools/make_*.tscn ecrivent du contenu. Celui-ci n en ecrit pas, et
 ## c est le coeur de la conception : les trois voies d amelioration sont DERIVEES
-## des effets de chaque carte (RunState.upgrade_paths_for), pas ecrites carte par
+## des effets de chaque carte (RunState.upgrade_pool_for), pas ecrites carte par
 ## carte dans un .tres. 45 cartes x 3 voies feraient 135 entrees a maintenir, et
 ## surtout chaque nouveau sort ajoute par un autre chantier arriverait SANS
 ## amelioration — le systeme mentirait au joueur sur la moitie du catalogue.
@@ -53,7 +53,7 @@ func _apercu(card: SpellCard, nom: String) -> void:
 
 	var panneau := CardUpgradePanel.new()
 	racine.add_child(panneau)
-	panneau.show_paths(card, RunState.upgrade_paths_for(card))
+	panneau.show_paths(card, RunState.draw_upgrade_offer(card))
 	await _capture(nom)
 	racine.queue_free()
 	await get_tree().process_frame

@@ -662,10 +662,9 @@ static func where_to_obtain(card: SpellCard) -> String:
 	return CollectionStyle.where_to_obtain(card)
 
 
-## Section AMELIORATIONS. Les ameliorations de sort n existent pas encore (elles
-## sont un chantier a part) : la section annonce ce qui viendra plutot que de
-## disparaitre, et la boucle ci-dessous affichera la liste des qu un champ
-## `upgrades` apparaitra sur SpellCard — sans retoucher cet ecran.
+## Section AMELIORATIONS : tout le pool de voies du sort (RunState.upgrade_lines_for,
+## lu via `card.upgrades`), les voies acquises dans la partie en cours en tete de
+## ligne "+". Un sort sans voie annonce "a decouvrir" plutot que de disparaitre.
 func _fill_upgrades(box: VBoxContainer, card: SpellCard) -> void:
 	box.add_child(UiTheme.label("AMELIORATIONS", UiTheme.FONT_SMALL,
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
@@ -674,13 +673,21 @@ func _fill_upgrades(box: VBoxContainer, card: SpellCard) -> void:
 		box.add_child(UiTheme.label("a decouvrir en combat", UiTheme.FONT_BODY,
 			UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 		return
+	# La fiche montre TOUT le pool du sort, pas un tirage : l ecran de maturation
+	# n en montre que trois, et sans cette ligne le joueur prendrait les trois
+	# voies vues en partie pour tout ce que le sort peut devenir.
+	box.add_child(UiTheme.label("%d voies : chaque maturation en tire %d" % [
+		lignes.size(), mini(lignes.size(), GameConfig.LEVEL_UP_CHOICES)],
+		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
 	for u in lignes:
 		var texte: String = str(u.get("text", ""))
 		var acquise: bool = bool(u.get("unlocked", false))
 		# Non debloquee = grisee, mais LISIBLE : le joueur doit savoir ce qui
-		# l attend, c est ce qui lui donne envie de rejouer le sort.
+		# l attend, c est ce qui lui donne envie de rejouer le sort. En petit :
+		# un pool compte jusqu a une douzaine de voies, en corps normal la fiche
+		# deviendrait une page a faire defiler pour atteindre la derniere.
 		box.add_child(UiTheme.label(("+ " if acquise else "- ") + texte,
-			UiTheme.FONT_BODY,
+			UiTheme.FONT_SMALL,
 			UiTheme.TEXT_DARK if acquise else UiTheme.TEXT_DIM))
 
 

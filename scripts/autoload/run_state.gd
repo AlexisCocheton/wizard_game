@@ -146,6 +146,7 @@ func reset() -> void:
 	casts_by_card.clear()
 	upgrades_taken.clear()
 	pending_upgrade_card = null
+	pending_upgrade_paths = []
 	# Compteurs du moteur d objectifs (voir la section OBJECTIFS PARAMETRES).
 	_reset_objective_counters()
 
@@ -1729,17 +1730,36 @@ func double_cast_active() -> bool:
 ##
 ## "Amelioration des cartes en combat (XP par lancer, choix parmi 3)".
 ##
-## Un sort que le joueur LANCE souvent gagne de l experience ; au palier
-## (GameConfig.CARD_UPGRADE_CASTS lancers) il propose jusqu a trois voies
-## PROPRES A CE SORT (derivees de ses effets : degats, ralentissement, PV, zone,
-## nombre de cibles, duree, vitesse de lancement...), chacune en forme LEGERE
-## (petit gain gratuit) ou FORTE (gros gain paye sur un autre axe). La voie
-## choisie vaut POUR LA PARTIE EN COURS.
+## Un sort que le joueur LANCE souvent gagne de l experience. A chaque palier
+## (GameConfig.CARD_UPGRADE_CASTS lancers, puis un ecart plus long) il MURIT :
+## l ecran propose trois voies TIREES dans le POOL de ce sort. Le pool est derive de ses
+## effets (degats, ralentissement, PV, zone, nombre de cibles, duree, vitesse de
+## lancement...), chaque axe en forme LEGERE (petit gain gratuit) ou FORTE (gros
+## gain paye sur un autre axe, parfois de deux facons). Le joueur en retient une,
+## POUR LA PARTIE EN COURS.
+##
+## POURQUOI UN POOL ET UN TIRAGE (demande du co-auteur, 30/09)
+## -----------------------------------------------------------
+## Le trio etait FIXE : pour un sort donne, le joueur voyait toujours les trois
+## memes propositions, et au bout de trois parties le choix etait appris par
+## coeur. Le pool compte toujours PLUS de voies que l ecran n en montre
+## (verrouille par test_upgrades.gd), donc la proposition change d une partie a
+## l autre. Le tirage passe par le RNG de la partie (_rng, fixe par set_seed) :
+## une graine donnee rejoue les memes propositions, et le banc reste
+## reproductible.
+##
+## PLUSIEURS MATURATIONS PAR SORT (GameConfig.CARD_UPGRADE_TIERS)
+## --------------------------------------------------------------
+## Le co-auteur parle de "montees de niveau des sorts" au pluriel. Un sort
+## murit donc une fois par palier, jusqu a CARD_UPGRADE_TIERS fois par partie ;
+## une voie deja prise n est plus proposee, et les voies se CUMULENT (les
+## pourcentages s additionnent : +30 % puis +10 % de degats font +40 %).
+## Renoncer consomme le palier sans fermer les suivants.
 ##
 ## POURQUOI PAS PERMANENT
 ## ----------------------
 ## Tout l equilibrage du jeu est mesure au banc (tools/sim_balance.gd) sur un
-## depart connu : les sept niveaux sont rejoues depuis un deck de base. Si les
+## depart connu : les niveaux sont rejoues depuis un deck de base. Si les
 ## ameliorations s accumulaient d une partie a l autre, la dixieme partie
 ## partirait avec un deck bien plus fort que la premiere et les taux mesures ne
 ## decriraient plus aucune partie reelle. Le joueur qui reprend au niveau 6
@@ -1752,17 +1772,25 @@ func double_cast_active() -> bool:
 ## sert la carte en main, la fiche du grimoire et la partie suivante. On n ecrit
 ## donc JAMAIS dedans. `cast_specs()` rend des COPIES modifiees, relues a chaque
 ## lancement — c est le seul point par ou les valeurs d un sort sortent vers les
-## handlers (voir EffectRegistry.cast).
+## handlers (voir EffectRegistry.cast). Seul le prix "carte defaussee" se paie
+## ailleurs, dans note_cast : un PRIX ne doit etre paye qu une fois par lancer
+## reel, alors que cast_specs est aussi lu par l apercu de visee.
 
 ## Lancers par carte SUR LA PARTIE : {id de carte -> nombre}.
 ## Indexe par `id` et non par l objet : la meme carte peut avoir plusieurs
 ## exemplaires dans le deck, et ce sont bien tous « le meme sort » aux yeux du
 ## joueur — trois copies de Boule de feu progressent ensemble.
 var casts_by_card: Dictionary = {}
-## Voie retenue par carte SUR LA PARTIE : {id de carte -> id de voie}.
+## Voies retenues par carte SUR LA PARTIE : {id de carte -> Array d ids de voie},
+## une entree par maturation passee, "none" quand le joueur a renonce. Un ancien
+## appelant qui y range un id seul (StringName) reste lu : voir _taken_list.
 var upgrades_taken: Dictionary = {}
 ## Carte dont l amelioration attend un choix. Null si aucune.
 var pending_upgrade_card: SpellCard = null
+## Les voies TIREES pour l offre en attente. Gardees ici et non retirees au
+## moment du choix : le tirage consomme le RNG de la partie, le refaire au clic
+## rendrait d autres voies que celles que le joueur a lues.
+var pending_upgrade_paths: Array = []
 
 signal upgrade_ready(card: SpellCard, paths: Array)
 signal upgrade_taken(card: SpellCard, path: Dictionary)
@@ -1780,22 +1808,26 @@ func note_cast(card: SpellCard) -> void:
 	# Objectifs : element et effets du sort. AVANT les retours anticipes qui
 	# suivent, sinon un sort deja ameliore cesserait d etre compte.
 	_note_cast_for_objectives(card)
-	# Une carte DEJA amelioree ne redemande rien : sans ce garde, le sort favori
-	# ouvrirait un ecran modal toutes les huit incantations jusqu a la fin de la
-	# partie. Une seule amelioration par sort et par partie.
-	if upgrades_taken.has(cle):
-		return
+	# PRIX "carte defaussee" d une voie deja prise. Ici et non dans cast_specs :
+	# l apercu de visee relit cast_specs a chaque glissement, le joueur perdrait
+	# une carte a chaque fois qu il vise.
+	_pay_card_price(card)
 	# Une seule offre a la fois : deux ecrans modaux empiles laisseraient le
 	# second sans moyen d etre ferme, et la partie resterait en pause pour de bon.
 	if pending_upgrade_card != null:
 		return
-	if int(casts_by_card[cle]) < GameConfig.CARD_UPGRADE_CASTS:
+	# Toutes les maturations passees : sans ce garde, le sort favori ouvrirait un
+	# ecran modal a chaque palier jusqu a la fin de la partie.
+	if maturations_done(card) >= GameConfig.CARD_UPGRADE_TIERS:
 		return
-	var voies: Array = upgrade_paths_for(card)
+	if int(casts_by_card[cle]) < next_upgrade_at(card):
+		return
+	var voies: Array = draw_upgrade_offer(card)
 	if voies.is_empty():
 		return
 	pending_upgrade_card = card
-	upgrade_ready.emit(card, voies.duplicate())
+	pending_upgrade_paths = voies.duplicate(true)
+	upgrade_ready.emit(card, voies.duplicate(true))
 
 
 func casts_of(card: SpellCard) -> int:
@@ -1804,22 +1836,87 @@ func casts_of(card: SpellCard) -> int:
 	return int(casts_by_card.get(card.id, 0))
 
 
-## Avancement vers l amelioration, de 0 a 1. Lu par l interface pour poser une
-## pastille sur la carte : sans ce retour, le joueur ne sait pas qu un sort
-## progresse et le palier tombe comme une surprise.
+## Nombre de lancers qui declenche la PROCHAINE maturation de cette carte.
+func next_upgrade_at(card: SpellCard) -> int:
+	return upgrade_threshold(maturations_done(card))
+
+
+## Lancers CUMULES qui declenchent la maturation numero `faites` + 1. L ecart
+## entre deux paliers est multiplie par GameConfig.CARD_UPGRADE_GAP_GROWTH a
+## chaque maturation (8, puis 16 de plus : paliers a 8 et 24). Un ecart constant
+## ouvrait jusqu a dix ecrans modaux par partie sur les niveaux longs, la cadence
+## que GameConfig.CARD_UPGRADE_CASTS ecarte deja. Le lisere de la carte suit
+## l ecart EN COURS (upgrade_progress), donc la jauge ne ment pas.
+func upgrade_threshold(faites: int) -> int:
+	var total: int = 0
+	for k in faites + 1:
+		total += upgrade_gap(k)
+	return total
+
+
+## Lancers entre la maturation `faites` et la suivante.
+func upgrade_gap(faites: int) -> int:
+	var ecart: int = maxi(1, GameConfig.CARD_UPGRADE_CASTS)
+	for k in faites:
+		ecart *= maxi(1, GameConfig.CARD_UPGRADE_GAP_GROWTH)
+	return ecart
+
+
+## Maturations deja passees (voie prise OU refusee).
+func maturations_done(card: SpellCard) -> int:
+	return _taken_list(card).size()
+
+
+## Avancement vers la PROCHAINE maturation, de 0 a 1, et 1 quand le sort a fait
+## toutes les siennes. Lu par l interface pour poser une pastille sur la carte :
+## sans ce retour, le joueur ne sait pas qu un sort progresse et le palier tombe
+## comme une surprise.
 func upgrade_progress(card: SpellCard) -> float:
 	if card == null:
 		return 0.0
-	if upgrades_taken.has(card.id):
+	var faites: int = maturations_done(card)
+	if faites >= GameConfig.CARD_UPGRADE_TIERS:
 		return 1.0
-	var seuil: int = maxi(1, GameConfig.CARD_UPGRADE_CASTS)
-	return clampf(float(casts_of(card)) / float(seuil), 0.0, 1.0)
+	var debut: int = upgrade_threshold(faites - 1) if faites > 0 else 0
+	return clampf(float(casts_of(card) - debut) / float(upgrade_gap(faites)), 0.0, 1.0)
 
 
+## La DERNIERE maturation de la carte (id de voie, "none" si refusee, "" si
+## aucune). Le HUD s en sert pour dorer le lisere d un sort deja muri.
 func upgrade_of(card: SpellCard) -> StringName:
-	if card == null:
+	var l: Array = _taken_list(card)
+	if l.is_empty():
 		return &""
-	return StringName(upgrades_taken.get(card.id, &""))
+	return StringName(l[-1])
+
+
+## Les voies RETENUES pour cette carte, dans l ordre, sans les refus.
+func upgrade_ids_of(card: SpellCard) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id in _taken_list(card):
+		if StringName(id) != &"none" and StringName(id) != &"":
+			out.append(StringName(id))
+	return out
+
+
+## La liste brute des maturations de la carte. Accepte aussi un id SEUL : c est
+## la forme que rangeaient l ancien systeme a une maturation et ses tests ; la
+## refuser ferait disparaitre une amelioration sans un mot.
+func _taken_list(card: SpellCard) -> Array:
+	if card == null:
+		return []
+	var v: Variant = upgrades_taken.get(card.id, [])
+	if v is Array:
+		return v
+	if StringName(v) == &"":
+		return []
+	return [StringName(v)]
+
+
+func _append_taken(card: SpellCard, id: StringName) -> void:
+	var l: Array = _taken_list(card).duplicate()
+	l.append(id)
+	upgrades_taken[card.id] = l
 
 
 ## --- Les AXES d amelioration ---
@@ -1827,7 +1924,7 @@ func upgrade_of(card: SpellCard) -> StringName:
 ## Un axe est UNE grandeur du sort que l amelioration peut faire varier. Chaque
 ## axe se lit "plus c est haut, mieux c est" : la vitesse de lancement est donc
 ## l INVERSE du temps d incantation. C est ce qui permet a une voie de s ecrire
-## {axe -> pourcentage} et au meme pourcentage de se lire pareil partout.
+## {axe -> valeur} et au meme pourcentage de se lire pareil partout.
 const UP_DAMAGE := &"damage"
 const UP_SLOW := &"slow"
 const UP_TEMPO := &"tempo"
@@ -1838,12 +1935,23 @@ const UP_COUNT := &"count"
 const UP_AREA := &"area"
 const UP_DURATION := &"duration"
 const UP_CAST := &"cast"
+## Axes de COMPLEMENT, pour les sorts trop simples pour un pool qui varie. Ils
+## se comptent en CARTES et non en pourcentage :
+##   - DRAW (gain) : cartes piochees au lancement. Seul un sort sans aucun axe
+##     d effet chiffre le recoit (la Riviere) ;
+##   - DISCARD (prix) : cartes de la main defaussees au lancement. C est le prix
+##     de la vitesse forte d un sort qui n a RIEN d autre a payer (Riviere, sorts
+##     de pioche ou de retour en main) : un nombre entier ne peut pas servir de
+##     prix (15 % de 2 cartes s arrondit a zero), et une voie forte sans prix
+##     serait un bonus deguise.
+const UP_DRAW := &"draw"
+const UP_DISCARD := &"discard"
 const UP_LIGHT := &"light"
 const UP_STRONG := &"strong"
 
 ## Ordre de PRIORITE des axes d effet : le premier axe present est "l identite"
-## du sort, celui qui recoit la voie forte en tete de liste. Les degats passent
-## avant tout, sauf sur un sort qui RALENTIT (voir _effect_axes).
+## du sort. Les degats passent avant tout, sauf sur un sort qui RALENTIT (voir
+## _effect_axes).
 const _UP_ORDER: Array[StringName] = [&"damage", &"slow", &"tempo", &"force",
 	&"amplify", &"hp", &"count", &"area", &"duration"]
 
@@ -1865,6 +1973,10 @@ const _UP_NO_DURATION_KEYS: Array[StringName] = [&"meteor_storm", &"haste_enemie
 ## (EffectHandlers.placement_allowed) — un mur ameliore plus long que l apercu
 ## serait accepte a la visee puis refuse a la resolution, carte payee pour rien.
 const _UP_NO_AREA_KEYS: Array[StringName] = [&"build_wall", &"terrain_river"]
+## Cles qui PIOCHENT deja : leur nombre de cartes est leur axe NOMBRE, leur
+## proposer en plus "+1 carte piochee" ferait deux fois la meme voie sous deux noms.
+const _UP_DRAWING_KEYS: Array[StringName] = [&"draw_cards", &"discard_draw",
+	&"haste_enemies_boon"]
 ## Parametre ENTIER qui compte des cibles, des impacts ou des cartes, par cle.
 const _UP_COUNT_PARAM: Dictionary = {
 	&"pierce_line": &"max_targets",
@@ -1876,63 +1988,150 @@ const _UP_COUNT_PARAM: Dictionary = {
 }
 
 
-## Les voies proposees pour ce sort (au plus GameConfig.LEVEL_UP_CHOICES).
+## Le POOL de voies de ce sort : tout ce que ses maturations peuvent proposer.
 ##
-## Elles sont DERIVEES des effets de la carte, pas ecrites a la main dans chaque
-## .tres. Trois raisons :
-##   - 50 cartes x 3 voies = 150 entrees a maintenir, et chaque nouveau sort
-##     ajoute par un autre chantier arriverait SANS amelioration ;
+## Les voies sont DERIVEES des effets de la carte, pas ecrites a la main dans
+## chaque .tres. Trois raisons :
+##   - 50 cartes x une dizaine de voies = des centaines d entrees a maintenir, et
+##     chaque nouveau sort ajoute par un autre chantier arriverait SANS
+##     amelioration ;
 ##   - une voie ecrite a la main peut contredire l effet reel du sort ; derivee,
 ##     elle ne peut pas : un sort sans zone n a pas d axe `area`, donc aucune voie
 ##     "+zone" ne peut lui etre proposee ;
 ##   - le libelle affiche les vrais pourcentages de GameConfig, il reste juste
 ##     quand l equilibrage bouge.
 ##
-## LE TRIO. Trois voies sur trois axes DIFFERENTS, qui melangent les formes :
-##   1. l IDENTITE du sort en forme FORTE   (+30 % degats, -15 % vitesse)
-##   2. son second axe en forme LEGERE       (+10 % zone)
-##   3. la VITESSE de lancement en forme FORTE, payee sur l identite
-## Un sort trop simple pour trois axes (Etincelle : degats et vitesse) complete
-## avec l autre forme d un axe deja pris. La Riviere, qui n a rien de chiffre, ne
-## propose que la vitesse legere : une voie forte sans rien a payer serait un
-## bonus deguise. Deterministe : le grimoire montre des le depart les voies que
-## l ecran proposera, et le banc reste reproductible.
-func upgrade_paths_for(card: SpellCard) -> Array:
-	if card == null:
-		return []
-	var axes: Array[StringName] = _effect_axes(card)
-	var voulues: Array = []
-	if axes.size() >= 1:
-		voulues.append([axes[0], UP_STRONG])
-	if axes.size() >= 2:
-		voulues.append([axes[1], UP_LIGHT])
-	voulues.append([UP_CAST, UP_STRONG])
-	# Repli, dans l ordre : l autre forme de l identite, la vitesse legere, puis
-	# les autres axes. Ne sert qu aux sorts trop simples pour le trio.
-	if axes.size() >= 1:
-		voulues.append([axes[0], UP_LIGHT])
-	voulues.append([UP_CAST, UP_LIGHT])
-	for i in range(1, axes.size()):
-		voulues.append([axes[i], UP_STRONG if i == 1 else UP_LIGHT])
+## CE QUE CONTIENT LE POOL, axe par axe (axes d effet puis vitesse de lancement) :
+##   - la forme LEGERE ;
+##   - la forme FORTE payee sur son prix naturel (voir _price_axes) ;
+##   - pour l IDENTITE du sort et pour la VITESSE, une seconde forme forte payee
+##     AILLEURS : "+30 % degats contre -15 % vitesse" ou "contre -15 % zone". Ce
+##     sont les deux voies que le joueur veut le plus souvent ; lui laisser
+##     choisir ce qu il sacrifie est le vrai choix. Pas sur les autres axes : le
+##     pool doublerait sans rien apprendre de plus au joueur.
+## Un sort trop simple pour que le pool depasse ce que l ecran montre (la
+## Riviere, qui n a rien de chiffre) le complete par la pioche au lancement.
+##
+## Ordre STABLE, groupe par axe : c est l ordre du grimoire.
+func upgrade_pool_for(card: SpellCard) -> Array:
 	var out: Array = []
-	var pris: Dictionary = {}
-	for v in voulues:
-		if out.size() >= GameConfig.LEVEL_UP_CHOICES:
-			break
-		var voie: Dictionary = _make_path(card, StringName(v[0]), StringName(v[1]), axes)
-		if voie.is_empty() or pris.has(voie["id"]):
-			continue
-		pris[voie["id"]] = true
-		out.append(voie)
+	if card == null:
+		return out
+	var axes: Array[StringName] = _effect_axes(card)
+	var gains: Array[StringName] = axes.duplicate()
+	gains.append(UP_CAST)
+	var vus: Dictionary = {}
+	for g in gains:
+		_upgrade_pool_add(out, vus, _make_path(card, g, UP_LIGHT, axes))
+		for p in _price_axes(card, g, axes):
+			_upgrade_pool_add(out, vus, _make_path(card, g, UP_STRONG, axes, p))
+	if out.size() <= GameConfig.LEVEL_UP_CHOICES and _may_draw_more(card):
+		_upgrade_pool_add(out, vus, _make_path(card, UP_DRAW, UP_LIGHT, axes))
+		_upgrade_pool_add(out, vus, _make_path(card, UP_DRAW, UP_STRONG, axes))
 	return out
+
+
+func _upgrade_pool_add(out: Array, vus: Dictionary, voie: Dictionary) -> void:
+	if voie.is_empty() or vus.has(voie["id"]):
+		return
+	vus[voie["id"]] = true
+	out.append(voie)
+
+
+## Vrai si le sort peut recevoir l axe de complement "pioche au lancement".
+func _may_draw_more(card: SpellCard) -> bool:
+	for spec in card.effects:
+		if spec != null and _UP_DRAWING_KEYS.has(spec.key):
+			return false
+	return true
+
+
+## Les voies que la PROCHAINE maturation peut proposer : le pool, moins les voies
+## deja prises, moins celles que le cumul rendrait intenables (un ralentissement
+## deja monte qui depasserait le plafond).
+func upgrade_offerable_for(card: SpellCard) -> Array:
+	var out: Array = []
+	if card == null:
+		return out
+	var prises: Array[StringName] = upgrade_ids_of(card)
+	var deja: Dictionary = _summed_mods(taken_paths(card))
+	var base_lent: float = _slow_max(card)
+	for v in upgrade_pool_for(card):
+		if prises.has(StringName(v["id"])):
+			continue
+		var gain_lent: float = float((v["mods"] as Dictionary).get(UP_SLOW, 0.0))
+		if gain_lent > 0.0 and base_lent * (1.0 + float(deja.get(UP_SLOW, 0.0)) + gain_lent) \
+				> GameConfig.UPGRADE_SLOW_CAP:
+			continue
+		out.append(v)
+	return out
+
+
+## TIRE les voies d une maturation (au plus GameConfig.LEVEL_UP_CHOICES) dans ce
+## que la carte peut encore recevoir, avec le RNG de la partie.
+##
+## Le tirage n est pas uniforme, il garantit la forme de l ecran :
+##   1. une voie LEGERE (un bonus sur, que le joueur peut prendre sans lire) ;
+##   2. une voie FORTE sur un AUTRE axe que la legere (le pari) ;
+##   3. une troisieme, de preference sur un axe encore absent de l ecran.
+## Trois voies du meme axe ("+10 % degats", "+30 % degats contre vitesse", "+30 %
+## degats contre zone") seraient trois fois la meme question.
+## Puis l ordre est MELANGE : le banc prend la premiere voie comme un joueur qui
+## ne lit pas, et une legere toujours en tete aurait mesure un joueur prudent.
+##
+## Un pool pas plus grand que l ecran est rendu tel quel, sans consommer le RNG.
+func draw_upgrade_offer(card: SpellCard) -> Array:
+	var libres: Array = upgrade_offerable_for(card)
+	var n: int = GameConfig.LEVEL_UP_CHOICES
+	if libres.size() <= n:
+		return libres
+	var tirees: Array = []
+	var legeres: Array = libres.filter(func(v: Dictionary) -> bool:
+		return StringName(v["form"]) == UP_LIGHT)
+	if not legeres.is_empty():
+		tirees.append(_pick_one(legeres))
+	var fortes: Array = libres.filter(func(v: Dictionary) -> bool:
+		return StringName(v["form"]) == UP_STRONG and not _offer_has_axis(tirees, v))
+	if fortes.is_empty():
+		fortes = libres.filter(func(v: Dictionary) -> bool:
+			return StringName(v["form"]) == UP_STRONG)
+	if not fortes.is_empty():
+		tirees.append(_pick_one(fortes))
+	var garde: int = libres.size()
+	while tirees.size() < n and garde > 0:
+		garde -= 1
+		var reste: Array = libres.filter(func(v: Dictionary) -> bool:
+			return not tirees.has(v))
+		if reste.is_empty():
+			break
+		var neufs: Array = reste.filter(func(v: Dictionary) -> bool:
+			return not _offer_has_axis(tirees, v))
+		tirees.append(_pick_one(neufs if not neufs.is_empty() else reste))
+	for i in range(tirees.size() - 1, 0, -1):
+		var j: int = _rng.randi_range(0, i)
+		var t: Variant = tirees[i]
+		tirees[i] = tirees[j]
+		tirees[j] = t
+	return tirees
+
+
+func _pick_one(voies: Array) -> Dictionary:
+	return voies[_rng.randi_range(0, voies.size() - 1)]
+
+
+func _offer_has_axis(voies: Array, v: Dictionary) -> bool:
+	for w in voies:
+		if StringName(w["axis"]) == StringName(v["axis"]):
+			return true
+	return false
 
 
 ## Les axes d EFFET de la carte (sans la vitesse de lancement, que tout sort a),
 ## dans l ordre de priorite.
 ##
 ## Sur un sort qui RALENTIT, les degats passent apres la zone et la duree : le
-## Champ de givre inflige 1 degat par seconde, lui proposer "+30 % de degats" en
-## tete ferait de son amelioration phare un chiffre sans effet visible.
+## Champ de givre inflige 1 degat par seconde, en faire son identite ferait de
+## son amelioration phare un chiffre sans effet visible.
 func _effect_axes(card: SpellCard) -> Array[StringName]:
 	var presents: Dictionary = {}
 	for spec in card.effects:
@@ -2010,33 +2209,49 @@ func upgrade_count_bonus(n: int, pct: float) -> int:
 
 
 ## Construit une voie, ou {} si elle n a pas de sens pour cette carte.
+## `price` choisit le prix d une voie forte ; vide = son prix NATUREL, le
+## premier de _price_axes. Un prix hors de _price_axes est refuse : sans ce
+## garde, un id fabrique ("damage_strong_count") ferait payer un nombre entier.
 func _make_path(card: SpellCard, axis: StringName, form: StringName,
-		axes: Array[StringName]) -> Dictionary:
-	if axis != UP_CAST and not axes.has(axis):
+		axes: Array[StringName], price: StringName = &"") -> Dictionary:
+	if axis != UP_CAST and axis != UP_DRAW and not axes.has(axis):
 		return {}
-	var gain: float = GameConfig.UPGRADE_LIGHT_GAIN if form == UP_LIGHT \
-		else GameConfig.UPGRADE_STRONG_GAIN
+	# Les degats d un sort qui RALENTIT sont un a-cote (1 par seconde sur le Champ
+	# de givre) : "+10 % degats" y serait un chiffre sans effet visible. Ni gain
+	# ici, ni prix (voir _price_axes) : l identite de ces sorts est le ralentissement.
+	if axis == UP_DAMAGE and axes.has(UP_SLOW):
+		return {}
+	var gain: float = _gain_of(axis, form)
 	# Un ralentissement trop pres du plafond ne peut pas tenir la promesse du
 	# libelle : la voie n est pas proposee plutot que de mentir.
 	if axis == UP_SLOW and _slow_max(card) * (1.0 + gain) > GameConfig.UPGRADE_SLOW_CAP:
 		return {}
 	var mods: Dictionary = {axis: gain}
 	var prix: StringName = &""
+	var naturel: bool = true
 	if form == UP_STRONG:
-		prix = _price_axis(card, axis, axes)
-		if prix == &"":
+		var possibles: Array[StringName] = _price_axes(card, axis, axes)
+		if possibles.is_empty():
 			return {}
-		mods[prix] = -GameConfig.UPGRADE_STRONG_COST
+		prix = possibles[0] if price == &"" else price
+		if not possibles.has(prix):
+			return {}
+		naturel = prix == possibles[0]
+		mods[prix] = _price_of(prix)
 	var titre: String = _axis_title(card, axis)
 	var gain_txt: String = _mod_text(card, axis, gain)
-	var prix_txt: String = _mod_text(card, prix, -GameConfig.UPGRADE_STRONG_COST) \
-		if prix != &"" else ""
+	var prix_txt: String = _mod_text(card, prix, float(mods[prix])) if prix != &"" else ""
 	var forme: String = "forte" if form == UP_STRONG else "legere"
 	var texte: String = "%s, %s : %s" % [titre, forme, gain_txt]
 	if prix_txt != "":
 		texte += ", " + prix_txt
+	# L id nomme le prix seulement quand ce n est pas le naturel : "damage_strong"
+	# garde le sens qu il avait avant les variantes de prix (banc, tests).
+	var id: String = "%s_%s" % [axis, form]
+	if not naturel:
+		id += "_" + String(prix)
 	return {
-		"id": StringName("%s_%s" % [axis, form]),
+		"id": StringName(id),
 		"axis": axis,
 		"form": form,
 		"price_axis": prix,
@@ -2048,22 +2263,61 @@ func _make_path(card: SpellCard, axis: StringName, form: StringName,
 	}
 
 
-## L axe qui PAIE une voie forte. Jamais le nombre : un entier ne se reduit pas
-## de 15 % (2 cartes deviendraient 2), le prix serait nul.
-##   - gagner en vitesse se paie sur l identite du sort ;
-##   - elargir la zone ou multiplier les coups DILUE : ca se paie en degats
-##     quand le sort en fait ;
+## Le gain d une forme. En CARTES pour la pioche de complement, en pourcentage
+## partout ailleurs.
+func _gain_of(axis: StringName, form: StringName) -> float:
+	if axis == UP_DRAW:
+		return float(GameConfig.UPGRADE_DRAW_LIGHT if form == UP_LIGHT
+			else GameConfig.UPGRADE_DRAW_STRONG)
+	return GameConfig.UPGRADE_LIGHT_GAIN if form == UP_LIGHT else GameConfig.UPGRADE_STRONG_GAIN
+
+
+## Le prix d une voie forte, signe (negatif = ce que le joueur perd).
+func _price_of(axis: StringName) -> float:
+	if axis == UP_DISCARD:
+		return -float(GameConfig.UPGRADE_DISCARD_PRICE)
+	return -GameConfig.UPGRADE_STRONG_COST
+
+
+## Les axes qui peuvent PAYER une voie forte, le naturel en tete.
+##   - gagner en vitesse se paie sur l identite du sort, ou sur son second axe ;
+##     un sort sans rien d autre a payer la paie d une carte defaussee ;
+##   - elargir la zone ou multiplier les coups DILUE : ca se paie en degats quand
+##     le sort en fait ;
 ##   - le reste se paie en vitesse de lancement, comme l exemple du co-auteur
-##     (+30 % degats, -15 % vitesse).
-func _price_axis(card: SpellCard, gain: StringName, axes: Array[StringName]) -> StringName:
+##     (+30 % degats, -15 % vitesse) — et, pour l IDENTITE du sort seulement, en
+##     sacrifiant un autre de ses axes.
+## Jamais un NOMBRE : un entier ne se reduit pas de 15 % (2 cartes deviendraient
+## 2), le prix serait nul. Jamais les degats d un sort qui ralentit : ils sont
+## symboliques (1 par seconde sur le Champ de givre), les payer ne couterait rien.
+func _price_axes(card: SpellCard, gain: StringName, axes: Array[StringName]) -> Array[StringName]:
+	var payables: Array[StringName] = []
+	for a in axes:
+		if a == UP_COUNT or a == gain:
+			continue
+		if a == UP_DAMAGE and axes.has(UP_SLOW):
+			continue
+		payables.append(a)
+	var out: Array[StringName] = []
 	if gain == UP_CAST:
-		for a in axes:
-			if a != UP_COUNT:
-				return a
-		return &""
-	if (gain == UP_AREA or gain == UP_COUNT) and axes.has(UP_DAMAGE):
-		return UP_DAMAGE
-	return UP_CAST
+		for a in payables:
+			if out.size() < 2:
+				out.append(a)
+		if out.is_empty():
+			out.append(UP_DISCARD)
+		return out
+	if gain == UP_DRAW:
+		out.append(UP_CAST)
+		return out
+	var dilue: bool = (gain == UP_AREA or gain == UP_COUNT) and payables.has(UP_DAMAGE)
+	out.append(UP_DAMAGE if dilue else UP_CAST)
+	if axes.is_empty() or gain != axes[0]:
+		return out
+	if out[0] != UP_CAST:
+		out.append(UP_CAST)
+	elif not payables.is_empty():
+		out.append(payables[0])
+	return out
 
 
 ## Le plus fort ralentissement ecrit dans la carte, en %.
@@ -2126,6 +2380,10 @@ func _axis_word(card: SpellCard, axis: StringName) -> String:
 			return "duree"
 		UP_CAST:
 			return "vitesse de lancement"
+		UP_DRAW:
+			return "carte piochee"
+		UP_DISCARD:
+			return "carte defaussee"
 	return String(axis)
 
 
@@ -2144,6 +2402,7 @@ func _axis_title(card: SpellCard, axis: StringName) -> String:
 		UP_AREA: return "Zone"
 		UP_DURATION: return "Duree"
 		UP_CAST: return "Vitesse"
+		UP_DRAW: return "Inspiration"
 	return String(axis)
 
 
@@ -2155,17 +2414,23 @@ func _majuscule(s: String) -> String:
 	return s.substr(0, 1).to_upper() + s.substr(1)
 
 
-## "+30 % degats", "-15 % vitesse de lancement", "+2 impacts". Le SIGNE est
-## toujours ecrit : l ecran le double d une couleur, mais la couleur seule ne
-## se lit pas pour tout le monde.
-func _mod_text(card: SpellCard, axis: StringName, pct: float) -> String:
+## "+30 % degats", "-15 % vitesse de lancement", "+2 impacts", "-1 carte
+## defaussee au lancement". Le SIGNE est toujours ecrit : l ecran le double
+## d une couleur, mais la couleur seule ne se lit pas pour tout le monde.
+func _mod_text(card: SpellCard, axis: StringName, v: float) -> String:
 	if axis == UP_COUNT:
 		var s: EffectSpec = _first_spec_with(card, axis)
-		var d: int = upgrade_count_bonus(_spec_count(s) if s != null else 0, pct)
+		var d: int = upgrade_count_bonus(_spec_count(s) if s != null else 0, v)
 		var mot: String = _axis_word(card, axis)
 		return "+%d %s%s" % [d, mot, "s" if d > 1 else ""]
-	var signe: String = "+" if pct >= 0.0 else "-"
-	return "%s%s %s" % [signe, _pct(absf(pct)), _axis_word(card, axis)]
+	if axis == UP_DRAW or axis == UP_DISCARD:
+		var n: int = int(round(absf(v)))
+		var pluriel: String = "s" if n > 1 else ""
+		var verbe: String = "piochee" if axis == UP_DRAW else "defaussee"
+		return "%s%d carte%s %s%s au lancement" % ["+" if v >= 0.0 else "-", n, pluriel,
+			verbe, pluriel]
+	var signe: String = "+" if v >= 0.0 else "-"
+	return "%s%s %s" % [signe, _pct(absf(v)), _axis_word(card, axis)]
 
 
 ## Un pourcentage PRET A AFFICHER. Le caractere pourcent n est ecrit qu ici :
@@ -2175,74 +2440,112 @@ func _pct(f: float) -> String:
 	return "%d %%" % int(round(f * 100.0))
 
 
-## La voie `id` ("<axe>_<forme>") pour cette carte, ou {} si elle n a pas de sens
-## pour elle. Reconstruite a partir de l id et non cherchee dans le trio : la
-## voie retenue reste lisible meme si un autre chantier change l ORDRE du trio,
-## et les tests peuvent verifier l application de chaque axe, y compris ceux
-## qu aucune carte du catalogue ne propose aujourd hui en forme forte.
+## La voie `id` ("<axe>_<forme>" ou "<axe>_<forme>_<prix>") pour cette carte, ou
+## {} si elle n a pas de sens pour elle. Reconstruite a partir de l id et non
+## cherchee dans un tirage : la voie retenue reste lisible quel que soit l ordre
+## du pool, et les tests peuvent verifier l application de chaque axe.
 func upgrade_path_by_id(card: SpellCard, id: StringName) -> Dictionary:
 	if card == null:
 		return {}
-	var s: String = String(id)
-	var coupe: int = s.rfind("_")
-	if coupe <= 0:
+	var morceaux: PackedStringArray = String(id).split("_")
+	if morceaux.size() < 2 or morceaux.size() > 3:
 		return {}
-	var forme: StringName = StringName(s.substr(coupe + 1))
+	var axe: StringName = StringName(morceaux[0])
+	var forme: StringName = StringName(morceaux[1])
 	if forme != UP_LIGHT and forme != UP_STRONG:
 		return {}
-	return _make_path(card, StringName(s.substr(0, coupe)), forme, _effect_axes(card))
-
-
-## La voie retenue pour cette carte, ou {} (aucune, ou refusee).
-func taken_path(card: SpellCard) -> Dictionary:
-	var id: StringName = upgrade_of(card)
-	if id == &"" or id == &"none":
+	var prix: StringName = StringName(morceaux[2]) if morceaux.size() == 3 else &""
+	if prix != &"" and forme != UP_STRONG:
 		return {}
-	return upgrade_path_by_id(card, id)
+	# La pioche de COMPLEMENT n existe que pour les sorts qui en ont besoin : sans
+	# ce garde, un id fabrique donnerait "+1 carte" a une Boule de feu.
+	if axe == UP_DRAW:
+		for v in upgrade_pool_for(card):
+			if StringName(v["id"]) == id:
+				return v
+		return {}
+	return _make_path(card, axe, forme, _effect_axes(card), prix)
 
 
-## Les voies telles que le GRIMOIRE les affiche : [{text, unlocked}].
-## Contrat fixe par GalleryPanel.upgrades_of(), ecrit AVANT ce chantier pour que
-## la fiche du grimoire n ait pas a etre retouchee. Ne pas le rompre.
-func upgrade_lines_for(card: SpellCard) -> Array:
-	var prise: StringName = upgrade_of(card)
+## Les voies RETENUES pour cette carte, dans l ordre des maturations.
+func taken_paths(card: SpellCard) -> Array:
 	var out: Array = []
-	for v in upgrade_paths_for(card):
+	for id in upgrade_ids_of(card):
+		var v: Dictionary = upgrade_path_by_id(card, id)
+		if not v.is_empty():
+			out.append(v)
+	return out
+
+
+## La DERNIERE voie retenue pour cette carte, ou {} (aucune, ou refusee).
+func taken_path(card: SpellCard) -> Dictionary:
+	var v: Array = taken_paths(card)
+	return v[-1] if not v.is_empty() else {}
+
+
+## Les modificateurs CUMULES de plusieurs voies, axe par axe. Les pourcentages
+## s ADDITIONNENT (+30 % puis +10 % font +40 %, pas +43 %) : c est ce que le
+## joueur lit en additionnant les lignes de ses deux voies. Le NOMBRE n est pas
+## somme ici — un entier se calcule voie par voie, voir _apply_count.
+func _summed_mods(voies: Array) -> Dictionary:
+	var out: Dictionary = {}
+	for v in voies:
+		var mods: Dictionary = v.get("mods", {})
+		for a in mods:
+			if StringName(a) == UP_COUNT:
+				continue
+			out[StringName(a)] = float(out.get(StringName(a), 0.0)) + float(mods[a])
+	return out
+
+
+## Les voies telles que le GRIMOIRE les affiche : [{text, unlocked, form}], TOUT
+## le pool et non les seules voies d un tirage : la fiche dit au joueur tout ce
+## que ce sort peut devenir, c est ce qui lui donne envie de le faire murir.
+## Contrat fixe par GalleryPanel.upgrades_of() ({text, unlocked}), ecrit AVANT le
+## systeme d amelioration pour que la fiche n ait pas a etre retouchee. Ne pas le
+## rompre ; `form` est un ajout que la fiche peut ignorer.
+func upgrade_lines_for(card: SpellCard) -> Array:
+	var prises: Array[StringName] = upgrade_ids_of(card)
+	var out: Array = []
+	for v in upgrade_pool_for(card):
 		out.append({
 			"text": String(v.get("text", "")),
-			"unlocked": prise != &"" and StringName(v.get("id", &"")) == prise,
+			"unlocked": prises.has(StringName(v.get("id", &""))),
+			"form": StringName(v.get("form", &"")),
 		})
 	return out
 
 
-## Le joueur retient la voie `i` pour la carte en attente.
+## Le joueur retient la voie `i` de l offre en attente.
 func pick_upgrade(i: int) -> Dictionary:
 	var card: SpellCard = pending_upgrade_card
 	if card == null:
 		return {}
-	var voies: Array = upgrade_paths_for(card)
-	if i < 0 or i >= voies.size():
+	if i < 0 or i >= pending_upgrade_paths.size():
 		return {}
-	var voie: Dictionary = voies[i]
+	var voie: Dictionary = pending_upgrade_paths[i]
 	# On vide l attente AVANT d emettre : un ecouteur qui relance un sort dans la
 	# foulee ne doit pas retomber sur une offre deja consommee.
 	pending_upgrade_card = null
-	upgrades_taken[card.id] = StringName(voie.get("id", &""))
+	pending_upgrade_paths = []
+	_append_taken(card, StringName(voie.get("id", &"")))
 	upgrade_taken.emit(card, voie.duplicate(true))
 	return voie.duplicate(true)
 
 
-## Le joueur renonce : le sort reste tel quel.
-## Renoncer DOIT fermer la porte (voie "none"), sinon l ecran se rouvrirait au
-## lancer suivant et le refus ne servirait a rien.
+## Le joueur renonce : le sort reste tel quel POUR CE PALIER.
+## Renoncer DOIT consommer la maturation ("none"), sinon l ecran se rouvrirait au
+## lancer suivant et le refus ne servirait a rien. Les paliers suivants restent
+## ouverts : refuser un compromis n est pas renoncer a faire murir le sort.
 func decline_upgrade() -> void:
 	if pending_upgrade_card == null:
 		return
-	upgrades_taken[pending_upgrade_card.id] = &"none"
+	_append_taken(pending_upgrade_card, &"none")
 	pending_upgrade_card = null
+	pending_upgrade_paths = []
 
 
-## Les EffectSpec a appliquer POUR CE LANCEMENT, amelioration comprise.
+## Les EffectSpec a appliquer POUR CE LANCEMENT, ameliorations comprises.
 ##
 ## Rend des COPIES des que l amelioration change quelque chose : les EffectSpec
 ## du .tres sont partages et mis en cache par Godot (meme objet pour la main, le
@@ -2253,17 +2556,26 @@ func decline_upgrade() -> void:
 ## Les `params` sont RECOPIES EN PROFONDEUR, explicitement. Godot 4.4 copie deja
 ## le Dictionary au duplicate() (verifie : retirer cette ligne ne fait rougir
 ## aucun test), mais seulement en surface, et ce comportement a change d une
-## version a l autre. Les voies ecrivent maintenant dans les params ("+1 cible",
-## "+30 % de PV") : si la copie partageait le Dictionary de la carte, chaque
-## amelioration s ecrirait dans le catalogue. On ne confie pas ca au moteur.
+## version a l autre. Les voies ecrivent dans les params ("+1 cible", "+30 % de
+## PV") : si la copie partageait le Dictionary de la carte, chaque amelioration
+## s ecrirait dans le catalogue. On ne confie pas ca au moteur.
+##
+## La pioche de complement est un effet AJOUTE (draw_cards, verbe existant) : elle
+## passe par le meme chemin que tout effet, Debordement compris.
 func cast_specs(card: SpellCard) -> Array[EffectSpec]:
 	var out: Array[EffectSpec] = []
 	if card == null:
 		return out
-	var mods: Dictionary = taken_path(card).get("mods", {})
-	var touche: bool = false
-	for a in mods:
-		if StringName(a) != UP_CAST:
+	var voies: Array = taken_paths(card)
+	var sommes: Dictionary = _summed_mods(voies)
+	var nombres: Array[float] = []
+	for v in voies:
+		var mods: Dictionary = v.get("mods", {})
+		if mods.has(UP_COUNT):
+			nombres.append(float(mods[UP_COUNT]))
+	var touche: bool = not nombres.is_empty()
+	for a in sommes:
+		if not [UP_CAST, UP_DRAW, UP_DISCARD].has(StringName(a)):
 			touche = true
 	for spec in card.effects:
 		if spec == null:
@@ -2273,14 +2585,23 @@ func cast_specs(card: SpellCard) -> Array[EffectSpec]:
 			continue
 		var c: EffectSpec = spec.duplicate() as EffectSpec
 		c.params = spec.params.duplicate(true)
-		for a in mods:
-			_apply_axis(c, StringName(a), float(mods[a]))
+		for a in sommes:
+			_apply_axis(c, StringName(a), float(sommes[a]))
+		_apply_count(c, nombres)
 		out.append(c)
+	var pioche: int = int(round(float(sommes.get(UP_DRAW, 0.0))))
+	if pioche > 0:
+		var d := EffectSpec.new()
+		d.key = &"draw_cards"
+		d.params = {&"count": pioche}
+		out.append(d)
 	return out
 
 
 ## Applique `pct` (signe : + ameliore, - coute) a un axe d un effet COPIE.
 ## Meme table que _spec_axes : un effet qui ne porte pas l axe n est pas touche.
+## Les axes en CARTES (pioche, defausse) et la vitesse ne vivent pas dans les
+## effets : ils sont ignores ici.
 func _apply_axis(c: EffectSpec, axis: StringName, pct: float) -> void:
 	var f: float = 1.0 + pct
 	var k: StringName = c.key
@@ -2317,15 +2638,6 @@ func _apply_axis(c: EffectSpec, axis: StringName, pct: float) -> void:
 			for p in [&"prop_hp", &"wall_hp"]:
 				if float(c.params.get(p, 0.0)) > 0.0:
 					c.params[p] = float(c.params[p]) * f
-		UP_COUNT:
-			var n: int = _spec_count(c)
-			if n <= 0 or n >= GameConfig.UPGRADE_COUNT_UNLIMITED:
-				return
-			var d: int = upgrade_count_bonus(n, pct)
-			if k == &"retain_next":
-				c.magnitude = float(n + d)
-			else:
-				c.params[_UP_COUNT_PARAM[k]] = n + d
 		UP_AREA:
 			if c.radius > 0.0 and not _UP_NO_AREA_KEYS.has(k):
 				c.radius *= f
@@ -2335,13 +2647,46 @@ func _apply_axis(c: EffectSpec, axis: StringName, pct: float) -> void:
 				c.duration *= f
 
 
-## Facteur de TEMPS d incantation venant de l amelioration de CETTE carte.
+## Ajoute a un effet COPIE les nombres de plusieurs voies. Chaque voie compte ce
+## qu ELLE annoncait sur le nombre de la carte ("+1 carte", puis "+2 cartes") :
+## sommer d abord les pourcentages puis arrondir donnerait un total different de
+## la somme des deux lignes que le joueur a lues.
+func _apply_count(c: EffectSpec, pcts: Array[float]) -> void:
+	if pcts.is_empty():
+		return
+	var n: int = _spec_count(c)
+	if n <= 0 or n >= GameConfig.UPGRADE_COUNT_UNLIMITED:
+		return
+	var d: int = 0
+	for p in pcts:
+		d += upgrade_count_bonus(n, p)
+	if c.key == &"retain_next":
+		c.magnitude = float(n + d)
+	else:
+		c.params[_UP_COUNT_PARAM[c.key]] = n + d
+
+
+## Paie le prix "cartes defaussees" des voies retenues pour ce sort, a chaque
+## lancer reel. Defausse au hasard, comme discard_random partout ailleurs : un
+## prix que le joueur choisirait carte par carte serait un tri gratuit de sa main.
+func _pay_card_price(card: SpellCard) -> void:
+	if upgrade_ids_of(card).is_empty():
+		return
+	var n: int = int(round(-float(_summed_mods(taken_paths(card)).get(UP_DISCARD, 0.0))))
+	if n > 0:
+		discard_random(n)
+
+
+## Facteur de TEMPS d incantation venant des ameliorations de CETTE carte.
 ## La voie parle en VITESSE (+10 %) : le temps est son inverse, 1 / 1,10. Un
-## prix de -15 % de vitesse allonge donc le temps de 1 / 0,85.
+## prix de -15 % de vitesse allonge donc le temps de 1 / 0,85, et deux voies
+## s additionnent avant l inversion (+30 % puis -15 % = +15 %).
 ## Applique dans effective_cast_time() : c est le seul endroit que lisent le
 ## Caster et le HUD, donc la barre de charge et le sort partent toujours d accord.
 func upgrade_cast_factor(card: SpellCard) -> float:
-	var mods: Dictionary = taken_path(card).get("mods", {})
+	if card == null or upgrade_ids_of(card).is_empty():
+		return 1.0
+	var mods: Dictionary = _summed_mods(taken_paths(card))
 	if not mods.has(UP_CAST):
 		return 1.0
 	return 1.0 / maxf(0.05, 1.0 + float(mods[UP_CAST]))
