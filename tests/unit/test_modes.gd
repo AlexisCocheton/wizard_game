@@ -18,7 +18,7 @@ func run() -> void:
 	_test_valeurs_et_noms_des_modes()
 	_test_la_fiche_de_niveau_propose_exploration_et_infini()
 	_test_l_infini_s_ouvre_sans_finir_la_campagne()
-	_test_le_massacre_s_ouvre_au_premier_niveau_gagne()
+	_test_le_massacre_s_ouvre_a_la_fin_de_la_campagne()
 	_test_le_pool_du_massacre_couvre_tous_les_niveaux()
 	_test_le_massacre_melange_les_mondes_en_jouant()
 	_test_les_boss_de_tout_le_jeu_aux_paliers()
@@ -91,21 +91,38 @@ func _test_l_infini_s_ouvre_sans_finir_la_campagne() -> void:
 	SaveData.reset_profile()
 
 
-## Le Massacre (onglet) s ouvre au premier niveau GAGNE, et pas avant.
-func _test_le_massacre_s_ouvre_au_premier_niveau_gagne() -> void:
+## Le Massacre (onglet) s ouvre a la FIN DE LA CAMPAGNE, et pas avant (retouche
+## du co-auteur, 30/09). L onglet reste visible et dit ce qui l ouvre.
+func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
 	SaveData.reset_profile()
 	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
 	not_ok(SaveData.massacre_unlocked(), "profil neuf : le Massacre est ferme")
-	ok(MassacrePanel.block_reason() != "", "et l onglet dit pourquoi")
 	var panneau := MassacrePanel.new()
 	attach(panneau)
-	not_ok(panneau.can_play(), "JOUER est coupe tant que rien n est gagne")
-	SaveData.record_victory(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION, {}, 6)
-	ok(SaveData.massacre_unlocked(), "un niveau gagne ouvre le Massacre")
-	not_ok(SaveData.campaign_cleared(), "sans attendre la fin de la campagne")
+	not_ok(panneau.can_play(), "JOUER est coupe tant que la campagne n est pas finie")
+	ok(panneau.lock_shown(), "le bandeau du verrou est affiche")
+	# Tous les niveaux sauf UN : toujours ferme, et la raison dit le chemin.
+	var niveaux: Array = ContentDB.levels.values()
+	for i in niveaux.size() - 1:
+		SaveData.record_victory(niveaux[i], GameEnums.Mode.EXPLORATION, {}, 6)
+	not_ok(SaveData.massacre_unlocked(), "il reste un niveau : le Massacre reste ferme")
+	panneau.refresh()
+	not_ok(panneau.can_play(), "JOUER reste coupe")
+	var raison: String = MassacrePanel.block_reason()
+	ok(raison.contains("campagne"), "la raison nomme la campagne (%s)" % raison)
+	ok(raison.contains("%d / %d" % [niveaux.size() - 1, niveaux.size()]),
+		"et le chemin qui reste, en chiffres lus dans la sauvegarde (%s)" % raison)
+	# Le dernier niveau fini ouvre le Massacre.
+	SaveData.record_victory(niveaux[niveaux.size() - 1], GameEnums.Mode.EXPLORATION, {}, 6)
+	ok(SaveData.campaign_cleared(), "la campagne est finie")
+	ok(SaveData.massacre_unlocked(), "et le Massacre s ouvre")
 	panneau.refresh()
 	ok(panneau.can_play(), "JOUER s active, deck valide")
+	not_ok(panneau.lock_shown(), "le bandeau du verrou disparait")
 	eq(MassacrePanel.block_reason(), "", "plus aucune raison de refus")
+	# L Infini, lui, n a pas attendu : il s ouvrait niveau par niveau.
+	for lv: LevelDef in niveaux:
+		ok(SaveData.infinite_unlocked(lv.id), "l Infini de %s est ouvert" % lv.id)
 	# Un deck invalide coupe JOUER avec la raison du deck, pas celle du verrou.
 	SaveData.set_massacre_deck([])
 	panneau.refresh()

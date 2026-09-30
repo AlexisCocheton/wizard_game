@@ -30,6 +30,8 @@ func run() -> void:
 	_test_grimoire_compteurs_branches()
 	_test_grimoire_ameliorations()
 	_test_double_toucher_du_deck()
+	_test_bestiaire_trois_etats()
+	_test_bestiaire_fiche_a_rencontrer()
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 
@@ -158,8 +160,12 @@ func _test_le_panneau_se_construit() -> void:
 	var panel := GalleryPanel.new()
 	attach(panel)
 	panel.show_section(GalleryPanel.Section.BEASTS)
-	var total: int = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS).size()
-	ok(total >= 1, "le bestiaire liste des monstres (%d)" % total)
+	ok(GalleryPanel.entries_of(GalleryPanel.Section.BEASTS).size() >= 1,
+		"profil neuf : le bestiaire montre deja les monstres du premier niveau")
+	# Le CATALOGUE du bestiaire, lui, couvre tout ; ce qui s AFFICHE depend du
+	# profil depuis la retouche du 30/09 (trois etats, voir plus bas).
+	var total: int = GalleryPanel.catalog_of(GalleryPanel.Section.BEASTS).size()
+	ok(total >= 1, "le bestiaire catalogue des monstres (%d)" % total)
 	# Toutes les CREATURES, et elles seules. Comparer au total brut de
 	# ContentDB.enemies exigeait aussi les PROJECTILES (la boule de poison tiree
 	# par un Planogo), alors que le commentaire d EnemyDef.projectile promet
@@ -254,7 +260,7 @@ func _test_grimoire_trois_sections() -> void:
 	# du profil depuis le chantier P (cartes invisibles), d ou catalog_of ici.
 	var sorts: Array = GalleryPanel.catalog_of(GalleryPanel.Section.SPELLS)
 	var passifs: Array = GalleryPanel.catalog_of(GalleryPanel.Section.PASSIVES)
-	var betes: Array = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS)
+	var betes: Array = GalleryPanel.catalog_of(GalleryPanel.Section.BEASTS)
 	eq(sorts.size() + passifs.size(), ContentDB.cards.size(),
 		"sorts + passifs = toutes les cartes du jeu, aucune carte orpheline")
 	var vraies: int = 0
@@ -406,3 +412,122 @@ func _test_grimoire_ameliorations() -> void:
 			ok(u is Dictionary, "%s : une amelioration est un dictionnaire" % card.id)
 			ok(String(u.get("text", "")) != "", "%s : une amelioration a un texte" % card.id)
 	eq(GalleryPanel.upgrades_of(null).size(), 0, "null ne fait pas planter la fiche")
+
+
+# --- Bestiaire en trois etats (retouche du 30/09) ---
+
+## RENCONTRE = fiche lisible ; present dans un niveau OUVERT mais jamais vu =
+## grise ; niveau pas encore atteint = INVISIBLE. Meme compteur que les cartes :
+## rencontres / visibles.
+func _test_bestiaire_trois_etats() -> void:
+	SaveData.reset_profile()
+	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	var suivant: LevelDef = ContentDB.levels.get(lvl1.next_levels[0])
+	var du_premier: Array[EnemyDef] = SaveData.level_species(lvl1)
+	ok(not du_premier.is_empty(), "le premier niveau fait descendre des monstres")
+	# Une espece du niveau SUIVANT (ferme) qu aucun niveau ouvert ne montre.
+	var cachee: EnemyDef = null
+	for e: EnemyDef in SaveData.level_species(suivant):
+		if not du_premier.has(e):
+			cachee = e
+			break
+	ok(cachee != null, "le niveau suivant a au moins une espece a lui")
+	var vue: EnemyDef = du_premier[0]
+	var a_voir: EnemyDef = du_premier[du_premier.size() - 1]
+	ok(vue != a_voir, "le premier niveau a au moins deux especes")
+	eq(SaveData.enemy_visibility(vue.id), SaveData.ENEMY_REACHABLE,
+		"profil neuf : un monstre du niveau ouvert est A RENCONTRER")
+	if cachee != null:
+		eq(SaveData.enemy_visibility(cachee.id), SaveData.ENEMY_HIDDEN,
+			"un monstre d un niveau pas encore atteint est INVISIBLE")
+	SaveData.discover_enemy(vue.id)
+	eq(SaveData.enemy_visibility(vue.id), SaveData.ENEMY_MET, "rencontre : fiche lisible")
+	eq(SaveData.enemy_visibility(a_voir.id), SaveData.ENEMY_REACHABLE,
+		"le voisin jamais croise reste a rencontrer")
+
+	var betes: Array = GalleryPanel.entries_of(GalleryPanel.Section.BEASTS)
+	ok(betes.has(vue) and betes.has(a_voir), "le grimoire montre le rencontre et le grise")
+	if cachee != null:
+		not_ok(betes.has(cachee), "le grimoire cache le monstre du niveau ferme")
+	for e2: EnemyDef in betes:
+		ok(SaveData.enemy_visibility(e2.id) != SaveData.ENEMY_HIDDEN,
+			"%s affiche au grimoire est visible" % e2.id)
+		not_ok(e2.projectile, "%s n est pas un projectile" % e2.id)
+	ok(GalleryPanel.is_known(vue) and not GalleryPanel.is_greyed(vue), "le rencontre n est pas grise")
+	ok(GalleryPanel.is_greyed(a_voir), "le monstre a rencontrer est grise")
+	# Rencontres d abord, grises ensuite.
+	eq(betes[0], vue, "le seul monstre rencontre ouvre le bestiaire")
+	# Le compteur : rencontres / VISIBLES, pas le catalogue.
+	var entete: String = GalleryPanel.header_text(GalleryPanel.Section.BEASTS)
+	ok(entete.begins_with("1 / %d " % betes.size()),
+		"le compteur dit rencontres / visibles (%s, %d visibles)" % [entete, betes.size()])
+	not_ok(entete.contains("/ %d " % GalleryPanel.catalog_of(GalleryPanel.Section.BEASTS).size()),
+		"le compteur ne devoile pas la taille du bestiaire (%s)" % entete)
+	# Ouvrir le niveau suivant rend son monstre A RENCONTRER.
+	if cachee != null:
+		SaveData.unlock_level(suivant.id)
+		eq(SaveData.enemy_visibility(cachee.id), SaveData.ENEMY_REACHABLE,
+			"le niveau suivant ouvert : son monstre devient a rencontrer")
+		ok(GalleryPanel.entries_of(GalleryPanel.Section.BEASTS).has(cachee),
+			"et apparait grise au grimoire")
+	# Un monstre rencontre AILLEURS (boss de l Infini, tire dans tout le jeu)
+	# passe directement a RENCONTRE, meme hors des niveaux ouverts.
+	var loin: EnemyDef = null
+	var atteints: Dictionary = SaveData.reachable_enemy_ids()
+	for e3: EnemyDef in GalleryPanel.catalog_of(GalleryPanel.Section.BEASTS):
+		if not atteints.has(e3.id):
+			loin = e3
+			break
+	if loin != null:
+		SaveData.discover_enemy(loin.id)
+		eq(SaveData.enemy_visibility(loin.id), SaveData.ENEMY_MET,
+			"un monstre croise hors des niveaux ouverts est rencontre")
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+
+
+## Les especes d un niveau suivent ce qui NAIT de ses monstres (divisions,
+## invocations, renaissances) : une gelee moyenne se voit avant la petite.
+func _test_bestiaire_fiche_a_rencontrer() -> void:
+	var parent: EnemyDef = null
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e.split_into != null and not e.split_into.projectile:
+			parent = e
+			break
+	ok(parent != null, "le contenu a un monstre qui se divise")
+	if parent != null:
+		var lv := LevelDef.new()
+		lv.id = &"test_bete_div"
+		var w := WaveDef.new()
+		var entree := WaveEntry.new()
+		entree.enemy = parent
+		entree.count = 1
+		var entrees: Array[WaveEntry] = [entree]
+		w.entries = entrees
+		var vagues: Array[WaveDef] = [w]
+		lv.waves = vagues
+		ok(SaveData.level_species(lv).has(parent.split_into),
+			"%s nait de %s : il fait partie des especes du niveau"
+			% [parent.split_into.id, parent.id])
+	# La fiche grisee s ouvre sans planter, et dit OU le rencontrer.
+	SaveData.reset_profile()
+	var panel := GalleryPanel.new()
+	attach(panel)
+	panel.show_section(GalleryPanel.Section.BEASTS)
+	var liste: Array = panel.entries()
+	var idx: int = -1
+	for i in liste.size():
+		if GalleryPanel.is_reachable(liste[i]):
+			idx = i
+			break
+	ok(idx >= 0, "profil neuf : il y a un monstre a rencontrer")
+	if idx >= 0:
+		panel.open_detail(idx)
+		eq(panel.detail_index(), idx, "sa fiche s ouvre")
+		var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
+		ok(CollectionStyle.where_to_meet(liste[idx]).contains(lvl1.display_name),
+			"et dit ou le rencontrer (%s)" % CollectionStyle.where_to_meet(liste[idx]))
+		panel.close_detail()
+	detach(panel)
+	SaveData.reset_profile()
+	ContentDB.discover_starters()

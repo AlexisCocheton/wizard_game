@@ -554,9 +554,10 @@ func campaign_progress() -> Array:
 ## La campagne est-elle terminee ?
 ##
 ## Elle OUVRAIT le mode infini jusqu au 29/09. Decision du co-auteur et
-## d Alexis : l INFINI d un niveau s ouvre des que ce niveau est debloque, et le
-## MASSACRE des le premier niveau gagne (massacre_unlocked). La fonction reste
-## la mesure de "fin de campagne" pour le profil et les succes.
+## d Alexis : l INFINI d un niveau s ouvre des que ce niveau est debloque. Le
+## MASSACRE, lui, s ouvre ICI, a la fin de la campagne (massacre_unlocked,
+## retouche du 30/09). La fonction reste aussi la mesure de "fin de campagne"
+## pour le profil et les succes.
 func campaign_cleared() -> bool:
 	var p: Array = campaign_progress()
 	return int(p[1]) > 0 and int(p[0]) >= int(p[1])
@@ -571,12 +572,17 @@ func infinite_unlocked(level_id: StringName) -> bool:
 	return ContentDB.levels.has(level_id) and is_level_unlocked(level_id)
 
 
-## Le MASSACRE s ouvre au PREMIER niveau gagne. Avant, le joueur n a ni deck
-## eprouve ni idee de ce qu est un palier ; le mode le plus dur du jeu serait son
-## premier combat. Passe par is_level_cleared(), donc le mode testeur l ouvre
-## aussi, comme il ouvre tout le reste.
+## Le MASSACRE s ouvre a la FIN DE LA CAMPAGNE (retouche du co-auteur apres
+## test, 30/09 : "accessible uniquement a la fin de la campagne ; le mode INFINI
+## au fur et a mesure"). Il melange les monstres et les boss de TOUS les mondes :
+## ouvert plus tot, il devoilait des mondes que l histoire n avait pas encore
+## montres, et il faisait double emploi avec l Infini par niveau, qui est
+## justement le mode sans fin de la progression. L onglet reste VISIBLE et dit
+## ce qui l ouvre (MassacrePanel.block_reason) : un onglet cache ne donne pas
+## d objectif au joueur. Passe par campaign_cleared(), donc par
+## is_level_cleared() : le mode testeur l ouvre comme il ouvre tout le reste.
 func massacre_unlocked() -> bool:
-	return int(campaign_progress()[0]) >= 1
+	return campaign_cleared()
 
 
 ## Record INFINI d un niveau. Distinct de "best_wave", qui est celui de
@@ -769,6 +775,186 @@ func levels_offering(card_id: StringName) -> Array[LevelDef]:
 	out.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
 		return String(a.id) < String(b.id))
 	return out
+
+
+## Les niveaux OUVERTS qui DONNENT cette carte a qui les joue : elle est dans
+## leur deck, et jouer le deck d un niveau obtient ses cartes
+## (RunState.build_deck_from_list). Sous-ensemble de levels_offering() : c est ce
+## qui permet de dire au joueur "joue tel niveau" plutot que "prends-la a la
+## montee de niveau" pour une carte qu aucune montee n a besoin de proposer.
+func levels_dealing(card_id: StringName) -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for lv: LevelDef in levels_offering(card_id):
+		for c: SpellCard in lv.exploration_deck:
+			if c != null and c.id == card_id:
+				out.append(lv)
+				break
+	return out
+
+
+## Les cartes VISIBLES d une famille (sorts si `passives` est faux), dans
+## L ORDRE COMMUN du grimoire et de l ecran de deck : les OBTENUES d abord, puis
+## les A OBTENIR ; dans chaque groupe, par rarete puis par nom.
+##
+## Un seul endroit pour la liste et pour son ordre (retouche du 30/09) : les deux
+## ecrans filtraient chacun de leur cote, et l ecran de deck melangeait les
+## cartes grisees a celles qu on peut poser, si bien qu il fallait tourner les
+## pages pour trouver de quoi composer. Obtenues d abord : ce que le joueur a,
+## puis ce qu il peut aller chercher.
+func visible_cards(passives: bool) -> Array[SpellCard]:
+	var obtenues: Array[SpellCard] = []
+	var a_obtenir: Array[SpellCard] = []
+	var pool: Dictionary = obtainable_ids()
+	for c: SpellCard in ContentDB.cards.values():
+		if c == null or c.is_passive != passives:
+			continue
+		if is_discovered(c.id):
+			obtenues.append(c)
+		elif pool.has(c.id):
+			a_obtenir.append(c)
+	obtenues.sort_custom(_card_order)
+	a_obtenir.sort_custom(_card_order)
+	obtenues.append_array(a_obtenir)
+	return obtenues
+
+
+static func _card_order(a: SpellCard, b: SpellCard) -> bool:
+	if a.rarity != b.rarity:
+		return a.rarity < b.rarity
+	return a.display_name < b.display_name
+
+
+## LE COMPTEUR HONNETE des cartes : [obtenues, visibles], sorts et passifs
+## confondus si `passives` vaut -1, sinon la seule famille demandee (0 = sorts,
+## 1 = passifs). Lu par le grimoire, l ecran de deck et la barre du menu.
+##
+## Le denominateur est le nombre de cartes VISIBLES, pas le catalogue. Une carte
+## qu on ne peut pas encore obtenir est invisible : l annoncer dans un "8 / 64"
+## la devoilait par la bande, et le joueur cherchait en vain 50 cartes que
+## rien ne montre. "8 / 14" dit exactement ce que les pages contiennent : 14
+## vignettes, dont 6 grisees. On ne compte que le contenu REEL (ContentDB) : un
+## id perime dans le profil gonflait l ancien compteur.
+func card_counts(passives: int = -1) -> Array:
+	var obtenues: int = 0
+	var visibles: int = 0
+	var pool: Dictionary = obtainable_ids()
+	for c: SpellCard in ContentDB.cards.values():
+		if c == null:
+			continue
+		if passives != -1 and c.is_passive != (passives == 1):
+			continue
+		if is_discovered(c.id):
+			obtenues += 1
+			visibles += 1
+		elif pool.has(c.id):
+			visibles += 1
+	return [obtenues, visibles]
+
+
+# --- BESTIAIRE EN TROIS ETATS (retouche du 30/09) -----------------------------
+#
+# Meme regle que les cartes, lue par le grimoire :
+#   RENCONTRE  : deja combattu (discovered_enemies). Fiche complete.
+#   A RENCONTRER : l espece peut descendre dans un niveau OUVERT (ses vagues, son
+#                pool de l Infini, et ce qu elles font naitre : divisions,
+#                invocations, renaissances), mais le joueur ne l a jamais vue.
+#                Lisible mais grisee : son portrait et son nom, et OU la
+#                rencontrer. Ses chiffres et ses competences restent a
+#                decouvrir en la combattant : c est la recompense de la
+#                rencontre, et la raison pour laquelle le bestiaire existe.
+#   INVISIBLE  : aucun niveau ouvert ne la fait descendre.
+# Les boss que l Infini par niveau tire dans TOUT le jeu n entrent pas dans le
+# calcul : sinon chaque boss du jeu serait "a rencontrer" des le premier niveau.
+# Un boss croise ainsi passe directement a RENCONTRE, comme tout monstre vu.
+
+const ENEMY_HIDDEN: int = 0
+const ENEMY_REACHABLE: int = 1
+const ENEMY_MET: int = 2
+
+
+## Etat d un monstre : ENEMY_MET, ENEMY_REACHABLE ou ENEMY_HIDDEN.
+func enemy_visibility(enemy_id: StringName) -> int:
+	if is_enemy_discovered(enemy_id):
+		return ENEMY_MET
+	if reachable_enemy_ids().has(enemy_id):
+		return ENEMY_REACHABLE
+	return ENEMY_HIDDEN
+
+
+## Ids (StringName -> true) des especes que les niveaux OUVERTS peuvent faire
+## descendre. Recalcule a chaque appel, comme obtainable_ids() : un niveau qui
+## s ouvre doit se voir au grimoire sans cache a invalider.
+func reachable_enemy_ids() -> Dictionary:
+	var out: Dictionary = {}
+	for id in unlocked_levels():
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv == null:
+			continue
+		for e: EnemyDef in level_species(lv):
+			out[e.id] = true
+	return out
+
+
+## Les niveaux OUVERTS ou cette espece peut descendre, tries par id : la reponse
+## a "ou le rencontrer ?" pour un monstre grise.
+func levels_with_enemy(enemy_id: StringName) -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for id in unlocked_levels():
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv == null:
+			continue
+		for e: EnemyDef in level_species(lv):
+			if e.id == enemy_id:
+				out.append(lv)
+				break
+	out.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
+		return String(a.id) < String(b.id))
+	return out
+
+
+## Toutes les especes qu un niveau peut faire descendre : ses vagues ecrites, le
+## pool de son Infini, et ce que ces monstres font naitre. Les PROJECTILES en
+## sont exclus : ce ne sont pas des creatures (ni bestiaire, ni XP).
+static func level_species(lv: LevelDef) -> Array[EnemyDef]:
+	var out: Array[EnemyDef] = []
+	if lv == null:
+		return out
+	var pile: Array[EnemyDef] = []
+	for w: WaveDef in lv.waves:
+		if w != null:
+			pile.append_array(w.enemy_defs())
+	for e: EnemyDef in lv.enemy_pool:
+		pile.append(e)
+	var vus: Dictionary = {}
+	while not pile.is_empty():
+		var d: EnemyDef = pile.pop_back()
+		if d == null or vus.has(d):
+			continue
+		vus[d] = true
+		if not d.projectile:
+			out.append(d)
+		# Un projectile peut lui-meme naitre d un tireur, mais il ne fait rien
+		# naitre : on suit quand meme ses liens, par surete, sans le lister.
+		for fils in [d.split_into, d.summon_def, d.rebirth_def]:
+			if fils != null:
+				pile.append(fils)
+	return out
+
+
+## [rencontres, visibles] : le meme compteur honnete que card_counts().
+func enemy_counts() -> Array:
+	var vus: int = 0
+	var visibles: int = 0
+	var atteints: Dictionary = reachable_enemy_ids()
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e == null or e.projectile:
+			continue
+		if is_enemy_discovered(e.id):
+			vus += 1
+			visibles += 1
+		elif atteints.has(e.id):
+			visibles += 1
+	return [vus, visibles]
 
 
 ## --- Progression de COMPTE ---

@@ -345,6 +345,10 @@ func _la_fiche_affiche_logos_et_regle() -> void:
 	var golem: EnemyDef = ContentDB.enemies.get(&"golem")
 	if golem == null:
 		return
+	# Un monstre JAMAIS CROISE n a qu une fiche d ombre (chantier P) : on le
+	# fait rencontrer, puis on rend le profil tel qu il etait.
+	var connu: bool = SaveData.is_enemy_discovered(golem.id)
+	SaveData.discover_enemy(golem.id)
 	var gp := GalleryPanel.new()
 	gp.size = Vector2(1000, 1500)
 	attach(gp)
@@ -368,6 +372,8 @@ func _la_fiche_affiche_logos_et_regle() -> void:
 			ok(logo, "golem : la ligne %d porte le logo de l element" % int(t))
 	ok(lignes >= 3, "le golem montre ses ecarts")
 	detach(gp)
+	if not connu:
+		(SaveData.profile().get("discovered_enemies", []) as Array).erase(String(golem.id))
 
 
 func _a_le_tag(items: Array, tag: int) -> bool:

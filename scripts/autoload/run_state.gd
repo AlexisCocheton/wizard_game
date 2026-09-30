@@ -969,8 +969,9 @@ func take_next_spell_multiplier() -> float:
 
 
 ## Propose `count` cartes distinctes, TIREES DANS levelup_pool() du niveau et du
-## mode en cours : la rarete est tiree (80/15/5 pour un sort, table des passifs
-## pour un passif), puis on complete avec d autres raretes si le pool est court.
+## mode en cours : la rarete est tiree (table de campagne ou 80/15/5 pour un
+## sort, voir roll_spell_rarity ; table des passifs pour un passif), puis on
+## complete avec d autres raretes si le pool est court.
 ##
 ## Il n y a plus d offre de rarete imposee (l ancienne recompense de boss) : TOUTE
 ## offre passe par ici, donc par le pool. C est ce qui rend le pool vrai — une
@@ -998,14 +999,11 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 		# passifs, qui connait la COMMUNE. La table des sorts ne la tire jamais et
 		# le repli passait par RARE, jamais epuisee : les quatre passifs communs
 		# n etaient JAMAIS proposes.
-		var voulue: GameEnums.Rarity = roll_passive_rarity() if passif else roll_rarity()
+		# Meme defaut, cote SORTS, en campagne (retouche du 30/09) : voir
+		# roll_spell_rarity() et CAMPAIGN_RARITY_WEIGHTS.
+		var voulue: GameEnums.Rarity = roll_passive_rarity() if passif \
+			else roll_spell_rarity(current_level_def, mode)
 		# Replis, du plus proche au plus lointain, si la rarete voulue est epuisee.
-		# LIMITE ASSUMEE (chantier P) : la table des SORTS (DEC-004) ne tire
-		# jamais la commune. Dans un pool de campagne, les communes du deck ne
-		# sortent donc qu en repli, quand rare et epique sont epuisees dans
-		# l offre. C est la regle d avant, gardee : ajouter la commune a la
-		# table des sorts changerait l equilibrage mesure. A trancher par le
-		# co-auteur si le deck doit peser davantage.
 		var order: Array = [voulue, GameEnums.Rarity.RARE, GameEnums.Rarity.EPIC,
 			GameEnums.Rarity.COMMON, GameEnums.Rarity.LEGENDARY]
 		for r in order:
@@ -1065,6 +1063,49 @@ const PASSIVE_RARITY_WEIGHTS: Dictionary = {
 	GameEnums.Rarity.EPIC: 0.15,
 	GameEnums.Rarity.LEGENDARY: 0.05,
 }
+
+## Table de rarete des SORTS proposes en CAMPAGNE (retouche du 30/09).
+##
+## LE DEFAUT : la table des sorts (GameConfig.RARITY_WEIGHTS, 80/15/5, DEC-004)
+## ne tire jamais la commune. Elle a ete ecrite pour un pool qui etait TOUT le
+## catalogue ; depuis que le pool de campagne se limite au niveau (son deck, ses
+## cartes nouvelles, les cartes de ses objectifs), les communes de ce pool ne
+## sortaient qu en REPLI, quand rare et epique etaient epuisees dans l offre :
+## une commune nouvelle du niveau n etait presque jamais proposee.
+##
+## LE CHOIX : epique 15 % et legendaire 5 %, EXACTEMENT comme DEC-004, pour que
+## le haut de la courbe de puissance ne bouge pas ; les 80 % de "rare" sont
+## partages A PARTS EGALES entre commune et rare. Parts egales parce que, dans un
+## pool de niveau, les communes sont les cartes du deck du niveau et ses cartes
+## nouvelles : elles sont le contenu MEME du niveau, pas un fond de catalogue.
+## C est la forme de la table des passifs du chantier P, pour la meme raison.
+## Puis on tire UNIFORMEMENT parmi les cartes du pool de cette rarete.
+##
+## HORS CAMPAGNE (Infini, Massacre) et sans niveau (tests a froid, banc hors
+## partie), la table de DEC-004 reste la seule : le pool y est la collection
+## entiere du joueur, et c est l equilibrage qu elle a mesure.
+const CAMPAIGN_RARITY_WEIGHTS: Dictionary = {
+	GameEnums.Rarity.COMMON: 0.40,
+	GameEnums.Rarity.RARE: 0.40,
+	GameEnums.Rarity.EPIC: 0.15,
+	GameEnums.Rarity.LEGENDARY: 0.05,
+}
+
+
+## Tire la rarete d un SORT propose. Campagne avec un niveau : table de campagne
+## (qui connait la commune) ; sinon la table de DEC-004. Consomme UN seul tirage
+## dans les deux cas, comme roll_rarity : une graine donnee garde la meme suite
+## de tirages quel que soit le mode.
+func roll_spell_rarity(level_def: LevelDef, level_mode: GameEnums.Mode) -> GameEnums.Rarity:
+	if level_def == null or level_mode != GameEnums.Mode.EXPLORATION:
+		return roll_rarity()
+	var r: float = _rng.randf()
+	var acc: float = 0.0
+	for rarity: GameEnums.Rarity in CAMPAIGN_RARITY_WEIGHTS:
+		acc += CAMPAIGN_RARITY_WEIGHTS[rarity]
+		if r < acc:
+			return rarity
+	return GameEnums.Rarity.RARE
 
 
 ## LE pool de montee de niveau. Toutes les offres de cartes passent par ici
@@ -1131,11 +1172,22 @@ func roll_passive_rarity() -> GameEnums.Rarity:
 
 
 ## Equipe, au DEPART du combat, les passifs que le joueur a choisis dans l ecran
-## de deck (SaveData.equipped_passive_cards). Rien si l acte ne les admet pas :
-## un niveau d acte 1 part toujours sans passif, meme si le profil en a equipe.
-## Appele par GameController.start_level() APRES reset(), qui vide la barre.
+## de deck (SaveData.equipped_passive_cards). Appele par
+## GameController.start_level() APRES reset(), qui vide la barre.
 ## Rend le nombre de passifs equipes.
+##
+## SEULEMENT DANS LES MODES SANS FIN (retouche du co-auteur apres test, 30/09 :
+## "tres bien realise, mais ne pas rendre accessible au combat de campagne").
+## Un niveau de campagne part TOUJOURS sans passif : ses passifs viennent des
+## montees de niveau, a partir de l acte 2, comme avant. Raison : un niveau de
+## campagne est un combat MESURE (banc, objectifs, seuils regles sur une sonde
+## de parties) ; trois passifs choisis a l avance le rendraient plus facile a
+## mesure que la collection grossit, et les objectifs perdraient leur sens. Le
+## deck construit et ses passifs sont l affaire des modes ou le joueur compose.
+## Hors campagne, la regle d acte tient toujours (passives_allowed).
 func equip_saved_passives() -> int:
+	if not GameEnums.is_endless(mode):
+		return 0
 	if not passives_allowed(current_level_def, mode):
 		return 0
 	var n: int = 0
