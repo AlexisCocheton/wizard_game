@@ -65,7 +65,7 @@ func _challenges() -> void:
 		_challenge("ch_slayer_100", "Chasseur",
 			"Tuer 100 monstres, toutes parties confondues.", "enemies_killed", 100, R.COMMON),
 		_challenge("ch_cards_25", "Collectionneur",
-			"Decouvrir 25 cartes differentes.", "cards_discovered", 25, R.COMMON),
+			"Obtenir 25 cartes differentes.", "cards_discovered", 25, R.COMMON),
 		_challenge("ch_bestiary_10", "Curieux",
 			"Rencontrer 10 especes de monstres.", "enemies_discovered", 10, R.COMMON),
 

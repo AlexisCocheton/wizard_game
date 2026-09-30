@@ -47,6 +47,7 @@ func run() -> void:
 	_test_contenu_de_niveau_construit_en_code()
 	_test_ou_obtenir_distingue_deck_et_montee()
 	_test_meme_gris_au_grimoire_et_au_deck()
+	_test_profil_grimoire_et_deck_meme_compteur()
 	# Etat propre pour les suites suivantes.
 	RunState.reset()
 	RunState.current_level_def = null
@@ -54,6 +55,92 @@ func run() -> void:
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
 	reset_gauge_at_normal_speed()
+
+
+## LE PROFIL, LE GRIMOIRE ET LE DECK DONNENT LE MEME CHIFFRE (retouche du 30/09).
+## Le profil affichait "Cartes decouvertes N / catalogue" (discovered_count) :
+## un total qui devoilait les cartes invisibles, et un numerateur lu brut dans
+## la liste du profil, qu un id perime gonflait. Le succes « Collectionneur »
+## lisait ce meme numerateur brut. Ici un id perime est glisse expres dans le
+## profil : il doit etre ignore PARTOUT, et le succes doit compter les cartes
+## OBTENUES, comme les ecrans.
+func _test_profil_grimoire_et_deck_meme_compteur() -> void:
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
+	var legendaire: SpellCard = _sorts(GameEnums.Rarity.LEGENDARY)[0]
+	SaveData.discover_card(legendaire.id)
+	var perimes: Array = SaveData.profile().get("discovered_cards", [])
+	perimes.append("carte_retiree_du_jeu")
+	SaveData.profile()["discovered_cards"] = perimes
+	# Un monstre rencontre, et une MUNITION vue : ni le bestiaire ni le succes
+	# ne la comptent comme une espece.
+	var atteints: Array = SaveData.reachable_enemy_ids().keys()
+	ok(not atteints.is_empty(), "un profil neuf a des monstres a rencontrer")
+	if not atteints.is_empty():
+		SaveData.discover_enemy(StringName(atteints[0]))
+	for e: EnemyDef in ContentDB.enemies.values():
+		if e != null and e.projectile:
+			SaveData.discover_enemy(e.id)
+			break
+
+	var lignes: Dictionary = {}
+	for l: Array in ProfilePanel.collection_rows():
+		lignes[l[0]] = l[1]
+	var sorts: String = lignes.get(ProfilePanel.ROW_SPELLS, "?")
+	var passifs: String = lignes.get(ProfilePanel.ROW_PASSIVES, "?")
+	var betes: String = lignes.get(ProfilePanel.ROW_BEASTS, "?")
+	var entete_sorts: String = GalleryPanel.header_text(GalleryPanel.Section.SPELLS)
+	ok(entete_sorts.begins_with(sorts + " "),
+		"profil et grimoire : meme compteur de sorts (%s / %s)" % [sorts, entete_sorts])
+	ok(DeckPanel.collection_counter().begins_with(sorts + " "),
+		"profil et deck : meme compteur de sorts (%s / %s)"
+		% [sorts, DeckPanel.collection_counter()])
+	ok(GalleryPanel.header_text(GalleryPanel.Section.PASSIVES).begins_with(passifs + " "),
+		"profil et grimoire : meme compteur de passifs (%s)" % passifs)
+	ok(GalleryPanel.header_text(GalleryPanel.Section.BEASTS).begins_with(betes + " "),
+		"profil et bestiaire : meme compteur de monstres (%s)" % betes)
+
+	# Le total : sorts + passifs = barre du menu = succes « Collectionneur ».
+	var n_sorts: Array = SaveData.card_counts(0)
+	var n_passifs: Array = SaveData.card_counts(1)
+	var menu_script: GDScript = load("res://scripts/ui/main_menu.gd")
+	eq(menu_script.cards_counter_text(), "Cartes %d / %d" % [
+		int(n_sorts[0]) + int(n_passifs[0]), int(n_sorts[1]) + int(n_passifs[1])],
+		"la barre du menu est la somme des deux lignes du profil")
+	var victoire: GDScript = load("res://scripts/ui/victory_screen.gd")
+	eq(victoire.cards_obtained(), int(n_sorts[0]) + int(n_passifs[0]),
+		"le succes compte les cartes OBTENUES, comme les ecrans")
+	ok(victoire.cards_obtained() < SaveData.discovered_count(),
+		"l id perime du profil n est pas compte (%d obtenues, %d ids bruts)"
+		% [victoire.cards_obtained(), SaveData.discovered_count()])
+	eq(victoire.enemies_met(), int(SaveData.enemy_counts()[0]),
+		"le succes du bestiaire compte ce que le bestiaire compte")
+
+	# Les legendaires : obtenues / VISIBLES, comme les pages du grimoire.
+	var leg_vues: int = 0
+	var leg_obtenues: int = 0
+	for c: SpellCard in GalleryPanel.entries_of(GalleryPanel.Section.SPELLS) 			+ GalleryPanel.entries_of(GalleryPanel.Section.PASSIVES):
+		if c.rarity == GameEnums.Rarity.LEGENDARY:
+			leg_vues += 1
+			if SaveData.is_discovered(c.id):
+				leg_obtenues += 1
+	ok(leg_obtenues > 0, "la legendaire obtenue est comptee")
+	eq(lignes.get(ProfilePanel.ROW_LEGENDARIES, "?"), "%d / %d" % [leg_obtenues, leg_vues],
+		"les legendaires du profil = celles que montrent les pages du grimoire")
+
+	# Et l ECRAN de profil affiche bien ces lignes.
+	var panel := ProfilePanel.new()
+	attach(panel)
+	panel.show_section(ProfilePanel.Section.STATS)
+	for titre in lignes.keys():
+		var trouve: String = ""
+		for n: Node in panel.find_children("*", "Label", true, false):
+			if (n as Label).text == titre and n.get_parent().get_child_count() > 1:
+				trouve = (n.get_parent().get_child(1) as Label).text
+		eq(trouve, lignes[titre], "le profil affiche la ligne %s" % titre)
+	detach(panel)
+	SaveData.reset_profile()
+	ContentDB.discover_starters()
 
 
 # --- Outils --------------------------------------------------------------

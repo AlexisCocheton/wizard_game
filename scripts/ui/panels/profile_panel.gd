@@ -385,23 +385,62 @@ func _cosmetic_group(titre: String, kind: int, eteint: bool = false) -> void:
 		grille.add_child(b)
 
 
+## --- COMPTEURS DE COLLECTION ---
+##
+## LES MEMES CHIFFRES QUE LE GRIMOIRE ET L ECRAN DE DECK (retouche du 30/09).
+## Le profil affichait "Cartes decouvertes 8 / 64" : le total du CATALOGUE, et un
+## numerateur lu brut dans la liste du profil (discovered_count), qui comptait
+## aussi un id perime. Le grimoire, lui, disait "8 / 14 obtenues" : deux ecrans,
+## deux chiffres pour la meme collection, et le profil devoilait 50 cartes que
+## la regle des trois etats rend invisibles. Chaque ligne passe maintenant par
+## le compteur honnete de SaveData (obtenues / VISIBLES) :
+##   - Sorts   = SaveData.card_counts(0) = section SORTS du grimoire = deck ;
+##   - Passifs = SaveData.card_counts(1) = section PASSIFS du grimoire ;
+##   - Legendaires : la meme regle restreinte a la rarete (une legendaire
+##     invisible n est pas annoncee non plus) ;
+##   - Monstres = SaveData.enemy_counts() = section BESTIAIRE du grimoire.
+## Sorts et passifs sont separes comme au grimoire : un total unique ne se
+## comparerait a aucun des deux ecrans. Leur somme est celle de la barre du menu.
+## Verrouille par test_card_progression (les trois ecrans, le meme chiffre).
+const ROW_SPELLS: String = "Sorts obtenus"
+const ROW_PASSIVES: String = "Passifs obtenus"
+const ROW_LEGENDARIES: String = "Legendaires obtenues"
+const ROW_BEASTS: String = "Monstres rencontres"
+
+
+## [[titre, valeur], ...] dans l ordre d affichage. Statique : le test la
+## compare aux compteurs des autres ecrans sans construire le panneau.
+static func collection_rows() -> Array:
+	return [
+		[ROW_SPELLS, ratio_text(SaveData.card_counts(0))],
+		[ROW_PASSIVES, ratio_text(SaveData.card_counts(1))],
+		[ROW_LEGENDARIES, ratio_text(
+			SaveData.card_counts(-1, GameEnums.Rarity.LEGENDARY))],
+		[ROW_BEASTS, ratio_text(SaveData.enemy_counts())],
+	]
+
+
+## "8 / 14" : le debut exact de CollectionStyle.counter, sans le mot, que le
+## titre de la ligne porte deja.
+static func ratio_text(counts: Array) -> String:
+	return "%d / %d" % [int(counts[0]), int(counts[1])]
+
+
 ## --- STATS ---
 ##
 ## Ce que le joueur a vraiment fait, en lignes courtes. Rien d invente : chaque
 ## chiffre vient de SaveData ou de ContentDB.
 func _build_stats() -> void:
-	var total_cards: int = ContentDB.cards.size()
-	var legendaries: int = ContentDB.cards_of_rarity(GameEnums.Rarity.LEGENDARY).size()
 	var cleared: int = 0
 	for level: LevelDef in ContentDB.levels.values():
 		if SaveData.is_level_cleared(level.id):
 			cleared += 1
 
 	_box.add_child(UiTheme.label("PROGRESSION", UiTheme.FONT_BUTTON, UiTheme.GOLD))
-	_row("Cartes decouvertes", "%d / %d" % [SaveData.discovered_count(), total_cards])
-	_row("Legendaires obtenues", "%d / %d"
-		% [SaveData.unlocked_legendaries().size(), legendaries], Color(0.62, 0.45, 0.05))
-	_row("Monstres rencontres", "%d" % SaveData.discovered_enemies_count())
+	for ligne: Array in collection_rows():
+		_row(String(ligne[0]), String(ligne[1]),
+			UiTheme.rarity_ink(GameEnums.Rarity.LEGENDARY) if ligne[0] == ROW_LEGENDARIES
+			else UiTheme.TEXT_DARK)
 	_row("Niveaux termines", "%d / %d" % [cleared, ContentDB.levels.size()],
 		UiTheme.GREEN.darkened(0.4))
 
