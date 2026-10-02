@@ -173,6 +173,7 @@ func _run_all() -> void:
 	await _check_boss_reward()
 	await _check_precast()
 	await _check_upgrade_panel()
+	await _check_w8_screens()  # CHANTIER W8 : mediter, bruler vise, echange de passif, aura
 	await _check_cartes_petrifiees()
 	await _showcase_mecaniques_v3()
 	await _check_objectifs_en_combat()
@@ -2326,3 +2327,93 @@ func _vitrine_passifs_deck(panel: DeckPanel) -> void:
 	panel.close_passive_picker()
 	SaveData.load_from_dictionary(profil)
 	panel.refresh()
+
+
+## CHANTIER W8 — les ecrans de la montee de niveau et les protecteurs, joues dans
+## une vraie partie NON headless (les panneaux ne s ouvrent qu ainsi), et
+## captures en mode visuel :
+##   - l ecran de choix avec BRULER et MEDITER, puis bruler arme (pouvoir grise) ;
+##   - la carte brulee qui attend d etre visee, au-dessus de la main ;
+##   - l echange d un quatrieme passif, trois cartes et un refus ;
+##   - le bandeau « la vague suivante arrive » et deux Gardiens-totems dont l un
+##     est dissipe (son halo disparait).
+func _check_w8_screens() -> void:
+	var g: GameController = (load("res://scenes/game/Game.tscn") as PackedScene).instantiate()
+	add_child(g)
+	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
+	# APRES start_level, qui remet `running` a vrai (piege consigne en memoire).
+	g.running = false
+	var hud: Node = g.get_node_or_null("HUD")
+	var boule: SpellCard = ContentDB.cards.get(&"fireball")
+	var hate: SpellCard = ContentDB.cards.get(&"quickening")
+	var passif: SpellCard = ContentDB.cards.get(&"pass_fireboom")
+	if hud == null or boule == null or hate == null or passif == null:
+		_fail("ecrans W8 : partie, HUD ou cartes introuvables")
+		g.queue_free()
+		return
+	var totem: EnemyDef = ContentDB.enemies.get(&"totem_guardian")
+	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
+	var totems: Array[Enemy] = []
+	for k in 2:
+		var p := Vector2(300.0 + k * totem.aura_shield_radius * 0.6, 520.0)
+		totems.append(g.battlefield.spawn_enemy(totem, p.x, 1.0, p))
+	for k in 3:
+		g.battlefield.spawn_enemy(gnome, 700.0 + k * 110.0, 1.0, Vector2(700.0 + k * 110.0, 760.0))
+	for k in 40:
+		g.battlefield.simulate(FIXED_DELTA)
+
+	# 1) L ecran de choix : trois cartes, BRULER et MEDITER.
+	var offre: Array[SpellCard] = [boule, hate, passif]
+	RunState.pending_offer = offre.duplicate()
+	g.cards_offered.emit(offre)
+	await get_tree().process_frame
+	var bruler: Button = hud.find_child("Bruler", true, false) as Button
+	if bruler == null or hud.find_child("Mediter", true, false) == null:
+		_fail("ecran de choix : BRULER ou MEDITER manque")
+	await _shot("w8_choix_mediter")
+	if bruler != null:
+		bruler.button_pressed = true
+		await get_tree().process_frame
+		await _shot("w8_choix_bruler_arme")
+		# Toucher le POUVOIR en mode bruler ne fait rien : l ecran reste ouvert.
+		hud.call("_pick", 2)
+		if RunState.pending_offer.size() != offre.size():
+			_fail("bruler un pouvoir a consomme l offre")
+		hud.call("_pick", 0)
+	if RunState.burned_card != boule:
+		_fail("la Boule de feu brulee n attend pas d etre visee")
+	await get_tree().process_frame
+	await _shot("w8_bruler_viser")
+	var point := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.75, 760.0)
+	if not g.cast_burned(point):
+		_fail("la carte brulee ne part pas quand on la lache sur le terrain")
+	await get_tree().process_frame
+
+	# 2) L echange d un quatrieme passif.
+	RunState.equipped_passives.clear()
+	for id in [&"pass_apotheosis", &"pass_celerity", &"pass_frostbite"]:
+		RunState.equip_passive(ContentDB.cards.get(id))
+	RunState.gain_passive(passif)
+	await get_tree().process_frame
+	var swap: PassiveSwapPanel = g.get("_passive_swap_panel")
+	if swap == null or not swap.visible:
+		_fail("l echange de passif n ouvre pas son panneau")
+	await _shot("w8_echange_passif")
+	if swap != null:
+		swap.refused.emit()
+	if RunState.pending_passive != null:
+		_fail("refuser l echange laisse un passif en attente")
+
+	# 3) Le bandeau de vague et un totem dissipe : le halo du dissipe disparait.
+	g.battlefield.dispel_at(totems[0].position, 40.0, [GameEnums.DamageTag.ARCANE])
+	if totems[0].aura_active():
+		_fail("la dissipation ne coupe pas l aura du Gardien-totem")
+	hud.call("show_overtime_banner")
+	await _laisser_jouer(0.4)
+	if String(hud.call("overtime_banner_text")) == "":
+		_fail("le bandeau « la vague suivante arrive » ne s affiche pas")
+	await _shot("w8_vague_suivante_aura")
+	RunState.equipped_passives.clear()
+	RunState.pending_offer.clear()
+	g.queue_free()
+	await get_tree().process_frame
