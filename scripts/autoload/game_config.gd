@@ -364,10 +364,13 @@ const WAVE_OVERTIME_TRAVEL_FACTOR: float = 1.25
 ## pour lancer deux ou trois sorts derriere la dissipation, assez court pour que
 ## la carte reste un geste de timing et pas une suppression definitive.
 const AURA_DISPEL_SECONDS: float = 8.0
-## PAT D AURA : si TOUS les monstres frappables sont couverts par une aura pendant
-## ce temps de monde (deux Gardiens-totems ou deux Echos d Ymoa qui se couvrent
-## l un l autre, et rien d autre a viser), les auras se brisent comme sous une
-## dissipation (AURA_DISPEL_SECONDS). C est le filet qui garantit qu une
+## PAT D AURA : si TOUS les monstres frappables sont couverts par une aura ET
+## qu aucun ne descend vers le mage pendant ce temps de monde (deux Echos d Ymoa
+## qui campent en se couvrant l un l autre, et rien d autre a viser), les auras se
+## brisent comme sous une dissipation (AURA_DISPEL_SECONDS). Des proteges qui
+## MARCHENT (Gardiens-totems) ne declenchent rien : ils finiront au contact, la
+## vague n est pas imbattable (banc W8 : sans cette condition, lvl_20 passait de
+## 23 a 30 victoires sur 30). C est le filet qui garantit qu une
 ## protection ne rend JAMAIS une vague imbattable, meme sans carte de dissipation
 ## dans le deck. Le delai laisse voir l aura tenir avant de ceder : ce n est pas
 ## une invulnerabilite qui n existe pas, c est une invulnerabilite qui s use.

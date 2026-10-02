@@ -27,6 +27,7 @@ func run() -> void:
 	_test_deux_totems_croises_se_protegent()
 	_test_la_dissipation_coupe_l_aura_meme_entre_protecteurs()
 	_test_l_aura_revient_apres_la_coupure()
+	_test_des_proteges_qui_marchent_ne_font_pas_de_pat()
 	_test_le_pat_d_aura_rend_la_vague_battable()
 	_test_pas_de_pat_tant_qu_une_cible_est_a_decouvert()
 	_test_le_glouton_gagne_en_force_plafonnee()
@@ -306,20 +307,43 @@ func _test_l_aura_revient_apres_la_coupure() -> void:
 	ok(_bf.is_shielded_by_aura(t[0]), "et protegent de nouveau")
 
 
-func _test_le_pat_d_aura_rend_la_vague_battable() -> void:
+## Deux porteurs qui CAMPENT : des Echos d Ymoa poses SUR leur ligne de camp
+## (keeps_distance_at), donc immobiles — le cas qui figeait la partie pour de bon.
+func _deux_campeurs_proteges() -> Array[Enemy]:
+	_fresh()
+	var d: EnemyDef = ContentDB.enemies.get(&"demon_circle_echo")
+	var y: float = GameConfig.MAGE_LINE_Y - d.keeps_distance_at
+	var ecart: float = d.aura_shield_radius * 0.5
+	var a: Enemy = _bf.spawn_enemy(d, 400.0, 1.0, Vector2(400.0, y))
+	var b: Enemy = _bf.spawn_enemy(d, 400.0 + ecart, 1.0, Vector2(400.0 + ecart, y))
+	_sim(GameConfig.SPAWN_FADE_TIME + 0.1)
+	return [a, b]
+
+
+func _test_des_proteges_qui_marchent_ne_font_pas_de_pat() -> void:
 	var t: Array[Enemy] = _deux_totems()
+	ok(t[0].definition.base_speed > 0.0, "(les Gardiens-totems descendent)")
+	_sim(GameConfig.AURA_STALEMATE_SECONDS * 2.0)
+	ok(t[0].aura_active() and t[1].aura_active(),
+		"des proteges qui marchent finiront au contact : pas de pat, les auras tiennent")
+
+
+func _test_le_pat_d_aura_rend_la_vague_battable() -> void:
+	var t: Array[Enemy] = _deux_campeurs_proteges()
+	var y0: float = t[0].position.y
 	ok(_bf.all_targets_shielded(), "(plus rien n est a decouvert)")
 	_sim(GameConfig.AURA_STALEMATE_SECONDS * 0.5)
 	ok(t[0].aura_active() and t[1].aura_active(), "le pat ne cede pas tout de suite")
 	_sim(GameConfig.AURA_STALEMATE_SECONDS * 0.5 + 0.2)
+	feq(t[0].position.y, y0, "(les campeurs n ont pas bouge)", 0.5)
 	not_ok(t[0].aura_active() or t[1].aura_active(), "le pat dure : les auras cedent")
 	ok(_bf.damage_enemy(t[0], 10.0, _carte_arcane()), "la vague redevient battable")
 
 
 func _test_pas_de_pat_tant_qu_une_cible_est_a_decouvert() -> void:
-	var t: Array[Enemy] = _deux_totems()
-	var d: EnemyDef = ContentDB.enemies.get(&"totem_guardian")
-	var loin := Vector2(t[1].position.x + d.aura_shield_radius * 2.5, 500.0)
+	var t: Array[Enemy] = _deux_campeurs_proteges()
+	var d: EnemyDef = t[0].definition
+	var loin := Vector2(t[1].position.x + d.aura_shield_radius * 2.5, t[1].position.y)
 	_bf.spawn_enemy(_campeur("t_decouvert"), loin.x, 1.0, loin)
 	_sim(GameConfig.SPAWN_FADE_TIME + GameConfig.AURA_STALEMATE_SECONDS + 0.5)
 	not_ok(_bf.all_targets_shielded(), "(un monstre est a decouvert)")

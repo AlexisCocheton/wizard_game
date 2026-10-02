@@ -222,7 +222,7 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 		# qui se couvrent l un l autre se lisent comme invincibles.
 		out.append(("Protege de tout degat les monstres autour de lui (aura %s), y compris"
 			+ " un autre protecteur. Une dissipation eteint son aura %s s ; si plus rien"
-			+ " n est a decouvert, elle cede d elle-meme")
+			+ " n est a decouvert ni n avance, elle cede d elle-meme")
 			% [portee, _num(GameConfig.AURA_DISPEL_SECONDS)])
 	# L INVOCATION. Defaut PRE-EXISTANT trouve en relisant la fiche du Bourreau :
 	# onze comportements etaient traduits et pas celui-la, alors que pour

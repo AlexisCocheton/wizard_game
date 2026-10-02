@@ -1980,9 +1980,10 @@ func _obj_note_death(e: Enemy, def: EnemyDef) -> void:
 # Deux reponses, la seconde est le filet de la premiere :
 #   1. la DISSIPATION coupe l aura des porteurs touches (Enemy._w8_on_dispel,
 #      GameConfig.AURA_DISPEL_SECONDS), meme s ils se couvrent entre eux ;
-#   2. le PAT D AURA : quand plus RIEN de frappable n est a decouvert pendant
-#      GameConfig.AURA_STALEMATE_SECONDS, toutes les auras cedent pour la meme
-#      duree. Sans carte de dissipation dans le deck, la vague reste battable.
+#   2. le PAT D AURA : quand plus RIEN de frappable n est a decouvert ni ne
+#      descend pendant GameConfig.AURA_STALEMATE_SECONDS, toutes les auras
+#      cedent pour la meme duree. Sans carte de dissipation dans le deck, la
+#      vague reste battable.
 # =====================================================================
 
 ## Temps de monde passe avec TOUS les monstres frappables couverts par une aura.
@@ -1995,7 +1996,9 @@ func _w8_auras_simulate(wd: float) -> void:
 		if _alive(e) and e.has_aura():
 			e.tick_aura(wd)
 			porteurs.append(e)
-	if porteurs.is_empty() or not all_targets_shielded():
+	# Releve AVANT le test : un monstre qui descend ce tour-ci n est pas cale.
+	var avance: bool = _w8_someone_advances()
+	if porteurs.is_empty() or avance or not all_targets_shielded():
 		_aura_stalemate_time = 0.0
 		return
 	_aura_stalemate_time += wd
@@ -2018,6 +2021,24 @@ func all_targets_shielded() -> bool:
 		if not is_shielded_by_aura(e):
 			return false
 	return un
+
+
+## Un monstre frappable DESCEND-il vers le mage depuis la derniere image ? Le pat
+## d aura ne vaut que pour des proteges qui CALENT (campeurs a leur ligne, tours
+## immobiles, monstres bloques). Des proteges qui marchent finiront au contact du
+## mage : la vague n est pas imbattable, elle se paie en vitesse. BANC W8 : sans
+## cette condition, les Gardiens-totems de lvl_20, qui descendent, cedaient en
+## 4 s et le niveau passait de 23 a 30 victoires sur 30, hors de la fenetre.
+func _w8_someone_advances() -> bool:
+	var oui: bool = false
+	for e in enemies:
+		if not _targetable(e):
+			continue
+		var avant: float = float(e.get_meta(&"w8_prev_y", e.position.y))
+		if e.position.y > avant + 0.001:
+			oui = true
+		e.set_meta(&"w8_prev_y", e.position.y)
+	return oui
 
 
 ## Pour les tests : depuis combien de temps de monde dure le pat d aura en cours.
