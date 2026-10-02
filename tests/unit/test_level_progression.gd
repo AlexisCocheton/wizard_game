@@ -21,9 +21,9 @@ func get_suite_name() -> String:
 
 
 ## Parties jouees par objectif au banc pour mesurer MESURES (voir plus bas).
-## 60 et non 30 : le banc n est pas deterministe d un processus a l autre
-## (README_equilibrage, « Le bot du banc »), et deux objectifs voisins se
-## departagent mal sur 30 parties.
+## 60 et non 30 : deux objectifs voisins se departagent mal sur 30 parties.
+## RE-MESURER : tools/objective_bench.tscn (deterministe depuis W8, une ligne
+## prete a coller par niveau ; README_equilibrage, « Le banc des objectifs »).
 const PARTIES_DU_BANC: int = 60
 
 ## LES TAUX MESURES, qui verrouillent l ordre de difficulte.
