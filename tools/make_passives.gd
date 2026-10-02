@@ -55,7 +55,8 @@ func _spec(key: String, magnitude: float) -> EffectSpec:
 ## `cast_time` reste renseigne bien qu un passif ne s incante plus : la fiche du
 ## grimoire affiche le champ, et un 0 s y lirait comme un bug.
 func _passive(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
-		seuil: int, key: String, magnitude: float) -> SpellCard:
+		seuil: int, key: String, magnitude: float,
+		element: GameEnums.DamageTag = GameEnums.DamageTag.NONE) -> SpellCard:
 	var c := SpellCard.new()
 	c.id = StringName(id)
 	c.display_name = dname
@@ -66,6 +67,19 @@ func _passive(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 	c.targeting = GameEnums.Targeting.NONE
 	c.effects = [_spec(key, magnitude)]
 	c.is_passive = true
+	# Vague 8 : un passif porte un element quand sa regle en a un (Combustion
+	# brule, la Morsure gele, l Ecorce pousse) ; son logo le dit sur la carte.
+	c.element = element
+	return c
+
+
+## PASSIF ELEMENTAIRE (vague 8) : la cle generique `passive_element`, l element
+## de la carte, et la regle amplifiee dans `stat` (RunState.ELEMENT_STATS).
+func _elemental(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
+		seuil: int, element: GameEnums.DamageTag, stat: StringName,
+		pct: float) -> SpellCard:
+	var c: SpellCard = _passive(id, dname, desc, rarity, seuil, "passive_element", pct, element)
+	c.effects[0].params = {&"stat": stat}
 	return c
 
 
@@ -103,7 +117,8 @@ func _passives() -> void:
 	# lisible a l ecran — on voit exactement ce qu il fait, et quand il s eteint.
 	_emit(_passive("pass_bark", "Ecorce vive",
 		"Au-dela de 130 % de vitesse : un mur de ronces pousse a chaque vague.",
-		GameEnums.Rarity.COMMON, 130, "passive_start_wall", 1.0))
+		GameEnums.Rarity.COMMON, 130, "passive_start_wall", 1.0,
+		GameEnums.DamageTag.NATURE))
 
 	# ------------------------------------------------------------------- RARES
 	# Une regle en PLUS, comprehensible d un coup mais qui demande d y penser.
@@ -112,8 +127,9 @@ func _passives() -> void:
 	# "Fire boom", l exemple donne mot pour mot par le testeur, seuil compris.
 	_emit(_passive("pass_fireboom", "Combustion",
 		"Au-dela de 140 % de vitesse : les monstres explosent en mourant et"
-		+ " infligent 5 degats autour d eux.",
-		GameEnums.Rarity.RARE, 140, "passive_death_blast", 5.0))
+		+ " infligent 5 degats de FEU autour d eux.",
+		GameEnums.Rarity.RARE, 140, "passive_death_blast", 5.0,
+		GameEnums.DamageTag.FIRE))
 
 	_emit(_passive("pass_companion", "Compagnon fidele",
 		"Au-dela de 150 % de vitesse : un allie apparait au debut de chaque vague.",
@@ -123,8 +139,9 @@ func _passives() -> void:
 	# n a pas a choisir des cartes de givre pour ralentir la vague.
 	_emit(_passive("pass_frostbite", "Morsure de givre",
 		"Au-dela de 165 % de vitesse : tout degat, quel que soit son element,"
-		+ " ralentit sa cible de 30 % pendant 1,5 s.",
-		GameEnums.Rarity.RARE, 165, "passive_chill_on_hit", 30.0))
+		+ " ralentit sa cible de 30 % pendant 1,5 s (un ralentissement de GLACE).",
+		GameEnums.Rarity.RARE, 165, "passive_chill_on_hit", 30.0,
+		GameEnums.DamageTag.ICE))
 
 	# Boucle de retour : tuer rend la vitesse, la vitesse allume les passifs.
 	# Seuil haut dans sa rarete, parce qu il s auto-entretient une fois lance.
@@ -180,3 +197,89 @@ func _passives() -> void:
 		"Au-dela de 400 % de vitesse : la vitesse multiplie aussi les degats de"
 		+ " vos sorts, comme elle multiplie deja l experience.",
 		GameEnums.Rarity.LEGENDARY, 400, "passive_speed_damage", 1.0))
+	_elementaires()
+
+
+## LES SEIZE PASSIFS ELEMENTAIRES (vague 8, demande du co-auteur) : « augmente
+## la duree des effets de poison ; augmente les degats des sorts de feu ;
+## diminue l incantation des sorts d arcane ; inventes-en d autres, au moins
+## deux par element ».
+##
+## Deux par element, et jamais deux fois la meme regle pour un element : une
+## regle SIMPLE (commune : incantation ou duree) et une regle qui change la
+## facon de jouer l element (rare ou epique : degats, zone, solidite des
+## objets, resistances percees). La regle choisie suit ce que l element FAIT :
+##   - degats pour les elements qui frappent (feu, foudre, arcane) ;
+##   - duree pour ceux qui durent (braises, gel, venin) ;
+##   - zone pour ceux qui couvrent (eau, vent) ;
+##   - solidite pour la nature, la seule a poser des objets que l on frappe ;
+##   - resistances percees pour la glace et le poison, les deux elements les
+##     plus souvent resistes ou immunises du bestiaire (l immunite tient).
+## Memes echelles que les autres passifs : rarete = complexite, seuil = force.
+## Comme tous les passifs, ils sont proposables des l acte 2 (regle existante,
+## test_card_progression) : un passif d un element absent du deck reste un
+## pari sur les cartes nouvelles du niveau. Le banc des 21 niveaux a mesure
+## que cette dilution du tirage ne casse aucun niveau (rapport du chantier).
+func _elementaires() -> void:
+	var T := GameEnums.DamageTag
+	var R := GameEnums.Rarity
+	# FEU
+	_emit(_elemental("pass_fire_embers", "Feu couvant",
+		"Au-dela de 115 % de vitesse : les effets des sorts de FEU durent 40 % plus"
+		+ " longtemps.", R.COMMON, 115, T.FIRE, RunState.ELEM_DURATION, 40.0))
+	_emit(_elemental("pass_fire_fury", "Coeur de braise",
+		"Au-dela de 150 % de vitesse : les sorts de FEU infligent 30 % de degats en plus.",
+		R.RARE, 150, T.FIRE, RunState.ELEM_DAMAGE, 30.0))
+	# EAU
+	_emit(_elemental("pass_water_spring", "Source vive",
+		"Au-dela de 110 % de vitesse : les sorts d EAU se lancent 25 % plus vite.",
+		R.COMMON, 110, T.WATER, RunState.ELEM_CAST, 25.0))
+	_emit(_elemental("pass_water_flood", "Crue",
+		"Au-dela de 145 % de vitesse : les zones des sorts d EAU sont 30 % plus larges.",
+		R.RARE, 145, T.WATER, RunState.ELEM_RADIUS, 30.0))
+	# NATURE
+	_emit(_elemental("pass_nature_sap", "Seve rapide",
+		"Au-dela de 120 % de vitesse : les sorts de NATURE se lancent 25 % plus vite.",
+		R.COMMON, 120, T.NATURE, RunState.ELEM_CAST, 25.0))
+	_emit(_elemental("pass_nature_roots", "Racines profondes",
+		"Au-dela de 140 % de vitesse : les objets de NATURE (murs, arbres, autels)"
+		+ " subissent 40 % de degats en moins.",
+		R.RARE, 140, T.NATURE, RunState.ELEM_STURDY, 40.0))
+	# VENT
+	_emit(_elemental("pass_wind_tailwind", "Vent arriere",
+		"Au-dela de 105 % de vitesse : les sorts de VENT se lancent 20 % plus vite.",
+		R.COMMON, 105, T.WIND, RunState.ELEM_CAST, 20.0))
+	_emit(_elemental("pass_wind_gale", "Grand frais",
+		"Au-dela de 160 % de vitesse : les zones des sorts de VENT sont 30 % plus larges.",
+		R.RARE, 160, T.WIND, RunState.ELEM_RADIUS, 30.0))
+	# FOUDRE
+	_emit(_elemental("pass_storm_reflex", "Reflexe de l eclair",
+		"Au-dela de 125 % de vitesse : les sorts de FOUDRE se lancent 25 % plus vite.",
+		R.COMMON, 125, T.LIGHTNING, RunState.ELEM_CAST, 25.0))
+	_emit(_elemental("pass_storm_surge", "Surtension",
+		"Au-dela de 155 % de vitesse : les sorts de FOUDRE infligent 35 % de degats"
+		+ " en plus.", R.RARE, 155, T.LIGHTNING, RunState.ELEM_DAMAGE, 35.0))
+	# GLACE
+	_emit(_elemental("pass_ice_winter", "Long hiver",
+		"Au-dela de 120 % de vitesse : les effets des sorts de GLACE durent 40 % plus"
+		+ " longtemps.", R.COMMON, 120, T.ICE, RunState.ELEM_DURATION, 40.0))
+	_emit(_elemental("pass_ice_bite", "Glace mordante",
+		"Au-dela de 210 % de vitesse : la resistance des monstres a la GLACE est"
+		+ " reduite de moitie. Une immunite reste une immunite.",
+		R.EPIC, 210, T.ICE, RunState.ELEM_PIERCE, 50.0))
+	# ARCANE
+	_emit(_elemental("pass_arcane_mind", "Esprit vif",
+		"Au-dela de 130 % de vitesse : les sorts d ARCANE se lancent 15 % plus vite.",
+		R.COMMON, 130, T.ARCANE, RunState.ELEM_CAST, 15.0))
+	_emit(_elemental("pass_arcane_lore", "Savoir interdit",
+		"Au-dela de 220 % de vitesse : les sorts d ARCANE infligent 25 % de degats"
+		+ " en plus.", R.EPIC, 220, T.ARCANE, RunState.ELEM_DAMAGE, 25.0))
+	# POISON
+	_emit(_elemental("pass_poison_linger", "Venin tenace",
+		"Au-dela de 110 % de vitesse : les effets des sorts de POISON durent 50 % plus"
+		+ " longtemps.", R.COMMON, 110, T.POISON, RunState.ELEM_DURATION, 50.0))
+	_emit(_elemental("pass_poison_corrode", "Venin corrosif",
+		"Au-dela de 230 % de vitesse : la resistance des monstres au POISON est"
+		+ " reduite de 60 %. Une immunite reste une immunite.",
+		R.EPIC, 230, T.POISON, RunState.ELEM_PIERCE, 60.0))
+

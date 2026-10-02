@@ -82,20 +82,20 @@ func run() -> void:
 
 func _test_le_facteur_suit_la_regle() -> void:
 	var neutre := _def("neutre")
-	feq(neutre.control_factor([T.FROST]), 1.0, "sans resistance, l effet est entier")
-	var glace := _def("glace", {T.FROST: 0.4})
-	feq(glace.control_factor([T.FROST]), 0.4, "l element de la carte attenue l effet")
+	feq(neutre.control_factor([T.ICE]), 1.0, "sans resistance, l effet est entier")
+	var glace := _def("glace", {T.ICE: 0.4})
+	feq(glace.control_factor([T.ICE]), 0.4, "l element de la carte attenue l effet")
 	feq(glace.control_factor([T.FIRE]), 1.0, "un autre element n est pas attenue")
-	var fragile := _def("fragile", {T.FROST: 1.8})
-	feq(fragile.control_factor([T.FROST]), 1.0,
+	var fragile := _def("fragile", {T.ICE: 1.8})
+	feq(fragile.control_factor([T.ICE]), 1.0,
 		"une FAIBLESSE ne renforce pas le controle (plafond a 1)")
-	var lourd := _def("lourd", {T.SLOW: 0.0, T.FROST: 1.0})
-	feq(lourd.control_factor([T.FROST, T.SLOW], true), 0.0,
+	var lourd := _def("lourd", {T.SLOW: 0.0, T.ICE: 1.0})
+	feq(lourd.control_factor([T.ICE, T.SLOW], true), 0.0,
 		"un ralentissement lit aussi la ligne SLOW")
-	feq(lourd.control_factor([T.FROST, T.SLOW], false), 1.0,
+	feq(lourd.control_factor([T.ICE, T.SLOW], false), 1.0,
 		"un effet qui ne ralentit pas ignore la ligne SLOW")
-	var bi := _def("bi", {T.FIRE: 0.3, T.PHYSICAL: 1.5})
-	feq(bi.control_factor([T.FIRE, T.PHYSICAL]), 0.3,
+	var bi := _def("bi", {T.FIRE: 0.3, T.WIND: 1.5})
+	feq(bi.control_factor([T.FIRE, T.WIND]), 0.3,
 		"sort bi-element : le pire element pour le joueur, comme les degats")
 
 
@@ -111,10 +111,10 @@ func _descente_en_zone(def: EnemyDef, tags: Array, ralentit: bool = true) -> flo
 
 
 func _test_le_champ_de_givre_ralentit_moins_un_monstre_de_glace() -> void:
-	var givre: Array = [T.FROST, T.SLOW]
+	var givre: Array = [T.ICE, T.SLOW]
 	var libre: float = _descente_en_zone(_def("temoin"), givre, false)
 	var neutre: float = _descente_en_zone(_def("neutre"), givre)
-	var glace: float = _descente_en_zone(_def("glace", {T.FROST: 0.3}), givre)
+	var glace: float = _descente_en_zone(_def("glace", {T.ICE: 0.3}), givre)
 	var immobile: float = _descente_en_zone(_def("lourd", {T.SLOW: 0.0}), givre)
 	ok(neutre < libre - 1.0, "le champ de givre ralentit un monstre neutre")
 	ok(glace > neutre + 1.0, "un monstre qui resiste au GIVRE est moins ralenti")
@@ -176,12 +176,13 @@ func _recul(def: EnemyDef, tags: Array) -> float:
 
 
 func _test_le_repoussement_lit_l_element() -> void:
-	var phys: Array = [T.PHYSICAL]
-	var neutre: float = _recul(_def("neutre"), phys)
-	var roc: float = _recul(_def("roc", {T.PHYSICAL: 0.5}), phys)
+	# Vague 8 : l Onde de repulsion et la Rupture de chaine sont de VENT.
+	var vent: Array = [T.WIND]
+	var neutre: float = _recul(_def("neutre"), vent)
+	var roc: float = _recul(_def("roc", {T.WIND: 0.5}), vent)
 	ok(neutre > 1.0, "le souffle repousse un monstre neutre")
-	feq(roc / neutre, 0.5, "resistant a 50 % au physique, il recule moitie moins", 0.02)
-	feq(_recul(_def("mur", {T.PHYSICAL: 0.0}), phys), 0.0,
+	feq(roc / neutre, 0.5, "resistant a 50 % au vent, il recule moitie moins", 0.02)
+	feq(_recul(_def("mur", {T.WIND: 0.0}), vent), 0.0,
 		"immunise a l element, il ne bouge pas", 0.01)
 
 
@@ -205,12 +206,12 @@ func _test_l_aspiration_lit_l_element() -> void:
 func _test_la_provocation_lit_l_element() -> void:
 	_fresh()
 	var totem: TerrainProp = _bf.spawn_prop(TerrainProp.Kind.TREE, Vector2(540.0, 900.0),
-		0.0, 100.0, 300.0, 0.0, 0.0, "", Color.WHITE, [T.PHYSICAL])
+		0.0, 100.0, 300.0, 0.0, 0.0, "", Color.WHITE, [T.NATURE])
 	# A 200 px : dans la portee pleine (300), hors de la portee d un monstre qui
-	# resiste a 50 % au physique (150).
+	# resiste a 50 % a la nature (150). Vague 8 : le Totem est de NATURE.
 	var point := Vector2(540.0, 700.0)
 	var neutre: Enemy = _bf.spawn_enemy(_def("neutre"), 540.0, 1.0, point)
-	var roc: Enemy = _bf.spawn_enemy(_def("roc", {T.PHYSICAL: 0.5}), 540.0, 1.0, point)
+	var roc: Enemy = _bf.spawn_enemy(_def("roc", {T.NATURE: 0.5}), 540.0, 1.0, point)
 	ok(_bf.taunt_target_for(point, neutre) == totem, "un monstre neutre est attire")
 	ok(_bf.taunt_target_for(point, roc) == null,
 		"un monstre qui resiste a l element du totem n est attire que de pres")
@@ -284,9 +285,9 @@ func _recul_courant(def: EnemyDef, tags: Array) -> float:
 
 
 func _test_le_courant_lit_l_element() -> void:
-	var eau: Array = [T.FROST, T.SLOW]
+	var eau: Array = [T.ICE, T.SLOW]
 	var neutre: float = _recul_courant(_def("neutre"), eau)
-	var glace: float = _recul_courant(_def("glace", {T.FROST: 0.2}), eau)
+	var glace: float = _recul_courant(_def("glace", {T.ICE: 0.2}), eau)
 	ok(neutre > 1.0, "la nappe fait reculer un monstre neutre")
 	ok(glace < neutre - 1.0, "un monstre de glace recule moins dans la nappe de givre")
 
@@ -297,7 +298,7 @@ func _test_le_cameleon_reste_coherent() -> void:
 	_fresh()
 	var d := _def("cameleon")
 	d.chameleon_interval = 5.0
-	d.chameleon_elements = [T.FIRE, T.POISON, T.FROST, T.LIGHTNING]
+	d.chameleon_elements = [T.FIRE, T.POISON, T.ICE, T.LIGHTNING]
 	d.chameleon_weak_mult = 2.0
 	d.chameleon_resist_mult = 0.3
 	var c: Enemy = _bf.spawn_enemy(d, 540.0, 1.0, Vector2(540.0, 700.0))
@@ -328,12 +329,12 @@ func _test_les_handlers_transmettent_l_element() -> void:
 		for k in card.effect_keys():
 			if cles.has(k):
 				cle = k
-		if cle == &"" or card.tags.is_empty():
+		if cle == &"" or card.combat_tags().is_empty():
 			continue
 		# Un monstre IMMUNISE a tous les elements de la carte : si l element est
 		# bien transmis, l effet ne doit RIEN lui faire.
 		var table: Dictionary = {}
-		for t in card.tags:
+		for t in card.combat_tags():
 			table[t] = 0.0
 		_fresh()
 		var e: Enemy = _bf.spawn_enemy(_def("sourd", table, 0.0), 540.0, 1.0, Vector2(540.0, 900.0))

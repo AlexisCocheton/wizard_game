@@ -28,7 +28,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_uyy03"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_on7ce"]
 
-[sub_resource type="Resource" id="Resource_wrnir"]
+[sub_resource type="Resource" id="Resource_lckoi"]
 script = ExtResource("21_6fehv")
 id = &"obj_kill_type_one_cast_4_rat_swarm"
 description = "Oiseau mirage : en tuer 4 d un seul sort"
@@ -38,7 +38,7 @@ params = {
 "enemy": "rat_swarm"
 }
 
-[sub_resource type="Resource" id="Resource_mlu4c"]
+[sub_resource type="Resource" id="Resource_wd4fe"]
 script = ExtResource("21_6fehv")
 id = &"obj_kill_type_with_card_fireball_8_jelly_small"
 description = "Gelee (petite) : en tuer 8 avec Boule de feu"
@@ -49,7 +49,7 @@ params = {
 "enemy": "jelly_small"
 }
 
-[sub_resource type="Resource" id="Resource_rxygd"]
+[sub_resource type="Resource" id="Resource_u5o4w"]
 script = ExtResource("21_6fehv")
 id = &"obj_multi_kill_15_1"
 description = "Tuer 15 monstres en moins de 1 s"
@@ -73,7 +73,7 @@ count = 2
 spawn_delay = 2.4
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_1ap0e"]
+[sub_resource type="Resource" id="Resource_wrnir"]
 script = ExtResource("23_uyy03")
 id = &"w8_1"
 duration = 24.0
@@ -103,7 +103,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_7ouyn"]
+[sub_resource type="Resource" id="Resource_mlu4c"]
 script = ExtResource("23_uyy03")
 id = &"w8_2"
 duration = 26.0
@@ -140,7 +140,7 @@ count = 4
 spawn_delay = 1.6
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_0k7ld"]
+[sub_resource type="Resource" id="Resource_rxygd"]
 script = ExtResource("23_uyy03")
 id = &"w8_3"
 duration = 27.0
@@ -170,7 +170,7 @@ count = 4
 spawn_delay = 1.6
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_fving"]
+[sub_resource type="Resource" id="Resource_1ap0e"]
 script = ExtResource("23_uyy03")
 id = &"w8_4_miniboss"
 duration = 32.0
@@ -191,10 +191,10 @@ intro_story = &"lvl_08_intro"
 outro_story = &"lvl_08_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("23_uyy03")]([SubResource("Resource_1ap0e"), SubResource("Resource_7ouyn"), SubResource("Resource_0k7ld"), SubResource("Resource_fving")])
+waves = Array[ExtResource("23_uyy03")]([SubResource("Resource_wrnir"), SubResource("Resource_mlu4c"), SubResource("Resource_rxygd"), SubResource("Resource_1ap0e")])
 enemy_pool = Array[ExtResource("1_hw4m0")]([ExtResource("2_w76i7"), ExtResource("3_3ysf2"), ExtResource("4_lckoi"), ExtResource("5_wd4fe"), ExtResource("6_u5o4w"), ExtResource("7_wrnir"), ExtResource("8_mlu4c"), ExtResource("9_rxygd"), ExtResource("10_1ap0e")])
 exploration_deck = Array[ExtResource("11_7ouyn")]([ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("14_mrf3w"), ExtResource("14_mrf3w"), ExtResource("13_fving"), ExtResource("13_fving"), ExtResource("13_fving"), ExtResource("16_mmbm6"), ExtResource("16_mmbm6"), ExtResource("16_mmbm6"), ExtResource("17_w0s6c"), ExtResource("17_w0s6c"), ExtResource("19_6nsta"), ExtResource("19_6nsta")])
-objectives = Array[ExtResource("21_6fehv")]([SubResource("Resource_wrnir"), SubResource("Resource_mlu4c"), SubResource("Resource_rxygd")])
+objectives = Array[ExtResource("21_6fehv")]([SubResource("Resource_lckoi"), SubResource("Resource_wd4fe"), SubResource("Resource_u5o4w")])
 levelup_cards = Array[ExtResource("11_7ouyn")]([ExtResource("18_lckoi"), ExtResource("19_wd4fe"), ExtResource("20_u5o4w")])
 objective_rewards = Array[ExtResource("11_7ouyn")]([ExtResource("21_wrnir"), ExtResource("22_u5o4w"), ExtResource("23_rxygd")])
 next_levels = Array[StringName]([&"lvl_09"])

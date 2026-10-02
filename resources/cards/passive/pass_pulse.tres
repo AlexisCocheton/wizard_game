@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_142rr"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_dmj7h"]
 
-[sub_resource type="Resource" id="Resource_frrdm"]
+[sub_resource type="Resource" id="Resource_142rr"]
 script = ExtResource("1_142rr")
 key = &"passive_kill_speed"
 magnitude = 2.0
@@ -19,8 +19,9 @@ description = "Au-dela de 180 % de vitesse : chaque monstre tue pousse la jauge 
 rarity = 1
 base_cast_time = 0.0
 targeting = 0
+element = 0
 tags = Array[int]([])
-effects = Array[ExtResource("1_142rr")]([SubResource("Resource_frrdm")])
+effects = Array[ExtResource("1_142rr")]([SubResource("Resource_142rr")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = true

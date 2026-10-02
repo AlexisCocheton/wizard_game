@@ -27,6 +27,7 @@ description = "Invoque deux allies frappant pour 14 pendant 10 s."
 rarity = 3
 base_cast_time = 2.2
 targeting = 0
+element = 9
 tags = Array[int]([5])
 effects = Array[ExtResource("1_23bqu")]([SubResource("Resource_23bqu"), SubResource("Resource_mev5s")])
 copies_in_starter = 0

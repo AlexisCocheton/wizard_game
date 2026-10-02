@@ -47,6 +47,7 @@ ENUMS = {
     "kind": "GameEnums.EnemyKind",
     "shape": "GameEnums.Shape",
     "move_pattern": "EnemyDef.MovePattern",
+    "element": "GameEnums.DamageTag",
 }
 # Arguments positionnels des helpers de make_content.gd (indice 0 = id).
 ENEMY_ARGS = {"display_name": 1, "kind": 2, "power": 3, "max_hp": 4, "base_speed": 5,
@@ -59,8 +60,13 @@ FLOAT_FIELDS = {"max_hp", "base_speed", "base_radius", "sprite_scale", "base_cas
                 "magnitude", "duration", "radius", "difficulty", "spawn_delay",
                 "start_offset", "dodge_chance"}
 # Nom de l element dans le document -> cle de la table _resist().
-RESIST_KEYS = {"physique": "phys", "feu": "feu", "givre": "givre", "arcane": "arcane",
-               "poison": "poison", "foudre": "foudre", "ralentissement": "lent"}
+# Vague 8 : huit elements. Les tables de make_content.gd sont restees ecrites
+# avec « givre » (= glace) ; vent, nature et eau sont DERIVES par _resist() de
+# « phys » et « feu » tant qu aucune cle explicite ne les fixe — en ecrire une
+# est justement la facon d appliquer un reglage du testeur.
+RESIST_KEYS = {"feu": "feu", "eau": "eau", "nature": "nature", "vent": "vent",
+               "foudre": "foudre", "glace": "givre", "arcane": "arcane",
+               "poison": "poison", "ralentissement": "lent"}
 # EnemyDef.accentuate() : la table ecrite dans _resist() est JOUEE apres elle.
 RESIST_EXPONENT = 1.75
 WEAK_EXPONENT = 2.5
@@ -482,6 +488,16 @@ def handle_card(ws, ident, field, change):
         manquants = [SPEC_DEFAULTS[j] for j in range(len(sargs), k)] + [new]
         ws.edit(rel, sclose, sclose, ", " + ", ".join(manquants))
         return "DIFF", "%s:%d" % (rel, line_of(t, sp)), "argument %s ajoute : %s" % (sub, new)
+    if field == "element" and not passive:
+        # Vague 8 : l element d un sort vit dans la table ELEMENT_DES_SORTS de
+        # make_content.gd (une ligne par carte, avec sa raison), pas dans _card().
+        m = re.compile(r'"%s"[ \t]*:[ \t]*\[[ \t]*GameEnums\.DamageTag\.(\w+)' % re.escape(ident)).search(t)
+        if not m:
+            return "A LA MAIN", "%s:%d" % (rel, line_of(t, call_start)), "ligne de %s introuvable dans ELEMENT_DES_SORTS" % ident
+        if m.group(1).upper() == str(apres).upper():
+            return "DEJA FAIT", "%s:%d" % (rel, line_of(t, m.start(1))), ""
+        ws.edit(rel, m.start(1), m.end(1), str(apres).upper())
+        return "DIFF", "%s:%d" % (rel, line_of(t, m.start(1))), "element %s -> %s (reecrire la raison de la ligne)" % (m.group(1), apres)
     if field in CARD_ARGS and not passive:
         args, _ = call_args(t, paren)
         k = CARD_ARGS[field]

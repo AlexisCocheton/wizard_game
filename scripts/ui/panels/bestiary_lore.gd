@@ -128,12 +128,14 @@ static func kind_name(kind: int) -> String:
 
 static func _tag_name(tag: int) -> String:
 	match tag:
-		GameEnums.DamageTag.PHYSICAL: return "aux degats physiques"
 		GameEnums.DamageTag.FIRE: return "au feu"
-		GameEnums.DamageTag.FROST: return "au givre"
+		GameEnums.DamageTag.WATER: return "a l eau"
+		GameEnums.DamageTag.NATURE: return "a la nature"
+		GameEnums.DamageTag.WIND: return "au vent"
+		GameEnums.DamageTag.LIGHTNING: return "a la foudre"
+		GameEnums.DamageTag.ICE: return "a la glace"
 		GameEnums.DamageTag.ARCANE: return "aux arcanes"
 		GameEnums.DamageTag.POISON: return "au poison"
-		GameEnums.DamageTag.LIGHTNING: return "a la foudre"
 		GameEnums.DamageTag.SLOW: return "au ralentissement"
 		GameEnums.DamageTag.SUMMON: return "aux invocations"
 	return "a certains sorts"
@@ -145,7 +147,11 @@ static func _tag_name(tag: int) -> String:
 ## comportements (le Behemoth est un TANK qui encaisse aussi le premier coup),
 ## et le `kind` n en nomme qu un seul. Se fier au kind mentirait au joueur sur
 ## ce qui va reellement lui arriver.
-static func behaviours(def: EnemyDef) -> Array[String]:
+##
+## `rich` (vague 8) : les elements cites (legende du Cameleon) portent leur LOGO
+## dans la phrase, en BBCode ; a afficher dans ElementIcons.rich_label. Faux,
+## les memes phrases en texte nu, pour un Label (et pour les tests de texte).
+static func behaviours(def: EnemyDef, rich: bool = false) -> Array[String]:
 	var out: Array[String] = []
 	if def == null:
 		return out
@@ -187,7 +193,7 @@ static func behaviours(def: EnemyDef) -> Array[String]:
 		var quoi: String = "une carte" if def.blocks_cards == 1 			else "%d cartes" % def.blocks_cards
 		out.append(("Son regard petrifie %s de votre main : elles restent en main"
 			+ " mais refusent de partir. Le tuer les libere aussitot") % quoi)
-	out.append_array(boss_v3_lines(def))
+	out.append_array(boss_v3_lines(def, rich))
 	# L ONDE DE CHOC. On dit qu elle part du BOSS et non du mage : c est ce qui
 	# fait comprendre qu il y a un endroit sur, et donc qu il y a une decision.
 	if def.shockwave_interval > 0.0 and def.shockwave_radius > 0.0:
@@ -406,7 +412,7 @@ static func resistance_groups(def: EnemyDef) -> Array[Dictionary]:
 ## Reliquaire) : chaque ligne dit la REGLE et la REPONSE. Ce sont des mecaniques
 ## qui changent une regle du jeu ; decouvertes en combat sans explication, elles
 ## se liraient comme des bugs.
-static func boss_v3_lines(def: EnemyDef) -> Array[String]:
+static func boss_v3_lines(def: EnemyDef, rich: bool = false) -> Array[String]:
 	var out: Array[String] = []
 	if def == null:
 		return out
@@ -432,7 +438,10 @@ static func boss_v3_lines(def: EnemyDef) -> Array[String]:
 		var cycle: Array[int] = def.chameleon_elements if not def.chameleon_elements.is_empty() \
 			else GameEnums.ELEMENTS
 		for t in cycle:
-			elems.append(GameEnums.tag_name(t))
+			# LEGENDE EN LOGOS (vague 8) : le meme logo que sur la carte qu il
+			# faut sortir, devant le nom de l element.
+			elems.append(ElementIcons.inline_named(t, ElementIcons.inline_px(UiTheme.FONT_BODY))
+				if rich else GameEnums.tag_name(t))
 		out.append(("Change d element toutes les %s s (%s) : l element FAIBLE, ecrit"
 			+ " au-dessus de lui et donne par sa teinte, blesse de +%d %% ; l element"
 			+ " d en face ne fait que %d %%")

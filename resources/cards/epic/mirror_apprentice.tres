@@ -19,6 +19,7 @@ description = "Invoque un allie qui frappe pour 12 pendant 8 s."
 rarity = 2
 base_cast_time = 1.8
 targeting = 0
+element = 3
 tags = Array[int]([5])
 effects = Array[ExtResource("1_u5spx")]([SubResource("Resource_u5spx")])
 copies_in_starter = 0

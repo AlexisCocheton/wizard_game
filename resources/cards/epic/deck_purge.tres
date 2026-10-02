@@ -21,6 +21,7 @@ description = "Choisis jusqu a 2 cartes de ton deck : elles quittent la partie."
 rarity = 2
 base_cast_time = 1.0
 targeting = 0
+element = 6
 tags = Array[int]([])
 effects = Array[ExtResource("1_lehn2")]([SubResource("Resource_lehn2")])
 copies_in_starter = 0

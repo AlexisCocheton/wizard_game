@@ -67,7 +67,7 @@ func _pv_apres(def: EnemyDef, degats: float, tags: Array[GameEnums.DamageTag]) -
 
 
 func run() -> void:
-	_test_la_palette_couvre_les_six_elements()
+	_test_la_palette_couvre_les_huit_elements()
 	_test_resistance_moitie()
 	_test_vulnerabilite_majore()
 	_test_resistance_zero_est_une_immunite()
@@ -87,21 +87,38 @@ func run() -> void:
 	_test_les_logos_se_distinguent_par_la_forme()
 	_test_la_carte_porte_son_logo()
 	_test_l_ecran_de_deck_porte_le_sceau()
+	_test_chaque_sort_a_exactement_un_element()
+	_test_la_regle_de_passage_des_resistances()
+	_test_les_logos_dans_le_texte()
 
 
-## La palette doit couvrir les six ELEMENTS de degats. SLOW et SUMMON restent
-## dans le meme enum mais ne sont pas des elements : ce sont des categories
-## d effet (on ne resiste pas "au ralentissement" comme on resiste au feu, on y
-## est insensible ou non).
-func _test_la_palette_couvre_les_six_elements() -> void:
-	var elems: Array = GameEnums.ELEMENTS
-	eq(elems.size(), 6, "six elements de degats")
-	for e in [GameEnums.DamageTag.PHYSICAL, GameEnums.DamageTag.FIRE,
-			GameEnums.DamageTag.FROST, GameEnums.DamageTag.ARCANE,
-			GameEnums.DamageTag.POISON, GameEnums.DamageTag.LIGHTNING]:
-		ok(e in elems, "%d est un element" % e)
-	not_ok(GameEnums.DamageTag.SLOW in elems, "le ralentissement n est pas un element")
-	not_ok(GameEnums.DamageTag.SUMMON in elems, "l invocation n est pas un element")
+## Les HUIT elements du co-auteur (vague 8) : Feu, Eau, Nature, Vent, Foudre,
+## Glace, Arcanique, Poison — dans cet ordre, qui est l ordre d affichage. SLOW
+## et SUMMON restent dans le meme enum mais ne sont pas des elements : ce sont
+## des categories d effet. Le physique n existe plus.
+func _test_la_palette_couvre_les_huit_elements() -> void:
+	var T := GameEnums.DamageTag
+	var voulus: Array = [T.FIRE, T.WATER, T.NATURE, T.WIND, T.LIGHTNING, T.ICE,
+		T.ARCANE, T.POISON]
+	eq(GameEnums.ELEMENTS, voulus, "huit elements, dans l ordre du co-auteur")
+	var noms: Array = []
+	for e in voulus:
+		noms.append(GameEnums.tag_name(e))
+	eq(noms, ["feu", "eau", "nature", "vent", "foudre", "glace", "arcane", "poison"],
+		"chaque element a son nom joueur")
+	not_ok(T.SLOW in GameEnums.ELEMENTS, "le ralentissement n est pas un element")
+	not_ok(T.SUMMON in GameEnums.ELEMENTS, "l invocation n est pas un element")
+	not_ok(T.has("PHYSICAL"), "le physique a disparu de l enum")
+	not_ok(T.NONE in GameEnums.ELEMENTS, "NONE n est pas un element")
+	# Les valeurs ENTIERES des noms survivants n ont pas bouge : un .tres ou une
+	# donnee d un telephone qui les stocke garde son sens. La glace est l ancien
+	# givre ; l ancien physique (0) est devenu un trou inerte.
+	eq(GameEnums.tag_from_name("ICE"), 2, "la glace garde la valeur du givre")
+	eq(int(T.FIRE), 1, "le feu garde sa valeur")
+	eq(int(T.NONE), 0, "la valeur de l ancien physique ne designe plus aucun element")
+	for e in voulus:
+		eq(GameEnums.tag_from_name(GameEnums.tag_key(e)), e,
+			"%s : nom et valeur font l aller-retour" % GameEnums.tag_name(e))
 
 
 func _test_resistance_moitie() -> void:
@@ -123,9 +140,9 @@ func _test_vulnerabilite_majore() -> void:
 ## ne passe), mais c est la MEME table qui l exprime, donc une seule regle a lire.
 func _test_resistance_zero_est_une_immunite() -> void:
 	var d := _def("immune")
-	d.resistances = {GameEnums.DamageTag.FROST: 0.0}
-	ok(d.is_immune_to(GameEnums.DamageTag.FROST), "zero se lit comme une immunite")
-	feq(_pv_apres(d, 40.0, _tags([GameEnums.DamageTag.FROST])), 100.0,
+	d.resistances = {GameEnums.DamageTag.ICE: 0.0}
+	ok(d.is_immune_to(GameEnums.DamageTag.ICE), "zero se lit comme une immunite")
+	feq(_pv_apres(d, 40.0, _tags([GameEnums.DamageTag.ICE])), 100.0,
 		"un element a zero n applique aucun degat", 0.01)
 	feq(_pv_apres(d, 40.0, _tags([GameEnums.DamageTag.FIRE])), 60.0,
 		"un autre element passe entier", 0.01)
@@ -139,17 +156,18 @@ func _test_sans_entree_les_degats_passent_entiers() -> void:
 		"aucune correction appliquee", 0.01)
 
 
-## Un sort a plusieurs elements (le Meteore est FEU + PHYSIQUE). On prend le
-## PIRE pour le joueur : sinon ajouter un second element a une carte serait un
+## Un tableau a plusieurs elements (aucune carte n en porte depuis la vague 8,
+## mais un effet ancien ou un test peut en fabriquer). On prend le PIRE pour le
+## joueur : sinon ajouter un second element a une carte serait un
 ## bonus gratuit, et toute carte finirait bi-element pour contourner les
 ## resistances. La ou le monstre resiste, il resiste.
 func _test_le_pire_element_du_sort_gagne() -> void:
 	var d := _def("mixte")
 	d.resistances = {
 		GameEnums.DamageTag.FIRE: 0.25,
-		GameEnums.DamageTag.PHYSICAL: 1.5,
+		GameEnums.DamageTag.WIND: 1.5,
 	}
-	feq(d.resistance_to_tags([GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL]),
+	feq(d.resistance_to_tags([GameEnums.DamageTag.FIRE, GameEnums.DamageTag.WIND]),
 		0.25, "le sort bi-element subit la meilleure resistance du monstre")
 	feq(d.resistance_to_tags([]), 1.0, "un sort sans element passe entier")
 	feq(d.resistance_to_tags([GameEnums.DamageTag.SLOW]), 1.0,
@@ -233,11 +251,8 @@ func _test_chaque_carte_de_degats_porte_un_element() -> void:
 		var card: SpellCard = ContentDB.cards[id]
 		if card == null or not _fait_des_degats(card):
 			continue
-		var a_un_element: bool = false
-		for t in card.tags:
-			if t in GameEnums.ELEMENTS:
-				a_un_element = true
-		ok(a_un_element, "%s inflige des degats et porte un element" % id)
+		ok(card.main_element() in GameEnums.ELEMENTS,
+			"%s inflige des degats et porte un element" % id)
 
 
 func _fait_des_degats(card: SpellCard) -> bool:
@@ -261,8 +276,11 @@ func _fait_des_degats(card: SpellCard) -> bool:
 func _test_les_ecarts_de_design_demandes() -> void:
 	var golem: EnemyDef = ContentDB.enemies.get(&"golem")
 	if golem != null:
-		ok(golem.resistance_to(GameEnums.DamageTag.PHYSICAL) < 1.0,
-			"le golem de pierre encaisse le physique")
+		# Vague 8 : l ancienne durete (« physique ») vit dans le vent et la nature.
+		ok(golem.resistance_to(GameEnums.DamageTag.NATURE) < 1.0,
+			"le golem de pierre encaisse la nature")
+		ok(golem.resistance_to(GameEnums.DamageTag.WIND) < 1.0,
+			"le golem de pierre encaisse le vent")
 		ok(golem.resistance_to(GameEnums.DamageTag.ARCANE) > 1.0,
 			"le golem de pierre craint l arcane")
 
@@ -290,7 +308,7 @@ func _test_la_fiche_annonce_les_resistances() -> void:
 	var d := _def("cobaye")
 	d.resistances = {
 		GameEnums.DamageTag.FIRE: 0.5,
-		GameEnums.DamageTag.FROST: 1.5,
+		GameEnums.DamageTag.ICE: 1.5,
 		GameEnums.DamageTag.POISON: 0.0,
 		GameEnums.DamageTag.SLOW: 0.0,
 	}
@@ -305,11 +323,11 @@ func _test_la_fiche_annonce_les_resistances() -> void:
 		"l immunite au ralentissement se lit au meme endroit")
 	ok(_a_le_tag(par_titre.get("Resiste", []), GameEnums.DamageTag.FIRE),
 		"le feu resiste est range sous Resiste")
-	ok(_a_le_tag(par_titre.get("Vulnerable", []), GameEnums.DamageTag.FROST),
+	ok(_a_le_tag(par_titre.get("Vulnerable", []), GameEnums.DamageTag.ICE),
 		"la faiblesse au givre est rangee sous Vulnerable")
 	eq(ElementIcons.percent_text(d.resistance_to(GameEnums.DamageTag.FIRE)), "-50 %",
 		"la resistance est chiffree en pourcentage")
-	eq(ElementIcons.percent_text(d.resistance_to(GameEnums.DamageTag.FROST)), "+50 %",
+	eq(ElementIcons.percent_text(d.resistance_to(GameEnums.DamageTag.ICE)), "+50 %",
 		"la faiblesse aussi")
 	eq(ElementIcons.percent_text(0.0), "",
 		"une immunite n a pas de chiffre : le mot du groupe la dit")
@@ -321,10 +339,10 @@ func _test_la_fiche_annonce_les_resistances() -> void:
 	# co-auteur : « je ne sais pas si c est fait »). Une faiblesse, elle, ne
 	# promet que des degats : elle ne renforce pas le controle.
 	var T := GameEnums.DamageTag
-	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("degats et effets"),
+	ok(ElementIcons.effect_text(T.ICE, 0.5).contains("degats et effets"),
 		"une resistance annonce degats ET effets")
-	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("-50"), "chiffree")
-	ok(ElementIcons.effect_text(T.FROST, 0.5).contains("Givre"), "l element est nomme a cote du logo")
+	ok(ElementIcons.effect_text(T.ICE, 0.5).contains("-50"), "chiffree")
+	ok(ElementIcons.effect_text(T.ICE, 0.5).contains("Glace"), "l element est nomme a cote du logo")
 	not_ok(ElementIcons.effect_text(T.FIRE, 1.5).contains("effets"),
 		"une faiblesse ne promet pas d effets renforces")
 	ok(ElementIcons.effect_text(T.POISON, 0.0).contains("ni degats ni effets"),
@@ -358,20 +376,30 @@ func _la_fiche_affiche_logos_et_regle() -> void:
 	ok(idx >= 0, "le golem est au bestiaire")
 	gp.open_detail(idx)
 	ok(gp.find_child("ResistRule", true, false) != null, "la fiche ecrit la regle des effets")
-	var lignes: int = 0
+	# Vague 8 : une LIGNE de texte par groupe, logos dans la phrase
+	# (« [feu] feu -30 %   [eau] eau +60 % »). Chaque ecart du golem doit y
+	# figurer avec SON logo et son pourcentage.
+	var texte: String = ""
+	for g in BestiaryLore.resistance_groups(golem):
+		var ligne: Node = gp.find_child("ResistLine_" + str(g["title"]), true, false)
+		ok(ligne is RichTextLabel, "golem : le groupe %s a sa ligne a logos" % g["title"])
+		if ligne is RichTextLabel:
+			# Sans le « gluon » U+2060 pose apres le signe (ElementIcons.resist_bbcode).
+			texte += (ligne as RichTextLabel).text.replace("\u2060", "")
+	var ecarts: int = 0
 	for t in golem.resistances.keys():
 		var r: float = float(golem.resistances[t])
 		if is_equal_approx(r, 1.0):
 			continue
-		var ligne: Node = gp.find_child("Resist_%d" % int(t), true, false)
-		ok(ligne != null, "golem : l ecart %d a sa ligne" % int(t))
-		if ligne != null:
-			lignes += 1
-			var logo: bool = false
-			for c in ligne.get_children():
-				logo = logo or (c is TextureRect and (c as TextureRect).texture != null)
-			ok(logo, "golem : la ligne %d porte le logo de l element" % int(t))
-	ok(lignes >= 3, "le golem montre ses ecarts")
+		ecarts += 1
+		ok(texte.contains(ElementIcons.path(SpellCard.type_of_tag(int(t)))),
+			"golem : l ecart %s porte son logo dans le texte" % GameEnums.tag_name(int(t)))
+		ok(texte.contains(GameEnums.tag_name(int(t))),
+			"golem : l ecart %s est nomme" % GameEnums.tag_name(int(t)))
+		var pct: String = ElementIcons.percent_text(r).replace(" ", "\u00a0")
+		ok(pct == "" or texte.contains(pct),
+			"golem : l ecart %s est chiffre" % GameEnums.tag_name(int(t)))
+	ok(ecarts >= 3, "le golem montre ses ecarts")
 	detach(gp)
 	if not connu:
 		(SaveData.profile().get("discovered_enemies", []) as Array).erase(String(golem.id))
@@ -391,11 +419,11 @@ func _a_le_tag(items: Array, tag: int) -> bool:
 func _test_l_immunite_au_ralentissement_ne_protege_pas_du_givre() -> void:
 	var lourd := _def("lourd")
 	lourd.resistances = {GameEnums.DamageTag.SLOW: 0.0}
-	feq(_pv_apres(lourd, 40.0, _tags([GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW])),
+	feq(_pv_apres(lourd, 40.0, _tags([GameEnums.DamageTag.ICE, GameEnums.DamageTag.SLOW])),
 		60.0, "immunise au RALENTISSEMENT, il encaisse le givre entier", 0.01)
 	var glace := _def("glace")
-	glace.resistances = {GameEnums.DamageTag.FROST: 0.0}
-	feq(_pv_apres(glace, 40.0, _tags([GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW])),
+	glace.resistances = {GameEnums.DamageTag.ICE: 0.0}
+	feq(_pv_apres(glace, 40.0, _tags([GameEnums.DamageTag.ICE, GameEnums.DamageTag.SLOW])),
 		100.0, "immunise au GIVRE, rien ne passe", 0.01)
 	# Sur le contenu : chaque carte de degats du deck du niveau 1 mord sur son boss.
 	var lvl: LevelDef = ContentDB.levels.get(&"lvl_01")
@@ -414,7 +442,7 @@ func _test_l_immunite_au_ralentissement_ne_protege_pas_du_givre() -> void:
 		if not _fait_des_degats(card):
 			continue
 		# A TRAVERS le Battlefield, comme en jeu : c est take_damage qui refusait.
-		var tags: Array[GameEnums.DamageTag] = _tags(card.tags)
+		var tags: Array[GameEnums.DamageTag] = _tags(card.combat_tags())
 		ok(_pv_apres(boss, 10.0, tags) < _pv_apres(boss, 0.0, tags),
 			"%s mord sur %s, boss du niveau 1" % [card.id, boss.id])
 
@@ -486,12 +514,11 @@ func _test_chaque_carte_a_un_type() -> void:
 		ok(type != &"", "%s a un type" % id)
 		ok(ElementIcons.texture(type) != null, "%s : le logo de son type existe (%s)" % [id, type])
 		ok(ElementIcons.type_name(type) != "", "%s : son type a un nom" % id)
-		# Une carte qui porte un element a cet element pour type : c est lui que
+		# Vague 8 : le type d une carte a element EST son element — c est lui que
 		# les resistances lisent, le logo ne doit pas dire autre chose.
-		for t in card.tags:
-			if t in GameEnums.ELEMENTS:
-				eq(type, SpellCard.type_of_tag(t), "%s : son type est son premier element" % id)
-				break
+		if card.main_element() != GameEnums.DamageTag.NONE:
+			eq(type, SpellCard.type_of_tag(card.main_element()),
+				"%s : son type est son element" % id)
 	# Une carte INVENTEE sans element ni verbe connu n a pas de type : c est ce
 	# qui fait rougir le harnais au lieu d afficher un blanc sur la carte.
 	var orpheline := SpellCard.new()
@@ -632,3 +659,129 @@ func _contient(lignes: Array[String], morceau: String) -> bool:
 		if l.to_lower().contains(morceau.to_lower()):
 			return true
 	return false
+
+
+## VAGUE 8 — « Toutes les cartes doivent etre associees a un de ces elements. »
+## Chaque SORT (pas seulement ceux qui font des degats : pioche, temps, terrain
+## aussi) porte EXACTEMENT un element, dans le champ explicite
+## `SpellCard.element`, et aucun element ne traine dans `tags` pour le
+## contredire. Les tags du combat n en contiennent qu un.
+func _test_chaque_sort_a_exactement_un_element() -> void:
+	var par_element: Dictionary = {}
+	for id in ContentDB.cards.keys():
+		var card: SpellCard = ContentDB.cards[id]
+		if card == null or card.is_passive:
+			continue
+		ok(int(card.element) in GameEnums.ELEMENTS, "%s a un element explicite" % id)
+		for t in card.tags:
+			not_ok(int(t) in GameEnums.ELEMENTS,
+				"%s : aucun element dans ses tags, seulement des marqueurs" % id)
+		var n: int = 0
+		for t in card.combat_tags():
+			if int(t) in GameEnums.ELEMENTS:
+				n += 1
+		eq(n, 1, "%s : un seul element dans les tags du combat" % id)
+		par_element[int(card.element)] = int(par_element.get(int(card.element), 0)) + 1
+	for e in GameEnums.ELEMENTS:
+		ok(int(par_element.get(e, 0)) > 0,
+			"au moins un sort de %s : chaque element sert" % GameEnums.tag_name(e))
+	# Le repli d une carte ancienne : un element ecrit dans les tags est lu.
+	var vieille := SpellCard.new()
+	vieille.tags = _tags([GameEnums.DamageTag.FIRE, GameEnums.DamageTag.SLOW])
+	eq(vieille.main_element(), GameEnums.DamageTag.FIRE, "repli : l element des tags")
+	vieille.element = GameEnums.DamageTag.ICE
+	eq(vieille.combat_tags(), [GameEnums.DamageTag.ICE, GameEnums.DamageTag.SLOW],
+		"le champ l emporte, et l element des tags ne s ajoute pas")
+
+
+## LA REGLE DE PASSAGE DES RESISTANCES (vague 8), verifiee sur le contenu livre
+## et contre les constantes de make_content.gd : pas 86 valeurs a relire, une
+## regle. Le vent et la nature naissent de l ancienne durete (« phys ») — donc
+## egaux pour un monstre au sol ; un volant craint le vent et resiste a la
+## nature ; l eau est le miroir borne du feu.
+func _test_la_regle_de_passage_des_resistances() -> void:
+	var MC: GDScript = load("res://tools/make_content.gd")
+	var T := GameEnums.DamageTag
+	var vus_volants: int = 0
+	for id in ContentDB.enemies.keys():
+		var d: EnemyDef = ContentDB.enemies[id]
+		if d == null or d.chameleon_interval > 0.0:
+			continue
+		var vent: float = d.resistance_to(T.WIND)
+		var nature: float = d.resistance_to(T.NATURE)
+		if d.flying:
+			vus_volants += 1
+			ok(vent >= EnemyDef.accentuate(MC.WIND_FLYER_MIN) - 0.001,
+				"%s vole : il craint le vent" % id)
+			ok(nature <= EnemyDef.accentuate(MC.NATURE_FLYER_MAX) + 0.001,
+				"%s vole : la nature ne l atteint pas" % id)
+		else:
+			feq(vent, nature, "%s : vent et nature heritent de la meme durete" % id, 0.001)
+		# L eau, miroir du feu, sans jamais sortir de ses bornes.
+		var feu: float = d.resistance_to(T.FIRE)
+		var eau: float = d.resistance_to(T.WATER)
+		ok(eau >= EnemyDef.accentuate(MC.WATER_FROM_FIRE_MIN) - 0.001
+			and eau <= EnemyDef.accentuate(MC.WATER_FROM_FIRE_MAX) + 0.001,
+			"%s : l eau reste dans ses bornes" % id)
+		if feu < 1.0:
+			ok(eau > 1.0, "%s resiste au feu : il craint l eau" % id)
+		elif feu > 1.0:
+			ok(eau < 1.0, "%s craint le feu : il boit l eau" % id)
+		else:
+			feq(eau, 1.0, "%s neutre au feu : neutre a l eau" % id, 0.001)
+		not_ok(d.resistances.has(T.NONE), "%s : aucune ligne a l ancien physique" % id)
+	ok(vus_volants > 0, "des volants ont ete verifies")
+	# Le Cameleon ne declare aucun element de son cycle (les tables se multiplieraient).
+	var cam: EnemyDef = ContentDB.enemies.get(&"season_chameleon")
+	if cam != null:
+		for t in cam.chameleon_elements:
+			not_ok(cam.resistances.has(int(t)),
+				"Cameleon : %s tourne, il n est pas dans sa table" % GameEnums.tag_name(int(t)))
+			ok(int(t) in GameEnums.ELEMENTS, "Cameleon : son cycle est fait d elements")
+
+
+## LOGOS DANS LE TEXTE (vague 8) : « feu -30 %  eau +60 % » avec les logos, un
+## seul helper pour toute l interface.
+func _test_les_logos_dans_le_texte() -> void:
+	var T := GameEnums.DamageTag
+	var px: int = ElementIcons.inline_px(UiTheme.FONT_BODY)
+	ok(px > UiTheme.FONT_BODY, "le logo est plus haut qu une majuscule : lisible sur telephone")
+	var ligne: String = ElementIcons.resist_bbcode(
+		[{"tag": T.FIRE, "mult": 0.7}, {"tag": T.WATER, "mult": 1.6}], px)
+	ok(ligne.contains(ElementIcons.path(&"feu")) and ligne.contains(ElementIcons.path(&"eau")),
+		"chaque resistance porte son logo")
+	ok(ligne.find("feu") < ligne.find("eau"), "dans l ordre donne")
+	var sans_gluon: String = ligne.replace("\u2060", "")
+	ok(sans_gluon.contains("-30\u00a0%") and sans_gluon.contains("+60\u00a0%"),
+		"chiffres colles a leur logo par des espaces insecables")
+	ok(ligne.contains("+\u206060"), "aucune coupure possible apres le signe")
+	ok(ligne.contains(" "), "une coupure possible ENTRE deux resistances")
+	ok(ligne.contains("[img=%dx%d]" % [px, px]), "taille imposee, pas celle du PNG")
+	# Les descriptions : un mot d element en MAJUSCULES recoit son logo, un mot
+	# en minuscules non (« feu » dans une phrase n annonce pas un element).
+	var deco: String = ElementIcons.decorate("10 degats de VENT, le feu couve", px)
+	ok(deco.contains(ElementIcons.path(&"vent")), "VENT recoit son logo")
+	not_ok(deco.contains(ElementIcons.path(&"feu")), "un feu en minuscules reste un mot")
+	eq(ElementIcons.strip_inline(deco), "10 degats de VENT, le feu couve",
+		"le texte d origine se relit sans les logos")
+	# Le detail d une carte qui cite son element porte le logo dans la phrase.
+	var bolt: SpellCard = ContentDB.cards.get(&"arcane_bolt")
+	if bolt != null:
+		var cv := CardView.new()
+		cv.setup_detail(bolt, 300.0, 440.0)
+		var desc: Node = cv.find_child("Description", true, false)
+		ok(desc is RichTextLabel, "la description qui cite l ARCANE est un texte a logos")
+		if desc is RichTextLabel:
+			ok((desc as RichTextLabel).text.contains(ElementIcons.path(&"arcane")),
+				"le logo de l arcane est dans la description")
+		cv.free()
+	# La legende du Cameleon, a la fiche : ses elements en logos.
+	var cam: EnemyDef = ContentDB.enemies.get(&"season_chameleon")
+	if cam != null:
+		var riche: String = "\n".join(BestiaryLore.behaviours(cam, true))
+		var nu: String = "\n".join(BestiaryLore.behaviours(cam))
+		for t in cam.chameleon_elements:
+			ok(riche.contains(ElementIcons.path(SpellCard.type_of_tag(int(t)))),
+				"legende du Cameleon : logo de %s" % GameEnums.tag_name(int(t)))
+			ok(nu.contains(GameEnums.tag_name(int(t))), "et le texte nu le nomme")
+		not_ok(nu.contains("[img"), "le texte nu ne contient aucun BBCode")

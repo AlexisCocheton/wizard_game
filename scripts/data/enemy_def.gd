@@ -345,7 +345,7 @@ enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP, SPIRAL }
 
 ## LE CAMELEON — toutes les `chameleon_interval` secondes il change d element
 ## faible et d element resiste, en parcourant `chameleon_elements` dans l ordre
-## (vide = les six elements). L element resiste est celui qui se trouve a
+## (vide = les huit elements). L element resiste est celui qui se trouve a
 ## l oppose du cycle, jamais le meme que le faible. 0 = jamais.
 ##
 ## Meme semantique que `resistances` (multiplicateur de degats subis), et meme
@@ -449,10 +449,10 @@ func resistance_to(tag: int) -> float:
 	return 1.0
 
 
-## Multiplicateur pour un SORT, qui peut porter plusieurs elements (le Meteore
-## est feu + physique). On retient le PLUS FAIBLE, donc le meilleur pour le
-## monstre : sinon ajouter un second element a une carte serait un bonus gratuit
-## et toute carte finirait bi-element pour contourner les resistances.
+## Multiplicateur pour un SORT, lu sur `SpellCard.combat_tags()`. Depuis la
+## vague 8 une carte n a qu UN element : la regle du PLUS FAIBLE ne joue plus
+## que pour un tableau fabrique a la main (test, effet ancien). Elle reste,
+## parce qu un second element ne doit jamais etre un contournement gratuit.
 ##
 ## Les tags non elementaires (SLOW, SUMMON) sont ignores ici : ils ne portent
 ## pas les degats, ils qualifient l effet.
@@ -506,12 +506,11 @@ func slow_factor(factor: float, tags: Array = []) -> float:
 ##     le plus petit des deux. Un golem immunise au ralentissement n est donc
 ##     pas plus ralenti par un sort d arcane que par un sort de givre.
 ##
-## IL N Y A PAS D ELEMENT « VENT » : l aspiration, la provocation et le
-## repoussement se rattachent a l element de la CARTE qui les porte (Maelstrom et
-## Spirale de sel sont d arcane, Onde de repulsion d arcane et physique, Totem de
-## coeur-de-bois physique). Ajouter un septieme element pour trois cartes aurait
-## demande une ligne de plus a 82 monstres, et le joueur aurait du apprendre un
-## element qui ne fait jamais de degats.
+## L EFFET SUIT L ELEMENT DE LA CARTE (vague 8, huit elements) : Maelstrom,
+## Spirale de sel, Onde de repulsion et Volte-face sont de VENT, le Totem et les
+## Ronces de NATURE, la Nappe montante d EAU. Un monstre immunise au vent n est
+## donc ni aspire, ni repousse, ni retourne par eux ; un monstre qui resiste a
+## la nature ne sent l appel du Totem que de pres.
 ##
 ## PLAFOND A 1 : une faiblesse accelere la mort, elle ne rend pas le controle
 ## plus fort. Un monstre qui craint le givre a +100 % ne doit pas etre fige a
@@ -523,6 +522,42 @@ func control_factor(tags: Array, slows: bool = false) -> float:
 	if slows:
 		f = minf(f, resistance_to(GameEnums.DamageTag.SLOW))
 	return clampf(f, 0.0, 1.0)
+
+
+## LES COUPS D UN MONSTRE SUR UN OBJET DE TERRAIN (vague 8, regle du co-auteur).
+##
+## « Un mur de glace subira moins de degats d un monstre faible a la glace. »
+## Un objet pose par une carte (mur, totem, ronces, autel, semis...) porte
+## l ELEMENT de cette carte, et ce qu un monstre lui inflige est multiplie par
+## l INVERSE de sa relation a cet element :
+##
+##   r = multiplicateur de degats que le monstre SUBIT de cet element (table
+##       jouee, apres accentuation, Cameleon compris)
+##   facteur = r ^ -OBJECT_HIT_EXPONENT, borne a [OBJECT_HIT_MIN, OBJECT_HIT_MAX]
+##
+## Regle SYMETRIQUE (en ecart relatif) : faible x2 a la glace -> il frappe le
+## mur de glace a x0,71 ; resistant x0,5 -> il le frappe a x1,41 ; neutre ->
+## inchange. Une immunite (r = 0) vaut le plafond : la glace ne lui fait rien,
+## il la brise sans retenue.
+##
+## LA MOITIE DE L ECART (exposant 0,5) et pas l inverse entier : depuis la
+## vague 8 les objets de NATURE (Totem, Bastion, Autel, Semis) heritent de
+## l ancienne ligne physique, que 53 monstres resistent. L inverse entier les
+## aurait fait abattre jusqu a deux fois plus vite par la moitie du bestiaire —
+## un objet est un investissement du joueur, la regle doit se SENTIR sans
+## renverser les niveaux qui reposent sur lui (lvl_04 et son Totem).
+##
+## BORNEE aux memes bornes que les degats du joueur (WEAK_CAP = x2) : un objet
+## ne doit jamais devenir increvable ni fondre au premier contact.
+const OBJECT_HIT_EXPONENT: float = 0.5
+const OBJECT_HIT_MIN: float = 0.5
+const OBJECT_HIT_MAX: float = 2.0
+
+
+static func object_hit_factor(r: float) -> float:
+	if r <= 0.0:
+		return OBJECT_HIT_MAX
+	return clampf(pow(r, -OBJECT_HIT_EXPONENT), OBJECT_HIT_MIN, OBJECT_HIT_MAX)
 
 
 ## ACCENTUATION DES RESISTANCES (vague 5) — la regle UNIQUE qui transforme la

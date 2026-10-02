@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_co055"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ofuc2"]
+
+[sub_resource type="Resource" id="Resource_co055"]
+script = ExtResource("1_co055")
+key = &"passive_element"
+magnitude = 25.0
+duration = 0.0
+radius = 0.0
+params = {
+&"stat": &"damage"
+}
+
+[resource]
+script = ExtResource("2_ofuc2")
+id = &"pass_arcane_lore"
+display_name = "Savoir interdit"
+description = "Au-dela de 220 % de vitesse : les sorts d ARCANE infligent 25 % de degats en plus."
+rarity = 2
+base_cast_time = 0.0
+targeting = 0
+element = 3
+tags = Array[int]([])
+effects = Array[ExtResource("1_co055")]([SubResource("Resource_co055")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 220
+fx_key = &""
+sfx_key = &""

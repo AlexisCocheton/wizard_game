@@ -19,6 +19,7 @@ description = "Les 2 prochains sorts lances reviennent en main au lieu d etre de
 rarity = 1
 base_cast_time = 0.9
 targeting = 0
+element = 6
 tags = Array[int]([])
 effects = Array[ExtResource("1_ur3hq")]([SubResource("Resource_ur3hq")])
 copies_in_starter = 0

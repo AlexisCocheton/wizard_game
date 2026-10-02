@@ -817,6 +817,29 @@ func control_factor(tags: Array, slows: bool = false) -> float:
 	return clampf(f, 0.0, 1.0)
 
 
+## Relation BRUTE du monstre a l element de `tags` : le multiplicateur de degats
+## qu il subirait, table du Cameleon comprise, NON plafonnee (une faiblesse x2
+## reste 2). 1.0 sans element. Sert aux objets de terrain (vague 8).
+func element_multiplier(tags: Array) -> float:
+	if definition == null:
+		return 1.0
+	return definition.resistance_to_tags(tags) * _chameleon_factor(tags)
+
+
+## Facteur des coups que CE monstre porte a un objet de terrain de l element de
+## `tags` (EnemyDef.object_hit_factor : 1 / relation, borne). Un objet sans
+## element (mur d un passif ancien, objet d un test) est frappe normalement.
+func object_hit_factor(tags: Array) -> float:
+	var a_element: bool = false
+	for t in tags:
+		if int(t) in GameEnums.ELEMENTS:
+			a_element = true
+			break
+	if not a_element:
+		return 1.0
+	return EnemyDef.object_hit_factor(element_multiplier(tags))
+
+
 ## Immunise a l ELEMENT du sort (tags non elementaires ignores). Meme lecture que
 ## les degats : le pire element du sort pour le joueur decide.
 func _immune_to_elements(tags: Array) -> bool:
@@ -2107,7 +2130,7 @@ func _tick_thief(world_delta: float) -> void:
 	AudioBus.play_sfx(&"ward_deep")
 	if Fx.enabled() and battlefield != null:
 		Fx.sprite(battlefield, "diamond_mark", position, visual_radius() * 1.6, false,
-			Fx.color_for(c.tags))
+			Fx.color_for(c.combat_tags()))
 
 
 func _cast_stolen_card() -> void:
@@ -2130,7 +2153,7 @@ func _cast_stolen_card() -> void:
 		if Fx.enabled():
 			Fx.projectile(battlefield, position,
 				Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y),
-				Fx.color_for(card.tags), Fx.card_sheet(card))
+				Fx.color_for(card.combat_tags()), Fx.card_sheet(card))
 	AudioBus.play_sfx(&"hp_lost")
 
 

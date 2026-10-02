@@ -55,9 +55,11 @@ const BY_CARD: Dictionary = {
 ## coherente avec le type de degats qu aucune icone du tout.
 const BY_TAG: Dictionary = {
 	GameEnums.DamageTag.FIRE: "fire",
-	GameEnums.DamageTag.FROST: "freezing",
+	GameEnums.DamageTag.ICE: "freezing",
 	GameEnums.DamageTag.ARCANE: "magic8",
-	GameEnums.DamageTag.PHYSICAL: "arrow",
+	GameEnums.DamageTag.WIND: "arrow",
+	GameEnums.DamageTag.WATER: "tide_waves",
+	GameEnums.DamageTag.NATURE: "ts_dust_01",
 	GameEnums.DamageTag.POISON: "skull_burst",
 	GameEnums.DamageTag.LIGHTNING: "lightning_fork",
 	GameEnums.DamageTag.SLOW: "midnight",
@@ -136,7 +138,7 @@ static func for_card(card: SpellCard) -> String:
 		return propre
 	if BY_CARD.has(card.id):
 		return String(BY_CARD[card.id])
-	for tag in card.tags:
+	for tag in card.combat_tags():
 		if BY_TAG.has(tag):
 			return String(BY_TAG[tag])
 	return "magicspell"

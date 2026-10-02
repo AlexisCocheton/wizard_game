@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1ocau"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5bgiv"]
 
-[sub_resource type="Resource" id="Resource_72hvr"]
+[sub_resource type="Resource" id="Resource_1ocau"]
 script = ExtResource("1_1ocau")
 key = &"passive_xp_boost"
 magnitude = 30.0
@@ -19,8 +19,9 @@ description = "Au-dela de 115 % de vitesse : +30 % d experience gagnee."
 rarity = 0
 base_cast_time = 0.0
 targeting = 0
+element = 0
 tags = Array[int]([])
-effects = Array[ExtResource("1_1ocau")]([SubResource("Resource_72hvr")])
+effects = Array[ExtResource("1_1ocau")]([SubResource("Resource_1ocau")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = true

@@ -175,11 +175,23 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 	meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(meta)
 
-	var desc := UiTheme.label(c.description, body_size, Color(0.30, 0.23, 0.15),
-		HORIZONTAL_ALIGNMENT_CENTER)
-	desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(desc)
+	# Les ELEMENTS cites en majuscules (« degats de FEU ») recoivent leur logo
+	# dans la phrase (vague 8) : le meme que le sceau de la carte et que celui
+	# de la fiche du monstre. Texte sans element : un Label, comme avant.
+	var deco: String = ElementIcons.decorate(c.description, ElementIcons.inline_px(body_size))
+	if deco != c.description:
+		var riche: RichTextLabel = ElementIcons.rich_label(deco, body_size,
+			Color(0.30, 0.23, 0.15), true)
+		riche.name = "Description"
+		riche.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		box.add_child(riche)
+	else:
+		var desc := UiTheme.label(c.description, body_size, Color(0.30, 0.23, 0.15),
+			HORIZONTAL_ALIGNMENT_CENTER)
+		desc.name = "Description"
+		desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(desc)
 
 	if c.targeting != GameEnums.Targeting.NONE:
 		var aim := UiTheme.label(_targeting_hint(c.targeting), body_size - 2,

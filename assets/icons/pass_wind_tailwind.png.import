@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cgneaaqrjni5r"
-path="res://.godot/imported/element_givre.png-0c44b0a05f10e404a3d6ea6ff946c17a.ctex"
+uid="uid://dcfjt232sii06"
+path="res://.godot/imported/pass_wind_tailwind.png-d59003cac548ea38364094dcb7d2077f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/element_givre.png"
-dest_files=["res://.godot/imported/element_givre.png-0c44b0a05f10e404a3d6ea6ff946c17a.ctex"]
+source_file="res://assets/icons/pass_wind_tailwind.png"
+dest_files=["res://.godot/imported/pass_wind_tailwind.png-d59003cac548ea38364094dcb7d2077f.ctex"]
 
 [params]
 

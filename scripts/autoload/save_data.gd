@@ -154,6 +154,7 @@ func _migrate(d: Dictionary) -> Dictionary:
 	# on la reverse quand meme, pour un profil edite ou ecrit par une version plus
 	# ancienne. Pas de hausse de schema_version : c est une union, idempotente.
 	_merge_legacy_legendaries(d["profile"])
+	_rename_objectives(d["profile"])
 	# Meme completion UN CRAN PLUS BAS, pour les cosmetiques : un profil d avant
 	# les apprentis a bien un dictionnaire "cosmetics", donc la boucle ci-dessus
 	# le garde tel quel, sans la cle "character". Sans cette passe, la cle
@@ -176,6 +177,33 @@ func _migrate(d: Dictionary) -> Dictionary:
 		if typeof((cosm as Dictionary).get("outfits")) != TYPE_DICTIONARY:
 			cosm["outfits"] = {}
 	return d
+
+
+## OBJECTIFS RENOMMES SANS CHANGER DE SENS. L id d un objectif est DEDUIT de
+## son controle (voir system_objectives) : en vague 8 le givre est devenu la
+## GLACE, et « 32 sorts de givre » s appelle « obj_element_casts_32_ice ». Les
+## cartes comptees dans son niveau (lvl_11) sont exactement les memes : l etoile
+## deja gagnee est gardee sous le nouvel id. Union idempotente, rien n est
+## retire (meme principe que _merge_legacy_legendaries).
+const RENAMED_OBJECTIVES: Dictionary = {
+	"obj_element_casts_32_frost": "obj_element_casts_32_ice",
+}
+
+
+func _rename_objectives(prof: Dictionary) -> void:
+	var levels: Variant = prof.get("levels")
+	if typeof(levels) != TYPE_DICTIONARY:
+		return
+	for lid in levels:
+		var rec: Variant = levels[lid]
+		if typeof(rec) != TYPE_DICTIONARY:
+			continue
+		var objs: Variant = (rec as Dictionary).get("objectives")
+		if typeof(objs) != TYPE_DICTIONARY:
+			continue
+		for ancien: String in RENAMED_OBJECTIVES:
+			if bool((objs as Dictionary).get(ancien, false)):
+				objs[RENAMED_OBJECTIVES[ancien]] = true
 
 
 func _migrate_0_to_1(d: Dictionary) -> Dictionary:

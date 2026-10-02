@@ -31,7 +31,7 @@
 [ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="25_ah3ht"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="26_iwy8x"]
 
-[sub_resource type="Resource" id="Resource_iwy8x"]
+[sub_resource type="Resource" id="Resource_doijp"]
 script = ExtResource("19_ckdo4")
 id = &"obj_kill_type_one_cast_4_pit_ghoul"
 description = "Goule des fosses : en tuer 4 d un seul sort"
@@ -41,7 +41,7 @@ params = {
 "enemy": "pit_ghoul"
 }
 
-[sub_resource type="Resource" id="Resource_wokui"]
+[sub_resource type="Resource" id="Resource_epw7l"]
 script = ExtResource("19_ckdo4")
 id = &"obj_element_casts_44_fire"
 description = "Lancer 44 sorts de feu"
@@ -51,7 +51,7 @@ params = {
 "element": "FIRE"
 }
 
-[sub_resource type="Resource" id="Resource_nen0k"]
+[sub_resource type="Resource" id="Resource_6lwi4"]
 script = ExtResource("19_ckdo4")
 id = &"obj_untouched"
 description = "Gagner sans subir de degats"
@@ -79,7 +79,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_cmlmk"]
+[sub_resource type="Resource" id="Resource_pvtfm"]
 script = ExtResource("21_6yfmp")
 id = &"w19_1"
 duration = 26.0
@@ -116,7 +116,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_waf88"]
+[sub_resource type="Resource" id="Resource_yfv8l"]
 script = ExtResource("21_6yfmp")
 id = &"w19_2"
 duration = 27.0
@@ -153,7 +153,7 @@ count = 1
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_elph3"]
+[sub_resource type="Resource" id="Resource_ah3ht"]
 script = ExtResource("21_6yfmp")
 id = &"w19_3"
 duration = 28.0
@@ -183,7 +183,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_ckdo4"]
+[sub_resource type="Resource" id="Resource_iwy8x"]
 script = ExtResource("21_6yfmp")
 id = &"w19_4_miniboss"
 duration = 34.0
@@ -220,7 +220,7 @@ count = 2
 spawn_delay = 3.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_5pmol"]
+[sub_resource type="Resource" id="Resource_wokui"]
 script = ExtResource("21_6yfmp")
 id = &"w19_5_boss"
 duration = 45.0
@@ -241,10 +241,10 @@ intro_story = &"lvl_19_intro"
 outro_story = &"lvl_19_outro"
 terrain = "sand"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("21_6yfmp")]([SubResource("Resource_cmlmk"), SubResource("Resource_waf88"), SubResource("Resource_elph3"), SubResource("Resource_ckdo4"), SubResource("Resource_5pmol")])
+waves = Array[ExtResource("21_6yfmp")]([SubResource("Resource_pvtfm"), SubResource("Resource_yfv8l"), SubResource("Resource_ah3ht"), SubResource("Resource_iwy8x"), SubResource("Resource_wokui")])
 enemy_pool = Array[ExtResource("1_21pon")]([ExtResource("2_cvq5j"), ExtResource("3_2c7cs"), ExtResource("4_3hnwq"), ExtResource("5_vsqve"), ExtResource("6_8ejf3"), ExtResource("7_e4vxr"), ExtResource("8_3hnwq"), ExtResource("9_vsqve"), ExtResource("10_8ejf3"), ExtResource("11_e4vxr"), ExtResource("12_rffqt"), ExtResource("13_doijp")])
 exploration_deck = Array[ExtResource("8_rffqt")]([ExtResource("9_doijp"), ExtResource("9_doijp"), ExtResource("9_doijp"), ExtResource("13_ah3ht"), ExtResource("13_ah3ht"), ExtResource("13_ah3ht"), ExtResource("12_yfv8l"), ExtResource("12_yfv8l"), ExtResource("12_yfv8l"), ExtResource("11_pvtfm"), ExtResource("11_pvtfm"), ExtResource("10_epw7l"), ExtResource("10_epw7l"), ExtResource("15_wokui"), ExtResource("15_wokui")])
-objectives = Array[ExtResource("19_ckdo4")]([SubResource("Resource_iwy8x"), SubResource("Resource_wokui"), SubResource("Resource_nen0k")])
+objectives = Array[ExtResource("19_ckdo4")]([SubResource("Resource_doijp"), SubResource("Resource_epw7l"), SubResource("Resource_6lwi4")])
 levelup_cards = Array[ExtResource("8_rffqt")]([ExtResource("21_doijp"), ExtResource("22_epw7l"), ExtResource("23_pvtfm")])
 objective_rewards = Array[ExtResource("8_rffqt")]([ExtResource("24_yfv8l"), ExtResource("25_ah3ht"), ExtResource("26_iwy8x")])
 next_levels = Array[StringName]([&"lvl_20"])

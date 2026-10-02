@@ -62,12 +62,12 @@ func _test_immunite_bloque_les_degats() -> void:
 	var def := EnemyDef.new()
 	def.id = &"t_immune"
 	def.max_hp = 50.0
-	def.immune_tags = [GameEnums.DamageTag.FROST]
+	def.immune_tags = [GameEnums.DamageTag.ICE]
 	var packed: PackedScene = load("res://scenes/game/Enemy.tscn")
 	var e: Enemy = packed.instantiate()
 	e.setup(def, 1.0)
 
-	not_ok(e.take_damage(20.0, [GameEnums.DamageTag.FROST]),
+	not_ok(e.take_damage(20.0, [GameEnums.DamageTag.ICE]),
 		"un sort immunise n applique aucun degat")
 	feq(e.hp, 50.0, "PV intacts apres un sort immunise")
 	ok(e.take_damage(20.0, [GameEnums.DamageTag.FIRE]),

@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1dl5a"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_jorrv"]
+
+[sub_resource type="Resource" id="Resource_1dl5a"]
+script = ExtResource("1_1dl5a")
+key = &"passive_element"
+magnitude = 40.0
+duration = 0.0
+radius = 0.0
+params = {
+&"stat": &"duration"
+}
+
+[resource]
+script = ExtResource("2_jorrv")
+id = &"pass_fire_embers"
+display_name = "Feu couvant"
+description = "Au-dela de 115 % de vitesse : les effets des sorts de FEU durent 40 % plus longtemps."
+rarity = 0
+base_cast_time = 0.0
+targeting = 0
+element = 1
+tags = Array[int]([])
+effects = Array[ExtResource("1_1dl5a")]([SubResource("Resource_1dl5a")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 115
+fx_key = &""
+sfx_key = &""

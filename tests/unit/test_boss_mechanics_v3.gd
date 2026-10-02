@@ -287,7 +287,7 @@ func _test_jumeaux_plafond_de_retours() -> void:
 func _cameleon(id: String) -> EnemyDef:
 	var d := _def(id, 1000.0, 0.0)
 	d.chameleon_interval = 5.0
-	d.chameleon_elements = [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.FROST,
+	d.chameleon_elements = [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.ICE,
 		GameEnums.DamageTag.POISON, GameEnums.DamageTag.LIGHTNING]
 	d.chameleon_weak_mult = 1.5
 	d.chameleon_resist_mult = 0.5

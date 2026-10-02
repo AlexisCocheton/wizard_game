@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cjvjrdun0ggdq"
-path="res://.godot/imported/element_physique.png-9041e189e301f0ec620c5e2ee45297ad.ctex"
+uid="uid://bfl4wpy8n6675"
+path="res://.godot/imported/element_vent.png-6718535f625c59d95959c9e8e0f37fbe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/icons/element_physique.png"
-dest_files=["res://.godot/imported/element_physique.png-9041e189e301f0ec620c5e2ee45297ad.ctex"]
+source_file="res://assets/icons/element_vent.png"
+dest_files=["res://.godot/imported/element_vent.png-6718535f625c59d95959c9e8e0f37fbe.ctex"]
 
 [params]
 
