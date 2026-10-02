@@ -6725,15 +6725,21 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			]}
 		&"lvl_17":
 			# Vingt et un volants : les abattre tous. La Resonance du deck frappe chaque
-			# monstre present : la jouer souvent. Tenir la ligne haute contre des monstres
-			# qui ondulent et descendent vite est le plus dur.
-			# Nouvelles : Gel profond, Marque de faiblesse (au deck du port qui suit),
-			# Rupture de chaine (deja proposee en lvl_01 : les Oeils des courants craignent
-			# le physique). Ni mur ni appat : vingt et un volants passent au-dessus.
-			return {"nouvelles": ["deep_freeze", "weakness_mark", "chain_break"], "objectifs": [
+			# monstre present : la jouer souvent. Le plus dur est le defi du co-auteur
+			# « faire parcourir une tres grande distance a un monstre » (vague 8) : six
+			# longueurs de terrain a un Serpent des sables avant de l abattre. Le Serpent
+			# ONDULE et son ondulation ne ralentit pas : retenu par le givre du deck (Pluie
+			# x4, Champ x2) ou renvoye en haut par la Volte-face, il serpente sur place et
+			# allonge son chemin. Mais il craint le givre (x1,9) : le retenir sans le tuer
+			# trop tot est tout le geste. Remplace « tenir la ligne haute a 70 % ».
+			# Seuil PROVISOIRE, a mesurer au banc des objectifs apres la vague 8.
+			# Nouvelles : Gel profond (85 % de lenteur), Marque de faiblesse (au deck du
+			# port qui suit), Volte-face (deja proposee en lvl_08 : elle fait remonter
+			# les serpents). Ni mur ni appat : vingt et un volants passent au-dessus.
+			return {"nouvelles": ["deep_freeze", "weakness_mark", "about_face"], "objectifs": [
 				[_objectif(&"kill_flying", {"count": 21}), "temporal_drag"],
 				[_objectif(&"card_casts", {"card": "resonance", "count": 7}), "void_grip"],
-				[_objectif(&"no_enemy_past", {"ratio": 0.7}), "twin_channeling"],
+				[_objectif(&"enemy_travel", {"enemy": "sand_serpent", "distance": _longueurs(6.0)}), "twin_channeling"],
 			]}
 		&"lvl_18":
 			# Les Pillards arrivent par le cote et craignent le feu : les abattre a la
@@ -6787,14 +6793,17 @@ func _progression_de(level_id: StringName) -> Dictionary:
 		&"lvl_20":
 			# La cour des rois morts, niveau dur : le Vide d emprise du deck dissipe les
 			# auras des Gardiens-totems, s en passer se paie ; la Fleche percante (x4)
-			# traverse les rangs de squelettes pareurs ; le pari de finir sous 150 %.
+			# traverse les rangs de squelettes pareurs ; le pari de finir sous 120 %,
+			# defi du co-auteur (vague 8) : le plus bas de la campagne, dans son niveau le
+			# plus dur, ou un coup encaisse pres de la fin est le plus probable. A 150 %
+			# auparavant ; seuil a mesurer au banc des objectifs apres la vague 8.
 			# Nouvelles : Racine de tonnerre, Brasier, Rupture de chaine (les squelettes
 			# pareurs craignent le physique). Recompenses : Ronces, Autel d appel, Metier
 			# du monde.
 			return {"nouvelles": ["thunder_root", "brazier", "chain_break"], "objectifs": [
 				[_objectif(&"no_card", {"card": "void_grip"}), "terrain_brambles"],
 				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 21}), "terrain_altar"],
-				[_objectif(&"win_below_speed", {"pct": 150}), "world_loom"],
+				[_objectif(&"win_below_speed", {"pct": 120}), "world_loom"],
 			]}
 		&"lvl_05":
 			# Les forges : Golems et Behemoths craignent l ARCANE, que le deck porte

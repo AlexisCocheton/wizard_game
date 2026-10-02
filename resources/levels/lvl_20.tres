@@ -47,11 +47,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_pd0cl"]
 script = ExtResource("20_yb17v")
-id = &"obj_win_below_speed_150"
-description = "Gagner avec moins de 150 % de vitesse"
+id = &"obj_win_below_speed_120"
+description = "Gagner avec moins de 120 % de vitesse"
 check_key = &"win_below_speed"
 params = {
-"pct": 150
+"pct": 120
 }
 
 [sub_resource type="Resource" id="Resource_gyyd3"]

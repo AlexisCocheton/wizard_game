@@ -48,17 +48,41 @@ const PARTIES_DU_BANC: int = 60
 ## niveau. Les ids sont DEDUITS du controle (DEC-023) : changer un seuil change
 ## l id, et ce test refuse alors la ligne — un objectif retouche doit etre
 ## re-mesure, sinon le classement ne serait plus qu une supposition.
-const MESURES: Dictionary = {
+##
+## A RE-MESURER APRES LA VAGUE 8. Ces chiffres datent du 30/09 (chantier W7).
+## Depuis, les cartes nouvelles et les recompenses ont change (W8) et un retour
+## du co-auteur va changer les decks (12 cartes), les elements et les temps
+## d incantation : tout sera re-mesure avec le banc des objectifs APRES ces
+## changements. Les objectifs neufs de W8 n ont pas de chiffre : leur ligne
+## porte A_MESURER, et ils sont listes nommement dans OBJECTIFS_A_MESURER.
+const MESURES: Dictionary = MESURES_W7
+
+
+## Marque d un objectif pas encore joue au banc. Ce n est PAS un taux : il ne
+## compte ni comme reussi ni comme rate, et son rang n est pas encore classe.
+const A_MESURER: int = -1
+
+## Les SEULS objectifs admis sans mesure, nommement : un objectif retouche ou
+## ajoute qui ne serait pas ici reste refuse. Vague 8 (01/10) : les deux defis
+## du co-auteur mal exploites, places en rang 3 de leur niveau.
+## A VIDER a la re-mesure d apres la vague 8.
+const OBJECTIFS_A_MESURER: Array[String] = [
+	"obj_enemy_travel_8280_0_sand_serpent",
+	"obj_win_below_speed_120",
+]
+
+
+const MESURES_W7: Dictionary = {
 	"lvl_01": [["obj_card_casts_piercing_arrow_6", 59], ["obj_no_card_fireball", 48], ["obj_win_above_speed_250", 28]],
 	"lvl_02": [["obj_boss_quick_after_revive_8", 50], ["obj_win_above_speed_300", 31], ["obj_kill_type_one_cast_4_hopper", 8]],
 	"lvl_08": [["obj_kill_type_one_cast_4_rat_swarm", 39], ["obj_kill_type_with_card_fireball_8_jelly_small", 29], ["obj_multi_kill_15_1", 16]],
 	"lvl_09": [["obj_no_legendary", 56], ["obj_hit_from_sleepy_fox", 19], ["obj_win_below_speed_200", 10]],
-	"lvl_17": [["obj_kill_flying_21", 51], ["obj_card_casts_resonance_7", 26], ["obj_no_enemy_past_0_7", 11]],
+	"lvl_17": [["obj_kill_flying_21", 51], ["obj_card_casts_resonance_7", 26], ["obj_enemy_travel_8280_0_sand_serpent", A_MESURER]],
 	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 40], ["obj_win_below_speed_190", 21], ["obj_card_casts_weakness_mark_11", 10]],
 	"lvl_03": [["obj_multi_kill_8_1", 50], ["obj_card_casts_frost_rain_26", 20], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 16]],
 	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 47], ["obj_no_hit_from_imp_archer", 32], ["obj_untouched", 21]],
 	"lvl_19": [["obj_kill_type_one_cast_4_pit_ghoul", 31], ["obj_element_casts_44_fire", 10], ["obj_untouched", 6]],
-	"lvl_20": [["obj_no_card_void_grip", 55], ["obj_card_casts_piercing_arrow_21", 27], ["obj_win_below_speed_150", 12]],
+	"lvl_20": [["obj_no_card_void_grip", 55], ["obj_card_casts_piercing_arrow_21", 27], ["obj_win_below_speed_120", A_MESURER]],
 	"lvl_05": [["obj_element_casts_48_arcane", 46], ["obj_kill_type_one_cast_2_golem", 31], ["obj_win_above_speed_310", 17]],
 	"lvl_06": [["obj_element_casts_5_lightning", 53], ["obj_kill_type_one_cast_3_hopper", 36], ["obj_win_under_time_100", 9]],
 	"lvl_21": [["obj_kill_type_with_card_arcane_bolt_3_fire_worm", 47], ["obj_no_card_tag_fire", 33], ["obj_win_under_time_118", 15]],
@@ -420,7 +444,10 @@ static func defauts_un_seul_sort(lv: LevelDef) -> Array[String]:
 
 ## Le classement mesure : ids identiques au contenu, chaque objectif reussi ET
 ## rate au moins une fois, taux strictement decroissant du rang 1 au rang 3.
-static func defauts_classement(lv: LevelDef, mesure: Variant) -> Array[String]:
+## Une ligne A_MESURER n est admise que pour un id de `a_mesurer` ; elle est
+## alors sautee (les rangs mesures restent classes entre eux).
+static func defauts_classement(lv: LevelDef, mesure: Variant,
+		a_mesurer: Array[String] = []) -> Array[String]:
 	var out: Array[String] = []
 	if not mesure is Array or (mesure as Array).size() != lv.objectives.size():
 		out.append("pas de mesure pour les %d objectifs" % lv.objectives.size())
@@ -433,6 +460,10 @@ static func defauts_classement(lv: LevelDef, mesure: Variant) -> Array[String]:
 				lv.objectives[i].id if lv.objectives[i] != null else &"rien"])
 			continue
 		var n: int = int(ligne[1])
+		if n == A_MESURER:
+			if not String(ligne[0]) in a_mesurer:
+				out.append("%s sans mesure et absent de OBJECTIFS_A_MESURER" % ligne[0])
+			continue
 		if n < 1:
 			out.append("%s jamais reussi au banc" % ligne[0])
 		if n > PARTIES_DU_BANC - 1:
@@ -579,8 +610,20 @@ func _test_un_seul_sort_sans_tueur_permanent() -> void:
 
 func _test_objectifs_classes_par_difficulte() -> void:
 	for lv in _niveaux():
-		var d: Array[String] = defauts_classement(lv, MESURES.get(String(lv.id)))
+		var d: Array[String] = defauts_classement(lv, MESURES.get(String(lv.id)),
+			OBJECTIFS_A_MESURER)
 		ok(d.is_empty(), "%s : objectifs classes du plus facile au plus dur %s" % [lv.id, d])
+	# La liste des objectifs sans mesure ne garde rien de perime : chacun est
+	# porte par un niveau ET marque A_MESURER dans sa ligne.
+	var sans_mesure: Dictionary = {}
+	for niveau: String in MESURES:
+		for ligne: Array in MESURES[niveau]:
+			if int(ligne[1]) == A_MESURER:
+				sans_mesure[String(ligne[0])] = true
+	for id: String in OBJECTIFS_A_MESURER:
+		ok(sans_mesure.has(id), "%s, admis sans mesure, est bien une ligne A_MESURER" % id)
+	print("  [W8] %d objectif(s) a mesurer apres la vague 8 : %s"
+		% [OBJECTIFS_A_MESURER.size(), OBJECTIFS_A_MESURER])
 
 
 ## L AUDIT ne fait qu AVERTIR sur un niveau incomplet, un objectif gratuit ou un
@@ -677,6 +720,15 @@ func _test_les_detecteurs_mordent() -> void:
 	var perime: Array = [[ids[1], 9], [ids[0], 5], [ids[2], 1]]
 	not_ok(defauts_classement(modele, perime).is_empty(), "une mesure d un autre objectif est refusee")
 	not_ok(defauts_classement(modele, null).is_empty(), "un niveau sans mesure est refuse")
+	# Une ligne A_MESURER : admise seulement si l id est liste nommement.
+	var non_mesure: Array = [[ids[0], 5], [ids[1], 2], [ids[2], A_MESURER]]
+	not_ok(defauts_classement(modele, non_mesure).is_empty(),
+		"un objectif sans mesure et hors de la liste est refuse")
+	ok(defauts_classement(modele, non_mesure, [String(ids[2])] as Array[String]).is_empty(),
+		"un objectif sans mesure, liste nommement, est admis")
+	var non_mesure_desordre: Array = [[ids[0], 2], [ids[1], 5], [ids[2], A_MESURER]]
+	not_ok(defauts_classement(modele, non_mesure_desordre, [String(ids[2])] as Array[String]).is_empty(),
+		"les rangs mesures restent classes a cote d un rang a mesurer")
 	_saboter_nouveaute()
 
 
