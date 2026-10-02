@@ -218,10 +218,9 @@ const UPGRADE_DRAW_STRONG: int = 2
 ## se remplit.
 const UPGRADE_DISCARD_PRICE: int = 1
 ## MATURATIONS par sort et par partie. Le sort murit a CARD_UPGRADE_CASTS lancers,
-## puis au double, etc. Le co-auteur parle de "montees de niveau des sorts" au
-## pluriel : un sort favori doit pouvoir s affirmer au fil de la partie.
-## Deux et pas plus : chaque maturation est un ecran modal, et un troisieme palier
-## (24 lancers) n est atteint que par un sort joue en boucle sur un niveau long.
+## puis a des ecarts de plus en plus longs. Le co-auteur parle de "montees de
+## niveau des sorts" au pluriel : un sort favori doit pouvoir s affirmer au fil
+## de la partie. (Jusqu au chantier W8 : deux et pas plus, voir plus bas.)
 ##
 ## BANC U2 (21 niveaux x 30 parties + Massacre x 20, 30/09/2026, meme machine) :
 ##                         victoires   Massacre   ameliorations / partie
@@ -229,7 +228,8 @@ const UPGRADE_DISCARD_PRICE: int = 1
 ##   pool tire, 1 palier    525 / 630    10,1       3,1 a 6,0
 ##   pool, paliers 8+16     533 / 630    10,1       3,0 a 10,5
 ##   pool, paliers 8+16*    532 / 630    10,4       3,1 a 8,7   <- retenu
-##   (* ecart qui grandit : paliers a 8 et 24, CARD_UPGRADE_GAP_GROWTH)
+##   (* ecart qui grandit : paliers a 8 et 24, ancien facteur x2 remplace en W8
+##    par CARD_UPGRADE_GAP_STEP)
 ## Le bot prend la PREMIERE voie de l offre : avec le trio fixe c etait toujours
 ## l identite en forte (+30 % degats x94 sur lvl_16) ; avec le tirage c est une
 ## voie au hasard (37 voies differentes prises au lieu de 10). Ce hasard coute
@@ -331,25 +331,32 @@ const SPAWN_FADE_TIME: float = 0.5
 const MEDITATE_CARD_XP: int = 1
 
 ## VAGUE QUI TRAINE. Une vague dont toutes les apparitions sont faites, mais dont
-## des monstres restent en jeu depuis plus de ce temps (secondes de MONDE depuis
-## la DERNIERE apparition), laisse la place a la suivante : les restants restent
-## en jeu. Avant, la vague suivante attendait la mort du dernier monstre, et deux
-## campeurs proteges (ou un tank ralenti contre un mur) figeaient la partie.
+## des monstres restent en jeu trop longtemps apres la DERNIERE apparition (temps
+## de MONDE), laisse la place a la suivante : les restants restent en jeu. Avant,
+## la vague suivante attendait la mort du dernier monstre, et deux campeurs
+## proteges (ou un tank bloque contre un mur) figeaient la partie.
 ##
-## Pourquoi depuis la derniere apparition et pas depuis le debut (WaveDef.duration,
-## 24 a 60 s) : releve sur les 106 vagues ecrites, `duration` n est que la duree
-## des APPARITIONS plus ~7 s (mediane). L appliquer telle quelle ferait tomber la
-## vague suivante sur des monstres a peine nes. 40 s de monde, c est le temps
-## qu un monstre median (45 px/s x ENEMY_SPEED_SCALE) met a parcourir les trois
-## quarts du terrain : seule une vague qui CALE (campeurs, protegee, bloquee,
-## ralentie en boucle) l atteint, jamais une vague qu on est simplement en train
-## de nettoyer. La valeur est mesuree au banc (rapport W8 : vagues ecourtees par
-## partie, victoires avant / apres).
+## « Trop longtemps » = le temps qu il faut au monstre MOBILE le plus lent de la
+## vague pour traverser le terrain a sa vitesse de base, fois
+## WAVE_OVERTIME_TRAVEL_FACTOR, et jamais moins que WAVE_OVERTIME_SECONDS (voir
+## WaveSpawner.overtime_delay). Passe ce temps, chaque monstre aurait du arriver
+## ou mourir : ceux qui restent CALENT (campeurs, proteges, bloques).
+##
+## Pourquoi pas WaveDef.duration (24 a 60 s) : releve sur les 106 vagues
+## ecrites, `duration` n est que la duree des APPARITIONS plus ~7 s (mediane).
+## Pourquoi pas un delai fixe : BANC W8, 40 s fixes ont fait tomber lvl_16 de 27 a
+## 16 victoires sur 30 (1,67 vague ecourtee par partie) — son Echo d enclume
+## (28 px/s, 95 s de traversee) etait simplement en route quand la vague 3 lui
+## tombait dessus. Rapport W8 : banc avant / apres dans tools/README_equilibrage.md.
 ##
 ## Jamais pour la DERNIERE vague (la victoire attend que TOUT soit mort), jamais
 ## pour une vague de boss ou de mini-boss, ni pour ouvrir une vague de boss en
 ## avance (voir WaveSpawner.can_cut_short) : un combat de boss se joue seul.
 const WAVE_OVERTIME_SECONDS: float = 40.0
+## Marge sur le temps de traversee : un monstre ralenti par le joueur (givre,
+## courant, volte-face) met plus longtemps sans pour autant caler. 1,25 couvre
+## un ralentissement moyen sur un quart du trajet.
+const WAVE_OVERTIME_TRAVEL_FACTOR: float = 1.25
 
 ## PROTECTEURS (aura d invulnerabilite). Une DISSIPATION (Lumiere purifiante,
 ## Vide d emprise) coupe l aura des porteurs touches pendant ce temps de monde :

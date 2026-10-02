@@ -20,6 +20,7 @@ var _bf: Battlefield = null
 
 func run() -> void:
 	_test_la_vague_qui_traine_laisse_place_a_la_suivante()
+	_test_un_monstre_lent_en_route_ne_fait_pas_trainer_la_vague()
 	_test_la_derniere_vague_ne_s_ecourte_jamais()
 	_test_les_vagues_de_boss_ne_sont_pas_court_circuitees()
 	_test_en_partie_la_victoire_attend_tous_les_restants()
@@ -137,6 +138,29 @@ func _test_la_vague_qui_traine_laisse_place_a_la_suivante() -> void:
 	eq(_bf.alive_count(), 1, "le restant reste en jeu")
 	ok(sp.start_next(), "la suivante peut demarrer")
 	eq(sp.index, 1, "c est bien la suivante")
+
+
+## Un monstre LENT qui marche encore n est pas une vague qui cale : le delai
+## couvre sa traversee (defaut du premier banc W8, lvl_16 27 -> 16 / 30).
+func _test_un_monstre_lent_en_route_ne_fait_pas_trainer_la_vague() -> void:
+	_fresh()
+	var lent: EnemyDef = _campeur("t_lent")
+	var trajet: float = GameConfig.MAGE_LINE_Y - GameConfig.SPAWN_LINE_Y
+	# Assez lent pour que sa traversee depasse le plancher de delai.
+	lent.base_speed = trajet / (GameConfig.WAVE_OVERTIME_SECONDS * 2.0) / GameConfig.ENEMY_SPEED_SCALE
+	var sp: WaveSpawner = _spawner([_vague("l1", [lent]), _vague("l2", [_campeur()])])
+	sp.start_next()
+	var traversee: float = trajet / (lent.base_speed * GameConfig.ENEMY_SPEED_SCALE)
+	feq(sp.overtime_delay(), traversee * GameConfig.WAVE_OVERTIME_TRAVEL_FACTOR,
+		"le delai suit la traversee du plus lent", 0.01)
+	ok(sp.overtime_delay() > GameConfig.WAVE_OVERTIME_SECONDS, "(plus long que le plancher)")
+	eq(_tick(sp, traversee), 0, "tant qu il peut etre en route, la vague attend")
+	# Un monstre immobile ne compte pas : seul il ramene au plancher.
+	_fresh()
+	var sp2: WaveSpawner = _spawner([_vague("i1", [_campeur()]), _vague("i2", [_campeur()])])
+	sp2.start_next()
+	feq(sp2.overtime_delay(), GameConfig.WAVE_OVERTIME_SECONDS,
+		"un monstre immobile n arrivera jamais : plancher du delai")
 
 
 func _test_la_derniere_vague_ne_s_ecourte_jamais() -> void:

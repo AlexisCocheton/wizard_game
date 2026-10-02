@@ -250,9 +250,10 @@ func current_wave() -> WaveDef:
 ## Avant, la vague suivante attendait la mort du DERNIER monstre (tick, plus
 ## haut). Deux campeurs qui se protegent (Echos d Ymoa), un tank ralenti en
 ## boucle contre un mur : la partie se figeait, sans rien a l ecran pour le dire.
-## Desormais, GameConfig.WAVE_OVERTIME_SECONDS de MONDE apres la derniere
-## apparition, la vague suivante demarre meme si des monstres restent (ils restent
-## en jeu). Temps du monde : a x4 tout va quatre fois plus vite, l attente aussi.
+## Desormais, passe un delai de MONDE apres la derniere apparition (overtime_delay :
+## le temps de traversee du monstre le plus lent, au moins
+## GameConfig.WAVE_OVERTIME_SECONDS), la vague suivante demarre meme si des
+## monstres restent (ils restent en jeu). Temps du monde : a x4 tout va quatre fois plus vite, l attente aussi.
 
 ## Elapsed (temps du monde) de la DERNIERE apparition de la vague en cours, -1 si
 ## aucune n a encore eu lieu.
@@ -266,9 +267,34 @@ var overtime_count: int = 0
 func _w8_overtime_due() -> bool:
 	if not _queue.is_empty() or _last_spawn_at < 0.0:
 		return false
-	if _elapsed - _last_spawn_at < GameConfig.WAVE_OVERTIME_SECONDS:
+	if _elapsed - _last_spawn_at < overtime_delay():
 		return false
 	return can_cut_short()
+
+
+## Delai (secondes de monde, apres la derniere apparition) au-dela duquel la
+## vague en cours TRAINE : le temps qu il faut a son monstre MOBILE le plus lent
+## pour traverser le terrain a sa vitesse de base, avec une marge
+## (GameConfig.WAVE_OVERTIME_TRAVEL_FACTOR), et jamais moins que
+## GameConfig.WAVE_OVERTIME_SECONDS.
+##
+## Pourquoi la traversee : au premier banc avec un delai FIXE de 40 s, lvl_16 est
+## tombe de 27 a 16 victoires sur 30. Sa vague 2 porte un Echo d enclume qui
+## marche a 28 px/s : 95 s pour traverser. Il etait simplement EN ROUTE, et la
+## vague 3 lui tombait dessus. Une vague « traine » quand ses monstres auraient
+## TOUS du arriver (tues ou au contact) et que certains sont encore la : bloques,
+## campeurs, proteges. Un monstre immobile (vitesse 0) n entre pas dans le calcul :
+## il n arrivera jamais, c est justement le cas a debloquer.
+func overtime_delay() -> float:
+	var w: WaveDef = current_wave()
+	var lent: float = 0.0
+	if w != null:
+		var trajet: float = GameConfig.MAGE_LINE_Y - GameConfig.SPAWN_LINE_Y
+		for e: WaveEntry in w.entries:
+			if e == null or e.enemy == null or e.enemy.base_speed <= 0.0:
+				continue
+			lent = maxf(lent, trajet / (e.enemy.base_speed * GameConfig.ENEMY_SPEED_SCALE))
+	return maxf(GameConfig.WAVE_OVERTIME_SECONDS, lent * GameConfig.WAVE_OVERTIME_TRAVEL_FACTOR)
 
 
 ## Cette vague peut-elle etre ecourtee ? Trois exceptions, chacune pour une raison :
@@ -298,7 +324,7 @@ func can_cut_short() -> bool:
 func overtime_left() -> float:
 	if not active or not _queue.is_empty() or _last_spawn_at < 0.0 or not can_cut_short():
 		return -1.0
-	return maxf(0.0, GameConfig.WAVE_OVERTIME_SECONDS - (_elapsed - _last_spawn_at))
+	return maxf(0.0, overtime_delay() - (_elapsed - _last_spawn_at))
 
 
 ## Vrai seulement quand start_next() a franchi la derniere vague ecrite.
