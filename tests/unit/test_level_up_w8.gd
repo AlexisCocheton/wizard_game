@@ -192,6 +192,8 @@ func _test_mediter_donne_une_xp_par_carte_distincte() -> void:
 	ok(RunState.pending_offer.is_empty(), "l offre est consommee : la partie reprend")
 	eq(RunState.total_cards(), 3, "aucune carte n entre dans le deck")
 	ok(RunState.upgrade_progress(a) > 0.0, "le lisere de la carte avance")
+	ok(DeckBrowser.maturation_text(a).contains("meditation"),
+		"l onglet DECK de la pause montre l XP meditee (%s)" % DeckBrowser.maturation_text(a))
 	eq(RunState.meditate_offer(), 0, "sans offre, rien a mediter")
 	RunState.reset()
 

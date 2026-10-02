@@ -333,3 +333,16 @@ func is_finished() -> bool:
 	if procedural:
 		return false
 	return index >= waves.size()
+
+
+## Les monstres de la vague en cours qui ne sont PAS ENCORE nes, dans l ordre
+## d apparition. Lu par l onglet VAGUE du menu pause (vague 8) : le joueur
+## prepare sa main contre ce qui arrive. Une copie, la file reste privee : un
+## ecran qui la viderait par erreur supprimerait des monstres de la partie.
+func queued_enemies() -> Array[EnemyDef]:
+	var out: Array[EnemyDef] = []
+	for item in _queue:
+		var def: EnemyDef = item.get("def") as EnemyDef
+		if def != null:
+			out.append(def)
+	return out

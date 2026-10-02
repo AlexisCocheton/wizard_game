@@ -424,7 +424,7 @@ raccords — à lire avant d'y toucher.
 | **Essentials** (46 PNG) | effets d'interface de combat au tour par tour (Guard, Steal, Scan, AggroUp), sans rapport avec le jeu ; et licence inconnue |
 | **ttrpg_legend ×4** | copies identiques du cinquième (§5.3) |
 | **Free Sprites** (28 PNG) | battlers RPG Maker vus de face, immobiles, résolutions incohérentes (berger allemand photo-réaliste à côté d'un gobelin 32 px) |
-| **Fairy** (3 PNG) | 32×32, 8 frames, **une seule pose de vol** — ni attaque ni mort, insuffisant pour une entrée d'`AnimCatalog` |
+| **Fairy** (3 PNG) | 32×32, 8 frames, **une seule pose de vol** — ni attaque ni mort : insuffisant pour un MONSTRE. **Repris le 02/10 comme APPRENTIE** (§6.6) : une apprentie n a besoin que d attente et d incantation |
 | **Free Tank Mushroom** (5 PNG) | idle seul, 5 frames |
 | **gorgon 2 et 3** | mêmes silhouettes recolorées ; `EnemyDef` sait déjà teinter un sprite |
 | **Free-Animated-Explosions** (110 PNG) | 10 explosions en frames séparées — le jeu en a déjà 5, dont deux HD |
@@ -501,6 +501,35 @@ sur ce poste (`fetch_craftpix.py` répond « PAS CONNECTÉ »).
 | **Phoenixling** | **le .png manque**, seul le .json est arrivé |
 | **Mage Voice Pack** | **aucun PNG** : 130 .wav, traités séparément dans `assets/voice/` |
 
+### 6.6 Garde-robe du profil (vague 8, 2026-10-02) — EXTRAIT ou DESSINÉ
+
+`tools/assets/make_wardrobe.py [CHEMIN_raw_assets]` (dessin des chapeaux :
+`tools/assets/hat_painter.py`). Données générées : `scripts/game/wardrobe_data.gd`.
+
+| Pièce | Fichiers | Source | Licence |
+|---|---|---|---|
+| Robes Red / Yellow Monk | `assets/units/monk_{red,yellow}_{idle,walk,cast}.png` | Tiny Swords `Units/{Red,Yellow} Units/Monk/{Idle,Run,Heal}` | Pixel Frog, commercial, sans crédit |
+| Robes d'aube, de mousse | `monk_{dawn,forest}_*` | remappe 2 couleurs de `monk_blue` | idem |
+| 12 chapeaux | `assets/cosmetics/hats.png` (une bande, cases 96×104) | **dessinés par script** dans le style Tiny Swords | œuvre du projet |
+| Ancrage des chapeaux | `WardrobeData.HAT_ANCHORS` | mesuré sur chaque image idle/walk/cast du moine (centre de la tonsure, sommet du crâne) | — |
+| Teintes de l'Apprentie d'azur | `bluewitch_{ember,frost,moss}_{idle,walk,attack}` | remappe 7 couleurs de `bluewitch_*` | 9e0, commercial |
+| L'écuyer + 2 teintes | `soldier_*` (cases 56×44), `soldier_{azure,royal}_*` | Tiny RPG Character Pack 01, `Soldier` (arc = incantation) | Zerie, commercial |
+| La fée + 2 couleurs | `fairy_idle`, `fairy_{sun,moss}_idle` | `Fairy.zip` (les 3 couleurs de l'auteur) | itch, commercial |
+| Tours Red/Black/Yellow/Purple | `assets/terrain/tower_{red,black,yellow,purple}.png` | Tiny Swords `Buildings/*/Tower.png` | Pixel Frog |
+| L'arbre-nid | `tower_tree.png` (8 cases de 192) | Tiny Swords `Trees/Tree3` | Pixel Frog |
+| Le monastère | `tower_monastery.png` | Tiny Swords `Blue Buildings/Monastery` | Pixel Frog |
+| Sanctuaire des ruines | `tower_ruins.png` | Ancient Ruins `generic_estructure1-1-on grass` | rafaelmatos, commercial, redistribution non |
+| 10 portraits | `assets/cosmetics/avatars.png` (grille 5×2 de 256) | Tiny Swords `UI Elements/Human Avatars` 01,04,05,07,09,13,14,16,19,24 | Pixel Frog |
+
+**Les anciens chapeaux (`monk_hat_*`, 12 feuilles) sont SUPPRIMÉS** : ils
+reteignaient (200, 168, 118), qui est aussi la peau du visage et des mains, et
+empêchaient de cumuler chapeau et robe. Les profils sont migrés
+(`SaveData.LEGACY_HATS`, même couleur et même palier).
+
+**Faceset ttrpg_legend non retenu pour les portraits** : peints en 512 px, style
+étranger au pixel art, et crédit obligatoire. Les Human Avatars de Tiny Swords
+sont du même pack que le mage et ne demandent rien.
+
 ---
 
 ## 7. Crédits — mise à jour
@@ -513,6 +542,7 @@ Personnages: Ddant1100 — https://ddant1100.itch.io             [OBLIGATOIRE]
 Voix       : John Carroll — johncarroll.itch.io                [demandé : le prévenir]
 Monstres   : luizmelo · elesrech · chierit · creativekind · darkpixel-kronovi
              9e0 · elthen · rvros (à confirmer §5.6) · craftpix.net
+Apprentis  : 9e0 (Blue Witch) · Zerie (Soldier) · auteur du pack Fairy (itch)
 Effets     : pimen (Dark VFX) · Pipoya · BDragon1727 · CodeManu · DavitMasia · ansimuz
 Icônes     : Batareya (SOUS RÉSERVE §1.5) · craftpix.net
 Décors     : lornn (Wood Elves) · cogabushi · rafaelmatos · craftpix.net · deep-fold

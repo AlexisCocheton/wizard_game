@@ -232,7 +232,9 @@ func _test_on_n_equipe_que_ce_qu_on_a_debloque() -> void:
 	# Un cosmetique hors de portee du niveau se refuse.
 	var haut: AccountRewardDef = null
 	for r: AccountRewardDef in ContentDB.rewards_list():
-		if r.kind == K.MAGE_COLOR and r.at_level > 1:
+		# Une ROBE du mage : une tenue d apprenti se range sous son apprenti
+		# (SaveData.equipped_outfit), pas dans la robe — test_wardrobe la couvre.
+		if r.kind == K.MAGE_COLOR and r.at_level > 1 and not r.is_apprentice_outfit():
 			haut = r
 	ok(haut != null, "il existe un cosmetique de mage a debloquer")
 	if haut != null:

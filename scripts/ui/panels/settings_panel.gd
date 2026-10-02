@@ -237,6 +237,22 @@ func _build_tester() -> void:
 		TESTER_INK if actif else TESTER_INK_OFF)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_tester_box.add_child(l)
+	# OUTILS DU TESTEUR (vague 8) : editeur de contenu, onglet TEST et document
+	# de changement. Une PAGE A PART (scenes/tester/) et non une section de cette
+	# colonne, qui n a pas de defilement. Seulement mode allume : les surcharges
+	# ne sont jouees qu en mode testeur, regler sans les voir n aurait pas de sens.
+	if actif:
+		var outils := Button.new()
+		outils.name = "TesterToolsButton"
+		# Le libelle ne dit PAS "testeur" : le bouton du mode, lui, le dit, et
+		# c est par ce mot que l interrupteur se reconnait (test_tester_mode).
+		outils.text = "ATELIER : cartes, monstres, vagues (%d reglage%s)" % [
+			TesterOverrides.count(), "s" if TesterOverrides.count() > 1 else ""]
+		outils.custom_minimum_size = Vector2(0, 100)
+		outils.pressed.connect(func() -> void:
+			AudioBus.play_sfx(&"ui_tap")
+			SceneRouter.goto(TesterRun.TOOLS_SCENE))
+		_tester_box.add_child(outils)
 
 
 func _tester_label(actif: bool) -> String:

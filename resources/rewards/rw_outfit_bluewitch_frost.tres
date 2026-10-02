@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_2y5ix"]
+
+[resource]
+script = ExtResource("1_2y5ix")
+id = &"rw_outfit_bluewitch_frost"
+display_name = "Apprentie de givre"
+description = "Une robe pale et des cheveux d argent."
+at_level = 11
+kind = 2
+texture_name = "bluewitch_frost"
+for_character = "bluewitch"

@@ -5,8 +5,9 @@
 [resource]
 script = ExtResource("1_jrrmb")
 id = &"rw_hat_straw"
-display_name = "Chapeau de paille"
-description = "Le chapeau du voyageur."
+display_name = "Tete nue"
+description = "La tonsure du voyageur, au vent."
 at_level = 1
 kind = 3
-texture_name = "monk_blue"
+texture_name = "none"
+for_character = ""

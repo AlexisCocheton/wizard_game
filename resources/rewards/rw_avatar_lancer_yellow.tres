@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_13xxk"]
+
+[resource]
+script = ExtResource("1_13xxk")
+id = &"rw_avatar_lancer_yellow"
+display_name = "Le lancier"
+description = "Un portrait pour ton profil."
+at_level = 8
+kind = 1
+texture_name = "avatar_lancer_yellow"
+for_character = ""

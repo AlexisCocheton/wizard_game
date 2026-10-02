@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_0tggl"]
+
+[resource]
+script = ExtResource("1_0tggl")
+id = &"rw_outfit_fairy_sun"
+display_name = "Fee solaire"
+description = "Des ailes d or et une robe rouge."
+at_level = 8
+kind = 2
+texture_name = "fairy_sun"
+for_character = "fairy"

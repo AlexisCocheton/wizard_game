@@ -60,8 +60,18 @@ func _defaults() -> Dictionary:
 			## qu il s affiche exactement comme avant la mise a jour.
 			"cosmetics": {
 				"mage_color": "monk_blue",
-				"hat": "monk_blue",
+				## Chapeau DESSINE pose sur la tete (WardrobeData.HATS), ou tete
+				## nue. Avant la vague 8 la valeur etait une feuille de mage
+				## reteinte ("monk_blue", "monk_hat_gold"...) : LEGACY_HATS.
+				"hat": AccountRewardDef.HAT_NONE,
 				"tower": "tower_blue",
+				## Portrait du profil : la TETE DU MAGE par defaut
+				## (WardrobeData.AVATAR_MAGE), ou un de WardrobeData.AVATARS.
+				"avatar": "avatar_mage",
+				## Tenue de chaque APPRENTI : {cle de l apprenti: cle de sa
+				## teinte}. Absent = sa feuille d origine. La robe du mage reste
+				## dans "mage_color" (cle historique, les vieux profils l ont).
+				"outfits": {},
 				## Le PERSONNAGE joue en combat : le mage, ou un apprenti (cle
 				## AnimCatalog). Un profil d avant les apprentis n a pas cette
 				## cle : _migrate() la complete, et il se charge avec le mage.
@@ -157,6 +167,14 @@ func _migrate(d: Dictionary) -> Dictionary:
 		for key: String in base["profile"]["cosmetics"]:
 			if not (cosm as Dictionary).has(key):
 				cosm[key] = base["profile"]["cosmetics"][key]
+		# Les chapeaux d avant la vague 8 etaient des feuilles de mage reteintes :
+		# la valeur est traduite UNE fois et reecrite, pour que le fichier ne
+		# garde pas une cle qui ne designe plus rien.
+		var ancien: String = String((cosm as Dictionary).get("hat", ""))
+		if LEGACY_HATS.has(ancien):
+			cosm["hat"] = LEGACY_HATS[ancien]
+		if typeof((cosm as Dictionary).get("outfits")) != TYPE_DICTIONARY:
+			cosm["outfits"] = {}
 	return d
 
 
@@ -1172,8 +1190,9 @@ func unlocked_rewards() -> Array[AccountRewardDef]:
 
 ## --- COSMETIQUES EQUIPES ---
 ##
-## Quatre axes independants : la robe du mage, la couleur de son chapeau, sa tour,
-## et le personnage (le mage ou un apprenti, qui met robe et chapeau de cote).
+## Axes independants (vague 8) : la robe du mage, son chapeau (calque dessine,
+## cumulable avec la robe), sa tour, son portrait, le personnage (le mage ou un
+## apprenti), et la tenue de CHAQUE apprenti ("outfits").
 ## Chacun retient une CLE (nom de feuille d animation ou de texture) et non un id
 ## de recompense : les deux fichiers de jeu qui la lisent n ont ainsi rien a
 ## chercher dans ContentDB, et une seule ligne leur suffit.
@@ -1190,7 +1209,23 @@ func _cosmetic_slot(kind: int) -> String:
 		GameEnums.RewardKind.HAT: return "hat"
 		GameEnums.RewardKind.TOWER: return "tower"
 		GameEnums.RewardKind.CHARACTER: return "character"
+		GameEnums.RewardKind.AVATAR: return "avatar"
 	return ""
+
+
+## Les chapeaux d avant la vague 8 -> leur remplacant DESSINE. Les anciens etaient
+## des feuilles du mage dont on reteignait le crane... et la peau : la couleur
+## remplacee (200, 168, 118) est aussi celle du visage et des mains (mesure sur
+## monk_blue_walk, elle s etend jusqu aux mains a 61..133 px). Chaque ancien
+## chapeau passe a un chapeau de la MEME couleur et du MEME palier de compte, pour
+## qu un joueur ne perde ni son choix ni un droit acquis.
+const LEGACY_HATS: Dictionary = {
+	"monk_blue": "none",               # la tonsure d origine : tete nue
+	"monk_hat_crimson": "hat_feather",  # carmin, palier 2
+	"monk_hat_emerald": "hat_hood",     # emeraude, palier 5
+	"monk_hat_violet": "hat_witch",     # amethyste, palier 8
+	"monk_hat_gold": "hat_crown",       # or, palier 12
+}
 
 
 func _cosmetics() -> Dictionary:
@@ -1209,6 +1244,10 @@ func equipped_cosmetic(kind: int) -> String:
 		return ""
 	var defauts: Dictionary = (_defaults()["profile"] as Dictionary)["cosmetics"]
 	var valeur: String = String(_cosmetics().get(slot, ""))
+	# Un profil charge par une autre voie que la migration (edite, ou ecrit par
+	# une version anterieure puis relu sans _migrate) garde un ancien chapeau.
+	if kind == GameEnums.RewardKind.HAT and LEGACY_HATS.has(valeur):
+		valeur = String(LEGACY_HATS[valeur])
 	return valeur if valeur != "" else String(defauts.get(slot, ""))
 
 
@@ -1222,12 +1261,72 @@ func equip_cosmetic(reward_id: StringName) -> bool:
 		return false
 	if r.at_level > account_level():
 		return false
+	# Une TENUE d apprenti se range sous SON apprenti, pas a la place de la robe
+	# du mage : chacun garde la sienne.
+	if r.is_apprentice_outfit():
+		return equip_outfit(r.for_character, r.texture_name)
 	var slot: String = _cosmetic_slot(r.kind)
 	if slot == "":
 		return false
 	_cosmetics()[slot] = r.texture_name
 	profile_changed.emit()
 	return true
+
+
+func _outfits() -> Dictionary:
+	var c: Dictionary = _cosmetics()
+	if typeof(c.get("outfits")) != TYPE_DICTIONARY:
+		c["outfits"] = {}
+	return c["outfits"]
+
+
+## Les tenues GAGNEES d un personnage, sa feuille d origine comprise. Pour le
+## mage : ses robes. Pour un apprenti : sa propre cle (la teinte d origine, qui
+## n est pas une recompense a part : elle vient avec l apprenti) puis ses teintes.
+func outfit_rewards(character: String) -> Array[AccountRewardDef]:
+	var out: Array[AccountRewardDef] = []
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.kind == GameEnums.RewardKind.MAGE_COLOR \
+				and r.outfit_owner() == character:
+			out.append(r)
+	return out
+
+
+## Equipe une tenue sur un personnage. La cle de l apprenti elle-meme (sa teinte
+## d origine) est toujours permise ; une teinte doit etre une recompense de CET
+## apprenti, deja gagnee. Pour le mage, passe par la robe (equip_cosmetic).
+func equip_outfit(character: String, sheet: String) -> bool:
+	if character == AccountRewardDef.CHARACTER_MAGE or character == "":
+		for r in outfit_rewards(AccountRewardDef.CHARACTER_MAGE):
+			if r.texture_name == sheet:
+				return equip_cosmetic(r.id)
+		return false
+	if sheet != character:
+		var permise: bool = false
+		for r in outfit_rewards(character):
+			if r.texture_name == sheet and r.at_level <= account_level():
+				permise = true
+		if not permise:
+			return false
+	_outfits()[character] = sheet
+	profile_changed.emit()
+	return true
+
+
+## La feuille que porte un personnage. Pour le mage : sa robe. Pour un apprenti :
+## sa teinte, RE-VERIFIEE a la lecture comme le personnage lui-meme (mode
+## testeur eteint, profil edite, teinte retiree, feuille absente) ; a defaut, sa
+## feuille d origine — jamais un personnage invisible.
+func equipped_outfit(character: String) -> String:
+	if character == AccountRewardDef.CHARACTER_MAGE or character == "":
+		return equipped_cosmetic(GameEnums.RewardKind.MAGE_COLOR)
+	var cle: String = String(_outfits().get(character, character))
+	if cle == character or not AnimCatalog.has(StringName(cle)):
+		return character
+	for r in outfit_rewards(character):
+		if r.texture_name == cle and r.at_level <= account_level():
+			return cle
+	return character
 
 
 ## La recompense actuellement portee sur un axe, ou null. Sert a l interface pour

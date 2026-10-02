@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_sbhiw"]
+
+[resource]
+script = ExtResource("1_sbhiw")
+id = &"rw_hat_wizard"
+display_name = "Chapeau pointu"
+description = "Bleu nuit, seme d etoiles : le chapeau des mages d avant."
+at_level = 3
+kind = 3
+texture_name = "hat_wizard"
+for_character = ""

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_8x6sp"]
+
+[resource]
+script = ExtResource("1_8x6sp")
+id = &"rw_tower_red"
+display_name = "Tour carmin"
+description = "Une tour aux creneaux rouges."
+at_level = 3
+kind = 4
+texture_name = "tower_red"
+for_character = ""

@@ -47,6 +47,12 @@ func _ready() -> void:
 	var payload: Dictionary = SceneRouter.payload
 	var level_id: StringName = payload.get("level_id", &"lvl_01")
 	mode = payload.get("mode", GameEnums.Mode.EXPLORATION)
+	# OUTILS DU TESTEUR (vague 8) : une vague composee dans l onglet TEST n a pas
+	# de .tres, son niveau est fabrique par TesterRun (meme principe que le
+	# Massacre) et sa vitesse de depart posee apres start_level().
+	if TesterRun.is_test_payload(payload):
+		TesterRun.start_in(self, payload)
+		return
 	# MODES (chantier M) : le Massacre n a pas de .tres, son niveau est fabrique.
 	var def: LevelDef = MassacreMode.resolve_level(level_id, mode)
 	if def == null:
@@ -102,6 +108,7 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	# ecoute le signal plutot que de compter ici, pour que le comptage reste au
 	# point de passage unique des sorts (EffectRegistry.cast).
 	_connect_once(RunState.upgrade_ready, _on_upgrade_ready)
+	_connect_once(RunState.purge_requested, _on_purge_requested)
 	# CHANTIER W8 : echange de passif en pause, vague qui traine.
 	_connect_once(RunState.passive_swap_needed, _on_passive_swap_needed)
 	_connect_once(spawner.wave_overtime, _on_wave_overtime)
@@ -189,8 +196,8 @@ func simulate(delta: float) -> void:
 	# hasard, soit prendre un coup en lisant.
 	if RunState.pending_upgrade_card != null:
 		return
-	# CHANTIER W8 : passif a echanger, carte brulee a viser (voir la fonction).
-	if _w8_choice_pending():
+	# Epuration, passif a echanger, carte brulee a viser (voir la fonction).
+	if game_frozen_by_choice():
 		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
 	# La mort (ou la victoire) declenche un CHANGEMENT DE SCENE depuis ce tick :
@@ -236,7 +243,7 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 		return false
 	if RunState.pending_upgrade_card != null:
 		return false
-	if _w8_choice_pending():
+	if game_frozen_by_choice():
 		return false
 	# Une carte a viser exige un point : sans lui, on refuse plutot que de
 	# lancer le sort a un endroit arbitraire.
@@ -417,6 +424,36 @@ func _ensure_upgrade_panel() -> CardUpgradePanel:
 	return _upgrade_panel
 
 
+## EPURATION (vague 8) : le choix des cartes a retirer. Meme partage que pour
+## l amelioration : en headless, personne ne peut toucher l ecran, AutoPick
+## tranche tout de suite ; sinon l ecran DeckBrowser se pose sur le HUD et
+## tranche lui-meme a VALIDER. Plusieurs parties peuvent ecouter le signal
+## (tests) : la premiere qui tranche vide `pending_purge`, les autres s arretent.
+##
+## UN SEUL ecran : une seconde demande pendant le choix (Debordement) releve le
+## plafond de l ecran deja ouvert, `pending_purge` portant le cumul.
+var _purge_screen: Control = null
+
+
+func _on_purge_requested(_max_count: int) -> void:
+	if RunState.pending_purge <= 0:
+		return
+	if headless_mode:
+		RunState.resolve_purge(AutoPick.purge_choice(RunState.run_deck_groups(),
+			RunState.pending_purge))
+		return
+	var ouvert: bool = _purge_screen != null and is_instance_valid(_purge_screen)
+	if ouvert and not _purge_screen.is_queued_for_deletion():
+		DeckBrowser.set_overlay_max(_purge_screen, RunState.pending_purge)
+		return
+	_purge_screen = DeckBrowser.purge_overlay(RunState.pending_purge)
+	var hud: Node = get_node_or_null("HUD")
+	if hud != null:
+		hud.add_child(_purge_screen)
+	else:
+		add_child(_purge_screen)
+
+
 ## On CACHE le panneau AVANT de trancher : depuis le chantier W8, trancher peut
 ## ouvrir aussitot l offre d une autre carte (meditation : deux cartes franchissent
 ## leur palier ensemble), et cette offre REMONTRE le panneau. Le cacher apres
@@ -569,7 +606,9 @@ func _on_all_cleared() -> void:
 	AudioBus.play_music(&"victory", false)
 	AudioBus.play_sfx(&"victory")
 	AudioBus.play_voice(&"victory")
-	if not headless_mode:
+	# Une partie de test revient aux outils du testeur, sans ecran de victoire
+	# (qui ouvrirait un "niveau suivant" et donnerait des recompenses).
+	if not headless_mode and not TesterRun.end_run(level_def, true):
 		SceneRouter.goto(SceneRouter.VICTORY, {"level_id": level_def.id})
 
 
@@ -599,7 +638,7 @@ func _on_died() -> void:
 	AudioBus.play_music(&"defeat", false)
 	AudioBus.play_sfx(&"defeat")
 	AudioBus.play_voice(&"death")
-	if not headless_mode:
+	if not headless_mode and not TesterRun.end_run(level_def, false):
 		SceneRouter.goto(SceneRouter.DEFEAT, {"level_id": level_def.id,
 			"waves": RunState.wave_index})
 
@@ -610,18 +649,24 @@ func _on_died() -> void:
 # ailleurs dans ce fichier est une ligne qui appelle une fonction d ici.
 # =====================================================================
 
-## Un choix du chantier W8 attend-il le joueur ? Lu par simulate() (pause) et
-## play_card() (refus). Deux choix modaux, meme regle que le choix de carte et
-## l amelioration, et pour la meme raison :
-##   - un quatrieme PASSIF attend que le joueur designe celui qu il retire (ou
-##     refuse) : il lit trois cartes, il ne doit pas encaisser en lisant ;
-##   - une carte BRULEE attend d etre visee : elle part sans incantation, la ou
-##     le joueur la lache, et viser pendant que tout bouge rendrait le choix de
-##     bruler pire que celui de prendre la carte.
+## LA PARTIE EST-ELLE FIGEE PAR UN CHOIX ? Un seul etat, lisible par tous (HUD,
+## tests, smoke) : tant qu il est vrai, simulate() n avance rien et play_card()
+## refuse. Les cinq choix modaux du combat, pour la meme raison a chaque fois —
+## le joueur LIT, il ne doit pas encaisser en lisant :
+##   - une offre de cartes (montee de niveau) ;
+##   - une amelioration de sort (trois voies a comparer) ;
+##   - une EPURATION (le joueur parcourt son deck) ;
+##   - un quatrieme PASSIF : le joueur designe celui qu il retire, ou refuse ;
+##   - une carte BRULEE a viser : elle part sans incantation, la ou le joueur la
+##     lache, et viser pendant que tout bouge rendrait bruler pire que prendre.
 ## (Le commentaire vit ici et pas dans simulate() : test_balance lit le debut de
 ## simulate() et exige d y trouver la sortie sur `_ended`.)
-func _w8_choice_pending() -> bool:
-	return RunState.pending_passive != null or RunState.burned_card != null
+func game_frozen_by_choice() -> bool:
+	return not RunState.pending_offer.is_empty() \
+		or RunState.pending_upgrade_card != null \
+		or RunState.pending_purge > 0 \
+		or RunState.pending_passive != null \
+		or RunState.burned_card != null
 
 
 ## Le panneau d echange de passif, cree a la premiere occasion (meme raison que

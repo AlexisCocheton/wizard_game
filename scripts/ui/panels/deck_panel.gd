@@ -6,7 +6,7 @@ extends Control
 ##   | [Feu] [Givre] [+]        [renommer]  [supprimer] |  <- onglets de decks
 ##   +--------------------------------------------------+
 ##   | ,----------------------------------------------. |
-##   |(|  Feu                          15 / 15        |)|  <- en-tete papier
+##   |(|  Feu                          12 / 12        |)|  <- en-tete papier
 ##   |(|  +-------+  +-------+  +-------+             |)|
 ##   |(|  | icone |  | icone |  | icone |             |)|  grille 3 x 2
 ##   |(|  | nom x3|  | nom x2|  | nom x1|             |)|  = LE DECK (toucher
@@ -42,7 +42,7 @@ extends Control
 ## GLISSER-DEPOSER (UI-006), EN PLUS DU TOUCHER
 ## -------------------------------------------
 ##   +--------------------------------------------------+
-##   |  Deck 1                          14 / 15         |
+##   |  Deck 1                          11 / 12         |
 ##   | +==============================================+ |
 ##   | |  DEPOSER ICI POUR AJOUTER    (ou la raison   | |  <- zone de depot
 ##   | |  du refus, en rouge, AVANT de lacher)        | |     (or / rouge)
@@ -201,6 +201,8 @@ var _detail_box: VBoxContainer
 var _detail_card: SpellCard = null
 ## Emplacement de passif dont le choix est ouvert sur la page, -1 = aucun.
 var _picker_slot: int = -1
+## Passif dont la FICHE est ouverte dans le choix (1er toucher), null sinon.
+var _passive_detail: SpellCard = null
 
 ## Appui en cours sur une vignette, pas encore un glisser :
 ## {card, from_deck, start, tile}. Vide = aucun doigt pose sur une carte.
@@ -418,6 +420,7 @@ func refresh() -> void:
 	_armed_id = &""
 	_detail_card = null
 	_picker_slot = -1
+	_passive_detail = null
 	# Un glisser ou un bandeau d une visite precedente n a plus de sens : les
 	# vignettes qu ils designent vont etre reconstruites.
 	cancel_drag()
@@ -660,6 +663,7 @@ func open_passive_picker(slot: int) -> void:
 	if not SaveData.passives_unlocked():
 		return
 	_picker_slot = clampi(slot, 0, DeckRules.MAX_PASSIVES - 1)
+	_passive_detail = null
 	_armed_id = &""
 	_detail_card = null
 	_render()
@@ -667,6 +671,7 @@ func open_passive_picker(slot: int) -> void:
 
 func close_passive_picker() -> void:
 	_picker_slot = -1
+	_passive_detail = null
 	_render()
 
 
@@ -683,6 +688,7 @@ func equip_passive_in_slot(slot: int, card: SpellCard) -> bool:
 	SaveData.set_equipped_passives(passives_with(ids, slot, card.id))
 	SaveData.save_profile()
 	_picker_slot = -1
+	_passive_detail = null
 	_render()
 	return true
 
@@ -697,7 +703,95 @@ func clear_passive_slot(slot: int) -> void:
 	SaveData.set_equipped_passives(ids)
 	SaveData.save_profile()
 	_picker_slot = -1
+	_passive_detail = null
 	_render()
+
+
+## Toucher un passif du choix. Deux etats, comme la collection de sorts :
+##   1er toucher (ou passif different) -> ouvre sa FICHE (nom, rarete, seuil,
+##                                        effet, logo de type) ;
+##   2e toucher sur le MEME passif      -> l equipe (equip_passive_in_slot).
+## Le bouton EQUIPER de la fiche est ce second toucher : le pouce n a pas a
+## revenir sur la vignette.
+func tap_passive(card: SpellCard) -> void:
+	if card == null:
+		return
+	if _passive_detail == card:
+		_passive_detail = null
+		equip_passive_in_slot(_picker_slot, card)
+		return
+	_passive_detail = card
+	_render()
+
+
+## La fiche de passif ouverte dans le choix, null sinon.
+func passive_detail() -> SpellCard:
+	return _passive_detail
+
+
+## Ligne de rarete et de seuil de la fiche d un passif. Statique : le test la
+## lit sans construire l ecran.
+static func passive_sheet_line(card: SpellCard) -> String:
+	return "Passif %s   -   actif des %d %% de vitesse" % [
+		GameEnums.rarity_name(card.rarity).to_lower(), card.speed_threshold]
+
+
+## La fiche d un passif, a la place de la grille du choix. Encre SOMBRE : papier.
+func _render_passive_sheet(card: SpellCard) -> void:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_detail_box.add_child(scroll)
+	var box := VBoxContainer.new()
+	box.name = "PassiveSheet"
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override(&"separation", 10)
+	scroll.add_child(box)
+
+	# L icone porte le SCEAU DE TYPE (type_art), comme les sorts : c est le logo
+	# qui dit sur quel genre de sort le passif agit.
+	var art: Control = type_art(card, 180.0)
+	if art != null:
+		art.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		box.add_child(art)
+	box.add_child(UiTheme.label(card.display_name, UiTheme.FONT_TITLE,
+		UiTheme.rarity_ink(card.rarity), HORIZONTAL_ALIGNMENT_CENTER, false))
+	box.add_child(UiTheme.label(passive_sheet_line(card), UiTheme.FONT_SMALL,
+		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	var types: Array[String] = ElementIcons.card_type_names(card)
+	if not types.is_empty():
+		box.add_child(UiTheme.label("Type : " + ", ".join(types), UiTheme.FONT_SMALL,
+			Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
+	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY,
+		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+	var ou: int = equipped_passive_cards().find(card)
+	if ou != -1:
+		box.add_child(UiTheme.label("Deja equipe (emplacement %d)" % (ou + 1),
+			UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER, false))
+
+	var boutons := HBoxContainer.new()
+	boutons.add_theme_constant_override(&"separation", 12)
+	_detail_box.add_child(boutons)
+	var equiper := Button.new()
+	equiper.name = "EquipPassive"
+	equiper.text = "EQUIPER"
+	equiper.custom_minimum_size = Vector2(0, 110)
+	equiper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	equiper.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		tap_passive(card))
+	boutons.add_child(equiper)
+	var retour := Button.new()
+	retour.text = "RETOUR"
+	retour.custom_minimum_size = Vector2(0, 110)
+	retour.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	retour.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		_passive_detail = null
+		_render())
+	boutons.add_child(retour)
 
 
 ## Le choix d un passif, a la place des grilles sur la MEME page (comme la fiche
@@ -714,8 +808,15 @@ func _render_passive_picker() -> void:
 		c.queue_free()
 	_header.text = "PASSIF  -  emplacement %d / %d" % [_picker_slot + 1, DeckRules.MAX_PASSIVES]
 	_header.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
-	_page_label.text = "actifs des le debut, en Infini et en Massacre"
+	# COURT : le pied de page tient entre deux fleches de ARROW_W px, sans
+	# retour a la ligne. La phrase d avant (46 lettres) elargissait toute la page
+	# au-dela de l ecran : la 3e vignette et la fiche du passif etaient coupees
+	# a droite (vu sur capture). La portee complete est deja ecrite sous la bande.
+	_page_label.text = "actifs des le debut du combat"
 	_page_label.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
+	if _passive_detail != null:
+		_render_passive_sheet(_passive_detail)
+		return
 
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -746,8 +847,11 @@ func _render_passive_picker() -> void:
 		var pied: String = "des %d %%" % p.speed_threshold
 		if ou != -1:
 			pied = "equipe (%d)" % (ou + 1)
+		# DOUBLE TOUCHER, comme les sorts de la collection (vague 8) : le 1er
+		# toucher ouvre la FICHE du passif, le 2e l equipe. Un seul toucher
+		# equipait et l effet n etait qu une infobulle — invisible au doigt.
 		var t: Button = _tile(p, pied, UiTheme.GOLD if ou != -1 else UiTheme.TEXT,
-			equip_passive_in_slot.bind(_picker_slot, p), p.description)
+			tap_passive.bind(p), "")
 		grille.add_child(t)
 
 	var boutons := HBoxContainer.new()
@@ -799,27 +903,45 @@ func _render_deck_grid() -> void:
 			"Toucher pour retirer un exemplaire, ou glisser vers la collection")
 		_make_draggable(t, card, true)
 		_deck_grid.add_child(t)
-	# On complete la grille avec des emplacements VIDES visibles plutot qu un
-	# trou : le joueur voit qu il lui reste de la place sans lire le compteur.
-	# On n en met QUE de quoi finir la page visible — au-dela, la zone defile et
-	# des cases vides supplementaires n apprendraient plus rien.
-	var cases: int = COLS * DECK_ROWS
-	for _i in maxi(0, cases - _deck_grid.get_child_count()):
-		_deck_grid.add_child(_empty_slot())
+	# PLUS DE CASES "vide" (vague 8). La grille se completait jusqu a six
+	# emplacements (MAX_DISTINCT) : le joueur lisait six cases a remplir, alors
+	# que six sorts differents sont un MAXIMUM, pas une obligation — un deck de
+	# DeckRules.DECK_SIZE cartes en trois sorts est valide. Le compteur du haut
+	# dit ce qui manque vraiment. Un deck VIDE garde une phrase, sinon la zone se
+	# lirait comme une page blanche cassee (vu sur capture).
+	if _deck_grid.get_child_count() == 0:
+		_deck_grid.add_child(_empty_deck_hint())
 
 
-func _empty_slot() -> Control:
-	# Un BOUTON desactive et non un panneau nu : sur le papier creme, un
-	# PanelContainer sans style est invisible, et la zone du deck se lisait comme
-	# une page blanche cassee (vu sur capture). Le cadre grise dit "emplacement
-	# a remplir", ce qui est exactement l information.
-	var b := Button.new()
-	b.text = "vide"
-	b.disabled = true
-	b.custom_minimum_size = Vector2(TILE_W, TILE_H)
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
-	return b
+## La phrase d un deck vide, posee dans la premiere case de la grille. Pas un
+## bouton grise : rien a toucher ici, c est la collection qui ajoute.
+func _empty_deck_hint() -> Control:
+	var l: Label = UiTheme.label("Deck vide : touche deux fois une carte de la collection",
+		UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
+	l.name = "EmptyDeckHint"
+	l.custom_minimum_size = Vector2(TILE_W, TILE_H)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return l
+
+
+## Nombre de CARTES (vignettes) dans la grille du deck : une par sort different,
+## aucune case vide. Lu par les tests.
+func deck_grid_cards() -> int:
+	var n: int = 0
+	for c in _deck_grid.get_children():
+		if c is Button:
+			n += 1
+	return n
+
+
+## Nombre total d elements poses dans la grille du deck (vignettes + phrase).
+func deck_grid_cells() -> int:
+	return _deck_grid.get_child_count()
+
+
+## Le compteur du deck tel qu affiche en tete de page.
+func header_text() -> String:
+	return _header.text if _header != null else ""
 
 
 func _render_filters() -> void:

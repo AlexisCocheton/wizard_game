@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_tcylu"]
+
+[resource]
+script = ExtResource("1_tcylu")
+id = &"rw_outfit_bluewitch_ember"
+display_name = "Apprentie de braise"
+description = "Cheveux de flamme et robe de cendre."
+at_level = 10
+kind = 2
+texture_name = "bluewitch_ember"
+for_character = "bluewitch"

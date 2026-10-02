@@ -10,3 +10,4 @@ description = "Une tour qui rougeoie encore de la derniere bataille."
 at_level = 10
 kind = 4
 texture_name = "tower_ember"
+for_character = ""

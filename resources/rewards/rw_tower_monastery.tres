@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_o5lre"]
+
+[resource]
+script = ExtResource("1_o5lre")
+id = &"rw_tower_monastery"
+display_name = "Le monastere"
+description = "Le mage se tient sur le seuil de la maison des moines."
+at_level = 12
+kind = 4
+texture_name = "tower_monastery"
+for_character = ""

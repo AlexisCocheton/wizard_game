@@ -10,3 +10,4 @@ description = "La robe bleue des gardiens du temps."
 at_level = 1
 kind = 2
 texture_name = "monk_blue"
+for_character = ""

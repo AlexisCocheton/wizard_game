@@ -10,3 +10,4 @@ description = "Titre affiche sur ton profil."
 at_level = 2
 kind = 0
 texture_name = ""
+for_character = ""

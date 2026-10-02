@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_qk7g2"]
+
+[resource]
+script = ExtResource("1_qk7g2")
+id = &"rw_hat_beanie"
+display_name = "Bonnet de laine"
+description = "Rouge, avec un pompon. Pour les sieges d hiver."
+at_level = 6
+kind = 3
+texture_name = "hat_beanie"
+for_character = ""

@@ -360,6 +360,48 @@ func _check_apprentices() -> void:
 				% [r.id, cle, monstres[String(cle)]])
 	if not mage_de_depart:
 		fail("aucune recompense CHARACTER ne rend le mage au niveau 1")
+	_check_wardrobe(monstres, vus)
+
+
+## LA GARDE-ROBE (vague 8). Chaque piece est du CONTENU : une cle mal tapee dans
+## make_account.gd donnerait un chapeau invisible, une tour de repli ou une tenue
+## qui habille un monstre. Rien ne planterait ; c est ici que ca doit se voir.
+func _check_wardrobe(monstres: Dictionary, apprentis: Dictionary) -> void:
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r == null:
+			continue
+		match r.kind:
+			GameEnums.RewardKind.HAT:
+				if r.texture_name != AccountRewardDef.HAT_NONE \
+						and not WardrobeData.HATS.has(r.texture_name):
+					fail("chapeau %s : '%s' n est pas dans WardrobeData.HATS" % [r.id, r.texture_name])
+			GameEnums.RewardKind.TOWER:
+				if not WardrobeData.TOWERS.has(r.texture_name):
+					fail("tour %s : '%s' n a pas de geometrie mesuree (WardrobeData.TOWERS)"
+						% [r.id, r.texture_name])
+			GameEnums.RewardKind.AVATAR:
+				# La TETE DU MAGE (portrait par defaut, vague 8) vient de la planche
+				# du casting, pas de la grille des portraits : on exige son IMAGE.
+				if r.texture_name == WardrobeData.AVATAR_MAGE:
+					if UiTheme.avatar_texture(r.texture_name) == null:
+						fail("portrait %s : la tete du mage ne se decoupe pas" % r.id)
+				elif not WardrobeData.AVATARS.has(r.texture_name):
+					fail("portrait %s : '%s' n est pas dans WardrobeData.AVATARS"
+						% [r.id, r.texture_name])
+			GameEnums.RewardKind.MAGE_COLOR:
+				var cle := StringName(r.texture_name)
+				if not AnimCatalog.has(cle) or not AnimCatalog.has_anim(cle, "idle"):
+					fail("tenue %s : '%s' n est pas une feuille animee" % [r.id, cle])
+				if r.is_apprentice_outfit():
+					if not apprentis.has(StringName(r.for_character)):
+						fail("tenue %s : habille '%s', qui n est pas un apprenti"
+							% [r.id, r.for_character])
+					if monstres.has(r.texture_name):
+						fail("tenue %s : la feuille %s est aussi celle du monstre %s"
+							% [r.id, cle, monstres[r.texture_name]])
+				elif UiTheme.hat_rig(r.texture_name) == "":
+					fail("robe %s : '%s' n a pas de gabarit de tete (WardrobeData.HAT_RIGS)"
+						% [r.id, cle])
 
 
 ## AUCUNE COULEUR DE RARETE ECRITE EN DUR HORS DE UiTheme.

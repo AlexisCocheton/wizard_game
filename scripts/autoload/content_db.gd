@@ -29,6 +29,10 @@ func reload() -> void:
 	rewards.clear()
 	duplicate_ids.clear()
 	_scan_dir("res://resources")
+	# OUTILS DU TESTEUR (vague 8) : le calque de surcharges est rejoue ICI, et
+	# seulement ici, sur les objets fraichement indexes. Il ne fait rien hors
+	# mode testeur. Avant l emission : un ecouteur doit voir le contenu regle.
+	TesterOverrides.after_content_load()
 	# Plus de "communes de depart" ecrites dans le profil (discover_starters a
 	# ete SUPPRIMEE, le 01/10) : le livre d un profil neuf est le deck du premier
 	# niveau, et SaveData le DEDUIT des niveaux ouverts (LE LIVRE DE SORTS). La

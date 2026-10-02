@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_hsnub"]
+
+[resource]
+script = ExtResource("1_hsnub")
+id = &"rw_outfit_bluewitch_moss"
+display_name = "Apprentie des mousses"
+description = "Une robe de foret et des cheveux de ble."
+at_level = 12
+kind = 2
+texture_name = "bluewitch_moss"
+for_character = "bluewitch"

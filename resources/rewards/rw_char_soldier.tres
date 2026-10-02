@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_xmgt2"]
+
+[resource]
+script = ExtResource("1_xmgt2")
+id = &"rw_char_soldier"
+display_name = "L ecuyer"
+description = "Un soldat qui a pose l epee pour l arc. Il combat a la place du mage."
+at_level = 4
+kind = 5
+texture_name = "soldier"
+for_character = ""
