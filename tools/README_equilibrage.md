@@ -93,6 +93,14 @@ les 21 niveaux, avec les cartes que le bot y a prises (13,4 vagues avant W7) ;
 lance seul (`--niveaux=none`), il part d un profil neuf et le pool est vide
 (7,7 vagues). Comparer deux Massacres mesures de la meme facon.
 
+**Regle du livre (02/10)** : distribuer un deck n obtient plus rien ; une carte
+est obtenue si elle est dans le deck d un niveau OUVERT ou prise en combat. Le
+banc ouvre donc, avant de mesurer un niveau, ce niveau et tous ceux qui le
+precedent dans l ordre de jeu (`open_levels_up_to`). **Les chiffres de Massacre
+mesures avant et apres cette regle ne sont pas comparables** (le pool n est plus
+le meme) ; les niveaux de campagne, dont le pool ne lit pas le profil, ne
+bougent pas.
+
 Le rapport par niveau donne aussi : vitesse retiree par source (cumul et par
 vague), vague de la mort, cartes et ameliorations prises, temps pour abattre
 le boss, et l adequation du deck au lieu (facteur moyen pondere par les PV).
@@ -137,8 +145,9 @@ celles du banc d equilibrage), `--detail` (une ligne par partie avec son emprein
 deux sorties a comparer).
 
 **En parallele** : un processus par groupe de niveaux, puis concatener les
-lignes « A COLLER ». Le profil est remis a neuf avant chaque partie : le resultat
-ne depend ni de l ordre ni du decoupage.
+lignes « A COLLER ». Avant chaque partie, le profil est remis a neuf puis le
+niveau et ceux qui le precedent sont ouverts : le resultat ne depend ni de
+l ordre ni du decoupage.
 
 ```bash
 for g in lvl_01,lvl_02,lvl_08,lvl_09,lvl_17 lvl_18,lvl_03,lvl_04,lvl_19,lvl_20 \

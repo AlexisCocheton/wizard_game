@@ -188,10 +188,24 @@ func _report_deck_fit(level: LevelDef) -> void:
 
 
 ## Rejoue le meme niveau avec des graines differentes et resume.
+## Ouvre dans le profil (en memoire) `level_id` et tous les niveaux qui le
+## precedent dans l ordre de jeu. Aussi utilise par le banc des objectifs.
+static func open_levels_up_to(level_id: StringName) -> void:
+	for id in _levels():
+		SaveData.unlock_level(StringName(id))
+		if StringName(id) == level_id:
+			return
+
+
 func _run_level_many(level_id: StringName, runs: int) -> void:
 	var level: LevelDef = ContentDB.levels.get(level_id)
 	if level == null:
 		return
+	# PROFIL REALISTE (regle du livre) : une carte est obtenue par le deck d un
+	# niveau OUVERT ou par sa prise en combat. Le niveau mesure et ceux qui le
+	# precedent dans l ordre de jeu sont ouverts, comme chez un joueur qui y
+	# arrive ; sans cela le Massacre mesure apres eux partirait d un pool vide.
+	open_levels_up_to(level_id)
 	var wins: int = 0
 	var vagues: Array[int] = []
 	## Vitesse restante a l arrivee. C est la reserve de VIE du mage depuis le

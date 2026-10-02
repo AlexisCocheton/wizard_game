@@ -34,9 +34,10 @@ extends Node
 ##
 ## DETERMINISME : deux processus a graine egale rendent les memes nombres (le
 ## hasard du monde passe par RunState.world_rng, fixe par RunState.set_seed ;
-## verrouille par tests/unit/test_objective_bench.gd). Le profil est remis a
-## neuf avant chaque partie : une partie ne depend ni de celles d avant, ni de
-## l ordre des niveaux, ni du decoupage entre processus.
+## verrouille par tests/unit/test_objective_bench.gd). Avant chaque partie le
+## profil est remis a neuf, puis le niveau et ceux qui le precedent sont ouverts
+## (regle du livre) : une partie ne depend ni de celles d avant, ni de l ordre
+## des niveaux, ni du decoupage entre processus.
 ##
 ## EN PARALLELE : un processus par groupe de niveaux (--niveaux), puis on
 ## concatene les lignes « A COLLER » de chaque sortie. Le pas de temps et les
@@ -282,6 +283,9 @@ func _mesurer_niveau(lv: LevelDef) -> void:
 ## d image continuait a piloter les autoloads pendant la suivante).
 func _une_partie(lv: LevelDef, p: AutoPick.Politique, graine: int) -> Dictionary:
 	SaveData.reset_profile()
+	# Profil d un joueur qui arrive a ce niveau : lui et ceux d avant sont ouverts
+	# (regle du livre : le deck d un niveau ouvert est obtenu).
+	SimBalance.open_levels_up_to(lv.id)
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
