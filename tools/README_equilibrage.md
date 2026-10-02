@@ -172,6 +172,42 @@ marcher le monstre jusqu a sa distance, puis le viser. Les paris de fin de
 combat (vitesse, chrono, intact, multi_kill) : bot tel quel. Une cle ajoutee au
 moteur sans politique documentee fait rougir `test_objective_bench`.
 
+## Chantier W8 (combat) : vagues qui trainent, protecteurs, devoreurs, paliers
+
+Banc complet (21 niveaux x 30 parties + Massacre x 20, `--sans-vagues`), meme
+machine, banc deterministe : `main` avant fusion contre la branche W8.
+
+| | avant | apres |
+|---|---|---|
+| Victoires, tous niveaux | 590 / 630 | 594 / 630 |
+| lvl_20 (Gardiens-totems) | 23 / 30 | 27 / 30 |
+| Autres niveaux | — | identiques au point pres |
+| Ameliorations par partie (moyenne des 21) | 5,78 | 5,78 |
+| Vagues ecourtees par partie (campagne) | — | 0,00 partout |
+| Massacre | vague 14,4 | vague 13,9 |
+
+Ce que disent ces chiffres :
+
+- **Les paliers 3 a 5** (48, 80, 120 lancers) ne sont jamais atteints en campagne :
+  le nombre d ecrans d amelioration par partie ne bouge pas. Ils servent les
+  longues parties (Infini, Massacre), c est voulu.
+- **La vague qui traine** : un premier essai a delai FIXE (40 s apres la derniere
+  apparition) a fait tomber lvl_16 de 27 a 16 victoires (1,67 vague ecourtee par
+  partie) : son Echo d enclume, a 28 px/s, mettait 95 s a traverser et etait
+  simplement en route. Le delai suit desormais la traversee du monstre MOBILE le
+  plus lent (x1,25, plancher 40 s) : en campagne le bot n ecourte plus aucune
+  vague, le minuteur ne mord que sur ce qui CALE.
+- **Le pat d aura** : un premier essai (tous les monstres frappables couverts
+  pendant 4 s) cassait aussi les Gardiens-totems qui MARCHENT : lvl_20 passait de
+  23 a 30 / 30, hors fenetre. Il ne vaut plus que pour des proteges qui ne
+  descendent pas (campeurs, tours immobiles) : lvl_20 27 / 30 (90 %, dans la
+  fenetre). La part des +4 qui revient a la dissipation (qui coupe maintenant
+  les auras) et celle qui revient au pat n ont pas ete separees.
+- **La force des devoreurs** ne fait bouger aucun niveau de campagne au banc ;
+  le Massacre perd 0,5 vague (14,4 -> 13,9), effet cumule de la force des
+  devoreurs, des vagues ecourtees et des paliers, non separe.
+- Le banc releve maintenant les **vagues ecourtees** par niveau.
+
 Les garde-fous sont dans `tests/unit/test_balance.gd` : ils verrouillent les
 rapports (pas de saut superieur a x2 entre deux vagues, enchainement des niveaux,
 pioche suffisante). Le banc reste la mesure de verite.

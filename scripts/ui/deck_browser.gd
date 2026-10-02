@@ -388,12 +388,16 @@ static func piles_text(g: Dictionary) -> String:
 		int(g.get("pile", 0)), int(g.get("hand", 0)), int(g.get("discard", 0))]
 
 
-## Ou en est la carte dans ses maturations (GameConfig.CARD_UPGRADE_TIERS), et
-## les voies prises. C est l information qu on ne lit nulle part en combat : le
-## lisere de la carte dit seulement qu elle progresse.
+## Ou en est la carte dans ses maturations, et les voies prises. C est
+## l information qu on ne lit nulle part en combat : le lisere de la carte dit
+## seulement qu elle progresse.
+## CHANTIER W8 : le total est celui de CETTE carte (RunState.upgrade_tiers_for :
+## jamais plus de maturations que de voies), et le reste se compte en XP de
+## carte (lancers ET meditations, RunState.card_xp) — compter les seuls lancers
+## annoncait « 1 lancer » a une carte que la meditation venait de porter au palier.
 static func maturation_text(card: SpellCard) -> String:
 	var faites: int = RunState.maturations_done(card)
-	var total: int = GameConfig.CARD_UPGRADE_TIERS
+	var total: int = RunState.upgrade_tiers_for(card)
 	var t: String = "Maturation %d / %d" % [mini(faites, total), total]
 	var noms: Array[String] = []
 	for id in RunState.upgrade_ids_of(card):
@@ -404,8 +408,11 @@ static func maturation_text(card: SpellCard) -> String:
 	if not noms.is_empty():
 		t += " : " + ", ".join(noms)
 	if faites < total:
-		var reste: int = maxi(0, RunState.next_upgrade_at(card) - RunState.casts_of(card))
+		var reste: int = maxi(0, RunState.next_upgrade_at(card) - RunState.card_xp(card))
 		t += "  -  prochaine dans %d lancer%s" % [reste, "s" if reste > 1 else ""]
+	var meditee: int = RunState.card_xp_given(card)
+	if meditee > 0:
+		t += " (%d XP de meditation)" % meditee
 	return t
 
 
