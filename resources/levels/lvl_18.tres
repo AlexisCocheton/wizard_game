@@ -13,13 +13,13 @@
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="11_y4skc"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_a7q5d"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="13_hxfeh"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="15_71fqq"]
-[ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="16_oi32p"]
+[ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="15_71fqq"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="16_oi32p"]
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="16_pk01i"]
-[ext_resource type="Resource" path="res://resources/cards/rare/heartwood_totem.tres" id="17_dkopx"]
+[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="17_dkopx"]
 [ext_resource type="Resource" path="res://resources/cards/rare/bone_recall.tres" id="18_1stm8"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_jfkqu"]
-[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="19_dc1bl"]
+[ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="19_1stm8"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_u162o"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_4hem6"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/terrain_river.tres" id="20_g451r"]
@@ -192,5 +192,5 @@ enemy_pool = Array[ExtResource("1_il855")]([ExtResource("2_323wf"), ExtResource(
 exploration_deck = Array[ExtResource("8_dc1bl")]([ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("10_wgl7e"), ExtResource("10_wgl7e"), ExtResource("12_a7q5d"), ExtResource("12_a7q5d"), ExtResource("16_pk01i"), ExtResource("16_pk01i")])
 objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_71fqq"), SubResource("Resource_oi32p"), SubResource("Resource_dkopx")])
 levelup_cards = Array[ExtResource("8_dc1bl")]([ExtResource("15_71fqq"), ExtResource("16_oi32p"), ExtResource("17_dkopx")])
-objective_rewards = Array[ExtResource("8_dc1bl")]([ExtResource("18_1stm8"), ExtResource("19_dc1bl"), ExtResource("20_g451r")])
+objective_rewards = Array[ExtResource("8_dc1bl")]([ExtResource("18_1stm8"), ExtResource("19_1stm8"), ExtResource("20_g451r")])
 next_levels = Array[StringName]([&"lvl_03"])

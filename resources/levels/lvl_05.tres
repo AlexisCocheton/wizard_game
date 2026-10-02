@@ -18,16 +18,16 @@
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="15_ku35m"]
 [ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="16_3n3tv"]
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="18_cfeh0"]
-[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="19_tefmi"]
-[ext_resource type="Resource" path="res://resources/cards/epic/thunder_root.tres" id="20_nwfpf"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="19_tefmi"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="20_nwfpf"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_cvhwm"]
-[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="21_jbul7"]
+[ext_resource type="Resource" path="res://resources/cards/epic/reckless_bargain.tres" id="21_jbul7"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_kj3ap"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="22_u46sd"]
+[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="22_u46sd"]
 [ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="23_bv40u"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_bva8d"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_4m5kv"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="24_geehf"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/tide_ledger.tres" id="24_bv40u"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="25_kwppq"]
 [ext_resource type="Resource" path="res://resources/enemies/emberlord.tres" id="27_7t2wd"]
 [ext_resource type="Resource" path="res://resources/enemies/glass_mirror.tres" id="27_cfeh0"]
@@ -303,5 +303,5 @@ enemy_pool = Array[ExtResource("1_n8ylh")]([ExtResource("2_kwppq"), ExtResource(
 exploration_deck = Array[ExtResource("11_jbul7")]([ExtResource("12_u46sd"), ExtResource("12_u46sd"), ExtResource("12_u46sd"), ExtResource("13_bv40u"), ExtResource("13_bv40u"), ExtResource("13_bv40u"), ExtResource("13_bv40u"), ExtResource("14_geehf"), ExtResource("14_geehf"), ExtResource("15_ku35m"), ExtResource("15_ku35m"), ExtResource("16_3n3tv"), ExtResource("16_3n3tv"), ExtResource("18_cfeh0"), ExtResource("18_cfeh0")])
 objectives = Array[ExtResource("21_cvhwm")]([SubResource("Resource_tefmi"), SubResource("Resource_nwfpf"), SubResource("Resource_jbul7")])
 levelup_cards = Array[ExtResource("11_jbul7")]([ExtResource("19_tefmi"), ExtResource("20_nwfpf"), ExtResource("21_jbul7")])
-objective_rewards = Array[ExtResource("11_jbul7")]([ExtResource("22_u46sd"), ExtResource("23_bv40u"), ExtResource("24_geehf")])
+objective_rewards = Array[ExtResource("11_jbul7")]([ExtResource("22_u46sd"), ExtResource("23_bv40u"), ExtResource("24_bv40u")])
 next_levels = Array[StringName]([&"lvl_21"])

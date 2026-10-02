@@ -16,14 +16,14 @@
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="15_dsw6l"]
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="16_mmbm6"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="17_w0s6c"]
-[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="18_lckoi"]
+[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="18_lckoi"]
 [ext_resource type="Resource" path="res://resources/cards/epic/maelstrom.tres" id="19_6nsta"]
-[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="19_wd4fe"]
-[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="20_lckoi"]
+[ext_resource type="Resource" path="res://resources/cards/rare/arcane_insight.tres" id="19_wd4fe"]
+[ext_resource type="Resource" path="res://resources/cards/rare/purifying_light.tres" id="20_u5o4w"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_6fehv"]
 [ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="21_wrnir"]
-[ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="22_mlu4c"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_u7xm8"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="22_wrnir"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/forge_dial.tres" id="23_rxygd"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_uyy03"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_on7ce"]
@@ -195,6 +195,6 @@ waves = Array[ExtResource("23_uyy03")]([SubResource("Resource_wrnir"), SubResour
 enemy_pool = Array[ExtResource("1_hw4m0")]([ExtResource("2_w76i7"), ExtResource("3_3ysf2"), ExtResource("4_lckoi"), ExtResource("5_wd4fe"), ExtResource("6_u5o4w"), ExtResource("7_wrnir"), ExtResource("8_mlu4c"), ExtResource("9_rxygd"), ExtResource("10_1ap0e")])
 exploration_deck = Array[ExtResource("11_7ouyn")]([ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("14_mrf3w"), ExtResource("14_mrf3w"), ExtResource("13_fving"), ExtResource("13_fving"), ExtResource("13_fving"), ExtResource("16_mmbm6"), ExtResource("16_mmbm6"), ExtResource("16_mmbm6"), ExtResource("17_w0s6c"), ExtResource("17_w0s6c"), ExtResource("19_6nsta"), ExtResource("19_6nsta")])
 objectives = Array[ExtResource("21_6fehv")]([SubResource("Resource_lckoi"), SubResource("Resource_wd4fe"), SubResource("Resource_u5o4w")])
-levelup_cards = Array[ExtResource("11_7ouyn")]([ExtResource("18_lckoi"), ExtResource("19_wd4fe"), ExtResource("20_lckoi")])
-objective_rewards = Array[ExtResource("11_7ouyn")]([ExtResource("21_wrnir"), ExtResource("22_mlu4c"), ExtResource("23_rxygd")])
+levelup_cards = Array[ExtResource("11_7ouyn")]([ExtResource("18_lckoi"), ExtResource("19_wd4fe"), ExtResource("20_u5o4w")])
+objective_rewards = Array[ExtResource("11_7ouyn")]([ExtResource("21_wrnir"), ExtResource("22_wrnir"), ExtResource("23_rxygd")])
 next_levels = Array[StringName]([&"lvl_09"])

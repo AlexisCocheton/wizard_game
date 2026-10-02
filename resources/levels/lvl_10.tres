@@ -17,17 +17,17 @@
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="14_5g66q"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="16_74qp1"]
 [ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="18_l5tjt"]
-[ext_resource type="Resource" path="res://resources/cards/common/ember_pool.tres" id="20_038uy"]
+[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="20_038uy"]
 [ext_resource type="Resource" path="res://resources/cards/epic/maelstrom.tres" id="20_fnnop"]
 [ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="21_vvwhi"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deep_freeze.tres" id="21_xnxle"]
-[ext_resource type="Resource" path="res://resources/cards/epic/terrain_pit.tres" id="22_cdd3h"]
-[ext_resource type="Resource" path="res://resources/cards/rare/stone_wall.tres" id="23_13lwu"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="21_xnxle"]
+[ext_resource type="Resource" path="res://resources/cards/rare/quickening.tres" id="22_cdd3h"]
+[ext_resource type="Resource" path="res://resources/cards/rare/cycle_of_thought.tres" id="23_13lwu"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="23_aa37k"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="24_g86xn"]
-[ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="24_j06ms"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="24_j06ms"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="25_1r1p4"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="25_vac0b"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/terrain_river.tres" id="25_vac0b"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="26_pf002"]
 
 [sub_resource type="Resource" id="Resource_038uy"]
@@ -39,7 +39,7 @@ params = {
 "count": 1
 }
 
-[sub_resource type="Resource" id="Resource_6lwi4"]
+[sub_resource type="Resource" id="Resource_ujq15"]
 script = ExtResource("23_aa37k")
 id = &"obj_untouched"
 description = "Gagner sans subir de degats"
@@ -228,7 +228,7 @@ backdrop = "act3_demon"
 waves = Array[ExtResource("25_1r1p4")]([SubResource("Resource_cdd3h"), SubResource("Resource_13lwu"), SubResource("Resource_j06ms"), SubResource("Resource_vac0b"), SubResource("Resource_w2mk4")])
 enemy_pool = Array[ExtResource("1_c4pak")]([ExtResource("2_3t80o"), ExtResource("3_1maxx"), ExtResource("4_038uy"), ExtResource("5_xnxle"), ExtResource("6_cdd3h"), ExtResource("7_13lwu"), ExtResource("8_j06ms"), ExtResource("9_vac0b"), ExtResource("10_w2mk4"), ExtResource("11_r352n"), ExtResource("12_ntw4e")])
 exploration_deck = Array[ExtResource("12_6t36y")]([ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("13_nwen4"), ExtResource("13_nwen4"), ExtResource("13_nwen4"), ExtResource("21_vvwhi"), ExtResource("21_vvwhi"), ExtResource("20_fnnop"), ExtResource("18_l5tjt")])
-objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_038uy"), SubResource("Resource_6lwi4"), SubResource("Resource_xnxle")])
+objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_038uy"), SubResource("Resource_ujq15"), SubResource("Resource_xnxle")])
 levelup_cards = Array[ExtResource("12_6t36y")]([ExtResource("20_038uy"), ExtResource("21_xnxle"), ExtResource("22_cdd3h")])
 objective_rewards = Array[ExtResource("12_6t36y")]([ExtResource("23_13lwu"), ExtResource("24_j06ms"), ExtResource("25_vac0b")])
 next_levels = Array[StringName]([&"lvl_13"])

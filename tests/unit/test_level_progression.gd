@@ -79,6 +79,7 @@ func run() -> void:
 	_test_tout_le_catalogue_est_obtenable()
 	_test_les_passifs_s_obtiennent_des_l_acte_2()
 	_test_cartes_simples_en_acte_1()
+	_test_cartes_vraiment_nouvelles()
 	_test_objectifs_lies_au_deck_et_aux_monstres()
 	_test_un_seul_sort_sans_tueur_permanent()
 	_test_objectifs_classes_par_difficulte()
@@ -165,6 +166,173 @@ static func defauts_cartes(lv: LevelDef) -> Array[String]:
 			out.append("la recompense du rang %d (%s) n a pas la rarete du rang"
 				% [LevelDef.objective_rank(i), r.id])
 	return out
+
+
+## --- VRAIMENT NOUVELLES (chantier W8) ---
+##
+## Regle d obtention : une carte est OBTENUE des qu elle est au deck d un niveau
+## OUVERT (ou prise en combat). Au moment de jouer un niveau, le joueur possede
+## donc AU MOINS l union des decks des niveaux surement ouverts. Une carte
+## nouvelle ou une recompense prise dans cette union n apporte rien.
+##
+## Calcul PUR, depuis les LevelDef seuls (next_levels, decks) : il ne lit ni
+## SaveData ni RunState, pour pouvoir juger le contenu sans profil.
+
+
+## Les niveaux de campagne par id.
+static func _campagne(niveaux: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	for lv in niveaux.values():
+		if lv != null and (lv as LevelDef).act > 0:
+			out[(lv as LevelDef).id] = lv
+	return out
+
+
+## Les niveaux qui CITENT `id` dans leur next_levels.
+static func _predecesseurs(camp: Dictionary, id: StringName) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for lv: LevelDef in camp.values():
+		if id in lv.next_levels:
+			out.append(lv.id)
+	return out
+
+
+## L ordre de jeu : un tri topologique de next_levels (file d attente, dans
+## l ordre ou chaque niveau cite les suivants). Un niveau n entre qu apres
+## TOUS ceux qui le citent : lvl_21 apres lvl_05 et lvl_06.
+static func ordre_de_jeu(niveaux: Dictionary) -> Array[StringName]:
+	var camp: Dictionary = _campagne(niveaux)
+	var reste: Dictionary = {}
+	var file: Array[StringName] = []
+	var ids: Array = camp.keys()
+	ids.sort_custom(func(a, b) -> bool: return String(a) < String(b))
+	for id: StringName in ids:
+		reste[id] = _predecesseurs(camp, id).size()
+		if reste[id] == 0:
+			file.append(id)
+	var out: Array[StringName] = []
+	while not file.is_empty():
+		var id: StringName = file.pop_front()
+		out.append(id)
+		for nxt: StringName in (camp[id] as LevelDef).next_levels:
+			if not reste.has(nxt):
+				continue
+			reste[nxt] -= 1
+			if reste[nxt] == 0:
+				file.append(nxt)
+	return out
+
+
+## Les niveaux SUREMENT gagnes avant que `id` s ouvre : ceux par lesquels passe
+## tout chemin d ouverture (intersection sur ses predecesseurs).
+static func _gagnes_avant(camp: Dictionary, id: StringName, memo: Dictionary) -> Dictionary:
+	if memo.has(id):
+		return memo[id]
+	var preds: Array[StringName] = _predecesseurs(camp, id)
+	var out: Dictionary = {}
+	for i in preds.size():
+		var avec: Dictionary = _gagnes_avant(camp, preds[i], memo).duplicate()
+		avec[preds[i]] = true
+		if i == 0:
+			out = avec
+		else:
+			for k in out.keys():
+				if not avec.has(k):
+					out.erase(k)
+	memo[id] = out
+	return out
+
+
+## Les niveaux SUREMENT ouverts quand on joue `id` : les racines, lui-meme, ceux
+## qu il a fallu gagner, et tout ce que ces victoires ont ouvert (les freres :
+## jouer lvl_05, c est avoir ouvert lvl_06 par la meme victoire).
+static func niveaux_ouverts_a(niveaux: Dictionary, id: StringName) -> Dictionary:
+	var camp: Dictionary = _campagne(niveaux)
+	var out: Dictionary = {id: true}
+	for k: StringName in camp.keys():
+		if _predecesseurs(camp, k).is_empty():
+			out[k] = true
+	var gagnes: Dictionary = _gagnes_avant(camp, id, {})
+	for g: StringName in gagnes.keys():
+		out[g] = true
+		for nxt: StringName in (camp[g] as LevelDef).next_levels:
+			out[nxt] = true
+	return out
+
+
+## Les cartes que le joueur possede FORCEMENT quand il joue `id`.
+static func cartes_garanties(niveaux: Dictionary, id: StringName) -> Dictionary:
+	var out: Dictionary = {}
+	for o: StringName in niveaux_ouverts_a(niveaux, id).keys():
+		var lv: LevelDef = niveaux.get(o)
+		if lv != null:
+			out.merge(_ids(lv.exploration_deck))
+	return out
+
+
+## Le bilan de nouveaute de la campagne, dans l ordre de jeu :
+##   garanties : "niveau : carte" proposee alors qu elle est deja possedee ;
+##   reprises  : "niveau : carte" deja proposee par un niveau anterieur ;
+##   places    : nombre de cartes proposees (nouvelles + recompenses) ;
+##   proposables : sorts qui ne sont pas garantis au premier niveau joue (ceux
+##     qu on peut encore faire decouvrir) ; places - proposables est le
+##     MINIMUM de reprises, atteint quand chacun est propose une fois avant
+##     d entrer dans un deck ouvert ;
+##   jamais_inedites : ceux-la, quand ils ne le sont pas ;
+##   consecutives : "carte" proposee par deux niveaux qui se suivent ;
+##   legendaire_tot : une reprise de legendaire qui precede la premiere
+##     proposition d une autre legendaire (les reprises viennent le plus tard).
+static func bilan_nouveaute(niveaux: Dictionary) -> Dictionary:
+	var ordre: Array[StringName] = ordre_de_jeu(niveaux)
+	var b: Dictionary = {"garanties": [], "reprises": [], "places": 0, "proposables": 0,
+		"jamais_inedites": [], "consecutives": [], "legendaire_tot": []}
+	if ordre.is_empty():
+		return b
+	var premieres: Dictionary = cartes_garanties(niveaux, ordre[0])
+	var proposables: Dictionary = {}
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and not c.is_passive and not premieres.has(c.id):
+			proposables[c.id] = true
+	b["proposables"] = proposables.size()
+	var vues: Dictionary = {}
+	var inedites: Dictionary = {}
+	var precedentes: Dictionary = {}
+	var derniere_leg_inedite: int = -1
+	var premiere_leg_reprise: int = -1
+	var leg_reprise_ou: String = ""
+	for i in ordre.size():
+		var lv: LevelDef = niveaux[ordre[i]]
+		var garanties: Dictionary = cartes_garanties(niveaux, lv.id)
+		var ici: Dictionary = {}
+		for liste: Array in [lv.levelup_cards, lv.objective_rewards]:
+			for c in liste:
+				if c == null:
+					continue
+				var carte: SpellCard = c
+				b["places"] += 1
+				var ou: String = "%s : %s" % [lv.id, carte.id]
+				if garanties.has(carte.id):
+					b["garanties"].append(ou)
+				elif vues.has(carte.id):
+					b["reprises"].append(ou)
+					if carte.rarity == GameEnums.Rarity.LEGENDARY and premiere_leg_reprise < 0:
+						premiere_leg_reprise = i
+						leg_reprise_ou = ou
+				else:
+					inedites[carte.id] = true
+					if carte.rarity == GameEnums.Rarity.LEGENDARY:
+						derniere_leg_inedite = i
+				if precedentes.has(carte.id):
+					b["consecutives"].append(ou)
+				ici[carte.id] = true
+		vues.merge(ici)
+		precedentes = ici
+	for id in proposables.keys():
+		if not inedites.has(id):
+			b["jamais_inedites"].append(String(id))
+	if premiere_leg_reprise >= 0 and premiere_leg_reprise < derniere_leg_inedite:
+		b["legendaire_tot"].append(leg_reprise_ou)
+	return b
 
 
 ## Un objectif est LIE au niveau s il nomme une carte de son deck, un element,
@@ -358,6 +526,32 @@ func _test_cartes_simples_en_acte_1() -> void:
 			not_ok(permanent, "%s : %s ne pose pas d objet permanent en acte 1" % [lv.id, c.id])
 
 
+## Regle W8 : aucune carte nouvelle ni recompense n est deja possedee quand on
+## joue le niveau ; chaque sort encore a decouvrir l est une fois avant d entrer
+## dans un deck ouvert, si bien que les reprises sont au MINIMUM (places moins
+## sorts proposables) ; jamais la meme carte dans deux niveaux qui se suivent ;
+## les reprises de legendaire viennent apres toutes leurs premieres sorties.
+func _test_cartes_vraiment_nouvelles() -> void:
+	var niveaux: Dictionary = _campagne(ContentDB.levels)
+	var ordre: Array[StringName] = ordre_de_jeu(niveaux)
+	eq(ordre.size(), niveaux.size(), "l ordre de jeu atteint tous les niveaux de campagne")
+	var b: Dictionary = bilan_nouveaute(niveaux)
+	var minimum: int = int(b["places"]) - int(b["proposables"])
+	print("  [W8] %d places, %d sorts a faire decouvrir, %d reprises (minimum %d)" % [
+		b["places"], b["proposables"], (b["reprises"] as Array).size(), minimum])
+	ok(int(b["places"]) > 0, "des cartes proposees en campagne")
+	ok((b["garanties"] as Array).is_empty(),
+		"aucune carte nouvelle ni recompense deja possedee %s" % [b["garanties"]])
+	ok((b["jamais_inedites"] as Array).is_empty(),
+		"chaque sort a decouvrir est propose avant d etre garanti %s" % [b["jamais_inedites"]])
+	ok((b["reprises"] as Array).size() <= minimum,
+		"%d reprises, minimum %d" % [(b["reprises"] as Array).size(), minimum])
+	ok((b["consecutives"] as Array).is_empty(),
+		"jamais la meme carte dans deux niveaux qui se suivent %s" % [b["consecutives"]])
+	ok((b["legendaire_tot"] as Array).is_empty(),
+		"les reprises de legendaire viennent apres leurs premieres sorties %s" % [b["legendaire_tot"]])
+
+
 func _test_objectifs_lies_au_deck_et_aux_monstres() -> void:
 	var cartes: int = 0
 	var monstres: int = 0
@@ -483,3 +677,68 @@ func _test_les_detecteurs_mordent() -> void:
 	var perime: Array = [[ids[1], 9], [ids[0], 5], [ids[2], 1]]
 	not_ok(defauts_classement(modele, perime).is_empty(), "une mesure d un autre objectif est refusee")
 	not_ok(defauts_classement(modele, null).is_empty(), "un niveau sans mesure est refuse")
+	_saboter_nouveaute()
+
+
+## Le calcul de nouveaute sur une campagne FABRIQUEE, ou l on sait ce qui doit
+## sortir : A ouvre B et C par la meme victoire, B et C ouvrent D.
+func _saboter_nouveaute() -> void:
+	var sorts: Array[SpellCard] = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and not c.is_passive:
+			sorts.append(c)
+	sorts.sort_custom(func(a: SpellCard, b: SpellCard) -> bool: return String(a.id) < String(b.id))
+	ok(sorts.size() >= 8, "assez de sorts pour fabriquer une campagne")
+	if sorts.size() < 8:
+		return
+	var fab := func(id: StringName, nxt: Array[StringName], deck: Array[SpellCard]) -> LevelDef:
+		var lv := LevelDef.new()
+		lv.id = id
+		lv.act = 1
+		lv.next_levels = nxt
+		lv.exploration_deck = deck
+		return lv
+	var a: LevelDef = fab.call(&"t_a", [&"t_b", &"t_c"] as Array[StringName], [sorts[0]] as Array[SpellCard])
+	var b: LevelDef = fab.call(&"t_b", [&"t_d"] as Array[StringName], [sorts[1]] as Array[SpellCard])
+	var c: LevelDef = fab.call(&"t_c", [&"t_d"] as Array[StringName], [sorts[2]] as Array[SpellCard])
+	var d: LevelDef = fab.call(&"t_d", [] as Array[StringName], [sorts[3]] as Array[SpellCard])
+	var camp: Dictionary = {&"t_a": a, &"t_b": b, &"t_c": c, &"t_d": d}
+	eq(ordre_de_jeu(camp), [&"t_a", &"t_b", &"t_c", &"t_d"] as Array[StringName],
+		"ordre de jeu : D apres B ET C")
+	ok(niveaux_ouverts_a(camp, &"t_b").has(&"t_c"),
+		"jouer B, c est avoir ouvert C par la meme victoire")
+	not_ok(niveaux_ouverts_a(camp, &"t_a").has(&"t_b"), "B n est pas ouvert quand on joue A")
+	ok(cartes_garanties(camp, &"t_b").has(sorts[2].id), "le deck de C est possede en jouant B")
+	not_ok(cartes_garanties(camp, &"t_b").has(sorts[3].id), "le deck de D ne l est pas")
+	# Une carte nouvelle de B prise au deck du frere C : deja possedee.
+	b.levelup_cards = [sorts[2]] as Array[SpellCard]
+	not_ok((bilan_nouveaute(camp)["garanties"] as Array).is_empty(),
+		"une carte nouvelle au deck d un niveau ouvert est refusee")
+	# Le deck de D montre en A (inedite), puis repris en B : une reprise.
+	b.levelup_cards = [] as Array[SpellCard]
+	a.levelup_cards = [sorts[3]] as Array[SpellCard]
+	c.objective_rewards = [sorts[3]] as Array[SpellCard]
+	var bilan: Dictionary = bilan_nouveaute(camp)
+	ok((bilan["garanties"] as Array).is_empty(), "le deck de D n est pas possede en A ni en C")
+	eq((bilan["reprises"] as Array).size(), 1, "la seconde proposition est une reprise")
+	not_ok((bilan["jamais_inedites"] as Array).is_empty(),
+		"les sorts jamais montres sont signales")
+	# Deux niveaux qui se suivent proposent la meme carte.
+	b.objective_rewards = [sorts[4]] as Array[SpellCard]
+	c.levelup_cards = [sorts[4]] as Array[SpellCard]
+	not_ok((bilan_nouveaute(camp)["consecutives"] as Array).is_empty(),
+		"la meme carte dans deux niveaux qui se suivent est signalee")
+	# Une legendaire reprise avant qu une autre sorte pour la premiere fois.
+	var leg: Array[SpellCard] = []
+	for s in sorts:
+		if s.rarity == GameEnums.Rarity.LEGENDARY:
+			leg.append(s)
+	ok(leg.size() >= 2, "deux legendaires au catalogue")
+	if leg.size() >= 2:
+		a.objective_rewards = [leg[0]] as Array[SpellCard]
+		b.objective_rewards = [leg[0]] as Array[SpellCard]
+		c.objective_rewards = [] as Array[SpellCard]
+		c.levelup_cards = [] as Array[SpellCard]
+		d.objective_rewards = [leg[1]] as Array[SpellCard]
+		not_ok((bilan_nouveaute(camp)["legendaire_tot"] as Array).is_empty(),
+			"une reprise de legendaire avant une premiere sortie est signalee")
