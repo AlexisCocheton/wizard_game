@@ -8,7 +8,6 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_test_persistance_coupee()
 	_test_cartes_de_depart_decouvertes()
 	_test_deck_massacre()
@@ -29,17 +28,18 @@ func run() -> void:
 	_test_profil_en_superposition()
 	# Etat propre pour les suites suivantes.
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _test_persistance_coupee() -> void:
 	not_ok(SaveData.persistence_enabled, "en headless, le vrai profil n est jamais touche")
 
 
+## Le livre d un profil neuf est le deck du premier niveau (regle detaillee et
+## verrouillee dans test_spell_book).
 func _test_cartes_de_depart_decouvertes() -> void:
-	ok(SaveData.is_discovered(&"arcane_bolt"), "les communes de depart sont decouvertes")
+	ok(SaveData.is_discovered(&"arcane_bolt"), "une carte du deck du niveau 1 est dans le livre")
 	not_ok(SaveData.is_discovered(&"time_rift"), "la legendaire ne l est pas")
-	ok(SaveData.discovered_count() >= 4, "au moins les 4 communes")
+	ok(SaveData.discovered_count() >= 4, "au moins 4 cartes dans le livre")
 
 
 func _test_deck_massacre() -> void:
@@ -95,7 +95,6 @@ func _test_plusieurs_decks() -> void:
 		"un index hors bornes est ramene dans les clous")
 	eq(SaveData.deck_at(42).size(), 0, "lire un deck inexistant rend une liste vide")
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## Les telephones deja en service ont un profil avec UN seul `massacre_deck`.
@@ -114,7 +113,6 @@ func _test_migration_ancien_deck_unique() -> void:
 	eq(SaveData.massacre_deck()[0], "arcane_bolt", "avec ses cartes")
 	ok(SaveData.deck_name(0).length() > 0, "et un nom d onglet non vide")
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _test_reglages() -> void:
@@ -152,7 +150,6 @@ func _test_objectifs_cumulatifs_sans_legendaire() -> void:
 		ids.append(o.id)
 	eq(ids.size(), 3, "3 objectifs sur le niveau 1")
 
-	var avant: int = SaveData.discovered_count()
 	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
 		{ids[0]: true, ids[1]: true, ids[2]: false}, 6)
 	eq(SaveData.objectives_done_count(lvl1), 2, "2 objectifs acquis")
@@ -160,8 +157,17 @@ func _test_objectifs_cumulatifs_sans_legendaire() -> void:
 	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {ids[2]: true}, 6)
 	eq(SaveData.objectives_done_count(lvl1), ids.size(),
 		"le 3e objectif, meme sur un autre run, complete la serie")
-	eq(SaveData.discovered_count(), avant,
+	# La victoire OUVRE le niveau suivant, dont le deck entre au livre (regle du
+	# livre de sorts, 01/10) : le livre doit valoir les decks ouverts, sans
+	# aucune carte d objectif en plus.
+	eq(SaveData.discovered_count(),
+		SaveData.cards_owned_by_decks(SaveData.unlocked_levels()).size(),
 		"trois objectifs ne DONNENT plus aucune carte : elles entrent au pool")
+	for i in lvl1.objectives.size():
+		var recompense: SpellCard = lvl1.objective_reward(i)
+		if recompense != null:
+			not_ok(SaveData.is_discovered(recompense.id),
+				"la carte de l objectif %d n est pas donnee (%s)" % [i + 1, recompense.id])
 	eq(SaveData.unlocked_legendaries().size(), 0,
 		"aucune legendaire obtenue sans l avoir prise en combat")
 
@@ -280,7 +286,6 @@ func _test_coquille_du_menu() -> void:
 ## compte de cartes, tous deux lus dans SaveData.
 func _test_entete_affiche_niveau_et_cartes() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
 	var menu: Control = packed.instantiate()
 	attach(menu)

@@ -21,9 +21,9 @@ func get_suite_name() -> String:
 
 
 ## Parties jouees par objectif au banc pour mesurer MESURES (voir plus bas).
-## 60 et non 30 : le banc n est pas deterministe d un processus a l autre
-## (README_equilibrage, « Le bot du banc »), et deux objectifs voisins se
-## departagent mal sur 30 parties.
+## 60 et non 30 : deux objectifs voisins se departagent mal sur 30 parties.
+## RE-MESURER : tools/objective_bench.tscn (deterministe depuis W8, une ligne
+## prete a coller par niveau ; README_equilibrage, « Le banc des objectifs »).
 const PARTIES_DU_BANC: int = 60
 
 ## LES TAUX MESURES, qui verrouillent l ordre de difficulte.
@@ -300,8 +300,9 @@ func _test_recompenses_rare_epique_legendaire() -> void:
 
 
 ## TOUT le catalogue s obtient en campagne. Un sort qu aucun deck, aucune carte
-## nouvelle, aucune recompense ne porte, et qui n est pas une carte de depart,
-## ne peut JAMAIS etre obtenu (le pool hors campagne ne contient que l obtenu).
+## nouvelle, aucune recompense ne porte ne peut JAMAIS etre obtenu (le pool hors
+## campagne ne contient que l obtenu). Les "cartes de depart" n y echappent plus :
+## copies_in_starter ne donne plus rien au livre de sorts (01/10).
 func _test_tout_le_catalogue_est_obtenable() -> void:
 	var joignables: Dictionary = {}
 	for lv in _niveaux():
@@ -313,7 +314,7 @@ func _test_tout_le_catalogue_est_obtenable() -> void:
 		if c == null or c.is_passive:
 			continue
 		sorts += 1
-		if c.copies_in_starter <= 0 and not joignables.has(c.id):
+		if not joignables.has(c.id):
 			morts.append(String(c.id))
 	ok(sorts > 0, "des sorts au catalogue")
 	ok(morts.is_empty(), "aucun sort jamais obtenable en campagne %s" % [morts])

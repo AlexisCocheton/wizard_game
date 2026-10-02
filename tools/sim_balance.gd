@@ -188,10 +188,24 @@ func _report_deck_fit(level: LevelDef) -> void:
 
 
 ## Rejoue le meme niveau avec des graines differentes et resume.
+## Ouvre dans le profil (en memoire) `level_id` et tous les niveaux qui le
+## precedent dans l ordre de jeu. Aussi utilise par le banc des objectifs.
+static func open_levels_up_to(level_id: StringName) -> void:
+	for id in _levels():
+		SaveData.unlock_level(StringName(id))
+		if StringName(id) == level_id:
+			return
+
+
 func _run_level_many(level_id: StringName, runs: int) -> void:
 	var level: LevelDef = ContentDB.levels.get(level_id)
 	if level == null:
 		return
+	# PROFIL REALISTE (regle du livre) : une carte est obtenue par le deck d un
+	# niveau OUVERT ou par sa prise en combat. Le niveau mesure et ceux qui le
+	# precedent dans l ordre de jeu sont ouverts, comme chez un joueur qui y
+	# arrive ; sans cela le Massacre mesure apres eux partirait d un pool vide.
+	open_levels_up_to(level_id)
 	var wins: int = 0
 	var vagues: Array[int] = []
 	## Vitesse restante a l arrivee. C est la reserve de VIE du mage depuis le
@@ -562,78 +576,16 @@ func _on_mage_hit(dmg: int, source: EnemyDef = null) -> void:
 	_passed += 1
 
 
-## Le monstre peut-il prendre des degats, a ce qu en voit le joueur ?
-##
-## Un monstre dans le HALO d un Gardien-totem est intouchable (Battlefield.
-## is_shielded_by_aura) et le halo est dessine a l ecran. Le bot visait pourtant
-## le plus avance, protege ou non : sur la cour des rois morts, dont toute la
-## lecon est « abats d abord celui qui protege », il vidait sa main sur des
-## monstres intouchables pendant que le totem avancait. C est l erreur qu un
-## joueur fait une fois. `--visee-naive` rend l ancien comportement, pour mesurer.
-func _touchable(g: GameController, e: Enemy) -> bool:
-	if e == null or not is_instance_valid(e) or e.hp <= 0.0:
-		return false
-	return _visee_naive or not g.battlefield.is_shielded_by_aura(e)
-
-
+## Le geste du bot (quelle carte, sur qui, ou poser une zone) vit dans AutoPick
+## (try_play) : le banc des objectifs (tools/objective_bench.gd) joue avec le
+## MEME geste, a sa politique d objectif pres. Le halo des totems, la cible la
+## plus avancee et la zone sur le plus gros groupe y sont documentes.
+## `--visee-naive` vise aussi les monstres proteges par un halo, pour mesurer.
 var _visee_naive: bool = false
 
 
 func _try_play(g: GameController) -> bool:
-	if RunState.hand.is_empty():
-		return false
-	var cible: Enemy = null
-	var y_max: float = -1e9
-	# Le plus avance des monstres TOUCHABLES ; a defaut (tous proteges), le plus
-	# avance tout court.
-	for passe in 2:
-		for e in g.battlefield.enemies:
-			if e == null or not is_instance_valid(e) or e.hp <= 0.0:
-				continue
-			if passe == 0 and not _touchable(g, e):
-				continue
-			if e.position.y > y_max:
-				y_max = e.position.y
-				cible = e
-		if cible != null:
-			break
-	if cible == null:
-		return false
-	for card: SpellCard in RunState.hand.duplicate():
-		var aim: Vector2 = cible.position
-		# Une zone se pose la ou il y a le PLUS de monstres, pas sur le plus avance :
-		# c est ce qui fait la difference entre subir et nettoyer.
-		if card.targeting == GameEnums.Targeting.POSITION:
-			aim = _best_cluster(g, _zone_radius(card), cible.position)
-		if g.play_card(card, aim, cible):
-			return true
-	return false
-
-
-func _zone_radius(card: SpellCard) -> float:
-	var r: float = 0.0
-	for spec in card.effects:
-		if spec != null:
-			r = maxf(r, spec.radius)
-	return maxf(r, 60.0)
-
-
-## Centre du groupe le plus fourni dans la moitie basse du terrain.
-func _best_cluster(g: GameController, radius: float, defaut: Vector2) -> Vector2:
-	var best: Vector2 = defaut
-	var best_n: int = 0
-	for e in g.battlefield.enemies:
-		if not _touchable(g, e):
-			continue
-		var n: int = 0
-		for o in g.battlefield.enemies:
-			if _touchable(g, o) and o.position.distance_to(e.position) <= radius:
-				n += 1
-		# A nombre egal, on prefere le groupe le plus avance.
-		if n > best_n or (n == best_n and e.position.y > best.y):
-			best_n = n
-			best = e.position
-	return best
+	return AutoPick.try_play(g, null, _visee_naive)
 
 
 func _print_stats(nom: String, s: Dictionary) -> void:

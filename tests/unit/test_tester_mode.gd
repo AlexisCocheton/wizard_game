@@ -26,7 +26,6 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_test_eteint_par_defaut()
 	_test_debloque_tous_les_niveaux()
 	_test_ouvre_le_massacre()
@@ -43,7 +42,6 @@ func run() -> void:
 	# suite a l autre rendrait vrais tous les verrous que les autres testent.
 	SaveData.set_tester_mode(false)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _test_eteint_par_defaut() -> void:
@@ -156,7 +154,6 @@ func _test_ouvre_tous_les_succes() -> void:
 ## et il ne l allumera jamais.
 func _test_eteindre_rend_la_progression_reelle() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	# Une progression reelle modeste : un niveau fini, quelques cartes.
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
 	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {}, 6)
@@ -220,7 +217,6 @@ func _test_le_mode_est_persiste_dans_les_reglages() -> void:
 	not_ok(SaveData.tester_mode(),
 		"un profil qui ne connait pas la cle redemarre eteint")
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## L INTERFACE. Le mode doit etre ATTEIGNABLE depuis les reglages, armer en deux
@@ -231,7 +227,6 @@ func _test_le_mode_est_persiste_dans_les_reglages() -> void:
 ## rien pour personne.
 func _test_interface_des_reglages() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var panel := SettingsPanel.new()
 	attach(panel)
 
@@ -275,7 +270,6 @@ func _test_interface_des_reglages() -> void:
 
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## LES ENCRES, MESUREES ET NON REGARDEES.
