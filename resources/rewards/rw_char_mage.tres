@@ -10,3 +10,4 @@ description = "Le gardien du temps en personne."
 at_level = 1
 kind = 5
 texture_name = "mage"
+for_character = ""

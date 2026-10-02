@@ -10,3 +10,4 @@ description = "La robe noire des mages sans nom."
 at_level = 3
 kind = 2
 texture_name = "monk_black"
+for_character = ""

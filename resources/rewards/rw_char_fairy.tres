@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_hre81"]
+
+[resource]
+script = ExtResource("1_hre81")
+id = &"rw_char_fairy"
+display_name = "La fee"
+description = "Elle ne pose jamais pied a terre. Elle combat a la place du mage."
+at_level = 6
+kind = 5
+texture_name = "fairy"
+for_character = ""

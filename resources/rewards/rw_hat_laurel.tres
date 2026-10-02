@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_sxrg3"]
+
+[resource]
+script = ExtResource("1_sxrg3")
+id = &"rw_hat_laurel"
+display_name = "Couronne de laurier"
+description = "Le laurier des vainqueurs."
+at_level = 10
+kind = 3
+texture_name = "hat_laurel"
+for_character = ""

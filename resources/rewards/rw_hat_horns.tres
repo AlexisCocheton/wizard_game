@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_asjf5"]
+
+[resource]
+script = ExtResource("1_asjf5")
+id = &"rw_hat_horns"
+display_name = "Cornes"
+description = "Ramenees du monde demoniaque. Elles ne poussent pas, promis."
+at_level = 11
+kind = 3
+texture_name = "hat_horns"
+for_character = ""

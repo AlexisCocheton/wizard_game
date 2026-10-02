@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_nptq1"]
+
+[resource]
+script = ExtResource("1_nptq1")
+id = &"rw_hat_helm"
+display_name = "Heaume"
+description = "Acier poli et cimier rouge."
+at_level = 9
+kind = 3
+texture_name = "hat_helm"
+for_character = ""

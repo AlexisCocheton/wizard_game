@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Fabrique les COSMETIQUES de compte : chapeaux du mage, tours, bannieres de titre.
+"""Fabrique les COSMETIQUES de compte : tours reteintes, bannieres de titre.
+
+LES CHAPEAUX N EN SORTENT PLUS (vague 8). Ils reteignaient deux couleurs de la
+feuille du mage, dont (200, 168, 118)... qui est aussi la PEAU du visage et des
+mains : un chapeau carmin donnait un mage aux mains rouges. Et chapeau et robe
+etant la meme feuille, on ne pouvait pas les cumuler. Ils sont maintenant
+DESSINES et poses en calque : tools/assets/hat_painter.py et make_wardrobe.py.
 
 POURQUOI un remplacement de palette et pas un simple `modulate` :
 un `modulate` multiplie TOUS les pixels, y compris la peau, le bois et le
@@ -22,25 +28,6 @@ ROOT = Path(__file__).resolve().parents[2]
 UNITS = ROOT / "assets" / "units"
 TERRAIN = ROOT / "assets" / "terrain"
 UI = ROOT / "assets" / "ui"
-
-# --- Chapeau du mage -------------------------------------------------------
-# Les deux seules couleurs du chapeau de paille, mesurees sur la region de tete
-# (y 60..101) de monk_blue_idle : 368 pixels a elles deux, et elles n
-# apparaissent nulle part ailleurs sur le sprite.
-HAT_LIGHT = (239, 225, 171, 255)
-HAT_DARK = (200, 168, 118, 255)
-
-# (cle, clair, sombre). "straw" est l original : il n est pas regenere, il sert
-# de valeur par defaut pour un profil neuf.
-HATS = {
-    "crimson": ((236, 138, 132, 255), (168, 62, 66, 255)),
-    "emerald": ((150, 226, 160, 255), (54, 140, 84, 255)),
-    "violet": ((214, 166, 240, 255), (128, 72, 168, 255)),
-    "gold": ((252, 232, 140, 255), (206, 158, 46, 255)),
-}
-
-# Les trois animations du mage, chacune sur sa propre feuille.
-MONK_SHEETS = ["monk_blue_idle", "monk_blue_walk", "monk_blue_cast"]
 
 # --- Tour du mage ----------------------------------------------------------
 # Le bleu de tower_blue.png, en quatre tons (du plus sombre au plus clair).
@@ -111,19 +98,6 @@ def tint(src: Path, dst: Path, factor: tuple) -> None:
 
 
 def main() -> None:
-    print("Chapeaux du mage :")
-    for key, (light, dark) in HATS.items():
-        mapping = {HAT_LIGHT: light, HAT_DARK: dark}
-        for sheet in MONK_SHEETS:
-            src = UNITS / f"{sheet}.png"
-            if not src.exists():
-                print(f"  ABSENT {src.name}")
-                continue
-            # monk_blue_idle -> monk_hat_crimson_idle : le prefixe dit que c est
-            # une variante de CHAPEAU, la robe restant celle du monk_blue.
-            anim = sheet.rsplit("_", 1)[1]
-            remap(src, UNITS / f"monk_hat_{key}_{anim}.png", mapping)
-
     print("Tours :")
     base = TERRAIN / "tower_blue.png"
     if base.exists():

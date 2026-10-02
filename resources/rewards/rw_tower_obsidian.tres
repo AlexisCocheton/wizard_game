@@ -10,3 +10,4 @@ description = "Une tour de verre noir, nee d un ancien incendie."
 at_level = 7
 kind = 4
 texture_name = "tower_obsidian"
+for_character = ""

@@ -43,6 +43,12 @@ func _ready() -> void:
 	var payload: Dictionary = SceneRouter.payload
 	var level_id: StringName = payload.get("level_id", &"lvl_01")
 	mode = payload.get("mode", GameEnums.Mode.EXPLORATION)
+	# OUTILS DU TESTEUR (vague 8) : une vague composee dans l onglet TEST n a pas
+	# de .tres, son niveau est fabrique par TesterRun (meme principe que le
+	# Massacre) et sa vitesse de depart posee apres start_level().
+	if TesterRun.is_test_payload(payload):
+		TesterRun.start_in(self, payload)
+		return
 	# MODES (chantier M) : le Massacre n a pas de .tres, son niveau est fabrique.
 	var def: LevelDef = MassacreMode.resolve_level(level_id, mode)
 	if def == null:
@@ -551,7 +557,9 @@ func _on_all_cleared() -> void:
 	AudioBus.play_music(&"victory", false)
 	AudioBus.play_sfx(&"victory")
 	AudioBus.play_voice(&"victory")
-	if not headless_mode:
+	# Une partie de test revient aux outils du testeur, sans ecran de victoire
+	# (qui ouvrirait un "niveau suivant" et donnerait des recompenses).
+	if not headless_mode and not TesterRun.end_run(level_def, true):
 		SceneRouter.goto(SceneRouter.VICTORY, {"level_id": level_def.id})
 
 
@@ -581,6 +589,6 @@ func _on_died() -> void:
 	AudioBus.play_music(&"defeat", false)
 	AudioBus.play_sfx(&"defeat")
 	AudioBus.play_voice(&"death")
-	if not headless_mode:
+	if not headless_mode and not TesterRun.end_run(level_def, false):
 		SceneRouter.goto(SceneRouter.DEFEAT, {"level_id": level_def.id,
 			"waves": RunState.wave_index})

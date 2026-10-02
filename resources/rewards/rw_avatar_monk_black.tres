@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_xi8ho"]
+
+[resource]
+script = ExtResource("1_xi8ho")
+id = &"rw_avatar_monk_black"
+display_name = "Le moine d encre"
+description = "Un portrait pour ton profil."
+at_level = 12
+kind = 1
+texture_name = "avatar_monk_black"
+for_character = ""

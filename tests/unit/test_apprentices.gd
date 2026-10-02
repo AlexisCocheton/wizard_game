@@ -207,8 +207,9 @@ func _test_le_choix_persiste() -> void:
 	SaveData.reset_profile()
 
 
-## Un apprenti ne porte ni la robe ni le chapeau (ce sont des teintes de la
-## feuille du mage), mais ils restent CHOISIS : reprendre le mage les rend.
+## Un apprenti ne porte ni la robe ni le chapeau du mage (la robe est une
+## feuille du mage, le chapeau se pose sur une tete mesuree du mage), mais ils
+## restent CHOISIS : reprendre le mage les rend, cumules.
 func _test_robe_et_chapeau_sont_mis_de_cote_pas_perdus() -> void:
 	var apprentis: Array[AccountRewardDef] = _apprentis()
 	var mage: AccountRewardDef = _reward_de(GameEnums.RewardKind.CHARACTER, MAGE)
@@ -218,27 +219,38 @@ func _test_robe_et_chapeau_sont_mis_de_cote_pas_perdus() -> void:
 	SaveData.reset_profile()
 	SaveData.set_tester_mode(true)
 	var chapeau: AccountRewardDef = null
+	var robe: AccountRewardDef = null
 	for c: AccountRewardDef in ContentDB.rewards_list():
 		if c.kind == GameEnums.RewardKind.HAT and c.at_level > 1:
 			chapeau = c
-	if chapeau == null:
+		if c.kind == GameEnums.RewardKind.MAGE_COLOR and c.at_level > 1 \
+				and not c.is_apprentice_outfit():
+			robe = c
+	if chapeau == null or robe == null:
+		ok(false, "le catalogue a un chapeau et une robe a gagner")
 		SaveData.set_tester_mode(false)
 		return
 	SaveData.equip_cosmetic(chapeau.id)
-	var feuille_du_mage: String = UiTheme.mage_sheet_key()
-	eq(feuille_du_mage, chapeau.texture_name, "le mage porte le chapeau choisi")
+	SaveData.equip_cosmetic(robe.id)
+	eq(UiTheme.hat_key(), chapeau.texture_name, "le mage porte le chapeau choisi")
+	eq(UiTheme.mage_sheet_key(), robe.texture_name, "ET la robe choisie : ils se cumulent")
+	eq(UiTheme.hero_hat_key(), chapeau.texture_name, "le combat pose le chapeau")
 
 	ok(SaveData.equip_cosmetic(r.id), "on prend l apprenti")
 	ok(UiTheme.hero_frames() != UiTheme.mage_frames(),
 		"le combat n affiche plus le mage")
 	ok(UiTheme.hero_frames() == AnimCatalog.frames(StringName(r.texture_name)),
 		"mais la feuille de l apprenti, sans teinte")
-	eq(UiTheme.mage_sheet_key(), feuille_du_mage, "le chapeau reste choisi")
+	eq(UiTheme.hero_hat_key(), AccountRewardDef.HAT_NONE,
+		"l apprenti garde son propre couvre-chef : pas de calque")
+	eq(UiTheme.hat_key(), chapeau.texture_name, "le chapeau reste choisi")
+	eq(UiTheme.mage_sheet_key(), robe.texture_name, "la robe aussi")
 
 	ok(SaveData.equip_cosmetic(mage.id), "on reprend le mage")
 	eq(SaveData.equipped_character(), MAGE, "c est le mage")
 	ok(UiTheme.hero_frames() == UiTheme.mage_frames(), "le combat le montre")
-	eq(UiTheme.mage_sheet_key(), feuille_du_mage, "avec son chapeau, intact")
+	eq(UiTheme.hero_hat_key(), chapeau.texture_name, "avec son chapeau, intact")
+	eq(UiTheme.hero_sheet_key(), robe.texture_name, "et sa robe")
 	SaveData.set_tester_mode(false)
 	SaveData.reset_profile()
 
@@ -248,11 +260,13 @@ func _test_robe_et_chapeau_sont_mis_de_cote_pas_perdus() -> void:
 ##
 ## LA TAILLE. Les cases different (192 px pour le mage, 48 pour la sorciere
 ## bleue) et l occupation aussi : reprendre l echelle du mage donnerait une
-## apprentie minuscule. Ce que le joueur doit voir, c est la meme hauteur de
-## personnage, pieds au meme endroit.
+## apprentie minuscule. Ce que le joueur doit voir : UiTheme.APPRENTICE_SCALE
+## fois la hauteur du mage (demande du co-auteur, vague 8), pieds au meme endroit.
 func _test_chaque_apprenti_se_joue_sans_code() -> void:
 	var etalon := Rect2(UiTheme.MAGE_CROP)
 	var hauteur_mage: float = etalon.size.y * UiTheme.MAGE_SCALE
+	ok(UiTheme.APPRENTICE_SCALE > 1.0, "l apprenti est PLUS GROS que le mage")
+	ok(UiTheme.APPRENTICE_SCALE <= 2.0, "sans devenir un geant (deborderait la tour)")
 	var pieds_mage: float = UiTheme.MAGE_Y \
 		+ (etalon.end.y - UiTheme.MAGE_FRAME * 0.5) * UiTheme.MAGE_SCALE
 	for r in _apprentis():
@@ -273,8 +287,8 @@ func _test_chaque_apprenti_se_joue_sans_code() -> void:
 		var pose: Dictionary = UiTheme.hero_pose(r.texture_name)
 		var s: float = float(pose["scale"])
 		# A 1 px pres : l ecart de hauteur entre le mage et l apprenti.
-		feq(vu.size.y * s, hauteur_mage,
-			"%s a la hauteur du mage a l ecran" % r.id, 1.0)
+		feq(vu.size.y * s, hauteur_mage * UiTheme.APPRENTICE_SCALE,
+			"%s a APPRENTICE_SCALE fois la hauteur du mage a l ecran" % r.id, 1.0)
 		feq(float(pose["y"]) + (vu.end.y - cellule * 0.5) * s, pieds_mage,
 			"%s a les pieds au niveau de ceux du mage" % r.id, 1.0)
 		ok(not is_equal_approx(s, UiTheme.MAGE_SCALE),
@@ -316,8 +330,9 @@ func _test_aucun_apprenti_ne_porte_un_monstre() -> void:
 				"le monstre %s ne porte pas la feuille de l apprenti %s" % [e.id, r.id])
 
 
-## L ecran grise robe et chapeau quand un apprenti est joue, avec une phrase —
-## il ne les cache pas. Et un apprenti non gagne y est un bouton INACTIF.
+## L ecran grise le chapeau quand un apprenti est joue, avec une phrase — il ne
+## le cache pas ; la grille de tenue passe aux teintes de l apprenti. Et un
+## apprenti non gagne y est un bouton INACTIF.
 func _test_l_onglet_grise_robe_et_chapeau() -> void:
 	var K := GameEnums.RewardKind
 	var apprentis: Array[AccountRewardDef] = _apprentis()
@@ -348,17 +363,27 @@ func _test_l_onglet_grise_robe_et_chapeau() -> void:
 	var robe: CanvasItem = panel.find_child("Group_%d" % K.MAGE_COLOR, true, false)
 	ok(robe != null and is_equal_approx(robe.modulate.a, 1.0), "la robe est pleinement visible")
 
-	# Un apprenti gagne et choisi : robe et chapeau palissent, la tour non.
+	# Un apprenti gagne et choisi : le CHAPEAU palit (l apprenti garde son
+	# couvre-chef), la grille de TENUE montre les siennes, la tour ne bouge pas.
 	_monter_au_niveau(apprentis[0].at_level)
 	SaveData.equip_cosmetic(apprentis[0].id)
 	panel.refresh()
 	ok(panel.find_child("ApprenticeNote", true, false) != null,
-		"une phrase dit pourquoi robe et chapeau sont grises")
-	for k in [K.MAGE_COLOR, K.HAT]:
-		var g: CanvasItem = panel.find_child("Group_%d" % k, true, false)
-		ok(g != null, "la grille %d reste AFFICHEE" % k)
-		if g != null:
-			ok(g.modulate.a < 1.0, "la grille %d est grisee" % k)
+		"une phrase dit pourquoi le chapeau est grise")
+	var chapeaux: CanvasItem = panel.find_child("Group_%d" % K.HAT, true, false)
+	ok(chapeaux != null, "la grille CHAPEAU reste AFFICHEE")
+	if chapeaux != null:
+		ok(chapeaux.modulate.a < 1.0, "la grille CHAPEAU est grisee")
+	var tenue: CanvasItem = panel.find_child("Group_%d" % K.MAGE_COLOR, true, false)
+	ok(tenue != null and is_equal_approx(tenue.modulate.a, 1.0),
+		"la grille de TENUE habille l apprenti : elle n est pas grisee")
+	if tenue != null:
+		var cases: int = 0
+		for b in tenue.get_children():
+			if b is Button:
+				cases += 1
+		eq(cases, 1 + SaveData.outfit_rewards(apprentis[0].texture_name).size(),
+			"elle montre SES tenues : l origine, puis ses teintes (aucune robe du mage)")
 	var tour: CanvasItem = panel.find_child("Group_%d" % K.TOWER, true, false)
 	ok(tour != null and is_equal_approx(tour.modulate.a, 1.0),
 		"la tour s applique aussi a l apprenti : elle n est pas grisee")
