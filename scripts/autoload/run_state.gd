@@ -145,6 +145,7 @@ func reset() -> void:
 	# elle franchirait la fin du niveau et l equilibrage mesure au banc ne
 	# decrirait plus aucune partie reelle (voir la section AMELIORATION plus bas).
 	casts_by_card.clear()
+	card_xp_bonus.clear()  # CHANTIER W8 : XP de meditation
 	upgrades_taken.clear()
 	pending_upgrade_card = null
 	pending_upgrade_paths = []
@@ -1900,10 +1901,10 @@ func note_cast(card: SpellCard) -> void:
 	_try_open_maturation(card)
 
 
-## XP DE CARTE donnee SANS lancer (chantier W8). Une XP de carte EST un lancer
-## pour la maturation : meme compteur (casts_by_card), meme palier, meme offre.
-## Mais ce n est PAS un lancer pour le reste : ni objectif (« lancer 30 fois le
-## meme sort »), ni prix « carte defaussee », ni compteur du grimoire. La
+## XP DE CARTE donnee SANS lancer (chantier W8). Une XP de carte vaut un lancer
+## pour la MATURATION : meme palier, meme lisere, meme offre (card_xp). Mais ce
+## n est PAS un lancer pour le reste : ni objectif (« lancer 30 fois le meme
+## sort »), ni prix « carte defaussee », ni compteur du grimoire. La
 ## meditation de la montee de niveau l utilise ; la carte Concentration la
 ## reutilisera (chantier suivant) — un seul point d entree, pour que les deux
 ## fassent murir les sorts exactement comme un lancer.
@@ -1912,9 +1913,30 @@ func note_cast(card: SpellCard) -> void:
 func grant_card_xp(card: SpellCard, n: int = 1) -> bool:
 	if card == null or card.is_passive or n <= 0:
 		return false
-	casts_by_card[card.id] = int(casts_by_card.get(card.id, 0)) + n
+	# Compteur A PART et non casts_by_card : les objectifs lisent casts_by_card
+	# (« le meme sort 30 fois », « au plus N sorts differents »), et une
+	# meditation n est pas un lancer.
+	card_xp_bonus[card.id] = int(card_xp_bonus.get(card.id, 0)) + n
 	_try_open_maturation(card)
 	return true
+
+
+## XP de carte donnee hors lancer, par id (meditation, Concentration). Remise a
+## zero avec la partie, comme casts_by_card.
+var card_xp_bonus: Dictionary = {}
+
+
+## L XP de MATURATION d une carte : ses lancers plus l XP donnee. C est ce que
+## lisent les paliers, le lisere et l ecran d amelioration.
+func card_xp(card: SpellCard) -> int:
+	if card == null:
+		return 0
+	return casts_of(card) + int(card_xp_bonus.get(card.id, 0))
+
+
+## L XP donnee hors lancer a cette carte (pour l ecran : « dont N meditees »).
+func card_xp_given(card: SpellCard) -> int:
+	return int(card_xp_bonus.get(card.id, 0)) if card != null else 0
 
 
 ## Ouvre l offre de maturation de `card` si elle a atteint son palier. Le seul
@@ -1945,7 +1967,7 @@ func _maturation_ready(card: SpellCard) -> bool:
 		return false
 	if maturations_done(card) >= upgrade_tiers_for(card):
 		return false
-	return casts_of(card) >= next_upgrade_at(card)
+	return card_xp(card) >= next_upgrade_at(card)
 
 
 ## Apres un choix ou un refus : une autre carte attendait-elle son ecran ? C est
@@ -2024,7 +2046,7 @@ func upgrade_progress(card: SpellCard) -> float:
 	if faites >= upgrade_tiers_for(card):
 		return 1.0
 	var debut: int = upgrade_threshold(faites - 1) if faites > 0 else 0
-	return clampf(float(casts_of(card) - debut) / float(upgrade_gap(faites)), 0.0, 1.0)
+	return clampf(float(card_xp(card) - debut) / float(upgrade_gap(faites)), 0.0, 1.0)
 
 
 ## La DERNIERE maturation de la carte (id de voie, "none" si refusee, "" si

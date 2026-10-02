@@ -491,7 +491,7 @@ func advance(world_delta: float) -> void:
 		if _shoot_timer <= 0.0:
 			_shoot_timer = definition.shoot_interval
 			play_shot_pose(false)
-			battlefield.enemy_shoot(self, definition.shot_damage)
+			battlefield.enemy_shoot(self, shot_damage_now())  # CHANTIER W8 : force du devoreur
 
 	# Les unites du pack regardent a droite : on les retourne quand elles vont a gauche.
 	if _anim != null and _anim.visible:
@@ -1138,6 +1138,8 @@ func dispel() -> void:
 	# une perte pour le joueur, et c est coherent : Lumiere purifiante « efface les
 	# effets en cours », les siens compris — la carte ne peut pas etre gratuite.
 	_stun_time = 0.0
+	# CHANTIER W8 : la dissipation COUPE l aura d un protecteur (voir plus bas).
+	_w8_on_dispel()
 	if _shield_up:
 		_shield_up = false
 		if _body != null:
@@ -2164,6 +2166,7 @@ func devour(prey: Enemy) -> void:
 		AudioBus.play_sfx(&"heal")
 		return
 	grow(prey.max_hp() * 0.5, 0.18)
+	devour_prey += 1  # CHANTIER W8 : la proie ajoute aussi a sa FORCE (devour_force)
 
 
 ## RAPPEL : un devoreur qui invoque avale ses sbires MURS ou qu ils soient. Sans
@@ -2431,3 +2434,97 @@ func break_caption() -> String:
 		return ""
 	return "BRISE : %s (%d s)" % [TerrainProp.kind_label(int(_brk_target.get("kind"))).to_upper(),
 		ceili(maxf(_brk_windup_left, 0.0))]
+
+
+# =====================================================================
+# CHANTIER W8 — PROTECTEURS (aura coupee) et DEVOREURS (force qui croit).
+# Bloc a part, appele par une ligne depuis dispel(), devour() et le tir ; la
+# lecture de l aura par les AUTRES monstres vit dans Battlefield, comme le veut
+# la regle du fichier.
+# =====================================================================
+
+## Temps de MONDE pendant lequel l aura de ce porteur est COUPEE (dissipation ou
+## pat d aura, voir Battlefield._w8_auras_simulate). 0 = aura active.
+var _aura_off_time: float = 0.0
+## Proies avalees par ce devoreur depuis son apparition (voir devour_force).
+var devour_prey: int = 0
+
+
+func has_aura() -> bool:
+	return definition != null and definition.aura_shield_radius > 0.0
+
+
+## L aura protege-t-elle EN CE MOMENT ? Un porteur dont l aura est coupee reste
+## un porteur (has_aura), mais il ne couvre plus personne.
+func aura_active() -> bool:
+	return has_aura() and not _dead and _aura_off_time <= 0.0
+
+
+func aura_off_left() -> float:
+	return _aura_off_time
+
+
+## Coupe l aura pendant `seconds` de monde. Prolonge une coupure en cours, ne la
+## raccourcit jamais. LISIBLE : le halo disparait pour toute la coupure (et un
+## eclat dore part du porteur au moment ou elle cede), puis revient — le joueur
+## voit exactement la fenetre ou ce qu il couvrait redevient frappable.
+func suppress_aura(seconds: float) -> void:
+	if not has_aura() or seconds <= 0.0 or _dead:
+		return
+	var cedait: bool = aura_active()
+	_aura_off_time = maxf(_aura_off_time, seconds)
+	_refresh_aura_fx()
+	if cedait:
+		AudioBus.play_sfx(&"shield_break")
+		if Fx.enabled() and battlefield != null:
+			Fx.impact(battlefield, position, Color(1.0, 0.92, 0.6),
+				definition.aura_shield_radius * 0.5)
+
+
+## Avance la coupure (temps du MONDE : a x4 l aura revient quatre fois plus vite,
+## comme tout ce qui se passe sur le terrain). Appele par Battlefield.
+func tick_aura(world_delta: float) -> void:
+	if _aura_off_time <= 0.0:
+		return
+	_aura_off_time = maxf(0.0, _aura_off_time - world_delta)
+	if _aura_off_time <= 0.0:
+		_refresh_aura_fx()
+
+
+func _refresh_aura_fx() -> void:
+	if _aura_fx != null and is_instance_valid(_aura_fx) and _aura_fx is CanvasItem:
+		(_aura_fx as CanvasItem).visible = aura_active()
+
+
+## Dissipation (Lumiere purifiante, Vide d emprise) : la carte promettait
+## « efface ... les auras », et dispel() ne les touchait pas. Elle coupe
+## maintenant l aura du porteur touche, MEME s il est lui-meme couvert par un
+## autre porteur : la dissipation ne passe pas par les degats (Battlefield._hit),
+## donc l aura voisine ne la bloque pas. C est ce qui defait deux tours qui se
+## protegent entre elles.
+func _w8_on_dispel() -> void:
+	suppress_aura(GameConfig.AURA_DISPEL_SECONDS)
+
+
+## Multiplicateur de FORCE d un devoreur qui grossit : +DEVOUR_FORCE_PER_PREY par
+## proie, plafonne a +DEVOUR_FORCE_CAP. 1 pour tout autre monstre, et pour le
+## devoreur-invocateur qui se SOIGNE en avalant (devour_heal_pct) : son gain est
+## le soin, voir GameConfig.
+func devour_force() -> float:
+	if definition == null or not definition.devours or definition.devour_heal_pct > 0.0:
+		return 1.0
+	return 1.0 + minf(float(devour_prey) * GameConfig.DEVOUR_FORCE_PER_PREY,
+		GameConfig.DEVOUR_FORCE_CAP)
+
+
+## Degats de CONTACT de CET exemplaire : le bareme de sa definition, multiplie
+## par sa force de devoreur. Lu par Battlefield a l arrivee sur le mage.
+func contact_damage() -> int:
+	var base: int = definition.contact_hit() if definition != null else 5
+	return int(round(float(base) * devour_force()))
+
+
+## Degats d un TIR de cet exemplaire (meme regle que le contact).
+func shot_damage_now() -> int:
+	var base: int = definition.shot_damage if definition != null else 0
+	return int(round(float(base) * devour_force()))

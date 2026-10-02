@@ -54,6 +54,9 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_terrain_breaker.gd",
 	"res://tests/unit/test_modes.gd",
 	"res://tests/unit/test_objective_bench.gd",
+	# Chantier W8 : montee de niveau, maturation, vagues qui trainent, protecteurs.
+	"res://tests/unit/test_level_up_w8.gd",
+	"res://tests/unit/test_waves_protectors_w8.gd",
 ]
 
 var _total_checks: int = 0

@@ -189,12 +189,7 @@ func simulate(delta: float) -> void:
 	# hasard, soit prendre un coup en lisant.
 	if RunState.pending_upgrade_card != null:
 		return
-	# CHANTIER W8 — deux autres choix modaux, meme regle et meme raison :
-	#   - un quatrieme PASSIF attend que le joueur designe celui qu il retire (ou
-	#     refuse) : il lit trois cartes, il ne doit pas encaisser en lisant ;
-	#   - une carte BRULEE attend d etre visee : elle part sans incantation, la ou
-	#     le joueur la lache, et viser pendant que tout bouge rendrait le choix de
-	#     bruler pire que celui de prendre la carte.
+	# CHANTIER W8 : passif a echanger, carte brulee a viser (voir la fonction).
 	if _w8_choice_pending():
 		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
@@ -616,7 +611,15 @@ func _on_died() -> void:
 # =====================================================================
 
 ## Un choix du chantier W8 attend-il le joueur ? Lu par simulate() (pause) et
-## play_card() (refus) : un passif a echanger, une carte brulee a viser.
+## play_card() (refus). Deux choix modaux, meme regle que le choix de carte et
+## l amelioration, et pour la meme raison :
+##   - un quatrieme PASSIF attend que le joueur designe celui qu il retire (ou
+##     refuse) : il lit trois cartes, il ne doit pas encaisser en lisant ;
+##   - une carte BRULEE attend d etre visee : elle part sans incantation, la ou
+##     le joueur la lache, et viser pendant que tout bouge rendrait le choix de
+##     bruler pire que celui de prendre la carte.
+## (Le commentaire vit ici et pas dans simulate() : test_balance lit le debut de
+## simulate() et exige d y trouver la sortie sur `_ended`.)
 func _w8_choice_pending() -> bool:
 	return RunState.pending_passive != null or RunState.burned_card != null
 

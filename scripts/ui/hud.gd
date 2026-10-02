@@ -84,8 +84,8 @@ func _ready() -> void:
 	# Le rail se reconstruit quand la barre de passifs change (gain, echange).
 	if not RunState.passives_changed.is_connected(_build_passive_rail):
 		RunState.passives_changed.connect(_build_passive_rail)
-	if not RunState.passive_swap_needed.is_connected(_on_passive_swap_needed):
-		RunState.passive_swap_needed.connect(_on_passive_swap_needed)
+	# L echange d un quatrieme passif ne se fait plus sur le rail : c est un
+	# panneau en pause, ouvert par GameController (PassiveSwapPanel, chantier W8).
 	if not RunState.objective_failed.is_connected(_on_objective_failed):
 		RunState.objective_failed.connect(_on_objective_failed)
 	_refresh_all()
@@ -120,6 +120,7 @@ func bind(controller: GameController) -> void:
 		# spawner du Massacre n emet jamais ce signal).
 		if game.spawner != null and not game.spawner.world_changed.is_connected(_on_world_changed):
 			game.spawner.world_changed.connect(_on_world_changed)
+		_w8_bind(game)
 	_refresh_all()
 
 
@@ -286,9 +287,9 @@ func _build_passive_rail() -> void:
 		var p: SpellCard = equipes[idx]
 		var y: float = ys[idx]
 		var pastille := Panel.new()
-		# IGNORE par defaut : hors echange, le rail ne doit rien avaler du geste de
-		# glisser-deposer qui commence souvent a gauche de l ecran. Il ne redevient
-		# cliquable que pendant un echange (voir _on_passive_swap_needed).
+		# IGNORE toujours : le rail ne doit rien avaler du geste de glisser-deposer
+		# qui commence souvent a gauche de l ecran. L echange d un passif ne passe
+		# plus par lui (PassiveSwapPanel, chantier W8).
 		pastille.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		pastille.custom_minimum_size = Vector2(ICONE, ICONE)
 		# position AVANT add_child : _ready() part des l ajout.
@@ -298,21 +299,11 @@ func _build_passive_rail() -> void:
 		sb.bg_color = Color(0.08, 0.07, 0.11, 0.92)
 		sb.set_border_width_all(4)
 		sb.border_color = UiTheme.rarity_color(p.rarity)
-		sb.set_corner_radius_all(int(ICONE * 0.5))
+		# Carre aux coins arrondis et non plus rond : l icone est carree, un cercle
+		# en mangeait les coins ou la reduisait a un timbre illisible.
+		sb.set_corner_radius_all(int(ICONE * 0.22))
 		pastille.add_theme_stylebox_override(&"panel", sb)
-
-		# L initiale suffit a distinguer trois passifs et tient dans 54 px ; un
-		# nom entier y serait illisible et une icone d asset n existe pas encore.
-		var lettre := Label.new()
-		lettre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		lettre.text = p.display_name.substr(0, 1).to_upper()
-		lettre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lettre.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		lettre.set_anchors_preset(Control.PRESET_FULL_RECT)
-		lettre.add_theme_font_override(&"font", UiTheme.font())
-		lettre.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
-		lettre.add_theme_color_override(&"font_color", UiTheme.rarity_color(p.rarity))
-		pastille.add_child(lettre)
+		pastille.add_child(_rail_icon(p))
 
 		# Le SEUIL en clair sous la pastille : sans le nombre, le joueur devine la
 		# hauteur sans jamais savoir combien il lui manque.
@@ -360,63 +351,35 @@ func _refresh_passive_rail() -> void:
 		var l: Label = pastille.get_meta(&"seuil_label") as Label
 		if l != null and is_instance_valid(l):
 			l.modulate = pastille.modulate
-		# Pendant un echange, la pastille designee clignote pour dire "touche-moi".
-		if RunState.pending_passive != null:
-			pastille.modulate = Color(1, 1, 1, 0.65 + 0.35 * sin(Time.get_ticks_msec() * 0.006))
 
 
-## Un quatrieme passif est gagne alors que les trois emplacements sont pleins.
-## "On doit selectionner un des trois passifs a changer" : le choix se fait SUR
-## LE RAIL lui-meme, la ou les trois passifs sont deja affiches a leur hauteur.
-## Un panneau separe aurait oblige le joueur a retrouver, dans une liste, les
-## memes trois icones qu il a sous les yeux.
-func _on_passive_swap_needed(card: SpellCard) -> void:
-	if card == null:
-		return
-	_build_passive_rail()
-	for i in _passive_icons.size():
-		var pastille: Control = _passive_icons[i]
-		if not is_instance_valid(pastille):
-			continue
-		# Seules ces trois pastilles redeviennent cliquables, et seulement le temps
-		# de l echange : ensuite le rail redevient transparent au doigt.
-		pastille.mouse_filter = Control.MOUSE_FILTER_STOP
-		var slot: int = i
-		pastille.gui_input.connect(func(ev: InputEvent) -> void:
-			if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
-				_resolve_passive_swap(slot))
-	_passive_prompt(card)
-
-
-## Bandeau qui annonce le passif gagne et ce qu il attend du joueur. Sans lui,
-## trois pastilles qui clignotent ne veulent rien dire.
-func _passive_prompt(card: SpellCard) -> void:
-	if _passive_swap_label != null and is_instance_valid(_passive_swap_label):
-		_passive_swap_label.queue_free()
-	var l := UiTheme.label_hud(
-		"%s\nTouche le pouvoir a remplacer" % card.display_name,
-		UiTheme.FONT_BODY, UiTheme.rarity_color(card.rarity))
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.position = Vector2(180.0, 1180.0)
-	l.size = Vector2(760.0, 140.0)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(l)
-	_passive_swap_label = l
-
-
-var _passive_swap_label: Label = null
-
-
-func _resolve_passive_swap(slot: int) -> void:
-	if RunState.pending_passive == null:
-		return
-	AudioBus.play_sfx(&"card_pick")
-	RunState.resolve_pending_passive(slot)
-	if _passive_swap_label != null and is_instance_valid(_passive_swap_label):
-		_passive_swap_label.queue_free()
-		_passive_swap_label = null
-	# _build_passive_rail() est rappele par passives_changed : les pastilles
-	# reviennent en MOUSE_FILTER_IGNORE et cessent de clignoter.
+## L ICONE du passif dans sa pastille (chantier W8) : la meme image que le menu
+## pause et l ecran de deck (CardIcons). L initiale d avant ne distinguait pas
+## deux pouvoirs de meme lettre, et elle ne se rapprochait de rien : le joueur
+## devait retenir une lettre par pouvoir. Repli sur l initiale si une carte n a
+## pas d icone (cas que test_card_icons interdit de livrer).
+## `name` fixe : le test du rail cherche l icone sans lire les pixels.
+func _rail_icon(p: SpellCard) -> Control:
+	var ico: TextureRect = CardIcons.make_rect(p, ICONE - 12.0)
+	if ico != null:
+		ico.name = "Icone"
+		ico.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		ico.offset_left = 6.0
+		ico.offset_top = 6.0
+		ico.offset_right = -6.0
+		ico.offset_bottom = -6.0
+		return ico
+	var lettre := Label.new()
+	lettre.name = "Initiale"
+	lettre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lettre.text = p.display_name.substr(0, 1).to_upper()
+	lettre.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lettre.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lettre.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lettre.add_theme_font_override(&"font", UiTheme.font())
+	lettre.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+	lettre.add_theme_color_override(&"font_color", UiTheme.rarity_color(p.rarity))
+	return lettre
 
 
 func _fmt(v: float) -> String:
@@ -648,6 +611,10 @@ func _on_card_input(event: InputEvent, card: SpellCard, slot: int) -> void:
 		# le joueur verrait partir une carte qu il n a pas touchee.
 		if RunState.is_slot_blocked(slot):
 			return
+		# CHANTIER W8 : une carte BRULEE attend d etre visee, la partie est en
+		# pause ; la main ne repond pas tant qu elle n est pas partie.
+		if RunState.burned_card != null:
+			return
 		if _needs_aim(card):
 			_begin_drag(card, mb.global_position)
 		else:
@@ -681,6 +648,13 @@ func _end_drag(screen_pos: Vector2) -> void:
 	if card == null:
 		return
 	var point: Vector2 = _battlefield_point(screen_pos)
+	# CHANTIER W8 : la carte glissee est la carte BRULEE, pas une carte de main.
+	# Meme geste, meme apercu, mais elle part sans incantation (cast_burned).
+	if _dragging_burned:
+		_dragging_burned = false
+		if _is_valid_aim(point, card) and game != null:
+			game.cast_burned(point)
+		return
 	if _is_valid_aim(point, card):
 		_play(card, point)
 	# Visee hors terrain : la carte reste en main, le geste est simplement annule.
@@ -742,17 +716,10 @@ func _show_choice(cards: Array[SpellCard]) -> void:
 	box.add_child(UiTheme.label("CHOISIS UN SORT", UiTheme.FONT_TITLE, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
 	box.add_child(UiTheme.label("Il rejoint ta defausse et reviendra dans la pioche.",
 		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
-	# Mode BRULER : on arme d abord, puis on touche la carte a sacrifier.
-	var burn_btn := Button.new()
-	burn_btn.text = "BRULER UNE CARTE"
-	burn_btn.custom_minimum_size = Vector2(0, 76)
-	burn_btn.toggle_mode = true
-	burn_btn.toggled.connect(func(on: bool) -> void:
-		_burn_armed = on
-		burn_btn.text = "CHOISIS LA CARTE A BRULER" if on else "BRULER UNE CARTE")
-	box.add_child(burn_btn)
-	box.add_child(UiTheme.label("Brulee : lancee tout de suite, mais elle n entre pas dans ton deck.",
-		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
+	# Un nouvel ecran repart TOUJOURS desarme : un mode bruler reste arme d une
+	# montee a l autre brulerait la carte que le joueur voulait prendre.
+	_burn_armed = false
+	_choice_views.clear()
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override(&"separation", 24)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -764,22 +731,35 @@ func _show_choice(cards: Array[SpellCard]) -> void:
 		cv.setup_detail(cards[i], 300.0, 440.0, 30, 22)
 		cv.pressed.connect(func(_c: SpellCard) -> void: _pick(i))
 		row.add_child(cv)
+		_choice_views.append(cv)
+	_w8_choice_actions(box)
 	_choice.visible = true
 
 
 ## Armement du mode bruler : le joueur clique le bouton, puis la carte.
 var _burn_armed: bool = false
+## Les cartes de l ecran de choix, dans l ordre de l offre (pour les griser quand
+## le mode bruler est arme : un passif ne se brule pas, chantier W8).
+var _choice_views: Array[CardView] = []
 
 
 func _pick(i: int) -> void:
-	AudioBus.play_sfx(&"card_pick")
-	_choice.visible = false
 	if game == null:
 		return
 	if _burn_armed:
+		# UN PASSIF NE SE BRULE PAS (RunState.burn_offer le refuse) : l ecran
+		# reste ouvert et arme, le joueur touche un sort ou desarme.
+		if i < 0 or i >= RunState.pending_offer.size() \
+				or not RunState.can_burn(RunState.pending_offer[i]):
+			AudioBus.play_sfx(&"ui_tap")
+			return
+		AudioBus.play_sfx(&"card_pick")
 		_burn_armed = false
+		_choice.visible = false
 		game.burn_card(i)
 		return
+	AudioBus.play_sfx(&"card_pick")
+	_choice.visible = false
 	game.choose_card(i)
 
 
@@ -1309,3 +1289,226 @@ func _ensure_world_banner() -> void:
 	col.add_child(_world_title)
 	col.add_child(_world_sub)
 	_root.add_child(_world_banner)
+
+
+# =====================================================================
+# CHANTIER W8 — montee de niveau (BRULER vise, MEDITER) et vague qui traine.
+# Section a part : chaque accroche ailleurs dans ce fichier est une ligne qui
+# appelle une fonction d ici (bind, _show_choice, _end_drag).
+# =====================================================================
+
+const CHOICE_HINT := "Bruler : la carte part tout de suite, la ou tu la vises, sans entrer dans ton deck.\nMediter : aucune carte, +%d XP a chaque carte de ta main."
+const CHOICE_HINT_ARMED := "Touche le sort a bruler. Un pouvoir ne se brule pas."
+## Teinte des cartes que le mode bruler ne peut pas prendre (les pouvoirs).
+const TEINTE_NON_BRULABLE := Color(0.45, 0.45, 0.52, 0.75)
+
+## Vrai si le glisser en cours est celui de la carte BRULEE (voir _end_drag).
+var _dragging_burned: bool = false
+## Le plateau qui presente la carte brulee a viser. Null hors visee.
+var _burn_tray: Control = null
+
+
+func _w8_bind(g: GameController) -> void:
+	if g == null:
+		return
+	if not g.burn_aim_requested.is_connected(_on_burn_aim_requested):
+		g.burn_aim_requested.connect(_on_burn_aim_requested)
+	if not g.burn_resolved.is_connected(_on_burn_resolved):
+		g.burn_resolved.connect(_on_burn_resolved)
+	if g.spawner != null and not g.spawner.wave_overtime.is_connected(_on_wave_overtime):
+		g.spawner.wave_overtime.connect(_on_wave_overtime)
+
+
+## BRULER et MEDITER, sous les trois cartes de l ecran de choix. Deux boutons cote
+## a cote, chacun de 96 px de haut (cible tactile), et UNE phrase d aide qui dit
+## ce que fait chacun — puis, une fois bruler arme, ce que le joueur doit toucher.
+##
+## Sous les cartes et non plus au-dessus : le geste principal (prendre une carte)
+## reste le premier que l oeil rencontre, les deux alternatives se lisent apres.
+func _w8_choice_actions(box: VBoxContainer) -> void:
+	var actions := HBoxContainer.new()
+	actions.name = "Actions"
+	actions.add_theme_constant_override(&"separation", 24)
+	box.add_child(actions)
+	var bruler := Button.new()
+	bruler.name = "Bruler"
+	bruler.text = "BRULER"
+	bruler.toggle_mode = true
+	bruler.custom_minimum_size = Vector2(0, 96)
+	bruler.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(bruler)
+	var mediter := Button.new()
+	mediter.name = "Mediter"
+	mediter.text = "MEDITER"
+	mediter.custom_minimum_size = Vector2(0, 96)
+	mediter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	actions.add_child(mediter)
+	var aide: Label = UiTheme.label(CHOICE_HINT % GameConfig.MEDITATE_CARD_XP,
+		UiTheme.FONT_SMALL, UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER)
+	aide.name = "Aide"
+	box.add_child(aide)
+	bruler.toggled.connect(func(on: bool) -> void:
+		_burn_armed = on
+		bruler.text = "ANNULER" if on else "BRULER"
+		aide.text = CHOICE_HINT_ARMED if on else CHOICE_HINT % GameConfig.MEDITATE_CARD_XP
+		_shade_unburnable(on))
+	mediter.pressed.connect(_on_meditate_pressed)
+
+
+## Mode bruler arme : les POUVOIRS de l offre se grisent. Le joueur voit avant de
+## toucher qu ils ne se brulent pas, au lieu de toucher et de ne rien voir partir.
+func _shade_unburnable(armed: bool) -> void:
+	for cv in _choice_views:
+		if not is_instance_valid(cv):
+			continue
+		cv.modulate = TEINTE_NON_BRULABLE if armed and not RunState.can_burn(cv.card) \
+			else Color.WHITE
+
+
+func _on_meditate_pressed() -> void:
+	if game == null:
+		return
+	AudioBus.play_sfx(&"level_up")
+	_burn_armed = false
+	_choice.visible = false
+	game.meditate()
+	# Le lisere de progression des cartes en main vient de bouger : on le redessine.
+	_refresh_hand()
+
+
+## La carte brulee attend d etre visee : on la pose AU-DESSUS de la main, avec ce
+## qu elle attend du joueur. Le geste est celui de la main — appuyer sur la carte,
+## glisser, relacher — avec le meme apercu de visee (AimOverlay).
+func _on_burn_aim_requested(card: SpellCard) -> void:
+	_hide_burn_tray()
+	if card == null:
+		return
+	var tray := VBoxContainer.new()
+	tray.name = "BurnTray"
+	tray.add_theme_constant_override(&"separation", 10)
+	tray.custom_minimum_size = Vector2(BURN_TRAY_WIDTH, 0.0)
+	# position AVANT add_child : _ready() part des l ajout.
+	tray.position = Vector2((GameConfig.BATTLEFIELD_WIDTH - BURN_TRAY_WIDTH) * 0.5, BURN_TRAY_Y)
+	tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var titre: Label = UiTheme.label_hud("BRULEE : glisse-la sur le terrain",
+		UiTheme.FONT_BODY, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	titre.name = "Consigne"
+	titre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tray.add_child(titre)
+	var centre := CenterContainer.new()
+	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tray.add_child(centre)
+	var cv := CardView.new()
+	cv.name = "CarteBrulee"
+	cv.setup_hand(card, 200.0, 230.0)
+	cv.gui_input.connect(_on_burn_card_input.bind(card))
+	centre.add_child(cv)
+	_root.add_child(tray)
+	_burn_tray = tray
+
+
+## Le plateau de la carte brulee : centre, juste au-dessus de la tour du mage,
+## la ou le pouce part deja pour jouer une carte de la main.
+const BURN_TRAY_WIDTH: float = 760.0
+const BURN_TRAY_Y: float = 1080.0
+
+
+func _on_burn_card_input(event: InputEvent, card: SpellCard) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	var mb := event as InputEventMouseButton
+	if mb.button_index != MOUSE_BUTTON_LEFT or not mb.pressed:
+		return
+	if RunState.burned_card != card:
+		return
+	_dragging_burned = true
+	_begin_drag(card, mb.global_position)
+
+
+func _on_burn_resolved(_card: SpellCard) -> void:
+	_hide_burn_tray()
+
+
+func _hide_burn_tray() -> void:
+	if _burn_tray != null and is_instance_valid(_burn_tray):
+		_burn_tray.queue_free()
+	_burn_tray = null
+
+
+## Pour les tests : la carte que le plateau presente, null hors visee.
+func burn_tray_card() -> SpellCard:
+	if _burn_tray == null or not is_instance_valid(_burn_tray):
+		return null
+	var cv: CardView = _burn_tray.find_child("CarteBrulee", true, false) as CardView
+	return cv.card if cv != null else null
+
+
+# --- La vague suivante arrive alors que des monstres restent ---
+#
+# Sans annonce, le joueur voit une nouvelle vague tomber sur les restants de la
+# precedente et croit a un bug du compteur (« j avais pas fini »). Un bandeau
+# BREF, sous celui du monde (les deux peuvent tomber ensemble en Infini), qui
+# laisse passer le doigt et s efface seul.
+
+const OVERTIME_BANNER_SECONDS: float = 2.4
+const OVERTIME_BANNER_Y: float = 600.0
+
+var _overtime_banner: PanelContainer = null
+var _overtime_title: Label = null
+var _overtime_tween: Tween = null
+
+
+func _on_wave_overtime(_index: int) -> void:
+	show_overtime_banner()
+
+
+func show_overtime_banner() -> void:
+	_ensure_overtime_banner()
+	_overtime_banner.visible = true
+	_overtime_banner.modulate = Color(1, 1, 1, 0)
+	if _overtime_tween != null and _overtime_tween.is_valid():
+		_overtime_tween.kill()
+	var tw: Tween = _overtime_banner.create_tween()
+	tw.tween_property(_overtime_banner, "modulate:a", 1.0, 0.2)
+	tw.tween_interval(OVERTIME_BANNER_SECONDS - 0.6)
+	tw.tween_property(_overtime_banner, "modulate:a", 0.0, 0.4)
+	tw.tween_callback(func() -> void: _overtime_banner.visible = false)
+	_overtime_tween = tw
+
+
+## Pour les tests et le SMOKE : le titre affiche, "" si le bandeau est cache.
+func overtime_banner_text() -> String:
+	if _overtime_banner == null or not _overtime_banner.visible:
+		return ""
+	return _overtime_title.text
+
+
+func _ensure_overtime_banner() -> void:
+	if _overtime_banner != null and is_instance_valid(_overtime_banner):
+		return
+	_overtime_banner = PanelContainer.new()
+	_overtime_banner.name = "OvertimeBanner"
+	_overtime_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Meme aplat sombre que le bandeau de monde, pour la meme raison : les cinq
+	# fonds vont du ciel clair au rouge, un texte nu y serait illisible.
+	_overtime_banner.add_theme_stylebox_override(&"panel",
+		UiTheme.flat_box(Color(UiTheme.BG, 0.82), 18, 16.0))
+	_overtime_banner.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_overtime_banner.anchor_left = 0.12
+	_overtime_banner.anchor_right = 0.88
+	_overtime_banner.offset_left = 0.0
+	_overtime_banner.offset_right = 0.0
+	_overtime_banner.offset_top = OVERTIME_BANNER_Y
+	_overtime_banner.offset_bottom = OVERTIME_BANNER_Y
+	_overtime_banner.visible = false
+	var col := VBoxContainer.new()
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_theme_constant_override(&"separation", 2)
+	_overtime_banner.add_child(col)
+	_overtime_title = UiTheme.label_hud("LA VAGUE SUIVANTE ARRIVE", UiTheme.FONT_BODY,
+		UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	var sous: Label = UiTheme.label_hud("Les monstres restants restent en jeu",
+		UiTheme.FONT_SMALL, UiTheme.TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+	col.add_child(_overtime_title)
+	col.add_child(sous)
+	_root.add_child(_overtime_banner)

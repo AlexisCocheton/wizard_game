@@ -63,7 +63,9 @@ extends Control
 ##     toutes les 20 a 50 secondes : c est l ordre de grandeur des montees de
 ##     niveau. Une respiration, pas un hoquet. Avec deux paliers a ecart egal (8
 ##     et 16), les niveaux longs montaient a 10,5 : c est pour cela que l ecart
-##     grandit (GameConfig.CARD_UPGRADE_GAP_GROWTH).
+##     grandit (GameConfig.CARD_UPGRADE_GAP_STEP). Depuis le chantier W8, cinq
+##     paliers (8, 24, 48, 80, 120) : les deux premiers n ont pas bouge, les
+##     suivants recompensent le sort joue en boucle sur une longue partie.
 ## Le bouton "garder tel quel" existe pour cette raison : si le joueur ne veut
 ## pas s arreter, il ferme d un doigt sans rien lire.
 
@@ -135,34 +137,45 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	# et la moitie basse de l ecran restait vide. Deux Controls vides qui prennent
 	# la place restante, un de chaque cote, centrent pour de bon.
 	_box.add_child(_ressort())
+	# L ICONE DU SORT EN GRAND, avec son sceau de type (chantier W8). Le nom seul
+	# ne suffisait pas : en jeu la carte n est qu une icone de 118 px, et le
+	# joueur reconnait « la boule orange » bien avant de lire « Boule de feu ».
+	# C est la meme image que dans sa main, a la taille d un titre.
+	var portrait: Control = _portrait(card)
+	if portrait != null:
+		_box.add_child(portrait)
 	_box.add_child(UiTheme.label("CE SORT A MURI", UiTheme.FONT_TITLE, UiTheme.GOLD,
 		HORIZONTAL_ALIGNMENT_CENTER, false))
 	var nom: String = card.display_name if card != null else "?"
 	var lancers: int = RunState.casts_of(card)
-	_box.add_child(UiTheme.label("%s  -  %d lancers" % [nom, lancers],
-		UiTheme.FONT_BODY, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER, false))
+	var sous_titre: String = "%s  -  %d lancers" % [nom, lancers]
+	# CHANTIER W8 : l XP de MEDITATION compte pour la maturation sans etre un
+	# lancer. Sans la mention, « 7 lancers » au palier de 8 se lirait comme un bug.
+	var meditee: int = RunState.card_xp_given(card)
+	if meditee > 0:
+		sous_titre += " + %d medite%s" % [meditee, "s" if meditee > 1 else ""]
+	_box.add_child(UiTheme.label(sous_titre,
+		UiTheme.FONT_BODY, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER, true))
 	# QUELLE maturation, et parmi combien de voies : sans le compte, le joueur
 	# croit que les trois voies montrees sont tout ce que le sort peut devenir,
 	# et ne sait pas qu une autre partie lui en proposera d autres.
 	var rang: int = RunState.maturations_done(card) + 1
 	var pool: int = RunState.upgrade_offerable_for(card).size()
+	var paliers: int = RunState.upgrade_tiers_for(card)
 	var entete: String = "Une voie parmi %d, pour cette partie seulement." % pool
-	if GameConfig.CARD_UPGRADE_TIERS > 1:
-		entete = "Maturation %d sur %d  -  %s" % [rang, GameConfig.CARD_UPGRADE_TIERS,
-			entete.to_lower()]
+	if paliers > 1:
+		entete = "Maturation %d sur %d  -  %s" % [rang, paliers, entete.to_lower()]
 	_box.add_child(UiTheme.label(entete, UiTheme.FONT_SMALL, UiTheme.TEXT_DIM,
 		HORIZONTAL_ALIGNMENT_CENTER, true))
-	# LE CUMUL. A la seconde maturation, la nouvelle voie s AJOUTE a la premiere :
-	# le joueur doit voir ce qu il a deja pour juger ce qu il ajoute (un second
-	# "-15 % vitesse" se lit tout autrement quand le premier est sous ses yeux).
-	var acquis: Array[String] = []
-	for v in RunState.taken_paths(card):
-		var ligne: String = String(v.get("gain_text", ""))
-		if String(v.get("cost_text", "")) != "":
-			ligne += ", " + String(v.get("cost_text", ""))
-		acquis.append(ligne)
+	# LE CUMUL. A partir de la seconde maturation, la nouvelle voie s AJOUTE aux
+	# precedentes : le joueur doit voir ce qu il a deja pour juger ce qu il ajoute
+	# (un second "-15 % vitesse" se lit tout autrement quand le premier est sous
+	# ses yeux). Depuis le chantier W8 (cinq maturations), c est le TOTAL par axe
+	# qui s affiche (RunState.upgrade_cumul_lines), plus la liste des voies : cinq
+	# voies recopiees l une apres l autre obligeaient a faire l addition soi-meme.
+	var acquis: Array[String] = RunState.upgrade_cumul_lines(card)
 	if not acquis.is_empty():
-		var l_acquis: Label = UiTheme.label("Deja acquis : " + " ; ".join(acquis),
+		var l_acquis: Label = UiTheme.label("Deja acquis : " + ", ".join(acquis),
 			UiTheme.FONT_SMALL, UiTheme.GOLD, HORIZONTAL_ALIGNMENT_CENTER, true)
 		l_acquis.name = "Acquis"
 		_box.add_child(l_acquis)
@@ -290,6 +303,27 @@ func _path_button(path: Dictionary, index: int) -> Control:
 	l_prix.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	inner.add_child(l_prix)
 	return b
+
+
+## Taille de l icone du sort en tete de l ecran (chantier W8). 180 px : trois fois
+## sa taille en main pleine, et les trois voies (3 x 200 px) plus les titres
+## tiennent encore dans 1920 px de haut.
+const PORTRAIT_SIZE: float = 180.0
+
+
+## L icone du sort avec son sceau de type, centree. Null si la carte n a pas
+## d icone (cas interdit par test_card_icons).
+func _portrait(card: SpellCard) -> Control:
+	if card == null:
+		return null
+	var ico: TextureRect = CardIcons.make_rect(card, PORTRAIT_SIZE)
+	if ico == null:
+		return null
+	var centre := CenterContainer.new()
+	centre.name = "Portrait"
+	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	centre.add_child(CardView.with_type_badge(ico, card, PORTRAIT_SIZE))
+	return centre
 
 
 ## Un espace vide qui prend toute la place restante. Deux d entre eux, un de
