@@ -113,3 +113,55 @@ static func element_factor(card: SpellCard, seen: Array) -> float:
 		somme += def.resistance_to_tags(card.tags)
 		n += 1
 	return somme / float(n) if n > 0 else 1.0
+
+
+## EPURATION (vague 8) : les exemplaires a retirer quand personne ne peut
+## choisir a l ecran (banc, tests headless). Un element par exemplaire, au plus
+## `max_count`, dans la forme que lit RunState.resolve_purge.
+##
+## LA REGLE : retirer ce qui pese le moins. A defaut de mesurer la force d un
+## sort, on prend la RARETE la plus basse (les communes), et parmi elles la carte
+## qui a le PLUS d exemplaires : en retirer une copie amincit le deck sans faire
+## disparaitre un sort. A egalite, l id le plus petit, pour que le choix ne
+## depende pas de l ordre d affichage (meme exigence que pour les ameliorations).
+##
+## LE PLANCHER : on ne descend jamais sous GameConfig.MAX_HAND_SIZE cartes en
+## tout. Une main pleine doit rester possible ; un bot qui viderait son deck
+## mesurerait au banc une partie qu aucun joueur ne choisirait de jouer.
+## Ancien comportement (2 cartes du dessus de la pioche, au hasard) : il n est
+## plus le geste du joueur, le banc ne le garde donc pas.
+static func purge_choice(groups: Array, max_count: int) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	if max_count <= 0:
+		return out
+	var restant: Dictionary = {}
+	var total: int = 0
+	var cartes: Array[SpellCard] = []
+	for g in groups:
+		if not (g is Dictionary) or not (g.get("card") is SpellCard):
+			continue
+		var c: SpellCard = g["card"]
+		restant[c.id] = int(g.get("total", 0))
+		total += int(g.get("total", 0))
+		cartes.append(c)
+	while out.size() < max_count and total > GameConfig.MAX_HAND_SIZE:
+		var pire: SpellCard = null
+		for c in cartes:
+			if int(restant[c.id]) <= 0:
+				continue
+			if pire == null or _weaker(c, pire, restant):
+				pire = c
+		if pire == null:
+			break
+		out.append(pire)
+		restant[pire.id] = int(restant[pire.id]) - 1
+		total -= 1
+	return out
+
+
+static func _weaker(a: SpellCard, b: SpellCard, restant: Dictionary) -> bool:
+	if a.rarity != b.rarity:
+		return a.rarity < b.rarity
+	if int(restant[a.id]) != int(restant[b.id]):
+		return int(restant[a.id]) > int(restant[b.id])
+	return String(a.id) < String(b.id)

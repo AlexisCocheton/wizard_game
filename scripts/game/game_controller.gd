@@ -98,6 +98,7 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	# ecoute le signal plutot que de compter ici, pour que le comptage reste au
 	# point de passage unique des sorts (EffectRegistry.cast).
 	_connect_once(RunState.upgrade_ready, _on_upgrade_ready)
+	_connect_once(RunState.purge_requested, _on_purge_requested)
 
 	var hud: Node = get_node_or_null("HUD")
 	if hud != null and hud.has_method("bind"):
@@ -182,6 +183,9 @@ func simulate(delta: float) -> void:
 	# hasard, soit prendre un coup en lisant.
 	if RunState.pending_upgrade_card != null:
 		return
+	# EPURATION en attente (vague 8) : le joueur parcourt son deck pour choisir.
+	if RunState.pending_purge > 0:
+		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
 	# La mort (ou la victoire) declenche un CHANGEMENT DE SCENE depuis ce tick :
 	# le champ de bataille est alors en cours de liberation. Continuer a le
@@ -225,6 +229,8 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 	if not RunState.pending_offer.is_empty():
 		return false
 	if RunState.pending_upgrade_card != null:
+		return false
+	if RunState.pending_purge > 0:
 		return false
 	# Une carte a viser exige un point : sans lui, on refuse plutot que de
 	# lancer le sort a un endroit arbitraire.
@@ -365,6 +371,36 @@ func _ensure_upgrade_panel() -> CardUpgradePanel:
 	else:
 		add_child(_upgrade_panel)
 	return _upgrade_panel
+
+
+## EPURATION (vague 8) : le choix des cartes a retirer. Meme partage que pour
+## l amelioration : en headless, personne ne peut toucher l ecran, AutoPick
+## tranche tout de suite ; sinon l ecran DeckBrowser se pose sur le HUD et
+## tranche lui-meme a VALIDER. Plusieurs parties peuvent ecouter le signal
+## (tests) : la premiere qui tranche vide `pending_purge`, les autres s arretent.
+##
+## UN SEUL ecran : une seconde demande pendant le choix (Debordement) releve le
+## plafond de l ecran deja ouvert, `pending_purge` portant le cumul.
+var _purge_screen: Control = null
+
+
+func _on_purge_requested(_max_count: int) -> void:
+	if RunState.pending_purge <= 0:
+		return
+	if headless_mode:
+		RunState.resolve_purge(AutoPick.purge_choice(RunState.run_deck_groups(),
+			RunState.pending_purge))
+		return
+	var ouvert: bool = _purge_screen != null and is_instance_valid(_purge_screen)
+	if ouvert and not _purge_screen.is_queued_for_deletion():
+		DeckBrowser.set_overlay_max(_purge_screen, RunState.pending_purge)
+		return
+	_purge_screen = DeckBrowser.purge_overlay(RunState.pending_purge)
+	var hud: Node = get_node_or_null("HUD")
+	if hud != null:
+		hud.add_child(_purge_screen)
+	else:
+		add_child(_purge_screen)
 
 
 func _on_upgrade_path_chosen(index: int) -> void:

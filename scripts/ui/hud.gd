@@ -812,113 +812,21 @@ func _on_pause_pressed() -> void:
 ## Panneau de pause : ce que le joueur a en cours. Les pouvoirs passifs sont
 ## invisibles une fois joues — sans cet ecran, il ne peut plus savoir lesquels il
 ## a pris ni ce qui lui reste en deck.
+##
+## Depuis la vague 8 c est un ecran A ONGLETS (MAIN / DECK / VAGUE) qui vit dans
+## son propre fichier, scripts/ui/pause_panel.gd. Le HUD ne fait plus que le
+## poser et brancher ses deux sorties.
 var _pause_panel: Control = null
 
 
 func _show_pause_panel() -> void:
 	if _pause_panel != null:
 		_pause_panel.queue_free()
-	_pause_panel = Control.new()
-	_pause_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_pause_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	var panneau := PausePanel.new(game)
+	panneau.resume_requested.connect(_on_pause_pressed)
+	panneau.quit_requested.connect(_on_quit_pressed)
+	_pause_panel = panneau
 	_root.add_child(_pause_panel)
-
-	var scrim := ColorRect.new()
-	scrim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	scrim.color = Color(0.05, 0.04, 0.09, 0.82)
-	_pause_panel.add_child(scrim)
-
-	var paper := PanelContainer.new()
-	paper.set_anchors_preset(Control.PRESET_FULL_RECT)
-	paper.offset_left = 50.0
-	paper.offset_right = -50.0
-	paper.offset_top = 260.0
-	paper.offset_bottom = -260.0
-	UiTheme.style_paper(paper)
-	_pause_panel.add_child(paper)
-
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	paper.add_child(scroll)
-	var box := VBoxContainer.new()
-	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	box.add_theme_constant_override(&"separation", 16)
-	scroll.add_child(box)
-
-	box.add_child(UiTheme.label("PAUSE", UiTheme.FONT_TITLE, UiTheme.GOLD,
-		HORIZONTAL_ALIGNMENT_CENTER))
-
-	# LA MAIN EN GRAND, en premier. C est la raison d etre de cet ecran depuis le
-	# retour du testeur : "on peut mettre pause pour regarder ses cartes et lire
-	# dans le detail". En jeu la carte ne montre qu une icone ; c est ICI qu on
-	# apprend ce que l icone veut dire, une fois pour toutes.
-	_build_pause_hand(box)
-
-	# Les passifs ensuite : information qu on ne peut lire nulle part ailleurs.
-	box.add_child(UiTheme.label("POUVOIRS ACTIFS", UiTheme.FONT_BODY, UiTheme.GOLD))
-	if RunState.equipped_passives.is_empty():
-		box.add_child(UiTheme.label("Aucun pour l instant.", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
-	else:
-		for p: SpellCard in RunState.equipped_passives:
-			var ligne := HBoxContainer.new()
-			ligne.add_theme_constant_override(&"separation", 12)
-			var ico: TextureRect = CardIcons.make_rect(p, 64.0)
-			if ico != null:
-				ligne.add_child(ico)
-			var col := VBoxContainer.new()
-			col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			# Tailles prises dans le THEME et jamais ecrites en dur : une taille
-			# litterale ne profite d aucun reglage global, et ce panneau s etait
-			# deja detache une fois de cette facon (piege consigne en memoire).
-			col.add_child(UiTheme.label(p.display_name, UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
-				HORIZONTAL_ALIGNMENT_LEFT, false))
-			col.add_child(UiTheme.label(p.description, UiTheme.FONT_SMALL,
-				Color(0.40, 0.31, 0.22)))
-			ligne.add_child(col)
-			box.add_child(ligne)
-
-	box.add_child(UiTheme.label("TON DECK", UiTheme.FONT_BODY, UiTheme.GOLD))
-	box.add_child(UiTheme.label(
-		"Pioche %d   -   Main %d   -   Defausse %d"
-		% [RunState.deck.size(), RunState.hand.size(), RunState.discard.size()],
-		UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
-
-	# Composition restante, par nom : le joueur decide s il garde ou depense.
-	var restant: Dictionary = {}
-	for c: SpellCard in RunState.deck:
-		restant[c.display_name] = int(restant.get(c.display_name, 0)) + 1
-	for c2: SpellCard in RunState.discard:
-		restant[c2.display_name] = int(restant.get(c2.display_name, 0)) + 1
-	var noms: Array = restant.keys()
-	noms.sort()
-	var wrap := HFlowContainer.new()
-	wrap.add_theme_constant_override(&"h_separation", 14)
-	wrap.add_theme_constant_override(&"v_separation", 6)
-	for nom in noms:
-		# `wrap = false` : sans cela le nom se replie LETTRE PAR LETTRE dans la
-		# colonne etroite que le conteneur lui accorde.
-		var tag := UiTheme.label("%s x%d" % [nom, restant[nom]], UiTheme.FONT_SMALL,
-			UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_LEFT, false)
-		wrap.add_child(tag)
-	box.add_child(wrap)
-
-	var reprendre := Button.new()
-	reprendre.text = "REPRENDRE"
-	reprendre.custom_minimum_size = Vector2(0, 96)
-	reprendre.process_mode = Node.PROCESS_MODE_ALWAYS
-	reprendre.pressed.connect(_on_pause_pressed)
-	box.add_child(reprendre)
-
-	# QUITTER (demande du testeur) : "dans l onglet pause on peut quitter le
-	# combat pour retourner au menu". En dessous de REPRENDRE et non au-dessus :
-	# on ne met pas la sortie definitive sous le pouce de quelqu un qui voulait
-	# seulement reprendre.
-	var quitter := Button.new()
-	quitter.text = "QUITTER LE COMBAT"
-	quitter.custom_minimum_size = Vector2(0, 96)
-	quitter.process_mode = Node.PROCESS_MODE_ALWAYS
-	quitter.pressed.connect(_on_quit_pressed)
-	box.add_child(quitter)
 
 
 ## Quitter le combat et revenir au menu.
@@ -941,61 +849,6 @@ func _on_quit_pressed() -> void:
 		game.abandon_run()
 	AudioBus.play_music(&"menu")
 	SceneRouter.goto(SceneRouter.MAIN_MENU)
-
-
-## Les cartes en main, en grand et avec leur description complete.
-##
-## Disposition en LIGNES et non en grille de cartes : une description tient sur
-## une ligne de texte, pas dans une carte de 200 px. L icone est a gauche, a la
-## meme taille et avec la meme teinte qu en main — c est ce qui fait le lien entre
-## ce qu on lit ici et ce qu on reconnait en jeu.
-func _build_pause_hand(box: VBoxContainer) -> void:
-	box.add_child(UiTheme.label("TA MAIN  (%d)" % RunState.hand.size(),
-		UiTheme.FONT_BODY, UiTheme.GOLD))
-	if RunState.hand.is_empty():
-		box.add_child(UiTheme.label("Main vide : la prochaine pioche arrive.",
-			UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
-		return
-	for c: SpellCard in RunState.hand:
-		var ligne := HBoxContainer.new()
-		ligne.add_theme_constant_override(&"separation", 16)
-		# Meme icone qu en main, en plus grand : c est la cle de lecture.
-		var ico: TextureRect = CardIcons.make_rect(c, 76.0)
-		if ico != null:
-			ligne.add_child(ico)
-		var col := VBoxContainer.new()
-		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		col.add_theme_constant_override(&"separation", 2)
-
-		# Nom + temps sur la meme ligne, sans autowrap : dans la colonne etroite
-		# que le conteneur accorde, UiTheme.label replierait LETTRE PAR LETTRE.
-		var entete := HBoxContainer.new()
-		entete.add_theme_constant_override(&"separation", 14)
-		var nom := UiTheme.label(c.display_name, UiTheme.FONT_BODY, UiTheme.TEXT_DARK,
-			HORIZONTAL_ALIGNMENT_LEFT, false)
-		nom.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		entete.add_child(nom)
-		entete.add_child(UiTheme.label("%ss" % _fmt(c.base_cast_time), UiTheme.FONT_SMALL,
-			UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_RIGHT, false))
-		col.add_child(entete)
-
-		# La description, elle, DOIT se replier : c est une phrase.
-		col.add_child(UiTheme.label(c.description, UiTheme.FONT_SMALL,
-			Color(0.36, 0.28, 0.20)))
-		if c.targeting != GameEnums.Targeting.NONE:
-			col.add_child(UiTheme.label(_targeting_hint(c.targeting), UiTheme.FONT_SMALL,
-				Color(0.20, 0.38, 0.70), HORIZONTAL_ALIGNMENT_LEFT, false))
-		ligne.add_child(col)
-		box.add_child(ligne)
-
-
-## Meme libelle que sur la carte de detail : le geste s apprend une seule fois.
-func _targeting_hint(t: int) -> String:
-	match t:
-		GameEnums.Targeting.POSITION: return "glisser sur une zone"
-		GameEnums.Targeting.DIRECTION: return "glisser pour viser"
-		GameEnums.Targeting.TARGET: return "glisser sur un monstre"
-	return ""
 
 
 func _on_multiplier_changed(_old: int, _new: int) -> void:

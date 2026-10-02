@@ -1,8 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://c0e2o4uwwiec6"]
+[gd_scene load_steps=7 format=3 uid="uid://c0e2o4uwwiec6"]
 
 [ext_resource type="Script" uid="uid://bm4u88wpfxlbh" path="res://scripts/ui/main_menu.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://cdepgwkh31eua" path="res://assets/ui/wood_tile.png" id="2"]
-[ext_resource type="Texture2D" uid="uid://d0kjfpl82n217" path="res://assets/ui/avatar.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://dhadhtsilxxvt" path="res://assets/ui/ribbon_title9.png" id="4"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2"]
@@ -103,13 +102,13 @@ theme_override_font_sizes/font_size = 30
 text = "Cartes 0 / 0"
 horizontal_alignment = 1
 
-[node name="ProfileBlock" type="VBoxContainer" parent="Layout/TopBar/TopRow"]
+[node name="SettingsBlock" type="VBoxContainer" parent="Layout/TopBar/TopRow"]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 0
 
-[node name="ProfileButton" type="Button" parent="Layout/TopBar/TopRow/ProfileBlock"]
+[node name="SettingsButton" type="Button" parent="Layout/TopBar/TopRow/SettingsBlock"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 170)
 layout_mode = 2
@@ -119,8 +118,7 @@ theme_override_font_sizes/font_size = 28
 theme_override_styles/hover = SubResource("StyleBoxEmpty_2")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_3")
 theme_override_styles/normal = SubResource("StyleBoxEmpty_1")
-text = "PROFIL"
-icon = ExtResource("3")
+text = "REGLAGES"
 icon_alignment = 1
 vertical_icon_alignment = 0
 expand_icon = true

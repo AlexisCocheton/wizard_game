@@ -73,6 +73,112 @@ func _laisser_jouer(secondes: float) -> void:
 		t += await _frame_delta()
 
 
+## LE MENU PAUSE A ONGLETS ET L EPURATION (vague 8), dans une VRAIE partie non
+## headless : c est le seul chemin ou l ecran d Epuration s ouvre (en headless,
+## AutoPick tranche). La capture de bataille qui montrait la pause ne se
+## declenche pas a chaque smoke : ce controle a sa propre partie.
+func _check_pause_menu() -> void:
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	var g: GameController = packed.instantiate()
+	add_child(g)
+	g.running = false
+	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
+	# La vague 1 demarre et une partie de sa file reste a naitre.
+	for k in 20:
+		g.simulate(FIXED_DELTA)
+	# Des monstres a RESISTANCES sur le terrain : la fiche doit montrer des logos.
+	var poses: int = 0
+	for d: EnemyDef in ContentDB.enemies.values():
+		if poses < 3 and not d.is_boss() and d.resistances.size() >= 2:
+			g.battlefield.spawn_enemy(d, 240.0 + poses * 300.0, 1.0,
+				Vector2(240.0 + poses * 300.0, 520.0))
+			poses += 1
+	for k in 6:
+		g.battlefield.simulate(FIXED_DELTA)
+	var passif: SpellCard = ContentDB.cards.get(&"pass_celerity")
+	if passif != null:
+		RunState.equip_passive(passif)
+	var hud: Node = g.get_node_or_null("HUD")
+	if hud == null:
+		_fail("pause : la partie n a pas de HUD")
+		g.queue_free()
+		return
+	hud.call("_show_pause_panel")
+	var panel: PausePanel = hud.get("_pause_panel") as PausePanel
+	await _vitrine_pause_onglets(panel, g)
+	if panel != null:
+		panel.queue_free()
+		hud.set("_pause_panel", null)
+	await get_tree().process_frame
+	await _vitrine_epuration(g, hud)
+	g.queue_free()
+	await get_tree().process_frame
+
+
+## Les trois onglets de la pause et une fiche de monstre de l onglet VAGUE. Un
+## onglet qui plante ou qui deborde resterait invisible sans ces captures.
+func _vitrine_pause_onglets(panel: PausePanel, g: GameController) -> void:
+	if panel == null:
+		_fail("le panneau de pause n est pas un PausePanel")
+		return
+	for i in PausePanel.TABS.size():
+		panel.show_tab(i)
+		if panel.current_tab() != i:
+			_fail("l onglet de pause %s ne s active pas" % PausePanel.TABS[i])
+		await _shot("pause_" + PausePanel.TABS[i].to_lower())
+	# Le monstre le plus riche en resistances : la capture doit montrer les logos.
+	var groupes: Array[Dictionary] = PausePanel.wave_groups(g)
+	if groupes.is_empty():
+		_fail("onglet VAGUE vide alors que des monstres sont sur le terrain")
+		return
+	var choisi: EnemyDef = groupes[0]["def"]
+	for gr in groupes:
+		var d: EnemyDef = gr["def"]
+		if d.resistances.size() > choisi.resistances.size():
+			choisi = d
+	panel.open_enemy(choisi)
+	if panel.open_enemy_sheet() != choisi:
+		_fail("toucher un monstre de la vague n ouvre pas sa fiche")
+	await _shot("pause_fiche_monstre")
+	panel.close_enemy()
+
+
+## L EPURATION par le vrai chemin : la demande ouvre l ecran sur le HUD, la
+## partie attend, VALIDER retire la carte retenue et rend la main.
+func _vitrine_epuration(g: GameController, hud: Node) -> void:
+	var avant: int = RunState.total_cards()
+	RunState.request_purge(2)
+	if RunState.pending_purge != 2:
+		_fail("Epuration : aucun choix en attente apres la demande")
+	var ecran: Control = hud.find_child("PurgeOverlay", true, false) as Control
+	if ecran == null:
+		_fail("Epuration : l ecran de choix ne s ouvre pas en partie")
+		RunState.resolve_purge([])
+		return
+	var horloge: float = RunState.run_time
+	for k in 10:
+		g.simulate(FIXED_DELTA)
+	if not is_equal_approx(RunState.run_time, horloge):
+		_fail("Epuration : la partie avance pendant le choix")
+	var browser: DeckBrowser = ecran.find_child("DeckBrowser", true, false) as DeckBrowser
+	# Pas de ternaire vers un tableau type (piege documente : erreur a l execution).
+	var cartes: Array[SpellCard] = []
+	if browser != null:
+		cartes = browser.listed_cards()
+	if cartes.is_empty() or not browser.pick(cartes[0]):
+		_fail("Epuration : impossible de retenir une carte")
+	await _shot("epuration_choix")
+	var valider: Button = ecran.find_child("Validate", true, false) as Button
+	if valider != null:
+		valider.pressed.emit()
+	if RunState.pending_purge != 0:
+		_fail("Epuration : VALIDER ne tranche pas le choix")
+	if RunState.total_cards() != avant - 1:
+		_fail("Epuration : %d cartes attendues apres retrait, %d lues"
+			% [avant - 1, RunState.total_cards()])
+	await get_tree().process_frame
+
+
 func _frame_delta() -> float:
 	await get_tree().process_frame
 	return get_process_delta_time()
@@ -173,6 +279,7 @@ func _run_all() -> void:
 	await _check_boss_reward()
 	await _check_precast()
 	await _check_upgrade_panel()
+	await _check_pause_menu()
 	await _check_cartes_petrifiees()
 	await _showcase_mecaniques_v3()
 	await _check_objectifs_en_combat()
@@ -872,8 +979,8 @@ func _check_menu_screens() -> void:
 
 	# L ecran de deck a plusieurs ONGLETS DE DECKS et une fiche d effet qui prend
 	# la page : la capture de l onglet ne montre que le premier deck plein. On en
-	# cree un second, VIDE, parce que c est lui qui expose le cas limite (les six
-	# emplacements vides et le message "il manque 15 cartes").
+	# cree un second, VIDE, parce que c est lui qui expose le cas limite (la
+	# phrase du deck vide et le message "il manque N cartes", N = DECK_SIZE).
 	menu.select_tab(1)
 	var deck_ecran: Control = null
 	for p2 in menu.get_node("%Content").get_children():
@@ -895,8 +1002,8 @@ func _check_menu_screens() -> void:
 		await _check_deck_scroll(deck_ecran)
 		await _vitrine_passifs_deck(deck_ecran)
 
-	# Le profil a quitte la barre du bas pour l en-tete : sans cette capture il
-	# ne serait plus verifie du tout.
+	# Le profil est l onglet de droite depuis la vague 8 ; on le reprend ici avec
+	# un compte rempli, ses trois sections une par une.
 	# Un compte de niveau 6 pour la capture : au niveau 1 tous les cosmetiques
 	# sont verrouilles et l onglet ne montrerait que des cases grises, donc ni
 	# le cadre dore de l equipe, ni les contours de rarete des succes accomplis.
@@ -920,6 +1027,25 @@ func _check_menu_screens() -> void:
 			await _shot("profil_" + ProfilePanel.SECTIONS[s].to_lower())
 		profil.show_section(ProfilePanel.Section.ACHIEVEMENTS)
 	menu.call("show_profile", false)
+
+	# Les REGLAGES ont quitte la barre du bas pour l engrenage du haut (vague 8) :
+	# le passage des onglets ne les montre plus, sans cette capture ils ne
+	# seraient plus verifies du tout.
+	menu.call("show_settings", true)
+	if not menu.call("settings_open"):
+		_fail("l engrenage du haut n ouvre pas les reglages")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# Les reglages sont plus hauts que la zone de contenu : poses sans defilement,
+	# ils poussaient la barre d onglets et l engrenage HORS de l ecran.
+	var ecran: Rect2 = menu.get_viewport_rect()
+	for nom in ["TabBar", "SettingsButton"]:
+		var n: Control = menu.get_node("%" + nom) as Control
+		if n == null or not ecran.encloses(n.get_global_rect()):
+			_fail("reglages ouverts : %s sort de l ecran (%s)"
+				% [nom, n.get_global_rect() if n != null else "absent"])
+	await _shot("menu_reglages")
+	menu.call("show_settings", false)
 
 	menu.select_tab(menu.HOME_TAB)
 	menu.queue_free()
@@ -2093,9 +2219,9 @@ func _check_defeat_path() -> void:
 	print("[SMOKE] chemin de defaite verifie")
 
 
-## Le panneau de profil, ou qu il soit dans l arbre du menu. Il est pose sous un
-## CALQUE de superposition (Content > calque > boite > panneau) : chercher dans
-## les enfants directs de Content ne le trouve pas.
+## Le panneau de profil, ou qu il soit dans l arbre du menu. Recherche en
+## profondeur : il a vecu sous un calque de superposition avant de redevenir un
+## onglet (vague 8), et la recherche ne doit pas dependre de sa place.
 func _find_profile_panel(root: Node) -> Control:
 	if root is ProfilePanel:
 		return root as Control
@@ -2277,6 +2403,20 @@ func _verrou_des_passifs_en_entier(panel: DeckPanel) -> void:
 		_fail("phrase de verrou des passifs hors de l ecran : %s" % r)
 
 
+## Chaque bouton visible de l ecran tient DANS l ecran. Un texte sans retour a
+## la ligne elargissait toute la page du choix des passifs : la 3e vignette et
+## la fiche etaient coupees a droite, sans qu aucune verification ne rougisse.
+func _boutons_dans_l_ecran(racine: Control, ou: String) -> void:
+	await get_tree().process_frame
+	var ecran: Rect2 = racine.get_viewport_rect()
+	for n in _tous_les_noeuds(racine):
+		if n is Button and (n as Button).is_visible_in_tree():
+			var r: Rect2 = (n as Button).get_global_rect()
+			if r.position.x < -1.0 or r.end.x > ecran.size.x + 1.0:
+				_fail("%s : le bouton « %s » sort de l ecran (%s)" % [ou, (n as Button).text, r])
+				return
+
+
 ## La bande des passifs de l ecran de deck : verrouillee avant l acte 2, puis
 ## trois emplacements equipables et le choix du passif sur la page.
 func _vitrine_passifs_deck(panel: DeckPanel) -> void:
@@ -2314,6 +2454,15 @@ func _vitrine_passifs_deck(panel: DeckPanel) -> void:
 	if panel.picker_slot() != 2:
 		_fail("le choix du troisieme emplacement ne s ouvre pas")
 	await _shot("deck_passifs_choix")
+	await _boutons_dans_l_ecran(panel, "choix du passif")
+	# La FICHE d un passif (vague 8) : premier toucher = lire, pas equiper.
+	panel.tap_passive(passifs[2])
+	if panel.passive_detail() != passifs[2]:
+		_fail("le premier toucher sur un passif n ouvre pas sa fiche")
+	if SaveData.equipped_passive_cards().has(passifs[2]):
+		_fail("le premier toucher sur un passif l a equipe sans le laisser lire")
+	await _shot("deck_passif_fiche")
+	await _boutons_dans_l_ecran(panel, "fiche du passif")
 	panel.close_passive_picker()
 	SaveData.load_from_dictionary(profil)
 	panel.refresh()

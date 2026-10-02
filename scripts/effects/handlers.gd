@@ -274,15 +274,19 @@ class HasteEnemiesBoon extends EffectHandler:
 		RunState.draw(int(spec.get_param(&"draw", 2)))
 
 
-## Retire definitivement des cartes du deck.
+## Retire definitivement des cartes du deck, AU CHOIX du joueur (vague 8).
+## `count` est le PLAFOND : le joueur en retire 0, 1 ou `count` sur l ecran
+## DeckBrowser ; sans ecran (banc, tests), AutoPick tranche. Voir
+## RunState.request_purge. L aura part d abord : le sort se voit lance avant
+## que l ecran de choix ne le recouvre.
 class RemoveCards extends EffectHandler:
 	func get_key() -> StringName:
 		return &"remove_cards"
 
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
-		RunState.exile_from_deck(int(spec.get_param(&"count", 1)))
 		if ctx.battlefield != null:
 			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
+		RunState.request_purge(int(spec.get_param(&"count", 1)))
 
 
 ## Erige un mur qui bloque le pathfinding des monstres pendant une duree.

@@ -44,8 +44,10 @@ const DIM: Color = Color(0.45, 0.42, 0.52)
 ## CHARACTERS]` (Ddant1100, itch.io) fournit 100 personnages nommes par classe et
 ## par race : il y a enfin de VRAIS humains, et un mage qui ressemble a un mage.
 ## `demon_heads.png` reste sur le disque mais n est plus la source de personne.
-const CAST_SHEET: String = PORTRAITS + "story_cast.png"
-const CAST_PX: int = 512
+## La planche et sa taille de case vivent dans UiTheme : le menu et le profil
+## decoupent la meme planche (tete du mage), une seule arithmetique pour tous.
+const CAST_SHEET: String = UiTheme.CAST_SHEET
+const CAST_PX: int = UiTheme.CAST_PX
 
 ## Cle de portrait -> sa case dans la planche, et la source dont elle vient.
 ##
@@ -239,30 +241,12 @@ func _cast_texture(key: StringName) -> Texture2D:
 	if not CAST.has(key):
 		return null
 	var fiche: Dictionary = CAST[key]
-	var chemin: String = String(fiche.get("sheet", ""))
-	if chemin == "" or not ResourceLoader.exists(chemin):
-		return null
-	var planche: Texture2D = load(chemin)
-	if planche == null:
-		return null
 	var rc: Array = fiche.get("cell", [])
 	if rc.size() < 2:
 		return null
-	var ligne: int = int(rc[0]) - 1
-	var colonne: int = int(rc[1]) - 1
-	if ligne < 0 or colonne < 0:
-		return null
-	# Une case hors planche donnerait un rectangle vide a l ecran, ce qui se lit
-	# comme "ce personnage n a pas de portrait" alors que c est une faute de
-	# frappe dans la table. On refuse plutot que d afficher du vide.
-	if (colonne + 1) * CAST_PX > planche.get_width():
-		return null
-	if (ligne + 1) * CAST_PX > planche.get_height():
-		return null
-	var at := AtlasTexture.new()
-	at.atlas = planche
-	at.region = Rect2(colonne * CAST_PX, ligne * CAST_PX, CAST_PX, CAST_PX)
-	return at
+	# Le decoupage (et son refus d une case hors planche) est dans UiTheme.
+	return UiTheme.cast_cell(int(rc[0]), int(rc[1]), Rect2(),
+		String(fiche.get("sheet", "")))
 
 
 ## Premiere case d "idle" d une feuille d AnimCatalog, RECADREE sur le personnage.

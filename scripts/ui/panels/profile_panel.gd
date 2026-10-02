@@ -128,8 +128,12 @@ func _build_identity() -> void:
 	ligne.add_theme_constant_override(&"separation", 18)
 	carte.add_child(ligne)
 
+	# La TETE DU MAGE, la meme que l onglet PROFIL du menu (UiTheme.mage_head) :
+	# l ancien avatar etait un visage generique, sans rapport avec le heros
+	# que le joueur incarne. Nomme pour que les tests le retrouvent.
 	var avatar := TextureRect.new()
-	avatar.texture = UiTheme.tex("avatar")
+	avatar.name = "IdentityAvatar"
+	avatar.texture = UiTheme.mage_head()
 	avatar.custom_minimum_size = Vector2(120, 120)
 	avatar.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	avatar.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

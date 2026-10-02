@@ -26,7 +26,8 @@ func run() -> void:
 	_test_le_hud_reste_actif_en_pause()
 	_test_coquille_du_menu()
 	_test_entete_affiche_niveau_et_cartes()
-	_test_profil_en_superposition()
+	_test_reglages_en_haut_profil_en_bas()
+	_test_la_tete_du_mage()
 	# Etat propre pour les suites suivantes.
 	SaveData.reset_profile()
 	ContentDB.discover_starters()
@@ -253,9 +254,13 @@ func _test_coquille_du_menu() -> void:
 	var tabs: Array = menu.get("TABS")
 	eq(tabs.size(), 5, "cinq onglets : le Massacre a rejoint les quatre d avant")
 	not_ok(tabs.has("BESTIAIRE"), "plus d onglet BESTIAIRE dans la barre du bas")
-	not_ok(tabs.has("PROFIL"), "le profil n est plus un onglet du bas")
-	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "REGLAGES"]:
+	# Vague 8 : PROFIL et REGLAGES ont echange leur place. Le profil est le 5e
+	# onglet du bas, les reglages sont montes derriere l engrenage du haut.
+	not_ok(tabs.has("REGLAGES"), "les reglages ne sont plus un onglet du bas")
+	for attendu in ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "PROFIL"]:
 		ok(tabs.has(attendu), "l onglet %s est present" % attendu)
+	eq(tabs.find("PROFIL"), tabs.size() - 1,
+		"le profil prend la place des reglages, a droite de la barre")
 	eq(tabs[int(menu.get("HOME_TAB"))], "CAMPAGNE",
 		"l onglet d accueil sureleve reste la CAMPAGNE")
 	# Au CENTRE, pas seulement "d accueil" : autant d onglets de chaque cote.
@@ -266,7 +271,7 @@ func _test_coquille_du_menu() -> void:
 	var icones: Array = menu.get("TAB_ICONS")
 	eq(icones.size(), tabs.size(), "une icone par onglet")
 	for nom in icones:
-		ok(UiTheme.tex(String(nom)) != null, "l icone %s existe sur le disque" % nom)
+		ok(menu.call("tab_icon", String(nom)) != null, "l icone %s existe" % nom)
 	not_ok(icones.has("icon_04"), "le steak n est plus l icone de la campagne")
 
 	# Chaque onglet doit s activer sans erreur.
@@ -313,21 +318,101 @@ func _test_entete_affiche_niveau_et_cartes() -> void:
 	detach(menu)
 
 
-## Le profil ouvert par l avatar en haut a droite, et non par un onglet du bas.
-func _test_profil_en_superposition() -> void:
+## Vague 8 (demande du co-auteur) : les REGLAGES en haut a droite, derriere
+## l engrenage, et le PROFIL en onglet du bas. Les reglages s ouvrent par-dessus
+## l onglet courant et se referment quand on change d onglet ; le profil
+## s ouvre comme n importe quel onglet.
+func _test_reglages_en_haut_profil_en_bas() -> void:
 	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
 	var menu: Control = packed.instantiate()
 	attach(menu)
 
-	var bouton: Button = menu.find_child("ProfileButton", true, false) as Button
-	ok(bouton != null, "le bouton PROFIL est dans la barre du haut")
-	not_ok(menu.call("profile_open"), "ferme au depart")
-	menu.call("show_profile", true)
-	ok(menu.call("profile_open"), "l avatar ouvre le profil")
-	# Changer d onglet doit le refermer, sinon il resterait pose par-dessus.
+	var engrenage: Button = menu.find_child("SettingsButton", true, false) as Button
+	ok(engrenage != null, "le bouton REGLAGES est dans la barre du haut")
+	ok(menu.find_child("ProfileButton", true, false) == null,
+		"plus de bouton PROFIL dans la barre du haut")
+	if engrenage != null:
+		ok(engrenage.icon != null, "le bouton des reglages porte une icone")
+		ok(engrenage.icon == UiTheme.tex(String(menu.get("SETTINGS_ICON"))),
+			"c est l engrenage")
+		ok(engrenage.custom_minimum_size.x >= 90.0 and engrenage.custom_minimum_size.y >= 90.0,
+			"cible tactile d au moins 90 px (%s)" % engrenage.custom_minimum_size)
+
+	not_ok(menu.call("settings_open"), "reglages fermes au depart")
+	if engrenage != null:
+		engrenage.pressed.emit()
+	ok(menu.call("settings_open"), "l engrenage ouvre les reglages")
+	var reglages: Node = _premier(menu, func(n: Node) -> bool: return n is SettingsPanel)
+	ok(reglages != null and (reglages as Control).is_visible_in_tree(),
+		"le panneau des reglages est affiche")
 	menu.select_tab(0)
-	not_ok(menu.call("profile_open"), "changer d onglet referme le profil")
+	not_ok(menu.call("settings_open"), "changer d onglet referme les reglages")
+
+	var tabs: Array = menu.get("TABS")
+	menu.select_tab(tabs.find("PROFIL"))
+	ok(menu.call("profile_open"), "l onglet PROFIL ouvre le profil")
+	var profil: Node = _premier(menu, func(n: Node) -> bool: return n is ProfilePanel)
+	ok(profil != null and (profil as Control).is_visible_in_tree(),
+		"le panneau du profil est affiche dans la zone de contenu")
+	menu.call("show_profile", false)
+	not_ok(menu.call("profile_open"), "fermer le profil revient a l accueil")
+	eq(menu.current_tab(), int(menu.get("HOME_TAB")), "et l accueil est la campagne")
 	detach(menu)
+
+
+## La TETE DU MAGE : decoupee dans la planche du casting, sur la case du mage,
+## et la MEME image sur l onglet du profil et sur la carte d identite. On verifie
+## la region decoupee, pas seulement qu une image existe : l ancien avatar
+## generique passait un test d existence.
+func _test_la_tete_du_mage() -> void:
+	var tete: AtlasTexture = UiTheme.mage_head() as AtlasTexture
+	ok(tete != null, "la tete du mage se decoupe dans une planche")
+	if tete == null:
+		return
+	ok(tete.atlas != null and tete.atlas.resource_path == UiTheme.CAST_SHEET,
+		"elle vient de la planche du casting")
+	var case_mage := Rect2(
+		(UiTheme.MAGE_CAST_CELL[1] - 1) * UiTheme.CAST_PX,
+		(UiTheme.MAGE_CAST_CELL[0] - 1) * UiTheme.CAST_PX,
+		UiTheme.CAST_PX, UiTheme.CAST_PX)
+	ok(case_mage.encloses(tete.region), "la tete reste dans la case du mage (%s)" % tete.region)
+	ok(tete.region.size.x < UiTheme.CAST_PX and tete.region.size.y < UiTheme.CAST_PX,
+		"c est un recadrage sur la tete, pas le buste entier")
+	feq(tete.region.size.x, tete.region.size.y, "carree : aucun conteneur ne la deforme")
+	# La meme case que celle que la scene d histoire montre pour le mage.
+	var histoire: GDScript = load("res://scripts/ui/story_scene.gd")
+	var casting: Dictionary = histoire.get_script_constant_map().get("CAST", {})
+	var fiche: Dictionary = casting.get(&"mage", {})
+	eq(fiche.get("cell", []), Array(UiTheme.MAGE_CAST_CELL),
+		"la case du mage est celle de la scene d histoire")
+
+	# Un decoupage hors planche est refuse plutot que d afficher du vide.
+	ok(UiTheme.cast_cell(99, 99) == null, "une case hors planche rend null")
+
+	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
+	var menu: Control = packed.instantiate()
+	attach(menu)
+	var icone: AtlasTexture = menu.call("tab_icon", String(menu.get("MAGE_HEAD_ICON"))) as AtlasTexture
+	var tabs: Array = menu.get("TABS")
+	var icones: Array = menu.get("TAB_ICONS")
+	eq(String(icones[tabs.find("PROFIL")]), String(menu.get("MAGE_HEAD_ICON")),
+		"l onglet PROFIL porte la tete du mage")
+	ok(icone != null and icone.region == tete.region, "l icone d onglet est ce decoupage")
+	menu.call("show_profile", true)
+	var avatar: TextureRect = menu.find_child("IdentityAvatar", true, false) as TextureRect
+	ok(avatar != null, "la carte d identite du profil a son portrait")
+	if avatar != null:
+		var t: AtlasTexture = avatar.texture as AtlasTexture
+		ok(t != null and t.region == tete.region and t.atlas == tete.atlas,
+			"la carte d identite montre la meme tete que l onglet")
+	detach(menu)
+
+
+func _premier(racine: Node, test: Callable) -> Node:
+	for n in _tous(racine):
+		if test.call(n):
+			return n
+	return null
 
 
 ## `campaign_cleared()` mesure la FIN DE CAMPAGNE. Elle ouvrait le mode infini
