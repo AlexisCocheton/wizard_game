@@ -2136,6 +2136,9 @@ const ELEMENT_DES_SORTS: Dictionary = {
 	"venom_mire": [GameEnums.DamageTag.POISON, "une mare de venin"],
 	"bone_recall": [GameEnums.DamageTag.POISON, "les ossements : la mort et ce qui pourrit (etait sans element)"],
 	"deck_purge": [GameEnums.DamageTag.POISON, "une purge : on rejette ce qui empoisonne le deck (etait sans element)"],
+	"venom_dart": [GameEnums.DamageTag.POISON, "un dard venimeux (vague 8, demande du co-auteur)"],
+	# Et une carte de temps de plus, comme la Precipitation :
+	"time_surge": [GameEnums.DamageTag.ARCANE, "l elan du temps : la vitesse du mage (vague 8, demande du co-auteur)"],
 }
 
 
@@ -2304,6 +2307,9 @@ func _cards() -> void:
 	ally.sfx_key = &"whoosh_summon"
 	_save(ally, "res://resources/cards/epic/mirror_apprentice.tres")
 
+	# CONCENTRATION (vague 8) : le co-auteur la disait « ne fonctionne pas ».
+	# EN ATTENTE du chantier COMBAT (RunState.grant_card_xp) : l effet sera
+	# remplace par « 1 XP a chaque carte de la main ».
 	var focus := _card("deep_focus", "Concentration",
 		"Defausse ta main : moins 1 s d incantation par carte, 8 s.",
 		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
@@ -2417,10 +2423,13 @@ func _cards() -> void:
 	deep_freeze.sfx_key = &"zap_short"
 	_save(deep_freeze, "res://resources/cards/epic/deep_freeze.tres")
 
+	# 8 s et non plus 6 (co-auteur, vague 8 : « duree un peu plus longue ») :
+	# a la vitesse de depart, 6 s de monde laissaient a peine le temps d y poser
+	# une seconde incantation depuis que les incantations sont plus longues.
 	var weakness := _card("weakness_mark", "Marque de faiblesse",
-		"Zone ou les monstres subissent le double de degats pendant 6 s.", GameEnums.Rarity.EPIC, 1.3,
+		"Zone ou les monstres subissent le double de degats pendant 8 s.", GameEnums.Rarity.EPIC, 1.3,
 		GameEnums.Targeting.POSITION, [],
-		[_spec("ground_zone", 0.0, 6.0, 200.0, {&"vuln_mult": 2.0})])
+		[_spec("ground_zone", 0.0, 8.0, 200.0, {&"vuln_mult": 2.0})])
 	weakness.fx_key = &"diamond_mark"
 	weakness.sfx_key = &"charge_magic"
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
@@ -2454,10 +2463,12 @@ func _cards() -> void:
 	# Acte II / lvl_04 — enseignee par le Pretre goule repenti.
 	# Le Grand Appel est le niveau le plus LONG : la penurie de cartes y tue plus que
 	# les monstres. Garder ses deux prochains sorts, c est doubler sa main utile.
+	# UN sort et non plus deux (co-auteur, vague 8) : a deux, la rare faisait le
+	# travail de l Echo de la main, la legendaire du meme verbe.
 	var recall := _card("bone_recall", "Rappel d ossements",
-		"Les 2 prochains sorts lances reviennent en main au lieu d etre defausses.",
+		"Le prochain sort lance revient en main au lieu d etre defausse.",
 		GameEnums.Rarity.RARE, 0.9, GameEnums.Targeting.NONE, [],
-		[_spec("retain_next", 2.0)])
+		[_spec("retain_next", 1.0)])
 	# L AME QUI S ENVOLE. La feuille montre un crane violet qui file en laissant une
 	# trainee : une ame qu on rappelle. C est le verbe meme de la carte, qui fait
 	# REVENIR les sorts en main au lieu de les laisser partir a la defausse.
@@ -2499,9 +2510,12 @@ func _cards() -> void:
 
 	# lvl_03 : le registre des goules. Elles comptaient les ames ; le mage compte
 	# les monstres. Piocher 3 d un coup repond au seul vrai probleme de l Ossuaire.
+	# Incantation GRANDEMENT allongee (co-auteur, vague 8) : 1,6 -> 3,2 s de base.
+	# Pioche de 3 ET double lancer pour une incantation de commune, c etait le
+	# sort a lancer des qu il sortait ; il se merite maintenant.
 	var ledger := _card("tide_ledger", "Registre des marees",
 		"Pioche 3 cartes immediatement et lance deux sorts a la fois pendant 8 s.",
-		GameEnums.Rarity.LEGENDARY, 1.6, GameEnums.Targeting.NONE, [],
+		GameEnums.Rarity.LEGENDARY, 3.2, GameEnums.Targeting.NONE, [],
 		[
 			_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3}),
 			_spec("double_cast", 0.0, 8.0),
@@ -2607,14 +2621,16 @@ func _cards() -> void:
 
 	# Piocher SANS defausser : Cycle de pensee echange, celle-ci ajoute. Cast tres
 	# court, car son interet est de sortir d une main vide au pire moment.
+	# Vague 8 (co-auteur) : EPIQUE, et 2 cartes au lieu de 3. Elle quitte donc les
+	# cartes nouvelles de l acte 1 (lvl_02), qui n offre que communes et rares.
 	var insight := _card("arcane_insight", "Intuition arcanique",
-		"Pioche 3 cartes immediatement. Rien n est defausse.",
-		GameEnums.Rarity.RARE, 0.5, GameEnums.Targeting.NONE,
+		"Pioche 2 cartes immediatement. Rien n est defausse.",
+		GameEnums.Rarity.EPIC, 0.5, GameEnums.Targeting.NONE,
 		[],
-		[_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3})])
+		[_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 2})])
 	insight.fx_key = &"sun_burst"
 	insight.sfx_key = &"spell_deep"
-	_save(insight, "res://resources/cards/rare/arcane_insight.tres")
+	_save(insight, "res://resources/cards/epic/arcane_insight.tres")
 
 	# Mur PERMANENT : il ne compte pas les secondes, il compte les coups. Il
 	# redessine le terrain pour toute la vague, et les monstres enfermes le
@@ -2656,10 +2672,13 @@ func _cards() -> void:
 
 	# Pluie sur TOUTE la carte : 16 impacts etales sur 5 s. Aucun ciblage — c est
 	# le sort qu on lance quand on a deja perdu le controle du terrain.
+	# Incantation GRANDEMENT allongee (co-auteur, vague 8) : 2,6 -> 4,4 s de base,
+	# la plus longue du jeu. 18 x 70 degats sur tout le terrain nettoyait une
+	# vague entiere pour le prix d un Meteore.
 	var storm := _card("meteor_storm", "Pluie de meteorites",
 		"18 meteores s abattent sur tout le terrain pendant 5 s, "
 		+ "70 degats chacun.",
-		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.NONE,
+		GameEnums.Rarity.LEGENDARY, 4.4, GameEnums.Targeting.NONE,
 		[],
 		[_spec("meteor_storm", 70.0, 5.0, 290.0, {&"impacts": 18})])
 	storm.fx_key = &"magma_burst"
@@ -2720,14 +2739,19 @@ func _cards() -> void:
 	#
 	# Portee de 460 px : moins de la moitie de la largeur du terrain. Un arbre qui
 	# provoquerait tout l ecran serait un bouton « plus personne n avance ».
+	#
+	# VAGUE 8 : 800 PV « pour voir » (co-auteur, 02/10). C est un ESSAI de design
+	# et non une mesure : contre la vague mediane il tombe en un peu plus d une
+	# seconde de monde. GameConfig.TERRAIN_TAUNT_MIN_HOLD a ete abaisse en
+	# consequence ; si l essai est abandonne, revenir a 3500 et a 4 s.
 	var totem := _card("heartwood_totem", "Totem de coeur-de-bois",
-		"Plante un arbre de 3500 PV qui reste jusqu a ce qu on l abatte. Les "
+		"Plante un arbre de 800 PV qui reste jusqu a ce qu on l abatte. Les "
 		+ "monstres a portee le prennent pour cible au lieu du mage et s acharnent "
-		+ "dessus : une vague entiere le fait tomber en quelques secondes.",
+		+ "dessus : une vague entiere le fait tomber vite.",
 		GameEnums.Rarity.RARE, 1.6, GameEnums.Targeting.POSITION,
 		[],
 		[_spec("taunt_prop", 0.0, 0.0, 460.0,
-			{&"prop_hp": 3500.0, &"kind": "tree"})])
+			{&"prop_hp": 800.0, &"kind": "tree"})])
 	totem.fx_key = &"spirit_gold"
 	totem.sfx_key = &"stone_shove"
 	_save(totem, "res://resources/cards/rare/heartwood_totem.tres")
@@ -2760,7 +2784,9 @@ func _cards() -> void:
 		+ "les monstres, mais ceux qui passent a son pied le frappent.",
 		GameEnums.Rarity.EPIC, 1.9, GameEnums.Targeting.POSITION,
 		[],
-		[_spec("place_terrain", 9.0, 0.0, 230.0,
+		# Rayon 300 et non plus 230 (co-auteur, vague 8 : « zone plus grande ») :
+		# a 230 un couloir sur deux longeait la mare sans y entrer.
+		[_spec("place_terrain", 9.0, 0.0, 300.0,
 			{&"prop_hp": 120.0, &"kind": "tree"})])
 	sapling.fx_key = &"spirit_violet"
 	# `whoosh_deep` et non `spell_crackle` : ce dernier portait deja trois cartes,
@@ -2813,18 +2839,57 @@ func _cards() -> void:
 	# courant, donc le Golem la traverse comme si de rien n etait.
 	#
 	# AUCUN degat, expres : avec des degats elle serait strictement meilleure que le
-	# Champ de givre, qui n aurait plus aucune raison d exister. Elle est commune et
-	# rapide a lancer parce que son travail est de gagner trois secondes tout de
-	# suite, pas de remporter une vague.
+	# Champ de givre, qui n aurait plus aucune raison d exister.
+	# VAGUE 8 (co-auteur) : RARE et plus longue a lancer (1,3 -> 2,0 s de base).
+	# Faire reculer toute une vague est plus fort que de la ralentir : commune et
+	# rapide, elle rendait le Champ de givre inutile la ou elle etait.
 	var tide := _card("tidal_pool", "Nappe montante",
 		"Tres large nappe d eau pendant 7 s : le courant fait RECULER les monstres "
 		+ "au lieu de les ralentir. Aucun degat.",
-		GameEnums.Rarity.COMMON, 1.3, GameEnums.Targeting.POSITION,
+		GameEnums.Rarity.RARE, 2.0, GameEnums.Targeting.POSITION,
 		[GameEnums.DamageTag.SLOW],
-		[_spec("water_flood", 45.0, 7.0, 300.0)], 2)
+		[_spec("water_flood", 45.0, 7.0, 300.0)])
 	tide.fx_key = &"orb_cyan"
 	tide.sfx_key = &"drip_frost"
-	_save(tide, "res://resources/cards/common/tidal_pool.tres")
+	_save(tide, "res://resources/cards/rare/tidal_pool.tres")
+
+	# --- SORTS DEMANDES PAR LE CO-AUTEUR (vague 8) ---
+
+	# LE DARD VENIMEUX : « un sort commun de poison mono-cible qui fait perdre
+	# 2 PV par seconde au monstre jusqu a sa mort ». Le poison est PORTE par le
+	# monstre (cle `poison_dot`, voir EffectHandlers.PoisonDot) : il le suit, se
+	# voit au-dessus de lui (le crane vert de sa feuille) et ne s arrete qu a sa
+	# mort. 2 PV/s de MONDE : la vitesse du mage l accelere comme le reste. C est
+	# le sort des monstres qui durent (boss, colosses) ; deux dards s additionnent.
+	# Incantation courte (0,7 s de base) : c est une commune qu on pose en passant.
+	# POISON : les morts-vivants y sont immunises, la carte le dit par son element.
+	var dart := _card("venom_dart", "Dard venimeux",
+		"Empoisonne une cible : elle perd 2 PV de POISON par seconde jusqu a sa "
+		+ "mort. Deux dards s additionnent.",
+		GameEnums.Rarity.COMMON, 0.7, GameEnums.Targeting.TARGET, [],
+		[_spec("poison_dot", 2.0)])
+	dart.fx_key = &"skull_burst"
+	# Un trait qui part, comme la Fleche percante : `spell_crackle` porte deja
+	# trois cartes.
+	dart.sfx_key = &"arrow_laser"
+	_save(dart, "res://resources/cards/common/venom_dart.tres")
+
+	# L ELAN DU TEMPS : « une carte qui augmente la vitesse du jeu ». La vitesse
+	# du mage est sa vie ET l horloge du monde : +30 points d un coup (cle
+	# `gain_speed`, le soin de SpeedGauge). 30 points = 15 s de montee naturelle
+	# (GameConfig.SPEED_RISE_PER_SECOND), un peu plus qu un coup de monstre de
+	# puissance 3. ARCANIQUE : c est une carte de temps, comme la Precipitation.
+	# RARE : un soin est aussi une arme (incantations plus courtes, XP, passifs),
+	# mais les monstres accelerent avec le mage — c est un pari, pas un bouclier.
+	# Incantation moyenne (1,2 s de base) : elle se lance entre deux vagues ou
+	# derriere un mur, pas au contact.
+	var surge := _card("time_surge", "Elan du temps",
+		"Rend 30 points de vitesse au mage. Le monde accelere avec lui.",
+		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.NONE, [],
+		[_spec("gain_speed", 30.0)])
+	surge.fx_key = &"orb_gold"
+	surge.sfx_key = &"spell_rise"
+	_save(surge, "res://resources/cards/rare/time_surge.tres")
 
 	# --- SORTS DE TERRAIN PERMANENTS ---
 	#
@@ -3028,13 +3093,22 @@ func _waves_and_level() -> void:
 		load(E + "hornblower.tres"), load(E + "shade.tres"),
 	]
 	var C := "res://resources/cards/"
+	# DECKS DE 12 CARTES (vague 8, co-auteur) : chaque deck de campagne garde ses
+	# cartes differentes — les cartes nouvelles et les recompenses sont reglees
+	# sur ce que ces decks font posseder, en retirer une en rendrait d autres
+	# « deja possedees » ou jamais proposees — et perd trois exemplaires, pris la
+	# ou l element du lieu mord le moins (facteur moyen des monstres du niveau,
+	# pondere par leurs PV, celui du rapport du banc). Les cartes que comptent les
+	# objectifs du niveau gardent leurs exemplaires. Ici : un Trait, un Champ de
+	# givre (la glace mord a 0,75 aux Marches) et un Mur de moins. C est aussi le
+	# deck par defaut (DeckRules.default_deck_ids).
 	lvl.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 4],
+		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 3],
-		[C + "common/frost_field.tres", 2],
+		[C + "common/frost_field.tres", 1],
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/fireball.tres", 2],
-		[C + "rare/stone_wall.tres", 2],
+		[C + "rare/stone_wall.tres", 1],
 	])
 	# Le niveau 1 ne debloque qu UN niveau : la campagne doit rester lineaire au
 	# demarrage. La premiere fourche est en lvl_04 (voir docs/histoire.md section 8).
@@ -3279,7 +3353,7 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# 60-95 %. Avec un exemplaire la carte se joue encore une fois par partie sans
 	# transformer le niveau en promenade.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -3288,11 +3362,11 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	# au Trait, pour que le deck garde le meme poids de degats.
 	lvl2.exploration_deck = _deck([
 		[C + "common/fireball.tres", 3],
-		[C + "common/ember_pool.tres", 3],
+		[C + "common/ember_pool.tres", 2],
 		[C + "common/piercing_arrow.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 1],
 		[C + "rare/meteor.tres", 2],
-		[C + "common/tidal_pool.tres", 1],
+		[C + "rare/tidal_pool.tres", 1],
 	])
 	_poser_progression(lvl2)
 	# CHANTIER N — le village mene maintenant a LA ROUTE DU MAIRE (`lvl_08`), qui
@@ -3506,7 +3580,7 @@ func _acte_2(C: String, E: String) -> void:
 	# DISPERSEES : l arbre les rassemble a son pied et son poison les use. Les
 	# goules y sont immunisees au venin : la carte vaut plus au niveau suivant.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -3515,10 +3589,10 @@ func _acte_2(C: String, E: String) -> void:
 	# givre et la Fleche prennent le fond du deck.
 	lvl3.exploration_deck = _deck([
 		[C + "common/frost_rain.tres", 4],
-		[C + "common/piercing_arrow.tres", 4],
-		[C + "common/fireball.tres", 2],
-		[C + "rare/salt_spiral.tres", 2],
-		[C + "epic/resonance.tres", 2],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/fireball.tres", 3],
+		[C + "rare/salt_spiral.tres", 1],
+		[C + "epic/resonance.tres", 1],
 		[C + "epic/blight_sapling.tres", 1],
 	])
 	_poser_progression(lvl3)
@@ -3675,7 +3749,7 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	# INVOQUE sans arret, et contre un flux on gagne en donnant au flux autre chose
 	# a faire. L arbre est la seule carte du jeu qui le permette.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -3683,9 +3757,9 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	# et le Mur ; le Trait monte a 4 pour achever ce que les zones entament.
 	lvl4.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/ember_pool.tres", 3],
-		[C + "rare/meteor.tres", 3],
-		[C + "rare/heartwood_totem.tres", 2],
+		[C + "common/ember_pool.tres", 2],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/heartwood_totem.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "rare/bone_recall.tres", 1],
 	])
@@ -3873,7 +3947,7 @@ func _acte_3(C: String, E: String) -> void:
 	# que le Colosse craint. Mesure : a une Focalisation et un Meteore de moins, le
 	# niveau tombait a 53-63 %. On garde donc leurs exemplaires entiers.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -3881,11 +3955,11 @@ func _acte_3(C: String, E: String) -> void:
 	# exemplaire chacun) : le Trait monte a 4, l arcane etant ce que les Forges
 	# craignent le plus (x1.11 en moyenne ponderee par les PV).
 	lvl5.exploration_deck = _deck([
-		[C + "rare/meteor.tres", 3],
+		[C + "rare/meteor.tres", 1],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "rare/chain_break.tres", 2],
+		[C + "rare/chain_break.tres", 1],
 		[C + "common/frost_rain.tres", 2],
 	])
 	_poser_progression(lvl5)
@@ -4050,7 +4124,7 @@ cadran, et ils ignorent qui la passe."
 	# aurait menti au joueur. La Cour, elle, empile des monstres a effets qui
 	# craignent tous d etre arretes une seconde.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -4058,10 +4132,10 @@ cadran, et ils ignorent qui la passe."
 	# le Totem, la Rupture et le Mur ; la Fleche monte a 4 parce que le Chevalier
 	# du vide AVALE l arcane (0,65) et que le physique le traverse.
 	lvl6.exploration_deck = _deck([
-		[C + "common/fireball.tres", 4],
-		[C + "common/piercing_arrow.tres", 4],
-		[C + "common/arcane_bolt.tres", 3],
-		[C + "rare/brazier.tres", 2],
+		[C + "common/fireball.tres", 3],
+		[C + "common/piercing_arrow.tres", 2],
+		[C + "common/arcane_bolt.tres", 4],
+		[C + "rare/brazier.tres", 1],
 		[C + "epic/void_grip.tres", 1],
 		[C + "epic/thunder_root.tres", 1],
 	])
@@ -4278,7 +4352,7 @@ func _acte_final(C: String, E: String) -> void:
 	# monstre. L Apprenti miroir entre ICI : le mage entre dans la matrice avec
 	# ses allies, et c est le premier allie qu il invoque lui-meme.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -4286,9 +4360,9 @@ func _acte_final(C: String, E: String) -> void:
 	# Rappel, la Fleche et le Mur.
 	lvl7.exploration_deck = _deck([
 		[C + "common/fireball.tres", 4],
-		[C + "rare/meteor.tres", 3],
-		[C + "rare/salt_spiral.tres", 2],
-		[C + "rare/chain_break.tres", 2],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/salt_spiral.tres", 1],
+		[C + "rare/chain_break.tres", 1],
 		[C + "epic/void_grip.tres", 2],
 		[C + "epic/mirror_apprentice.tres", 2],
 	])
@@ -4430,7 +4504,7 @@ func _acte_1_suite(C: String, E: String) -> void:
 	# Le deck du niveau du NOMBRE est un deck de ZONES, et 0 legendaire : la
 	# legendaire se GAGNE aux objectifs, elle n est pas offerte au depart.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -4438,12 +4512,12 @@ func _acte_1_suite(C: String, E: String) -> void:
 	# le Champ de givre monte a 3 pour que le feu ne passe pas la moitie du deck
 	# (feu x1.15 ici : la lecon de lvl_03).
 	lvl8.exploration_deck = _deck([
-		[C + "common/fireball.tres", 3],
+		[C + "common/fireball.tres", 4],
 		[C + "common/ember_pool.tres", 2],
-		[C + "common/frost_field.tres", 3],
-		[C + "common/frost_rain.tres", 3],
+		[C + "common/frost_field.tres", 1],
+		[C + "common/frost_rain.tres", 2],
 		[C + "rare/meteor.tres", 2],
-		[C + "epic/maelstrom.tres", 2],
+		[C + "epic/maelstrom.tres", 1],
 	])
 	_poser_progression(lvl8)
 	lvl8.next_levels = [&"lvl_09"]
@@ -4571,7 +4645,7 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 	# Le deck de la fin d acte : il garde des zones mais rend du MONO-CIBLE lourd,
 	# parce qu un boss de 140 PV ne tombe pas a la nappe de givre.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -4580,10 +4654,10 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 	# abat le boss.
 	lvl9.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 3],
-		[C + "common/piercing_arrow.tres", 3],
+		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "rare/meteor.tres", 3],
-		[C + "epic/deep_focus.tres", 2],
+		[C + "rare/meteor.tres", 2],
+		[C + "epic/deep_focus.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	_poser_progression(lvl9)
@@ -4735,7 +4809,7 @@ func _acte_2_suite(C: String, E: String) -> void:
 	# place, des zones larges qui couvrent le ciel ou les cibles vont passer, et
 	# des Traits pour achever l Archer qui campe au fond.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -4744,9 +4818,9 @@ func _acte_2_suite(C: String, E: String) -> void:
 	# pouvoir la faire DECOUVRIR) et la Precipitation.
 	lvl17.exploration_deck = _deck([
 		[C + "common/frost_rain.tres", 4],
-		[C + "common/arcane_bolt.tres", 3],
-		[C + "common/fireball.tres", 2],
-		[C + "common/frost_field.tres", 2],
+		[C + "common/arcane_bolt.tres", 2],
+		[C + "common/fireball.tres", 1],
+		[C + "common/frost_field.tres", 1],
 		[C + "epic/resonance.tres", 2],
 		[C + "rare/repulsion_wave.tres", 2],
 	])
@@ -4851,7 +4925,7 @@ atelier."
 	# que chaque coup accelere, une nappe est un piege. Meteore et Focalisation
 	# donnent le paquet de degats ; la Marque de faiblesse double ce qui suit.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -4859,10 +4933,10 @@ atelier."
 	# Rupture de chaine (carte d histoire des Forges, qui doit s y decouvrir) ;
 	# le Trait et la Boule de feu prennent leur place.
 	lvl18.exploration_deck = _deck([
-		[C + "rare/meteor.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "rare/meteor.tres", 2],
+		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "rare/focus.tres", 2],
+		[C + "rare/focus.tres", 1],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
 	])
@@ -5036,7 +5110,7 @@ func _acte_3_suite(C: String, E: String) -> void:
 	# morts-vivants se donnent. Le Semis de fletrissure n y est pas : les goules
 	# sont immunisees au venin.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -5044,10 +5118,10 @@ func _acte_3_suite(C: String, E: String) -> void:
 	# legendaire se gagne, elle n est plus offerte ici), la Fleche et le Mur.
 	lvl19.exploration_deck = _deck([
 		[C + "rare/meteor.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "rare/focus.tres", 2],
-		[C + "rare/purifying_light.tres", 2],
+		[C + "rare/focus.tres", 1],
+		[C + "rare/purifying_light.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
 	])
 	_poser_progression(lvl19)
@@ -5150,19 +5224,19 @@ laisse une GARDE, et une garde ne protege pas un fuyard, elle retarde un poursui
 	# les totems punissent. Le Vide d emprise est la reponse d urgence : il efface
 	# l aura du porteur.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Vide d emprise. Sortent la Spirale, le Mur et la Focalisation ;
 	# la Fleche monte a 4, c est la carte du niveau.
 	lvl20.exploration_deck = _deck([
-		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/piercing_arrow.tres", 3],
 		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/fireball.tres", 2],
-		[C + "rare/meteor.tres", 2],
+		[C + "rare/meteor.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "epic/void_grip.tres", 2],
+		[C + "epic/void_grip.tres", 1],
 	])
 	_poser_progression(lvl20)
 	# LA FOURCHE EXISTANTE. `lvl_05` (les Forges, des blindes) et `lvl_06` (la
@@ -5309,18 +5383,18 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 	# Pluie de givre, la seule zone que le Ver ne rende pas inutile. Plus AUCUNE
 	# Boule de feu : le feu n est plus la reponse ici, et c est le niveau qui le dit.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Pluie de meteorites. Sortent la derniere Boule de feu et la
 	# Focalisation ; Trait et Fleche montent a 4.
 	lvl21.exploration_deck = _deck([
-		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/frost_rain.tres", 2],
-		[C + "rare/meteor.tres", 2],
-		[C + "epic/deep_focus.tres", 2],
+		[C + "common/frost_rain.tres", 3],
+		[C + "rare/meteor.tres", 1],
+		[C + "epic/deep_focus.tres", 1],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	_poser_progression(lvl21)
@@ -5507,7 +5581,7 @@ func _acte_4_suite(C: String, E: String) -> void:
 	# La Volte-face entre ICI : contre une fosse qui deborde, faire remonter tout
 	# le monde trois secondes rend le temps de poser la zone suivante.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -5515,9 +5589,9 @@ func _acte_4_suite(C: String, E: String) -> void:
 	# et le Mur ; la Pluie de givre et le Trait montent a 4.
 	lvl10.exploration_deck = _deck([
 		[C + "common/frost_rain.tres", 4],
-		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/fireball.tres", 3],
-		[C + "epic/resonance.tres", 2],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/fireball.tres", 2],
+		[C + "epic/resonance.tres", 1],
 		[C + "epic/maelstrom.tres", 1],
 		[C + "rare/about_face.tres", 1],
 	])
@@ -5629,7 +5703,7 @@ Gardien. Il n a jamais donne d ordre a personne : il en a recu un."
 	# pleinement sur Kaltek (c est le seul boss du jeu qu on peut reellement
 	# ralentir).
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -5637,11 +5711,11 @@ Gardien. Il n a jamais donne d ordre a personne : il en a recu un."
 	# la Concentration et la Faille temporelle (la legendaire se gagne) ; la
 	# Fleche monte a 4 et porte les degats.
 	lvl11.exploration_deck = _deck([
-		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/piercing_arrow.tres", 3],
 		[C + "common/frost_field.tres", 3],
 		[C + "common/frost_rain.tres", 2],
-		[C + "common/fireball.tres", 2],
-		[C + "rare/temporal_drag.tres", 2],
+		[C + "common/fireball.tres", 1],
+		[C + "rare/temporal_drag.tres", 1],
 		[C + "epic/deep_freeze.tres", 2],
 	])
 	_poser_progression(lvl11)
@@ -5781,18 +5855,18 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 	# L Intuition arcanique entre ICI : piocher trois cartes, c est reunir plus vite la
 	# Focalisation et le Meteore qui doivent partir ensemble.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Intuition arcanique. Sortent la Boule de feu, le Mur et la Marque.
 	lvl12.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/piercing_arrow.tres", 3],
-		[C + "rare/meteor.tres", 3],
-		[C + "rare/focus.tres", 2],
-		[C + "epic/deep_focus.tres", 2],
-		[C + "rare/arcane_insight.tres", 1],
+		[C + "common/piercing_arrow.tres", 1],
+		[C + "rare/meteor.tres", 2],
+		[C + "rare/focus.tres", 3],
+		[C + "epic/deep_focus.tres", 1],
+		[C + "epic/arcane_insight.tres", 1],
 	])
 	_poser_progression(lvl12)
 	lvl12.next_levels = [&"lvl_13"]
@@ -5984,17 +6058,17 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# L Etincelle entre ICI : la foudre est neutre sur ce bestiaire, et un sort
 	# rapide acheve ce que la Boule de feu laisse debout.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Etincelle. Sortent la Fleche, le Champ de givre, le Mur, la
 	# Focalisation, la Resonance et la Concentration.
 	lvl13.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/fireball.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/fireball.tres", 2],
 		[C + "common/spark.tres", 3],
-		[C + "rare/meteor.tres", 2],
+		[C + "rare/meteor.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
@@ -6235,18 +6309,18 @@ func _acte_5(C: String, E: String) -> void:
 	# Le Flux de mana entre ICI : il ne change pas la main, il la fait revenir
 	# plus vite.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Flux de mana. Sortent le Champ de givre, le Brasier, le Mur et
 	# la Resonance.
 	lvl14.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/piercing_arrow.tres", 3],
+		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/fireball.tres", 3],
 		[C + "rare/meteor.tres", 2],
-		[C + "rare/mana_flow.tres", 2],
+		[C + "rare/mana_flow.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	_poser_progression(lvl14)
@@ -6430,7 +6504,7 @@ depuis le pentacle, et il marche devant."
 	# le spam, et la Concentration y est doublee pour ca. La Precipitation entre
 	# ICI : elle raccourcit l incantation des gros sorts au lieu d en ajouter.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -6439,9 +6513,9 @@ depuis le pentacle, et il marche devant."
 	lvl15.exploration_deck = _deck([
 		[C + "common/fireball.tres", 4],
 		[C + "rare/meteor.tres", 3],
-		[C + "rare/focus.tres", 3],
-		[C + "epic/deep_focus.tres", 2],
-		[C + "rare/quickening.tres", 2],
+		[C + "rare/focus.tres", 2],
+		[C + "epic/deep_focus.tres", 1],
+		[C + "rare/quickening.tres", 1],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	_poser_progression(lvl15)
@@ -6618,7 +6692,7 @@ courir pour voir jusqu ou tu irais."
 	# Faille et le Sablier ne servent pas a frapper : ils servent a survivre a la
 	# garde de renvoi, et c est au joueur de le trouver.
 	#
-	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 15 cartes, exemplaires
+	# REGLE DES 6 (27/09) : au plus 6 cartes differentes, 12 cartes (15 avant la vague 8 : trois exemplaires retires la ou l element du lieu mord le moins), exemplaires
 	# 4/3/2/1. Le deck garde les cartes qui PORTENT le niveau et perd la variete de
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
@@ -6626,8 +6700,8 @@ courir pour voir jusqu ou tu irais."
 	# Focalisation, le Mur, la Concentration et la Marque.
 	lvl16.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
-		[C + "common/fireball.tres", 4],
-		[C + "common/piercing_arrow.tres", 4],
+		[C + "common/fireball.tres", 3],
+		[C + "common/piercing_arrow.tres", 2],
 		[C + "legendary/time_rift.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 		[C + "legendary/world_loom.tres", 1],
@@ -6833,11 +6907,16 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# aussi : les degats doivent venir d ailleurs). Le « plus de 300 % » ne se joue
 			# pas ici : 96 s de combat ne laissent monter la vitesse que vers 340 % sans un
 			# coup, le seuil descend a 250 et l exemple passe au niveau suivant.
-			# Nouvelles : Pluie de givre, Brasier, Rupture de chaine, trois sorts simples
-			# a un seul geste. Recompenses : Volte-face, Maelstrom (au deck de lvl_08) et
-			# la Faille temporelle, ancienne legendaire du niveau 1. Ni le Meteore ni la
-			# Nappe : ils sont au deck de lvl_02, que cette victoire ouvre.
-			return {"nouvelles": ["frost_rain", "brazier", "chain_break"], "objectifs": [
+			# Nouvelles : Pluie de givre, Dard venimeux, Rupture de chaine, trois sorts
+			# simples a un seul geste. Le Dard (vague 8, commune de poison) est ici parce
+			# que le tutoriel est le lieu ou le poison mord le mieux (facteur 1,13 contre
+			# 0,4 a 0,8 presque partout ailleurs) et que Chronos dure : le poison qui
+			# court jusqu a la mort s y lit. Il prend la place du Brasier, dont la
+			# premiere sortie passe en lvl_08. Recompenses : Volte-face, Maelstrom (au
+			# deck de lvl_08) et la Faille temporelle, ancienne legendaire du niveau 1.
+			# Ni le Meteore ni la Nappe : ils sont au deck de lvl_02, que cette victoire
+			# ouvre.
+			return {"nouvelles": ["frost_rain", "venom_dart", "chain_break"], "objectifs": [
 				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 6}), "about_face"],
 				[_objectif(&"no_card", {"card": "fireball"}), "maelstrom"],
 				[_objectif(&"win_above_speed", {"pct": 250}), "time_rift"],
@@ -6847,10 +6926,14 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# « Plus de 300 % » (exemple du co-auteur) : le combat dure trois minutes, la
 			# vitesse a le temps de monter. Les Sauterelles avancent par a-coups et se
 			# regroupent a l arret : en tuer 4 d un seul sort demande d attendre la pause.
-			# Nouvelles : Intuition arcanique, Precipitation, Spirale de sel. Recompenses
-			# : Rappel d ossements, Concentration (au deck de lvl_09) et le Sablier fendu,
-			# lui aussi au deck de lvl_09 : c est sa derniere fenetre.
-			return {"nouvelles": ["arcane_insight", "quickening", "salt_spiral"], "objectifs": [
+			# Nouvelles : Elan du temps, Precipitation, Spirale de sel. L Elan (vague 8,
+			# rare de temps) prend la place de l Intuition arcanique, devenue EPIQUE :
+			# l acte 1 n offre que communes et rares ; sa premiere sortie passe en lvl_18.
+			# Les deux cartes de temps ensemble : l une rend de la vitesse, l autre
+			# accelere l incantation. Recompenses : Rappel d ossements, Concentration (au
+			# deck de lvl_09) et le Sablier fendu, lui aussi au deck de lvl_09 : c est sa
+			# derniere fenetre.
+			return {"nouvelles": ["time_surge", "quickening", "salt_spiral"], "objectifs": [
 				[_objectif(&"boss_quick_after_revive", {"seconds": 8}), "bone_recall"],
 				[_objectif(&"win_above_speed", {"pct": 300}), "deep_focus"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "hopper", "count": 4}), "hourglass_shard"],
@@ -6860,7 +6943,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# l exemple du co-auteur « 4 Oiseaux mirage en une attaque » est ici, une nuee
 			# en compte quatre. Les petites gelees craignent le feu : les achever a la
 			# Boule de feu. Et la plus longue serie, 15 morts en moins d une seconde.
-			# Nouvelles : Brasier (deja propose en lvl_01), Focalisation, Lumiere
+			# Nouvelles : Brasier (sa premiere sortie depuis la vague 8), Focalisation, Lumiere
 			# purifiante (le Totem ancien craint l arcane). Recompenses : Onde de
 			# repulsion, Resonance (au deck de lvl_17) et le Cadran des forges, feu en
 			# pluie.
@@ -6889,7 +6972,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# « faire parcourir une tres grande distance a un monstre » (vague 8) : six
 			# longueurs de terrain a un Serpent des sables avant de l abattre. Le Serpent
 			# ONDULE et son ondulation ne ralentit pas : retenu par le givre du deck (Pluie
-			# x4, Champ x2) ou renvoye en haut par la Volte-face, il serpente sur place et
+			# x4, Champ x1) ou renvoye en haut par la Volte-face, il serpente sur place et
 			# allonge son chemin. Mais il craint le givre (x1,9) : le retenir sans le tuer
 			# trop tot est tout le geste. Remplace « tenir la ligne haute a 70 % ».
 			# Seuil PROVISOIRE, a mesurer au banc des objectifs apres la vague 8.
@@ -6908,8 +6991,9 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Les Pillards arrivent par le cote et craignent le feu : les abattre a la
 			# Boule de feu. Le port est le niveau le plus dur de l acte : le pari est de
 			# finir en dessous de 190 %, et la Marque de faiblesse doit revenir souvent.
-			# Nouvelles : Apprenti miroir, Intuition arcanique et Brasier (deja proposes ;
-			# les pillards craignent le feu). Legendaire : la Riviere, qui force les
+			# Nouvelles : Apprenti miroir, Intuition arcanique (premiere sortie depuis
+			# qu elle est epique, vague 8) et Brasier (deja propose ; les pillards
+			# craignent le feu). Legendaire : la Riviere, qui force les
 			# pillards a un pont.
 			return {"nouvelles": ["mirror_apprentice", "arcane_insight", "brazier"], "objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "nacelle_raider", "card": "fireball", "count": 5}), "bone_recall"],
@@ -6954,7 +7038,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			]}
 		&"lvl_20":
 			# La cour des rois morts, niveau dur : le Vide d emprise du deck dissipe les
-			# auras des Gardiens-totems, s en passer se paie ; la Fleche percante (x4)
+			# auras des Gardiens-totems, s en passer se paie ; la Fleche percante (x3)
 			# traverse les rangs de squelettes pareurs ; le pari de finir sous 120 %,
 			# defi du co-auteur (vague 8) : le plus bas de la campagne, dans son niveau le
 			# plus dur, ou un coup encaisse pres de la fin est le plus probable. A 150 %

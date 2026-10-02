@@ -75,6 +75,7 @@ func simulate(delta: float) -> void:
 		_reverse_time -= wd
 
 	_simulate_zones(wd)
+	_simulate_poisons(wd)
 	_simulate_vortices(wd)
 	# AVANT les monstres : un accessoire qui vient d expirer ne doit pas attirer
 	# une derniere fois pendant la meme frame, sinon un arbre mort detournerait un
@@ -213,6 +214,65 @@ func _simulate_zones(wd: float) -> void:
 			if vn != null and is_instance_valid(vn):
 				vn.queue_free()
 			zones.remove_at(i)
+
+
+## POISONS PORTES PAR LES MONSTRES (vague 8, Dard venimeux) : un par lancer,
+## {enemy, dps, tags, src}. Ils mordent jusqu a la mort de leur porteur.
+var poisons: Array[Dictionary] = []
+
+## Meta posee sur un monstre empoisonne : sa marque visible (une seule, meme
+## pour plusieurs poisons).
+const POISON_MARKER_META: StringName = &"poison_marker"
+
+
+## Empoisonne `target` : il perd `dps` PV par seconde de MONDE jusqu a sa mort.
+## Les morsures passent par `_hit` (resistances, vulnerabilites, passifs) au nom
+## du lancer en cours (RunState.damage_source, objectifs). Rend false si la
+## cible ne peut pas etre empoisonnee (morte, en train d apparaitre).
+func poison_enemy(target: Object, dps: float, card: SpellCard) -> bool:
+	if target == null or not is_instance_valid(target) or not (target is Enemy):
+		return false
+	var e: Enemy = target as Enemy
+	if not _targetable(e) or dps <= 0.0:
+		return false
+	poisons.append({"enemy": e, "dps": dps,
+		"tags": (card.combat_tags() if card != null else [GameEnums.DamageTag.POISON]) as Array,
+		"src": RunState.damage_source})
+	# LISIBLE SUR LE MONSTRE : la feuille de la carte tourne en boucle au-dessus
+	# de lui, enfant de son noeud, donc elle le suit et meurt avec lui.
+	# has_meta d abord : get_meta(nom, null) leve une erreur moteur en 4.4 (un
+	# defaut null vaut « pas de defaut »).
+	var marque: Variant = e.get_meta(POISON_MARKER_META) if e.has_meta(POISON_MARKER_META) else null
+	if marque == null or not is_instance_valid(marque):
+		var r: float = e.radius()
+		var sp: Node = Fx.sprite(e, Fx.card_sheet(card) if card != null else "skull_burst",
+			Vector2(0.0, -r * 1.1), maxf(r * 1.3, 56.0), true,
+			Color(Fx.COL_POISON.r, Fx.COL_POISON.g, Fx.COL_POISON.b, 0.9))
+		if sp != null:
+			e.set_meta(POISON_MARKER_META, sp)
+	return true
+
+
+## Nombre de poisons en cours sur ce monstre (tests, interface).
+func poison_count(e: Enemy) -> int:
+	var n: int = 0
+	for p in poisons:
+		if p["enemy"] == e:
+			n += 1
+	return n
+
+
+func _simulate_poisons(wd: float) -> void:
+	for i in range(poisons.size() - 1, -1, -1):
+		var p: Dictionary = poisons[i]
+		var e: Variant = p["enemy"]
+		if e == null or not is_instance_valid(e) or (e as Enemy).is_dead():
+			poisons.remove_at(i)
+			continue
+		# OBJECTIFS : le poison mord au nom du lancer qui l a pose.
+		var obj_src_avant: Dictionary = RunState.swap_damage_source(p.get("src", {}))
+		_hit(e as Enemy, float(p["dps"]) * wd, p["tags"])
+		RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 
 
 func _simulate_allies(wd: float) -> void:
@@ -609,6 +669,7 @@ func clear_all() -> void:
 			e.queue_free()
 	enemies.clear()
 	zones.clear()
+	poisons.clear()
 	# Les sprites d allies doivent partir avec eux, sinon ils restent a l ecran
 	# d une partie a la suivante.
 	for a in allies:

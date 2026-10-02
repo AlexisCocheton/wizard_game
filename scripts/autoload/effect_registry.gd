@@ -48,6 +48,10 @@ func register_defaults() -> void:
 		# fosse, autel generateur) et la riviere qui coupe le terrain.
 		EffectHandlers.PlaceTerrain.new(),
 		EffectHandlers.River.new(),
+		# Vague 8 (sorts du co-auteur) : un poison que le monstre PORTE jusqu a sa
+		# mort, et une carte qui rend de la vitesse au mage.
+		EffectHandlers.PoisonDot.new(),
+		EffectHandlers.GainSpeed.new(),
 	]:
 		register(h)
 

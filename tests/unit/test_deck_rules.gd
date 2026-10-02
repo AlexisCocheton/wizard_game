@@ -1,8 +1,8 @@
 extends TestCase
 ## Regles de composition du deck, en campagne comme en Massacre.
 ##
-## Depuis la demande du testeur (chantier K) le deck est EXACTEMENT de 15 cartes :
-## ni 14 ni 16. Un intervalle laissait le joueur composer un deck de 8 cartes et
+## Depuis la demande du testeur (chantier K) le deck a une taille EXACTE
+## (DeckRules.DECK_SIZE : 15, puis 12 depuis la vague 8) : ni une de moins ni une de plus. Un intervalle laissait le joueur composer un deck de 8 cartes et
 ## croire qu il jouait le meme jeu que celui qui en jouait 20 ; la pioche, l XP et
 ## la courbe de vagues sont calees sur une taille unique.
 ##
@@ -54,6 +54,8 @@ func run() -> void:
 	_test_passifs_hors_deck()
 	_test_message()
 	_test_un_deck_sauvegarde_hors_regle_est_garde_et_explique()
+	_test_pas_de_minimum_de_cartes_differentes()
+	_test_un_ancien_deck_de_15_est_garde_et_explique()
 	_test_resolve()
 	_test_deck_par_defaut()
 	_test_les_decks_de_campagne_suivent_la_regle()
@@ -65,7 +67,8 @@ func _test_copies_max() -> void:
 	eq(DeckRules.max_copies(GameEnums.Rarity.RARE), 3, "3 rares max")
 	eq(DeckRules.max_copies(GameEnums.Rarity.EPIC), 2, "2 epiques max")
 	eq(DeckRules.max_copies(GameEnums.Rarity.LEGENDARY), 1, "1 legendaire max")
-	eq(DeckRules.DECK_SIZE, 15, "le deck fait exactement 15 cartes")
+	# Vague 8 (co-auteur, 02/10) : 12 cartes et non plus 15.
+	eq(DeckRules.DECK_SIZE, 12, "le deck fait exactement 12 cartes")
 	eq(DeckRules.MAX_DISTINCT, 6, "au plus 6 cartes differentes")
 	eq(DeckRules.MAX_PASSIVES, 3, "au plus 3 passifs equipes")
 	# Les plafonds par rarete ont disparu : la regle des 6 les remplace. Un
@@ -86,34 +89,34 @@ func _test_can_add() -> void:
 	for i in 4:
 		deck.append("com")
 	not_ok(DeckRules.can_add(deck, com, true), "pas de 5e exemplaire d une commune")
-	# Plafond global : le deck est PLEIN a 15, pas a 20.
+	# Plafond global : le deck est PLEIN a DECK_SIZE.
 	var full: Array = _deck(DeckRules.DECK_SIZE)
 	not_ok(DeckRules.can_add(full, _card("com_0", GameEnums.Rarity.COMMON), true),
-		"deck plein a 15 : refus")
+		"deck plein : refus")
 	# Un passif ne rentre plus dans le deck : il s equipe a part (chantier F).
 	var passif := _card("pass", GameEnums.Rarity.RARE)
 	passif.is_passive = true
 	not_ok(DeckRules.can_add([], passif, true), "un passif ne s ajoute pas au deck")
 
 
-## La regle centrale : 15 et rien d autre.
+## La regle centrale : DECK_SIZE et rien d autre.
 func _test_taille_exacte() -> void:
-	not_ok(DeckRules.is_valid(_deck(DeckRules.DECK_SIZE - 1)), "14 cartes : invalide")
-	ok(DeckRules.is_valid(_deck(DeckRules.DECK_SIZE)), "15 cartes : valide")
-	not_ok(DeckRules.is_valid(_deck(DeckRules.DECK_SIZE + 1)), "16 cartes : invalide")
+	not_ok(DeckRules.is_valid(_deck(DeckRules.DECK_SIZE - 1)), "une carte de moins : invalide")
+	ok(DeckRules.is_valid(_deck(DeckRules.DECK_SIZE)), "pile DECK_SIZE cartes : valide")
+	not_ok(DeckRules.is_valid(_deck(DeckRules.DECK_SIZE + 1)), "une carte de plus : invalide")
 	not_ok(DeckRules.is_valid([]), "deck vide : invalide")
 
 
-## Six ids : valide. Sept : invalide, meme a 15 cartes et exemplaires respectes.
+## Six ids : valide. Sept : invalide, meme a DECK_SIZE cartes et exemplaires respectes.
 ## Et la limite doit BLOQUER l ajout d un 7e id, pas seulement invalider apres
 ## coup — mais jamais un exemplaire de plus d un id deja present.
 func _test_six_cartes_differentes() -> void:
 	var six: Array = _deck_en_ids(DeckRules.DECK_SIZE, DeckRules.MAX_DISTINCT)
 	eq(DeckRules.count_distinct(six), DeckRules.MAX_DISTINCT, "le deck fabrique a 6 ids")
-	ok(DeckRules.is_valid(six), "15 cartes en 6 ids : valide")
+	ok(DeckRules.is_valid(six), "DECK_SIZE cartes en 6 ids : valide")
 	var sept: Array = _deck_en_ids(DeckRules.DECK_SIZE, DeckRules.MAX_DISTINCT + 1)
 	eq(DeckRules.count_distinct(sept), DeckRules.MAX_DISTINCT + 1, "le deck fabrique a 7 ids")
-	not_ok(DeckRules.is_valid(sept), "15 cartes en 7 ids : invalide")
+	not_ok(DeckRules.is_valid(sept), "DECK_SIZE cartes en 7 ids : invalide")
 
 	var partiel: Array = _deck_en_ids(DeckRules.MAX_DISTINCT, DeckRules.MAX_DISTINCT)
 	not_ok(DeckRules.can_add(partiel, _card("com_neuf", GameEnums.Rarity.COMMON), true),
@@ -149,12 +152,16 @@ func _test_is_valid_verifie_les_exemplaires() -> void:
 ##
 ## On enumere toutes les compositions de 1 a 7 ids (combien de legendaires,
 ## d epiques, de rares, de communes), on fabrique pour chacune le deck le plus
-## proche de 15 cartes qu autorisent les exemplaires, et on demande a is_valid()
-## lesquels passent. Les bornes qui en sortent sont celles que la regle des 6
-## impose d elle-meme :
-##   - au plus 3 legendaires (3 x 1 + 3 communes x 4 = 15) ;
-##   - au plus 4 epiques (4 x 2 + 2 communes x 4 = 16 ; 5 x 2 + 4 = 14) ;
-##   - au moins 4 ids (3 communes x 4 = 12).
+## proche de DECK_SIZE cartes qu autorisent les exemplaires, et on demande a
+## is_valid() lesquels passent. Les bornes qui en sortent sont celles que la
+## regle des 6 impose d elle-meme. A 15 cartes : 3 legendaires, 4 epiques, 4 ids
+## au moins. A 12 (vague 8) elle borne moins :
+##   - au plus 4 legendaires (4 x 1 + 2 communes x 4 = 12 ; 5 x 1 + 4 = 9) ;
+##   - jusqu a 6 epiques (6 x 2 = 12) : la regle ne borne plus les epiques ;
+##   - au moins 3 ids (3 communes x 4 = 12), et AUCUN minimum impose : « si on
+##     atteint 12 cartes on n est pas oblige de remplir les 6 cases ».
+## Le co-auteur n a fixe que la taille, les 6 ids et les exemplaires : ces
+## bornes plus larges sont acceptees, et ce test le dit si elles bougent.
 ## Si quelqu un change MAX_DISTINCT ou les exemplaires, ces bornes bougent et le
 ## test le dit : c est le moment de se demander s il faut un plafond de rarete.
 func _test_la_rarete_est_bornee_par_la_regle_des_six() -> void:
@@ -186,13 +193,13 @@ func _test_la_rarete_est_bornee_par_la_regle_des_six() -> void:
 					min_ids = mini(min_ids, total_ids)
 	ok(valides > 0, "l enumeration trouve des decks valides (%d)" % valides)
 	eq(sept_valides, 0, "aucune composition a 7 ids n est valide")
-	eq(max_leg, 3, "la regle des 6 borne les legendaires a 3")
-	eq(max_epi, 4, "la regle des 6 borne les epiques a 4")
-	eq(min_ids, 4, "un deck de 15 compte au moins 4 cartes differentes")
+	eq(max_leg, 4, "a 12 cartes, la regle des 6 borne les legendaires a 4")
+	eq(max_epi, 6, "a 12 cartes, six epiques font un deck valide")
+	eq(min_ids, 3, "un deck de 12 compte au moins 3 cartes differentes")
 
 
 ## Le deck d une composition : chaque id recoit ses exemplaires maximum, puis on
-## en retire (jamais sous 1 par id) jusqu a 15. S il manque des cartes, le deck
+## en retire (jamais sous 1 par id) jusqu a DECK_SIZE. S il manque des cartes, le deck
 ## reste court et is_valid() le refusera — c est ce qui doit se produire.
 func _deck_de_composition(compte: Array, raretes: Array, prefixes: Array) -> Array:
 	var copies: Array = []
@@ -344,6 +351,53 @@ func _test_un_deck_sauvegarde_hors_regle_est_garde_et_explique() -> void:
 	SaveData.reset_profile()
 
 
+## « Si on atteint 12 cartes on n est pas oblige de remplir les 6 cases » : le
+## plus petit nombre d ids qui fait DECK_SIZE cartes donne un deck valide, et
+## un id de moins que ce qu il faut ne se plaint que de la TAILLE.
+func _test_pas_de_minimum_de_cartes_differentes() -> void:
+	var n_com: int = DeckRules.max_copies(GameEnums.Rarity.COMMON)
+	var ids_min: int = int(ceil(float(DeckRules.DECK_SIZE) / float(n_com)))
+	ok(ids_min < DeckRules.MAX_DISTINCT, "le deck peut tenir en moins de %d ids (%d)"
+		% [DeckRules.MAX_DISTINCT, ids_min])
+	var deck: Array = _deck(DeckRules.DECK_SIZE)
+	eq(DeckRules.count_distinct(deck), ids_min, "le deck fabrique a %d ids" % ids_min)
+	ok(DeckRules.is_valid(deck), "%d cartes en %d ids : valide, sans remplir les %d cases"
+		% [DeckRules.DECK_SIZE, ids_min, DeckRules.MAX_DISTINCT])
+	var court: Array = _deck(DeckRules.DECK_SIZE - 1)
+	var msg: String = DeckRules.validation_message(court)
+	ok(msg.contains("Ajoute 1 carte") and not msg.to_lower().contains("differentes"),
+		"un deck court reclame une CARTE, jamais un id de plus (%s)" % msg)
+
+
+## Un deck sauvegarde a l ancienne taille (15 cartes, regle respectee par
+## ailleurs) n est ni tronque ni efface : il est rendu intact, refuse au jeu, et
+## le message dit combien de cartes retirer.
+func _test_un_ancien_deck_de_15_est_garde_et_explique() -> void:
+	SaveData.reset_profile()
+	var ancien: Array = []
+	var cartes: Array = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and not c.is_passive and c.rarity == GameEnums.Rarity.COMMON:
+			cartes.append(String(c.id))
+	cartes.sort()
+	var ancienne_taille: int = 15
+	var k: int = 0
+	while ancien.size() < ancienne_taille and k < cartes.size() * 4:
+		var id: String = cartes[k / 4]
+		ancien.append(id)
+		k += 1
+	ok(ancien.size() == ancienne_taille, "un ancien deck de %d cartes" % ancienne_taille)
+	ok(DeckRules.count_distinct(ancien) <= DeckRules.MAX_DISTINCT, "regle des 6 respectee")
+	SaveData.set_massacre_deck(ancien)
+	eq(SaveData.massacre_deck(), ancien, "l ancien deck est rendu intact, pas tronque")
+	not_ok(DeckRules.is_valid(SaveData.massacre_deck()), "il n est plus jouable tel quel")
+	var trop: int = ancienne_taille - DeckRules.DECK_SIZE
+	var msg: String = DeckRules.validation_message(SaveData.massacre_deck())
+	ok(msg.begins_with("Retire %d carte" % trop) and msg.contains(str(DeckRules.DECK_SIZE)),
+		"le joueur lit combien en retirer : %s" % msg)
+	SaveData.reset_profile()
+
+
 func _test_resolve() -> void:
 	var ids: Array = ["arcane_bolt", "arcane_bolt", "id_inconnu", "frost_field"]
 	var cards: Array[SpellCard] = DeckRules.resolve(ids)
@@ -354,7 +408,7 @@ func _test_resolve() -> void:
 
 func _test_deck_par_defaut() -> void:
 	var ids: Array = DeckRules.default_deck_ids()
-	eq(ids.size(), DeckRules.DECK_SIZE, "le deck de base fait pile 15 cartes")
+	eq(ids.size(), DeckRules.DECK_SIZE, "le deck de base fait pile DECK_SIZE cartes")
 	ok(DeckRules.count_distinct(ids) <= DeckRules.MAX_DISTINCT,
 		"le deck de base tient en %d cartes differentes (%d)"
 		% [DeckRules.MAX_DISTINCT, DeckRules.count_distinct(ids)])
@@ -438,7 +492,7 @@ func _test_les_decks_de_campagne_suivent_la_regle() -> void:
 	casse.exploration_deck = cartes
 	var n_ids: int = DeckRules.count_distinct(_ids_du_niveau(casse))
 	eq(n_ids, DeckRules.MAX_DISTINCT + 1, "le sabotage donne 7 ids au niveau 1")
-	eq(_ids_du_niveau(casse).size(), DeckRules.DECK_SIZE, "le sabotage garde 15 cartes")
+	eq(_ids_du_niveau(casse).size(), DeckRules.DECK_SIZE, "le sabotage garde DECK_SIZE cartes")
 	ok(_defaut_du_deck(casse) != "",
 		"une 7e carte differente au niveau 1 fait rougir le controle")
 
