@@ -71,8 +71,10 @@ d autres processus Godot tournent mesure une machine chargee, pas le jeu.
 ## Le bot du banc (chantier W7)
 
 Le banc joue avec un bot qui doit ressembler a un joueur RAISONNABLE, pas a un
-joueur parfait. Ses choix vivent dans `scripts/game/auto_pick.gd` (`AutoPick` ; les parties
-headless des tests les utilisent aussi) et dans `_try_play` du banc :
+joueur parfait. Tous ses choix vivent dans `scripts/game/auto_pick.gd` (`AutoPick` ;
+les parties headless des tests et le banc des objectifs les utilisent aussi). Le
+geste (quelle carte, sur qui, ou poser une zone) y a ete deplace depuis `_try_play`
+du banc (`AutoPick.try_play`), a l identique :
 
 | Choix | Regle | Pourquoi |
 |---|---|---|
@@ -91,9 +93,84 @@ les 21 niveaux, avec les cartes que le bot y a prises (13,4 vagues avant W7) ;
 lance seul (`--niveaux=none`), il part d un profil neuf et le pool est vide
 (7,7 vagues). Comparer deux Massacres mesures de la meme facon.
 
+**Regle du livre (02/10)** : distribuer un deck n obtient plus rien ; une carte
+est obtenue si elle est dans le deck d un niveau OUVERT ou prise en combat. Le
+banc ouvre donc, avant de mesurer un niveau, ce niveau et tous ceux qui le
+precedent dans l ordre de jeu (`open_levels_up_to`). **Les chiffres de Massacre
+mesures avant et apres cette regle ne sont pas comparables** (le pool n est plus
+le meme) ; les niveaux de campagne, dont le pool ne lit pas le profil, ne
+bougent pas.
+
 Le rapport par niveau donne aussi : vitesse retiree par source (cumul et par
 vague), vague de la mort, cartes et ameliorations prises, temps pour abattre
 le boss, et l adequation du deck au lieu (facteur moyen pondere par les PV).
+
+## Determinisme (chantier W8)
+
+**A graine egale, deux processus rendent le meme resultat**, partie par partie.
+Ce n etait pas le cas : le spawner (couloirs, cotes d apparition), la Pluie de
+meteores, l esquive, la place des allies invoques et le pont d une riviere
+tiraient au hasard SANS la graine de la partie. Ils passent tous par
+`RunState.world_rng`, que `RunState.set_seed()` fixe en meme temps que la pioche
+(un second generateur, pour que la pioche d une graine ne change pas selon la
+facon de jouer). Le jeu reel ne seme jamais : rien n y change. Verrouille par
+`tests/unit/test_objective_bench.gd` (le hasard global est re-seme entre deux
+parties de meme graine, comme dans un autre processus ; chaque source sabotee le
+fait rougir).
+
+Consequences : un ecart entre deux bancs de meme graine vient du CODE ou du
+CONTENU, jamais du tirage. Le hasard reste dans la graine : 30 parties ne
+departagent toujours pas deux reglages voisins (variance d une graine a
+l autre), il en faut 60 a 90.
+
+## Le banc des objectifs
+
+```bash
+Godot --headless --path . tools/objective_bench.tscn
+Godot --headless --path . tools/objective_bench.tscn -- --niveaux=lvl_03,lvl_04 --parties=60
+```
+
+Pour chaque objectif de niveau : N parties (60 par defaut, ce que
+`test_level_progression` exige) avec le bot du banc, ORIENTE vers l objectif
+mesure. Rend, par niveau et dans l ordre du niveau : le nombre de reussites, le
+taux, le rang mesure (1 = le plus facile), les victoires, la politique jouee, le
+verdict du classement (strictement decroissant, chaque objectif reussi et rate),
+et la ligne prete a coller dans `MESURES`. Toutes les lignes sont recopiees a la
+fin, sous `=== A COLLER DANS MESURES ===`.
+
+Options (apres `--`) : `--niveaux=lvl_01,lvl_02` (defaut : tous, ordre de jeu),
+`--objectifs=obj_a,obj_b` (re-mesurer un objectif retouche ; la ligne est marquee
+PARTIELLE), `--parties=60`, `--graine=0` (partie i : graine `1000 + 37 (graine + i)`,
+celles du banc d equilibrage), `--detail` (une ligne par partie avec son empreinte :
+deux sorties a comparer).
+
+**En parallele** : un processus par groupe de niveaux, puis concatener les
+lignes « A COLLER ». Avant chaque partie, le profil est remis a neuf puis le
+niveau et ceux qui le precedent sont ouverts : le resultat ne depend ni de
+l ordre ni du decoupage.
+
+```bash
+for g in lvl_01,lvl_02,lvl_08,lvl_09,lvl_17 lvl_18,lvl_03,lvl_04,lvl_19,lvl_20 \
+         lvl_05,lvl_06,lvl_21,lvl_07,lvl_10 lvl_11,lvl_12,lvl_13,lvl_14,lvl_15,lvl_16; do
+  Godot --headless --path . tools/objective_bench.tscn -- --niveaux=$g > banc_$g.txt &
+done; wait
+```
+
+Duree mesuree : environ 1,5 s par partie ; les objectifs a politique neutre d un
+niveau partagent leurs parties (meme graines, memes parties : le banc est
+deterministe).
+
+**La politique par cle** est un tableau en tete de la section « LE BOT QUI VISE
+UN OBJECTIF » de `scripts/game/auto_pick.gd` (`AutoPick.politique_pour`). En bref :
+jouer d abord la carte / l element / la carte la plus nombreuse demandes (et les
+prendre aux montees) jusqu au compte ; ne jamais jouer ni prendre une carte, un
+tag, un effet, une legendaire interdits ; ne prendre aucun passif ; viser d abord
+l espece qui ne doit pas toucher, les volants, les monstres releves ; ne jamais
+frapper l espece dont le coup est requis, ni une garde de renvoi levee ; poser
+ses zones sur le plus gros groupe de l espece a tuer d un seul sort ; laisser
+marcher le monstre jusqu a sa distance, puis le viser. Les paris de fin de
+combat (vitesse, chrono, intact, multi_kill) : bot tel quel. Une cle ajoutee au
+moteur sans politique documentee fait rougir `test_objective_bench`.
 
 Les garde-fous sont dans `tests/unit/test_balance.gd` : ils verrouillent les
 rapports (pas de saut superieur a x2 entre deux vagues, enchainement des niveaux,

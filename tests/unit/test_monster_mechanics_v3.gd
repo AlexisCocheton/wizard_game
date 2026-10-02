@@ -122,6 +122,11 @@ func run() -> void:
 	_test_motif_au_sol_ne_traverse_pas_un_mur()
 	_test_motif_au_sol_enferme_ne_traverse_pas()
 	_test_motif_volant_ignore_les_murs()
+	_test_motif_spirale()
+	_test_motif_spirale_sans_recul_par_defaut()
+	_test_motif_au_sol_ne_traverse_pas_un_mur(EnemyDef.MovePattern.SPIRAL)
+	_test_motif_au_sol_enferme_ne_traverse_pas(EnemyDef.MovePattern.SPIRAL)
+	_test_motif_volant_ignore_les_murs(EnemyDef.MovePattern.SPIRAL)
 	_test_gros_monstre_par_le_cote_reste_visible()
 	_test_gros_monstre_par_le_cote_ne_se_coince_pas()
 	_test_bestiaire_dit_chaque_mecanique()
@@ -698,10 +703,10 @@ func _test_motif_sauts() -> void:
 			"chaque saut franchit une colonne", 1.0)
 
 
-func _test_motif_au_sol_ne_traverse_pas_un_mur() -> void:
+func _test_motif_au_sol_ne_traverse_pas_un_mur(motif: int = EnemyDef.MovePattern.ZIGZAG) -> void:
 	_fresh()
-	var d := _def("zigzag_sol", 100.0, 60.0)
-	d.move_pattern = EnemyDef.MovePattern.ZIGZAG
+	var d := _def("motif_sol", 100.0, 60.0)
+	d.move_pattern = motif
 	d.pattern_width = 400.0
 	d.pattern_lateral_speed = 200.0
 	var e: Enemy = _bf.spawn_enemy(d, 480.0, 1.0, Vector2(480.0, 300.0))
@@ -714,9 +719,10 @@ func _test_motif_au_sol_ne_traverse_pas_un_mur() -> void:
 		if is_instance_valid(e) and _bf.nav.is_blocked(_bf.nav.to_cell(e.position)):
 			dans_le_mur += 1
 		t += 1.0 / 60.0
-	eq(dans_le_mur, 0, "le motif d un monstre au sol n entre jamais dans un mur")
+	eq(dans_le_mur, 0, "%s : le motif d un monstre au sol n entre jamais dans un mur"
+		% _nom_motif(motif))
 	ok(not is_instance_valid(e) or e.is_dead() or e.position.y > 800.0,
-		"et il ne reste pas coince derriere")
+		"%s : et il ne reste pas coince derriere" % _nom_motif(motif))
 
 
 ## Le cas ou la garde laterale travaille vraiment. Avec un mur pose, l A* rend un
@@ -724,10 +730,10 @@ func _test_motif_au_sol_ne_traverse_pas_un_mur() -> void:
 ## precedent) ; il ne reprend la main que quand le chemin est vide — un monstre
 ## ENFERME. La, son zigzag le pousse contre les parois : il doit les longer, pas
 ## les traverser, et repartir quand elles tombent.
-func _test_motif_au_sol_enferme_ne_traverse_pas() -> void:
+func _test_motif_au_sol_enferme_ne_traverse_pas(motif: int = EnemyDef.MovePattern.ZIGZAG) -> void:
 	_fresh()
-	var d := _def("zigzag_enferme", 100.0, 60.0)
-	d.move_pattern = EnemyDef.MovePattern.ZIGZAG
+	var d := _def("motif_enferme", 100.0, 60.0)
+	d.move_pattern = motif
 	d.pattern_width = 500.0
 	d.pattern_lateral_speed = 240.0
 	var e: Enemy = _bf.spawn_enemy(d, 540.0, 1.0, Vector2(540.0, 560.0))
@@ -747,19 +753,20 @@ func _test_motif_au_sol_enferme_ne_traverse_pas() -> void:
 		x_min = minf(x_min, e.position.x)
 		x_max = maxf(x_max, e.position.x)
 		t += 1.0 / 60.0
-	ok(x_max - x_min > 60.0, "enferme, il zigzague quand meme dans sa cuve (%.0f px)"
-		% (x_max - x_min))
-	eq(dans_le_mur, 0, "sans jamais entrer dans une paroi")
+	ok(x_max - x_min > 60.0, "%s : enferme, il garde son motif dans sa cuve (%.0f px)"
+		% [_nom_motif(motif), x_max - x_min])
+	eq(dans_le_mur, 0, "%s : sans jamais entrer dans une paroi" % _nom_motif(motif))
 	var y: float = e.position.y
 	_sim(3.0)
-	ok(e.position.y > y + 40.0, "les murs tombes, il repart vers le mage")
+	ok(e.position.y > y + 40.0, "%s : les murs tombes, il repart vers le mage"
+		% _nom_motif(motif))
 
 
-func _test_motif_volant_ignore_les_murs() -> void:
+func _test_motif_volant_ignore_les_murs(motif: int = EnemyDef.MovePattern.ZIGZAG) -> void:
 	_fresh()
-	var d := _def("zigzag_vol", 100.0, 60.0)
+	var d := _def("motif_vol", 100.0, 60.0)
 	d.flying = true
-	d.move_pattern = EnemyDef.MovePattern.ZIGZAG
+	d.move_pattern = motif
 	d.pattern_width = 400.0
 	d.pattern_lateral_speed = 200.0
 	var e: Enemy = _bf.spawn_enemy(d, 480.0, 1.0, Vector2(480.0, 300.0))
@@ -771,7 +778,93 @@ func _test_motif_volant_ignore_les_murs() -> void:
 		if is_instance_valid(e) and _bf.nav.is_blocked(_bf.nav.to_cell(e.position)):
 			dans_le_mur += 1
 		t += 1.0 / 60.0
-	ok(dans_le_mur > 0, "un volant garde son motif au-dessus du mur")
+	ok(dans_le_mur > 0, "%s : un volant garde son motif au-dessus du mur" % _nom_motif(motif))
+
+
+## Duree (s de monde a x1) de `n` tours de spirale : derivee du motif et de la
+## vitesse, pas ecrite en dur (un reglage de vitesse ne casse pas le test).
+func _tours(d: EnemyDef, n: float) -> float:
+	var tangente: float = d.pattern_lateral_speed if d.pattern_lateral_speed > 0.0 \
+		else d.base_speed
+	return n * TAU * d.pattern_width * 0.5 / (tangente * GameConfig.ENEMY_SPEED_SCALE)
+
+
+func _nom_motif(motif: int) -> String:
+	return String(EnemyDef.MovePattern.keys()[motif])
+
+
+## SPIRAL, plus rapide sur son cercle qu a la descente : il TOURNE. Il va et
+## vient autour de sa colonne sur la largeur du motif, remonte un instant a
+## chaque boucle, ne passe jamais au-dessus de son point de depart, et descend.
+func _test_motif_spirale() -> void:
+	_fresh()
+	var d := _def("spirale", 100.0, 60.0)
+	d.move_pattern = EnemyDef.MovePattern.SPIRAL
+	d.pattern_width = 200.0
+	d.pattern_lateral_speed = 150.0
+	var x0: float = 300.0
+	var e: Enemy = _bf.spawn_enemy(d, x0, 1.0, Vector2(x0, 300.0))
+	_sim(GameConfig.SPAWN_FADE_TIME + 0.05)
+	var depart: Vector2 = e.position
+	var pts: Array[Vector2] = []
+	var t: float = 0.0
+	while t < _tours(d, 2.5) and is_instance_valid(e) and not e.is_dead():
+		_step()
+		pts.append(e.position)
+		t += 1.0 / 60.0
+	ok(pts.size() > 60, "il a vecu assez pour tourner")
+	var x_min: float = INF
+	var x_max: float = -INF
+	var y_min: float = INF
+	var remontees: int = 0
+	var demi_tours: int = 0
+	var premier_dx: float = 0.0
+	for i in range(1, pts.size()):
+		var dx: float = pts[i].x - pts[i - 1].x
+		if premier_dx == 0.0 and absf(dx) > 0.001:
+			premier_dx = dx
+		if pts[i].y < pts[i - 1].y - 0.001:
+			remontees += 1
+		if i >= 2:
+			var dx0: float = pts[i - 1].x - pts[i - 2].x
+			if signf(dx) != signf(dx0) and dx != 0.0 and dx0 != 0.0:
+				demi_tours += 1
+		x_min = minf(x_min, pts[i].x)
+		x_max = maxf(x_max, pts[i].x)
+		y_min = minf(y_min, pts[i].y)
+	ok(premier_dx > 0.0, "il part vers le centre du terrain")
+	between(x_max - x_min, d.pattern_width * 0.8, d.pattern_width * 1.05,
+		"l ecart lateral est le diametre du cercle")
+	ok(x_min < depart.x and x_max > depart.x, "il tourne AUTOUR de sa colonne")
+	ok(demi_tours >= 3, "il change de sens lateral a chaque demi-tour (%d)" % demi_tours)
+	ok(remontees > 0, "plus rapide sur son cercle qu a la descente, il fait des boucles")
+	ok(y_min >= depart.y - 0.5, "jamais au-dessus de son point de depart")
+	ok(pts[-1].y > depart.y + 50.0, "et il descend quand meme")
+
+
+## Vitesse sur le cercle egale a la descente (defaut) : une roue qui roule, il
+## ne remonte jamais. Le joueur ne le voit pas reculer vers le haut.
+func _test_motif_spirale_sans_recul_par_defaut() -> void:
+	_fresh()
+	var d := _def("spirale_roue", 100.0, 60.0)
+	d.move_pattern = EnemyDef.MovePattern.SPIRAL
+	d.pattern_width = 200.0
+	var e: Enemy = _bf.spawn_enemy(d, 540.0, 1.0, Vector2(540.0, 300.0))
+	_sim(GameConfig.SPAWN_FADE_TIME + 0.05)
+	var y: float = e.position.y
+	var recul: float = 0.0
+	var x_min: float = INF
+	var x_max: float = -INF
+	var t: float = 0.0
+	while t < _tours(d, 1.5) and is_instance_valid(e) and not e.is_dead():
+		_step()
+		recul = maxf(recul, y - e.position.y)
+		y = e.position.y
+		x_min = minf(x_min, e.position.x)
+		x_max = maxf(x_max, e.position.x)
+		t += 1.0 / 60.0
+	ok(recul < 0.01, "il ne remonte jamais (%.3f px)" % recul)
+	ok(x_max - x_min > d.pattern_width * 0.8, "mais il tourne bien (%.0f px)" % (x_max - x_min))
 
 
 # --- 7. ENTREE PAR LE COTE D UN GROS MONSTRE -----------------------------------
@@ -873,6 +966,19 @@ func _test_bestiaire_dit_chaque_mecanique() -> void:
 	h.move_pattern = EnemyDef.MovePattern.HOP
 	h.pattern_interval = 2.0
 	ok(_contient(BestiaryLore.behaviours(h), "2 s"), "motif sauts nomme avec sa cadence")
+	var sp := _def("sp")
+	sp.move_pattern = EnemyDef.MovePattern.SPIRAL
+	ok(_contient(BestiaryLore.behaviours(sp), "spirale"), "motif spirale nomme")
+	# Chaque motif autre que la ligne droite a sa ligne : un motif ajoute a
+	# l enum sans phrase au bestiaire fait rougir ce test.
+	var nu_motif: Array[String] = BestiaryLore.behaviours(_def("lore"))
+	for m in EnemyDef.MovePattern.values():
+		if m == EnemyDef.MovePattern.STRAIGHT:
+			continue
+		var dm := _def("lore")
+		dm.move_pattern = m
+		ok(BestiaryLore.behaviours(dm) != nu_motif,
+			"le motif %s a sa ligne au bestiaire" % _nom_motif(m))
 
 	var vol := _def("vol")
 	vol.flying = true
