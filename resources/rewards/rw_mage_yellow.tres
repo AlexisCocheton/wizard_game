@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_nk6s1"]
+
+[resource]
+script = ExtResource("1_nk6s1")
+id = &"rw_mage_yellow"
+display_name = "Robe d ocre"
+description = "La robe jaune des moines du desert."
+at_level = 7
+kind = 2
+texture_name = "monk_yellow"
+for_character = ""

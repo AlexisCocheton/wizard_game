@@ -249,105 +249,217 @@ static func rarity_bg(rarity: int) -> Color:
 	return Color.WHITE
 
 
-## --- APPARENCE DU MAGE (cosmetiques equipes) ---
+## --- APPARENCE DU PERSONNAGE (cosmetiques equipes) ---
 ##
-## Le mage est fait de DEUX cosmetiques qui vivent sur la meme feuille : la ROBE
-## (monk_blue / monk_black / monk_purple, trois variantes fournies par le pack)
-## et le CHAPEAU (monk_hat_*, reteintures faites par tools/assets/make_cosmetics.py).
+## Depuis la vague 8, quatre couches qui se CUMULENT :
+##   - le PERSONNAGE : le mage, ou un de ses apprentis (cle AnimCatalog) ;
+##   - sa TENUE : une robe du mage (monk_*) ou une teinte de l apprenti
+##     (bluewitch_ember...). Une feuille entiere, meme silhouette que l originale ;
+##   - le CHAPEAU : un CALQUE dessine (assets/cosmetics/hats.png) pose sur le
+##     sommet de la tete IMAGE PAR IMAGE (WardrobeData.HAT_ANCHORS, mesure par
+##     tools/assets/make_wardrobe.py). Avant, chapeau et robe etaient deux
+##     reteintures de la meme feuille : il fallait choisir l un OU l autre ;
+##   - la TOUR sous ses pieds (WardrobeData.TOWERS).
 ##
-## Comme ils partagent une feuille, on ne peut pas les superposer : on choisit
-## celle des deux qui est la PLUS SPECIFIQUE. Un chapeau autre que celui d
-## origine gagne, parce que c est le choix que le joueur vient de faire ; sinon
-## on rend la robe. Une vraie superposition demanderait de decouper le sprite en
-## deux calques, ce qui n est pas ce que le pack fournit.
-##
-## Ce code vit ici et non dans AnimCatalog parce que les feuilles de chapeau sont
-## des assets de COSMETIQUE : le catalogue d animations decrit les silhouettes de
-## jeu, et mage_view.gd ne doit avoir qu une seule ligne a lire.
-const MAGE_ANIMS: Dictionary = {"idle": 6.0, "walk": 8.0, "cast": 12.0}
+## mage_view.gd ne lit que hero_*() et hat_*() : il ne sait pas qui il affiche.
+## Ajouter un apprenti, une teinte, un chapeau ou une tour reste du CONTENU.
 const MAGE_FRAME: int = 192
 const MAGE_DEFAULT := "monk_blue"
 ## Region reellement occupee par le mage dans une case de MAGE_FRAME px.
-## MESUREE sur la couche alpha des SEPT feuilles de robe et de chapeau
-## (tools/assets/measure_occupancy.py) : toutes rendent exactement
+## MESUREE sur la couche alpha des feuilles de robe : toutes rendent exactement
 ## (67, 65) -> (125, 134), ce qui confirme que ce sont des palettes echangees
 ## d une meme planche. On garde 1 px de marge de chaque cote pour ne pas raser
 ## le contour noir du sprite.
 const MAGE_CROP := Rect2i(66, 64, 60, 71)
 
+## Echelle et hauteur du mage d origine, reprises telles quelles de mage_view.gd :
+## c est l etalon sur lequel chaque apprenti est aligne.
+const MAGE_SCALE: float = 1.35
+const MAGE_Y: float = -20.0
 
-## La feuille d animation que le mage doit porter, d apres le profil.
-## Rend toujours une cle utilisable : un mage sans feuille ne s afficherait pas.
+## L APPRENTI EST PLUS GROS QUE LE MAGE (demande du co-auteur, vague 8).
+## Ramene a la hauteur du mage, il paraissait chetif sur sa tour : une sorciere
+## de 48 px ou une fee de 32 px n a pas la masse d un moine de 192 px, meme a
+## hauteur egale. 1,5 fois la hauteur du mage = 144 px a l ecran au lieu de 96.
+## Les PIEDS restent ou sont ceux du mage : l agrandissement se fait vers le haut,
+## donc loin de la main (en dessous) ; et la tour est au centre de l ecran, loin
+## de la jauge (bord gauche). Verifie en capture de combat.
+const APPRENTICE_SCALE: float = 1.5
+
+## Mesures de silhouette deja faites (get_image() coute : on ne le fait qu une
+## fois par feuille).
+static var _visible_cache: Dictionary = {}
+## Vignettes composees (robe + chapeau) deja calculees.
+static var _preview_cache: Dictionary = {}
+
+
+## La robe du mage, d apres le profil. Rend toujours une cle du catalogue : un
+## mage sans feuille ne s afficherait pas.
 static func mage_sheet_key() -> String:
-	var chapeau: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.HAT)
-	if chapeau != "" and chapeau != MAGE_DEFAULT:
-		return chapeau
 	var robe: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.MAGE_COLOR)
-	return robe if robe != "" else MAGE_DEFAULT
+	return robe if AnimCatalog.has(StringName(robe)) else MAGE_DEFAULT
 
 
-## Les animations du mage tel qu il est equipe. Passe par AnimCatalog quand la
-## cle y figure (les trois robes du pack), et decoupe la feuille directement pour
-## les chapeaux, qui sont des assets de cosmetique et n ont rien a faire dans le
-## catalogue des silhouettes de jeu.
+## Les animations du mage dans la robe equipee (le chapeau est un calque a part).
 static func mage_frames() -> SpriteFrames:
-	var key: String = mage_sheet_key()
-	if AnimCatalog.has(StringName(key)):
-		return AnimCatalog.frames(StringName(key))
-	var spec: Dictionary = {}
-	for anim: String in MAGE_ANIMS:
-		spec[anim] = {
-			"path": "res://assets/units/%s_%s.png" % [key, anim],
-			"frame": MAGE_FRAME,
-			"fps": float(MAGE_ANIMS[anim]),
-			"loop": true,
-		}
-	var sf: SpriteFrames = SheetLib.frames("cosmetic:" + key, spec)
-	# Repli : une feuille absente donnerait un mage invisible en combat, ce qui
-	# est bien pire que de perdre le chapeau choisi.
+	var sf: SpriteFrames = AnimCatalog.frames(StringName(mage_sheet_key()))
 	if sf == null or not sf.has_animation("idle") or sf.get_frame_count("idle") == 0:
 		return AnimCatalog.frames(&"monk_blue")
 	return sf
 
 
+## --- CHAPEAUX ---
+
+## Le chapeau equipe, ou HAT_NONE. Une cle inconnue (chapeau retire du jeu) rend
+## la tete nue plutot qu un calque vide.
+static func hat_key() -> String:
+	var k: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.HAT)
+	return k if WardrobeData.HATS.has(k) else AccountRewardDef.HAT_NONE
+
+
+## Le gabarit de tete d une feuille ("monk"), ou "" si elle n en a pas.
+static func hat_rig(sheet: String) -> String:
+	return String(WardrobeData.HAT_RIGS.get(sheet, ""))
+
+
+## La case d un chapeau dans l atlas, ou null.
+static func hat_texture(key: String) -> Texture2D:
+	var i: int = WardrobeData.HATS.find(key)
+	if i < 0:
+		return null
+	var sheet: Texture2D = SheetLib.texture(WardrobeData.HAT_SHEET)
+	if sheet == null:
+		return null
+	var at := AtlasTexture.new()
+	at.atlas = sheet
+	at.region = Rect2(Vector2(i * WardrobeData.HAT_CELL.x, 0), Vector2(WardrobeData.HAT_CELL))
+	return at
+
+
+## Ou poser le PIVOT du chapeau dans le repere d un AnimatedSprite2D CENTRE qui
+## joue `sheet`, a l image `frame` de `anim`. Vector2.INF si la feuille n a pas de
+## gabarit de tete ou si l animation n a pas ete mesuree.
+static func hat_offset(sheet: String, anim: StringName, frame: int) -> Vector2:
+	var rig: String = hat_rig(sheet)
+	if rig == "" or not WardrobeData.HAT_ANCHORS.has(rig):
+		return Vector2.INF
+	var pts: Array = (WardrobeData.HAT_ANCHORS[rig] as Dictionary).get(String(anim), [])
+	if pts.is_empty():
+		return Vector2.INF
+	var p: Array = pts[clampi(frame, 0, pts.size() - 1)]
+	var demi: float = float(WardrobeData.HAT_RIG_CELL.get(rig, MAGE_FRAME)) * 0.5
+	return Vector2(float(p[0]) - demi, float(p[1]) - demi)
+
+
+## Le chapeau que porte le personnage JOUE : celui du profil si sa feuille a un
+## gabarit de tete, sinon aucun. Les apprentis portent deja un couvre-chef
+## dessine (chapeau de sorciere, casque, fee) : le chapeau choisi est garde pour
+## le mage, pas pose par-dessus.
+static func hero_hat_key() -> String:
+	var h: String = hat_key()
+	if h == AccountRewardDef.HAT_NONE or hat_rig(hero_sheet_key()) == "":
+		return AccountRewardDef.HAT_NONE
+	return h
+
+
+## --- VIGNETTES DE L ONGLET COSMETIQUES ---
+
 ## VIGNETTE d une piece de cosmetique DONNEE — pas de celle qui est equipee.
 ##
-## mage_frames() et tower_texture() resolvent ce que le joueur PORTE ; l ecran de
-## choix a besoin de l inverse : montrer chaque piece de la grille. Sans cela le
-## joueur choisit une robe en lisant "Robe d encre", sans jamais voir la couleur
-## — ce qui vide de son sens un ecran dont le seul objet est l apparence.
+## L ecran de choix montre chaque piece de la grille ; sans image, le joueur
+## choisirait "Robe d encre" sans voir la couleur. Rend null quand la feuille
+## manque : l appelant retombe alors sur le texte seul.
 ##
-## Rend null quand la feuille manque : l appelant retombe alors sur le texte
-## seul, ce qui reste utilisable.
+## LE RECADRAGE COMPTE AUTANT QUE LA VIGNETTE : une case de 192 px ou le mage
+## tient dans 58 donne un point au milieu du vide. Chaque vignette est donc
+## recadree sur ce qu elle montre (MAGE_CROP, silhouette mesuree, chapeau).
 static func cosmetic_preview(kind: int, texture_name: String) -> Texture2D:
 	if texture_name == "":
 		return null
 	match kind:
 		GameEnums.RewardKind.TOWER:
-			return SheetLib.texture("res://assets/terrain/%s.png" % texture_name)
-		GameEnums.RewardKind.MAGE_COLOR, GameEnums.RewardKind.HAT:
-			# La premiere image de la pose d attente : le mage debout, de face.
-			var sheet: Texture2D = SheetLib.texture(
-				"res://assets/units/%s_idle.png" % texture_name)
-			if sheet == null:
-				return null
-			var at := AtlasTexture.new()
-			at.atlas = sheet
-			# On recadre sur la region OCCUPEE, pas sur la case entiere. Mesure
-			# faite sur monk_blue_idle.png : le mage tient dans 58 px sur 192,
-			# soit moins d un tiers — decouper la case complete donnait une
-			# silhouette minuscule perdue au centre d un grand vide, et
-			# agrandir la vignette n y changeait rien. C est le meme piege que
-			# pour les icones de cartes (voir card_icons.gd).
-			at.region = Rect2(MAGE_CROP.position, MAGE_CROP.size)
-			return at
-		GameEnums.RewardKind.CHARACTER:
-			# Le mage se montre TEL QU IL EST HABILLE : c est lui qu on retrouve
-			# en le reprenant, avec la robe et le chapeau deja choisis.
-			if texture_name == AccountRewardDef.CHARACTER_MAGE:
-				return cosmetic_preview(GameEnums.RewardKind.HAT, mage_sheet_key())
+			return tower_preview(texture_name)
+		GameEnums.RewardKind.MAGE_COLOR:
+			if hat_rig(texture_name) != "":
+				return _robe_preview(texture_name)
 			return _apprentice_preview(texture_name)
+		GameEnums.RewardKind.HAT:
+			# Le chapeau SUR le mage tel qu il est habille : c est ce qu on verra.
+			if texture_name != AccountRewardDef.HAT_NONE and hat_texture(texture_name) == null:
+				return null
+			return _dressed_preview(mage_sheet_key(), texture_name)
+		GameEnums.RewardKind.CHARACTER:
+			# Le mage se montre TEL QU IL EST HABILLE (robe et chapeau) ; un
+			# apprenti dans la tenue qu il porte.
+			if texture_name == AccountRewardDef.CHARACTER_MAGE:
+				return _dressed_preview(mage_sheet_key(), hat_key())
+			if not AnimCatalog.has(StringName(texture_name)):
+				return null
+			return _apprentice_preview(SaveData.equipped_outfit(texture_name))
+		GameEnums.RewardKind.AVATAR:
+			return avatar_texture(texture_name)
 	return null
+
+
+## La robe seule, premiere image d attente recadree sur le mage.
+static func _robe_preview(sheet: String) -> Texture2D:
+	var tex: Texture2D = SheetLib.texture("res://assets/units/%s_idle.png" % sheet)
+	if tex == null:
+		return null
+	var at := AtlasTexture.new()
+	at.atlas = tex
+	at.region = Rect2(MAGE_CROP.position, MAGE_CROP.size)
+	return at
+
+
+## Le mage dans `robe` coiffe de `hat`, en UNE texture : un Button n a qu une
+## icone. Composee une fois par paire et gardee en cache.
+##
+## La composition lit les pixels (get_image) : possible en jeu et a l etage
+## visual, pas toujours en headless. A defaut, on rend le chapeau seul (ou la
+## robe pour la tete nue) — une vignette juste, a defaut d etre complete.
+static func _dressed_preview(robe: String, hat: String) -> Texture2D:
+	var base: Texture2D = _robe_preview(robe)
+	if hat == AccountRewardDef.HAT_NONE or base == null:
+		return base
+	var cle: String = robe + "|" + hat
+	if _preview_cache.has(cle):
+		return _preview_cache[cle]
+	var chapeau: Texture2D = hat_texture(hat)
+	var corps_img: Image = _pixels((base as AtlasTexture).atlas)
+	var chap_img: Image = _pixels(SheetLib.texture(WardrobeData.HAT_SHEET))
+	var ancre: Vector2 = hat_offset(robe, &"idle", 0)
+	if corps_img == null or chap_img == null or ancre == Vector2.INF:
+		return chapeau
+	var i: int = WardrobeData.HATS.find(hat)
+	var case_chap := Rect2i(Vector2i(i * WardrobeData.HAT_CELL.x, 0), WardrobeData.HAT_CELL)
+	var utile: Rect2i = chap_img.get_region(case_chap).get_used_rect()
+	# Tout en px de la CASE du mage (0..192) : le chapeau y est pose a l ancre.
+	var pivot_case: Vector2 = ancre + Vector2.ONE * MAGE_FRAME * 0.5
+	var chap_pos := Vector2i((pivot_case - WardrobeData.HAT_PIVOT).round()) + utile.position
+	var cadre := Rect2i(MAGE_CROP).merge(Rect2i(chap_pos, utile.size))
+	var img := Image.create(cadre.size.x, cadre.size.y, false, Image.FORMAT_RGBA8)
+	var corps_src := Rect2i(cadre.position, cadre.size).intersection(
+		Rect2i(0, 0, MAGE_FRAME, MAGE_FRAME))
+	img.blend_rect(corps_img, corps_src, corps_src.position - cadre.position)
+	img.blend_rect(chap_img, Rect2i(case_chap.position + utile.position, utile.size),
+		chap_pos - cadre.position)
+	var tex: Texture2D = ImageTexture.create_from_image(img)
+	_preview_cache[cle] = tex
+	return tex
+
+
+## Les pixels d une texture en RGBA8, ou null si le moteur ne les rend pas.
+static func _pixels(tex: Texture2D) -> Image:
+	if tex == null:
+		return null
+	var img: Image = tex.get_image()
+	if img == null or img.is_empty():
+		return null
+	if img.is_compressed():
+		img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	return img
 
 
 ## --- LE PERSONNAGE EN COMBAT : le mage ou un de ses apprentis ---
@@ -356,16 +468,6 @@ static func cosmetic_preview(kind: int, texture_name: String) -> Texture2D:
 ## ce qui rend un apprenti purement DECLARATIF — une recompense CHARACTER et une
 ## cle d AnimCatalog suffisent, la taille, la hauteur des pieds et la pose
 ## d incantation se deduisent de la feuille.
-
-## Echelle et hauteur du mage d origine, reprises telles quelles de mage_view.gd :
-## c est l etalon sur lequel chaque apprenti est aligne.
-const MAGE_SCALE: float = 1.35
-const MAGE_Y: float = -20.0
-
-## Mesures de silhouette deja faites (get_image() coute : on ne le fait qu une
-## fois par feuille).
-static var _visible_cache: Dictionary = {}
-
 
 ## La cle reellement jouee : celle du profil, SAUF si sa feuille ne donne pas de
 ## pose d attente — un personnage invisible est pire que le retour au mage.
@@ -383,19 +485,29 @@ static func hero_is_apprentice() -> bool:
 	return hero_key() != AccountRewardDef.CHARACTER_MAGE
 
 
-## Les animations du personnage joue. Le mage garde sa robe et son chapeau ; un
-## apprenti les met de cote (ce sont des teintes de la feuille du mage, elles
-## n ont aucun sens sur une autre silhouette).
-static func hero_frames() -> SpriteFrames:
+## La FEUILLE jouee : la robe du mage, ou la tenue de l apprenti (sa teinte, ou
+## sa feuille d origine si la teinte manque de pose d attente).
+static func hero_sheet_key() -> String:
 	var key: String = hero_key()
 	if key == AccountRewardDef.CHARACTER_MAGE:
+		return mage_sheet_key()
+	var tenue: String = SaveData.equipped_outfit(key)
+	var sf: SpriteFrames = AnimCatalog.frames(StringName(tenue))
+	if sf == null or not sf.has_animation(&"idle") or sf.get_frame_count(&"idle") == 0:
+		return key
+	return tenue
+
+
+## Les animations du personnage joue, dans sa tenue.
+static func hero_frames() -> SpriteFrames:
+	if not hero_is_apprentice():
 		return mage_frames()
-	return AnimCatalog.frames(StringName(key))
+	return AnimCatalog.frames(StringName(hero_sheet_key()))
 
 
-## La pose d incantation. Le mage a une feuille "cast" ; les sorcieres du pack
-## n ont qu une "attack", qui est bien un geste de sort. A defaut, l attente :
-## mieux vaut un personnage immobile qu une animation absente.
+## La pose d incantation. Le mage a une feuille "cast" ; les apprentis du disque
+## n ont qu une "attack" (charge de la sorciere, arc de l ecuyer, vol de la fee).
+## A defaut, l attente : mieux vaut un personnage immobile qu une animation absente.
 static func hero_cast_anim(sf: SpriteFrames) -> StringName:
 	for a: StringName in [&"cast", &"attack"]:
 		if sf != null and sf.has_animation(a) and sf.get_frame_count(a) > 0:
@@ -403,16 +515,23 @@ static func hero_cast_anim(sf: SpriteFrames) -> StringName:
 	return &"idle"
 
 
-## Echelle et position du sprite pour que le personnage ait la HAUTEUR du mage a
-## l ecran et les PIEDS au meme endroit.
+## Ou tombent les PIEDS du mage, sous la position du noeud MageView : bas de sa
+## silhouette (MAGE_CROP) moins la demi-case, a son echelle. C est la ligne sur
+## laquelle se posent les apprentis ET les tours.
+static func hero_feet_y() -> float:
+	return MAGE_Y + (float(MAGE_CROP.end.y) - MAGE_FRAME * 0.5) * MAGE_SCALE
+
+
+## Echelle et position du sprite : le mage tel quel ; un apprenti a
+## APPRENTICE_SCALE fois la HAUTEUR du mage a l ecran, PIEDS au meme endroit.
 ##
 ## POURQUOI PAS UN SIMPLE RAPPORT DE CASES. La case du mage fait 192 px et il en
 ## occupe 71 de haut ; celle de la sorciere bleue fait 48 px et elle en occupe
 ## une quarantaine. Reprendre l echelle du mage donnerait une apprentie deux fois
 ## plus petite que lui. L occupation du catalogue ne suffit pas non plus : elle
 ## est mesuree sur la plus grande dimension de la MARCHE, qui chez le mage est sa
-## largeur (83 px, les bras qui balancent) — la sorciere sortirait d une tete
-## plus grande que lui. On compare donc les hauteurs reellement opaques de la pose d attente.
+## largeur (83 px, les bras qui balancent). On compare donc les hauteurs
+## reellement opaques de la pose d attente.
 static func hero_pose(key: String = "") -> Dictionary:
 	if key == "":
 		key = hero_key()
@@ -422,12 +541,11 @@ static func hero_pose(key: String = "") -> Dictionary:
 	var r: Rect2 = hero_visible_rect(key)
 	if r.size.y <= 0.0:
 		return {"scale": MAGE_SCALE, "y": MAGE_Y}
-	var s: float = MAGE_SCALE * etalon.size.y / r.size.y
+	var s: float = MAGE_SCALE * etalon.size.y / r.size.y * APPRENTICE_SCALE
 	# Le sprite est centre sur sa case : les pieds tombent a (bas de la
 	# silhouette - demi-case) * echelle sous la position du sprite.
-	var pieds_mage: float = MAGE_Y + (etalon.end.y - MAGE_FRAME * 0.5) * MAGE_SCALE
 	var demi_case: float = AnimCatalog.frame_px(StringName(key)) * 0.5
-	return {"scale": s, "y": pieds_mage - (r.end.y - demi_case) * s}
+	return {"scale": s, "y": hero_feet_y() - (r.end.y - demi_case) * s}
 
 
 ## Region opaque de la premiere image d attente, en pixels DE LA CASE.
@@ -462,10 +580,9 @@ static func _hero_idle_frame(key: String) -> Texture2D:
 	return sf.get_frame_texture(&"idle", 0)
 
 
-## Vignette d un apprenti : sa premiere image d attente RECADREE sur la
-## silhouette. Meme lecon que pour le mage (MAGE_CROP) : la case entiere laisse
-## un personnage perdu au milieu du vide, et c est le recadrage qui fait qu on
-## le reconnait. L atlas reste la feuille d origine, aucune texture n est creee.
+## Vignette d un apprenti (ou d une de ses teintes) : sa premiere image d attente
+## RECADREE sur la silhouette. L atlas reste la feuille d origine, aucune texture
+## n est creee.
 static func _apprentice_preview(key: String) -> Texture2D:
 	var frame: AtlasTexture = _hero_idle_frame(key) as AtlasTexture
 	if frame == null:
@@ -477,11 +594,89 @@ static func _apprentice_preview(key: String) -> Texture2D:
 	return at
 
 
-## La texture de tour que le joueur a equipee, avec repli sur celle d origine.
-static func tower_texture() -> Texture2D:
+## --- TOURS ---
+
+## La tour equipee, avec repli sur celle d origine (cle inconnue, tour retiree).
+static func tower_key() -> String:
 	var key: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.TOWER)
+	return key if WardrobeData.TOWERS.has(key) else "tower_blue"
+
+
+## Geometrie d une tour : {"frame": [w, h], "frames": n, "feet": [x, y], "scale"}.
+static func tower_spec(key: String = "") -> Dictionary:
+	if key == "":
+		key = tower_key()
+	return WardrobeData.TOWERS.get(key, WardrobeData.TOWERS["tower_blue"])
+
+
+## La FEUILLE de la tour (une bande pour l arbre qui se balance).
+static func tower_texture(key: String = "") -> Texture2D:
+	if key == "":
+		key = tower_key()
 	var t: Texture2D = SheetLib.texture("res://assets/terrain/%s.png" % key)
 	return t if t != null else SheetLib.texture("res://assets/terrain/tower_blue.png")
+
+
+## Les animations d une tour animee (l arbre), ou null pour une tour fixe.
+static func tower_frames(key: String = "") -> SpriteFrames:
+	if key == "":
+		key = tower_key()
+	var spec: Dictionary = tower_spec(key)
+	if int(spec.get("frames", 1)) <= 1:
+		return null
+	var taille: Array = spec["frame"]
+	return SheetLib.frames("tower:" + key, {"sway": {
+		"path": "res://assets/terrain/%s.png" % key,
+		"frame": int(taille[0]), "frame_h": int(taille[1]),
+		"fps": float(spec.get("fps", 6)), "loop": true}})
+
+
+## Vignette d une tour : la premiere case RECADREE sur ses pixels opaques
+## (spec "crop", mesure a l extraction). Une tour de 128x256 n en occupe que
+## 120x184 : la case entiere donnait une tour minuscule dans son bouton.
+static func tower_preview(key: String) -> Texture2D:
+	if not WardrobeData.TOWERS.has(key):
+		return null
+	var tex: Texture2D = SheetLib.texture("res://assets/terrain/%s.png" % key)
+	if tex == null:
+		return null
+	var spec: Dictionary = tower_spec(key)
+	var c: Array = spec.get("crop", [0, 0, spec["frame"][0], spec["frame"][1]])
+	var at := AtlasTexture.new()
+	at.atlas = tex
+	at.region = Rect2(float(c[0]), float(c[1]), float(c[2]), float(c[3]))
+	return at
+
+
+## --- PORTRAITS ---
+
+## Le portrait equipe (WardrobeData.AVATARS), avec repli sur le premier.
+static func avatar_key() -> String:
+	var key: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.AVATAR)
+	return key if WardrobeData.AVATARS.has(key) else WardrobeData.AVATARS[0]
+
+
+## Le portrait du profil, a afficher sur la carte d identite et le bouton PROFIL.
+## Sans argument : celui que le joueur a choisi.
+static func avatar_texture(key: String = "") -> Texture2D:
+	if key == "":
+		key = avatar_key()
+	var i: int = WardrobeData.AVATARS.find(key)
+	if i < 0:
+		return null
+	var sheet: Texture2D = SheetLib.texture(WardrobeData.AVATAR_SHEET)
+	if sheet == null:
+		return null
+	var c: int = WardrobeData.AVATAR_CELL
+	var at := AtlasTexture.new()
+	at.atlas = sheet
+	var ligne: int = floori(float(i) / float(WardrobeData.AVATAR_COLS))
+	# Recadre sur la region utile COMMUNE (mesuree) : les portraits n occupent
+	# que ~150 px de leur case de 256, la meme taille de tete pour tous.
+	var utile: Rect2i = WardrobeData.AVATAR_CROP
+	at.region = Rect2(Vector2((i % WardrobeData.AVATAR_COLS) * c, ligne * c) + Vector2(utile.position),
+		Vector2(utile.size))
+	return at
 
 
 static func tex(name: String) -> Texture2D:

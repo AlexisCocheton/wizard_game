@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_3wc8n"]
+
+[resource]
+script = ExtResource("1_3wc8n")
+id = &"rw_avatar_pawn_blue"
+display_name = "La paysanne"
+description = "Un portrait pour ton profil."
+at_level = 4
+kind = 1
+texture_name = "avatar_pawn_blue"
+for_character = ""

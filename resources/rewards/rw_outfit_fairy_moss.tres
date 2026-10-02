@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_4yw5f"]
+
+[resource]
+script = ExtResource("1_4yw5f")
+id = &"rw_outfit_fairy_moss"
+display_name = "Fee des mousses"
+description = "Des ailes vertes et une robe violette."
+at_level = 10
+kind = 2
+texture_name = "fairy_moss"
+for_character = "fairy"

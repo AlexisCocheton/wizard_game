@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_fk22d"]
+
+[resource]
+script = ExtResource("1_fk22d")
+id = &"rw_hat_witch"
+display_name = "Chapeau de sorciere"
+description = "Un large bord, une pointe tordue, une boucle d or."
+at_level = 8
+kind = 3
+texture_name = "hat_witch"
+for_character = ""

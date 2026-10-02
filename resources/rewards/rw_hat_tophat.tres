@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_ixcmi"]
+
+[resource]
+script = ExtResource("1_ixcmi")
+id = &"rw_hat_tophat"
+display_name = "Haut-de-forme du temps"
+description = "Un cadran sur le ruban : il retarde toujours un peu."
+at_level = 12
+kind = 3
+texture_name = "hat_tophat"
+for_character = ""

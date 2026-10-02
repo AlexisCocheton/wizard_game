@@ -179,6 +179,9 @@ func _run_all() -> void:
 	await _showcase_miroir()
 	await _check_end_screens()
 	await _check_cosmetics_in_battle()
+	# Garde-robe de la vague 8 (chapeaux, apprentis, tours, onglet) : captures.
+	if _visual:
+		await WardrobeShowcase.new().run(self)
 	await _check_massacre_deck()
 
 	# 4) La defaite doit aussi fonctionner.
@@ -2121,15 +2124,21 @@ func _find_profile_panel(root: Node) -> Control:
 ## est que les deux fichiers de jeu lisent bien le profil.
 func _check_cosmetics_in_battle() -> void:
 	SaveData.grant_account_xp(SaveData.account_xp_for_level(12))
-	if not SaveData.equip_cosmetic(&"rw_hat_gold"):
-		_fail("le chapeau d or ne s equipe pas au niveau 12")
+	# Chapeau ET robe : depuis la vague 8 ils se cumulent (le chapeau est un
+	# calque pose sur la tete), la capture doit montrer les deux a la fois.
+	if not SaveData.equip_cosmetic(&"rw_hat_crown"):
+		_fail("la couronne ne s equipe pas au niveau 12")
+	if not SaveData.equip_cosmetic(&"rw_mage_red"):
+		_fail("la robe de braise ne s equipe pas au niveau 12")
 	if not SaveData.equip_cosmetic(&"rw_tower_ember"):
 		_fail("la tour de braise ne s equipe pas au niveau 12")
 
-	# Le mage : la feuille lue doit etre celle du chapeau equipe, et porter ses
-	# trois animations — une feuille vide donnerait un mage invisible en combat.
-	if UiTheme.mage_sheet_key() != "monk_hat_gold":
-		_fail("le mage ne lit pas le chapeau equipe (%s)" % UiTheme.mage_sheet_key())
+	# Le mage : la feuille lue doit etre la robe equipee, avec ses trois
+	# animations, et le chapeau doit etre celui du profil.
+	if UiTheme.mage_sheet_key() != "monk_red":
+		_fail("le mage ne lit pas la robe equipee (%s)" % UiTheme.mage_sheet_key())
+	if UiTheme.hero_hat_key() != "hat_crown":
+		_fail("le mage ne lit pas le chapeau equipe (%s)" % UiTheme.hero_hat_key())
 	var sf: SpriteFrames = UiTheme.mage_frames()
 	if sf == null:
 		_fail("le mage equipe n a aucune feuille d animation")
@@ -2155,6 +2164,11 @@ func _check_cosmetics_in_battle() -> void:
 		g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
 		for _i in 40:
 			g.simulate(FIXED_DELTA)
+		# Le calque du chapeau doit exister et suivre la tete : en fenetre reelle
+		# MageView l a cree (il est inerte en headless, Fx.enabled()).
+		var vue: MageView = g.get_node_or_null("Mage") as MageView
+		if vue == null or vue.hat_layer() == null or not vue.hat_layer().visible:
+			_fail("le chapeau equipe n est pas pose sur le mage en combat")
 		await _shot("bataille_cosmetiques")
 		g.queue_free()
 	SaveData.reset_profile()

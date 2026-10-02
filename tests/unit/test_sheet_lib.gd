@@ -85,17 +85,12 @@ func _test_chaque_feuille_est_au_catalogue() -> void:
 	for cle in silhouettes:
 		if AnimCatalog.has(StringName(cle)):
 			continue
-		# DEUX EXCEPTIONS LEGITIMES, verifiees dans le code avant d etre
-		# ecrites ici — une exception non verifiee est un trou, pas une regle.
-		#
-		# 1. `monk_hat_*` : les chapeaux cosmetiques. Ils ne sont PAS des
-		#    silhouettes de jeu ; `UiTheme.mage_frames()` les decoupe lui-meme,
-		#    parce qu un catalogue de monstres n a pas a connaitre la garde-robe
-		#    du joueur.
-		# 2. `peacock_front` : deja reference par le catalogue, mais SOUS UN
-		#    AUTRE NOM d entree — le fichier est cite, la cle differe.
-		if String(cle).begins_with("monk_hat_"):
-			continue
+		# UNE EXCEPTION LEGITIME, verifiee dans le code avant d etre ecrite
+		# ici — une exception non verifiee est un trou, pas une regle :
+		# `peacock_front` est reference par le catalogue SOUS UN AUTRE NOM
+		# d entree — le fichier est cite, la cle differe. (Les `monk_hat_*`,
+		# chapeaux reteints hors catalogue, n existent plus depuis la vague 8 :
+		# les chapeaux sont des calques dans assets/cosmetics/.)
 		var citee: bool = false
 		for entree in AnimCatalog.UNITS.values():
 			for v in (entree as Dictionary).values():

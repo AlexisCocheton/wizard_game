@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_e1nup"]
+
+[resource]
+script = ExtResource("1_e1nup")
+id = &"rw_hat_halo"
+display_name = "Aureole"
+description = "Elle flotte toute seule. Personne ne sait pourquoi."
+at_level = 12
+kind = 3
+texture_name = "hat_halo"
+for_character = ""

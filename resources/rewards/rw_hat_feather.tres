@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_0ne1c"]
+
+[resource]
+script = ExtResource("1_0ne1c")
+id = &"rw_hat_feather"
+display_name = "Chapeau a plume"
+description = "Un feutre carmin et une plume blanche, qu on repere de loin."
+at_level = 2
+kind = 3
+texture_name = "hat_feather"
+for_character = ""

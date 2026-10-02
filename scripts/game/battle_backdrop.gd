@@ -189,29 +189,64 @@ func _scatter_decor() -> void:
 
 ## Pose de la tour du mage. Nommees pour que le HUD (et son test) sache ou
 ## elle est sans recopier les nombres : le bandeau d objectifs vit a cote.
+##
+## Depuis la vague 8 chaque tour porte sa geometrie MESUREE (WardrobeData.TOWERS,
+## tools/assets/make_wardrobe.py) : un point "feet" ou se posent les pieds du
+## personnage, et une echelle. Une tour Tiny Swords, un arbre ou un sanctuaire
+## n ont ni la meme taille ni le meme plancher ; c est le point des pieds, pas le
+## centre de l image, qu on aligne sur la ligne du mage. Pour les tours de 128x256
+## le resultat est EXACTEMENT l ancienne pose (echelle 1,6, centre a
+## MAGE_LINE_Y + 40) : les pieds tombent a y = 123,4 dans la tour.
 const TOWER_SCALE: float = 1.6
-const TOWER_DROP: float = 40.0
 
 
-## Emprise a l ecran de la tour equipee (terrain = ecran, le Battlefield est a
-## l origine). Rect vide si aucune texture.
-static func tower_rect() -> Rect2:
-	var tex: Texture2D = UiTheme.tower_texture()
-	if tex == null:
+## Centre a l ecran d une tour (terrain = ecran, le Battlefield est a l origine)
+## pour que son point "feet" tombe sous les pieds du personnage.
+static func tower_center(key: String = "") -> Vector2:
+	var spec: Dictionary = UiTheme.tower_spec(key)
+	var taille := Vector2(float(spec["frame"][0]), float(spec["frame"][1]))
+	var pieds := Vector2(float(spec["feet"][0]), float(spec["feet"][1]))
+	var ecran := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5,
+		GameConfig.MAGE_LINE_Y + UiTheme.hero_feet_y())
+	return ecran - (pieds - taille * 0.5) * float(spec.get("scale", TOWER_SCALE))
+
+
+## Emprise a l ecran de la tour equipee. Rect vide si aucune texture.
+static func tower_rect(key: String = "") -> Rect2:
+	if UiTheme.tower_texture(key) == null:
 		return Rect2()
-	var taille: Vector2 = tex.get_size() * TOWER_SCALE
-	var centre := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y + TOWER_DROP)
-	return Rect2(centre - taille * 0.5, taille)
+	var spec: Dictionary = UiTheme.tower_spec(key)
+	var taille: Vector2 = Vector2(float(spec["frame"][0]), float(spec["frame"][1])) \
+		* float(spec.get("scale", TOWER_SCALE))
+	return Rect2(tower_center(key) - taille * 0.5, taille)
+
+
+## Le noeud d une tour : Sprite2D, ou AnimatedSprite2D pour l arbre qui se
+## balance. Statique pour que les vitrines posent n importe quelle tour.
+static func make_tower(key: String = "") -> Node2D:
+	var tex: Texture2D = UiTheme.tower_texture(key)
+	if tex == null:
+		return null
+	var spec: Dictionary = UiTheme.tower_spec(key)
+	var n: Node2D
+	var sf: SpriteFrames = UiTheme.tower_frames(key)
+	if sf != null:
+		var a := AnimatedSprite2D.new()
+		a.sprite_frames = sf
+		a.play("sway")
+		n = a
+	else:
+		var s := Sprite2D.new()
+		s.texture = tex
+		n = s
+	n.position = tower_center(key)
+	n.scale = Vector2.ONE * float(spec.get("scale", TOWER_SCALE))
+	n.z_index = -5
+	return n
 
 
 func _mage_tower() -> void:
 	# La tour est un cosmetique de compte : elle suit ce que le joueur a equipe.
-	var tex: Texture2D = UiTheme.tower_texture()
-	if tex == null:
-		return
-	var s := Sprite2D.new()
-	s.texture = tex
-	s.position = Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y + TOWER_DROP)
-	s.scale = Vector2(TOWER_SCALE, TOWER_SCALE)
-	s.z_index = -5
-	add_child(s)
+	var n: Node2D = make_tower()
+	if n != null:
+		add_child(n)

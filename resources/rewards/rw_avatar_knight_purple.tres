@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_1bayy"]
+
+[resource]
+script = ExtResource("1_1bayy")
+id = &"rw_avatar_knight_purple"
+display_name = "Le chevalier pourpre"
+description = "Un portrait pour ton profil."
+at_level = 10
+kind = 1
+texture_name = "avatar_knight_purple"
+for_character = ""

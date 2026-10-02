@@ -122,6 +122,40 @@ const UNITS: Dictionary = {
 		"walk": ["gorgon_walk", 13], "idle": ["gorgon_idle", 7], "attack": ["gorgon_attack", 16, false], "hurt": ["gorgon_hurt", 3, false], "death": ["gorgon_death", 3, false]},
 	"bluewitch": {"frame": 48, "frame_h": 48, "occupancy": 0.79,
 		"walk": ["bluewitch_walk", 8], "idle": ["bluewitch_idle", 6], "attack": ["bluewitch_attack", 5, false], "hurt": ["bluewitch_hurt", 3, false], "death": ["bluewitch_death", 10, false]},
+	## --- GARDE-ROBE DU JOUEUR (vague 8, tools/assets/make_wardrobe.py) ---
+	## Aucune de ces cles ne doit porter un monstre (AUDIT, _check_apprentices) :
+	## le joueur ne tire jamais sur sa propre silhouette.
+	##
+	## Robes du mage : meme planche que monk_blue, deux couleurs changees.
+	"monk_red":    {"frame": 192, "occupancy": 0.43, "walk": ["monk_red_walk", 8], "idle": ["monk_red_idle", 6], "cast": ["monk_red_cast", 12]},
+	"monk_yellow": {"frame": 192, "occupancy": 0.43, "walk": ["monk_yellow_walk", 8], "idle": ["monk_yellow_idle", 6], "cast": ["monk_yellow_cast", 12]},
+	"monk_dawn":   {"frame": 192, "occupancy": 0.43, "walk": ["monk_dawn_walk", 8], "idle": ["monk_dawn_idle", 6], "cast": ["monk_dawn_cast", 12]},
+	"monk_forest": {"frame": 192, "occupancy": 0.43, "walk": ["monk_forest_walk", 8], "idle": ["monk_forest_idle", 6], "cast": ["monk_forest_cast", 12]},
+	## Teintes de l Apprentie d azur. "attack" est B_witch_charge (la pose de
+	## charge du pack), deja l incantation de la sorciere d origine.
+	"bluewitch_ember": {"frame": 48, "frame_h": 48, "occupancy": 0.85,
+		"walk": ["bluewitch_ember_walk", 8], "idle": ["bluewitch_ember_idle", 6], "attack": ["bluewitch_ember_attack", 5, false]},
+	"bluewitch_frost": {"frame": 48, "frame_h": 48, "occupancy": 0.85,
+		"walk": ["bluewitch_frost_walk", 8], "idle": ["bluewitch_frost_idle", 6], "attack": ["bluewitch_frost_attack", 5, false]},
+	"bluewitch_moss": {"frame": 48, "frame_h": 48, "occupancy": 0.85,
+		"walk": ["bluewitch_moss_walk", 8], "idle": ["bluewitch_moss_idle", 6], "attack": ["bluewitch_moss_attack", 5, false]},
+	## L Ecuyer (Tiny RPG Character Pack 01, Zerie). Cases 56x44 recadrees dans les
+	## 100 px du pack ; "attack" = le tir a l arc, le seul geste qui projette.
+	"soldier": {"frame": 56, "frame_h": 44, "occupancy": 0.50,
+		"walk": ["soldier_walk", 10], "idle": ["soldier_idle", 6], "attack": ["soldier_attack", 12, false], "hurt": ["soldier_hurt", 10, false], "death": ["soldier_death", 8, false]},
+	"soldier_azure": {"frame": 56, "frame_h": 44, "occupancy": 0.50,
+		"walk": ["soldier_azure_walk", 10], "idle": ["soldier_azure_idle", 6], "attack": ["soldier_azure_attack", 12, false]},
+	"soldier_royal": {"frame": 56, "frame_h": 44, "occupancy": 0.50,
+		"walk": ["soldier_royal_walk", 10], "idle": ["soldier_royal_idle", 6], "attack": ["soldier_royal_attack", 12, false]},
+	## La Fee (Fairy.zip) : une seule animation, le vol, sur 8 cases de 32 px. Elle
+	## sert d attente, de marche et d incantation (plus rapide) : une fee ne pose
+	## jamais pied a terre. Les trois couleurs sont celles de l auteur.
+	"fairy": {"frame": 32, "frame_h": 32, "occupancy": 0.97,
+		"walk": ["fairy_idle", 10], "idle": ["fairy_idle", 8], "attack": ["fairy_idle", 16]},
+	"fairy_sun": {"frame": 32, "frame_h": 32, "occupancy": 0.97,
+		"walk": ["fairy_sun_idle", 10], "idle": ["fairy_sun_idle", 8], "attack": ["fairy_sun_idle", 16]},
+	"fairy_moss": {"frame": 32, "frame_h": 32, "occupancy": 0.97,
+		"walk": ["fairy_moss_idle", 10], "idle": ["fairy_moss_idle", 8], "attack": ["fairy_moss_idle", 16]},
 	"smallmonster": {"frame": 81, "frame_h": 81, "occupancy": 0.35,
 		"walk": ["smallmonster_walk", 6], "idle": ["smallmonster_idle", 6], "attack": ["smallmonster_attack", 13, false], "death": ["smallmonster_death", 8, false]},
 	"mageguardian": {"frame": 58, "frame_h": 58, "occupancy": 0.97,

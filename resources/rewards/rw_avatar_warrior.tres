@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_6ytmq"]
+
+[resource]
+script = ExtResource("1_6ytmq")
+id = &"rw_avatar_warrior"
+display_name = "Le veilleur"
+description = "Le portrait du profil."
+at_level = 1
+kind = 1
+texture_name = "avatar_warrior_red"
+for_character = ""

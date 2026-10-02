@@ -127,7 +127,8 @@ func _niveaux_acte(acte: int) -> int:
 
 
 func _reward(id: String, nom: String, desc: String, niveau: int,
-		kind: GameEnums.RewardKind, texture: String = "") -> AccountRewardDef:
+		kind: GameEnums.RewardKind, texture: String = "",
+		pour: String = "") -> AccountRewardDef:
 	var r := AccountRewardDef.new()
 	r.id = StringName(id)
 	r.display_name = nom
@@ -135,90 +136,179 @@ func _reward(id: String, nom: String, desc: String, niveau: int,
 	r.at_level = niveau
 	r.kind = kind
 	r.texture_name = texture
+	r.for_character = pour
 	return r
 
 
-## Uniquement des titres, des avatars et des COSMETIQUES : aucune recompense ne
-## touche a la puissance, sinon l equilibrage mesure des sept niveaux ne vaudrait
-## plus rien et jouer beaucoup vaudrait mieux que jouer bien.
+## Uniquement des titres, des portraits et des COSMETIQUES : aucune recompense ne
+## touche a la puissance, sinon l equilibrage mesure ne vaudrait plus rien et
+## jouer beaucoup vaudrait mieux que jouer bien.
 ##
-## Les trois axes cosmetiques s ouvrent en alternance, un palier sur deux environ :
-## le joueur a toujours quelque chose de NOUVEAU a essayer au niveau suivant, et
-## jamais trois choix du meme genre d un coup.
+## LA GARDE-ROBE DE LA VAGUE 8 (assets : tools/assets/make_wardrobe.py).
+## Trois a six pieces par palier, de genres MELANGES : le joueur a toujours
+## quelque chose de nouveau a essayer au niveau suivant, jamais trois choix du
+## meme genre d un coup.
 ##
-## Chaque axe a son entree de niveau 1 : c est ce que porte un profil neuf, et
-## c est ce qui permet a l onglet Cosmetiques d afficher une grille complete des
-## le depart plutot qu une case vide.
+## TOUT TIENT DANS LES DOUZE PREMIERS NIVEAUX. Seuls les succes donnent de l XP
+## (11 900 au total aujourd hui), ce qui plafonne le compte au niveau 12 : une
+## piece posee au 13 n arriverait jamais. test_wardrobe le verrouille contre le
+## catalogue des succes, pas contre un nombre ecrit ici.
+##
+## Les apprentis arrivent avant leurs teintes ; une teinte n est jamais donnee
+## avant son apprenti (verifie par test_wardrobe).
+##
+## Chaque axe a son entree de niveau 1 : c est ce que porte un profil neuf.
 func _rewards() -> void:
 	var K := GameEnums.RewardKind
+	var NU := AccountRewardDef.HAT_NONE
 	var liste: Array[AccountRewardDef] = [
 		# --- Les defauts, disponibles des le niveau 1 ---
 		_reward("rw_mage_blue", "Robe d azur",
 			"La robe bleue des gardiens du temps.", 1, K.MAGE_COLOR, "monk_blue"),
-		_reward("rw_hat_straw", "Chapeau de paille",
-			"Le chapeau du voyageur.", 1, K.HAT, "monk_blue"),
+		# L id historique est garde : c est la tete nue, la tonsure du voyageur.
+		_reward("rw_hat_straw", "Tete nue",
+			"La tonsure du voyageur, au vent.", 1, K.HAT, NU),
 		_reward("rw_tower_blue", "Tour d azur",
 			"La tour de pierre bleue.", 1, K.TOWER, "tower_blue"),
 		# Le mage est un choix comme un autre dans la grille PERSONNAGE : sans
-		# cette entree, un joueur qui a pris une apprentie ne pourrait plus
+		# cette entree, un joueur qui a pris un apprenti ne pourrait plus
 		# revenir a lui.
 		_reward("rw_char_mage", "Le mage",
 			"Le gardien du temps en personne.", 1, K.CHARACTER,
 			AccountRewardDef.CHARACTER_MAGE),
+		_reward("rw_avatar_warrior", "Le veilleur",
+			"Le portrait du profil.", 1, K.AVATAR, "avatar_warrior_red"),
 
-		# --- Paliers ---
+		# --- 2 ---
 		_reward("rw_title_apprenti", "Apprenti",
 			"Titre affiche sur ton profil.", 2, K.TITLE),
-		_reward("rw_hat_crimson", "Chapeau carmin",
-			"Un chapeau rouge sang, qu on repere de loin.", 2, K.HAT, "monk_hat_crimson"),
+		_reward("rw_hat_feather", "Chapeau a plume",
+			"Un feutre carmin et une plume blanche, qu on repere de loin.", 2, K.HAT, "hat_feather"),
+		_reward("rw_avatar_monk_blue", "Le mage d azur",
+			"Un portrait du gardien du temps.", 2, K.AVATAR, "avatar_monk_blue"),
 
-		_reward("rw_avatar_02", "Portrait du veilleur",
-			"Un nouveau portrait pour ton profil.", 3, K.AVATAR, "icon_02"),
+		# --- 3 ---
 		_reward("rw_mage_black", "Robe d encre",
 			"La robe noire des mages sans nom.", 3, K.MAGE_COLOR, "monk_black"),
+		_reward("rw_hat_wizard", "Chapeau pointu",
+			"Bleu nuit, seme d etoiles : le chapeau des mages d avant.", 3, K.HAT, "hat_wizard"),
+		_reward("rw_tower_red", "Tour carmin",
+			"Une tour aux creneaux rouges.", 3, K.TOWER, "tower_red"),
 
+		# --- 4 ---
 		_reward("rw_title_remonteur", "Remonteur de temps",
 			"Titre affiche sur ton profil.", 4, K.TITLE),
 		_reward("rw_tower_sand", "Tour de gres",
 			"Une tour de pierre chaude, taillee dans le desert.", 4, K.TOWER, "tower_sand"),
+		# APPRENTIS PROVISOIRES : en attendant le Witches Pack, des personnages
+		# animes deja sur le disque, qu aucun monstre ne porte (AUDIT).
+		_reward("rw_char_soldier", "L ecuyer",
+			"Un soldat qui a pose l epee pour l arc. Il combat a la place du mage.",
+			4, K.CHARACTER, "soldier"),
+		_reward("rw_avatar_pawn_blue", "La paysanne",
+			"Un portrait pour ton profil.", 4, K.AVATAR, "avatar_pawn_blue"),
 
-		_reward("rw_avatar_05", "Portrait de l archiviste",
-			"Un nouveau portrait pour ton profil.", 5, K.AVATAR, "icon_05"),
-		_reward("rw_hat_emerald", "Chapeau d emeraude",
-			"Un chapeau vert profond, couleur des forets d avant.", 5, K.HAT, "monk_hat_emerald"),
+		# --- 5 ---
+		_reward("rw_hat_hood", "Capuche des bois",
+			"Une capuche verte, couleur des forets d avant.", 5, K.HAT, "hat_hood"),
+		_reward("rw_mage_red", "Robe de braise",
+			"La robe rouge des moines de la vallee.", 5, K.MAGE_COLOR, "monk_red"),
+		_reward("rw_tower_tree", "L arbre-nid",
+			"Un vieux bouleau ou percher. Il se balance avec le vent.", 5, K.TOWER, "tower_tree"),
+		_reward("rw_avatar_monk_red", "Le moine de braise",
+			"Un portrait pour ton profil.", 5, K.AVATAR, "avatar_monk_red"),
 
+		# --- 6 ---
 		_reward("rw_title_briseur", "Briseur de cycles",
 			"Titre affiche sur ton profil.", 6, K.TITLE),
 		_reward("rw_mage_purple", "Robe d amethyste",
 			"La robe violette des briseurs de cycles.", 6, K.MAGE_COLOR, "monk_purple"),
+		_reward("rw_char_fairy", "La fee",
+			"Elle ne pose jamais pied a terre. Elle combat a la place du mage.",
+			6, K.CHARACTER, "fairy"),
+		_reward("rw_outfit_soldier_azure", "Ecuyer d azur",
+			"Une tunique bleue pour l ecuyer.", 6, K.MAGE_COLOR, "soldier_azure", "soldier"),
+		_reward("rw_hat_beanie", "Bonnet de laine",
+			"Rouge, avec un pompon. Pour les sieges d hiver.", 6, K.HAT, "hat_beanie"),
 
+		# --- 7 ---
 		_reward("rw_tower_obsidian", "Tour d obsidienne",
 			"Une tour de verre noir, nee d un ancien incendie.", 7, K.TOWER, "tower_obsidian"),
+		_reward("rw_hat_turban", "Turban",
+			"Des lieues de tissu creme et un joyau turquoise.", 7, K.HAT, "hat_turban"),
+		_reward("rw_mage_yellow", "Robe d ocre",
+			"La robe jaune des moines du desert.", 7, K.MAGE_COLOR, "monk_yellow"),
+		_reward("rw_tower_yellow", "Tour d ambre",
+			"Une tour aux creneaux dores.", 7, K.TOWER, "tower_yellow"),
+		_reward("rw_avatar_knight_blue", "Le chevalier",
+			"Un portrait pour ton profil.", 7, K.AVATAR, "avatar_knight_blue"),
 
-		# LES APPRENTIS DU MAGE (Witches Pack) : une sorciere par recompense.
-		# Changer de personnage est le plus gros cosmetique du compte, il vient
-		# donc apres la premiere moitie des robes et chapeaux. Le niveau 9 etait
-		# un palier VIDE : le joueur montait sans rien recevoir. Les suivantes
-		# prendront 11 (vide aussi) puis les paliers au-dela de 12, quand le pack
-		# complet sera sur le disque — une recompense et une cle d animation
-		# suffisent, aucun code.
+		# --- 8 ---
+		_reward("rw_hat_witch", "Chapeau de sorciere",
+			"Un large bord, une pointe tordue, une boucle d or.", 8, K.HAT, "hat_witch"),
+		_reward("rw_outfit_fairy_sun", "Fee solaire",
+			"Des ailes d or et une robe rouge.", 8, K.MAGE_COLOR, "fairy_sun", "fairy"),
+		_reward("rw_tower_ruins", "Sanctuaire des ruines",
+			"Un edifice de brique a toit plat, rescape d une cite oubliee.",
+			8, K.TOWER, "tower_ruins"),
+		_reward("rw_mage_forest", "Robe de mousse",
+			"Le vert des sous-bois.", 8, K.MAGE_COLOR, "monk_forest"),
+		_reward("rw_avatar_lancer_yellow", "Le lancier",
+			"Un portrait pour ton profil.", 8, K.AVATAR, "avatar_lancer_yellow"),
+
+		# --- 9 ---
+		# Le niveau 9 etait un palier VIDE : le joueur montait sans rien recevoir.
 		_reward("rw_char_bluewitch", "Apprentie d azur",
 			"La premiere apprentie du mage. Elle combat a sa place ; il garde la parole dans les histoires.",
 			9, K.CHARACTER, "bluewitch"),
+		_reward("rw_hat_helm", "Heaume",
+			"Acier poli et cimier rouge.", 9, K.HAT, "hat_helm"),
+		_reward("rw_tower_purple", "Tour d amethyste",
+			"Une tour aux creneaux violets.", 9, K.TOWER, "tower_purple"),
+		_reward("rw_outfit_soldier_royal", "Ecuyer royal",
+			"Un casque dore et une tunique pourpre.", 9, K.MAGE_COLOR, "soldier_royal", "soldier"),
+		_reward("rw_avatar_monk_yellow", "Le moine d ocre",
+			"Un portrait pour ton profil.", 9, K.AVATAR, "avatar_monk_yellow"),
 
-		_reward("rw_avatar_09", "Portrait du dernier mage",
-			"Un nouveau portrait pour ton profil.", 8, K.AVATAR, "icon_09"),
-		_reward("rw_hat_violet", "Chapeau d amethyste",
-			"Un chapeau violet, assorti aux robes des anciens.", 8, K.HAT, "monk_hat_violet"),
-
+		# --- 10 ---
 		_reward("rw_title_origine", "Temoin de l Origine",
 			"Titre affiche sur ton profil.", 10, K.TITLE),
 		_reward("rw_tower_ember", "Tour de braise",
 			"Une tour qui rougeoie encore de la derniere bataille.", 10, K.TOWER, "tower_ember"),
+		_reward("rw_hat_laurel", "Couronne de laurier",
+			"Le laurier des vainqueurs.", 10, K.HAT, "hat_laurel"),
+		_reward("rw_outfit_bluewitch_ember", "Apprentie de braise",
+			"Cheveux de flamme et robe de cendre.", 10, K.MAGE_COLOR, "bluewitch_ember", "bluewitch"),
+		_reward("rw_outfit_fairy_moss", "Fee des mousses",
+			"Des ailes vertes et une robe violette.", 10, K.MAGE_COLOR, "fairy_moss", "fairy"),
+		_reward("rw_avatar_knight_purple", "Le chevalier pourpre",
+			"Un portrait pour ton profil.", 10, K.AVATAR, "avatar_knight_purple"),
 
-		# --- Le bout de la progression : le chapeau d or, le plus voyant ---
-		_reward("rw_hat_gold", "Chapeau d or",
-			"L or des mages qui ont vu la source du temps.", 12, K.HAT, "monk_hat_gold"),
+		# --- 11 ---
+		_reward("rw_hat_horns", "Cornes",
+			"Ramenees du monde demoniaque. Elles ne poussent pas, promis.", 11, K.HAT, "hat_horns"),
+		_reward("rw_tower_black", "Tour d encre",
+			"Une tour aux creneaux d ardoise.", 11, K.TOWER, "tower_black"),
+		_reward("rw_outfit_bluewitch_frost", "Apprentie de givre",
+			"Une robe pale et des cheveux d argent.", 11, K.MAGE_COLOR, "bluewitch_frost", "bluewitch"),
+		_reward("rw_mage_dawn", "Robe d aube",
+			"Ivoire et lilas : la couleur du ciel avant le premier cycle.", 11, K.MAGE_COLOR, "monk_dawn"),
+		_reward("rw_avatar_monk_purple", "Le moine d amethyste",
+			"Un portrait pour ton profil.", 11, K.AVATAR, "avatar_monk_purple"),
+
+		# --- 12 : le bout de la progression, les pieces les plus voyantes ---
+		_reward("rw_hat_crown", "Couronne d or",
+			"L or des mages qui ont vu la source du temps.", 12, K.HAT, "hat_crown"),
+		_reward("rw_hat_halo", "Aureole",
+			"Elle flotte toute seule. Personne ne sait pourquoi.", 12, K.HAT, "hat_halo"),
+		_reward("rw_hat_tophat", "Haut-de-forme du temps",
+			"Un cadran sur le ruban : il retarde toujours un peu.", 12, K.HAT, "hat_tophat"),
+		_reward("rw_tower_monastery", "Le monastere",
+			"Le mage se tient sur le seuil de la maison des moines.", 12, K.TOWER, "tower_monastery"),
+		_reward("rw_outfit_bluewitch_moss", "Apprentie des mousses",
+			"Une robe de foret et des cheveux de ble.", 12, K.MAGE_COLOR, "bluewitch_moss", "bluewitch"),
+		_reward("rw_avatar_monk_black", "Le moine d encre",
+			"Un portrait pour ton profil.", 12, K.AVATAR, "avatar_monk_black"),
 	]
 	for r in liste:
 		_save(r, RW + String(r.id) + ".tres")

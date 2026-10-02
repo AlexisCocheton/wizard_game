@@ -10,3 +10,4 @@ description = "Une tour de pierre chaude, taillee dans le desert."
 at_level = 4
 kind = 4
 texture_name = "tower_sand"
+for_character = ""

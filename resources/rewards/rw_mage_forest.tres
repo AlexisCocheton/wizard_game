@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_cse0u"]
+
+[resource]
+script = ExtResource("1_cse0u")
+id = &"rw_mage_forest"
+display_name = "Robe de mousse"
+description = "Le vert des sous-bois."
+at_level = 8
+kind = 2
+texture_name = "monk_forest"
+for_character = ""
