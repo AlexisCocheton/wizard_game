@@ -10,3 +10,4 @@ description = "La tour de pierre bleue."
 at_level = 1
 kind = 4
 texture_name = "tower_blue"
+for_character = ""

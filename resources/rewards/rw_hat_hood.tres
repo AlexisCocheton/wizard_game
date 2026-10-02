@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_umgeb"]
+
+[resource]
+script = ExtResource("1_umgeb")
+id = &"rw_hat_hood"
+display_name = "Capuche des bois"
+description = "Une capuche verte, couleur des forets d avant."
+at_level = 5
+kind = 3
+texture_name = "hat_hood"
+for_character = ""

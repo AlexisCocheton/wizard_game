@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_up764"]
+
+[resource]
+script = ExtResource("1_up764")
+id = &"rw_outfit_soldier_azure"
+display_name = "Ecuyer d azur"
+description = "Une tunique bleue pour l ecuyer."
+at_level = 6
+kind = 2
+texture_name = "soldier_azure"
+for_character = "soldier"

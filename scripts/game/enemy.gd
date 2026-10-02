@@ -211,9 +211,9 @@ static func shown_sheet(def: EnemyDef) -> StringName:
 	var heros: String = UiTheme.hero_key()
 	if heros != AccountRewardDef.CHARACTER_MAGE:
 		return StringName(heros)
-	# Le mage lui-meme : sa robe si elle est au catalogue. Un chapeau n y est pas
-	# (feuille de cosmetique, voir UiTheme.mage_frames) : on garde alors la robe
-	# equipee, puis la feuille d origine.
+	# Le mage lui-meme : sa robe (UiTheme.mage_sheet_key, toujours une cle du
+	# catalogue depuis la vague 8), puis la feuille d origine. Le CHAPEAU est un
+	# calque de MageView : le reflet ne le porte pas, il copie la silhouette.
 	for k: String in [UiTheme.mage_sheet_key(),
 			SaveData.equipped_cosmetic(GameEnums.RewardKind.MAGE_COLOR)]:
 		if k != "" and AnimCatalog.has(StringName(k)):

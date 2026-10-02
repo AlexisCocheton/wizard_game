@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_d82a0"]
+
+[resource]
+script = ExtResource("1_d82a0")
+id = &"rw_hat_crown"
+display_name = "Couronne d or"
+description = "L or des mages qui ont vu la source du temps."
+at_level = 12
+kind = 3
+texture_name = "hat_crown"
+for_character = ""

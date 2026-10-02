@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_052k0"]
+
+[resource]
+script = ExtResource("1_052k0")
+id = &"rw_tower_black"
+display_name = "Tour d encre"
+description = "Une tour aux creneaux d ardoise."
+at_level = 11
+kind = 4
+texture_name = "tower_black"
+for_character = ""

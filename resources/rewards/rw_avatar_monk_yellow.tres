@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_l1ep1"]
+
+[resource]
+script = ExtResource("1_l1ep1")
+id = &"rw_avatar_monk_yellow"
+display_name = "Le moine d ocre"
+description = "Un portrait pour ton profil."
+at_level = 9
+kind = 1
+texture_name = "avatar_monk_yellow"
+for_character = ""

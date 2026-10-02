@@ -10,3 +10,4 @@ description = "La robe violette des briseurs de cycles."
 at_level = 6
 kind = 2
 texture_name = "monk_purple"
+for_character = ""
