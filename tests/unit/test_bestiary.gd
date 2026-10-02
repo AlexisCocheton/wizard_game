@@ -13,7 +13,6 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_test_aucune_rencontre_au_depart()
 	_test_rencontre_memorisee()
 	_test_rencontre_idempotente()
@@ -33,7 +32,6 @@ func run() -> void:
 	_test_bestiaire_trois_etats()
 	_test_bestiaire_fiche_a_rencontrer()
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 # --- Memorisation des rencontres ---
@@ -187,7 +185,6 @@ func _test_le_panneau_se_construit() -> void:
 ## Le 1er toucher montre l effet, le 2e ajoute, une autre carte remet a zero.
 func _test_double_toucher_du_deck() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
@@ -483,7 +480,6 @@ func _test_bestiaire_trois_etats() -> void:
 		eq(SaveData.enemy_visibility(loin.id), SaveData.ENEMY_MET,
 			"un monstre croise hors des niveaux ouverts est rencontre")
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## Les especes d un niveau suivent ce qui NAIT de ses monstres (divisions,
@@ -530,4 +526,3 @@ func _test_bestiaire_fiche_a_rencontrer() -> void:
 		panel.close_detail()
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
