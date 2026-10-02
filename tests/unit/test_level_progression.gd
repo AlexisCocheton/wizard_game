@@ -294,12 +294,38 @@ static func cartes_garanties(niveaux: Dictionary, id: StringName) -> Dictionary:
 	return out
 
 
+## Les niveaux ouverts une fois `id` GAGNE : ceux de niveaux_ouverts_a, plus
+## ceux que cette victoire ouvre.
+static func niveaux_ouverts_apres(niveaux: Dictionary, id: StringName) -> Dictionary:
+	var out: Dictionary = niveaux_ouverts_a(niveaux, id)
+	var lv: LevelDef = niveaux.get(id)
+	if lv != null:
+		for nxt: StringName in lv.next_levels:
+			out[nxt] = true
+	return out
+
+
+## Les cartes possedees FORCEMENT une fois `id` gagne. C est la borne des
+## cartes nouvelles et des recompenses : une recompense tombe a la victoire,
+## au moment ou les decks des niveaux qu elle ouvre entrent au livre ; une
+## carte nouvelle prise en combat serait de toute facon acquise en gagnant.
+static func cartes_garanties_apres(niveaux: Dictionary, id: StringName) -> Dictionary:
+	var out: Dictionary = {}
+	for o: StringName in niveaux_ouverts_apres(niveaux, id).keys():
+		var lv: LevelDef = niveaux.get(o)
+		if lv != null:
+			out.merge(_ids(lv.exploration_deck))
+	return out
+
+
 ## Le bilan de nouveaute de la campagne, dans l ordre de jeu :
-##   garanties : "niveau : carte" proposee alors qu elle est deja possedee ;
+##   garanties : "niveau : carte" proposee alors qu elle est deja possedee, ou
+##     le sera par la victoire de ce niveau (cartes_garanties_apres) ;
 ##   reprises  : "niveau : carte" deja proposee par un niveau anterieur ;
 ##   places    : nombre de cartes proposees (nouvelles + recompenses) ;
-##   proposables : sorts qui ne sont pas garantis au premier niveau joue (ceux
-##     qu on peut encore faire decouvrir) ; places - proposables est le
+##   proposables : sorts qui ne sont pas garantis apres la victoire du premier
+##     niveau joue (ceux qu on peut encore faire decouvrir : les garanties ne
+##     font que grandir le long de l ordre) ; places - proposables est le
 ##     MINIMUM de reprises, atteint quand chacun est propose une fois avant
 ##     d entrer dans un deck ouvert ;
 ##   jamais_inedites : ceux-la, quand ils ne le sont pas ;
@@ -312,7 +338,7 @@ static func bilan_nouveaute(niveaux: Dictionary) -> Dictionary:
 		"jamais_inedites": [], "consecutives": [], "legendaire_tot": []}
 	if ordre.is_empty():
 		return b
-	var premieres: Dictionary = cartes_garanties(niveaux, ordre[0])
+	var premieres: Dictionary = cartes_garanties_apres(niveaux, ordre[0])
 	var proposables: Dictionary = {}
 	for c: SpellCard in ContentDB.cards.values():
 		if c != null and not c.is_passive and not premieres.has(c.id):
@@ -326,7 +352,7 @@ static func bilan_nouveaute(niveaux: Dictionary) -> Dictionary:
 	var leg_reprise_ou: String = ""
 	for i in ordre.size():
 		var lv: LevelDef = niveaux[ordre[i]]
-		var garanties: Dictionary = cartes_garanties(niveaux, lv.id)
+		var garanties: Dictionary = cartes_garanties_apres(niveaux, lv.id)
 		var ici: Dictionary = {}
 		for liste: Array in [lv.levelup_cards, lv.objective_rewards]:
 			for c in liste:
@@ -567,6 +593,27 @@ func _test_cartes_vraiment_nouvelles() -> void:
 	var niveaux: Dictionary = _campagne(ContentDB.levels)
 	var ordre: Array[StringName] = ordre_de_jeu(niveaux)
 	eq(ordre.size(), niveaux.size(), "l ordre de jeu atteint tous les niveaux de campagne")
+	# Le calcul de ce test et celui du jeu (SaveData.cards_owned_by_decks, la
+	# regle du livre de sorts) disent la MEME chose pour chaque niveau.
+	for id: StringName in ordre:
+		for apres: bool in [false, true]:
+			var ouverts: Array = (niveaux_ouverts_apres(niveaux, id) if apres
+				else niveaux_ouverts_a(niveaux, id)).keys()
+			var du_jeu: Dictionary = {}
+			for c: StringName in SaveData.cards_owned_by_decks(ouverts):
+				du_jeu[c] = true
+			var d_ici: Dictionary = cartes_garanties_apres(niveaux, id) if apres \
+				else cartes_garanties(niveaux, id)
+			var ecart: Array = []
+			for c in d_ici.keys():
+				if not du_jeu.has(StringName(c)):
+					ecart.append(c)
+			for c in du_jeu.keys():
+				if not d_ici.has(StringName(c)):
+					ecart.append(c)
+			ok(ecart.is_empty() and not du_jeu.is_empty(),
+				"%s%s : cartes garanties identiques a SaveData.cards_owned_by_decks %s"
+				% [id, " (apres victoire)" if apres else "", ecart])
 	var b: Dictionary = bilan_nouveaute(niveaux)
 	var minimum: int = int(b["places"]) - int(b["proposables"])
 	print("  [W8] %d places, %d sorts a faire decouvrir, %d reprises (minimum %d)" % [
@@ -767,12 +814,19 @@ func _saboter_nouveaute() -> void:
 	b.levelup_cards = [sorts[2]] as Array[SpellCard]
 	not_ok((bilan_nouveaute(camp)["garanties"] as Array).is_empty(),
 		"une carte nouvelle au deck d un niveau ouvert est refusee")
-	# Le deck de D montre en A (inedite), puis repris en B : une reprise.
+	# Une recompense de B prise au deck de D, que la victoire de B ouvre : elle
+	# tomberait au moment meme ou D entre au livre.
 	b.levelup_cards = [] as Array[SpellCard]
-	a.levelup_cards = [sorts[3]] as Array[SpellCard]
-	c.objective_rewards = [sorts[3]] as Array[SpellCard]
+	b.objective_rewards = [sorts[3]] as Array[SpellCard]
+	ok(cartes_garanties_apres(camp, &"t_b").has(sorts[3].id), "gagner B donne le deck de D")
+	not_ok((bilan_nouveaute(camp)["garanties"] as Array).is_empty(),
+		"une recompense au deck d un niveau ouvert par la meme victoire est refusee")
+	# Un sort hors de tout deck montre en A (inedit), puis repris en C : une reprise.
+	b.objective_rewards = [] as Array[SpellCard]
+	a.levelup_cards = [sorts[5]] as Array[SpellCard]
+	c.objective_rewards = [sorts[5]] as Array[SpellCard]
 	var bilan: Dictionary = bilan_nouveaute(camp)
-	ok((bilan["garanties"] as Array).is_empty(), "le deck de D n est pas possede en A ni en C")
+	ok((bilan["garanties"] as Array).is_empty(), "ce sort n est possede ni en A ni en C")
 	eq((bilan["reprises"] as Array).size(), 1, "la seconde proposition est une reprise")
 	not_ok((bilan["jamais_inedites"] as Array).is_empty(),
 		"les sorts jamais montres sont signales")
