@@ -60,6 +60,9 @@ func _textes(racine: Node) -> String:
 	for n in _tous(racine):
 		if n is Label:
 			t += (n as Label).text + "\n"
+		elif n is RichTextLabel:
+			# Vague 8 : phrases a logos, relues sans leurs logos.
+			t += ElementIcons.strip_inline((n as RichTextLabel).text) + "\n"
 		elif n is Button:
 			t += (n as Button).text + "\n"
 	return t
@@ -251,20 +254,20 @@ func _test_fiche_de_monstre_resistances_en_logos() -> void:
 	var texte: String = _textes(box)
 	ok(texte.contains(def.display_name), "la fiche porte le nom")
 	ok(texte.contains(BestiaryLore.RESIST_RULE_TEXT), "la regle « degats et effets » est ecrite")
-	for line in BestiaryLore.behaviours(def):
-		ok(texte.contains(line), "la competence est ecrite : %s" % line)
+	for line in BestiaryLore.behaviours(def, true):
+		ok(texte.contains(ElementIcons.strip_inline(line)), "la competence est ecrite : %s" % line)
+	# Vague 8 : une ligne a logos par groupe, chaque element avec SON logo.
 	for gr in BestiaryLore.resistance_groups(def):
 		var bloc: Node = box.find_child("Resist_" + str(gr["title"]), true, false)
 		ok(bloc != null, "le groupe %s est la" % gr["title"])
+		var ligne: Node = box.find_child("ResistLine_" + str(gr["title"]), true, false)
+		ok(ligne is RichTextLabel, "le groupe %s a sa ligne a logos" % gr["title"])
+		if not (ligne is RichTextLabel):
+			continue
 		for item in gr["items"]:
-			var ligne: Node = box.find_child("Resist_%d" % int(item["tag"]), true, false)
-			ok(ligne != null, "l element %d a sa ligne" % int(item["tag"]))
-			if ligne != null:
-				var logo: bool = false
-				for n in _tous(ligne):
-					if n is TextureRect and (n as TextureRect).texture != null:
-						logo = true
-				ok(logo, "l element %d a son LOGO" % int(item["tag"]))
+			var tag: int = int(item["tag"])
+			ok((ligne as RichTextLabel).text.contains(ElementIcons.path(SpellCard.type_of_tag(tag))),
+				"l element %s a son LOGO" % GameEnums.tag_name(tag))
 	detach(box)
 
 

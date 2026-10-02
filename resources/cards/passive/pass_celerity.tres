@@ -19,6 +19,7 @@ description = "Au-dela de 110 % de vitesse : chaque sort se lance 0,3 s plus vit
 rarity = 0
 base_cast_time = 0.0
 targeting = 0
+element = 0
 tags = Array[int]([])
 effects = Array[ExtResource("1_hl47d")]([SubResource("Resource_hl47d")])
 copies_in_starter = 0

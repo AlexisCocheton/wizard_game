@@ -164,10 +164,10 @@ func _paire_resistee() -> Dictionary:
 	for id in ids:
 		var d: EnemyDef = ContentDB.enemies[id]
 		for r in sorts:
-			if d.resistance_to_tags(r.tags) >= AutoPick.RESISTED:
+			if d.resistance_to_tags(r.combat_tags()) >= AutoPick.RESISTED:
 				continue
 			for n in sorts:
-				if d.resistance_to_tags(n.tags) >= AutoPick.RESISTED:
+				if d.resistance_to_tags(n.combat_tags()) >= AutoPick.RESISTED:
 					return {"monstre": d, "resiste": r, "neutre": n}
 	return {}
 
@@ -190,11 +190,11 @@ func _test_la_carte_resistee_n_est_pas_prise() -> void:
 	var pire: SpellCard = null
 	var pire_f: float = 2.0
 	for c in _sorts():
-		var f: float = p["monstre"].resistance_to_tags(c.tags)
+		var f: float = p["monstre"].resistance_to_tags(c.combat_tags())
 		if f < pire_f:
 			pire_f = f
 			pire = c
-	if pire != null and pire_f < p["monstre"].resistance_to_tags(p["resiste"].tags):
+	if pire != null and pire_f < p["monstre"].resistance_to_tags(p["resiste"].combat_tags()):
 		eq(AutoPick.offer_index([pire, p["resiste"]], seen), 1,
 			"tout est resiste : le bot prend le moins resiste (%s plutot que %s)"
 			% [p["resiste"].id, pire.id])

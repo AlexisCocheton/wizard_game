@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_nuwnh"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_tdgew"]
+
+[sub_resource type="Resource" id="Resource_nuwnh"]
+script = ExtResource("1_nuwnh")
+key = &"passive_element"
+magnitude = 15.0
+duration = 0.0
+radius = 0.0
+params = {
+&"stat": &"cast"
+}
+
+[resource]
+script = ExtResource("2_tdgew")
+id = &"pass_arcane_mind"
+display_name = "Esprit vif"
+description = "Au-dela de 130 % de vitesse : les sorts d ARCANE se lancent 15 % plus vite."
+rarity = 0
+base_cast_time = 0.0
+targeting = 0
+element = 3
+tags = Array[int]([])
+effects = Array[ExtResource("1_nuwnh")]([SubResource("Resource_nuwnh")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 130
+fx_key = &""
+sfx_key = &""

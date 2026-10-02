@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_seurv"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_iucuj"]
 
-[sub_resource type="Resource" id="Resource_q5qq0"]
+[sub_resource type="Resource" id="Resource_seurv"]
 script = ExtResource("1_seurv")
 key = &"passive_shield_keeper"
 magnitude = 1.0
@@ -19,8 +19,9 @@ description = "Au-dela de 300 % de vitesse : un coup encaisse ne coute que la mo
 rarity = 3
 base_cast_time = 0.0
 targeting = 0
+element = 0
 tags = Array[int]([])
-effects = Array[ExtResource("1_seurv")]([SubResource("Resource_q5qq0")])
+effects = Array[ExtResource("1_seurv")]([SubResource("Resource_seurv")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = true

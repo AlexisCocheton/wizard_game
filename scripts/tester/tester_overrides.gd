@@ -75,9 +75,13 @@ const SKIP_FIELDS: Array[String] = [
 
 ## Elements dans l ordre d affichage, par leur nom joueur : c est ce nom qui
 ## apparait dans le champ ("resistances/feu"), lisible dans le document.
+## Vague 8 : les HUIT elements (GameEnums.ELEMENTS, ordre du co-auteur) puis le
+## ralentissement, qui garde sa ligne a part. « resistances/glace »,
+## « resistances/vent »... : le nom vient de GameEnums.tag_name.
 const RESIST_TAGS: Array[int] = [
-	GameEnums.DamageTag.PHYSICAL, GameEnums.DamageTag.FIRE, GameEnums.DamageTag.FROST,
-	GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.POISON, GameEnums.DamageTag.LIGHTNING,
+	GameEnums.DamageTag.FIRE, GameEnums.DamageTag.WATER, GameEnums.DamageTag.NATURE,
+	GameEnums.DamageTag.WIND, GameEnums.DamageTag.LIGHTNING, GameEnums.DamageTag.ICE,
+	GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.POISON,
 	GameEnums.DamageTag.SLOW,
 ]
 
@@ -557,7 +561,7 @@ static func _simple_field(holder: Object, p: Dictionary) -> Dictionary:
 			elif hs.begins_with("2:") and name == "chameleon_elements":
 				# Des entiers qui SONT des elements : on les ecrit par leur nom.
 				f["kind"] = "enum_list"
-				f["choices"] = _enum_names("Physical:0,Fire:1,Frost:2,Arcane:3,Slow:4,Summon:5,Poison:6,Lightning:7")
+				f["choices"] = _enum_names(DAMAGE_TAG_HINT)
 			else:
 				return {}
 		_:
@@ -611,12 +615,38 @@ static func _autoload(name: String) -> Node:
 	return tree.root.get_node_or_null(name)
 
 
+## Les noms de GameEnums.DamageTag sous la forme d un hint d export, construits
+## depuis l enum : une liste recopiee a la main avait garde « Physical » et
+## « Frost » apres la vague 8.
+static var DAMAGE_TAG_HINT: String = _damage_tag_hint()
+
+
+static func _damage_tag_hint() -> String:
+	var parts: PackedStringArray = []
+	for k: String in GameEnums.DamageTag.keys():
+		parts.append("%s:%d" % [k.capitalize(), int(GameEnums.DamageTag[k])])
+	return ",".join(parts)
+
+
+## Noms d un hint d enum, RANGES PAR VALEUR : la position dans le tableau est la
+## valeur entiere (un « Nom:12 » isole laisserait des trous nommes "").
+## Les valeurs de DamageTag sont contigues (0..10) mais rien ne le garantit pour
+## un enum futur.
 static func _enum_names(hs: String) -> Array:
 	var out: Array = []
+	var suivante: int = 0
 	for part in hs.split(","):
-		var nom: String = part.split(":")[0].strip_edges()
-		if nom != "":
-			out.append(nom)
+		var morceaux: PackedStringArray = part.split(":")
+		var nom: String = morceaux[0].strip_edges()
+		if nom == "":
+			continue
+		var v: int = suivante
+		if morceaux.size() > 1 and morceaux[1].strip_edges().is_valid_int():
+			v = morceaux[1].strip_edges().to_int()
+		while out.size() <= v:
+			out.append("")
+		out[v] = nom
+		suivante = v + 1
 	return out
 
 

@@ -19,6 +19,7 @@ description = "Au-dela de 150 % de vitesse : un allie apparait au debut de chaqu
 rarity = 1
 base_cast_time = 0.0
 targeting = 0
+element = 0
 tags = Array[int]([])
 effects = Array[ExtResource("1_l5u17")]([SubResource("Resource_l5u17")])
 copies_in_starter = 0

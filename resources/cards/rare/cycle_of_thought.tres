@@ -21,6 +21,7 @@ description = "Defausse 2 cartes, en pioche 2."
 rarity = 1
 base_cast_time = 0.6
 targeting = 0
+element = 8
 tags = Array[int]([])
 effects = Array[ExtResource("1_amhwp")]([SubResource("Resource_amhwp")])
 copies_in_starter = 0

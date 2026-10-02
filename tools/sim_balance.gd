@@ -181,7 +181,7 @@ func _report_deck_fit(level: LevelDef) -> void:
 				if entry.enemy == null:
 					continue
 				var pv: float = entry.enemy.max_hp * entry.count * maxi(1, entry.enemy.swarm_count)
-				somme += entry.enemy.resistance_to_tags(c.tags) * pv
+				somme += entry.enemy.resistance_to_tags(c.combat_tags()) * pv
 				poids += pv
 		parts.append("%s %.2f" % [c.id, somme / maxf(poids, 1.0)])
 	print("      deck contre le lieu (facteur moyen pondere par les PV) : " + ", ".join(parts))

@@ -17,8 +17,8 @@ extends RefCounted
 ##   int    = entier GDScript (30, pas 30.0)
 ##   nombre = entier ou flottant (1, 0.5)
 ##   tag    = nom d un GameEnums.DamageTag en String ("FIRE", "SUMMON"...)
-##   elem   = un tag qui est un vrai element (GameEnums.ELEMENTS : PHYSICAL,
-##            FIRE, FROST, ARCANE, POISON, LIGHTNING)
+##   elem   = un tag qui est un vrai element (GameEnums.ELEMENTS : FIRE, WATER,
+##            NATURE, WIND, LIGHTNING, ICE, ARCANE, POISON — vague 8)
 ##   effet  = cle d effet de EFFECT_PHRASES ci-dessous (celles qui ont un libelle)
 ##   carte  = id String d une SpellCard du catalogue (ContentDB), jamais un passif
 ##   monstre= id String d un EnemyDef du catalogue, jamais un projectile (une
@@ -308,10 +308,7 @@ static func terrain_length() -> float:
 static func tag_from_name(name: Variant) -> int:
 	if typeof(name) != TYPE_STRING and typeof(name) != TYPE_STRING_NAME:
 		return -1
-	var s: String = String(name)
-	if not GameEnums.DamageTag.has(s):
-		return -1
-	return int(GameEnums.DamageTag[s])
+	return GameEnums.tag_from_name(String(name))
 
 
 # --- Validation (AUDIT) -------------------------------------------------------
@@ -392,7 +389,9 @@ static func _type_error(type: String, v: Variant) -> String:
 static func _element_names() -> String:
 	var noms: PackedStringArray = []
 	for t: int in GameEnums.ELEMENTS:
-		noms.append(GameEnums.DamageTag.keys()[t])
+		# find_key et non keys()[t] : les valeurs de l enum sont ecrites a la main
+		# depuis la vague 8 (voir GameEnums.DamageTag).
+		noms.append(GameEnums.tag_key(t))
 	return ", ".join(noms)
 
 
@@ -778,7 +777,7 @@ static func _lengths(px: float) -> String:
 	return "%s longueur%s de terrain" % [_fmt(n), "s" if n >= 2.0 else ""]
 
 
-## "de feu", "d arcane", "physique(s)" : le complement d un sort de cet element.
+## "de feu", "d arcane", "de glace" : le complement d un sort de cet element.
 ## Nom d un tag pour le bandeau : celui de GameEnums, sauf le seul trop long.
 static func _tag_short(tag: int) -> String:
 	if tag == GameEnums.DamageTag.SLOW:
@@ -786,9 +785,7 @@ static func _tag_short(tag: int) -> String:
 	return GameEnums.tag_name(tag)
 
 
-static func _of_tag(tag: int, pluriel: bool) -> String:
-	if tag == GameEnums.DamageTag.PHYSICAL:
-		return "physiques" if pluriel else "physique"
+static func _of_tag(tag: int, _pluriel: bool) -> String:
 	var nom: String = GameEnums.tag_name(tag)
 	if nom.substr(0, 1) in ["a", "e", "i", "o", "u"]:
 		return "d " + nom
@@ -962,10 +959,12 @@ static func card_can_kill(card: SpellCard, def: EnemyDef) -> bool:
 		var allies: bool = (spec.key == &"summon_ally" and spec.magnitude > 0.0) \
 			or (float(spec.get_param(&"summon_every", 0.0)) > 0.0
 				and float(spec.get_param(&"ally_damage", 0.0)) > 0.0)
-		if allies:
+		# Vague 8 : un allie frappe a l element de sa carte, il bute donc lui
+		# aussi sur une immunite.
+		if allies and def.resistance_to_tags(card.combat_tags()) > 0.0:
 			return true
 		if spec.key in KILLING_EFFECTS and spec.magnitude > 0.0 \
-				and def.resistance_to_tags(card.tags) > 0.0:
+				and def.resistance_to_tags(card.combat_tags()) > 0.0:
 			return true
 	return false
 
@@ -1074,6 +1073,6 @@ static func _flyers_from(d: EnemyDef, profondeur: int) -> int:
 static func _deck_count_tag(level: LevelDef, tag: int) -> int:
 	var n: int = 0
 	for c: SpellCard in level.exploration_deck:
-		if c != null and not c.is_passive and c.tags.has(tag):
+		if c != null and not c.is_passive and c.has_tag(tag):
 			n += 1
 	return n

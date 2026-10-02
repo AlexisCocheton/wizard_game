@@ -18,6 +18,13 @@ const COL_PHYSICAL := Color(0.90, 0.85, 0.70)
 ## sert a rien, le joueur ne peut pas verifier qu il a joue le bon sort.
 const COL_POISON := Color(0.55, 0.90, 0.30)
 const COL_LIGHTNING := Color(0.95, 0.90, 0.35)
+## Les trois elements de la vague 8. Meme principe : chacun LOIN des autres, et
+## la meme teinte que le cadre de son logo (tools/assets/extract_elements.py).
+## La glace garde la teinte de l ancien givre (COL_FROST) : c est le meme element.
+const COL_WATER := Color(0.25, 0.50, 0.95)
+const COL_NATURE := Color(0.69, 0.52, 0.25)
+const COL_WIND := Color(0.80, 0.95, 0.90)
+const COL_ICE := COL_FROST
 const COL_SUMMON := Color(0.55, 0.90, 0.55)
 const COL_WALL := Color(0.60, 0.55, 0.50)
 const COL_HASTE := Color(0.95, 0.80, 0.35)
@@ -291,10 +298,13 @@ static func color_for(tags: Array) -> Color:
 	for t in tags:
 		match t:
 			GameEnums.DamageTag.FIRE: return COL_FIRE
-			GameEnums.DamageTag.FROST: return COL_FROST
+			GameEnums.DamageTag.ICE: return COL_FROST
 			GameEnums.DamageTag.POISON: return COL_POISON
 			GameEnums.DamageTag.LIGHTNING: return COL_LIGHTNING
-			GameEnums.DamageTag.PHYSICAL: return COL_PHYSICAL
+			GameEnums.DamageTag.WATER: return COL_WATER
+			GameEnums.DamageTag.NATURE: return COL_NATURE
+			GameEnums.DamageTag.WIND: return COL_WIND
+			GameEnums.DamageTag.ARCANE: return COL_ARCANE
 			GameEnums.DamageTag.SUMMON: return COL_SUMMON
 			# SLOW passe APRES les elements : un Champ de givre est givre AVANT
 			# d etre ralentissant, et une Mare de venin doit rester verte.
@@ -309,6 +319,9 @@ static func impact_sheet(col: Color) -> String:
 	if col == COL_POISON: return "skull_burst"
 	if col == COL_LIGHTNING: return "lightning_fork"
 	if col == COL_PHYSICAL: return "weaponhit"
+	if col == COL_WATER: return "orb_cyan"
+	if col == COL_NATURE: return "stone_peak"
+	if col == COL_WIND: return "ring_expand"
 	if col == COL_SUMMON: return "magicbubbles"
 	return "magickahit"
 
@@ -319,6 +332,9 @@ static func zone_sheet(col: Color) -> String:
 	if col == COL_POISON: return "spiral_salt"
 	if col == COL_LIGHTNING: return "lightning_web"
 	if col == COL_PHYSICAL: return "stone_peak"
+	if col == COL_WATER: return "tide_waves"
+	if col == COL_NATURE: return "stone_peak"
+	if col == COL_WIND: return "spiral_pull"
 	if col == COL_VULN: return "felspell"
 	return "magicspell"
 
@@ -477,13 +493,25 @@ static func zone_visual(parent: Node2D, at: Vector2, radius: float,
 
 
 ## Mur : une rangee de rochers du pack, soulevee dans un nuage de poussiere.
+## `element` (vague 8) : un mur porte l element de sa carte. La NATURE garde les
+## rochers tels quels ; un autre element les eclaircit vers sa couleur et pose
+## sa feuille au pied du mur, pour qu un mur de glace ne se lise pas comme un mur
+## de pierre — le joueur doit savoir quels monstres le briseront vite.
+## Eclaircir et non teinter : une teinte MULTIPLIE (gotchas) et noircirait la roche.
 static func spawn_wall_visual(parent: Node2D, center: Vector2, half_width: float,
-		thickness: float, duration: float) -> Node:
+		thickness: float, duration: float, element: int = GameEnums.DamageTag.NONE) -> Node:
 	if not enabled() or parent == null:
 		return null
 	var root := Node2D.new()
 	root.position = center
 	parent.add_child(root)
+	if element in GameEnums.ELEMENTS and element != GameEnums.DamageTag.NATURE:
+		var c: Color = color_for([element])
+		root.modulate = Color.WHITE.lerp(c, 0.45)
+		var feuille: String = zone_sheet(c)
+		if feuille != "":
+			sprite(root, feuille, Vector2.ZERO, minf(half_width * 1.6, 260.0), true,
+				Color(c.r, c.g, c.b, 0.55))
 	var rocks: Array[Texture2D] = []
 	for i in range(1, 5):
 		var t: Texture2D = SheetLib.texture("res://assets/terrain/rock%d.png" % i)

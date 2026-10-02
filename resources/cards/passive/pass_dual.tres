@@ -19,6 +19,7 @@ description = "Au-dela de 200 % de vitesse : deux sorts chargent en meme temps, 
 rarity = 2
 base_cast_time = 0.0
 targeting = 0
+element = 0
 tags = Array[int]([])
 effects = Array[ExtResource("1_ewqeq")]([SubResource("Resource_ewqeq")])
 copies_in_starter = 0

@@ -19,6 +19,7 @@ description = "Ralentit tous les ennemis de 40 pourcent pendant 5 s."
 rarity = 1
 base_cast_time = 1.4
 targeting = 0
+element = 3
 tags = Array[int]([4])
 effects = Array[ExtResource("1_rnomm")]([SubResource("Resource_rnomm")])
 copies_in_starter = 0

@@ -25,7 +25,7 @@
 [ext_resource type="Resource" path="res://resources/cards/legendary/terrain_river.tres" id="20_g451r"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_bh4ch"]
 
-[sub_resource type="Resource" id="Resource_dkopx"]
+[sub_resource type="Resource" id="Resource_71fqq"]
 script = ExtResource("18_jfkqu")
 id = &"obj_kill_type_with_card_fireball_5_nacelle_raider"
 description = "Pillard de Haute-Nacelle : en tuer 5 avec Boule de feu"
@@ -36,7 +36,7 @@ params = {
 "enemy": "nacelle_raider"
 }
 
-[sub_resource type="Resource" id="Resource_1stm8"]
+[sub_resource type="Resource" id="Resource_oi32p"]
 script = ExtResource("18_jfkqu")
 id = &"obj_win_below_speed_190"
 description = "Gagner avec moins de 190 % de vitesse"
@@ -45,7 +45,7 @@ params = {
 "pct": 190
 }
 
-[sub_resource type="Resource" id="Resource_dc1bl"]
+[sub_resource type="Resource" id="Resource_dkopx"]
 script = ExtResource("18_jfkqu")
 id = &"obj_card_casts_weakness_mark_11"
 description = "Lancer 11 fois Marque de faiblesse"
@@ -69,7 +69,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_g451r"]
+[sub_resource type="Resource" id="Resource_1stm8"]
 script = ExtResource("20_4hem6")
 id = &"w18_1"
 duration = 25.0
@@ -99,7 +99,7 @@ count = 3
 spawn_delay = 1.8
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_wgl7e"]
+[sub_resource type="Resource" id="Resource_dc1bl"]
 script = ExtResource("20_4hem6")
 id = &"w18_2"
 duration = 27.0
@@ -136,7 +136,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 21.0
 
-[sub_resource type="Resource" id="Resource_y4skc"]
+[sub_resource type="Resource" id="Resource_g451r"]
 script = ExtResource("20_4hem6")
 id = &"w18_3"
 duration = 28.0
@@ -166,7 +166,7 @@ count = 1
 spawn_delay = 2.5
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_a7q5d"]
+[sub_resource type="Resource" id="Resource_wgl7e"]
 script = ExtResource("20_4hem6")
 id = &"w18_4_miniboss"
 duration = 34.0
@@ -187,10 +187,10 @@ intro_story = &"lvl_18_intro"
 outro_story = &"lvl_18_outro"
 terrain = "sand"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_4hem6")]([SubResource("Resource_g451r"), SubResource("Resource_wgl7e"), SubResource("Resource_y4skc"), SubResource("Resource_a7q5d")])
+waves = Array[ExtResource("20_4hem6")]([SubResource("Resource_1stm8"), SubResource("Resource_dc1bl"), SubResource("Resource_g451r"), SubResource("Resource_wgl7e")])
 enemy_pool = Array[ExtResource("1_il855")]([ExtResource("2_323wf"), ExtResource("3_ysblc"), ExtResource("4_71fqq"), ExtResource("5_oi32p"), ExtResource("6_dkopx"), ExtResource("7_1stm8")])
 exploration_deck = Array[ExtResource("8_dc1bl")]([ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("9_g451r"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("11_y4skc"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("13_hxfeh"), ExtResource("10_wgl7e"), ExtResource("10_wgl7e"), ExtResource("12_a7q5d"), ExtResource("12_a7q5d"), ExtResource("16_pk01i"), ExtResource("16_pk01i")])
-objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_dkopx"), SubResource("Resource_1stm8"), SubResource("Resource_dc1bl")])
+objectives = Array[ExtResource("18_jfkqu")]([SubResource("Resource_71fqq"), SubResource("Resource_oi32p"), SubResource("Resource_dkopx")])
 levelup_cards = Array[ExtResource("8_dc1bl")]([ExtResource("15_71fqq"), ExtResource("16_71fqq"), ExtResource("16_oi32p")])
 objective_rewards = Array[ExtResource("8_dc1bl")]([ExtResource("18_1stm8"), ExtResource("19_oi32p"), ExtResource("20_g451r")])
 next_levels = Array[StringName]([&"lvl_03"])

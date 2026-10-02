@@ -175,7 +175,8 @@ func _test_validation() -> void:
 		["enemy:monstre_inexistant", "max_hp", 10.0, "cible inconnue"],
 		[t, "kind", "PasUneFamille", "enum inconnu"],
 		[t, "split_into", "monstre_inexistant", "reference inconnue"],
-		[t, "resistances/vent", 1.0, "element inconnu"],
+		# « physique » n est plus un element depuis la vague 8 (le vent l est).
+		[t, "resistances/physique", 1.0, "element inconnu"],
 		[t, "anim_key", "feuille_inexistante", "apparence hors catalogue"],
 	]
 	for r in refus:
@@ -285,7 +286,7 @@ func _test_aller_retour_export_import() -> void:
 	TesterOverrides.set_override(t, "max_hp", d.max_hp + 3.0)
 	TesterOverrides.set_override(t, "flying", not d.flying)
 	TesterOverrides.set_override(t, "tint", "#80ff80ff")
-	TesterOverrides.set_override(t, "resistances/givre", 0.5)
+	TesterOverrides.set_override(t, "resistances/glace", 0.5)
 	var rarete: String = "Rare" if c.rarity != GameEnums.Rarity.RARE else "Epic"
 	TesterOverrides.set_override(tc, "rarity", rarete)
 	TesterOverrides.set_override(tc, "description", "Texte regle par le testeur")

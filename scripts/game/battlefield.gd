@@ -228,7 +228,9 @@ func _simulate_allies(wd: float) -> void:
 				Fx.projectile(self, a.get("pos", Vector2.ZERO), target.position, Fx.COL_SUMMON)
 				# OBJECTIFS : l allie frappe au nom du lancer qui l a invoque.
 				var obj_src_avant: Dictionary = RunState.swap_damage_source(a.get("src", {}))
-				_hit(target, a["damage"], [GameEnums.DamageTag.SUMMON])
+				# L allie frappe a l ELEMENT de la carte qui l a appele (vague 8) :
+				# une invocation de nature bute sur ce qui resiste a la nature.
+				_hit(target, a["damage"], a.get("tags", [GameEnums.DamageTag.SUMMON]) as Array)
 				RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 			a["cooldown"] = 1.0
 		if a["time"] <= 0.0:
@@ -301,6 +303,9 @@ func enemy_shockwave(from: Enemy, radius: float, damage: int) -> void:
 		"max": radius,
 		"damage": damage,
 		"source": from.definition,
+		# Le monstre lui-meme (vague 8) : ses coups sur un objet de terrain
+		# suivent sa relation a l element de l objet (`object_hit`).
+		"by": from,
 		# Ce que le front a DEJA frappe. Sans cette memoire, un monstre lent reste
 		# dans l epaisseur du front plusieurs images et encaisse dix fois la meme
 		# onde : le boss deviendrait une tondeuse.
@@ -347,7 +352,11 @@ func _simulate_shockwaves(wd: float) -> void:
 			var dp: float = centre.distance_to(pr.position)
 			if apres >= dp and avant < dp and dp <= float(w["max"]):
 				deja.append(pr)
-				if pr.is_breakable() and pr.take_damage(float(degats) * 6.0):
+				var auteur: Enemy = null
+				if is_instance_valid(w.get("by")):
+					auteur = w.get("by") as Enemy
+				if pr.is_breakable() and pr.take_damage(object_hit(float(degats) * 6.0,
+						auteur, _prop_tags(pr))):
 					_destroy_prop(j, true)
 
 		# Le visuel du front, pose aux paliers : une seule image d impact etiree a
@@ -523,7 +532,9 @@ func _passive_death_blast(where: Vector2, rayon_mort: float) -> void:
 			continue
 		# Tableau de tags NON TYPE : Godot 4.4 refuse de convertir Array vers
 		# Array[T] au passage d argument (piege documente en memoire).
-		var tags: Array = []
+		# Vague 8 : Combustion est une carte de FEU, son explosion aussi — un
+		# monstre qui resiste au feu l encaisse moins, comme le Brasier.
+		var tags: Array = [GameEnums.DamageTag.FIRE]
 		_hit(cible, degats, tags)
 	_chain_depth -= 1
 	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
@@ -700,6 +711,30 @@ func _prop_tags(p: TerrainProp) -> Array:
 	return p.get_meta(&"card_tags", []) as Array
 
 
+## Le premier ELEMENT d un tableau de tags, NONE s il n y en a pas.
+static func element_of(tags: Array) -> int:
+	for t in tags:
+		if int(t) in GameEnums.ELEMENTS:
+			return int(t)
+	return GameEnums.DamageTag.NONE
+
+
+## LES COUPS D UN MONSTRE SUR UN OBJET DE TERRAIN (vague 8) — le seul endroit
+## ou la regle s applique, pour le mur, l accessoire et l onde de choc :
+##   relation du monstre a l element de l objet (EnemyDef.object_hit_factor :
+##   faible -> frappe moins, resistant -> frappe plus, borne x0,5..x2) ;
+##   passif elementaire « objets plus solides » de cet element.
+## Sans monstre (test, coup sans auteur), le coup passe tel quel.
+func object_hit(amount: float, who: Enemy, tags: Array) -> float:
+	var f: float = 1.0
+	if who != null and is_instance_valid(who):
+		f = who.object_hit_factor(tags)
+	var el: int = element_of(tags)
+	if el != GameEnums.DamageTag.NONE:
+		f *= maxf(0.0, 1.0 - RunState.element_bonus(el, RunState.ELEM_STURDY) * 0.01)
+	return amount * f
+
+
 func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	if not _targetable(e):
 		return false
@@ -710,6 +745,12 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	# des degats, pour qu aucune carte ni aucun autre passif n y echappe.
 	var total: float = amount * _vuln_multiplier_for(e) \
 		* RunState.passive_damage_multiplier()
+	# PASSIFS ELEMENTAIRES (vague 8) : « +X % de degats aux sorts de feu ». Lus
+	# ICI, au point de passage unique, avec l element des tags : la zone, l allie
+	# et l objet d une carte de feu en profitent comme le sort lui-meme.
+	var el: int = element_of(tags)
+	if el != GameEnums.DamageTag.NONE:
+		total *= 1.0 + RunState.element_bonus(el, RunState.ELEM_DAMAGE) * 0.01
 	# RESISTANCE ELEMENTAIRE du monstre. Elle s applique ICI, au point de passage
 	# unique des degats, et nulle part ailleurs : une source qui la contournerait
 	# ignorerait tout le bestiaire.
@@ -718,7 +759,9 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	# degats normaux, ce qui est la lecture attendue par le joueur — la zone
 	# COMPENSE la resistance, elle ne l ecrase pas.
 	if e.definition != null:
-		total *= e.definition.resistance_to_tags(tags)
+		# Un passif « perce-resistance » (vague 8) ramene une resistance vers le
+		# neutre ; il ne touche ni a une immunite ni a une faiblesse.
+		total *= RunState.pierce_resistance(e.definition.resistance_to_tags(tags), el)
 	# BOUCLIER DE RENVOI. Releve AVANT d appliquer les degats, parce que le coup
 	# peut tuer le boss et refermer sa garde : un renvoi resolu apres coup serait
 	# annule par la mort de celui qui renvoie, et tuer le boss pendant sa garde
@@ -741,7 +784,9 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 		# mettent a freiner les monstres.
 		var chill: float = RunState.passive_magnitude(&"passive_chill_on_hit")
 		if chill > 0.0:
-			e.apply_slow(maxf(0.25, 1.0 - chill * 0.01), 1.5)
+			# Vague 8 : la Morsure est de GLACE, son ralentissement suit la
+			# resistance a la glace (et la ligne SLOW, comme tout ralentissement).
+			e.apply_slow(maxf(0.25, 1.0 - chill * 0.01), 1.5, [GameEnums.DamageTag.ICE])
 		_v3_after_hit(e)
 	return applied
 
@@ -751,7 +796,7 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 func damage_enemy(target: Object, amount: float, card: SpellCard) -> bool:
 	if target == null or not is_instance_valid(target):
 		return false
-	var tags: Array = card.tags if card != null else []
+	var tags: Array = card.combat_tags() if card != null else []
 	return _hit(target as Enemy, amount, tags)
 
 
@@ -786,7 +831,7 @@ func enemies_in_radius(center: Vector2, radius: float) -> Array:
 ## TerrainProp.zone) : sans cette poignee, abattre l arbre laisserait le poison.
 func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
 		dps: float, slow_pct: float, card: SpellCard, vuln_mult: float = 1.0) -> Dictionary:
-	var col: Color = Fx.color_for(card.tags if card != null else [])
+	var col: Color = Fx.color_for(card.combat_tags() if card != null else [])
 	if vuln_mult > 1.0:
 		col = Fx.COL_VULN
 	var vis: Node = Fx.zone_visual(self, pos, maxf(radius, 10.0), duration, col,
@@ -798,7 +843,7 @@ func spawn_ground_zone(pos: Vector2, radius: float, duration: float,
 		"dps": dps,
 		"slow_pct": slow_pct,
 		"vuln_mult": vuln_mult,
-		"tags": (card.tags if card != null else []) as Array,
+		"tags": (card.combat_tags() if card != null else []) as Array,
 		"node": vis,
 		# OBJECTIFS : le lancer qui la pose, remis en place a chaque morsure.
 		"src": RunState.damage_source,
@@ -835,7 +880,10 @@ func apply_reverse(duration: float, tags: Array = []) -> void:
 ## `at` : lieu d apparition. Par defaut devant le mage ; un AUTEL (generateur de
 ## terrain) fait naitre les siens a cote de lui, sinon le joueur ne relierait pas
 ## les allies a l objet qu il a pose.
-func spawn_ally(duration: float, damage: float, at: Vector2 = Vector2.INF) -> void:
+## `tags` (vague 8) : element de la carte qui invoque, plus SUMMON. Vide ou sans
+## element (passif Compagnon fidele) : l allie frappe sans element.
+func spawn_ally(duration: float, damage: float, at: Vector2 = Vector2.INF,
+		tags: Array = [GameEnums.DamageTag.SUMMON]) -> void:
 	# Devant le mage, decale au hasard : deux allies ne se superposent pas.
 	# Hasard du MONDE de la partie (fixe par la graine), pas le hasard global.
 	var r: RandomNumberGenerator = RunState.world_rng
@@ -849,23 +897,27 @@ func spawn_ally(duration: float, damage: float, at: Vector2 = Vector2.INF) -> vo
 	var node: Node = Fx.sprite(self, "magicbubbles", pos, 130.0, true,
 		Color(Fx.COL_SUMMON.r, Fx.COL_SUMMON.g, Fx.COL_SUMMON.b, 0.95))
 	allies.append({"time": duration, "damage": damage, "cooldown": 0.5,
-		"pos": pos, "node": node,
+		"pos": pos, "node": node, "tags": tags.duplicate(),
 		# OBJECTIFS : le lancer qui l invoque (vide pour un allie de passif).
 		"src": RunState.damage_source})
 
 
 ## Pose un mur qui bloque le pathfinding pendant `duration` secondes.
+## `tags` (vague 8) : element de la carte qui pose le mur. Les coups des
+## monstres sur ce mur en dependent (`_object_hit`).
 func spawn_wall(center: Vector2, half_width: float, duration: float,
-		thickness: float = 60.0) -> void:
+		thickness: float = 60.0, tags: Array = []) -> void:
 	if nav == null:
 		nav = NavGrid.new()
 	var cells: Array[Vector2i] = nav.block_rect(center, half_width, thickness)
 	if cells.is_empty():
 		return
 	AudioBus.play_sfx(&"wall")
-	var node: Node = Fx.spawn_wall_visual(self, center, half_width, thickness, duration)
+	var node: Node = Fx.spawn_wall_visual(self, center, half_width, thickness, duration,
+		element_of(tags))
 	var w: Dictionary = {"cells": cells, "time": maxf(duration, 0.1), "node": node,
-		"center": center, "half_width": half_width, "thickness": thickness}
+		"center": center, "half_width": half_width, "thickness": thickness,
+		"tags": tags.duplicate()}
 	walls.append(w)
 	# Un mur est un objet de terrain comme un autre pour le Briseur de terrain :
 	# il recoit la meme ancre, et `destroy()` le fait tomber comme s il avait ete
@@ -1002,7 +1054,9 @@ func dispel_at(center: Vector2, radius: float, tags: Array = []) -> int:
 
 ## Frappe le mur qui recouvre `point`. Renvoie true si un mur a bien encaisse.
 ## Un mur sans PV (les murs temporaires) ignore les coups : seule la duree le tue.
-func damage_wall_at(point: Vector2, amount: float) -> bool:
+## `who` (vague 8) : le monstre qui frappe ; ses coups suivent sa relation a
+## l element du mur (`object_hit`).
+func damage_wall_at(point: Vector2, amount: float, who: Enemy = null) -> bool:
 	for i in range(walls.size() - 1, -1, -1):
 		var w: Dictionary = walls[i]
 		if float(w.get("hp", 0.0)) <= 0.0:
@@ -1014,7 +1068,7 @@ func damage_wall_at(point: Vector2, amount: float) -> bool:
 		var demi_haut: float = float(w.get("thickness", 60.0)) * 0.5
 		if absf(point.x - centre.x) > demi_large or absf(point.y - centre.y) > demi_haut:
 			continue
-		w["hp"] = float(w["hp"]) - amount
+		w["hp"] = float(w["hp"]) - object_hit(amount, who, w.get("tags", []) as Array)
 		if float(w["hp"]) <= 0.0:
 			_break_wall(i)
 		return true
@@ -1042,8 +1096,8 @@ func _break_wall(index: int) -> void:
 ## `duration = INF` traverse `_simulate_walls` sans jamais atteindre zero : aucune
 ## branche d expiration a ajouter, le meme code gere les deux sortes de murs.
 func spawn_breakable_wall(center: Vector2, half_width: float, thickness: float,
-		hp: float) -> void:
-	spawn_wall(center, half_width, INF, thickness)
+		hp: float, tags: Array = []) -> void:
+	spawn_wall(center, half_width, INF, thickness, tags)
 	if walls.is_empty():
 		return
 	walls[walls.size() - 1]["hp"] = maxf(hp, 1.0)
@@ -1068,7 +1122,7 @@ func enemy_strikes_wall(e: Enemy, world_delta: float) -> void:
 	if e == null or e.definition == null:
 		return
 	var devant: Vector2 = e.position + Vector2(0.0, e.radius() + 20.0)
-	damage_wall_at(devant, float(e.definition.contact_hit()) * 4.0 * world_delta)
+	damage_wall_at(devant, float(e.definition.contact_hit()) * 4.0 * world_delta, e)
 
 
 # =====================================================================
@@ -1141,12 +1195,12 @@ func prop_hp_at(point: Vector2) -> float:
 ## Meme forme que `damage_wall_at()` volontairement : c est ce que les monstres
 ## bloques appellent deja, et un joueur ne distingue pas « frapper un mur » de
 ## « frapper un arbre » — seul le resultat change.
-func damage_prop_at(point: Vector2, amount: float) -> bool:
+func damage_prop_at(point: Vector2, amount: float, who: Enemy = null) -> bool:
 	for i in range(props.size() - 1, -1, -1):
 		var p: TerrainProp = props[i]
 		if not p.is_breakable() or not p.covers(point):
 			continue
-		if p.take_damage(amount):
+		if p.take_damage(object_hit(amount, who, _prop_tags(p))):
 			_destroy_prop(i, true)
 		return true
 	return false
@@ -1255,7 +1309,8 @@ func _props_take_hits(p: TerrainProp, wd: float) -> void:
 		if e.position.distance_to(p.position) > p.reach + e.radius():
 			continue
 		# Meme bareme que le mur : les degats de contact, appliques en continu.
-		if p.take_damage(float(e.definition.contact_hit()) * 4.0 * wd):
+		if p.take_damage(object_hit(float(e.definition.contact_hit()) * 4.0 * wd, e,
+				_prop_tags(p))):
 			var idx: int = props.find(p)
 			if idx >= 0:
 				_destroy_prop(idx, true)
@@ -1402,7 +1457,10 @@ func _tick_generator(p: TerrainProp, wd: float) -> void:
 	p.summon_timer += p.summon_every
 	# OBJECTIFS : l allie d un autel appartient au lancer qui a pose l autel.
 	var obj_src_avant: Dictionary = RunState.swap_damage_source(p.get_meta(&"obj_src", {}))
-	spawn_ally(p.summon_duration, p.summon_damage, p.position)
+	var tags_allie: Array = _prop_tags(p).duplicate()
+	if not tags_allie.has(GameEnums.DamageTag.SUMMON):
+		tags_allie.append(GameEnums.DamageTag.SUMMON)
+	spawn_ally(p.summon_duration, p.summon_damage, p.position, tags_allie)
 	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 	Fx.impact(self, p.position, Fx.COL_SUMMON, 60.0)
 

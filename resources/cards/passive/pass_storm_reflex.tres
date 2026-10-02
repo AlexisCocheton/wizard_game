@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0hbr0"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_sxdi0"]
+
+[sub_resource type="Resource" id="Resource_0hbr0"]
+script = ExtResource("1_0hbr0")
+key = &"passive_element"
+magnitude = 25.0
+duration = 0.0
+radius = 0.0
+params = {
+&"stat": &"cast"
+}
+
+[resource]
+script = ExtResource("2_sxdi0")
+id = &"pass_storm_reflex"
+display_name = "Reflexe de l eclair"
+description = "Au-dela de 125 % de vitesse : les sorts de FOUDRE se lancent 25 % plus vite."
+rarity = 0
+base_cast_time = 0.0
+targeting = 0
+element = 7
+tags = Array[int]([])
+effects = Array[ExtResource("1_0hbr0")]([SubResource("Resource_0hbr0")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 125
+fx_key = &""
+sfx_key = &""

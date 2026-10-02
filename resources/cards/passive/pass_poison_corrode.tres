@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_2u7fh"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_04jy3"]
+
+[sub_resource type="Resource" id="Resource_2u7fh"]
+script = ExtResource("1_2u7fh")
+key = &"passive_element"
+magnitude = 60.0
+duration = 0.0
+radius = 0.0
+params = {
+&"stat": &"pierce"
+}
+
+[resource]
+script = ExtResource("2_04jy3")
+id = &"pass_poison_corrode"
+display_name = "Venin corrosif"
+description = "Au-dela de 230 % de vitesse : la resistance des monstres au POISON est reduite de 60 %. Une immunite reste une immunite."
+rarity = 2
+base_cast_time = 0.0
+targeting = 0
+element = 6
+tags = Array[int]([])
+effects = Array[ExtResource("1_2u7fh")]([SubResource("Resource_2u7fh")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 230
+fx_key = &""
+sfx_key = &""

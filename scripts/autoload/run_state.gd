@@ -278,6 +278,8 @@ func effective_cast_time(card: SpellCard) -> float:
 	# doit pas pouvoir rendre un sort instantane, la barre de charge n aurait
 	# plus rien a montrer.
 	base = maxf(0.1, base * upgrade_cast_factor(card))
+	# PASSIFS ELEMENTAIRES (vague 8) : « -X % d incantation aux sorts de vent ».
+	base = maxf(0.1, base * element_cast_factor(card))
 	# Le MULTIPLICATEUR GLOBAL entre ici, apres les ajustements par carte et
 	# avant la division par la vitesse : il rallonge tous les sorts dans la meme
 	# proportion, donc la hierarchie entre eux ne bouge pas. Le plancher de
@@ -965,7 +967,40 @@ const PASSIVE_KEYS: Array[StringName] = [
 	&"passive_twin_cast",       # chaque sort est resolu deux fois
 	&"passive_speed_damage",    # la vitesse multiplie aussi les degats
 	&"passive_kill_speed",      # chaque mort repousse la jauge de vitesse
+	&"passive_element",         # vague 8 : amplifie UN element (voir element_bonus)
 ]
+
+## --- PASSIFS ELEMENTAIRES (vague 8) ---
+##
+## « Augmente la duree des effets de poison ; augmente les degats des sorts de
+## feu ; diminue l incantation des sorts d arcane. » Une SEULE cle,
+## `passive_element`, pour tous : l ELEMENT est celui de la carte passive
+## (SpellCard.element), la REGLE amplifiee est le parametre `stat` de son
+## effet, le pourcentage sa magnitude. Seize passifs, zero handler neuf : un
+## passif de plus est un .tres de plus, comme une carte.
+##
+## Chaque `stat` est lue a UN endroit, au moment ou la regle s applique :
+##   damage    +X % de degats             Battlefield._hit
+##   duration  +X % de duree des effets   cast_specs (copies)
+##   radius    +X % de rayon des effets   cast_specs (copies)
+##   cast      -X % d incantation         effective_cast_time
+##   sturdy    -X % de degats subis par les objets de terrain de l element
+##                                        Battlefield.object_hit
+##   pierce    les RESISTANCES a l element reculent de X % vers le neutre ;
+##             une immunite reste une immunite (c est une decision de design,
+##             pas un chiffre a eroder)  Battlefield._hit (pierce_resistance)
+const ELEM_DAMAGE: StringName = &"damage"
+const ELEM_DURATION: StringName = &"duration"
+const ELEM_RADIUS: StringName = &"radius"
+const ELEM_CAST: StringName = &"cast"
+const ELEM_STURDY: StringName = &"sturdy"
+const ELEM_PIERCE: StringName = &"pierce"
+const ELEMENT_STATS: Array[StringName] = [
+	ELEM_DAMAGE, ELEM_DURATION, ELEM_RADIUS, ELEM_CAST, ELEM_STURDY, ELEM_PIERCE,
+]
+## Plancher de l incantation reduite par les passifs elementaires : deux passifs
+## de la meme famille ne doivent pas rendre un sort instantane.
+const ELEMENT_CAST_FLOOR: float = 0.5
 
 ## Nombre de sorts qui chargent en ce moment (tenu a jour par le Caster : lui
 ## seul sait si la seconde place est reellement occupee).
@@ -1013,6 +1048,42 @@ func passive_magnitude(key: StringName) -> float:
 			if spec != null and spec.key == key:
 				total += spec.magnitude
 	return total
+
+
+## Somme des pourcentages des passifs elementaires ACTIFS (seuil compris) qui
+## amplifient `stat` pour `element`. Zero si aucun : chaque lecteur multiplie
+## par (1 + bonus / 100) sans avoir a savoir si un passif est equipe.
+func element_bonus(element: int, stat: StringName) -> float:
+	if element == GameEnums.DamageTag.NONE:
+		return 0.0
+	var total: float = 0.0
+	for c in equipped_passives:
+		if c == null or c.main_element() != element or not passive_active(c):
+			continue
+		for spec in c.effects:
+			if spec == null or spec.key != &"passive_element":
+				continue
+			if StringName(spec.get_param(&"stat", &"")) == stat:
+				total += spec.magnitude
+	return total
+
+
+## Resistance `r` d un monstre a `element`, apres les passifs « perce-
+## resistance » : r recule vers 1 de X %. Ni une immunite (0) ni une
+## faiblesse (> 1) ne bougent.
+func pierce_resistance(r: float, element: int) -> float:
+	if r <= 0.0 or r >= 1.0:
+		return r
+	var b: float = clampf(element_bonus(element, ELEM_PIERCE) * 0.01, 0.0, 1.0)
+	return r + (1.0 - r) * b
+
+
+## Facteur d incantation des passifs elementaires pour cette carte (1 = rien).
+func element_cast_factor(card: SpellCard) -> float:
+	if card == null:
+		return 1.0
+	var b: float = element_bonus(card.main_element(), ELEM_CAST)
+	return maxf(ELEMENT_CAST_FLOOR, 1.0 - b * 0.01)
 
 
 ## Equipe un passif dans un emplacement libre. Faux si la barre est pleine ou si
@@ -1556,7 +1627,9 @@ func is_objective_failed(objective_id: StringName) -> bool:
 
 
 func _note_cast_for_objectives(card: SpellCard) -> void:
-	for t in card.tags:
+	# L element du sort compte comme un tag (vague 8 : il vit dans
+	# SpellCard.element, plus dans `tags`).
+	for t in card.combat_tags():
 		casts_by_tag[int(t)] = int(casts_by_tag.get(int(t), 0)) + 1
 	var vues: Dictionary = {}
 	for k: StringName in card.effect_keys():
@@ -2761,6 +2834,7 @@ func cast_specs(card: SpellCard) -> Array[EffectSpec]:
 			_apply_axis(c, StringName(a), float(sommes[a]))
 		_apply_count(c, nombres)
 		out.append(c)
+	_apply_element_passives(card, out)
 	var pioche: int = int(round(float(sommes.get(UP_DRAW, 0.0))))
 	if pioche > 0:
 		var d := EffectSpec.new()
@@ -2768,6 +2842,27 @@ func cast_specs(card: SpellCard) -> Array[EffectSpec]:
 		d.params = {&"count": pioche}
 		out.append(d)
 	return out
+
+
+## PASSIFS ELEMENTAIRES de duree et de rayon (vague 8), appliques sur des
+## COPIES pour la meme raison que les ameliorations : les EffectSpec du .tres
+## sont partages. Sans passif actif, `out` n est pas touche (aucune copie).
+## Une duree nulle (objet PERMANENT) reste nulle : il n y a rien a allonger.
+func _apply_element_passives(card: SpellCard, out: Array[EffectSpec]) -> void:
+	var el: int = card.main_element()
+	var dur: float = element_bonus(el, ELEM_DURATION)
+	var ray: float = element_bonus(el, ELEM_RADIUS)
+	if dur <= 0.0 and ray <= 0.0:
+		return
+	for i in out.size():
+		var sp: EffectSpec = out[i]
+		var c: EffectSpec = sp.duplicate() as EffectSpec
+		c.params = sp.params.duplicate(true)
+		if dur > 0.0 and c.duration > 0.0 and is_finite(c.duration):
+			c.duration *= 1.0 + dur * 0.01
+		if ray > 0.0 and c.radius > 0.0:
+			c.radius *= 1.0 + ray * 0.01
+		out[i] = c
 
 
 ## Applique `pct` (signe : + ameliore, - coute) a un axe d un effet COPIE.

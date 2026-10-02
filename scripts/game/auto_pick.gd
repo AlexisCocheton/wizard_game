@@ -116,7 +116,7 @@ static func element_factor(card: SpellCard, seen: Array) -> float:
 		var def: EnemyDef = d as EnemyDef
 		if def == null:
 			continue
-		somme += def.resistance_to_tags(card.tags)
+		somme += def.resistance_to_tags(card.combat_tags())
 		n += 1
 	return somme / float(n) if n > 0 else 1.0
 
@@ -540,7 +540,7 @@ class Politique extends RefCounted:
 			return true
 		if interdites.has(c.id):
 			return true
-		if tag_interdit >= 0 and c.tags.has(tag_interdit):
+		if tag_interdit >= 0 and c.has_tag(tag_interdit):
 			return true
 		if cle_interdite != &"" and cle_interdite in c.effect_keys():
 			return true
@@ -554,13 +554,13 @@ class Politique extends RefCounted:
 	func demande_a_l_offre(c: SpellCard) -> bool:
 		if atteint():
 			return false
-		return d_abord.has(c.id) or (tag_d_abord >= 0 and c.tags.has(tag_d_abord))
+		return d_abord.has(c.id) or (tag_d_abord >= 0 and c.has_tag(tag_d_abord))
 
 	## Carte a essayer avant les autres.
 	func prefere(g: GameController, c: SpellCard) -> bool:
 		if atteint():
 			return false
-		if d_abord.has(c.id) or (tag_d_abord >= 0 and c.tags.has(tag_d_abord)):
+		if d_abord.has(c.id) or (tag_d_abord >= 0 and c.has_tag(tag_d_abord)):
 			return true
 		return zones_d_abord and c.targeting == GameEnums.Targeting.POSITION \
 			and present(g, zones_sur)

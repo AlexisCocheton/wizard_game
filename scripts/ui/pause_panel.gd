@@ -244,7 +244,9 @@ func _render_hand() -> void:
 		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		col.add_child(UiTheme.label(p.display_name, UiTheme.FONT_BODY, INK_TEXT,
 			HORIZONTAL_ALIGNMENT_LEFT, false))
-		col.add_child(UiTheme.label(p.description, UiTheme.FONT_SMALL, INK_SOFT))
+		# Vague 8 : l element cite porte son logo dans la phrase.
+		col.add_child(ElementIcons.rich_label(ElementIcons.decorate(p.description,
+			ElementIcons.inline_px(UiTheme.FONT_SMALL)), UiTheme.FONT_SMALL, INK_SOFT))
 		ligne.add_child(col)
 		box.add_child(ligne)
 
@@ -273,8 +275,10 @@ func _hand_row(c: SpellCard) -> Control:
 		INK_HINT, HORIZONTAL_ALIGNMENT_RIGHT, false))
 	col.add_child(entete)
 
-	# La description, elle, DOIT se replier : c est une phrase.
-	col.add_child(UiTheme.label(c.description, UiTheme.FONT_SMALL, INK_SOFT))
+	# La description, elle, DOIT se replier : c est une phrase. Les elements
+	# cites y portent leur logo (vague 8, ElementIcons.decorate).
+	col.add_child(ElementIcons.rich_label(ElementIcons.decorate(c.description,
+		ElementIcons.inline_px(UiTheme.FONT_SMALL)), UiTheme.FONT_SMALL, INK_SOFT))
 	if c.targeting != GameEnums.Targeting.NONE:
 		col.add_child(UiTheme.label(targeting_hint(c.targeting), UiTheme.FONT_SMALL,
 			INK_HINT, HORIZONTAL_ALIGNMENT_LEFT, false))
@@ -431,11 +435,12 @@ static func fill_enemy_sheet(box: VBoxContainer, def: EnemyDef) -> void:
 
 	box.add_child(UiTheme.label("COMPETENCES", UiTheme.FONT_SMALL, INK_SOFT,
 		HORIZONTAL_ALIGNMENT_CENTER, false))
-	var lignes: Array[String] = BestiaryLore.behaviours(def)
+	# `true` : la legende du Cameleon porte les logos de ses elements (vague 8).
+	var lignes: Array[String] = BestiaryLore.behaviours(def, true)
 	if lignes.is_empty():
 		box.add_child(UiTheme.label("- aucune particularite", UiTheme.FONT_SMALL, INK_TEXT))
 	for line in lignes:
-		box.add_child(UiTheme.label("- " + line, UiTheme.FONT_SMALL, INK_TEXT))
+		box.add_child(ElementIcons.rich_label("- " + line, UiTheme.FONT_SMALL, INK_TEXT))
 
 	var groupes: Array[Dictionary] = BestiaryLore.resistance_groups(def)
 	if groupes.is_empty():
@@ -451,11 +456,13 @@ static func fill_enemy_sheet(box: VBoxContainer, def: EnemyDef) -> void:
 		box.add_child(bloc)
 		bloc.add_child(UiTheme.label(str(gr["title"]) + " :", UiTheme.FONT_BODY,
 			resist_ink(str(gr["title"])), HORIZONTAL_ALIGNMENT_LEFT, false))
-		for item in gr["items"]:
-			var ligne: HBoxContainer = ElementIcons.resistance_row(int(item["tag"]),
-				float(item["mult"]), RESIST_ICON_PX, INK_TEXT, UiTheme.FONT_SMALL)
-			ligne.name = "Resist_%d" % int(item["tag"])
-			bloc.add_child(ligne)
+		# Vague 8 : « [feu] feu -30 %   [eau] eau +60 % » sur une ligne, le meme
+		# helper que le bestiaire (ElementIcons.resist_bbcode).
+		var ligne: RichTextLabel = ElementIcons.rich_label(
+			ElementIcons.resist_bbcode(gr["items"], ElementIcons.inline_px(UiTheme.FONT_SMALL)),
+			UiTheme.FONT_SMALL, INK_TEXT)
+		ligne.name = "ResistLine_" + str(gr["title"])
+		bloc.add_child(ligne)
 
 
 ## Encre du mot de groupe, sur PAPIER (comme au bestiaire) : rouge sombre pour ce

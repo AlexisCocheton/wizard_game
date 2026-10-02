@@ -236,10 +236,16 @@ func _labels(root: Node) -> Array[Label]:
 	return sortie
 
 
+## Les textes LUS par le joueur. Depuis la vague 8, une description qui cite un
+## element est un RichTextLabel a logos : on la relit sans ses logos
+## (ElementIcons.strip_inline), c est la phrase d origine qui doit y etre.
 func _textes(root: Node) -> Array[String]:
 	var sortie: Array[String] = []
 	for l: Label in _labels(root):
 		sortie.append(l.text)
+	for n in _descendants(root):
+		if n is RichTextLabel:
+			sortie.append(ElementIcons.strip_inline((n as RichTextLabel).text))
 	return sortie
 
 

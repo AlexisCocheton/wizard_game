@@ -21,6 +21,7 @@ description = "Mur de 20 s : les monstres le contournent et il arrete leurs proj
 rarity = 1
 base_cast_time = 1.5
 targeting = 1
+element = 9
 tags = Array[int]([])
 effects = Array[ExtResource("1_1rujh")]([SubResource("Resource_1rujh")])
 copies_in_starter = 0
