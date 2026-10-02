@@ -106,6 +106,7 @@ var speed_dropped: bool = false
 
 func _ready() -> void:
 	_rng.randomize()
+	world_rng.randomize()
 	reset()
 
 
@@ -152,8 +153,39 @@ func reset() -> void:
 
 
 ## Fixe la graine pour rendre les tirages deterministes (tests, replays).
+## Elle fixe AUSSI le hasard du monde (world_rng) : une graine = une partie.
 func set_seed(value: int) -> void:
 	_rng.seed = value
+	world_rng.seed = value ^ WORLD_SEED_SALT
+
+
+## LE HASARD DU MONDE : couloirs et cotes d apparition (WaveSpawner), esquive
+## (Enemy.take_damage), points de chute de la Pluie de meteores, place des allies
+## invoques, pont d une riviere (Battlefield).
+##
+## POURQUOI : ces tirages passaient par le hasard GLOBAL de Godot (randf) ou par
+## un generateur re-seme au hasard a chaque usage. set_seed() ne les fixait pas,
+## et deux processus du banc a graine egale rendaient des resultats differents
+## (chantier W7) : un objectif ne se re-mesurait pas, il se re-tirait.
+##
+## POURQUOI UN SECOND GENERATEUR plutot que _rng : les tirages du monde dependent
+## de ce qui se passe en jeu (une esquive par coup recu). Partages avec la
+## pioche, ils decaleraient les cartes tirees des que le joueur vise autrement ;
+## separes, une graine donne la meme pioche quelle que soit la facon de jouer,
+## et les tests semes d avant gardent exactement leurs tirages.
+##
+## Le jeu reel ne seme jamais : les deux generateurs partent au hasard (_ready),
+## le comportement du joueur ne change pas.
+var world_rng := RandomNumberGenerator.new()
+## Ecarte la graine du monde de celle de la pioche : avec la meme valeur, les
+## deux suites seraient identiques et correlees.
+const WORLD_SEED_SALT: int = 0x5DEECE66D
+
+
+## Graine d un generateur DERIVE du hasard du monde (le WaveSpawner a le sien) :
+## jamais 0, qui veut dire "au hasard" pour ses consommateurs.
+func world_seed() -> int:
+	return int(world_rng.randi()) + 1
 
 
 func total_cards() -> int:

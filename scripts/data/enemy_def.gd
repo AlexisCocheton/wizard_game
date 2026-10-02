@@ -207,14 +207,22 @@ extends Resource
 ##   BOUNCE   : diagonale qui rebondit sur les bords du terrain
 ##   HOP      : saute d une colonne de `pattern_width` px toutes les
 ##              `pattern_interval` s
+##   SPIRAL   : descend en TOURNANT : il parcourt un cercle de `pattern_width`
+##              px de diametre pendant que sa colonne descend. Le cercle part
+##              vers le centre du terrain, se pose SOUS sa position de depart
+##              (jamais au-dessus de la ligne d apparition) et oscille autour de
+##              sa colonne. Vitesse sur le cercle : `pattern_lateral_speed`. Plus
+##              rapide que `base_speed`, il fait des boucles et REMONTE un
+##              instant ; egale (defaut), une roue qui roule, sans recul.
 ## Pour un monstre AU SOL, le motif ne s applique qu en descente libre : des
-## qu un mur impose un chemin A*, le chemin prime, et un ecart lateral qui
-## entrerait dans une cellule bloquee est refuse. Les volants l appliquent
-## toujours. `wave_amplitude` et `burst_move` restent independants et cumulables.
-enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP }
+## qu un mur impose un chemin A*, le chemin prime, et un ecart (lateral, ou
+## vertical pour la spirale) qui entrerait dans une cellule bloquee est refuse.
+## Les volants l appliquent toujours. `wave_amplitude` et `burst_move` restent
+## independants et cumulables.
+enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP, SPIRAL }
 @export var move_pattern: MovePattern = MovePattern.STRAIGHT
-## Vitesse laterale en px/s a x1 (ZIGZAG, BOUNCE). 0 = egale a `base_speed`,
-## donc une diagonale a 45 degres.
+## Vitesse laterale en px/s a x1 (ZIGZAG, BOUNCE ; vitesse sur le cercle pour
+## SPIRAL). 0 = egale a `base_speed`, donc une diagonale a 45 degres.
 @export var pattern_lateral_speed: float = 0.0
 @export var pattern_width: float = 240.0
 @export var pattern_interval: float = 1.5
