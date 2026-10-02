@@ -192,26 +192,33 @@ func total_cards() -> int:
 	return deck.size() + hand.size() + discard.size()
 
 
-## Construit le deck de depart a partir des cartes communes.
+## Construit un deck a partir des exemplaires de base (copies_in_starter).
+## N obtient AUCUNE carte : copies_in_starter ne donne plus rien au livre de
+## sorts (SaveData, LE LIVRE DE SORTS).
 func build_starter_deck(cards: Array[SpellCard]) -> void:
 	deck.clear()
 	for c in cards:
 		for i in c.copies_in_starter:
 			deck.append(c)
-		SaveData.discover_card(c.id)
 	shuffle_deck()
 	deck_changed.emit()
 
 
 ## Construit le deck a partir d une liste EXPLICITE : une entree = un exemplaire.
 ## Utilise par le deck pre-etabli d un niveau et par le deck Massacre du joueur.
+##
+## Distribuer un deck n OBTIENT plus ses cartes (regle du livre de sorts, 01/10).
+## Le deck d un niveau OUVERT est deja dans le livre avant la premiere partie,
+## et un deck compose ne contient que des cartes obtenues. Ecrire ici donnait
+## un livre qui dependait d avoir lance une partie (le Mur de pierre restait "a
+## obtenir" jusque-la), et faisait obtenir le deck d un niveau FERME a qui le
+## jouait hors campagne (banc, tests).
 func build_deck_from_list(cards: Array[SpellCard]) -> void:
 	deck.clear()
 	for c in cards:
 		if c == null:
 			continue
 		deck.append(c)
-		SaveData.discover_card(c.id)
 	shuffle_deck()
 	deck_changed.emit()
 
@@ -897,8 +904,10 @@ func equip_passive(card: SpellCard) -> bool:
 		return false
 	if equipped_passives.size() >= GameConfig.PASSIVE_SLOTS:
 		return false
+	# Equiper n obtient rien : en combat, un passif arrive par pick_offer, qui
+	# l a deja fait entrer au livre ; au depart, equip_saved_passives n equipe que
+	# des passifs obtenus. Une seule porte d entree : la PRISE.
 	equipped_passives.append(card)
-	SaveData.discover_card(card.id)
 	passive_activated.emit(card)
 	passives_changed.emit()
 	return true
@@ -914,7 +923,6 @@ func swap_passive(slot: int, card: SpellCard) -> bool:
 	if equipped_passives.has(card):
 		return false
 	equipped_passives[slot] = card
-	SaveData.discover_card(card.id)
 	passive_activated.emit(card)
 	passives_changed.emit()
 	return true

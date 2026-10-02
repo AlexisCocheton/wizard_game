@@ -25,7 +25,6 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_test_pool_de_campagne_exact()
 	_test_un_objectif_reussi_ajoute_sa_carte_au_pool()
 	_test_pool_hors_campagne_egal_aux_cartes_obtenues()
@@ -45,7 +44,7 @@ func run() -> void:
 	_test_communes_proposees_en_campagne()
 	_test_hors_campagne_la_table_des_sorts_ne_change_pas()
 	_test_contenu_de_niveau_reel()
-	_test_ou_obtenir_distingue_deck_et_montee()
+	_test_ou_obtenir_dit_la_montee()
 	_test_meme_gris_au_grimoire_et_au_deck()
 	_test_profil_grimoire_et_deck_meme_compteur()
 	# Etat propre pour les suites suivantes.
@@ -53,7 +52,6 @@ func run() -> void:
 	RunState.current_level_def = null
 	RunState.mode = GameEnums.Mode.EXPLORATION
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	reset_gauge_at_normal_speed()
 
 
@@ -66,7 +64,6 @@ func run() -> void:
 ## OBTENUES, comme les ecrans.
 func _test_profil_grimoire_et_deck_meme_compteur() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var legendaire: SpellCard = _sorts(GameEnums.Rarity.LEGENDARY)[0]
 	SaveData.discover_card(legendaire.id)
 	var perimes: Array = SaveData.profile().get("discovered_cards", [])
@@ -140,7 +137,6 @@ func _test_profil_grimoire_et_deck_meme_compteur() -> void:
 		eq(trouve, lignes[titre], "le profil affiche la ligne %s" % titre)
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 # --- Outils --------------------------------------------------------------
@@ -278,7 +274,6 @@ func _test_un_objectif_reussi_ajoute_sa_carte_au_pool() -> void:
 
 func _test_pool_hors_campagne_egal_aux_cartes_obtenues() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var lv: LevelDef = _niveau(1)
 	var hors: GameEnums.Mode = _mode_hors_campagne()
 	ok(hors != GameEnums.Mode.EXPLORATION, "il existe un mode hors campagne")
@@ -383,16 +378,20 @@ func _test_premiere_prise_obtient_bruler_non() -> void:
 
 func _test_visibilite_trois_etats() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
 	ok(SaveData.is_level_unlocked(&"lvl_01"), "le premier niveau est ouvert")
-	# OBTENABLE : dans le deck d un niveau ouvert, jamais obtenue.
+	# OBTENUE sans avoir joue : le deck d un niveau ouvert est dans le livre
+	# (regle du livre de sorts, 01/10 ; voir test_spell_book).
+	for c0: SpellCard in lvl1.exploration_deck:
+		eq(SaveData.card_visibility(c0.id), SaveData.CARD_OBTAINED,
+			"%s, du deck d un niveau ouvert, est OBTENUE" % c0.id)
+	# OBTENABLE : une carte NOUVELLE d un niveau ouvert, jamais prise.
 	var obtenable: SpellCard = null
-	for c: SpellCard in lvl1.exploration_deck:
+	for c: SpellCard in lvl1.levelup_cards:
 		if c != null and not SaveData.is_discovered(c.id):
 			obtenable = c
 			break
-	ok(obtenable != null, "le deck du premier niveau a une carte pas encore obtenue")
+	ok(obtenable != null, "le premier niveau a une carte nouvelle pas encore obtenue")
 	if obtenable != null:
 		eq(SaveData.card_visibility(obtenable.id), SaveData.CARD_OBTAINABLE,
 			"une carte du pool d un niveau ouvert, jamais prise, est OBTENABLE")
@@ -440,7 +439,6 @@ func _test_visibilite_trois_etats() -> void:
 
 func _test_le_grimoire_et_le_deck_cachent_l_invisible() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
 	var catalogue: Array = GalleryPanel.catalog_of(GalleryPanel.Section.SPELLS)
 	ok(sorts.size() < catalogue.size(),
@@ -531,7 +529,6 @@ func _test_migration_d_un_ancien_profil() -> void:
 	SaveData.load_from_dictionary(ecrit)
 	ok(SaveData.is_discovered(legendaire.id), "la migration relue ne retire rien")
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _test_rang_et_rarete_des_recompenses() -> void:
@@ -584,7 +581,6 @@ func _test_niveau_sans_contenu_de_progression() -> void:
 	lvl1.levelup_cards = avant_cartes
 	lvl1.objective_rewards = avant_rec
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 # --- E. Passifs --------------------------------------------------------------
@@ -778,7 +774,6 @@ func _test_ecran_de_deck_equipe_les_passifs() -> void:
 		DeckRules.MAX_PASSIVES, "jamais plus de trois emplacements")
 
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
@@ -810,7 +805,6 @@ func _test_ecran_de_deck_equipe_les_passifs() -> void:
 	ok(panel.passive_lock_label() == null, "une fois l acte 2 atteint, plus de phrase de verrou")
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## LA PHRASE DE VERROU SE LIT EN ENTIER (retouche du 30/09). Sur les captures du
@@ -908,7 +902,6 @@ func _test_communes_proposees_en_campagne() -> void:
 	RunState.reset()
 	RunState.current_level_def = null
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## Hors campagne (Infini, Massacre) et sans niveau, la table de DEC-004 reste la
@@ -944,11 +937,10 @@ func _test_hors_campagne_la_table_des_sorts_ne_change_pas() -> void:
 ## Le contenu LIVRE (chantier W7 : 3 cartes nouvelles par niveau, une carte par
 ## objectif) sur les deux premiers niveaux, l un ouvert, l autre ferme. Ce test
 ## fabriquait ce contenu en code tant qu il n etait pas ecrit ; il lit
-## maintenant le vrai. Les cartes deja obtenues (cartes de depart) ou deja
+## maintenant le vrai. Les cartes deja obtenues (deck d un niveau ouvert) ou deja
 ## offertes par un pool ouvert sont ecartees : leur etat ne dit rien de la regle.
 func _test_contenu_de_niveau_reel() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var ouvert: LevelDef = ContentDB.levels.get(&"lvl_01")
 	var ferme: LevelDef = null
 	for id in ouvert.next_levels:
@@ -1007,48 +999,41 @@ func _test_contenu_de_niveau_reel() -> void:
 	eq(int(apres[1]), int(avant[1]), "et le nombre de cartes visibles ne change pas")
 	RunState.reset()
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
-## "Ou l obtenir" ne dit pas la meme chose pour une carte du DECK d un niveau
-## (il suffit de le jouer) et pour une carte de sa montee de niveau.
-func _test_ou_obtenir_distingue_deck_et_montee() -> void:
+## "Ou l obtenir" : la montee de niveau, et elle seule. Le chemin "joue tel
+## niveau, elle est dans son deck" a disparu avec la regle du livre de sorts
+## (01/10) : une carte du deck d un niveau ouvert est deja obtenue, aucune
+## phrase ne doit envoyer le joueur la chercher.
+func _test_ou_obtenir_dit_la_montee() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
-	var du_deck: SpellCard = null
 	for c: SpellCard in lvl1.exploration_deck:
-		if c != null and not SaveData.is_discovered(c.id):
-			du_deck = c
-			break
-	ok(du_deck != null, "le deck du niveau 1 a une carte pas encore obtenue")
-	if du_deck == null:
-		return
-	var phrase: String = CollectionStyle.where_to_obtain(du_deck)
-	ok(phrase.contains("joue") and phrase.contains(lvl1.display_name),
-		"carte du deck : jouer le niveau suffit (%s)" % phrase)
-	not_ok(phrase.contains("montee"), "et pas de montee de niveau a guetter (%s)" % phrase)
+		eq(SaveData.card_visibility(c.id), SaveData.CARD_OBTAINED,
+			"%s, du deck du niveau 1, n a pas de 'ou l obtenir' : elle est obtenue" % c.id)
 	var sauve: Array[SpellCard] = lvl1.levelup_cards.duplicate()
 	var nouvelle: SpellCard = null
 	for c2: SpellCard in _sorts(GameEnums.Rarity.RARE):
 		if SaveData.card_visibility(c2.id) == SaveData.CARD_HIDDEN:
 			nouvelle = c2
 			break
+	ok(nouvelle != null, "une rare invisible sur un profil neuf")
+	if nouvelle == null:
+		return
 	var nouv: Array[SpellCard] = [nouvelle]
 	lvl1.levelup_cards = nouv
 	var phrase2: String = CollectionStyle.where_to_obtain(nouvelle)
 	ok(phrase2.contains("montee") and phrase2.contains(lvl1.display_name),
 		"carte nouvelle : a prendre a la montee de niveau (%s)" % phrase2)
+	not_ok(phrase2.contains("joue "), "et pas de 'joue tel niveau' (%s)" % phrase2)
 	lvl1.levelup_cards = sauve
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## Une carte grisee a LE MEME ASPECT au grimoire et a l ecran de deck : fond et
 ## icone grises, texte intact. Le defaut releve : le deck voilait tout le texte.
 func _test_meme_gris_au_grimoire_et_au_deck() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var sorts: Array = GalleryPanel.entries_of(GalleryPanel.Section.SPELLS)
 	var cible: SpellCard = null
 	var index: int = -1
@@ -1088,7 +1073,6 @@ func _test_meme_gris_au_grimoire_et_au_deck() -> void:
 	detach(deck)
 	detach(grimoire)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _vignette_de(racine: Node, nom: String) -> Button:
