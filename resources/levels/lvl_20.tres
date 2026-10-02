@@ -26,7 +26,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="22_ffhrg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="23_wpr6s"]
 
-[sub_resource type="Resource" id="Resource_so1u1"]
+[sub_resource type="Resource" id="Resource_77re2"]
 script = ExtResource("20_yb17v")
 id = &"obj_no_card_void_grip"
 description = "Gagner sans lancer Vide d emprise"
@@ -35,7 +35,7 @@ params = {
 "card": "void_grip"
 }
 
-[sub_resource type="Resource" id="Resource_811w5"]
+[sub_resource type="Resource" id="Resource_81gl4"]
 script = ExtResource("20_yb17v")
 id = &"obj_card_casts_piercing_arrow_21"
 description = "Lancer 21 fois Fleche percante"
@@ -45,7 +45,7 @@ params = {
 "count": 21
 }
 
-[sub_resource type="Resource" id="Resource_h0w5p"]
+[sub_resource type="Resource" id="Resource_pd0cl"]
 script = ExtResource("20_yb17v")
 id = &"obj_win_below_speed_120"
 description = "Gagner avec moins de 120 % de vitesse"
@@ -75,7 +75,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 17.0
 
-[sub_resource type="Resource" id="Resource_vj0kn"]
+[sub_resource type="Resource" id="Resource_m0qgh"]
 script = ExtResource("22_ffhrg")
 id = &"w20_1"
 duration = 26.0
@@ -105,7 +105,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_140t5"]
+[sub_resource type="Resource" id="Resource_so1u1"]
 script = ExtResource("22_ffhrg")
 id = &"w20_2"
 duration = 28.0
@@ -142,7 +142,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 23.0
 
-[sub_resource type="Resource" id="Resource_hb22i"]
+[sub_resource type="Resource" id="Resource_811w5"]
 script = ExtResource("22_ffhrg")
 id = &"w20_3"
 duration = 29.0
@@ -172,7 +172,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_8y18n"]
+[sub_resource type="Resource" id="Resource_h0w5p"]
 script = ExtResource("22_ffhrg")
 id = &"w20_4_miniboss"
 duration = 33.0
@@ -193,10 +193,10 @@ intro_story = &"lvl_20_intro"
 outro_story = &"lvl_20_outro"
 terrain = "sand"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("22_ffhrg")]([SubResource("Resource_vj0kn"), SubResource("Resource_140t5"), SubResource("Resource_hb22i"), SubResource("Resource_8y18n")])
+waves = Array[ExtResource("22_ffhrg")]([SubResource("Resource_m0qgh"), SubResource("Resource_so1u1"), SubResource("Resource_811w5"), SubResource("Resource_h0w5p")])
 enemy_pool = Array[ExtResource("1_m5jln")]([ExtResource("2_ofd6q"), ExtResource("3_77re2"), ExtResource("4_81gl4"), ExtResource("5_pd0cl"), ExtResource("6_m0qgh"), ExtResource("7_so1u1"), ExtResource("8_811w5")])
 exploration_deck = Array[ExtResource("9_h0w5p")]([ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("10_vj0kn"), ExtResource("11_140t5"), ExtResource("11_140t5"), ExtResource("11_140t5"), ExtResource("12_hb22i"), ExtResource("12_hb22i"), ExtResource("13_8y18n"), ExtResource("13_8y18n"), ExtResource("18_r8wa0"), ExtResource("18_r8wa0"), ExtResource("17_34pj6"), ExtResource("17_34pj6")])
-objectives = Array[ExtResource("20_yb17v")]([SubResource("Resource_so1u1"), SubResource("Resource_811w5"), SubResource("Resource_h0w5p")])
+objectives = Array[ExtResource("20_yb17v")]([SubResource("Resource_77re2"), SubResource("Resource_81gl4"), SubResource("Resource_pd0cl")])
 levelup_cards = Array[ExtResource("9_h0w5p")]([ExtResource("16_77re2"), ExtResource("17_81gl4"), ExtResource("18_pd0cl")])
 objective_rewards = Array[ExtResource("9_h0w5p")]([ExtResource("19_m0qgh"), ExtResource("20_so1u1"), ExtResource("21_m0qgh")])
 next_levels = Array[StringName]([&"lvl_05", &"lvl_06"])

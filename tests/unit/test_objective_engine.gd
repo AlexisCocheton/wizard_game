@@ -26,7 +26,7 @@ const SAMPLES: Dictionary = {
 	&"multi_kill": {"count": 5, "window": 1.0},
 	&"no_card_key": {"key": "build_wall"},
 	&"no_card_tag": {"tag": "FIRE"},
-	&"element_casts": {"element": "FROST", "count": 10},
+	&"element_casts": {"element": "ICE", "count": 10},
 	&"kill_flying": {"count": 8},
 	&"boss_quick_after_revive": {"seconds": 5},
 	&"never_hit_reflect": {},
@@ -223,7 +223,7 @@ func _test_no_card_key() -> void:
 func _test_no_card_tag() -> void:
 	_fresh()
 	var o := _obj(&"no_card_tag", {"tag": "FIRE"})
-	RunState.note_cast(_card("givre", [GameEnums.DamageTag.FROST], ["damage_single"]))
+	RunState.note_cast(_card("givre", [GameEnums.DamageTag.ICE], ["damage_single"]))
 	ok(ObjectiveChecker.evaluate(o), "no_card_tag : aucun sort de feu, reussi")
 	RunState.note_cast(_card("feu", [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.SLOW],
 		["damage_single"]))
@@ -233,8 +233,8 @@ func _test_no_card_tag() -> void:
 func _test_element_casts() -> void:
 	_fresh()
 	var n: int = 3
-	var o := _obj(&"element_casts", {"element": "FROST", "count": n})
-	var givre := _card("givre", [GameEnums.DamageTag.FROST], ["damage_single"])
+	var o := _obj(&"element_casts", {"element": "ICE", "count": n})
+	var givre := _card("givre", [GameEnums.DamageTag.ICE], ["damage_single"])
 	for i in n - 1:
 		RunState.note_cast(givre)
 	RunState.note_cast(_card("feu", [GameEnums.DamageTag.FIRE], ["damage_single"]))
@@ -393,8 +393,8 @@ func _test_labels() -> void:
 		"Gagner sans poser de mur", "sans poser de mur")
 	eq(ObjectiveChecker.label(_obj(&"no_card_tag", {"tag": "ARCANE"})),
 		"Gagner sans sort d arcane", "elision devant une voyelle")
-	eq(ObjectiveChecker.label(_obj(&"element_casts", {"element": "PHYSICAL", "count": 4})),
-		"Lancer 4 sorts physiques", "accord de physique")
+	eq(ObjectiveChecker.label(_obj(&"element_casts", {"element": "ICE", "count": 4})),
+		"Lancer 4 sorts de glace", "element de la vague 8, sans elision")
 	eq(ObjectiveChecker.label(_obj(&"win_under_time", {"seconds": 150})),
 		"Gagner en moins de 2 min 30", "duree en minutes")
 	eq(ObjectiveChecker.label(_obj(&"multi_kill", {"count": 3, "window": 0.5})),
@@ -470,7 +470,7 @@ func _test_coherence_with_level() -> void:
 	eq(ObjectiveChecker.impossible_reasons(rv, _level_with([phenix], [])).size(), 0,
 		"boss_quick_after_revive avec un phenix : possible")
 
-	var el := _obj(&"element_casts", {"element": "FROST", "count": 3})
+	var el := _obj(&"element_casts", {"element": "ICE", "count": 3})
 	not_ok(ObjectiveChecker.impossible_reasons(el, avec_vol).is_empty(),
 		"element_casts sans carte de givre au deck : impossible")
 

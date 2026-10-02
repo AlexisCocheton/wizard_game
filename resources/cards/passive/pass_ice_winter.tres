@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_tyg8v"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_p4b7l"]
+
+[sub_resource type="Resource" id="Resource_tyg8v"]
+script = ExtResource("1_tyg8v")
+key = &"passive_element"
+magnitude = 40.0
+duration = 0.0
+radius = 0.0
+params = {
+&"stat": &"duration"
+}
+
+[resource]
+script = ExtResource("2_p4b7l")
+id = &"pass_ice_winter"
+display_name = "Long hiver"
+description = "Au-dela de 120 % de vitesse : les effets des sorts de GLACE durent 40 % plus longtemps."
+rarity = 0
+base_cast_time = 0.0
+targeting = 0
+element = 2
+tags = Array[int]([])
+effects = Array[ExtResource("1_tyg8v")]([SubResource("Resource_tyg8v")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = true
+speed_threshold = 120
+fx_key = &""
+sfx_key = &""

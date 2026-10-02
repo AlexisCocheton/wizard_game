@@ -9,6 +9,19 @@ extends Resource
 ## Temps d'incantation en secondes A x1. Divise par le multiplicateur au lancement.
 @export var base_cast_time: float = 2.0
 @export var targeting: GameEnums.Targeting = GameEnums.Targeting.NONE
+## L ELEMENT du sort (vague 8) : un et un seul, y compris pour une carte qui ne
+## fait aucun degat (pioche, temps, terrain). C est lui que les resistances des
+## monstres lisent, pour les degats ET pour les effets, lui que les passifs
+## elementaires amplifient, lui dont le logo est pose sur la carte.
+##
+## UN CHAMP plutot qu un tag deduit : un sort ne peut plus etre « feu et
+## physique » (l ancienne regle du pire des deux), et l editeur de contenu du
+## testeur le voit comme une propriete a part, pas comme une case d une liste.
+## NONE : un passif sans element. Un SORT sans element rougit test_elements.
+@export var element: GameEnums.DamageTag = GameEnums.DamageTag.NONE
+## Marqueurs d EFFET (SLOW, SUMMON), plus l element sur les cartes d avant la
+## vague 8 (repli de `main_element`). Les resistances ne lisent jamais cette
+## liste directement : elles lisent `combat_tags()`.
 @export var tags: Array[GameEnums.DamageTag] = []
 @export var effects: Array[EffectSpec] = []
 ## Nombre d'exemplaires places dans le deck de depart (cartes communes).
@@ -53,29 +66,58 @@ func effect_keys() -> Array[StringName]:
 	return out
 
 
-## --- TYPE DU SORT (vague 5) ---
+## --- ELEMENT EFFECTIF (vague 8) ---
+
+## L element que le jeu lit : le champ `element`, sinon (carte ecrite avant la
+## vague 8, carte fabriquee par un test) le premier element de `tags`.
+## NONE si ni l un ni l autre.
+func main_element() -> int:
+	if int(element) in GameEnums.ELEMENTS:
+		return int(element)
+	for t in tags:
+		if int(t) in GameEnums.ELEMENTS:
+			return int(t)
+	return GameEnums.DamageTag.NONE
+
+
+## Les tags tels que le COMBAT les lit : l element, puis les marqueurs d effet.
+## C est ce tableau que recoivent Battlefield._hit, Enemy.control_factor, les
+## zones, les objets de terrain et les allies. Un seul element dedans, toujours :
+## un element stale dans `tags` ne peut pas s y ajouter et rouvrir l ancienne
+## regle « le pire des deux ».
 ##
-## Chaque carte a UN type visible, avec son logo (ElementIcons) : son ELEMENT
-## quand elle en porte un, sinon un petit nombre de types non elementaires. Le
-## joueur lit sur la carte ce que le bestiaire lui dit des resistances : un
-## golem immunise au sablier n est pas ralenti par une carte au sablier.
+## Tableau NON TYPE expres (voir gotchas : Array -> Array[T] refuse a l appel).
+func combat_tags() -> Array:
+	var out: Array = []
+	var e: int = main_element()
+	if e != GameEnums.DamageTag.NONE:
+		out.append(e)
+	for t in tags:
+		if not (int(t) in GameEnums.ELEMENTS) and not out.has(int(t)):
+			out.append(int(t))
+	return out
+
+
+## Le sort porte-t-il ce tag, element ou marqueur ? Lu par les objectifs
+## (`element_casts`, `no_card_tag`) et le bot du banc.
+func has_tag(tag: int) -> bool:
+	return combat_tags().has(tag)
+
+
+## --- TYPE DU SORT (vague 5, refait en vague 8) ---
 ##
-## DERIVE et non stocke : le type se deduit des tags et des effets, deux choses
-## que la carte porte deja. Un champ ecrit a la main aurait pu contredire les
-## tags (une carte « feu » qui inflige du givre), et chaque carte neuve aurait
-## du penser a le remplir. test_elements interdit qu une carte reste sans type :
-## un verbe neuf sans famille rougit le harnais au lieu d afficher un blanc.
+## Chaque carte a UN type visible, avec son logo (ElementIcons). Depuis la
+## vague 8 c est son ELEMENT, pour toutes les cartes de sort : le logo pose sur
+## la carte est celui que le bestiaire pose devant le pourcentage de la fiche
+## du monstre, et la carte de pioche dit elle aussi a quoi elle appartient.
 ##
-## ORDRE DE LECTURE, du plus utile au joueur au moins utile :
-##   1. le premier ELEMENT des tags — c est lui que les resistances lisent. Une
-##      Mare de venin est poison avant d etre ralentissante, un Totem physique
-##      avant d etre un objet de terrain ;
-##   2. un objet pose sur le terrain (mur, riviere, fosse, autel) : TERRAIN ;
-##   3. une invocation : INVOCATION ;
-##   4. un ralentissement sans element (Entrave temporelle) : RALENTISSEMENT,
-##      le meme logo que la ligne « immunise au ralentissement » du bestiaire ;
-##   5. tout ce qui agit sur la main, la pioche ou l incantation : GRIMOIRE.
-## Un passif est PASSIF, quelle que soit sa regle.
+## Un PASSIF elementaire montre son element (il dit ce qu il amplifie) ; un
+## passif sans element garde le logo PASSIF.
+##
+## Le repli plus bas (terrain, invocation, ralentissement, grimoire) ne sert
+## plus qu aux cartes sans element : une carte fabriquee par un test, ou une
+## carte d un chantier parallele ecrite avant la vague 8. test_elements interdit
+## qu une carte LIVREE en depende.
 const TYPE_TERRAIN_KEYS: Array[StringName] = [
 	&"build_wall", &"place_terrain", &"terrain_river", &"taunt_prop", &"water_flood",
 ]
@@ -88,11 +130,11 @@ const TYPE_GRIMOIRE_KEYS: Array[StringName] = [
 
 ## Cle du type ("feu", "terrain"...), "" si aucune regle ne s applique.
 func spell_type() -> StringName:
+	var e: int = main_element()
+	if e != GameEnums.DamageTag.NONE:
+		return type_of_tag(e)
 	if is_passive:
 		return &"passif"
-	for t in tags:
-		if t in GameEnums.ELEMENTS:
-			return type_of_tag(t)
 	var cles: Array[StringName] = effect_keys()
 	for k in cles:
 		if k in TYPE_TERRAIN_KEYS:
@@ -111,12 +153,14 @@ func spell_type() -> StringName:
 ## d une fiche de monstre, donc le meme logo aux deux endroits.
 static func type_of_tag(tag: int) -> StringName:
 	match tag:
-		GameEnums.DamageTag.PHYSICAL: return &"physique"
 		GameEnums.DamageTag.FIRE: return &"feu"
-		GameEnums.DamageTag.FROST: return &"givre"
+		GameEnums.DamageTag.WATER: return &"eau"
+		GameEnums.DamageTag.NATURE: return &"nature"
+		GameEnums.DamageTag.WIND: return &"vent"
+		GameEnums.DamageTag.LIGHTNING: return &"foudre"
+		GameEnums.DamageTag.ICE: return &"glace"
 		GameEnums.DamageTag.ARCANE: return &"arcane"
 		GameEnums.DamageTag.POISON: return &"poison"
-		GameEnums.DamageTag.LIGHTNING: return &"foudre"
 		GameEnums.DamageTag.SLOW: return &"ralentissement"
 		GameEnums.DamageTag.SUMMON: return &"invocation"
 	return &""

@@ -22,6 +22,7 @@ description = "Creuse une fosse qui reste jusqu a la fin du combat : les monstre
 rarity = 2
 base_cast_time = 1.7
 targeting = 1
+element = 9
 tags = Array[int]([])
 effects = Array[ExtResource("1_oxs7y")]([SubResource("Resource_oxs7y")])
 copies_in_starter = 0

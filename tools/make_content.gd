@@ -65,20 +65,79 @@ func _enemy(id: String, dname: String, kind: GameEnums.EnemyKind, power: int,
 ## gardees). Une seule regle plutot que 82 retouches : l intention de chaque
 ## table (le golem craint l arcane, le colosse le givre) reste lisible telle
 ## qu elle a ete pensee, et le prochain reglage ne touchera qu une constante.
+##
+## LES HUIT ELEMENTS (vague 8) — LA REGLE DE PASSAGE, pas 86 decisions.
+##
+## Les tables ci-dessous sont restees ECRITES dans les mots d avant (« phys »,
+## « givre ») : elles disent l intention de chaque monstre telle qu elle a ete
+## pensee et mesuree. `_resist` les traduit en huit elements par une regle
+## unique :
+##
+##   glace  = givre (le meme element, renomme)
+##   feu, arcane, poison, foudre, ralentissement : inchanges
+##   VENT   = phys  : l ancienne ligne physique disait la DURETE du corps, ce qui
+##            arrete une fleche ou une onde. Ces sorts sont devenus de vent :
+##            leur effet sur chaque monstre ne bouge pas.
+##   NATURE = phys  : pierre, ronce, racine, bois — des coups de MATIERE, que la
+##            meme durete arrete. Le golem resiste aux deux, le squelette fragile
+##            craint les deux.
+##   sauf les VOLANTS : le vent est leur milieu, ils y sont au moins faibles
+##            (vent >= 1,2) ; la terre ne les atteint pas, ils resistent a la
+##            nature (nature <= 0,65).
+##   EAU    = 2 - feu, borne a [0,65 ; 1,35] : l eau eteint ce que le feu nourrit.
+##            Un ver de feu immunise au feu craint l eau ; une plante qui brule
+##            boit l eau ; un monstre neutre au feu est neutre a l eau.
+##
+## Une valeur ECRITE sous le nouveau nom (« vent », « nature », « eau »,
+## « glace ») l emporte sur la regle : c est la porte des exceptions voulues,
+## et il n y en a aucune au 02/10. Les valeurs neutres (1,0) ne sont pas
+## stockees : la fiche n affiche que les ecarts.
+const WIND_FLYER_MIN: float = 1.2
+const NATURE_FLYER_MAX: float = 0.65
+const WATER_FROM_FIRE_MIN: float = 0.65
+const WATER_FROM_FIRE_MAX: float = 1.35
+
+
 func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
 	var T := GameEnums.DamageTag
-	var out: Dictionary = {}
+	var ecrit: Dictionary = {}
 	for nom in table.keys():
-		var v: float = EnemyDef.accentuate(float(table[nom]))
-		match String(nom):
-			"phys": out[T.PHYSICAL] = v
-			"feu": out[T.FIRE] = v
-			"givre": out[T.FROST] = v
-			"arcane": out[T.ARCANE] = v
-			"poison": out[T.POISON] = v
-			"foudre": out[T.LIGHTNING] = v
-			"lent": out[T.SLOW] = v
-			_: printerr("element inconnu dans une table de resistances : ", nom)
+		ecrit[String(nom)] = float(table[nom])
+	for nom in ecrit.keys():
+		if not nom in ["phys", "feu", "givre", "glace", "arcane", "poison", "foudre",
+				"lent", "vent", "nature", "eau"]:
+			printerr("element inconnu dans une table de resistances : ", nom)
+	var dur: float = float(ecrit.get("phys", 1.0))
+	var vent: float = float(ecrit.get("vent", dur))
+	var nature: float = float(ecrit.get("nature", dur))
+	if e.flying and not ecrit.has("vent"):
+		vent = maxf(vent, WIND_FLYER_MIN)
+	if e.flying and not ecrit.has("nature"):
+		nature = minf(nature, NATURE_FLYER_MAX)
+	var feu: float = float(ecrit.get("feu", 1.0))
+	var eau: float = float(ecrit.get("eau",
+		clampf(2.0 - feu, WATER_FROM_FIRE_MIN, WATER_FROM_FIRE_MAX)))
+	var joue: Dictionary = {
+		T.FIRE: feu,
+		T.WATER: eau,
+		T.NATURE: nature,
+		T.WIND: vent,
+		T.LIGHTNING: float(ecrit.get("foudre", 1.0)),
+		T.ICE: float(ecrit.get("glace", ecrit.get("givre", 1.0))),
+		T.ARCANE: float(ecrit.get("arcane", 1.0)),
+		T.POISON: float(ecrit.get("poison", 1.0)),
+		T.SLOW: float(ecrit.get("lent", 1.0)),
+	}
+	var out: Dictionary = {}
+	for tag in joue.keys():
+		var v: float = EnemyDef.accentuate(float(joue[tag]))
+		if not is_equal_approx(v, 1.0):
+			out[tag] = v
+	# Le CAMELEON ne declare pas les elements de son cycle (EnemyDef : les deux
+	# tables se multiplieraient). La regle ci-dessus pourrait en deriver un (le
+	# vent et la nature naissent de « phys ») : on les retire.
+	for t in e.chameleon_elements:
+		out.erase(int(t))
 	e.resistances = out
 	# L ancien champ est vide desormais : la table est la seule source de verite.
 	# Le laisser rempli ferait exister DEUX endroits ou lire une immunite, et
@@ -1744,9 +1803,12 @@ func _enemies_v3(E: String) -> void:
 
 	# LE CAMELEON DES SAISONS — MINI-BOSS de `lvl_14`, la galerie des saisons.
 	# Toutes les 5 s il change d element faible, dans l ordre des saisons : feu
-	# (l ete), poison (l automne), givre (l hiver), foudre (le printemps). L element
-	# resiste est a l oppose du cycle. Le deck qui gagne est celui qui a DEUX
-	# elements et attend le bon moment.
+	# (l ete), vent (l automne), glace (l hiver), nature (le printemps). L element
+	# resiste est a l oppose du cycle : la glace en ete, la nature en automne. Le
+	# deck qui gagne est celui qui a DEUX elements et attend le bon moment.
+	# Vague 8 : les saisons ont enfin leurs elements. L ancien cycle (feu, poison,
+	# givre, foudre) n avait qu un element sur quatre dans le deck de lvl_14 ; le
+	# nouveau en a deux (feu, et le vent de la Fleche percante).
 	#
 	# Il ne declare AUCUN de ces quatre elements dans `resistances` : les deux
 	# tables se multiplieraient, et un feu resiste a 0,5 par la table et a 0,5 par
@@ -1755,7 +1817,7 @@ func _enemies_v3(E: String) -> void:
 		125.0, 36.0, 13, S.STAR, Color(0.70, 0.85, 0.55), 54.0)
 	chameleon.anim_key = &"wraith"
 	chameleon.chameleon_interval = 5.0
-	chameleon.chameleon_elements = [T.FIRE, T.POISON, T.FROST, T.LIGHTNING]
+	chameleon.chameleon_elements = [T.FIRE, T.WIND, T.ICE, T.NATURE]
 	# Ses deux multiplicateurs tournants passent par la MEME accentuation que les
 	# tables : sinon le Cameleon, dont la faiblesse EST la mecanique, deviendrait
 	# le monstre aux ecarts les plus timides du bestiaire.
@@ -2003,6 +2065,80 @@ func _spec(key: String, magnitude: float, duration: float = 0.0,
 	return s
 
 
+## L ELEMENT DE CHAQUE SORT (vague 8, demande du co-auteur) : « toutes les
+## cartes doivent etre associees a un de ces elements ». UN element par carte,
+## y compris pioche, temps et terrain, avec sa raison — c est la table de
+## correspondance du chantier, a relire ici plutot que dans 50 appels a _card.
+## `_card` la lit : une carte absente de la table rougit la generation
+## (printerr) puis test_elements.
+##
+## Contrainte tenue en plus du sens : les objectifs « N sorts d arcane / de
+## foudre / de glace / de feu » des niveaux 5, 6, 11, 15, 16, 19, 21 gardent le
+## MEME ensemble de cartes comptees dans leur niveau (Precipitation et Flux de
+## mana restent d arcane, la Clef de l Appel n y entre pas) : leurs taux mesures
+## au banc des objectifs restent valables.
+const ELEMENT_DES_SORTS: Dictionary = {
+	# --- FEU : ce qui brule ---
+	"ember_pool": [GameEnums.DamageTag.FIRE, "des braises"],
+	"fireball": [GameEnums.DamageTag.FIRE, "une boule de feu"],
+	"brazier": [GameEnums.DamageTag.FIRE, "un brasier"],
+	"meteor": [GameEnums.DamageTag.FIRE, "une pierre en flammes ; l ancien « feu et physique » perd son second element"],
+	"meteor_storm": [GameEnums.DamageTag.FIRE, "meme famille que le Meteore"],
+	"forge_dial": [GameEnums.DamageTag.FIRE, "le cadran des FORGES, ses meteorites sont de feu"],
+	# --- EAU : ce qui coule, revient, se renouvelle ---
+	"tidal_pool": [GameEnums.DamageTag.WATER, "une nappe d eau et son courant (etait givre)"],
+	"terrain_river": [GameEnums.DamageTag.WATER, "une riviere"],
+	"tide_ledger": [GameEnums.DamageTag.WATER, "le registre des MAREES"],
+	"cycle_of_thought": [GameEnums.DamageTag.WATER, "un cycle : la main se vide et se remplit comme une maree"],
+	# --- NATURE : pierre, bois, ronce, racine, la terre qui appelle ---
+	"stone_wall": [GameEnums.DamageTag.NATURE, "la pierre"],
+	"bastion": [GameEnums.DamageTag.NATURE, "un dome de pierre (etait physique)"],
+	"terrain_brambles": [GameEnums.DamageTag.NATURE, "des ronces (etait physique)"],
+	"heartwood_totem": [GameEnums.DamageTag.NATURE, "un arbre de coeur-de-bois (etait physique)"],
+	"blight_sapling": [GameEnums.DamageTag.NATURE, "un arbre qui fletrit : la plante d abord (etait poison)"],
+	"terrain_pit": [GameEnums.DamageTag.NATURE, "une fosse creusee dans la terre"],
+	"terrain_altar": [GameEnums.DamageTag.NATURE, "une pierre levee d ou la terre fait naitre des allies"],
+	"summoners_key": [GameEnums.DamageTag.NATURE, "l Appel : des creatures sortent de la terre, comme a l Autel"],
+	# --- VENT : ce qui souffle, pousse, aspire, porte ---
+	"piercing_arrow": [GameEnums.DamageTag.WIND, "une fleche portee par le vent (etait physique)"],
+	"chain_break": [GameEnums.DamageTag.WIND, "un souffle qui brise et repousse (etait physique)"],
+	"repulsion_wave": [GameEnums.DamageTag.WIND, "une onde qui souffle (etait arcane et physique)"],
+	"salt_spiral": [GameEnums.DamageTag.WIND, "un tourbillon qui aspire (etait arcane)"],
+	"maelstrom": [GameEnums.DamageTag.WIND, "une spirale qui aspire (etait arcane)"],
+	"about_face": [GameEnums.DamageTag.WIND, "une bourrasque qui retourne les monstres (etait arcane)"],
+	# --- FOUDRE : l eclair, la secousse ---
+	"spark": [GameEnums.DamageTag.LIGHTNING, "une etincelle"],
+	"thunder_root": [GameEnums.DamageTag.LIGHTNING, "la racine du TONNERRE etourdit comme un eclair"],
+	"reckless_bargain": [GameEnums.DamageTag.LIGHTNING, "un pacte qui electrise tout le terrain"],
+	# --- GLACE : l ancien givre ---
+	"frost_field": [GameEnums.DamageTag.ICE, "un champ de givre"],
+	"frost_rain": [GameEnums.DamageTag.ICE, "une pluie de givre"],
+	"deep_freeze": [GameEnums.DamageTag.ICE, "le gel"],
+	# --- ARCANIQUE : la magie pure, le temps, l esprit du mage ---
+	"arcane_bolt": [GameEnums.DamageTag.ARCANE, "un trait arcanique"],
+	"arcane_insight": [GameEnums.DamageTag.ARCANE, "une intuition arcanique"],
+	"focus": [GameEnums.DamageTag.ARCANE, "l esprit du mage se focalise"],
+	"deep_focus": [GameEnums.DamageTag.ARCANE, "concentration : l esprit (etait sans element)"],
+	"quickening": [GameEnums.DamageTag.ARCANE, "le temps s accelere : carte de temps"],
+	"mana_flow": [GameEnums.DamageTag.ARCANE, "le mana"],
+	"temporal_drag": [GameEnums.DamageTag.ARCANE, "le temps s alourdit : carte de temps (etait ralentissement seul)"],
+	"hourglass_shard": [GameEnums.DamageTag.ARCANE, "un sablier : carte de temps"],
+	"time_rift": [GameEnums.DamageTag.ARCANE, "une faille dans le temps"],
+	"world_loom": [GameEnums.DamageTag.ARCANE, "le temps se retisse"],
+	"twin_channeling": [GameEnums.DamageTag.ARCANE, "deux canaux de magie pure"],
+	"echo_of_the_hand": [GameEnums.DamageTag.ARCANE, "un echo, magie de l esprit"],
+	"purifying_light": [GameEnums.DamageTag.ARCANE, "une lumiere qui dissipe la magie"],
+	"void_grip": [GameEnums.DamageTag.ARCANE, "le vide qui efface la magie"],
+	"weakness_mark": [GameEnums.DamageTag.ARCANE, "une marque, un sceau"],
+	"resonance": [GameEnums.DamageTag.ARCANE, "une resonance de magie pure"],
+	"mirror_apprentice": [GameEnums.DamageTag.ARCANE, "un reflet magique du mage (etait invocation seule)"],
+	# --- POISON : ce qui ronge, la mort, la pourriture ---
+	"venom_mire": [GameEnums.DamageTag.POISON, "une mare de venin"],
+	"bone_recall": [GameEnums.DamageTag.POISON, "les ossements : la mort et ce qui pourrit (etait sans element)"],
+	"deck_purge": [GameEnums.DamageTag.POISON, "une purge : on rejette ce qui empoisonne le deck (etait sans element)"],
+}
+
+
 func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 		cast_time: float, targeting: GameEnums.Targeting,
 		tags: Array[GameEnums.DamageTag], effects: Array[EffectSpec],
@@ -2014,7 +2150,17 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 	c.rarity = rarity
 	c.base_cast_time = cast_time
 	c.targeting = targeting
-	c.tags = tags
+	# Les tags ne portent plus que des MARQUEURS d effet (SLOW, SUMMON) : un
+	# element ecrit dans la liste d un appel ne doit pas contredire la table.
+	var marqueurs: Array[GameEnums.DamageTag] = []
+	for t in tags:
+		if not (int(t) in GameEnums.ELEMENTS):
+			marqueurs.append(t)
+	c.tags = marqueurs
+	if ELEMENT_DES_SORTS.has(id):
+		c.element = ELEMENT_DES_SORTS[id][0]
+	else:
+		printerr("sort sans element dans ELEMENT_DES_SORTS : ", id)
 	c.effects = effects
 	c.copies_in_starter = copies
 	return c
@@ -2030,25 +2176,25 @@ func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
 		"Inflige 26 degats d ARCANE a une cible.", GameEnums.Rarity.COMMON, 1.1,
-		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Targeting.TARGET, [],
 		[_spec("damage_single", 26.0)], 4)
 	bolt.fx_key = &"orb_burst"
 	bolt.sfx_key = &"spell_arcane"
 	_save(bolt, "res://resources/cards/common/arcane_bolt.tres")
 
 	var pierce := _card("piercing_arrow", "Fleche percante",
-		"Traverse jusqu a 5 ennemis en ligne, 10 degats PHYSIQUES chacun.",
+		"Traverse jusqu a 5 ennemis en ligne, 10 degats de VENT chacun.",
 		GameEnums.Rarity.COMMON, 1.5, GameEnums.Targeting.DIRECTION,
-		[GameEnums.DamageTag.PHYSICAL],
+		[],
 		[_spec("pierce_line", 10.0, 0.0, 120.0, {&"max_targets": 5})], 3)
 	pierce.fx_key = &"pin_thrust"
 	pierce.sfx_key = &"arrow_laser"
 	_save(pierce, "res://resources/cards/common/piercing_arrow.tres")
 
 	var frost := _card("frost_field", "Champ de givre",
-		"Zone qui inflige 1 degat de GIVRE par seconde et ralentit de 50 pourcent "
+		"Zone qui inflige 1 degat de GLACE par seconde et ralentit de 50 pourcent "
 		+ "pendant 5 s.", GameEnums.Rarity.COMMON, 0.6,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
+		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.SLOW],
 		# Degats VOLONTAIREMENT minimes (1/s contre 8/s pour les Braises). Sans eux,
 		# le givre n etait pas un element mais une simple etiquette : aucune carte
 		# de degats ne le portait, donc « vulnerable au givre » etait une
@@ -2062,7 +2208,7 @@ func _cards() -> void:
 
 	var ember := _card("ember_pool", "Braises",
 		"Zone infligeant 8 degats de FEU par seconde pendant 4 s.", GameEnums.Rarity.COMMON, 1.7,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
+		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 8.0, 4.0, 160.0)], 2)
 	ember.fx_key = &"ember_flames"
 	ember.sfx_key = &"fire_ignite"
@@ -2088,7 +2234,7 @@ func _cards() -> void:
 	# banc, pas une correction de libelle.
 	var fireball := _card("fireball", "Boule de feu",
 		"Zone infligeant 26 degats de FEU par seconde pendant 0.6 s.", GameEnums.Rarity.COMMON, 1.4,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
+		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 26.0, 0.6, 170.0)], 2)
 	fireball.fx_key = &"fireball_hit"
 	fireball.sfx_key = &"blast_short"
@@ -2097,7 +2243,7 @@ func _cards() -> void:
 	# --- Rares ---
 	var haste := _card("quickening", "Precipitation",
 		"Accelere l incantation de 60 pourcent pendant 6 s.", GameEnums.Rarity.RARE, 0.8,
-		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Targeting.NONE, [],
 		[_spec("self_haste", 60.0, 6.0)])
 	haste.fx_key = &"ray_wheel"
 	haste.sfx_key = &"spell_rise"
@@ -2135,7 +2281,7 @@ func _cards() -> void:
 	# Le cahier des charges promet une pioche "ameliorable" : voici la carte qui le fait.
 	var flow := _card("mana_flow", "Flux de mana",
 		"Pioche deux fois plus vite pendant 12 s.", GameEnums.Rarity.RARE, 0.8,
-		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Targeting.NONE, [],
 		[_spec("draw_boost", 2.0, 12.0)])
 	flow.fx_key = &"wisp_rise"
 	flow.sfx_key = &"spell_rise"
@@ -2171,7 +2317,7 @@ func _cards() -> void:
 		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE,
 		# Aucun degat : l element n est ici qu une etiquette de FAMILLE, pour que
 		# la carte s affiche avec la couleur de sa feuille d orage.
-		[GameEnums.DamageTag.LIGHTNING],
+		[],
 		[_spec("haste_enemies_boon", 30.0, 5.0, 0.0, {&"draw": 3})])
 	bargain.fx_key = &"lightning_web"
 	bargain.sfx_key = &"spell_crackle"
@@ -2198,7 +2344,7 @@ func _cards() -> void:
 	var rift := _card("time_rift", "Faille temporelle",
 		"Reduit le cout des cartes de 1.5 s pendant 10 s et frappe en ligne.",
 		GameEnums.Rarity.LEGENDARY, 2.0, GameEnums.Targeting.DIRECTION,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[
 			_spec("cost_reduction", 1.5, 10.0),
 			_spec("pierce_line", 40.0, 0.0, 200.0, {&"max_targets": 99}),
@@ -2215,16 +2361,16 @@ func _cards() -> void:
 	var spark := _card("spark", "Etincelle",
 		"15 degats de FOUDRE sur une cible. Tres rapide a lancer.",
 		GameEnums.Rarity.COMMON, 0.45,
-		GameEnums.Targeting.TARGET, [GameEnums.DamageTag.LIGHTNING],
+		GameEnums.Targeting.TARGET, [],
 		[_spec("damage_single", 15.0)], 2)
 	spark.fx_key = &"spark_burst"
 	spark.sfx_key = &"spell_arcane"
 	_save(spark, "res://resources/cards/common/spark.tres")
 
 	var frost_rain := _card("frost_rain", "Pluie de givre",
-		"Tres grande zone : 2 degats de GIVRE par seconde et ralentissement de "
+		"Tres grande zone : 2 degats de GLACE par seconde et ralentissement de "
 		+ "30 pourcent pendant 8 s.", GameEnums.Rarity.COMMON, 1.8,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
+		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 2.0, 8.0, 260.0, {&"slow_pct": 30.0})])
 	frost_rain.fx_key = &"crystal_field"
 	frost_rain.sfx_key = &"drip_frost"
@@ -2232,15 +2378,15 @@ func _cards() -> void:
 
 	var brazier := _card("brazier", "Brasier",
 		"Zone de FEU : 14 degats par seconde pendant 6 s.", GameEnums.Rarity.RARE, 2.1,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE],
+		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 14.0, 6.0, 140.0)])
 	brazier.fx_key = &"flame_pillar"
 	brazier.sfx_key = &"fire_ignite"
 	_save(brazier, "res://resources/cards/rare/brazier.tres")
 
 	var meteor := _card("meteor", "Meteore",
-		"Long a invoquer : 60 degats de FEU et de choc dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
+		"Long a invoquer : 60 degats de FEU dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
+		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 200.0, 0.3, 120.0)])
 	meteor.fx_key = &"meteor_streak"
 	meteor.sfx_key = &"blast_pop"
@@ -2248,7 +2394,7 @@ func _cards() -> void:
 
 	var about_face := _card("about_face", "Volte-face",
 		"Tous les monstres font demi-tour pendant 3 s.", GameEnums.Rarity.RARE, 1.0,
-		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Targeting.NONE, [],
 		[_spec("reverse_enemies", 0.0, 3.0)])
 	about_face.fx_key = &"pinwheel_turn"
 	about_face.sfx_key = &"whoosh_deep"
@@ -2256,16 +2402,16 @@ func _cards() -> void:
 
 	var focalisation := _card("focus", "Focalisation",
 		"Le prochain sort inflige le double de degats.", GameEnums.Rarity.RARE, 0.7,
-		GameEnums.Targeting.NONE, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Targeting.NONE, [],
 		[_spec("empower_next", 2.0)])
 	focalisation.fx_key = &"star_focus"
 	focalisation.sfx_key = &"spell_arcane"
 	_save(focalisation, "res://resources/cards/rare/focus.tres")
 
 	var deep_freeze := _card("deep_freeze", "Gel profond",
-		"Zone qui ralentit de 85 pourcent et inflige 4 degats de GIVRE par seconde "
+		"Zone qui ralentit de 85 pourcent et inflige 4 degats de GLACE par seconde "
 		+ "pendant 4 s. Presque un arret.", GameEnums.Rarity.EPIC, 1.5,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
+		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 4.0, 4.0, 170.0, {&"slow_pct": 85.0})])
 	deep_freeze.fx_key = &"frost_spikes"
 	deep_freeze.sfx_key = &"zap_short"
@@ -2273,7 +2419,7 @@ func _cards() -> void:
 
 	var weakness := _card("weakness_mark", "Marque de faiblesse",
 		"Zone ou les monstres subissent le double de degats pendant 6 s.", GameEnums.Rarity.EPIC, 1.3,
-		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 0.0, 6.0, 200.0, {&"vuln_mult": 2.0})])
 	weakness.fx_key = &"diamond_mark"
 	weakness.sfx_key = &"charge_magic"
@@ -2281,7 +2427,7 @@ func _cards() -> void:
 
 	var resonance := _card("resonance", "Resonance",
 		"6 degats d ARCANE par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
-		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [GameEnums.DamageTag.ARCANE],
+		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [],
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
 	resonance.fx_key = &"pulse_ring"
 	resonance.sfx_key = &"spell_crackle"
@@ -2299,7 +2445,7 @@ func _cards() -> void:
 		"Aspire les monstres vers son centre pendant 3 s. Ne fait aucun degat : "
 		+ "elle prepare le sort suivant.",
 		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("vortex_pull", 150.0, 3.0, 220.0)])
 	salt.fx_key = &"spiral_salt"
 	salt.sfx_key = &"wind_gust"
@@ -2326,9 +2472,9 @@ func _cards() -> void:
 	# et le temps gagne vaut plus que les degats. D ou une magnitude modeste et un
 	# recul important.
 	var chain := _card("chain_break", "Rupture de chaine",
-		"18 degats PHYSIQUES en zone, puis repousse violemment tout ce qui reste debout.",
+		"18 degats de VENT en zone, puis repousse violemment tout ce qui reste debout.",
 		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.PHYSICAL],
+		[],
 		[_spec("knockback", 18.0, 0.0, 190.0, {&"push": 260.0})])
 	chain.fx_key = &"shatter_burst"
 	chain.sfx_key = &"impact_heavy"
@@ -2343,7 +2489,7 @@ func _cards() -> void:
 	var void_grip := _card("void_grip", "Vide d emprise",
 		"Efface rage, boucliers et auras des monstres d une petite zone.",
 		GameEnums.Rarity.EPIC, 1.1, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
 	void_grip.fx_key = &"void_mandala"
 	void_grip.sfx_key = &"ward_light"
@@ -2382,7 +2528,7 @@ func _cards() -> void:
 	var dial := _card("forge_dial", "Cadran des forges",
 		"Pluie de meteorites sur toute l ile : 14 impacts sur 6 s.",
 		GameEnums.Rarity.LEGENDARY, 2.4, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.FIRE],
+		[],
 		[_spec("meteor_storm", 30.0, 6.0, 110.0, {&"impacts": 14})])
 	dial.fx_key = &"fire_bloom"
 	dial.sfx_key = &"blast_long"
@@ -2393,7 +2539,7 @@ func _cards() -> void:
 		"Le temps se retisse : ennemis ralentis de 50 pourcent, incantation doublee "
 		+ "et deux sorts a la fois, pendant 8 s.",
 		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.SLOW],
+		[GameEnums.DamageTag.SLOW],
 		[
 			_spec("slow_enemy_gauge", 50.0, 8.0),
 			_spec("self_haste", 100.0, 8.0),
@@ -2407,7 +2553,7 @@ func _cards() -> void:
 		"Le temps se fige pour eux et s emballe pour toi : ennemis -60 pourcent, "
 		+ "incantation +100 pourcent, pendant 6 s.",
 		GameEnums.Rarity.LEGENDARY, 2.1, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.SLOW],
+		[GameEnums.DamageTag.SLOW],
 		[
 			_spec("slow_enemy_gauge", 60.0, 6.0),
 			_spec("self_haste", 100.0, 6.0),
@@ -2424,9 +2570,9 @@ func _cards() -> void:
 	# Le souffle ne tue pas : il rend au joueur la distance qu il a perdue quand
 	# une vague arrive trop bas. D ou des degats modestes et une grosse poussee.
 	var repulsion := _card("repulsion_wave", "Onde de repulsion",
-		"Souffle une zone : 18 degats d ARCANE et les monstres sont violemment repousses.",
+		"Souffle une zone : 18 degats de VENT et les monstres sont violemment repousses.",
 		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.ARCANE, GameEnums.DamageTag.PHYSICAL],
+		[],
 		[_spec("knockback", 18.0, 0.0, 220.0, {&"push": 260.0})])
 	repulsion.fx_key = &"ring_expand"
 	repulsion.sfx_key = &"impact_heavy"
@@ -2438,7 +2584,7 @@ func _cards() -> void:
 		"Spirale qui aspire les monstres vers son centre pendant 4 s. Aucun degat, "
 		+ "mais tout ce qui tombe dedans est regroupe.",
 		GameEnums.Rarity.EPIC, 1.6, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("vortex_pull", 260.0, 4.0, 420.0)])
 	maelstrom.fx_key = &"spiral_pull"
 	maelstrom.sfx_key = &"wind_gust"
@@ -2449,7 +2595,7 @@ func _cards() -> void:
 	var purify := _card("purifying_light", "Lumiere purifiante",
 		"Petite zone : les monstres perdent rage, boucliers et effets en cours.",
 		GameEnums.Rarity.RARE, 1.0, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
 	# LA COLONNE DE LUMIERE, sur la carte qui s appelle Lumiere purifiante.
 	# Cases de 192 px, et une forme VERTICALE qui tombe du ciel sur un point precis :
@@ -2464,7 +2610,7 @@ func _cards() -> void:
 	var insight := _card("arcane_insight", "Intuition arcanique",
 		"Pioche 3 cartes immediatement. Rien n est defausse.",
 		GameEnums.Rarity.RARE, 0.5, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("draw_cards", 0.0, 0.0, 0.0, {&"count": 3})])
 	insight.fx_key = &"sun_burst"
 	insight.sfx_key = &"spell_deep"
@@ -2476,7 +2622,7 @@ func _cards() -> void:
 	var bastion := _card("bastion", "Bastion",
 		"Mur permanent de 120 PV. Il ne disparait pas : les monstres doivent le briser.",
 		GameEnums.Rarity.EPIC, 2.0, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.PHYSICAL],
+		[],
 		[_spec("build_wall", 0.0, 0.0, 200.0,
 			{&"thickness": 60.0, &"permanent": true, &"wall_hp": 120.0})])
 	bastion.fx_key = &"dome_bastion"
@@ -2491,7 +2637,7 @@ func _cards() -> void:
 	var echo := _card("echo_of_the_hand", "Echo de la main",
 		"Les 2 prochaines cartes que tu joues reviennent en main au lieu de partir.",
 		GameEnums.Rarity.LEGENDARY, 1.2, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("retain_next", 2.0)])
 	echo.fx_key = &"echo_rings"
 	echo.sfx_key = &"ward_deep"
@@ -2502,7 +2648,7 @@ func _cards() -> void:
 	var twin := _card("twin_channeling", "Canalisation jumelle",
 		"Pendant 10 s, tu peux charger deux sorts en meme temps.",
 		GameEnums.Rarity.LEGENDARY, 2.0, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.ARCANE],
+		[],
 		[_spec("double_cast", 0.0, 10.0)])
 	twin.fx_key = &"twin_flames"
 	twin.sfx_key = &"charge_magic"
@@ -2514,7 +2660,7 @@ func _cards() -> void:
 		"18 meteores s abattent sur tout le terrain pendant 5 s, "
 		+ "70 degats chacun.",
 		GameEnums.Rarity.LEGENDARY, 2.6, GameEnums.Targeting.NONE,
-		[GameEnums.DamageTag.FIRE, GameEnums.DamageTag.PHYSICAL],
+		[],
 		[_spec("meteor_storm", 70.0, 5.0, 290.0, {&"impacts": 18})])
 	storm.fx_key = &"magma_burst"
 	storm.sfx_key = &"blast_long"
@@ -2531,7 +2677,7 @@ func _cards() -> void:
 		# ne brule pas. Passee en POISON, elle devient la reponse au Glouton (qui
 		# gobe tout, y compris le venin) et reste inutile contre les morts-vivants
 		# — exactement le genre d arbitrage que les resistances doivent creer.
-		[GameEnums.DamageTag.POISON, GameEnums.DamageTag.SLOW],
+		[GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 10.0, 20.0, 340.0, {&"slow_pct": 25.0})])
 	# LES SPECTRES QUI MONTENT DU SOL. Quinze images de silhouettes sombres qui
 	# s elevent d un nuage : jouee en BOUCLE au centre d une mare qui dure 20 s,
@@ -2579,7 +2725,7 @@ func _cards() -> void:
 		+ "monstres a portee le prennent pour cible au lieu du mage et s acharnent "
 		+ "dessus : une vague entiere le fait tomber en quelques secondes.",
 		GameEnums.Rarity.RARE, 1.6, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.PHYSICAL],
+		[],
 		[_spec("taunt_prop", 0.0, 0.0, 460.0,
 			{&"prop_hp": 3500.0, &"kind": "tree"})])
 	totem.fx_key = &"spirit_gold"
@@ -2613,7 +2759,7 @@ func _cards() -> void:
 		+ "il repand 9 degats de POISON par seconde autour de lui. Il n attire pas "
 		+ "les monstres, mais ceux qui passent a son pied le frappent.",
 		GameEnums.Rarity.EPIC, 1.9, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.POISON],
+		[],
 		[_spec("place_terrain", 9.0, 0.0, 230.0,
 			{&"prop_hp": 120.0, &"kind": "tree"})])
 	sapling.fx_key = &"spirit_violet"
@@ -2645,7 +2791,7 @@ func _cards() -> void:
 		+ "tirent ni ne frappent. 14 degats de FOUDRE au passage. Sans effet sur "
 		+ "ce qui resiste au ralentissement.",
 		GameEnums.Rarity.EPIC, 1.9, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.LIGHTNING],
+		[],
 		[_spec("stun_zone", 14.0, 1.1, 200.0)])
 	thunder.fx_key = &"lightning_fork"
 	thunder.sfx_key = &"zap_short"
@@ -2674,7 +2820,7 @@ func _cards() -> void:
 		"Tres large nappe d eau pendant 7 s : le courant fait RECULER les monstres "
 		+ "au lieu de les ralentir. Aucun degat.",
 		GameEnums.Rarity.COMMON, 1.3, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.FROST, GameEnums.DamageTag.SLOW],
+		[GameEnums.DamageTag.SLOW],
 		[_spec("water_flood", 45.0, 7.0, 300.0)], 2)
 	tide.fx_key = &"orb_cyan"
 	tide.sfx_key = &"drip_frost"
@@ -2740,9 +2886,9 @@ func _cards() -> void:
 	# pas un buisson d epines) : seul le plafond les remplace.
 	var brambles := _card("terrain_brambles", "Ronces",
 		"Fait pousser des ronces qui restent jusqu a la fin du combat : elles "
-		+ "ralentissent de 35 pourcent et infligent 2 degats PHYSIQUES par seconde.",
+		+ "ralentissent de 35 pourcent et infligent 2 degats de NATURE par seconde.",
 		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
-		[GameEnums.DamageTag.PHYSICAL, GameEnums.DamageTag.SLOW],
+		[GameEnums.DamageTag.SLOW],
 		[_spec("place_terrain", 2.0, 0.0, 170.0,
 			{&"kind": "bramble", &"slow_pct": 35.0})])
 	brambles.fx_key = &"slash_arc"
@@ -6889,7 +7035,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# lenteur). Legendaire : la Mare de venin (Kaltek craint le poison).
 			return {"nouvelles": ["reckless_bargain", "terrain_pit", "terrain_brambles"], "objectifs": [
 				[_objectif(&"kill_flying", {"count": 4}), "quickening"],
-				[_objectif(&"element_casts", {"element": "FROST", "count": 32}), "terrain_altar"],
+				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "terrain_altar"],
 				[_objectif(&"win_below_speed", {"pct": 150}), "venom_mire"],
 			]}
 		&"lvl_12":

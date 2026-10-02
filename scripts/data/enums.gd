@@ -13,24 +13,44 @@ enum Targeting {
 	TARGET,     ## un ennemi precis
 }
 
-## Tags portes par les sorts. Les six PREMIERS sont des ELEMENTS de degats :
-## chaque monstre leur oppose un pourcentage de resistance (EnemyDef.resistances).
-## SLOW et SUMMON ferment la liste parce qu ils ne sont pas des elements mais des
-## CATEGORIES d effet — un sort peut etre a la fois de givre et ralentissant.
+## LES HUIT ELEMENTS (vague 8, demande du co-auteur) et deux MARQUEURS d effet.
 ##
-## POISON et LIGHTNING ont ete ajoutes en fin d enum, jamais inseres au milieu :
-## les .tres livres et les sauvegardes stockent la valeur ENTIERE du tag, et
-## glisser une valeur decalerait toutes les suivantes (le feu deviendrait du
-## givre sur les telephones deja installes).
-enum DamageTag { PHYSICAL, FIRE, FROST, ARCANE, SLOW, SUMMON, POISON, LIGHTNING }
+## Feu, Eau, Nature, Vent, Foudre, Glace, Arcanique, Poison : chaque sort a
+## EXACTEMENT un element (SpellCard.element) et chaque monstre leur oppose un
+## pourcentage de resistance (EnemyDef.resistances). SLOW et SUMMON ne sont pas
+## des elements mais des CATEGORIES d effet : un sort peut etre de glace ET
+## ralentissant ; la ligne SLOW garde sa resistance a part (un golem immunise au
+## ralentissement n est pas ralenti, quel que soit l element du sort).
+##
+## POURQUOI DES VALEURS ECRITES A LA MAIN. Les .tres stockent la valeur ENTIERE
+## du tag. Les noms qui survivent gardent leur valeur d avant (ICE = l ancien
+## FROST = 2, POISON = 6...), les trois neufs s ajoutent EN FIN (8, 9, 10), et
+## la valeur 0 de l ancien PHYSICAL devient NONE, un trou inerte. Un .tres d un
+## autre chantier, ou une donnee d un telephone, qui porterait encore un 0 ne se
+## lit donc pas comme du feu ou de l eau : il ne se lit plus du tout. Renumeroter
+## de 0 a 9 aurait transforme silencieusement le physique en feu.
+## Aucune sauvegarde ne stocke de DamageTag (verifie dans SaveData le 02/10).
+enum DamageTag {
+	NONE = 0,       ## aucun element (ancien PHYSICAL, retire en vague 8)
+	FIRE = 1,
+	ICE = 2,        ## l ancien FROST (givre) : meme valeur, nouveau nom
+	ARCANE = 3,
+	SLOW = 4,       ## marqueur d effet : ralentit / fige
+	SUMMON = 5,     ## marqueur d effet : invoque
+	POISON = 6,
+	LIGHTNING = 7,
+	WATER = 8,
+	NATURE = 9,
+	WIND = 10,
+}
 
-## Les tags qui sont de vrais ELEMENTS de degats. Une carte qui inflige des
-## degats doit en porter au moins un (verifie par tests/unit/test_elements.gd) :
-## sans element, elle echapperait a toutes les resistances et serait par
-## accident la meilleure carte du jeu.
+## Les tags qui sont de vrais ELEMENTS, dans l ORDRE D AFFICHAGE (fiches de
+## monstre, legende du Cameleon, filtres) : celui que le co-auteur a donne.
+## Une carte de sort en porte exactement un (verifie par test_elements) : sans
+## element, elle echapperait a toutes les resistances.
 const ELEMENTS: Array[int] = [
-	DamageTag.PHYSICAL, DamageTag.FIRE, DamageTag.FROST,
-	DamageTag.ARCANE, DamageTag.POISON, DamageTag.LIGHTNING,
+	DamageTag.FIRE, DamageTag.WATER, DamageTag.NATURE, DamageTag.WIND,
+	DamageTag.LIGHTNING, DamageTag.ICE, DamageTag.ARCANE, DamageTag.POISON,
 ]
 
 
@@ -38,15 +58,33 @@ const ELEMENTS: Array[int] = [
 ## doit s ecrire : fiche de monstre, carte, bilan de fin.
 static func tag_name(tag: int) -> String:
 	match tag:
-		DamageTag.PHYSICAL: return "physique"
 		DamageTag.FIRE: return "feu"
-		DamageTag.FROST: return "givre"
+		DamageTag.WATER: return "eau"
+		DamageTag.NATURE: return "nature"
+		DamageTag.WIND: return "vent"
+		DamageTag.LIGHTNING: return "foudre"
+		DamageTag.ICE: return "glace"
 		DamageTag.ARCANE: return "arcane"
 		DamageTag.POISON: return "poison"
-		DamageTag.LIGHTNING: return "foudre"
 		DamageTag.SLOW: return "ralentissement"
 		DamageTag.SUMMON: return "invocation"
 	return "inconnu"
+
+
+## Valeur d un tag a partir de son NOM d enum ("FIRE", "ICE"), -1 si inconnu.
+## Les valeurs sont ecrites a la main (voir plus haut) : elles se suivent
+## aujourd hui, mais `keys()[i]` ne rend le nom de la valeur i que par hasard.
+## Passer toujours par ici ou par `tag_key` (find_key).
+static func tag_from_name(s: String) -> int:
+	if not DamageTag.has(s):
+		return -1
+	return int(DamageTag[s])
+
+
+## Nom d enum d une valeur ("ICE"), "" si inconnue.
+static func tag_key(tag: int) -> String:
+	var k: Variant = DamageTag.find_key(tag)
+	return String(k) if k != null else ""
 
 ## Famille de monstre : sert a l affichage et a l equilibrage.
 ## Les comportements eux-memes sont pilotes par les champs d EnemyDef.

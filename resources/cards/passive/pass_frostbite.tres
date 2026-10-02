@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_epk41"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_oql16"]
 
-[sub_resource type="Resource" id="Resource_kycxa"]
+[sub_resource type="Resource" id="Resource_epk41"]
 script = ExtResource("1_epk41")
 key = &"passive_chill_on_hit"
 magnitude = 30.0
@@ -15,12 +15,13 @@ params = {}
 script = ExtResource("2_oql16")
 id = &"pass_frostbite"
 display_name = "Morsure de givre"
-description = "Au-dela de 165 % de vitesse : tout degat, quel que soit son element, ralentit sa cible de 30 % pendant 1,5 s."
+description = "Au-dela de 165 % de vitesse : tout degat, quel que soit son element, ralentit sa cible de 30 % pendant 1,5 s (un ralentissement de GLACE)."
 rarity = 1
 base_cast_time = 0.0
 targeting = 0
+element = 2
 tags = Array[int]([])
-effects = Array[ExtResource("1_epk41")]([SubResource("Resource_kycxa")])
+effects = Array[ExtResource("1_epk41")]([SubResource("Resource_epk41")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = true

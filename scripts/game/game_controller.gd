@@ -444,7 +444,9 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 		if RunState.has_passive(&"passive_start_wall"):
 			var au_milieu := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5,
 				GameConfig.MAGE_LINE_Y * 0.62)
-			battlefield.spawn_wall(au_milieu, 170.0, 14.0)
+			# Un mur d ECORCE est de nature (vague 8) : les monstres qui
+			# craignent la nature le frappent moins fort.
+			battlefield.spawn_wall(au_milieu, 170.0, 14.0, 60.0, [GameEnums.DamageTag.NATURE])
 	if wave != null and (wave.is_boss or wave.is_miniboss):
 		AudioBus.play_sfx(&"boss")
 		AudioBus.play_voice(&"attack")

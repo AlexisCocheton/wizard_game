@@ -29,6 +29,7 @@ description = "Pioche 3 cartes immediatement et lance deux sorts a la fois penda
 rarity = 3
 base_cast_time = 1.6
 targeting = 0
+element = 8
 tags = Array[int]([])
 effects = Array[ExtResource("1_7goh8")]([SubResource("Resource_7goh8"), SubResource("Resource_q8jgj")])
 copies_in_starter = 0

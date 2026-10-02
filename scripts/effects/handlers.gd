@@ -7,8 +7,11 @@ extends RefCounted
 ## `ctx.damage_mult` (Focalisation) s applique a tout ce qui inflige des degats.
 
 
+## Les tags tels que le combat les lit : l ELEMENT de la carte puis ses
+## marqueurs d effet (SpellCard.combat_tags, vague 8). Tout effet les transmet :
+## degats, ralentir, aspirer, repousser, objets poses, allies invoques.
 static func _tags(ctx: CastContext) -> Array:
-	return ctx.card.tags if ctx.card != null else []
+	return ctx.card.combat_tags() if ctx.card != null else []
 
 
 ## Cellules qu un mur de cette carte bloquerait a ce point. Meme decoupe que
@@ -241,7 +244,11 @@ class SummonAlly extends EffectHandler:
 		if ctx.battlefield == null:
 			return
 		Fx.self_aura(ctx.battlefield, Fx.COL_SUMMON, Fx.card_sheet(ctx.card))
-		ctx.battlefield.spawn_ally(spec.duration, spec.magnitude * ctx.damage_mult)
+		var tags_allie: Array = EffectHandlers._tags(ctx).duplicate()
+		if not tags_allie.has(GameEnums.DamageTag.SUMMON):
+			tags_allie.append(GameEnums.DamageTag.SUMMON)
+		ctx.battlefield.spawn_ally(spec.duration, spec.magnitude * ctx.damage_mult,
+			Vector2.INF, tags_allie)
 
 
 ## Defausse N cartes puis en pioche N.
@@ -317,9 +324,10 @@ class BuildWall extends EffectHandler:
 		# c est un parametre, pas un second handler.
 		if bool(spec.get_param(&"permanent", false)):
 			ctx.battlefield.spawn_breakable_wall(ctx.target_position, half, thickness,
-				float(spec.get_param(&"wall_hp", 80.0)))
+				float(spec.get_param(&"wall_hp", 80.0)), EffectHandlers._tags(ctx))
 			return
-		ctx.battlefield.spawn_wall(ctx.target_position, half, spec.duration, thickness)
+		ctx.battlefield.spawn_wall(ctx.target_position, half, spec.duration, thickness,
+			EffectHandlers._tags(ctx))
 
 
 ## Defausse la main ; chaque carte defaussee reduit l incantation de cette carte.

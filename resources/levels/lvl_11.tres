@@ -27,7 +27,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_eswmg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="25_ihudj"]
 
-[sub_resource type="Resource" id="Resource_fw4au"]
+[sub_resource type="Resource" id="Resource_6bhln"]
 script = ExtResource("22_3efo2")
 id = &"obj_kill_flying_4"
 description = "Abattre 4 monstres volants"
@@ -36,17 +36,17 @@ params = {
 "count": 4
 }
 
-[sub_resource type="Resource" id="Resource_pucof"]
+[sub_resource type="Resource" id="Resource_fw4au"]
 script = ExtResource("22_3efo2")
-id = &"obj_element_casts_32_frost"
-description = "Lancer 32 sorts de givre"
+id = &"obj_element_casts_32_ice"
+description = "Lancer 32 sorts de glace"
 check_key = &"element_casts"
 params = {
 "count": 32,
-"element": "FROST"
+"element": "ICE"
 }
 
-[sub_resource type="Resource" id="Resource_dtkdf"]
+[sub_resource type="Resource" id="Resource_pucof"]
 script = ExtResource("22_3efo2")
 id = &"obj_win_below_speed_150"
 description = "Gagner avec moins de 150 % de vitesse"
@@ -69,7 +69,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_xahqv"]
+[sub_resource type="Resource" id="Resource_dtkdf"]
 script = ExtResource("24_eswmg")
 id = &"w11_1"
 duration = 26.0
@@ -99,7 +99,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 19.0
 
-[sub_resource type="Resource" id="Resource_y6l72"]
+[sub_resource type="Resource" id="Resource_xahqv"]
 script = ExtResource("24_eswmg")
 id = &"w11_2"
 duration = 28.0
@@ -129,7 +129,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_8bg8g"]
+[sub_resource type="Resource" id="Resource_y6l72"]
 script = ExtResource("24_eswmg")
 id = &"w11_3_miniboss"
 duration = 32.0
@@ -159,7 +159,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_pu0p6"]
+[sub_resource type="Resource" id="Resource_8bg8g"]
 script = ExtResource("24_eswmg")
 id = &"w11_4"
 duration = 30.0
@@ -189,7 +189,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 28.0
 
-[sub_resource type="Resource" id="Resource_3pn3o"]
+[sub_resource type="Resource" id="Resource_pu0p6"]
 script = ExtResource("24_eswmg")
 id = &"w11_5_boss"
 duration = 44.0
@@ -210,10 +210,10 @@ intro_story = &"lvl_11_intro"
 outro_story = &"lvl_11_outro"
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("24_eswmg")]([SubResource("Resource_xahqv"), SubResource("Resource_y6l72"), SubResource("Resource_8bg8g"), SubResource("Resource_pu0p6"), SubResource("Resource_3pn3o")])
+waves = Array[ExtResource("24_eswmg")]([SubResource("Resource_dtkdf"), SubResource("Resource_xahqv"), SubResource("Resource_y6l72"), SubResource("Resource_8bg8g"), SubResource("Resource_pu0p6")])
 enemy_pool = Array[ExtResource("1_q8cbb")]([ExtResource("2_6bhln"), ExtResource("3_fw4au"), ExtResource("4_pucof"), ExtResource("5_dtkdf"), ExtResource("6_xahqv"), ExtResource("7_y6l72"), ExtResource("8_8bg8g"), ExtResource("9_pu0p6")])
 exploration_deck = Array[ExtResource("10_3pn3o")]([ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("11_88php"), ExtResource("11_88php"), ExtResource("11_88php"), ExtResource("12_paeys"), ExtResource("12_paeys"), ExtResource("14_v6qrd"), ExtResource("14_v6qrd"), ExtResource("15_k2nie"), ExtResource("15_k2nie"), ExtResource("18_ifueo"), ExtResource("18_ifueo")])
-objectives = Array[ExtResource("22_3efo2")]([SubResource("Resource_fw4au"), SubResource("Resource_pucof"), SubResource("Resource_dtkdf")])
+objectives = Array[ExtResource("22_3efo2")]([SubResource("Resource_6bhln"), SubResource("Resource_fw4au"), SubResource("Resource_pucof")])
 levelup_cards = Array[ExtResource("10_3pn3o")]([ExtResource("17_fw4au"), ExtResource("18_pucof"), ExtResource("17_6bhln")])
 objective_rewards = Array[ExtResource("10_3pn3o")]([ExtResource("20_6bhln"), ExtResource("21_xahqv"), ExtResource("22_6bhln")])
 next_levels = Array[StringName]([&"lvl_13"])

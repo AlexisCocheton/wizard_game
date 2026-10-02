@@ -88,7 +88,7 @@ const MESURES_W7: Dictionary = {
 	"lvl_21": [["obj_kill_type_with_card_arcane_bolt_3_fire_worm", 47], ["obj_no_card_tag_fire", 33], ["obj_win_under_time_118", 15]],
 	"lvl_07": [["obj_no_card_mirror_apprentice", 56], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 24], ["obj_win_above_speed_350", 9]],
 	"lvl_10": [["obj_kill_flying_1", 49], ["obj_untouched", 44], ["obj_enemy_travel_1104_0_cacodaemon", 13]],
-	"lvl_11": [["obj_kill_flying_4", 46], ["obj_element_casts_32_frost", 26], ["obj_win_below_speed_150", 21]],
+	"lvl_11": [["obj_kill_flying_4", 46], ["obj_element_casts_32_ice", 26], ["obj_win_below_speed_150", 21]],
 	"lvl_12": [["obj_card_casts_focus_14", 45], ["obj_kill_type_with_card_arcane_bolt_7_shade", 30], ["obj_same_card_casts_38", 12]],
 	"lvl_13": [["obj_no_legendary", 51], ["obj_card_casts_spark_25", 35], ["obj_win_above_speed_300", 20]],
 	"lvl_14": [["obj_kill_type_one_cast_3_rat_swarm", 44], ["obj_hit_from_sleepy_fox", 21], ["obj_no_hit_from_imp_archer", 6]],
@@ -412,7 +412,7 @@ static func lien_de(o: ObjectiveDef, lv: LevelDef) -> String:
 			var tag: int = ObjectiveChecker.tag_from_name(
 				_param(o, "element") if o.check_key == &"element_casts" else _param(o, "tag"))
 			for c: SpellCard in lv.exploration_deck:
-				if c != null and c.tags.has(tag):
+				if c != null and c.has_tag(tag):
 					return "carte"
 		&"no_card_key":
 			for c: SpellCard in lv.exploration_deck:

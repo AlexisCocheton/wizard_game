@@ -120,7 +120,7 @@ func _test_perdu_implique_echec_a_la_victoire() -> void:
 				RunState.note_cast(_card("interdit", [], [_p(o, "key")]))
 			&"no_card_tag":
 				var tag: int = ObjectiveChecker.tag_from_name(_p(o, "tag"))
-				var autre: int = GameEnums.DamageTag.FROST if tag != GameEnums.DamageTag.FROST \
+				var autre: int = GameEnums.DamageTag.ICE if tag != GameEnums.DamageTag.ICE \
 					else GameEnums.DamageTag.FIRE
 				RunState.note_cast(_card("autre", [autre], ["damage_single"]))
 				not_ok(ObjectiveChecker.is_failed(o), "no_card_tag : un autre tag ne ruine rien")

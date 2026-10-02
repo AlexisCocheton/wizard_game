@@ -626,8 +626,12 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 	# Le compteur demande par le testeur : combien de fois ce sort a ete lance.
 	stats.add_child(_stat("Lance", str(card_uses(card.id)), UiTheme.INK_LEGENDARY))
 
-	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY,
-		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+	# Les elements cites en majuscules portent leur logo dans la phrase (vague 8).
+	var desc: RichTextLabel = ElementIcons.rich_label(
+		ElementIcons.decorate(card.description, ElementIcons.inline_px(UiTheme.FONT_BODY)),
+		UiTheme.FONT_BODY, UiTheme.TEXT_DARK, true)
+	desc.name = "CardDescription"
+	box.add_child(desc)
 	# OU L OBTENIR : une carte grisee doit dire au joueur ou aller la chercher,
 	# sinon la montrer ne sert qu a frustrer.
 	if not SaveData.is_discovered(card.id):
@@ -732,17 +736,23 @@ func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:
 
 	box.add_child(UiTheme.label("COMPETENCES", UiTheme.FONT_SMALL,
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
-	for line in BestiaryLore.behaviours(def):
-		box.add_child(UiTheme.label("- " + line, UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
+	for line in BestiaryLore.behaviours(def, true):
+		# RichTextLabel : la legende du Cameleon porte les logos de ses elements
+		# dans la phrase (BestiaryLore.boss_v3_lines, vague 8).
+		box.add_child(ElementIcons.rich_label("- " + line, UiTheme.FONT_BODY,
+			UiTheme.TEXT_DARK))
 	_fill_resistances(box, def)
 
 
-## RESISTANCES en logos (vague 5) : sous chaque mot de groupe (Immunise /
-## Resiste / Vulnerable), une ligne par element — son LOGO, puis ce qu il fait
-## en clair : « -53 % degats et effets », « +58 % degats », « ni degats ni
-## effets ». Le mot reste ecrit : c est lui qui dit si le chiffre est une chance
-## ou un obstacle, et un joueur qui ne distingue pas les couleurs lit
-## « Resiste » aussi bien qu un autre.
+## RESISTANCES en logos (vague 5, en ligne depuis la vague 8) : sous chaque mot
+## de groupe (Immunise / Resiste / Vulnerable), UNE ligne de texte ou chaque
+## element est son LOGO dans la phrase, son nom et son pourcentage :
+## « [feu] feu -30 %   [eau] eau -20 % » — la forme demandee par le co-auteur.
+## Une ligne par element ne tenait plus : huit elements et le ralentissement
+## faisaient une fiche de neuf lignes a faire defiler. Le mot du groupe reste
+## ecrit : c est lui qui dit si le chiffre est une chance ou un obstacle, et un
+## joueur qui ne distingue pas les couleurs lit « Resiste » aussi bien qu un
+## autre ; la FORME du logo lui dit l element.
 ##
 ## POURQUOI « ET EFFETS » ECRIT SUR CHAQUE LIGNE (retour du co-auteur : « je ne
 ## sais pas si c est fait ») : depuis la vague 5, une resistance freine aussi le
@@ -771,13 +781,11 @@ func _fill_resistances(box: VBoxContainer, def: EnemyDef) -> void:
 		box.add_child(bloc)
 		bloc.add_child(UiTheme.label(str(g["title"]) + " :", UiTheme.FONT_BODY,
 			_resist_ink(str(g["title"])), HORIZONTAL_ALIGNMENT_LEFT, false))
-		for item in g["items"]:
-			var tag: int = int(item["tag"])
-			var mult: float = float(item["mult"])
-			var ligne: HBoxContainer = ElementIcons.resistance_row(tag, mult, RESIST_ICON_PX,
-				UiTheme.TEXT_DARK, UiTheme.FONT_BODY)
-			ligne.name = "Resist_%d" % tag
-			bloc.add_child(ligne)
+		var ligne: RichTextLabel = ElementIcons.rich_label(
+			ElementIcons.resist_bbcode(g["items"], ElementIcons.inline_px(UiTheme.FONT_BODY)),
+			UiTheme.FONT_BODY, UiTheme.TEXT_DARK)
+		ligne.name = "ResistLine_" + str(g["title"])
+		bloc.add_child(ligne)
 
 
 ## Encre du mot de groupe, sur PAPIER : rouge sombre pour ce qui gene le joueur,

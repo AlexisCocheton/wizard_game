@@ -6,13 +6,23 @@ se lit plus, la couleur ne se lit pas pour un joueur daltonien, mais la FORME du
 cadre se lit toujours. Deux elements ne partagent jamais une forme.
 
   element    forme              couleur du cadre     image (pack craftpix)
-  physique   carre              bronze               lance         EarthMage 9
   feu        triangle (pointe   orange               flamme        FireMage 6
              en haut)
-  givre      hexagone           cyan                 eclat blanc   Aeromancer 46 (recolore en givre)
+  eau        goutte (pointe     bleu profond         trombe d eau  Aeromancer 47 (recoloree en bleu)
+             en haut)
+  nature     carre              ocre                 arbre-rune    EarthMage 18
+  vent       capsule couchee    blanc menthe         tornade       Aeromancer 19 (recoloree menthe)
+  glace      hexagone           cyan                 eclat blanc   Aeromancer 46 (recolore en givre)
   arcane     losange            violet               croissant     Night Elf 48
   poison     cercle             vert                 fiole         Warlock 45 (recoloree en vert)
   foudre     etoile a 4 pointes jaune                eclair        FireMage 8 (fond passe au nuit)
+
+VAGUE 8 (huit elements) : le physique disparait, la GLACE reprend le logo du
+givre (meme element, fichier renomme), la NATURE prend le carre du physique
+(la pierre, le bloc de terre), l EAU une goutte, le VENT une capsule couchee
+(une rafale). Les deux formes neuves ne ressemblent a aucune autre a 28 px :
+la goutte a une pointe que le cercle n a pas, la capsule est la seule forme
+plus large que haute.
   ralentis.  sablier            argent               main qui      Night Elf 11
                                                      arrete
 
@@ -77,6 +87,9 @@ PACKS = {
 }
 
 BRONZE = (205, 172, 110)
+BLEU = (64, 128, 242)
+OCRE = (176, 132, 64)
+MENTHE = (204, 242, 230)
 ORANGE = (242, 115, 51)
 CYAN = (115, 204, 242)
 VIOLET = (158, 115, 242)
@@ -87,9 +100,11 @@ OR = (242, 199, 77)
 
 # cle -> (pack, numero, forme, couleur du cadre, recoloration ou None)
 LOGOS = {
-    "physique": ("earth", 9, "carre", BRONZE, None),
     "feu": ("fire", 6, "triangle", ORANGE, None),
-    "givre": ("aero", 46, "hexagone", CYAN, ((8, 26, 58), (200, 240, 255))),
+    "eau": ("aero", 47, "goutte", BLEU, ((6, 18, 64), (150, 205, 255))),
+    "nature": ("earth", 18, "carre", OCRE, None),
+    "vent": ("aero", 19, "capsule", MENTHE, ((14, 44, 40), (225, 255, 240))),
+    "glace": ("aero", 46, "hexagone", CYAN, ((8, 26, 58), (200, 240, 255))),
     "arcane": ("nightelf", 48, "losange", VIOLET, None),
     "poison": ("warlock", 45, "cercle", VERT, ((10, 36, 10), (205, 255, 130))),
     "foudre": ("fire", 8, "etoile", JAUNE, ((20, 16, 64), (255, 245, 110))),
@@ -127,6 +142,24 @@ def _forme(nom):
     if nom == "sablier":
         return [(-0.86, -0.96), (0.86, -0.96), (0.26, 0.0),
                 (0.86, 0.96), (-0.86, 0.96), (-0.26, 0.0)]
+    if nom == "goutte":
+        # Un cercle bas surmonte d une pointe : la pointe est ce qui la separe
+        # du cercle du poison, meme en niveaux de gris.
+        pts = [(0.0, -1.0)]
+        for a in range(-60, 241, 6):
+            r = math.radians(a)
+            pts.append((0.68 * math.cos(r), 0.30 + 0.68 * math.sin(r)))
+        return pts
+    if nom == "capsule":
+        # Plus large que haute : la seule forme couchee du jeu.
+        pts = []
+        for a in range(-90, 91, 6):
+            r = math.radians(a)
+            pts.append((0.40 + 0.56 * math.cos(r), 0.56 * math.sin(r)))
+        for a in range(90, 271, 6):
+            r = math.radians(a)
+            pts.append((-0.40 + 0.56 * math.cos(r), 0.56 * math.sin(r)))
+        return pts
     if nom == "ecu":
         return [(-0.86, -0.92), (0.86, -0.92), (0.86, 0.12), (0.62, 0.58),
                 (0.0, 1.0), (-0.62, 0.58), (-0.86, 0.12)]
@@ -201,6 +234,13 @@ def logo(cle):
 def main():
     dest = os.path.join(PROJ, "assets", "icons")
     os.makedirs(dest, exist_ok=True)
+    # Logos d elements RETIRES en vague 8 : un fichier orphelin serait encore
+    # charge par un appel oublie et afficherait un element qui n existe plus.
+    for ancien in ("physique", "givre"):
+        for ext in (".png", ".png.import"):
+            f = os.path.join(dest, "element_%s%s" % (ancien, ext))
+            if os.path.exists(f):
+                os.remove(f)
     for cle in LOGOS:
         logo(cle).save(os.path.join(dest, "element_%s.png" % cle), optimize=True)
         print("logo", cle)

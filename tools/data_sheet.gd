@@ -484,7 +484,7 @@ func _table_cards() -> Array:
 			rayon = maxf(rayon, e.radius)
 			duree = maxf(duree, e.duration)
 		var elements: Array[String] = []
-		for t in c.tags:
+		for t in c.combat_tags():
 			elements.append(GameEnums.tag_name(t))
 		var decks: Array = _card_decks.get(c.id, [])
 		# LE chiffre de comparaison. Les degats bruts mentent : la Traction
@@ -545,7 +545,7 @@ func _table_cards() -> Array:
 		# degat — elle ralentit de 40 %.
 		if degats > 0.0:
 			var a_element: bool = false
-			for t in c.tags:
+			for t in c.combat_tags():
 				if t in GameEnums.ELEMENTS:
 					a_element = true
 			if not a_element:
@@ -608,7 +608,7 @@ func _table_levels() -> Array:
 			if c == null:
 				continue
 			deck.append(String(c.id))
-			for t in c.tags:
+			for t in c.combat_tags():
 				if t in GameEnums.ELEMENTS:
 					elements[GameEnums.tag_name(t)] = true
 		var objs: Array[String] = []

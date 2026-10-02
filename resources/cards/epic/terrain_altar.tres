@@ -26,6 +26,7 @@ description = "Erige un autel de 140 PV qui reste jusqu a ce qu on l abatte. Tou
 rarity = 2
 base_cast_time = 2.2
 targeting = 1
+element = 9
 tags = Array[int]([5])
 effects = Array[ExtResource("1_7aqar")]([SubResource("Resource_7aqar")])
 copies_in_starter = 0

@@ -19,6 +19,7 @@ description = "Fait couler une riviere sur toute la largeur du terrain, a la hau
 rarity = 3
 base_cast_time = 2.6
 targeting = 1
+element = 8
 tags = Array[int]([])
 effects = Array[ExtResource("1_oaysl")]([SubResource("Resource_oaysl")])
 copies_in_starter = 0
