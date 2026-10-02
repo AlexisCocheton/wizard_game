@@ -11,13 +11,11 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_test_un_passif_se_lit_avant_de_s_equiper()
 	_test_pas_de_case_vide_dans_le_deck()
 	_test_le_compteur_lit_deck_size()
 	_test_aucun_compte_de_deck_en_dur()
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _passifs() -> Array[SpellCard]:
@@ -55,7 +53,6 @@ func _textes(racine: Node) -> String:
 
 func _test_un_passif_se_lit_avant_de_s_equiper() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_ouvrir_les_passifs()
 	var p: Array[SpellCard] = _passifs()
 	SaveData.discover_card(p[0].id)
@@ -107,20 +104,23 @@ func _test_un_passif_se_lit_avant_de_s_equiper() -> void:
 		"deux touchers sur le meme passif l equipent")
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _test_pas_de_case_vide_dans_le_deck() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
 	# Un deck de deux sorts differents : deux vignettes, pas six cases.
-	var sorts: Array[SpellCard] = []
+	# La grille du deck montre ce que le profil contient, obtenu ou non : deux
+	# sorts quelconques suffisent, tries pour que le test ne depende pas du disque.
+	var tous: Array[SpellCard] = []
 	for c: SpellCard in ContentDB.cards.values():
-		if not c.is_passive and SaveData.is_discovered(c.id) and sorts.size() < 2:
-			sorts.append(c)
+		if not c.is_passive:
+			tous.append(c)
+	tous.sort_custom(func(a: SpellCard, b: SpellCard) -> bool: return String(a.id) < String(b.id))
+	var sorts: Array[SpellCard] = tous.slice(0, 2)
+	eq(sorts.size(), 2, "deux sorts pour composer le deck")
 	var ids: Array = []
 	for c in sorts:
 		for i in DeckRules.max_copies(c.rarity):
@@ -140,12 +140,10 @@ func _test_pas_de_case_vide_dans_le_deck() -> void:
 	panel.delete_current_deck()
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _test_le_compteur_lit_deck_size() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
