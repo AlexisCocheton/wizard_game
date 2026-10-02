@@ -2307,13 +2307,16 @@ func _cards() -> void:
 	ally.sfx_key = &"whoosh_summon"
 	_save(ally, "res://resources/cards/epic/mirror_apprentice.tres")
 
-	# CONCENTRATION (vague 8) : le co-auteur la disait « ne fonctionne pas ».
-	# EN ATTENTE du chantier COMBAT (RunState.grant_card_xp) : l effet sera
-	# remplace par « 1 XP a chaque carte de la main ».
+	# CONCENTRATION (vague 8) : le co-auteur la disait « ne fonctionne pas » —
+	# defausser la main contre des secondes d incantation se lisait mal et vidait
+	# la main au pire moment. Elle donne maintenant 1 XP de carte a chaque sort
+	# de la main (cle `hand_card_xp`, RunState.grant_card_xp, la semantique de
+	# MEDITER) : les sorts murissent plus tot, rien n est perdu. Ce n est pas un
+	# lancer pour les objectifs.
 	var focus := _card("deep_focus", "Concentration",
-		"Defausse ta main : moins 1 s d incantation par carte, 8 s.",
+		"Chaque sort de ta main gagne 1 XP : ils murissent plus tot.",
 		GameEnums.Rarity.EPIC, 0.7, GameEnums.Targeting.NONE, [],
-		[_spec("discard_hand_for_speed", 0.0, 8.0, 0.0, {&"seconds_per_card": 1.0})])
+		[_spec("hand_card_xp", 1.0)])
 	focus.fx_key = &"hex_sigil"
 	focus.sfx_key = &"charge_magic"
 	_save(focus, "res://resources/cards/epic/deep_focus.tres")

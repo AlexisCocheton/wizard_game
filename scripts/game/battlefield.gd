@@ -86,6 +86,7 @@ func simulate(delta: float) -> void:
 	_simulate_shots(wd)
 	_simulate_shockwaves(wd)
 	_simulate_support(wd)
+	_w8_auras_simulate(wd)  # CHANTIER W8 : coupure d aura et pat d aura
 
 	var buff: float = _buff_multiplier()
 	# Copie : la liste est modifiee pendant l iteration (morts, arrivees).
@@ -640,7 +641,8 @@ var speed_before_hit: int = 100
 
 
 func _on_enemy_reached_mage(e: Enemy) -> void:
-	var dmg: int = e.definition.contact_hit() if e.definition != null else 5
+	# CHANTIER W8 : contact_damage() = bareme de la definition x force du devoreur.
+	var dmg: int = e.contact_damage()
 	enemies.erase(e)
 	e.queue_free()
 	# Photo de la vitesse AVANT l encaissement. Le passif legendaire "Verrou
@@ -716,7 +718,8 @@ func is_shielded_by_aura(e: Enemy) -> bool:
 	for g in enemies:
 		if g == e or not _alive(g) or g.definition == null:
 			continue
-		if g.definition.aura_shield_radius <= 0.0:
+		# CHANTIER W8 : une aura COUPEE (dissipation, pat d aura) ne couvre personne.
+		if not g.aura_active():
 			continue
 		if g.position.distance_to(e.position) <= g.definition.aura_shield_radius:
 			return true
@@ -1183,7 +1186,8 @@ func enemy_strikes_wall(e: Enemy, world_delta: float) -> void:
 	if e == null or e.definition == null:
 		return
 	var devant: Vector2 = e.position + Vector2(0.0, e.radius() + 20.0)
-	damage_wall_at(devant, float(e.definition.contact_hit()) * 4.0 * world_delta, e)
+	# CHANTIER W8 : contact_damage() porte la force du devoreur.
+	damage_wall_at(devant, float(e.contact_damage()) * 4.0 * world_delta, e)
 
 
 # =====================================================================
@@ -1370,7 +1374,8 @@ func _props_take_hits(p: TerrainProp, wd: float) -> void:
 		if e.position.distance_to(p.position) > p.reach + e.radius():
 			continue
 		# Meme bareme que le mur : les degats de contact, appliques en continu.
-		if p.take_damage(object_hit(float(e.definition.contact_hit()) * 4.0 * wd, e,
+		# CHANTIER W8 : contact_damage() porte la force du devoreur.
+		if p.take_damage(object_hit(float(e.contact_damage()) * 4.0 * wd, e,
 				_prop_tags(p))):
 			var idx: int = props.find(p)
 			if idx >= 0:
@@ -2080,3 +2085,83 @@ func _obj_note_death(e: Enemy, def: EnemyDef) -> void:
 	RunState.note_kill_by_source(def)
 	if e != null and is_instance_valid(e):
 		RunState.note_travel_at_death(def, float(e.get_meta(RunState.TRAVEL_META, 0.0)))
+
+
+# =====================================================================
+# CHANTIER W8 — PROTECTEURS. Une aura d invulnerabilite ne doit JAMAIS rendre
+# une vague imbattable.
+#
+# Le defaut : is_shielded_by_aura() couvre un monstre si un AUTRE porteur est
+# proche. Deux porteurs voisins (Gardiens-totems de w20_3, Echos d Ymoa qui
+# campent a distance du mage) se couvraient donc l un l autre, pour toujours :
+# aucun degat ne passait, et la dissipation ne retirait pas les auras. Le
+# co-auteur : « deux tours qui se protegent entre elles c est ok, mais il faut
+# pouvoir retirer leurs effets de protection avec les sorts ».
+#
+# Deux reponses, la seconde est le filet de la premiere :
+#   1. la DISSIPATION coupe l aura des porteurs touches (Enemy._w8_on_dispel,
+#      GameConfig.AURA_DISPEL_SECONDS), meme s ils se couvrent entre eux ;
+#   2. le PAT D AURA : quand plus RIEN de frappable n est a decouvert ni ne
+#      descend pendant GameConfig.AURA_STALEMATE_SECONDS, toutes les auras
+#      cedent pour la meme duree. Sans carte de dissipation dans le deck, la
+#      vague reste battable.
+# =====================================================================
+
+## Temps de monde passe avec TOUS les monstres frappables couverts par une aura.
+var _aura_stalemate_time: float = 0.0
+
+
+func _w8_auras_simulate(wd: float) -> void:
+	var porteurs: Array[Enemy] = []
+	for e in enemies:
+		if _alive(e) and e.has_aura():
+			e.tick_aura(wd)
+			porteurs.append(e)
+	# Releve AVANT le test : un monstre qui descend ce tour-ci n est pas cale.
+	var avance: bool = _w8_someone_advances()
+	if porteurs.is_empty() or avance or not all_targets_shielded():
+		_aura_stalemate_time = 0.0
+		return
+	_aura_stalemate_time += wd
+	if _aura_stalemate_time < GameConfig.AURA_STALEMATE_SECONDS:
+		return
+	_aura_stalemate_time = 0.0
+	for g in porteurs:
+		g.suppress_aura(GameConfig.AURA_DISPEL_SECONDS)
+
+
+## Vrai si au moins un monstre est frappable et que TOUS ceux qui le sont sont
+## couverts par une aura active : le joueur n a plus rien qu il puisse toucher.
+## Un monstre qui apparait encore ne compte pas (il n est pas encore frappable).
+func all_targets_shielded() -> bool:
+	var un: bool = false
+	for e in enemies:
+		if not _targetable(e):
+			continue
+		un = true
+		if not is_shielded_by_aura(e):
+			return false
+	return un
+
+
+## Un monstre frappable DESCEND-il vers le mage depuis la derniere image ? Le pat
+## d aura ne vaut que pour des proteges qui CALENT (campeurs a leur ligne, tours
+## immobiles, monstres bloques). Des proteges qui marchent finiront au contact du
+## mage : la vague n est pas imbattable, elle se paie en vitesse. BANC W8 : sans
+## cette condition, les Gardiens-totems de lvl_20, qui descendent, cedaient en
+## 4 s et le niveau passait de 23 a 30 victoires sur 30, hors de la fenetre.
+func _w8_someone_advances() -> bool:
+	var oui: bool = false
+	for e in enemies:
+		if not _targetable(e):
+			continue
+		var avant: float = float(e.get_meta(&"w8_prev_y", e.position.y))
+		if e.position.y > avant + 0.001:
+			oui = true
+		e.set_meta(&"w8_prev_y", e.position.y)
+	return oui
+
+
+## Pour les tests : depuis combien de temps de monde dure le pat d aura en cours.
+func aura_stalemate_time() -> float:
+	return _aura_stalemate_time

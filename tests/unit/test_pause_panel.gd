@@ -195,7 +195,8 @@ func _test_maturation_affichee() -> void:
 	ok(carte != null, "une carte ameliorable existe")
 	if carte == null:
 		return
-	var total: int = GameConfig.CARD_UPGRADE_TIERS
+	# Chantier W8 : le total est celui de la carte (jamais plus que ses voies).
+	var total: int = RunState.upgrade_tiers_for(carte)
 	ok(DeckBrowser.maturation_text(carte).begins_with("Maturation 0 / %d" % total),
 		"au depart : 0 / %d (%s)" % [total, DeckBrowser.maturation_text(carte)])
 	var voie: Dictionary = RunState.upgrade_pool_for(carte)[0]

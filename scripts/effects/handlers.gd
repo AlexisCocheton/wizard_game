@@ -651,6 +651,27 @@ class GainSpeed extends EffectHandler:
 		SpeedGauge.heal(int(round(maxf(spec.magnitude, 0.0))))
 
 
+## CONCENTRATION (vague 8, co-auteur : « ne fonctionne pas », remplacee par
+## « donne 1 XP a toutes les cartes de ta main »). L XP de carte fait MURIR les
+## sorts (maturations) : magnitude points par carte DISTINCTE de la main, par
+## RunState.grant_card_xp, la meme semantique que MEDITER — deux copies d un
+## sort partagent leur XP, et cette XP n est pas un lancer pour les objectifs.
+class HandCardXp extends EffectHandler:
+	func get_key() -> StringName:
+		return &"hand_card_xp"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		var n: int = maxi(int(round(spec.magnitude)), 0)
+		var vues: Dictionary = {}
+		for c: SpellCard in RunState.hand.duplicate():
+			if c == null or c.is_passive or vues.has(c.id):
+				continue
+			vues[c.id] = true
+			RunState.grant_card_xp(c, n)
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
+
+
 ## Nappe d eau : un COURANT qui remonte les monstres vers le haut.
 ##
 ## Ce n est pas un champ de givre en bleu. Un ralentissement est un facteur : il

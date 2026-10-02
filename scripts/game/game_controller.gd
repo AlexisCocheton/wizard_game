@@ -16,6 +16,10 @@ extends Node2D
 signal level_won()
 signal level_lost()
 signal cards_offered(cards: Array[SpellCard])
+## CHANTIER W8 : une carte BRULEE attend d etre visee (le HUD affiche la carte a
+## glisser), puis elle est partie.
+signal burn_aim_requested(card: SpellCard)
+signal burn_resolved(card: SpellCard)
 
 ## Modes sans fin (Infini et Massacre) : un choix de 3 cartes toutes les N
 ## vagues nettoyees.
@@ -105,6 +109,9 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	# point de passage unique des sorts (EffectRegistry.cast).
 	_connect_once(RunState.upgrade_ready, _on_upgrade_ready)
 	_connect_once(RunState.purge_requested, _on_purge_requested)
+	# CHANTIER W8 : echange de passif en pause, vague qui traine.
+	_connect_once(RunState.passive_swap_needed, _on_passive_swap_needed)
+	_connect_once(spawner.wave_overtime, _on_wave_overtime)
 
 	var hud: Node = get_node_or_null("HUD")
 	if hud != null and hud.has_method("bind"):
@@ -189,8 +196,8 @@ func simulate(delta: float) -> void:
 	# hasard, soit prendre un coup en lisant.
 	if RunState.pending_upgrade_card != null:
 		return
-	# EPURATION en attente (vague 8) : le joueur parcourt son deck pour choisir.
-	if RunState.pending_purge > 0:
+	# Epuration, passif a echanger, carte brulee a viser (voir la fonction).
+	if game_frozen_by_choice():
 		return
 	SpeedGauge.tick(delta)   # UNIQUE appelant
 	# La mort (ou la victoire) declenche un CHANGEMENT DE SCENE depuis ce tick :
@@ -236,7 +243,7 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 		return false
 	if RunState.pending_upgrade_card != null:
 		return false
-	if RunState.pending_purge > 0:
+	if game_frozen_by_choice():
 		return false
 	# Une carte a viser exige un point : sans lui, on refuse plutot que de
 	# lancer le sort a un endroit arbitraire.
@@ -248,7 +255,15 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 		return false
 	if not RunState.play_card(card):
 		return false
+	return caster.queue_next(card, _make_cast_context(card, target_pos, target_enemy))
 
+
+## Le contexte d un lancer vise : ce que le point relache veut dire pour CE mode
+## de ciblage. Extrait de play_card (chantier W8) pour que la carte BRULEE, qui
+## part sans incantation, interprete le geste exactement comme une carte de la
+## main — meme apercu, meme point, meme cible.
+func _make_cast_context(card: SpellCard, target_pos: Vector2,
+		target_enemy: Object) -> CastContext:
 	var ctx := CastContext.make(battlefield, card)
 	ctx.caster = self
 	var aim: Vector2 = target_pos if target_pos != Vector2.INF else _default_aim()
@@ -273,8 +288,7 @@ func play_card(card: SpellCard, target_pos: Vector2 = Vector2.INF,
 			ctx.target_position = aim
 			ctx.direction = Vector2.UP
 			ctx.target_enemy = target_enemy
-
-	return caster.queue_next(card, ctx)
+	return ctx
 
 
 ## La carte peut-elle etre lachee a ce point ? Lu par le HUD pour peindre
@@ -315,23 +329,54 @@ func choose_card(i: int) -> SpellCard:
 	return RunState.pick_offer(i)
 
 
-## BRULER l option i : la carte est lancee TOUT DE SUITE, au centre du terrain,
-## et n entre jamais dans le deck.
-func burn_card(i: int) -> SpellCard:
+## BRULER l option i : la carte n entre jamais dans le deck et part SANS
+## INCANTATION — la ou le joueur la vise (chantier W8).
+##
+## Avant, elle partait d office au centre de la moitie haute (540, 675) : un mur
+## ou une zone y tombaient souvent dans le vide, et bruler etait un pari sur la
+## place des monstres plutot qu un choix. Desormais :
+##   - une carte SANS visee (sur le mage, sur la main) part tout de suite ;
+##   - une carte a viser reste EN ATTENTE (RunState.burned_card), la partie en
+##     pause, jusqu a ce que le joueur la glisse sur le terrain avec le geste
+##     habituel (meme apercu que la main) : cast_burned(point) ;
+##   - `target_pos` donne d emblee (tests, banc) la lance tout de suite.
+## Un PASSIF ne se brule pas (RunState.burn_offer le refuse, l offre reste
+## ouverte) : rend null.
+func burn_card(i: int, target_pos: Vector2 = Vector2.INF) -> SpellCard:
 	var card: SpellCard = RunState.burn_offer(i)
 	if card == null:
 		return null
-	RunState.take_burned()
-	var ctx := CastContext.make(battlefield, card)
-	ctx.caster = self
-	# Pas de visee possible pendant l ecran de choix : on frappe au centre de la
-	# moitie haute, la ou les monstres descendent.
-	var cible := Vector2(GameConfig.BATTLEFIELD_WIDTH * 0.5, GameConfig.MAGE_LINE_Y * 0.45)
-	ctx.target_position = cible
-	ctx.direction = Vector2.UP
-	ctx.target_enemy = battlefield.enemy_nearest_to(cible) if battlefield != null else null
-	EffectRegistry.cast(card, ctx)
+	if not requires_aim(card) or target_pos != Vector2.INF:
+		if not cast_burned(target_pos):
+			# Point refuse (mur qui couperait tout chemin) : la carte reste a viser.
+			burn_aim_requested.emit(card)
+		return card
+	burn_aim_requested.emit(card)
 	return card
+
+
+## La carte brulee en attente vient d etre lachee en `target_pos`. Rend vrai si
+## elle est partie. Refusee (et toujours en attente) si le point est interdit,
+## exactement comme une carte de la main : un mur qui couperait tout chemin ne
+## se pose pas, et la carte n est pas perdue pour autant.
+func cast_burned(target_pos: Vector2 = Vector2.INF) -> bool:
+	var card: SpellCard = RunState.burned_card
+	if card == null:
+		return false
+	if requires_aim(card) and target_pos == Vector2.INF:
+		return false
+	if requires_aim(card) and not aim_allowed(card, target_pos):
+		return false
+	RunState.take_burned()
+	EffectRegistry.cast(card, _make_cast_context(card, target_pos, null))
+	burn_resolved.emit(card)
+	return true
+
+
+## MEDITER plutot que prendre une carte : +1 XP de carte a chaque carte en main
+## (RunState.meditate_offer). Rend le nombre de cartes qui ont medite.
+func meditate() -> int:
+	return RunState.meditate_offer()
 
 
 # --- Amelioration des cartes en combat ---
@@ -409,16 +454,20 @@ func _on_purge_requested(_max_count: int) -> void:
 		add_child(_purge_screen)
 
 
+## On CACHE le panneau AVANT de trancher : depuis le chantier W8, trancher peut
+## ouvrir aussitot l offre d une autre carte (meditation : deux cartes franchissent
+## leur palier ensemble), et cette offre REMONTRE le panneau. Le cacher apres
+## coup laissait la partie en pause derriere un ecran invisible.
 func _on_upgrade_path_chosen(index: int) -> void:
-	RunState.pick_upgrade(index)
 	if _upgrade_panel != null and is_instance_valid(_upgrade_panel):
 		_upgrade_panel.visible = false
+	RunState.pick_upgrade(index)
 
 
 func _on_upgrade_declined() -> void:
-	RunState.decline_upgrade()
 	if _upgrade_panel != null and is_instance_valid(_upgrade_panel):
 		_upgrade_panel.visible = false
+	RunState.decline_upgrade()
 
 
 func _on_level_up(_new_level: int) -> void:
@@ -594,3 +643,93 @@ func _on_died() -> void:
 	if not headless_mode and not TesterRun.end_run(level_def, false):
 		SceneRouter.goto(SceneRouter.DEFEAT, {"level_id": level_def.id,
 			"waves": RunState.wave_index})
+
+
+# =====================================================================
+# CHANTIER W8 — choix modaux de la montee de niveau, vagues qui trainent.
+# Section a part pour se fusionner sans toucher au reste : chaque accroche
+# ailleurs dans ce fichier est une ligne qui appelle une fonction d ici.
+# =====================================================================
+
+## LA PARTIE EST-ELLE FIGEE PAR UN CHOIX ? Un seul etat, lisible par tous (HUD,
+## tests, smoke) : tant qu il est vrai, simulate() n avance rien et play_card()
+## refuse. Les cinq choix modaux du combat, pour la meme raison a chaque fois —
+## le joueur LIT, il ne doit pas encaisser en lisant :
+##   - une offre de cartes (montee de niveau) ;
+##   - une amelioration de sort (trois voies a comparer) ;
+##   - une EPURATION (le joueur parcourt son deck) ;
+##   - un quatrieme PASSIF : le joueur designe celui qu il retire, ou refuse ;
+##   - une carte BRULEE a viser : elle part sans incantation, la ou le joueur la
+##     lache, et viser pendant que tout bouge rendrait bruler pire que prendre.
+## (Le commentaire vit ici et pas dans simulate() : test_balance lit le debut de
+## simulate() et exige d y trouver la sortie sur `_ended`.)
+func game_frozen_by_choice() -> bool:
+	return not RunState.pending_offer.is_empty() \
+		or RunState.pending_upgrade_card != null \
+		or RunState.pending_purge > 0 \
+		or RunState.pending_passive != null \
+		or RunState.burned_card != null
+
+
+## Le panneau d echange de passif, cree a la premiere occasion (meme raison que
+## le panneau d amelioration : il n existe que quelques secondes par partie).
+var _passive_swap_panel: PassiveSwapPanel = null
+
+
+## Un quatrieme passif est pris alors que les trois emplacements sont pleins.
+## Avant, le choix se faisait en touchant une pastille du RAIL, sans pause et
+## sans moyen de refuser — et les pastilles etant triees par seuil, l indice
+## touche n etait pas l emplacement : on pouvait retirer le mauvais passif. Le
+## panneau montre les trois CARTES equipees, chacune liee a SON emplacement
+## (indice dans RunState.equipped_passives), plus la nouvelle et un REFUS.
+func _on_passive_swap_needed(card: SpellCard) -> void:
+	if card == null:
+		return
+	if headless_mode:
+		# EN TEST HEADLESS, PERSONNE NE PEUT TOUCHER L ECRAN, et la partie est
+		# maintenant en pause tant que l echange attend. On garde les trois
+		# passifs equipes : c est ce que faisait le jeu d avant pour le banc
+		# (l echange restait en attente sans jamais aboutir), donc les mesures
+		# d equilibrage restent comparables.
+		RunState.decline_pending_passive()
+		return
+	_ensure_passive_swap_panel().show_swap(card, RunState.equipped_passives)
+
+
+func _ensure_passive_swap_panel() -> PassiveSwapPanel:
+	if _passive_swap_panel != null and is_instance_valid(_passive_swap_panel):
+		return _passive_swap_panel
+	_passive_swap_panel = PassiveSwapPanel.new()
+	_passive_swap_panel.name = "PassiveSwapPanel"
+	_passive_swap_panel.slot_chosen.connect(_on_passive_slot_chosen)
+	_passive_swap_panel.refused.connect(_on_passive_swap_refused)
+	# Dans le CanvasLayer du HUD, pour la meme raison que le panneau
+	# d amelioration : pose sur le Node2D de la partie, il suivrait le terrain.
+	var hud: Node = get_node_or_null("HUD")
+	if hud != null:
+		hud.add_child(_passive_swap_panel)
+	else:
+		add_child(_passive_swap_panel)
+	return _passive_swap_panel
+
+
+func _on_passive_slot_chosen(slot: int) -> void:
+	if _passive_swap_panel != null and is_instance_valid(_passive_swap_panel):
+		_passive_swap_panel.visible = false
+	RunState.resolve_pending_passive(slot)
+
+
+func _on_passive_swap_refused() -> void:
+	if _passive_swap_panel != null and is_instance_valid(_passive_swap_panel):
+		_passive_swap_panel.visible = false
+	RunState.decline_pending_passive()
+
+
+## La vague en cours a TRAINE (GameConfig.WAVE_OVERTIME_SECONDS apres sa derniere
+## apparition) : le spawner passe la main a la suivante, les monstres restants
+## restent en jeu. La partie la compte comme une vague franchie — compteur, record
+## des modes sans fin, choix de carte toutes les deux vagues — parce que c est ce
+## que le joueur vit : il a tenu la vague, la suivante arrive. Le HUD l annonce
+## (il ecoute le signal du spawner, comme le bandeau de monde).
+func _on_wave_overtime(index: int) -> void:
+	_on_wave_cleared(index)

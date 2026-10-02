@@ -78,6 +78,7 @@ func run() -> void:
 	_test_le_dard_venimeux_livre()
 	_test_gagner_de_la_vitesse()
 	_test_l_elan_du_temps_livre()
+	_test_concentration_fait_murir_la_main()
 	_test_les_voies_d_amelioration_ont_un_sens()
 	_test_les_raretes_demandees()
 	_test_les_cartes_neuves_s_obtiennent_en_campagne()
@@ -256,6 +257,36 @@ func _test_l_elan_du_temps_livre() -> void:
 	ok(c.effects[0].magnitude > 0.0, "un gain positif")
 	ok(c.description.contains(str(int(c.effects[0].magnitude))),
 		"le texte annonce le gain du .tres : %s" % c.description)
+
+
+# --- Concentration -----------------------------------------------------------
+
+## « Donne 1 XP a toutes les cartes de ta main » : chaque carte DISTINCTE de la
+## main gagne l XP du .tres (deux copies la partagent, comme MEDITER), l XP est
+## rangee a part (card_xp_bonus) et ne compte PAS comme un lancer.
+func _test_concentration_fait_murir_la_main() -> void:
+	var conc: SpellCard = ContentDB.cards.get(&"deep_focus")
+	ok(conc != null, "Concentration existe")
+	if conc == null:
+		return
+	eq(conc.effect_keys(), [&"hand_card_xp"] as Array[StringName],
+		"Concentration donne de l XP de carte, elle ne defausse plus la main")
+	var gain: int = int(round(conc.effects[0].magnitude))
+	ok(gain > 0, "un gain d XP positif")
+	ok(conc.description.contains("%d XP" % gain), "le texte annonce le gain : %s" % conc.description)
+	RunState.reset()
+	var a := _card(&"damage_single", 1.0)
+	a.id = &"t_main_a"
+	var b := _card(&"damage_single", 1.0)
+	b.id = &"t_main_b"
+	RunState.hand.assign([a, a, b])
+	var main_avant: int = RunState.hand.size()
+	EffectRegistry.cast(conc, CastContext.make(null, conc))
+	eq(RunState.card_xp(a), gain, "deux copies en main partagent leur XP (+%d, pas +%d)" % [gain, 2 * gain])
+	eq(RunState.card_xp(b), gain, "chaque carte distincte de la main murit")
+	eq(RunState.casts_of(a) + RunState.casts_of(b), 0, "l XP donnee n est pas un lancer")
+	eq(RunState.hand.size(), main_avant, "la main n est plus defaussee")
+	RunState.reset()
 
 
 # --- Ameliorations, raretes, obtention -----------------------------------------

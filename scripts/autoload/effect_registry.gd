@@ -52,6 +52,8 @@ func register_defaults() -> void:
 		# mort, et une carte qui rend de la vitesse au mage.
 		EffectHandlers.PoisonDot.new(),
 		EffectHandlers.GainSpeed.new(),
+		# Et Concentration : de l XP de carte a toute la main (grant_card_xp).
+		EffectHandlers.HandCardXp.new(),
 	]:
 		register(h)
 

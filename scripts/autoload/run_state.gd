@@ -145,6 +145,7 @@ func reset() -> void:
 	# elle franchirait la fin du niveau et l equilibrage mesure au banc ne
 	# decrirait plus aucune partie reelle (voir la section AMELIORATION plus bas).
 	casts_by_card.clear()
+	card_xp_bonus.clear()  # CHANTIER W8 : XP de meditation
 	upgrades_taken.clear()
 	pending_upgrade_card = null
 	pending_upgrade_paths = []
@@ -1438,8 +1439,17 @@ var burned_card: SpellCard = null
 ## la duree — sans ce prix, bruler serait toujours le bon choix.
 ## Elle n est pas non plus OBTENUE (chantier P) : la collection fait partie de la
 ## valeur durable a laquelle on renonce en brulant.
+##
+## UN PASSIF NE SE BRULE PAS (chantier W8). Bruler, c est LANCER la carte ; un
+## passif ne se lance pas (EffectRegistry.cast l ignore : il change une regle, il
+## ne s execute pas). Bruler un passif retirait donc la carte de l offre SANS
+## AUCUN EFFET — le joueur perdait son choix. On refuse plutot que d inventer un
+## effet de remplacement que rien a l ecran n annoncerait : l offre reste ouverte,
+## et l ecran grise les passifs des que le mode bruler est arme.
 func burn_offer(i: int) -> SpellCard:
 	if i < 0 or i >= pending_offer.size():
+		return null
+	if not can_burn(pending_offer[i]):
 		return null
 	var card: SpellCard = pending_offer[i]
 	pending_offer.clear()
@@ -1452,6 +1462,42 @@ func take_burned() -> SpellCard:
 	var c: SpellCard = burned_card
 	burned_card = null
 	return c
+
+
+## Cette carte peut-elle etre brulee ? Seul un SORT : voir burn_offer().
+static func can_burn(card: SpellCard) -> bool:
+	return card != null and not card.is_passive
+
+
+## MEDITER (chantier W8) : la quatrieme reponse a une montee de niveau, a cote
+## des trois cartes et de BRULER. Aucune carte n entre dans le deck ; chaque
+## carte EN MAIN gagne GameConfig.MEDITATE_CARD_XP point d XP de carte
+## (grant_card_xp), ce qui la rapproche de sa prochaine maturation.
+##
+## Par CARTE DISTINCTE et non par exemplaire : deux copies d une meme carte
+## partagent leur XP (casts_by_card est indexe par id). Deux Boules de feu en main
+## gagnent donc +1 a elles deux, la meme chose que le lisere montre sur chacune.
+## Les cartes petrifiees ou volees meditent aussi : elles sont en main, et l XP
+## est un progres du SORT, pas de l exemplaire bloque.
+##
+## Consomme l offre comme un choix (la partie reprend) et rend le nombre de
+## cartes qui ont gagne de l XP.
+func meditate_offer() -> int:
+	if pending_offer.is_empty():
+		return 0
+	pending_offer.clear()
+	var vues: Dictionary = {}
+	var n: int = 0
+	for c: SpellCard in hand.duplicate():
+		if c == null or c.is_passive or vues.has(c.id):
+			continue
+		vues[c.id] = true
+		# L offre est deja vide AVANT la premiere XP : une maturation ouverte par
+		# cette XP ne doit pas etre bloquee par un choix de carte encore « en cours ».
+		if grant_card_xp(c, GameConfig.MEDITATE_CARD_XP):
+			n += 1
+	offer_taken.emit(null)
+	return n
 
 
 func pick_offer(i: int) -> SpellCard:
@@ -2045,22 +2091,95 @@ func note_cast(card: SpellCard) -> void:
 	# l apercu de visee relit cast_specs a chaque glissement, le joueur perdrait
 	# une carte a chaque fois qu il vise.
 	_pay_card_price(card)
+	_try_open_maturation(card)
+
+
+## XP DE CARTE donnee SANS lancer (chantier W8). Une XP de carte vaut un lancer
+## pour la MATURATION : meme palier, meme lisere, meme offre (card_xp). Mais ce
+## n est PAS un lancer pour le reste : ni objectif (« lancer 30 fois le meme
+## sort »), ni prix « carte defaussee », ni compteur du grimoire. La
+## meditation de la montee de niveau l utilise ; la carte Concentration la
+## reutilisera (chantier suivant) — un seul point d entree, pour que les deux
+## fassent murir les sorts exactement comme un lancer.
+##
+## Rend vrai si la carte a gagne l XP (un passif n a pas de maturation).
+func grant_card_xp(card: SpellCard, n: int = 1) -> bool:
+	if card == null or card.is_passive or n <= 0:
+		return false
+	# Compteur A PART et non casts_by_card : les objectifs lisent casts_by_card
+	# (« le meme sort 30 fois », « au plus N sorts differents »), et une
+	# meditation n est pas un lancer.
+	card_xp_bonus[card.id] = int(card_xp_bonus.get(card.id, 0)) + n
+	_try_open_maturation(card)
+	return true
+
+
+## XP de carte donnee hors lancer, par id (meditation, Concentration). Remise a
+## zero avec la partie, comme casts_by_card.
+var card_xp_bonus: Dictionary = {}
+
+
+## L XP de MATURATION d une carte : ses lancers plus l XP donnee. C est ce que
+## lisent les paliers, le lisere et l ecran d amelioration.
+func card_xp(card: SpellCard) -> int:
+	if card == null:
+		return 0
+	return casts_of(card) + int(card_xp_bonus.get(card.id, 0))
+
+
+## L XP donnee hors lancer a cette carte (pour l ecran : « dont N meditees »).
+func card_xp_given(card: SpellCard) -> int:
+	return int(card_xp_bonus.get(card.id, 0)) if card != null else 0
+
+
+## Ouvre l offre de maturation de `card` si elle a atteint son palier. Le seul
+## endroit ou l offre s ouvre : lancer et XP donnee y passent tous les deux.
+func _try_open_maturation(card: SpellCard) -> bool:
 	# Une seule offre a la fois : deux ecrans modaux empiles laisseraient le
 	# second sans moyen d etre ferme, et la partie resterait en pause pour de bon.
+	# Une carte qui franchit son palier PENDANT une autre offre n est pas perdue :
+	# _open_next_ready_maturation() la reprend des que l offre en cours se ferme.
 	if pending_upgrade_card != null:
-		return
-	# Toutes les maturations passees : sans ce garde, le sort favori ouvrirait un
-	# ecran modal a chaque palier jusqu a la fin de la partie.
-	if maturations_done(card) >= GameConfig.CARD_UPGRADE_TIERS:
-		return
-	if int(casts_by_card[cle]) < next_upgrade_at(card):
-		return
+		return false
+	if not _maturation_ready(card):
+		return false
 	var voies: Array = draw_upgrade_offer(card)
 	if voies.is_empty():
-		return
+		return false
 	pending_upgrade_card = card
 	pending_upgrade_paths = voies.duplicate(true)
 	upgrade_ready.emit(card, voies.duplicate(true))
+	return true
+
+
+## La carte a-t-elle franchi le palier de sa PROCHAINE maturation, et lui en
+## reste-t-il une ? Sans le second garde, le sort favori ouvrirait un ecran modal
+## a chaque palier jusqu a la fin de la partie.
+func _maturation_ready(card: SpellCard) -> bool:
+	if card == null or card.is_passive:
+		return false
+	if maturations_done(card) >= upgrade_tiers_for(card):
+		return false
+	return card_xp(card) >= next_upgrade_at(card)
+
+
+## Apres un choix ou un refus : une autre carte attendait-elle son ecran ? C est
+## le cas de la MEDITATION, qui donne une XP a toute la main d un coup : deux
+## cartes peuvent franchir leur palier ensemble, et la seconde n aurait sinon
+## muri qu a son prochain lancer, sans que le joueur sache pourquoi.
+## On cherche dans les cartes de la PARTIE (main, pioche, defausse) : une carte
+## exilee ou brulee n a plus d ecran a ouvrir.
+func _open_next_ready_maturation() -> void:
+	if pending_upgrade_card != null:
+		return
+	var vues: Dictionary = {}
+	for pile: Array[SpellCard] in [hand, deck, discard]:
+		for c: SpellCard in pile:
+			if c == null or vues.has(c.id):
+				continue
+			vues[c.id] = true
+			if _try_open_maturation(c):
+				return
 
 
 func casts_of(card: SpellCard) -> int:
@@ -2075,8 +2194,8 @@ func next_upgrade_at(card: SpellCard) -> int:
 
 
 ## Lancers CUMULES qui declenchent la maturation numero `faites` + 1. L ecart
-## entre deux paliers est multiplie par GameConfig.CARD_UPGRADE_GAP_GROWTH a
-## chaque maturation (8, puis 16 de plus : paliers a 8 et 24). Un ecart constant
+## entre deux paliers GRANDIT de GameConfig.CARD_UPGRADE_GAP_STEP a chaque
+## maturation (8, 16, 24... : paliers a 8, 24, 48, 80, 120). Un ecart constant
 ## ouvrait jusqu a dix ecrans modaux par partie sur les niveaux longs, la cadence
 ## que GameConfig.CARD_UPGRADE_CASTS ecarte deja. Le lisere de la carte suit
 ## l ecart EN COURS (upgrade_progress), donc la jauge ne ment pas.
@@ -2089,10 +2208,19 @@ func upgrade_threshold(faites: int) -> int:
 
 ## Lancers entre la maturation `faites` et la suivante.
 func upgrade_gap(faites: int) -> int:
-	var ecart: int = maxi(1, GameConfig.CARD_UPGRADE_CASTS)
-	for k in faites:
-		ecart *= maxi(1, GameConfig.CARD_UPGRADE_GAP_GROWTH)
-	return ecart
+	return maxi(1, GameConfig.CARD_UPGRADE_CASTS) \
+		+ maxi(0, faites) * maxi(0, GameConfig.CARD_UPGRADE_GAP_STEP)
+
+
+## Nombre de maturations que CETTE carte peut faire dans une partie : le reglage
+## (GameConfig.CARD_UPGRADE_TIERS), mais jamais plus que son pool ne compte de
+## voies. Une voie prise n est plus proposee : la Riviere (4 voies) n a donc que
+## quatre maturations. Sans cette borne, son lisere resterait plein a jamais en
+## attendant un ecran qui ne peut plus s ouvrir.
+func upgrade_tiers_for(card: SpellCard) -> int:
+	if card == null:
+		return 0
+	return mini(GameConfig.CARD_UPGRADE_TIERS, upgrade_pool_for(card).size())
 
 
 ## Maturations deja passees (voie prise OU refusee).
@@ -2108,10 +2236,10 @@ func upgrade_progress(card: SpellCard) -> float:
 	if card == null:
 		return 0.0
 	var faites: int = maturations_done(card)
-	if faites >= GameConfig.CARD_UPGRADE_TIERS:
+	if faites >= upgrade_tiers_for(card):
 		return 1.0
 	var debut: int = upgrade_threshold(faites - 1) if faites > 0 else 0
-	return clampf(float(casts_of(card) - debut) / float(upgrade_gap(faites)), 0.0, 1.0)
+	return clampf(float(card_xp(card) - debut) / float(upgrade_gap(faites)), 0.0, 1.0)
 
 
 ## La DERNIERE maturation de la carte (id de voie, "none" si refusee, "" si
@@ -2728,6 +2856,52 @@ func taken_path(card: SpellCard) -> Dictionary:
 	return v[-1] if not v.is_empty() else {}
 
 
+## LE CUMUL LISIBLE des voies retenues (chantier W8) : une ligne par axe, dans
+## l ordre du pool, avec le total — « +40 % degats », « -15 % vitesse de
+## lancement », « +2 cibles ». Avec cinq maturations, recopier les voies une a
+## une (« +30 % degats, -15 % vitesse ; +10 % degats ; ... ») obligeait le joueur
+## a faire l addition lui-meme au moment de choisir la suivante. Un axe dont gain
+## et prix s annulent n est pas ecrit : « +0 % » ne dit rien.
+func upgrade_cumul_lines(card: SpellCard) -> Array[String]:
+	var out: Array[String] = []
+	if card == null:
+		return out
+	var voies: Array = taken_paths(card)
+	if voies.is_empty():
+		return out
+	var sommes: Dictionary = _summed_mods(voies)
+	var nombre: float = 0.0
+	for v in voies:
+		nombre += float((v.get("mods", {}) as Dictionary).get(UP_COUNT, 0.0))
+	var ordre: Array[StringName] = _UP_ORDER.duplicate()
+	for a in [UP_CAST, UP_DRAW, UP_DISCARD]:
+		ordre.append(a)
+	for a: StringName in ordre:
+		if a == UP_COUNT:
+			if nombre > 0.0:
+				out.append(_count_cumul_text(card, voies))
+			continue
+		var val: float = float(sommes.get(a, 0.0))
+		if absf(val) < 0.005:
+			continue
+		out.append(_mod_text(card, a, val))
+	return out
+
+
+## Le cumul d un axe de NOMBRE : la somme de ce que chaque voie a annonce (voir
+## _apply_count), pas l arrondi de la somme des pourcentages.
+func _count_cumul_text(card: SpellCard, voies: Array) -> String:
+	var s: EffectSpec = _first_spec_with(card, UP_COUNT)
+	var n: int = _spec_count(s) if s != null else 0
+	var d: int = 0
+	for v in voies:
+		var p: float = float((v.get("mods", {}) as Dictionary).get(UP_COUNT, 0.0))
+		if p > 0.0:
+			d += upgrade_count_bonus(n, p)
+	var mot: String = _axis_word(card, UP_COUNT)
+	return "+%d %s%s" % [d, mot, "s" if d > 1 else ""]
+
+
 ## Les modificateurs CUMULES de plusieurs voies, axe par axe. Les pourcentages
 ## s ADDITIONNENT (+30 % puis +10 % font +40 %, pas +43 %) : c est ce que le
 ## joueur lit en additionnant les lignes de ses deux voies. Le NOMBRE n est pas
@@ -2775,6 +2949,8 @@ func pick_upgrade(i: int) -> Dictionary:
 	pending_upgrade_paths = []
 	_append_taken(card, StringName(voie.get("id", &"")))
 	upgrade_taken.emit(card, voie.duplicate(true))
+	# Une autre carte attendait peut-etre son ecran (meditation, chantier W8).
+	_open_next_ready_maturation()
 	return voie.duplicate(true)
 
 
@@ -2788,6 +2964,7 @@ func decline_upgrade() -> void:
 	_append_taken(pending_upgrade_card, &"none")
 	pending_upgrade_card = null
 	pending_upgrade_paths = []
+	_open_next_ready_maturation()
 
 
 ## Les EffectSpec a appliquer POUR CE LANCEMENT, ameliorations comprises.

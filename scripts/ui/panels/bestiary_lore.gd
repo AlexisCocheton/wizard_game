@@ -224,7 +224,12 @@ static func behaviours(def: EnemyDef, rich: bool = false) -> Array[String]:
 		# l ecran, la seule echelle que le joueur percoit.
 		var part: float = def.aura_shield_radius / float(GameConfig.BATTLEFIELD_WIDTH)
 		var portee: String = "large" if part >= 0.25 else ("moyenne" if part >= 0.12 else "courte")
-		out.append("Protege de tout degat les monstres autour de lui (aura %s)" % portee)
+		# CHANTIER W8 : la REPONSE dans la meme phrase. Sans elle, deux protecteurs
+		# qui se couvrent l un l autre se lisent comme invincibles.
+		out.append(("Protege de tout degat les monstres autour de lui (aura %s), y compris"
+			+ " un autre protecteur. Une dissipation eteint son aura %s s ; si plus rien"
+			+ " n est a decouvert ni n avance, elle cede d elle-meme")
+			% [portee, _num(GameConfig.AURA_DISPEL_SECONDS)])
 	# L INVOCATION. Defaut PRE-EXISTANT trouve en relisant la fiche du Bourreau :
 	# onze comportements etaient traduits et pas celui-la, alors que pour
 	# l Ensevelisseur invoquer EST tout le combat. La reponse a un invocateur est
@@ -248,7 +253,12 @@ static func behaviours(def: EnemyDef, rich: bool = false) -> Array[String]:
 	# Un devoreur qui se SOIGNE ne grossit pas (voir EnemyDef.devour_heal_pct) :
 	# sa ligne est ecrite par boss_v3_lines().
 	if def.devours and def.devour_heal_pct <= 0.0:
-		out.append("Gobe les monstres plus faibles et grossit")
+		# CHANTIER W8 : la FORCE suit la taille. Chiffre et plafond ecrits : le
+		# joueur doit savoir qu un Glouton repu frappe deux fois plus fort.
+		out.append(("Gobe les monstres plus faibles : chaque proie le fait grossir et"
+			+ " frapper plus fort (+%d %% par proie, jusqu a x%s). Tuez-le avant qu il mange")
+			% [int(round(GameConfig.DEVOUR_FORCE_PER_PREY * 100.0)),
+				_num(1.0 + GameConfig.DEVOUR_FORCE_CAP)])
 	if def.enrage_speed_pct > 0.0:
 		out.append("Accelere de %d %% a chaque coup recu" % int(round(def.enrage_speed_pct)))
 	if def.dodge_chance > 0.0:

@@ -230,12 +230,17 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 	var passes: int = 0
 	var boss_temps: Array[float] = []
 	var boss_vus: int = 0
+	# CHANTIER W8 : vagues ECOURTEES (la suivante arrive alors que des monstres
+	# restent, GameConfig.WAVE_OVERTIME_SECONDS). Sans ce releve, un ecart de taux
+	# apres le minuteur ne se rattachait a rien.
+	var ecourtees: int = 0
 	_src_par_vague = {}
 	for i in runs:
 		var g: GameController = _make_game()
 		RunState.set_seed(1000 + (_graine + i) * 37)
 		g.start_level(level, GameEnums.Mode.EXPLORATION)
 		var st: Dictionary = _play(g)
+		ecourtees += g.spawner.overtime_count
 		if not st["mort"]:
 			wins += 1
 			pv.append(st["vitesse"])
@@ -288,6 +293,8 @@ func _run_level_many(level_id: StringName, runs: int) -> void:
 	print("    morts par vague : " + (", ".join(mparts) if not mparts.is_empty() else "aucune"))
 	print("    incantation %.0f %% du temps, interception %.0f %%"
 		% [100.0 * incant / maxf(duree, 0.01), 100.0 * tues / maxf(tues + passes, 1.0)])
+	print("    vagues ecourtees (restants en jeu) : %d (%.2f par partie)"
+		% [ecourtees, float(ecourtees) / maxf(runs, 1)])
 	if boss_vus > 0:
 		var bt: float = 0.0
 		for x in boss_temps:

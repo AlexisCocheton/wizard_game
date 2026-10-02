@@ -60,6 +60,10 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_deck_screens.gd",
 	"res://tests/unit/test_tester_tools.gd",
 	"res://tests/unit/test_objective_bench.gd",
+	# Chantier W8 : montee de niveau, maturation, vagues qui trainent, protecteurs.
+	"res://tests/unit/test_level_up_w8.gd",
+	"res://tests/unit/test_waves_protectors_w8.gd",
+	# Chantier W8 : les sorts du co-auteur (poison, vitesse, raretes).
 	"res://tests/unit/test_w8_sorts.gd",
 ]
 
