@@ -53,4 +53,9 @@ const AVATAR_CELL: int = 256
 const AVATAR_COLS: int = 5
 ## Region utile commune a tous les portraits (union des boites opaques).
 const AVATAR_CROP: Rect2i = Rect2i(22, 29, 197, 184)
+## Le portrait PAR DEFAUT : la tete du mage, decoupee dans la planche du
+## casting (UiTheme.mage_head), pas une case de AVATAR_SHEET. C est le visage de
+## tout profil neuf (niveau 1) ; un portrait equipe le remplace. Hors de AVATARS
+## parce que AVATARS decrit la GRILLE de la planche (une cle = une case).
+const AVATAR_MAGE: String = "avatar_mage"
 const AVATARS: Array[String] = ["avatar_warrior_red", "avatar_monk_blue", "avatar_pawn_blue", "avatar_knight_blue", "avatar_monk_red", "avatar_lancer_yellow", "avatar_monk_yellow", "avatar_knight_purple", "avatar_monk_purple", "avatar_monk_black"]

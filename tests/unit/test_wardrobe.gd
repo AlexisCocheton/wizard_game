@@ -326,10 +326,18 @@ func _test_les_portraits() -> void:
 		eq(t.get_height(), lignes * WardrobeData.AVATAR_CELL, "hauteur de la grille")
 	var vus: Dictionary = {}
 	for r in _rewards(GameEnums.RewardKind.AVATAR):
-		ok(WardrobeData.AVATARS.has(r.texture_name), "%s designe un portrait" % r.id)
+		# La TETE DU MAGE (portrait par defaut, vague 8) n est pas une case de la
+		# planche des portraits : elle vient de la planche du casting.
+		var mage: bool = r.texture_name == WardrobeData.AVATAR_MAGE
+		ok(mage or WardrobeData.AVATARS.has(r.texture_name), "%s designe un portrait" % r.id)
 		ok(r.is_equippable(), "%s s equipe" % r.id)
 		var img: Texture2D = UiTheme.avatar_texture(r.texture_name)
 		ok(img != null, "%s a son image" % r.id)
+		if mage:
+			ok(img != null and (img as AtlasTexture).region == (UiTheme.mage_head() as AtlasTexture).region,
+				"%s : c est la tete du mage" % r.id)
+			vus[r.texture_name] = r.at_level
+			continue
 		if img != null:
 			ok(img.get_width() < WardrobeData.AVATAR_CELL,
 				"%s : le portrait est recadre sur la tete, pas la case entiere" % r.id)
@@ -337,8 +345,10 @@ func _test_les_portraits() -> void:
 	for a in WardrobeData.AVATARS:
 		ok(vus.has(a), "le portrait %s est une recompense" % a)
 	eq(int(vus.get(WardrobeData.AVATARS[0], 0)), 1, "le premier portrait est celui du niveau 1")
+	eq(int(vus.get(WardrobeData.AVATAR_MAGE, 0)), 1, "la tete du mage est un portrait du niveau 1")
 	SaveData.reset_profile()
-	eq(UiTheme.avatar_key(), WardrobeData.AVATARS[0], "un profil neuf a le premier portrait")
+	eq(UiTheme.avatar_key(), WardrobeData.AVATAR_MAGE,
+		"un profil neuf a la tete du mage pour portrait")
 	SaveData.set_tester_mode(true)
 	var dernier: String = WardrobeData.AVATARS[WardrobeData.AVATARS.size() - 1]
 	for r in _rewards(GameEnums.RewardKind.AVATAR):

@@ -380,7 +380,12 @@ func _check_wardrobe(monstres: Dictionary, apprentis: Dictionary) -> void:
 					fail("tour %s : '%s' n a pas de geometrie mesuree (WardrobeData.TOWERS)"
 						% [r.id, r.texture_name])
 			GameEnums.RewardKind.AVATAR:
-				if not WardrobeData.AVATARS.has(r.texture_name):
+				# La TETE DU MAGE (portrait par defaut, vague 8) vient de la planche
+				# du casting, pas de la grille des portraits : on exige son IMAGE.
+				if r.texture_name == WardrobeData.AVATAR_MAGE:
+					if UiTheme.avatar_texture(r.texture_name) == null:
+						fail("portrait %s : la tete du mage ne se decoupe pas" % r.id)
+				elif not WardrobeData.AVATARS.has(r.texture_name):
 					fail("portrait %s : '%s' n est pas dans WardrobeData.AVATARS"
 						% [r.id, r.texture_name])
 			GameEnums.RewardKind.MAGE_COLOR:

@@ -650,10 +650,13 @@ static func tower_preview(key: String) -> Texture2D:
 
 ## --- PORTRAITS ---
 
-## Le portrait equipe (WardrobeData.AVATARS), avec repli sur le premier.
+## Le portrait equipe (WardrobeData.AVATARS), avec repli sur la TETE DU MAGE
+## (WardrobeData.AVATAR_MAGE), portrait par defaut de tout profil neuf.
 static func avatar_key() -> String:
 	var key: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.AVATAR)
-	return key if WardrobeData.AVATARS.has(key) else WardrobeData.AVATARS[0]
+	if key == WardrobeData.AVATAR_MAGE or WardrobeData.AVATARS.has(key):
+		return key
+	return WardrobeData.AVATAR_MAGE
 
 
 ## Le portrait du profil, a afficher sur la carte d identite et le bouton PROFIL.
@@ -661,6 +664,9 @@ static func avatar_key() -> String:
 static func avatar_texture(key: String = "") -> Texture2D:
 	if key == "":
 		key = avatar_key()
+	# Le portrait par defaut n est pas dans la grille : c est la tete du mage.
+	if key == WardrobeData.AVATAR_MAGE:
+		return mage_head()
 	var i: int = WardrobeData.AVATARS.find(key)
 	if i < 0:
 		return null

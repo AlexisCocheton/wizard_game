@@ -394,15 +394,22 @@ func _test_la_tete_du_mage() -> void:
 	# Un decoupage hors planche est refuse plutot que d afficher du vide.
 	ok(UiTheme.cast_cell(99, 99) == null, "une case hors planche rend null")
 
+	# LA TETE DU MAGE EST LE PORTRAIT PAR DEFAUT ; un portrait equipe a la
+	# garde-robe la remplace, sur l onglet ET sur la carte d identite (une seule
+	# source : UiTheme.avatar_texture).
+	SaveData.reset_profile()
+	eq(UiTheme.avatar_key(), WardrobeData.AVATAR_MAGE, "profil neuf : la tete du mage")
 	var packed: PackedScene = load("res://scenes/main_menu/MainMenu.tscn")
 	var menu: Control = packed.instantiate()
 	attach(menu)
-	var icone: AtlasTexture = menu.call("tab_icon", String(menu.get("MAGE_HEAD_ICON"))) as AtlasTexture
 	var tabs: Array = menu.get("TABS")
 	var icones: Array = menu.get("TAB_ICONS")
-	eq(String(icones[tabs.find("PROFIL")]), String(menu.get("MAGE_HEAD_ICON")),
-		"l onglet PROFIL porte la tete du mage")
-	ok(icone != null and icone.region == tete.region, "l icone d onglet est ce decoupage")
+	var ip: int = tabs.find("PROFIL")
+	eq(String(icones[ip]), String(menu.get("AVATAR_ICON")), "l onglet PROFIL porte le portrait")
+	var bouton: Button = _bouton_onglet(menu, "PROFIL")
+	ok(bouton != null and bouton.icon is AtlasTexture
+		and (bouton.icon as AtlasTexture).region == tete.region,
+		"par defaut, l icone de l onglet PROFIL est la tete du mage")
 	menu.call("show_profile", true)
 	var avatar: TextureRect = menu.find_child("IdentityAvatar", true, false) as TextureRect
 	ok(avatar != null, "la carte d identite du profil a son portrait")
@@ -410,7 +417,38 @@ func _test_la_tete_du_mage() -> void:
 		var t: AtlasTexture = avatar.texture as AtlasTexture
 		ok(t != null and t.region == tete.region and t.atlas == tete.atlas,
 			"la carte d identite montre la meme tete que l onglet")
+
+	# Un autre portrait, equipe : l onglet et la carte suivent.
+	SaveData.set_tester_mode(true)
+	var autre: String = WardrobeData.AVATARS[WardrobeData.AVATARS.size() - 1]
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r.kind == GameEnums.RewardKind.AVATAR and r.texture_name == autre:
+			ok(SaveData.equip_cosmetic(r.id), "un autre portrait s equipe")
+	var image: AtlasTexture = UiTheme.avatar_texture(autre) as AtlasTexture
+	bouton = _bouton_onglet(menu, "PROFIL")
+	ok(bouton != null and image != null and bouton.icon is AtlasTexture
+		and (bouton.icon as AtlasTexture).region == image.region,
+		"l onglet PROFIL montre le portrait equipe")
+	menu.call("show_profile", true)
+	avatar = menu.find_child("IdentityAvatar", true, false) as TextureRect
+	ok(avatar != null and avatar.texture is AtlasTexture and image != null
+		and (avatar.texture as AtlasTexture).region == image.region,
+		"la carte d identite aussi")
+	# Le niveau est prete par le mode testeur, pas l XP : plus de « -11000 / 1900 ».
+	var ligne: String = ProfilePanel.identity_xp_text()
+	not_ok(ligne.contains("-"), "mode testeur : aucune XP negative (%s)" % ligne)
+	SaveData.set_tester_mode(false)
+	var hors: String = ProfilePanel.identity_xp_text()
+	not_ok(hors.begins_with("-"), "hors mode testeur non plus (%s)" % hors)
 	detach(menu)
+	SaveData.reset_profile()
+
+
+func _bouton_onglet(menu: Node, nom: String) -> Button:
+	for n in _tous(menu):
+		if n is Button and (n as Button).text == nom:
+			return n
+	return null
 
 
 func _premier(racine: Node, test: Callable) -> Node:

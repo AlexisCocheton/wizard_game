@@ -50,13 +50,14 @@ const HOME_TAB: int = 2
 ##   - CAMPAGNE : une carte au tresor marquee d une croix ;
 ##   - MASSACRE : l epee de Tiny Swords (icon_05), de la meme planche que
 ##                l engrenage des reglages : le combat sans fin, dit par l objet ;
-##   - PROFIL   : la TETE DU MAGE, decoupee dans la planche du casting
-##                (UiTheme.mage_head). L ancien avatar etait un visage
-##                generique : le profil est celui du heros, on montre le heros.
-## Les noms sont des cles de UiTheme.tex, sauf MAGE_HEAD_ICON (voir tab_icon).
-const TAB_ICONS: Array[String] = ["tab_gallery", "tab_deck", "tab_campaign", "icon_05", "mage_head"]
-## Cle d icone qui n est pas un fichier mais un decoupage de planche.
-const MAGE_HEAD_ICON: String = "mage_head"
+##   - PROFIL   : le PORTRAIT du joueur (UiTheme.avatar_texture), la meme
+##                source que la carte d identite : la TETE DU MAGE par defaut,
+##                decoupee dans la planche du casting, le portrait choisi a la
+##                garde-robe sinon.
+## Les noms sont des cles de UiTheme.tex, sauf AVATAR_ICON (voir tab_icon).
+const TAB_ICONS: Array[String] = ["tab_gallery", "tab_deck", "tab_campaign", "icon_05", "avatar"]
+## Cle d icone qui n est pas un fichier : le portrait equipe du profil.
+const AVATAR_ICON: String = "avatar"
 ## L engrenage des reglages, en haut a droite (le seul `icon_*` qui convienne).
 const SETTINGS_ICON: String = "icon_10"
 
@@ -70,8 +71,8 @@ static func profile_tab() -> int:
 ## La texture d un onglet. Une fonction plutot que `UiTheme.tex` directement :
 ## l icone du profil n est pas un fichier, c est un morceau de planche.
 static func tab_icon(key: String) -> Texture2D:
-	if key == MAGE_HEAD_ICON:
-		return UiTheme.mage_head()
+	if key == AVATAR_ICON:
+		return UiTheme.avatar_texture()
 	return UiTheme.tex(key)
 
 
@@ -282,6 +283,10 @@ func _refresh_top_bar() -> void:
 		_cards_label.text = cards_counter_text()
 	if _level_label != null:
 		_level_label.text = "Niv.\n%d" % SaveData.account_level()
+	# Le portrait de l onglet PROFIL suit celui que le joueur equipe.
+	var ip: int = TAB_ICONS.find(AVATAR_ICON)
+	if ip >= 0 and ip < _tab_buttons.size():
+		_tab_buttons[ip].icon = tab_icon(AVATAR_ICON)
 	# La banniere du titre suit le NIVEAU DE COMPTE : bois, argent, or, cristal.
 	# C est la recompense la plus visible du compte — elle se voit a l ouverture
 	# du jeu, sans ouvrir le moindre ecran, et c est ce que le testeur demandait.
