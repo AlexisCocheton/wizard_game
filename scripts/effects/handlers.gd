@@ -449,8 +449,9 @@ class MeteorStorm extends EffectHandler:
 		if ctx.battlefield == null:
 			return
 		var n: int = maxi(int(spec.get_param(&"impacts", 12)), 1)
-		var rng := RandomNumberGenerator.new()
-		rng.randomize()
+		# Hasard du MONDE de la partie (fixe par la graine), et non un
+		# generateur re-seme au hasard a chaque lancer.
+		var rng: RandomNumberGenerator = RunState.world_rng
 		# Marge faible : les impacts doivent pouvoir tomber pres des bords, sinon
 		# les monstres qui longent le decor traversent la pluie sans rien prendre.
 		var marge: float = minf(spec.radius * 0.25, 80.0)

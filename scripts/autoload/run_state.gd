@@ -106,6 +106,7 @@ var speed_dropped: bool = false
 
 func _ready() -> void:
 	_rng.randomize()
+	world_rng.randomize()
 	reset()
 
 
@@ -154,34 +155,72 @@ func reset() -> void:
 
 
 ## Fixe la graine pour rendre les tirages deterministes (tests, replays).
+## Elle fixe AUSSI le hasard du monde (world_rng) : une graine = une partie.
 func set_seed(value: int) -> void:
 	_rng.seed = value
+	world_rng.seed = value ^ WORLD_SEED_SALT
+
+
+## LE HASARD DU MONDE : couloirs et cotes d apparition (WaveSpawner), esquive
+## (Enemy.take_damage), points de chute de la Pluie de meteores, place des allies
+## invoques, pont d une riviere (Battlefield).
+##
+## POURQUOI : ces tirages passaient par le hasard GLOBAL de Godot (randf) ou par
+## un generateur re-seme au hasard a chaque usage. set_seed() ne les fixait pas,
+## et deux processus du banc a graine egale rendaient des resultats differents
+## (chantier W7) : un objectif ne se re-mesurait pas, il se re-tirait.
+##
+## POURQUOI UN SECOND GENERATEUR plutot que _rng : les tirages du monde dependent
+## de ce qui se passe en jeu (une esquive par coup recu). Partages avec la
+## pioche, ils decaleraient les cartes tirees des que le joueur vise autrement ;
+## separes, une graine donne la meme pioche quelle que soit la facon de jouer,
+## et les tests semes d avant gardent exactement leurs tirages.
+##
+## Le jeu reel ne seme jamais : les deux generateurs partent au hasard (_ready),
+## le comportement du joueur ne change pas.
+var world_rng := RandomNumberGenerator.new()
+## Ecarte la graine du monde de celle de la pioche : avec la meme valeur, les
+## deux suites seraient identiques et correlees.
+const WORLD_SEED_SALT: int = 0x5DEECE66D
+
+
+## Graine d un generateur DERIVE du hasard du monde (le WaveSpawner a le sien) :
+## jamais 0, qui veut dire "au hasard" pour ses consommateurs.
+func world_seed() -> int:
+	return int(world_rng.randi()) + 1
 
 
 func total_cards() -> int:
 	return deck.size() + hand.size() + discard.size()
 
 
-## Construit le deck de depart a partir des cartes communes.
+## Construit un deck a partir des exemplaires de base (copies_in_starter).
+## N obtient AUCUNE carte : copies_in_starter ne donne plus rien au livre de
+## sorts (SaveData, LE LIVRE DE SORTS).
 func build_starter_deck(cards: Array[SpellCard]) -> void:
 	deck.clear()
 	for c in cards:
 		for i in c.copies_in_starter:
 			deck.append(c)
-		SaveData.discover_card(c.id)
 	shuffle_deck()
 	deck_changed.emit()
 
 
 ## Construit le deck a partir d une liste EXPLICITE : une entree = un exemplaire.
 ## Utilise par le deck pre-etabli d un niveau et par le deck Massacre du joueur.
+##
+## Distribuer un deck n OBTIENT plus ses cartes (regle du livre de sorts, 01/10).
+## Le deck d un niveau OUVERT est deja dans le livre avant la premiere partie,
+## et un deck compose ne contient que des cartes obtenues. Ecrire ici donnait
+## un livre qui dependait d avoir lance une partie (le Mur de pierre restait "a
+## obtenir" jusque-la), et faisait obtenir le deck d un niveau FERME a qui le
+## jouait hors campagne (banc, tests).
 func build_deck_from_list(cards: Array[SpellCard]) -> void:
 	deck.clear()
 	for c in cards:
 		if c == null:
 			continue
 		deck.append(c)
-		SaveData.discover_card(c.id)
 	shuffle_deck()
 	deck_changed.emit()
 
@@ -985,8 +1024,10 @@ func equip_passive(card: SpellCard) -> bool:
 		return false
 	if equipped_passives.size() >= GameConfig.PASSIVE_SLOTS:
 		return false
+	# Equiper n obtient rien : en combat, un passif arrive par pick_offer, qui
+	# l a deja fait entrer au livre ; au depart, equip_saved_passives n equipe que
+	# des passifs obtenus. Une seule porte d entree : la PRISE.
 	equipped_passives.append(card)
-	SaveData.discover_card(card.id)
 	passive_activated.emit(card)
 	passives_changed.emit()
 	return true
@@ -1002,7 +1043,6 @@ func swap_passive(slot: int, card: SpellCard) -> bool:
 	if equipped_passives.has(card):
 		return false
 	equipped_passives[slot] = card
-	SaveData.discover_card(card.id)
 	passive_activated.emit(card)
 	passives_changed.emit()
 	return true

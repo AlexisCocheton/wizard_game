@@ -335,6 +335,8 @@ static func v3_lines(def: EnemyDef) -> Array[String]:
 		EnemyDef.MovePattern.HOP:
 			out.append("Saute d une colonne a l autre toutes les %s s"
 				% _num(maxf(def.pattern_interval, 0.3)))
+		EnemyDef.MovePattern.SPIRAL:
+			out.append("Descend en spirale : il tourne autour de sa colonne, visez le centre du cercle")
 	return out
 
 

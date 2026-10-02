@@ -29,6 +29,7 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_enemy_behaviors.gd",
 	"res://tests/unit/test_card_choice.gd",
 	"res://tests/unit/test_card_progression.gd",
+	"res://tests/unit/test_spell_book.gd",
 	"res://tests/unit/test_sheet_lib.gd",
 	"res://tests/unit/test_new_spells.gd",
 	"res://tests/unit/test_bestiary.gd",
@@ -55,6 +56,7 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_purge.gd",
 	"res://tests/unit/test_pause_panel.gd",
 	"res://tests/unit/test_deck_screens.gd",
+	"res://tests/unit/test_objective_bench.gd",
 ]
 
 var _total_checks: int = 0
