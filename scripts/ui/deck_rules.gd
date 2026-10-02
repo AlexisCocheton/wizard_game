@@ -237,63 +237,70 @@ static func resolve(deck_ids: Array) -> Array[SpellCard]:
 	return out
 
 
-## Deck de depart propose quand le joueur n en a jamais compose : les cartes de
-## depart, au nombre de leurs exemplaires de base, completees ou rognees pour
-## tomber EXACTEMENT sur DECK_SIZE.
+## Deck de depart propose quand le joueur n en a jamais compose (ecran de deck),
+## et deck de repli du Massacre et de l Infini (GameController._build_deck).
+## Toujours un deck VALIDE (is_valid) de cartes OBTENUES (SaveData.is_discovered).
 ##
-## L arrondi est necessaire : le contenu de depart ne tombe pas pile sur 15
-## cartes en 6 ids au plus, et un deck de depart invalide interdirait de jouer
-## au premier lancement. On trie pour que le deck propose soit le meme d un
-## demarrage a l autre (ContentDB.cards est un Dictionary, son ordre n est pas
-## une promesse). can_add() porte toutes les regles, donc le resultat est
-## valide par construction : test_deck_rules le verifie contre is_valid().
+## C est le deck de campagne du PREMIER niveau. Il est valide par construction
+## (le contenu fait des decks de campagne de 15 cartes en 6 ids au plus) et il
+## est obtenu sur tout profil, puisque son niveau est ouvert d office et que le
+## deck d un niveau ouvert est dans le livre de sorts (SaveData, 01/10). Avant,
+## il se composait des "cartes de depart" (copies_in_starter) : des cartes que
+## le joueur n avait pas forcement, et qui ne donnent plus rien.
+##
+## Repli, pour un profil ou un contenu qui ne permettrait pas ce deck (premier
+## niveau absent ou ferme par un profil edite) : un deck compose des cartes
+## OBTENUES ; et seulement si elles ne suffisent pas a faire 15 cartes, completer
+## avec n importe quel sort, parce qu un deck de base injouable interdirait de
+## jouer du tout.
 static func default_deck_ids() -> Array:
-	var cartes: Array[SpellCard] = []
-	for c: SpellCard in ContentDB.cards.values():
-		if c != null and not c.is_passive and c.copies_in_starter > 0:
-			cartes.append(c)
-	# Les cartes de depart les plus DOTEES d abord : quand le contenu de depart
-	# compte plus de MAX_DISTINCT cartes (7 aujourd hui), ce sont les moins
-	# representees qui restent dehors, pas les dernieres de l alphabet. Comparaison
-	# sur String : le tri de StringName n est pas fiable en 4.4 (voir gotchas).
-	cartes.sort_custom(func(a: SpellCard, b: SpellCard) -> bool:
-		if a.copies_in_starter != b.copies_in_starter:
-			return a.copies_in_starter > b.copies_in_starter
-		return String(a.id) < String(b.id))
+	var premier: LevelDef = ContentDB.levels.get(SaveData.FIRST_LEVEL)
+	if premier != null:
+		var ids: Array = []
+		var tout_obtenu: bool = true
+		for c: SpellCard in premier.exploration_deck:
+			if c == null:
+				continue
+			ids.append(String(c.id))
+			if c.is_passive or not SaveData.is_discovered(c.id):
+				tout_obtenu = false
+		if tout_obtenu and is_valid(ids):
+			return ids
 
+	var obtenues: Array[SpellCard] = []
+	var toutes: Array[SpellCard] = []
+	for c2: SpellCard in ContentDB.cards.values():
+		if c2 == null or c2.is_passive:
+			continue
+		toutes.append(c2)
+		if SaveData.is_discovered(c2.id):
+			obtenues.append(c2)
+	# Les plus COMMUNES d abord : ce sont elles qui ont le plus d exemplaires, donc
+	# qui remplissent 15 cartes en 6 ids. Comparaison sur String : le tri de
+	# StringName n est pas fiable en 4.4 (voir gotchas).
+	var ordre: Callable = func(a: SpellCard, b: SpellCard) -> bool:
+		if a.rarity != b.rarity:
+			return a.rarity < b.rarity
+		return String(a.id) < String(b.id)
+	obtenues.sort_custom(ordre)
+	toutes.sort_custom(ordre)
 	var out: Array = []
-	# Tour par tour plutot que carte par carte : si le contenu de depart depasse
-	# 15, on rogne le DERNIER exemplaire de chacune au lieu d amputer une carte
-	# entiere, et le deck garde toute sa variete.
-	var tour: int = 0
-	var reste: bool = true
-	while out.size() < DECK_SIZE and reste:
-		reste = false
-		for c in cartes:
-			if c.copies_in_starter > tour and can_add(out, c, true):
-				out.append(String(c.id))
-				reste = true
-				if out.size() >= DECK_SIZE:
-					break
-		tour += 1
-
-	# Contenu de depart trop maigre : on complete avec n importe quelle carte
-	# ajoutable, pour ne jamais rendre un deck de base injouable.
-	if out.size() < DECK_SIZE:
-		var toutes: Array[SpellCard] = []
-		for c2: SpellCard in ContentDB.cards.values():
-			if c2 != null and not c2.is_passive:
-				toutes.append(c2)
-		toutes.sort_custom(func(a: SpellCard, b: SpellCard) -> bool:
-			return String(a.id) < String(b.id))
-		var progres: bool = true
-		while out.size() < DECK_SIZE and progres:
-			progres = false
-			for c3 in toutes:
-				if can_add(out, c3, true):
-					out.append(String(c3.id))
-					progres = true
-					if out.size() >= DECK_SIZE:
-						break
+	_fill(out, obtenues)
+	_fill(out, toutes)
 	return out
 
+
+## Remplit `out` jusqu a DECK_SIZE avec les cartes de `cartes`, TOUR PAR TOUR
+## (un exemplaire de chacune, puis un second...) : si les cartes debordent, c est
+## le dernier exemplaire de chacune qui reste dehors, pas une carte entiere.
+## can_add() porte toutes les regles, donc le resultat reste valide.
+static func _fill(out: Array, cartes: Array[SpellCard]) -> void:
+	var progres: bool = true
+	while out.size() < DECK_SIZE and progres:
+		progres = false
+		for c in cartes:
+			if can_add(out, c, true):
+				out.append(String(c.id))
+				progres = true
+				if out.size() >= DECK_SIZE:
+					return

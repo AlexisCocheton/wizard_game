@@ -284,8 +284,9 @@ func _on_reset() -> void:
 		return
 	_reset_armed = false
 	_reset_btn.text = "Reinitialiser la progression"
+	# Le profil remis a zero a deja son livre de depart : le deck du premier
+	# niveau en est deduit (SaveData, LE LIVRE DE SORTS), rien a y ecrire.
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	SaveData.save_profile()
 
 

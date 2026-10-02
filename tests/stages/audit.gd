@@ -292,9 +292,10 @@ func _check_levels() -> void:
 
 
 ## Un SORT qu aucun pool de campagne ne contient (deck, cartes nouvelles,
-## recompenses d objectif) et qui n est pas une carte de depart ne peut plus
-## JAMAIS etre obtenu : le pool hors campagne ne contient que des cartes deja
-## obtenues. Contenu mort, mais avertissement seulement tant que le chantier
+## recompenses d objectif) ne peut plus JAMAIS etre obtenu : le pool hors
+## campagne ne contient que des cartes deja obtenues. Plus d exception pour les
+## "cartes de depart" : copies_in_starter ne donne plus rien au livre de sorts
+## (SaveData, 01/10). Contenu mort, mais avertissement seulement tant que le chantier
 ## de contenu n a pas distribue les cartes nouvelles (chantier P).
 func _check_cards_obtainable() -> void:
 	var joignables: Dictionary = {}
@@ -306,7 +307,7 @@ func _check_cards_obtainable() -> void:
 					joignables[(c as SpellCard).id] = true
 	var morts: Array[String] = []
 	for card: SpellCard in ContentDB.cards.values():
-		if card.is_passive or card.copies_in_starter > 0 or joignables.has(card.id):
+		if card.is_passive or joignables.has(card.id):
 			continue
 		morts.append(String(card.id))
 	morts.sort()
