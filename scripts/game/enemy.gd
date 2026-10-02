@@ -624,7 +624,8 @@ func take_damage(amount: float, tags: Array) -> bool:
 	# aucun moyen de savoir quand.
 	if _hidden:
 		amount *= PHASE_DAMAGE_FACTOR
-	if definition.dodge_chance > 0.0 and randf() < definition.dodge_chance:
+	# Hasard du MONDE de la partie, pas le hasard global : fixe par la graine.
+	if definition.dodge_chance > 0.0 and RunState.world_rng.randf() < definition.dodge_chance:
 		return false
 	amount *= _chameleon_factor(tags)
 
@@ -1187,12 +1188,16 @@ var _v3_is_reanimated: bool = false
 ## d une marque, etc. Borne par Battlefield.REBIRTH_MAX_DEPTH.
 var _v3_rebirth_depth: int = 0
 ## Motifs : sens lateral (+1 / -1, 0 = pas encore choisi), distance parcourue
-## depuis le dernier demi-tour (ZIGZAG), minuterie et cible du saut (HOP).
+## depuis le dernier demi-tour (ZIGZAG), minuterie et cible du saut (HOP). Pour
+## SPIRAL, le sens est celui de la rotation.
 var _v3_dir: int = 0
 var _v3_travel: float = 0.0
 var _v3_hop_timer: float = 0.0
 var _v3_hopping: bool = false
 var _v3_hop_target: float = 0.0
+## SPIRAL : angle sur le cercle. -PI/2 = le haut du cercle, d ou il part vers le
+## centre du terrain : le cercle se pose donc SOUS sa position de depart.
+var _v3_spin: float = -PI * 0.5
 
 
 func _v3_setup(def: EnemyDef) -> void:
@@ -1413,8 +1418,9 @@ func _v3_side_margin() -> float:
 
 ## Applique le motif apres la descente. POUR UN MONSTRE AU SOL, seulement en
 ## descente libre (chemin A* vide) : un mur pose par le joueur doit continuer a
-## le detourner, sinon le motif serait un passe-muraille. Et un ecart lateral qui
-## entrerait dans une cellule bloquee est refuse (il fait demi-tour a la place).
+## le detourner, sinon le motif serait un passe-muraille. Et un ecart (lateral,
+## ou vertical pour la spirale) qui entrerait dans une cellule bloquee est
+## refuse (il fait demi-tour a la place).
 ## Un VOLANT ignore la grille : il applique toujours son motif.
 func _v3_apply_move_pattern(speed: float, world_delta: float) -> void:
 	if definition == null or definition.move_pattern == EnemyDef.MovePattern.STRAIGHT:
@@ -1443,6 +1449,7 @@ func _v3_apply_move_pattern(speed: float, world_delta: float) -> void:
 	var laterale: float = speed * ratio
 	var largeur: float = maxf(definition.pattern_width, 20.0)
 	var dx: float = 0.0
+	var dy: float = 0.0
 	match definition.move_pattern:
 		EnemyDef.MovePattern.ZIGZAG:
 			dx = laterale * world_delta * _v3_dir
@@ -1476,15 +1483,30 @@ func _v3_apply_move_pattern(speed: float, world_delta: float) -> void:
 							radius() * 1.8)
 				else:
 					dx = signf(reste) * pas
-	if dx == 0.0:
+		EnemyDef.MovePattern.SPIRAL:
+			# Un pas sur le cercle : l ecart entre deux points du cercle, ajoute
+			# a la descente. Les differences de cos et sin donnent un cercle
+			# exact quel que soit le pas (pas de derive a 30 ou 120 images/s).
+			# L angle avance meme si le pas est refuse (bord, mur) : le monstre
+			# finit par tourner AILLEURS au lieu de buter au meme endroit.
+			var rayon: float = largeur * 0.5
+			var suivant: float = _v3_spin + laterale * world_delta / rayon
+			dx = rayon * (cos(suivant) - cos(_v3_spin)) * _v3_dir
+			dy = rayon * (sin(suivant) - sin(_v3_spin))
+			_v3_spin = fposmod(suivant, TAU)
+	if dx == 0.0 and dy == 0.0:
 		return
 	var nx: float = clampf(position.x + dx, gauche, droite)
+	var ny: float = position.y + dy
 	if nx != position.x + dx and definition.move_pattern != EnemyDef.MovePattern.HOP:
-		# Le bord du terrain : ZIGZAG et BOUNCE repartent dans l autre sens.
+		# Le bord du terrain : ZIGZAG et BOUNCE repartent dans l autre sens,
+		# SPIRAL tourne dans l autre sens (cercle miroir).
 		_v3_dir = -_v3_dir
 		_v3_travel = 0.0
+	# La cellule d ARRIVEE, ecart vertical de la spirale compris : la meme regle
+	# que l ecart lateral des autres motifs.
 	if au_sol and nav.blocked_count() > 0 \
-			and nav.is_blocked(nav.to_cell(Vector2(nx, position.y))):
+			and nav.is_blocked(nav.to_cell(Vector2(nx, ny))):
 		# Un mur a cote : le motif cede, il ne traverse pas. Demi-tour, et un saut
 		# en cours est annule plutot que de finir dans la pierre.
 		_v3_dir = -_v3_dir
@@ -1493,6 +1515,7 @@ func _v3_apply_move_pattern(speed: float, world_delta: float) -> void:
 		return
 	var applique: float = nx - position.x
 	position.x = nx
+	position.y = ny
 	# L ondulation historique calcule sa position depuis `_base_x` : on deplace
 	# ce centre avec le motif pour que les deux se CUMULENT au lieu que
 	# l ondulation ramene le monstre a sa colonne de depart a chaque image.

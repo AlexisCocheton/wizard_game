@@ -34,14 +34,12 @@ func run() -> void:
 	_test_la_fiche_affiche_la_raison()
 	_test_defiler_ou_prendre()
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## Un panneau sur un profil neuf, avec `libres` places liberees dans le deck
 ## de base (qui fait pile DECK_SIZE depuis le chantier K).
 func _panel(libres: int) -> DeckPanel:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var p := DeckPanel.new()
 	attach(p)
 	p.refresh()

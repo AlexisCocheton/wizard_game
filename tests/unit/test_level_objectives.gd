@@ -51,11 +51,24 @@ const EXEMPLES_30_09: Array[Dictionary] = [
 ]
 
 
+## Les deux defis du co-auteur que la campagne exploitait mal (vague 8, 01/10) :
+## "finir avec moins de 120 % de vitesse" n etait nulle part (le plus bas etait
+## 150 %), "faire parcourir une tres grande distance a un monstre" une seule
+## fois, a 0,8 longueur. Ses mots : 120 %, et PLUSIEURS longueurs de terrain.
+const DEFI_VITESSE_BASSE: int = 120
+const DEFI_GRANDE_DISTANCE_LONGUEURS: float = 2.0
+## Ce qui FAIT MARCHER un monstre : mur, riviere, volte-face, nappe, appat.
+const CLES_QUI_FONT_MARCHER: Array[StringName] = [
+	&"build_wall", &"terrain_river", &"reverse_enemies", &"water_flood", &"taunt_prop",
+]
+
+
 func run() -> void:
 	_test_trois_objectifs_valides_et_differents()
 	_test_ni_impossible_ni_gratuit()
 	_test_variete_sur_la_campagne()
 	_test_exemples_du_co_auteur()
+	_test_les_defis_de_la_vague_8()
 	_test_libelle_livre_est_le_libelle_genere()
 	_test_le_detecteur_de_doublon_mord()
 
@@ -150,6 +163,63 @@ func _test_exemples_du_co_auteur() -> void:
 				if o != null and o.check_key == ex["key"] and _memes_params(o.params, ex["params"]):
 					trouve = true
 		ok(trouve, "l exemple du co-auteur %s %s est dans la campagne" % [ex["key"], ex["params"]])
+
+
+## Le niveau donne-t-il de quoi faire marcher un monstre (deck ou cartes
+## nouvelles) ? Les recompenses n y sont pas : elles arrivent APRES l etoile.
+static func fait_marcher(lv: LevelDef) -> bool:
+	for liste: Array in [lv.exploration_deck, lv.levelup_cards]:
+		for c in liste:
+			if c == null:
+				continue
+			for cle: StringName in (c as SpellCard).effect_keys():
+				if cle in CLES_QUI_FONT_MARCHER:
+					return true
+	return false
+
+
+## Les defis de la vague 8 tels que le contenu les porte : chacun en RANG 3 (le
+## plus dur) d au moins un niveau, la grande distance la ou l on peut faire
+## marcher les monstres. Rend la liste de ce qui manque.
+static func defauts_defis_vague_8(niveaux: Array[LevelDef]) -> Array[String]:
+	var vitesse: bool = false
+	var distance: bool = false
+	for lv in niveaux:
+		if lv.objectives.size() < 3 or lv.objectives[2] == null:
+			continue
+		var o: ObjectiveDef = lv.objectives[2]
+		match o.check_key:
+			&"win_below_speed":
+				if int(o.params.get("pct", 0)) <= DEFI_VITESSE_BASSE:
+					vitesse = true
+			&"enemy_travel":
+				var d: float = float(o.params.get("distance", 0.0))
+				if d >= DEFI_GRANDE_DISTANCE_LONGUEURS * ObjectiveChecker.terrain_length() \
+						and fait_marcher(lv):
+					distance = true
+	var out: Array[String] = []
+	if not vitesse:
+		out.append("aucun rang 3 « finir sous %d %% »" % DEFI_VITESSE_BASSE)
+	if not distance:
+		out.append("aucun rang 3 « %s longueurs de terrain » dans un niveau qui fait marcher"
+			% DEFI_GRANDE_DISTANCE_LONGUEURS)
+	return out
+
+
+func _test_les_defis_de_la_vague_8() -> void:
+	var niveaux: Array[LevelDef] = _niveaux()
+	var d: Array[String] = defauts_defis_vague_8(niveaux)
+	ok(d.is_empty(), "les deux defis du co-auteur sont en rang 3 %s" % [d])
+	# Sabotage : les memes niveaux sans leur rang 3 ne passent plus.
+	var amputes: Array[LevelDef] = []
+	for lv in niveaux:
+		var copie: LevelDef = lv.duplicate()
+		var deux: Array[ObjectiveDef] = []
+		for i in mini(2, lv.objectives.size()):
+			deux.append(lv.objectives[i])
+		copie.objectives = deux
+		amputes.append(copie)
+	eq(defauts_defis_vague_8(amputes).size(), 2, "sans rang 3, les deux defis manquent")
 
 
 ## Memes parametres, a la valeur pres (1 et 1.0 sont le meme seuil).

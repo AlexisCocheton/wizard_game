@@ -17,18 +17,18 @@
 [ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="15_ecpup"]
 [ext_resource type="Resource" path="res://resources/cards/rare/arcane_insight.tres" id="16_mct3y"]
 [ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="17_2752f"]
-[ext_resource type="Resource" path="res://resources/cards/rare/quickening.tres" id="18_xwln5"]
-[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="19_plhp6"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="19_xwln5"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="20_8lpo7"]
+[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="20_plhp6"]
 [ext_resource type="Resource" path="res://resources/cards/rare/cycle_of_thought.tres" id="20_u62p1"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="21_1gbag"]
-[ext_resource type="Resource" path="res://resources/cards/rare/purifying_light.tres" id="21_scsrq"]
 [ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="22_letu6"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="22_u62p1"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="22_y85qu"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="23_s2dmi"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/tide_ledger.tres" id="23_ss2tw"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="23_scsrq"]
 
-[sub_resource type="Resource" id="Resource_xwln5"]
+[sub_resource type="Resource" id="Resource_u62p1"]
 script = ExtResource("20_8lpo7")
 id = &"obj_card_casts_focus_14"
 description = "Lancer 14 fois Focalisation"
@@ -38,7 +38,7 @@ params = {
 "count": 14
 }
 
-[sub_resource type="Resource" id="Resource_plhp6"]
+[sub_resource type="Resource" id="Resource_scsrq"]
 script = ExtResource("20_8lpo7")
 id = &"obj_kill_type_with_card_arcane_bolt_7_shade"
 description = "Ombre : en tuer 7 avec Trait arcanique"
@@ -49,7 +49,7 @@ params = {
 "enemy": "shade"
 }
 
-[sub_resource type="Resource" id="Resource_u62p1"]
+[sub_resource type="Resource" id="Resource_letu6"]
 script = ExtResource("20_8lpo7")
 id = &"obj_same_card_casts_38"
 description = "Lancer 38 fois le meme sort"
@@ -72,7 +72,7 @@ count = 4
 spawn_delay = 1.8
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_scsrq"]
+[sub_resource type="Resource" id="Resource_ss2tw"]
 script = ExtResource("22_y85qu")
 id = &"w12_1"
 duration = 26.0
@@ -102,7 +102,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_letu6"]
+[sub_resource type="Resource" id="Resource_a5d1i"]
 script = ExtResource("22_y85qu")
 id = &"w12_2"
 duration = 28.0
@@ -139,7 +139,7 @@ count = 2
 spawn_delay = 2.5
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_ss2tw"]
+[sub_resource type="Resource" id="Resource_ii67q"]
 script = ExtResource("22_y85qu")
 id = &"w12_3"
 duration = 32.0
@@ -169,7 +169,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_a5d1i"]
+[sub_resource type="Resource" id="Resource_as280"]
 script = ExtResource("22_y85qu")
 id = &"w12_4_miniboss"
 duration = 32.0
@@ -206,7 +206,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 34.0
 
-[sub_resource type="Resource" id="Resource_ii67q"]
+[sub_resource type="Resource" id="Resource_x0noc"]
 script = ExtResource("22_y85qu")
 id = &"w12_5_boss"
 duration = 46.0
@@ -227,10 +227,10 @@ intro_story = &"lvl_12_intro"
 outro_story = &"lvl_12_outro"
 terrain = "sand"
 backdrop = "act3_demon"
-waves = Array[ExtResource("22_y85qu")]([SubResource("Resource_scsrq"), SubResource("Resource_letu6"), SubResource("Resource_ss2tw"), SubResource("Resource_a5d1i"), SubResource("Resource_ii67q")])
+waves = Array[ExtResource("22_y85qu")]([SubResource("Resource_ss2tw"), SubResource("Resource_a5d1i"), SubResource("Resource_ii67q"), SubResource("Resource_as280"), SubResource("Resource_x0noc")])
 enemy_pool = Array[ExtResource("1_3j5bi")]([ExtResource("2_1dvci"), ExtResource("3_2ilfx"), ExtResource("4_hjhg3"), ExtResource("5_xwln5"), ExtResource("6_plhp6"), ExtResource("7_u62p1"), ExtResource("8_3j5bi"), ExtResource("9_letu6"), ExtResource("10_6lvqg")])
 exploration_deck = Array[ExtResource("10_ss2tw")]([ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("12_ii67q"), ExtResource("12_ii67q"), ExtResource("12_ii67q"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("17_2752f"), ExtResource("17_2752f"), ExtResource("16_mct3y")])
-objectives = Array[ExtResource("20_8lpo7")]([SubResource("Resource_xwln5"), SubResource("Resource_plhp6"), SubResource("Resource_u62p1")])
-levelup_cards = Array[ExtResource("10_ss2tw")]([ExtResource("18_xwln5"), ExtResource("19_plhp6"), ExtResource("20_u62p1")])
-objective_rewards = Array[ExtResource("10_ss2tw")]([ExtResource("21_scsrq"), ExtResource("22_letu6"), ExtResource("23_ss2tw")])
+objectives = Array[ExtResource("20_8lpo7")]([SubResource("Resource_u62p1"), SubResource("Resource_scsrq"), SubResource("Resource_letu6")])
+levelup_cards = Array[ExtResource("10_ss2tw")]([ExtResource("22_letu6"), ExtResource("19_xwln5"), ExtResource("20_plhp6")])
+objective_rewards = Array[ExtResource("10_ss2tw")]([ExtResource("20_u62p1"), ExtResource("22_u62p1"), ExtResource("23_scsrq")])
 next_levels = Array[StringName]([&"lvl_13"])

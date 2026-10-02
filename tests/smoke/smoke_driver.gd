@@ -679,7 +679,6 @@ func _autoplay_for(g: GameController) -> void:
 ##   - le deck de depart est jouable tel quel, sans que le joueur touche a rien.
 func _check_premier_lancement() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 	# La campagne s ouvre sur le premier niveau, et lui seul.
 	var ouverts: int = 0
@@ -1057,6 +1056,17 @@ func _check_deck_drag(panel: DeckPanel) -> void:
 func _check_deck_drag_refused(panel: DeckPanel) -> void:
 	await _disposer()
 	var tuiles: Array[Button] = panel.draggable_tiles(false)
+	# La page laissee par le controle precedent peut ne montrer que des cartes
+	# GRISEES (non glissables) : les obtenues passent en premier, et le livre
+	# d un profil neuf est le seul deck du premier niveau (regle du livre de
+	# sorts, 01/10), soit tout juste une page. On cherche donc une page qui en
+	# montre une, au lieu de supposer la page courante.
+	var tours: int = 0
+	while tuiles.is_empty() and tours < panel.page_count():
+		panel.turn_page(1)
+		await _disposer()
+		tuiles = panel.draggable_tiles(false)
+		tours += 1
 	if tuiles.is_empty():
 		_fail("aucune vignette glissable dans la collection (deck plein)")
 		return
@@ -1820,7 +1830,6 @@ func _check_story() -> void:
 ## Victoire puis defaite, avec la progression reelle derriere.
 func _check_end_screens() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	RunState.mode = GameEnums.Mode.EXPLORATION
 	SceneRouter.payload = {"level_id": &"lvl_01"}
 	# CHANTIER P : l ecran dit ce que CHAQUE objectif rapporte. Le contenu des
