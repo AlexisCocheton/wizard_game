@@ -240,12 +240,25 @@ const UPGRADE_DISCARD_PRICE: int = 1
 ## Depuis le chantier W7, le bot choisit par une REGLE (AutoPick.upgrade_index :
 ## l identite du sort en forme forte, sinon la vitesse forte) et non plus la
 ## premiere voie : lvl_16 43 -> 59 victoires sur 90 a jeu egal.
-const CARD_UPGRADE_TIERS: int = 2
-## L ecart entre deux maturations est multiplie par ce facteur a chaque palier :
-## 8 lancers, puis 16 de plus (paliers a 8 et 24). A ecart constant (8 et 16),
-## le banc montait jusqu a 10,5 ecrans d amelioration par partie sur les niveaux
-## longs — la cadence d un ecran toutes les 15 s que CARD_UPGRADE_CASTS ecarte.
-const CARD_UPGRADE_GAP_GROWTH: int = 2
+##
+## CINQ PALIERS DEPUIS LE CHANTIER W8 (02/10/2026). Le co-auteur : « les cartes
+## peuvent monter PLUSIEURS fois de niveau ». Deux paliers ne laissaient a un
+## sort favori que deux choix par partie, et rien a viser au-dela de 24 lancers
+## en Infini ou en Massacre, ou une partie dure vingt vagues. Les deux premiers
+## paliers restent a 8 et 24 lancers (meme cadence qu avant en campagne) ; les
+## trois suivants s ecartent de plus en plus (48, 80, 120) : ils recompensent le
+## sort qu on joue en boucle sur une longue partie sans multiplier les ecrans
+## modaux d une partie courte. Mesure au banc dans le rapport du chantier W8
+## (ecrans par partie avant / apres). Un sort dont le pool compte moins de voies
+## que de paliers murit autant de fois qu il a de voies (RunState.upgrade_tiers_for).
+const CARD_UPGRADE_TIERS: int = 5
+## L ecart entre deux maturations GRANDIT de ce nombre de lancers a chaque
+## palier : 8, puis 16, 24, 32, 40 (paliers cumules a 8, 24, 48, 80, 120).
+## Croissance ARITHMETIQUE et non plus geometrique (l ancien facteur x2) : a x2,
+## le cinquieme palier tombait a 248 lancers, jamais atteint, et la promesse
+## « plusieurs maturations » aurait ete une ligne morte. A ecart constant, le banc
+## montait a 10,5 ecrans d amelioration par partie sur les niveaux longs (DEC-034).
+const CARD_UPGRADE_GAP_STEP: int = 8
 
 ## Part de PASSIFS dans les cartes proposees a la montee de niveau.
 ## "Les passifs sont plus rares que les cartes : 20 pourcent de passifs."
@@ -307,6 +320,62 @@ const SPAWN_LINE_Y: float = 120.0
 ## visibles, et une zone au sol posee sur la ligne d apparition tuerait les
 ## vagues avant qu elles existent.
 const SPAWN_FADE_TIME: float = 0.5
+
+## --- Chantier W8 : vagues qui trainent, protecteurs, devoreurs ---------------
+
+## MEDITER, a la montee de niveau : XP de carte donnee a chaque carte distincte
+## de la main (RunState.meditate_offer). UNE, la demande du co-auteur : la
+## meditation est le choix de qui veut faire murir sa main plutot que l elargir,
+## et une XP vaut un lancer — en donner plus ferait d un ecran de choix un
+## raccourci vers les maturations (paliers a 8, 24... lancers).
+const MEDITATE_CARD_XP: int = 1
+
+## VAGUE QUI TRAINE. Une vague dont toutes les apparitions sont faites, mais dont
+## des monstres restent en jeu depuis plus de ce temps (secondes de MONDE depuis
+## la DERNIERE apparition), laisse la place a la suivante : les restants restent
+## en jeu. Avant, la vague suivante attendait la mort du dernier monstre, et deux
+## campeurs proteges (ou un tank ralenti contre un mur) figeaient la partie.
+##
+## Pourquoi depuis la derniere apparition et pas depuis le debut (WaveDef.duration,
+## 24 a 60 s) : releve sur les 106 vagues ecrites, `duration` n est que la duree
+## des APPARITIONS plus ~7 s (mediane). L appliquer telle quelle ferait tomber la
+## vague suivante sur des monstres a peine nes. 40 s de monde, c est le temps
+## qu un monstre median (45 px/s x ENEMY_SPEED_SCALE) met a parcourir les trois
+## quarts du terrain : seule une vague qui CALE (campeurs, protegee, bloquee,
+## ralentie en boucle) l atteint, jamais une vague qu on est simplement en train
+## de nettoyer. La valeur est mesuree au banc (rapport W8 : vagues ecourtees par
+## partie, victoires avant / apres).
+##
+## Jamais pour la DERNIERE vague (la victoire attend que TOUT soit mort), jamais
+## pour une vague de boss ou de mini-boss, ni pour ouvrir une vague de boss en
+## avance (voir WaveSpawner.can_cut_short) : un combat de boss se joue seul.
+const WAVE_OVERTIME_SECONDS: float = 40.0
+
+## PROTECTEURS (aura d invulnerabilite). Une DISSIPATION (Lumiere purifiante,
+## Vide d emprise) coupe l aura des porteurs touches pendant ce temps de monde :
+## le halo disparait, et tout ce qu il couvrait redevient frappable. Assez long
+## pour lancer deux ou trois sorts derriere la dissipation, assez court pour que
+## la carte reste un geste de timing et pas une suppression definitive.
+const AURA_DISPEL_SECONDS: float = 8.0
+## PAT D AURA : si TOUS les monstres frappables sont couverts par une aura pendant
+## ce temps de monde (deux Gardiens-totems ou deux Echos d Ymoa qui se couvrent
+## l un l autre, et rien d autre a viser), les auras se brisent comme sous une
+## dissipation (AURA_DISPEL_SECONDS). C est le filet qui garantit qu une
+## protection ne rend JAMAIS une vague imbattable, meme sans carte de dissipation
+## dans le deck. Le delai laisse voir l aura tenir avant de ceder : ce n est pas
+## une invulnerabilite qui n existe pas, c est une invulnerabilite qui s use.
+const AURA_STALEMATE_SECONDS: float = 4.0
+
+## DEVOREURS : chaque proie avalee par un devoreur qui GROSSIT (Glouton, Sesh et
+## son echo) ajoute cette part a sa FORCE (degats de contact, et de tir s il
+## tire), jusqu au plafond. +20 % par proie, x2 au plus apres cinq proies : un
+## Glouton qui a mange toute une nuee frappe comme un mini-boss (36 -> 72 points
+## de vitesse), ce qui est la lecon du monstre — le tuer AVANT qu il mange.
+## Le devoreur-invocateur (devour_heal_pct, Seigneur demon) n en gagne PAS : son
+## gain est deja le soin, et le doubler ferait de chaque sbire avale deux
+## punitions pour une seule erreur.
+const DEVOUR_FORCE_PER_PREY: float = 0.20
+const DEVOUR_FORCE_CAP: float = 1.0
 
 ## --- Sorts de terrain PERMANENTS ---
 ## Plafond d objets de terrain permanents actifs en meme temps (arbres, ronces,

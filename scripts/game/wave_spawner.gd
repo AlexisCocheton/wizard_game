@@ -14,6 +14,9 @@ signal all_waves_cleared()
 ## connaitre le noeud de fond, et un ecran qui voudrait annoncer le monde (HUD,
 ## banniere) s y branche sans que le spawner change.
 signal world_changed(world_index: int, backdrop_key: String, world_name: String)
+## CHANTIER W8 : la vague `index` a traine (voir _w8_overtime_due) ; la suivante
+## demarre alors que des monstres restent. Emis A LA PLACE de wave_cleared.
+signal wave_overtime(index: int)
 
 var battlefield: Battlefield = null
 var waves: Array[WaveDef] = []
@@ -156,6 +159,7 @@ func start_next() -> bool:
 		return false
 	var w: WaveDef = waves[index]
 	_elapsed = 0.0
+	_last_spawn_at = -1.0  # CHANTIER W8 : aucune apparition faite
 	_queue.clear()
 	for entry in w.entries:
 		if entry == null or entry.enemy == null:
@@ -187,11 +191,17 @@ func tick(delta: float) -> void:
 		var item: Dictionary = _queue.pop_front()
 		var def: EnemyDef = item["def"]
 		battlefield.spawn_enemy(def, _spawn_x(def, item.get("lane", -1.0)), item["difficulty"])
+		_last_spawn_at = _elapsed  # CHANTIER W8 : depart du compte de la vague qui traine
 	# La vague est finie quand la file est vide et le terrain nettoye — y compris
 	# des marques de renaissance, qui sont des monstres a venir (is_clear).
 	if _queue.is_empty() and battlefield.is_clear():
 		active = false
 		wave_cleared.emit(index)
+	elif _w8_overtime_due():
+		# CHANTIER W8 : la vague a traine, la suivante prend le relais.
+		active = false
+		overtime_count += 1
+		wave_overtime.emit(index)
 
 
 ## Largeur du couloir d un groupe : assez etroit pour qu une zone en couvre
@@ -231,6 +241,62 @@ func current_wave() -> WaveDef:
 	if index >= 0 and index < waves.size():
 		return waves[index]
 	return null
+
+
+## --- CHANTIER W8 : la vague qui TRAINE ---------------------------------------
+##
+## Avant, la vague suivante attendait la mort du DERNIER monstre (tick, plus
+## haut). Deux campeurs qui se protegent (Echos d Ymoa), un tank ralenti en
+## boucle contre un mur : la partie se figeait, sans rien a l ecran pour le dire.
+## Desormais, GameConfig.WAVE_OVERTIME_SECONDS de MONDE apres la derniere
+## apparition, la vague suivante demarre meme si des monstres restent (ils restent
+## en jeu). Temps du monde : a x4 tout va quatre fois plus vite, l attente aussi.
+
+## Elapsed (temps du monde) de la DERNIERE apparition de la vague en cours, -1 si
+## aucune n a encore eu lieu.
+var _last_spawn_at: float = -1.0
+## Vagues ecourtees depuis le debut de la partie (lu par le banc et les tests).
+var overtime_count: int = 0
+
+
+## La vague en cours doit-elle ceder la place ? Toutes ses apparitions faites,
+## le delai ecoule depuis la derniere, et le droit d etre ecourtee.
+func _w8_overtime_due() -> bool:
+	if not _queue.is_empty() or _last_spawn_at < 0.0:
+		return false
+	if _elapsed - _last_spawn_at < GameConfig.WAVE_OVERTIME_SECONDS:
+		return false
+	return can_cut_short()
+
+
+## Cette vague peut-elle etre ecourtee ? Trois exceptions, chacune pour une raison :
+##   - la DERNIERE vague ecrite : la victoire attend que TOUT soit mort, restants
+##     des vagues ecourtees compris (is_clear regarde tout le terrain) ;
+##   - une vague de BOSS ou de MINI-BOSS : le combat de boss se joue jusqu au
+##     bout, on ne lui ajoute pas une vague par-dessus ;
+##   - la vague SUIVANTE est une vague de boss : on ne l ouvre pas en avance sur
+##     des restants. Un boss se presente sur un terrain nettoye.
+func can_cut_short() -> bool:
+	var w: WaveDef = current_wave()
+	if w == null or w.is_boss or w.is_miniboss:
+		return false
+	var suivante: int = index + 1
+	if procedural:
+		# La vague suivante n est pas encore fabriquee : on lit la cadence.
+		return not (WaveBudget.is_boss_wave(suivante + 1)
+			or WaveBudget.is_miniboss_wave(suivante + 1))
+	if suivante >= waves.size():
+		return false
+	var nw: WaveDef = waves[suivante]
+	return nw != null and not nw.is_boss and not nw.is_miniboss
+
+
+## Secondes de monde avant que la vague en cours cede la place, ou -1 si elle ne
+## le fera pas (apparitions pas finies, ou vague qui ne s ecourte pas).
+func overtime_left() -> float:
+	if not active or not _queue.is_empty() or _last_spawn_at < 0.0 or not can_cut_short():
+		return -1.0
+	return maxf(0.0, GameConfig.WAVE_OVERTIME_SECONDS - (_elapsed - _last_spawn_at))
 
 
 ## Vrai seulement quand start_next() a franchi la derniere vague ecrite.
