@@ -128,8 +128,12 @@ func _build_identity() -> void:
 	ligne.add_theme_constant_override(&"separation", 18)
 	carte.add_child(ligne)
 
+	# Le PORTRAIT du profil, la meme source que l onglet PROFIL du menu
+	# (UiTheme.avatar_texture) : la tete du mage par defaut, le portrait choisi
+	# sinon. Nomme pour que les tests le retrouvent.
 	var avatar := TextureRect.new()
-	avatar.texture = UiTheme.tex("avatar")
+	avatar.name = "IdentityAvatar"
+	avatar.texture = UiTheme.avatar_texture()
 	avatar.custom_minimum_size = Vector2(120, 120)
 	avatar.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	avatar.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -158,11 +162,7 @@ func _build_identity() -> void:
 	barre.value = SaveData.account_progress() * 100.0
 	col.add_child(barre)
 
-	var bas: int = SaveData.account_xp_for_level(niveau)
-	var haut: int = SaveData.account_xp_for_level(niveau + 1)
-	col.add_child(UiTheme.label("%d / %d XP vers le niveau %d"
-		% [SaveData.account_xp() - bas, haut - bas, niveau + 1],
-		UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
+	col.add_child(UiTheme.label(identity_xp_text(), UiTheme.FONT_SMALL, UiTheme.TEXT_DARK))
 
 	# Ce que le prochain palier de BANNIERE apporte : la banniere change toute
 	# seule en haut de l ecran, autant dire au joueur quand elle changera.
@@ -170,6 +170,22 @@ func _build_identity() -> void:
 	if suivant > 0:
 		col.add_child(UiTheme.label("Nouvelle banniere au niveau %d" % suivant,
 			UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.22)))
+
+
+## La ligne d XP de la carte d identite. En MODE TESTEUR le niveau est force
+## (SaveData.tester_account_level) mais l XP reste celle du vrai profil : la
+## soustraction donnait « -11000 / 1900 XP ». On dit alors ce qui se passe, et
+## hors mode testeur l avance est bornee a l intervalle du palier.
+static func identity_xp_text() -> String:
+	var niveau: int = SaveData.account_level()
+	if SaveData.tester_mode():
+		return "Mode testeur : niveau %d prete, ton XP reelle (%d) est gardee" % [
+			niveau, SaveData.account_xp()]
+	var bas: int = SaveData.account_xp_for_level(niveau)
+	var haut: int = SaveData.account_xp_for_level(niveau + 1)
+	var palier: int = maxi(0, haut - bas)
+	return "%d / %d XP vers le niveau %d" % [
+		clampi(SaveData.account_xp() - bas, 0, palier), palier, niveau + 1]
 
 
 ## --- SUCCES ---

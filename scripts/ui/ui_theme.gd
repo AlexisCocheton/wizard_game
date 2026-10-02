@@ -650,10 +650,13 @@ static func tower_preview(key: String) -> Texture2D:
 
 ## --- PORTRAITS ---
 
-## Le portrait equipe (WardrobeData.AVATARS), avec repli sur le premier.
+## Le portrait equipe (WardrobeData.AVATARS), avec repli sur la TETE DU MAGE
+## (WardrobeData.AVATAR_MAGE), portrait par defaut de tout profil neuf.
 static func avatar_key() -> String:
 	var key: String = SaveData.equipped_cosmetic(GameEnums.RewardKind.AVATAR)
-	return key if WardrobeData.AVATARS.has(key) else WardrobeData.AVATARS[0]
+	if key == WardrobeData.AVATAR_MAGE or WardrobeData.AVATARS.has(key):
+		return key
+	return WardrobeData.AVATAR_MAGE
 
 
 ## Le portrait du profil, a afficher sur la carte d identite et le bouton PROFIL.
@@ -661,6 +664,9 @@ static func avatar_key() -> String:
 static func avatar_texture(key: String = "") -> Texture2D:
 	if key == "":
 		key = avatar_key()
+	# Le portrait par defaut n est pas dans la grille : c est la tete du mage.
+	if key == WardrobeData.AVATAR_MAGE:
+		return mage_head()
 	var i: int = WardrobeData.AVATARS.find(key)
 	if i < 0:
 		return null
@@ -905,3 +911,63 @@ static func icon(index: int, size: float = 48.0) -> TextureRect:
 	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return tr
+
+
+# --- Planche du CASTING (portraits peints) ---
+#
+# Le decoupage vivait dans story_scene.gd seule. Le menu (onglet PROFIL) et la
+# carte d identite du profil montrent maintenant la TETE DU MAGE : trois
+# endroits qui decoupent la meme planche avec trois copies de l arithmetique
+# auraient fini par viser trois cases differentes. Une seule fonction ici.
+
+const PORTRAITS_DIR := "res://assets/portraits/"
+const CAST_SHEET := PORTRAITS_DIR + "story_cast.png"
+## Cote d une case de la planche, en px. La planche est generee hors jeu : chaque
+## personnage y est detoure puis mis a l echelle dans une case carree identique.
+const CAST_PX: int = 512
+## La case du mage dans la planche ([ligne, colonne], a partir de 1).
+const MAGE_CAST_CELL: Array[int] = [1, 1]
+## La TETE du mage DANS sa case, en px de la case. Mesuree sur la planche : le
+## crane commence vers y = 22, la barbe finit vers y = 330, le visage et le col
+## tiennent entre x = 96 et x = 416. Le BUSTE entier (la case) ne laisse a 100 px
+## qu un visage de 40 px perdu au-dessus d une cape violette : a la taille d un
+## onglet, on ne reconnaissait plus un personnage mais une tache. Carre, pour
+## qu aucun conteneur ne le deforme.
+const MAGE_HEAD_CROP := Rect2(96, 8, 320, 320)
+
+
+## Une case de la planche du casting, ou un morceau de case (`sub`, en px de la
+## case). Null si la planche manque ou si la case sort de la planche : un
+## rectangle vide a l ecran se lirait comme « pas de portrait » alors que c est
+## une faute de frappe dans une table, on prefere que l appelant le sache.
+static func cast_cell(row: int, col: int, sub: Rect2 = Rect2(),
+		sheet: String = CAST_SHEET) -> Texture2D:
+	if sheet == "" or not ResourceLoader.exists(sheet):
+		return null
+	var planche: Texture2D = load(sheet)
+	if planche == null:
+		return null
+	var ligne: int = row - 1
+	var colonne: int = col - 1
+	if ligne < 0 or colonne < 0:
+		return null
+	if (colonne + 1) * CAST_PX > planche.get_width():
+		return null
+	if (ligne + 1) * CAST_PX > planche.get_height():
+		return null
+	var region := Rect2(colonne * CAST_PX, ligne * CAST_PX, CAST_PX, CAST_PX)
+	if sub.has_area():
+		# Le morceau reste DANS sa case : deborder montrerait le voisin.
+		var dans: Rect2 = Rect2(Vector2.ZERO, Vector2(CAST_PX, CAST_PX)).intersection(sub)
+		if not dans.has_area():
+			return null
+		region = Rect2(region.position + dans.position, dans.size)
+	var at := AtlasTexture.new()
+	at.atlas = planche
+	at.region = region
+	return at
+
+
+## La tete du mage, lisible a la taille d un onglet ou d un bouton.
+static func mage_head() -> Texture2D:
+	return cast_cell(MAGE_CAST_CELL[0], MAGE_CAST_CELL[1], MAGE_HEAD_CROP)

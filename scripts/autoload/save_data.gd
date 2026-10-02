@@ -65,9 +65,9 @@ func _defaults() -> Dictionary:
 				## reteinte ("monk_blue", "monk_hat_gold"...) : LEGACY_HATS.
 				"hat": AccountRewardDef.HAT_NONE,
 				"tower": "tower_blue",
-				## Portrait du profil (WardrobeData.AVATARS). Le premier est celui
-				## qu affichait la carte d identite avant qu il se choisisse.
-				"avatar": "avatar_warrior_red",
+				## Portrait du profil : la TETE DU MAGE par defaut
+				## (WardrobeData.AVATAR_MAGE), ou un de WardrobeData.AVATARS.
+				"avatar": "avatar_mage",
 				## Tenue de chaque APPRENTI : {cle de l apprenti: cle de sa
 				## teinte}. Absent = sa feuille d origine. La robe du mage reste
 				## dans "mage_color" (cle historique, les vieux profils l ont).

@@ -176,6 +176,11 @@ func _rewards() -> void:
 		_reward("rw_char_mage", "Le mage",
 			"Le gardien du temps en personne.", 1, K.CHARACTER,
 			AccountRewardDef.CHARACTER_MAGE),
+		# Le portrait PAR DEFAUT, la tete du mage : une recompense de niveau 1
+		# pour qu on puisse y revenir apres avoir choisi un autre portrait.
+		_reward("rw_avatar_mage", "Le gardien",
+			"La tete du mage, le portrait de depart.", 1, K.AVATAR,
+			WardrobeData.AVATAR_MAGE),
 		_reward("rw_avatar_warrior", "Le veilleur",
 			"Le portrait du profil.", 1, K.AVATAR, "avatar_warrior_red"),
 

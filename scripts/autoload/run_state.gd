@@ -148,6 +148,8 @@ func reset() -> void:
 	upgrades_taken.clear()
 	pending_upgrade_card = null
 	pending_upgrade_paths = []
+	# Un choix d Epuration oublie gelerait la partie suivante des son debut.
+	pending_purge = 0
 	# Compteurs du moteur d objectifs (voir la section OBJECTIFS PARAMETRES).
 	_reset_objective_counters()
 
@@ -673,16 +675,134 @@ func discard_hand() -> int:
 	return n
 
 
-func exile_from_deck(count: int) -> int:
+# --- EPURATION : retirer des cartes AU CHOIX du joueur (vague 8) ---
+#
+# Epuration exilait les 2 cartes du DESSUS de la pioche : le joueur payait une
+# epique pour perdre deux cartes au hasard, peut-etre ses meilleures. Il CHOISIT
+# maintenant 0, 1 ou 2 cartes dans tout son deck de partie (pioche, main,
+# defausse), sur l ecran DeckBrowser. La partie attend son choix
+# (GameController.simulate refuse d avancer tant que `pending_purge` > 0),
+# comme pour une amelioration de carte.
+#
+# Quand personne ne peut toucher l ecran (banc, tests headless, sort lance hors
+# partie), le choix est tranche AUSSITOT par AutoPick.purge_choice : une offre
+# laissee en attente gelerait la partie pour toujours (meme lecon que le banc a
+# 0 victoire sur 30, voir GameController._on_upgrade_ready).
+
+## Emis quand un choix d Epuration attend le joueur. GameController l ecoute.
+signal purge_requested(max_count: int)
+## Emis une fois le choix tranche, avec le nombre de cartes retirees.
+signal purge_resolved(removed: int)
+
+## Plafond du choix en attente (0 = aucun choix en attente).
+var pending_purge: int = 0
+
+
+## Le deck de la PARTIE regroupe par carte : une entree par carte differente,
+## {card, pile, hand, discard, total}, triee par rarete puis par nom. Les copies
+## d une carte sont la meme ressource : les regrouper est la seule facon de les
+## montrer sans douze lignes dont trois identiques. Les cartes exilees n y sont
+## plus : elles ont quitte la partie.
+func run_deck_groups() -> Array[Dictionary]:
+	var par_id: Dictionary = {}
+	var ordre: Array[SpellCard] = []
+	for zone: Array in [[deck, "pile"], [hand, "hand"], [discard, "discard"]]:
+		var pile: Array[SpellCard] = zone[0]
+		var cle: String = zone[1]
+		for c in pile:
+			if c == null:
+				continue
+			if not par_id.has(c.id):
+				par_id[c.id] = {"card": c, "pile": 0, "hand": 0, "discard": 0, "total": 0}
+				ordre.append(c)
+			par_id[c.id][cle] = int(par_id[c.id][cle]) + 1
+			par_id[c.id]["total"] = int(par_id[c.id]["total"]) + 1
+	ordre.sort_custom(func(a: SpellCard, b: SpellCard) -> bool:
+		if a.rarity != b.rarity:
+			return a.rarity < b.rarity
+		return a.display_name < b.display_name)
+	var out: Array[Dictionary] = []
+	for c in ordre:
+		out.append(par_id[c.id])
+	return out
+
+
+## Ouvre un choix d Epuration : jusqu a `max_count` cartes a retirer.
+##
+## Les demandes S AJOUTENT tant que le choix n est pas tranche : Debordement
+## resout chaque sort deux fois, et deux Epurations resolues coup sur coup
+## doivent valoir quatre cartes au plus, sur UN seul ecran (l ecran ouvert lit
+## le plafond cumule dans `pending_purge`). Sans ecran, la premiere est deja
+## tranchee quand la seconde arrive : quatre aussi.
+func request_purge(max_count: int) -> void:
+	if max_count <= 0 or total_cards() == 0:
+		return
+	pending_purge += max_count
+	if purge_requested.get_connections().is_empty():
+		# Aucune partie n ecoute (sort lance par un test, vitrine) : personne ne
+		# pourrait jamais valider, on tranche tout de suite.
+		resolve_purge(AutoPick.purge_choice(run_deck_groups(), pending_purge))
+		return
+	purge_requested.emit(max_count)
+
+
+## Tranche le choix en attente : `cards` contient un element par EXEMPLAIRE a
+## retirer (0 element = rien retirer, c est permis). Au plus `pending_purge`
+## exemplaires partent, meme si l appelant en demande davantage : le plafond
+## est une regle de la carte, pas de l ecran. Rend le nombre retire.
+func resolve_purge(cards: Array) -> int:
+	var budget: int = pending_purge
+	pending_purge = 0
 	var n: int = 0
-	for i in count:
-		if deck.is_empty():
+	var main_touchee: bool = false
+	for c in cards:
+		if n >= budget:
 			break
-		exiled.append(deck.pop_back())
+		if not (c is SpellCard):
+			continue
+		var r: int = _exile_one(c)
+		if r == 0:
+			continue
 		n += 1
+		if r == 2:
+			main_touchee = true
 	if n > 0:
 		deck_changed.emit()
+	if main_touchee:
+		hand_changed.emit()
+	purge_resolved.emit(n)
 	return n
+
+
+## Exile UN exemplaire de `card`. Ordre des piles : la DEFAUSSE d abord (la
+## carte vient de servir, la retirer ne coute rien au tour en cours), puis la
+## PIOCHE, puis la MAIN en dernier (c est la carte que le joueur tient). Rend 0
+## si aucun exemplaire, 1 si pris en defausse ou en pioche, 2 si pris en main.
+func _exile_one(card: SpellCard) -> int:
+	var i: int = discard.find(card)
+	if i != -1:
+		discard.remove_at(i)
+		exiled.append(card)
+		return 1
+	i = deck.find(card)
+	if i != -1:
+		deck.remove_at(i)
+		exiled.append(card)
+		return 1
+	# En main, de preference un exemplaire LIBRE : un exemplaire petrifie ou
+	# tenu par un voleur reste en jeu, c est lui que le monstre designe.
+	var libre: int = -1
+	for k in hand.size():
+		if hand[k] == card:
+			if libre == -1:
+				libre = k
+			if not is_slot_blocked(k):
+				libre = k
+				break
+	if libre != -1:
+		exiled.append(_remove_from_hand(libre))
+		return 2
+	return 0
 
 
 ## N obtient PLUS la carte (chantier P) : c est pick_offer(), le geste de

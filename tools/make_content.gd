@@ -2177,8 +2177,12 @@ func _cards() -> void:
 	bargain.sfx_key = &"spell_crackle"
 	_save(bargain, "res://resources/cards/epic/reckless_bargain.tres")
 
+	# Vague 8 : le joueur CHOISIT les cartes (0, 1 ou 2) sur l ecran du deck ;
+	# `count` est le plafond du choix (RunState.request_purge). Avant, les 2
+	# cartes du dessus de la pioche partaient au hasard.
 	var purge := _card("deck_purge", "Epuration",
-		"Retire 2 cartes du deck.", GameEnums.Rarity.EPIC, 1.0,
+		"Choisis jusqu a 2 cartes de ton deck : elles quittent la partie.",
+		GameEnums.Rarity.EPIC, 1.0,
 		GameEnums.Targeting.NONE, [],
 		[_spec("remove_cards", 0.0, 0.0, 0.0, {&"count": 2})])
 	# LE FANTOME QUI SE DISSOUT. La feuille part d une silhouette blanche nette et

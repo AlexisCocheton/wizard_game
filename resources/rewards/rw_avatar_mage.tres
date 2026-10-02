@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AccountRewardDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/account_reward_def.gd" id="1_4hryk"]
+
+[resource]
+script = ExtResource("1_4hryk")
+id = &"rw_avatar_mage"
+display_name = "Le gardien"
+description = "La tete du mage, le portrait de depart."
+at_level = 1
+kind = 1
+texture_name = "avatar_mage"
+for_character = ""

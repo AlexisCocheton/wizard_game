@@ -2,14 +2,14 @@ extends Control
 ## Menu principal — coquille a onglets inspiree d Archero :
 ##
 ##   +--------------------------------------------------+
-##   | [Niv 7]   ,~~ TIME WIZARD ~~,      [avatar]      |  <- barre du haut
-##   |           Cartes 39 / 45            PROFIL       |
+##   | [Niv 7]   ,~~ TIME WIZARD ~~,     [engrenage]    |  <- barre du haut
+##   |           Cartes 39 / 45            REGLAGES     |
 ##   +--------------------------------------------------+
 ##   |                                                  |
 ##   |            panneau de l onglet actif             |
 ##   |                                                  |
 ##   +--------------------------------------------------+
-##   | GALERIE | DECK | [CAMPAGNE] | MASSACRE | REGLAGES |  <- centre sureleve
+##   | GALERIE | DECK | [CAMPAGNE] | MASSACRE | PROFIL   |  <- centre sureleve
 ##   +--------------------------------------------------+
 ##
 ## Les onglets changent le panneau sans changer de scene : la navigation est
@@ -19,9 +19,8 @@ extends Control
 ##
 ##   - le BESTIAIRE a fusionne avec la GALERIE, qui est devenue un grimoire a
 ##     trois sections (Sorts / Passifs / Bestiaire) ;
-##   - le PROFIL est monte dans la barre du HAUT, derriere l avatar : c est
-##     l ecran qu on ouvre pour se regarder, pas pour jouer, et il n a rien a
-##     faire dans la zone du pouce a cote du bouton JOUER.
+##   - le PROFIL etait monte dans la barre du HAUT, derriere l avatar (il est
+##     redescendu en vague 8, voir plus bas).
 ##
 ## 4 boutons sur 1080 px = 270 px chacun, au lieu de 170 : le nom de l onglet
 ## tient enfin en entier ("CAMPA" etait tronque sur la capture d avant).
@@ -29,9 +28,17 @@ extends Control
 ## CINQ depuis le 29/09 (chantier M) : le MASSACRE, niveau infini a part, a son
 ## onglet. Place a DROITE du centre pour que la CAMPAGNE reste au milieu, deux
 ## onglets de chaque cote : c est la symetrie d Archero, et le pouce retrouve le
-## centre sans regarder. 216 px par onglet : "MASSACRE" et "REGLAGES" (8 lettres)
-## tiennent a FONT_SMALL, verifie sur la capture menu_massacre.
-const TABS: Array[String] = ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "REGLAGES"]
+## centre sans regarder. 216 px par onglet : "MASSACRE" (8 lettres) tient a
+## FONT_SMALL, verifie sur la capture menu_massacre.
+##
+## PROFIL ET REGLAGES ONT ECHANGE LEUR PLACE (vague 8, demande du co-auteur). Le
+## profil redescend en 5e onglet, a la place des reglages : c est l ecran du
+## joueur (son niveau, ses succes, ses cosmetiques), il revient le voir apres
+## chaque partie, il merite un onglet sous le pouce. Les REGLAGES montent en haut
+## a droite, derriere l engrenage : on les ouvre rarement, et c est la qu un
+## joueur mobile cherche un engrenage. L ordre et les largeurs ne bougent pas :
+## la campagne reste au centre, deux onglets de chaque cote.
+const TABS: Array[String] = ["GALERIE", "DECK", "CAMPAGNE", "MASSACRE", "PROFIL"]
 const HOME_TAB: int = 2
 
 ## Icone de chaque onglet. Retour du testeur : "utilise les bonnes icones pour
@@ -43,38 +50,58 @@ const HOME_TAB: int = 2
 ##   - CAMPAGNE : une carte au tresor marquee d une croix ;
 ##   - MASSACRE : l epee de Tiny Swords (icon_05), de la meme planche que
 ##                l engrenage des reglages : le combat sans fin, dit par l objet ;
-##   - REGLAGES : l engrenage, le seul `icon_*` qui convienne (icon_10).
-const TAB_ICONS: Array[String] = ["tab_gallery", "tab_deck", "tab_campaign", "icon_05", "icon_10"]
+##   - PROFIL   : le PORTRAIT du joueur (UiTheme.avatar_texture), la meme
+##                source que la carte d identite : la TETE DU MAGE par defaut,
+##                decoupee dans la planche du casting, le portrait choisi a la
+##                garde-robe sinon.
+## Les noms sont des cles de UiTheme.tex, sauf AVATAR_ICON (voir tab_icon).
+const TAB_ICONS: Array[String] = ["tab_gallery", "tab_deck", "tab_campaign", "icon_05", "avatar"]
+## Cle d icone qui n est pas un fichier : le portrait equipe du profil.
+const AVATAR_ICON: String = "avatar"
+## L engrenage des reglages, en haut a droite (le seul `icon_*` qui convienne).
+const SETTINGS_ICON: String = "icon_10"
 
-## Le panneau PROFIL n est plus un onglet mais une superposition, ouverte par
-## l avatar en haut a droite. Il se ferme par son propre bouton.
-const PROFILE_TAB: int = -1
+
+## L onglet du profil, lu dans TABS : un index ecrit en dur mentirait le jour ou
+## un onglet s ajoute.
+static func profile_tab() -> int:
+	return TABS.find("PROFIL")
+
+
+## La texture d un onglet. Une fonction plutot que `UiTheme.tex` directement :
+## l icone du profil n est pas un fichier, c est un morceau de planche.
+static func tab_icon(key: String) -> Texture2D:
+	if key == AVATAR_ICON:
+		return UiTheme.avatar_texture()
+	return UiTheme.tex(key)
+
 
 @onready var _content: MarginContainer = %Content
 @onready var _tab_bar: HBoxContainer = %TabBar
 @onready var _cards_label: Label = %CardsLabel
 @onready var _level_label: Label = %LevelLabel
-@onready var _profile_button: Button = %ProfileButton
+@onready var _settings_button: Button = %SettingsButton
 ## La banniere du titre : elle CHANGE avec le niveau de compte (chantier L).
 @onready var _title_ribbon: NinePatchRect = %TitleRibbon
 
 var _panels: Array[Control] = []
 var _tab_buttons: Array[Button] = []
 var _current: int = -1
-var _profile_panel: ProfilePanel
-var _profile_layer: PanelContainer
+var _settings_panel: SettingsPanel
+var _settings_layer: PanelContainer
 
 
 func _ready() -> void:
 	theme = UiTheme.make()
 	_build_panels()
 	_build_tabs()
-	_build_profile_layer()
+	_build_settings_layer()
+	_settings_button.icon = UiTheme.tex(SETTINGS_ICON)
 	# Idempotent : _ready peut etre rejoue si la scene est reinstanciee dans un test.
 	if not SaveData.profile_changed.is_connected(_refresh_top_bar):
 		SaveData.profile_changed.connect(_refresh_top_bar)
-	if not _profile_button.pressed.is_connected(_toggle_profile):
-		_profile_button.pressed.connect(_toggle_profile)
+	if not _settings_button.pressed.is_connected(_toggle_settings):
+		_settings_button.pressed.connect(_toggle_settings)
 	_refresh_top_bar()
 	select_tab(HOME_TAB)
 	AudioBus.play_music(&"menu")
@@ -86,7 +113,7 @@ func _build_panels() -> void:
 		DeckPanel.new(),
 		CampaignPanel.new(),
 		MassacrePanel.new(),
-		SettingsPanel.new(),
+		ProfilePanel.new(),
 	]
 	for p in _panels:
 		p.visible = false
@@ -116,7 +143,7 @@ func _build_tabs() -> void:
 		else:
 			b.custom_minimum_size = Vector2(0, 160)
 		b.size_flags_vertical = Control.SIZE_SHRINK_END
-		b.icon = UiTheme.tex(TAB_ICONS[i])
+		b.icon = tab_icon(TAB_ICONS[i])
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		b.expand_icon = true
@@ -148,36 +175,47 @@ func _serrer_marges(b: Button) -> void:
 		b.add_theme_stylebox_override(etat, copie)
 
 
-## Le profil en superposition PLEIN ECRAN sous la barre du haut : il couvre le
-## panneau courant sans le detruire, donc on revient exactement ou on etait.
-func _build_profile_layer() -> void:
-	_profile_layer = PanelContainer.new()
-	_profile_layer.visible = false
-	_profile_layer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_profile_layer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_content.add_child(_profile_layer)
+## Les reglages en superposition PLEIN ECRAN sous la barre du haut : ils
+## couvrent le panneau courant sans le detruire, donc on revient exactement ou
+## on etait. C est le traitement qu avait le profil quand il etait en haut.
+func _build_settings_layer() -> void:
+	_settings_layer = PanelContainer.new()
+	_settings_layer.visible = false
+	_settings_layer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_settings_layer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_content.add_child(_settings_layer)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override(&"separation", 12)
-	_profile_layer.add_child(box)
+	_settings_layer.add_child(box)
 
-	_profile_panel = ProfilePanel.new()
-	_profile_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(_profile_panel)
+	# DANS UN DEFILEMENT : les reglages (audio, credits, mode testeur) sont plus
+	# hauts que la zone de contenu. Poses tels quels, leur hauteur minimale
+	# poussait la barre du haut et les onglets HORS de l ecran (vu sur capture :
+	# plus d engrenage, plus de barre du bas, seul FERMER restait).
+	var defile := ScrollContainer.new()
+	defile.name = "SettingsScroll"
+	defile.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	defile.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(defile)
+	_settings_panel = SettingsPanel.new()
+	_settings_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_settings_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	defile.add_child(_settings_panel)
 
 	var close := Button.new()
 	close.text = "FERMER"
 	close.custom_minimum_size = Vector2(0, 120)   # cible tactile
 	close.pressed.connect(func() -> void:
 		AudioBus.play_sfx(&"ui_tap")
-		show_profile(false))
+		show_settings(false))
 	box.add_child(close)
 
 
 func select_tab(index: int) -> void:
 	index = clampi(index, 0, _panels.size() - 1)
-	# Changer d onglet ferme le profil : sinon il resterait pose par-dessus.
-	show_profile(false)
+	# Changer d onglet ferme les reglages : sinon ils resteraient poses par-dessus.
+	show_settings(false)
 	if index == _current:
 		_panels[index].call("refresh")
 		return
@@ -193,26 +231,40 @@ func current_tab() -> int:
 	return _current
 
 
-## Le profil, ouvert ou ferme. Pilotable par les tests et par le SMOKE, qui doit
-## pouvoir le capturer sans simuler un toucher.
-func show_profile(open: bool) -> void:
-	if _profile_layer == null:
+## Les reglages, ouverts ou fermes. Pilotable par les tests et par le SMOKE, qui
+## doit pouvoir les capturer sans simuler un toucher.
+func show_settings(open: bool) -> void:
+	if _settings_layer == null:
 		return
-	_profile_layer.visible = open
+	_settings_layer.visible = open
 	if open:
-		_profile_panel.refresh()
-		_profile_button.add_theme_color_override(&"font_color", UiTheme.GOLD)
+		_settings_panel.refresh()
+		_settings_button.add_theme_color_override(&"font_color", UiTheme.GOLD)
 	else:
-		_profile_button.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
+		_settings_button.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
+
+
+func settings_open() -> bool:
+	return _settings_layer != null and _settings_layer.visible
+
+
+func _toggle_settings() -> void:
+	AudioBus.play_sfx(&"ui_tap")
+	show_settings(not settings_open())
+
+
+## Le profil est un ONGLET depuis la vague 8. Ces deux fonctions gardent le
+## vocabulaire des appelants (smoke, tests) : ouvrir le profil = choisir son
+## onglet ; le fermer = revenir a l accueil s il etait affiche.
+func show_profile(open: bool) -> void:
+	if open:
+		select_tab(profile_tab())
+	elif profile_open():
+		select_tab(HOME_TAB)
 
 
 func profile_open() -> bool:
-	return _profile_layer != null and _profile_layer.visible
-
-
-func _toggle_profile() -> void:
-	AudioBus.play_sfx(&"ui_tap")
-	show_profile(not profile_open())
+	return _current == profile_tab() and not settings_open()
 
 
 ## Le compteur de cartes du haut : obtenues / VISIBLES, sorts et passifs
@@ -231,6 +283,10 @@ func _refresh_top_bar() -> void:
 		_cards_label.text = cards_counter_text()
 	if _level_label != null:
 		_level_label.text = "Niv.\n%d" % SaveData.account_level()
+	# Le portrait de l onglet PROFIL suit celui que le joueur equipe.
+	var ip: int = TAB_ICONS.find(AVATAR_ICON)
+	if ip >= 0 and ip < _tab_buttons.size():
+		_tab_buttons[ip].icon = tab_icon(AVATAR_ICON)
 	# La banniere du titre suit le NIVEAU DE COMPTE : bois, argent, or, cristal.
 	# C est la recompense la plus visible du compte — elle se voit a l ouverture
 	# du jeu, sans ouvrir le moindre ecran, et c est ce que le testeur demandait.
