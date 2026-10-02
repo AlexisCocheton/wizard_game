@@ -13,6 +13,12 @@ const SAVE_PATH: String = "user://profile.json"
 const CORRUPT_PATH: String = "user://profile.corrupt.json"
 const CURRENT_VERSION: int = 1
 
+## Le premier niveau de la campagne, ouvert sur tout profil neuf. Son deck de
+## campagne est donc TOUT le livre de sorts d un joueur qui n a jamais joue
+## (voir LE LIVRE DE SORTS plus bas), et le deck de base du Massacre et de
+## l Infini (DeckRules.default_deck_ids).
+const FIRST_LEVEL: StringName = &"lvl_01"
+
 var _data: Dictionary = {}
 var persistence_enabled: bool = true
 
@@ -26,13 +32,16 @@ func _defaults() -> Dictionary:
 	return {
 		"schema_version": CURRENT_VERSION,
 		"profile": {
-			## Les cartes OBTENUES (voir PROGRESSION DES CARTES plus bas).
+			## Les cartes PRISES en combat, et tout ce qu un ancien profil
+			## avait deja. Ce n est PAS tout le livre : les decks des niveaux
+			## ouverts y sont aussi, sans etre ecrits (voir LE LIVRE DE SORTS).
 			"discovered_cards": [],
 			## HERITAGE : la legendaire "3/3 objectifs" n existe plus. La cle est
 			## gardee pour que _migrate() verse son contenu dans discovered_cards ;
 			## plus rien ne l ecrit.
 			"unlocked_legendaries": [],
-			"campaign": {"current_node": "lvl_01", "unlocked_levels": ["lvl_01"]},
+			"campaign": {"current_node": String(FIRST_LEVEL),
+				"unlocked_levels": [String(FIRST_LEVEL)]},
 			"levels": {},
 			"massacre_deck": [],
 			## Decks nommes et index du courant. La liste part VIDE a dessein :
@@ -197,8 +206,33 @@ func set_setting(key: String, value: Variant) -> void:
 	profile_changed.emit()
 
 
-# --- Cartes ---
+# --- LE LIVRE DE SORTS : quelles cartes sont OBTENUES (retouche du 01/10) ---
+#
+# Le co-auteur : "niveau 1 : les cartes de notre deck sont directement dans le
+# livre de sorts, mais on peut obtenir quelques autres cartes en montant de
+# niveau". Une carte est OBTENUE si, et seulement si :
+#   (a) elle est dans le deck de campagne (LevelDef.exploration_deck) d un
+#       niveau OUVERT ;
+#   (b) le joueur l a PRISE en combat (RunState.pick_offer). Une carte BRULEE
+#       ne compte pas (voir PROGRESSION DES CARTES plus bas) ;
+#   (c) le profil l avait deja : on ne retire JAMAIS rien a un profil existant.
+# Un profil neuf a donc EXACTEMENT le deck de FIRST_LEVEL.
+#
+# (a) est DEDUIT a chaque lecture, jamais ecrit. Ainsi un profil neuf, un profil
+# remis a zero, un profil de test charge a la main, un niveau qui s ouvre et un
+# deck retouche par le contenu sont justes d eux-memes, sans migration ni appel
+# a ne pas oublier apres reset_profile(). (b) et (c) vivent dans
+# "discovered_cards", la seule liste ecrite.
+#
+# copies_in_starter ne donne plus rien. Les 7 communes "de depart" etaient
+# obtenues d office au chargement du contenu : l Etincelle, carte NOUVELLE du
+# niveau 1, etait deja dans le livre, la Nappe montante y etait alors qu aucun
+# niveau ouvert ne la contient, et a l inverse le Mur de pierre, dans le deck du
+# niveau 1, restait "a obtenir" tant que la premiere partie n etait pas lancee
+# (seul le lancement du deck l ecrivait). Les profils qui les ont gardent tout,
+# par (c) : rien n est retire.
 
+## (b) : une carte PRISE en combat. Seule ecriture du livre.
 func discover_card(card_id: StringName) -> void:
 	var found: Array = profile().get("discovered_cards", [])
 	if not found.has(String(card_id)):
@@ -207,16 +241,75 @@ func discover_card(card_id: StringName) -> void:
 		profile_changed.emit()
 
 
+## La carte est-elle dans le livre ? (a), (b) ou (c) ci-dessus. TOUT le jeu lit
+## l obtention ici (grimoire, ecran de deck, pool hors campagne, passifs
+## equipes, compteurs) : la regle n est ecrite qu a un seul endroit.
 func is_discovered(card_id: StringName) -> bool:
 	if tester_mode():
 		return ContentDB.cards.has(card_id)
-	return profile().get("discovered_cards", []).has(String(card_id))
+	if profile().get("discovered_cards", []).has(String(card_id)):
+		return true
+	return _open_decks_hold(card_id)
 
 
+## Nombre d ids du livre, decks des niveaux ouverts compris. Un id perime de la
+## liste ecrite compte encore : c est un compte BRUT, que les ecrans ne lisent
+## plus (ils passent par card_counts, qui ne compte que le contenu reel).
 func discovered_count() -> int:
 	if tester_mode():
 		return ContentDB.cards.size()
-	return profile().get("discovered_cards", []).size()
+	var ids: Dictionary = {}
+	for id in profile().get("discovered_cards", []):
+		ids[String(id)] = true
+	for id2: StringName in cards_owned_by_decks(unlocked_levels()):
+		ids[String(id2)] = true
+	return ids.size()
+
+
+## (a) : la carte est-elle dans le deck de campagne d un niveau OUVERT ?
+## Parcours direct plutot que cards_owned_by_decks() : is_discovered est appele
+## pour chaque vignette du grimoire, inutile de trier une liste a chaque fois.
+func _open_decks_hold(card_id: StringName) -> bool:
+	for id in unlocked_levels():
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv == null:
+			continue
+		for c: SpellCard in lv.exploration_deck:
+			if c != null and c.id == card_id:
+				return true
+	return false
+
+
+## QUELLES CARTES SONT GARANTIES OBTENUES QUAND LES NIVEAUX `level_ids` SONT
+## OUVERTS ? Les ids des cartes de leurs decks de campagne, sans doublon, tries
+## par id (regle (a) du livre de sorts).
+##
+## PURE : ne lit que le contenu (ContentDB), JAMAIS le profil. Ni les cartes
+## prises, ni le mode testeur, ni les niveaux reellement ouverts n y entrent :
+## c est la reponse du contenu seul. Les ids inconnus sont ignores ; String et
+## StringName sont acceptes.
+##
+## Elle sert au contenu a verifier qu une carte NOUVELLE ou la recompense d un
+## objectif est VRAIMENT nouvelle : pour un niveau X, elle ne doit pas figurer
+## dans cards_owned_by_decks(<niveaux deja ouverts quand on joue X>), sinon le
+## joueur la decouvre... deja dans son livre. Exemple : pour lvl_02, ouvert
+## apres lvl_01, appeler cards_owned_by_decks([&"lvl_01", &"lvl_02"]).
+static func cards_owned_by_decks(level_ids: Array) -> Array[StringName]:
+	var vus: Dictionary = {}
+	for id in level_ids:
+		var lv: LevelDef = ContentDB.levels.get(StringName(id))
+		if lv == null:
+			continue
+		for c: SpellCard in lv.exploration_deck:
+			if c != null:
+				vus[String(c.id)] = true
+	# Tri sur String : le tri de StringName n est pas fiable en 4.4 (gotchas).
+	var noms: Array = vus.keys()
+	noms.sort_custom(func(a: Variant, b: Variant) -> bool: return String(a) < String(b))
+	var out: Array[StringName] = []
+	for n in noms:
+		out.append(StringName(n))
+	return out
 
 
 ## Les legendaires OBTENUES (ids en String). Ce n est plus une liste a part :
@@ -504,7 +597,7 @@ func unlock_level(level_id: StringName) -> void:
 
 
 func current_level() -> StringName:
-	return StringName(profile().get("campaign", {}).get("current_node", "lvl_01"))
+	return StringName(profile().get("campaign", {}).get("current_node", String(FIRST_LEVEL)))
 
 
 func set_current_level(level_id: StringName) -> void:
@@ -677,14 +770,14 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 # --- PROGRESSION DES CARTES (vague 5, chantier P) -----------------------------
 #
 # TROIS ETATS POUR UNE CARTE, lus par le grimoire ET l ecran de deck :
-#   OBTENUE    : dans discovered_cards. Lisible, utilisable au deck. On l obtient
-#                en la PRENANT en combat (RunState.pick_offer), en jouant le deck
-#                d un niveau (build_deck_from_list), en equipant un passif, et les
-#                communes de depart le sont d office.
+#   OBTENUE    : dans le livre (is_discovered, voir LE LIVRE DE SORTS plus
+#                haut) : deck d un niveau ouvert, carte PRISE en combat, ou deja
+#                au profil. Lisible, utilisable au deck.
 #   OBTENABLE  : pas obtenue, mais dans le pool de montee de niveau d un niveau
-#                OUVERT (son deck, ses cartes nouvelles, les cartes des objectifs
-#                deja reussis, et les passifs si l acte les admet). Lisible mais
-#                grisee : le joueur sait ce qu il peut aller chercher, et ou.
+#                OUVERT (ses cartes nouvelles, les cartes des objectifs deja
+#                reussis, et les passifs si l acte les admet ; son deck, lui, est
+#                deja obtenu). Lisible mais grisee : le joueur sait ce qu il peut
+#                aller chercher, et ou.
 #   INVISIBLE  : ni l un ni l autre. Plus de silhouette "???" : une carte qu on
 #                ne peut pas encore obtenir n a rien a dire au joueur.
 #
@@ -774,21 +867,6 @@ func levels_offering(card_id: StringName) -> Array[LevelDef]:
 				break
 	out.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
 		return String(a.id) < String(b.id))
-	return out
-
-
-## Les niveaux OUVERTS qui DONNENT cette carte a qui les joue : elle est dans
-## leur deck, et jouer le deck d un niveau obtient ses cartes
-## (RunState.build_deck_from_list). Sous-ensemble de levels_offering() : c est ce
-## qui permet de dire au joueur "joue tel niveau" plutot que "prends-la a la
-## montee de niveau" pour une carte qu aucune montee n a besoin de proposer.
-func levels_dealing(card_id: StringName) -> Array[LevelDef]:
-	var out: Array[LevelDef] = []
-	for lv: LevelDef in levels_offering(card_id):
-		for c: SpellCard in lv.exploration_deck:
-			if c != null and c.id == card_id:
-				out.append(lv)
-				break
 	return out
 
 

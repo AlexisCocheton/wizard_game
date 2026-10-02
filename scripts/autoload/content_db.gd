@@ -29,16 +29,12 @@ func reload() -> void:
 	rewards.clear()
 	duplicate_ids.clear()
 	_scan_dir("res://resources")
-	discover_starters()
+	# Plus de "communes de depart" ecrites dans le profil (discover_starters a
+	# ete SUPPRIMEE, le 01/10) : le livre d un profil neuf est le deck du premier
+	# niveau, et SaveData le DEDUIT des niveaux ouverts (LE LIVRE DE SORTS). La
+	# fonction est retiree plutot que videe : un appelant oublie casse a la
+	# compilation au lieu de croire qu il donne encore des cartes.
 	content_loaded.emit()
-
-
-## Les communes de depart sont connues d office : sans ca la galerie et le deck
-## seraient vides a la premiere ouverture.
-func discover_starters() -> void:
-	for c: SpellCard in cards.values():
-		if c.copies_in_starter > 0:
-			SaveData.discover_card(c.id)
 
 
 func _scan_dir(path: String) -> void:
@@ -93,14 +89,6 @@ func cards_of_rarity(rarity: GameEnums.Rarity) -> Array[SpellCard]:
 	var out: Array[SpellCard] = []
 	for c: SpellCard in cards.values():
 		if c.rarity == rarity:
-			out.append(c)
-	return out
-
-
-func starter_cards() -> Array[SpellCard]:
-	var out: Array[SpellCard] = []
-	for c: SpellCard in cards.values():
-		if c.copies_in_starter > 0:
 			out.append(c)
 	return out
 
