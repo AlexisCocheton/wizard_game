@@ -837,13 +837,15 @@ func apply_reverse(duration: float, tags: Array = []) -> void:
 ## les allies a l objet qu il a pose.
 func spawn_ally(duration: float, damage: float, at: Vector2 = Vector2.INF) -> void:
 	# Devant le mage, decale au hasard : deux allies ne se superposent pas.
+	# Hasard du MONDE de la partie (fixe par la graine), pas le hasard global.
+	var r: RandomNumberGenerator = RunState.world_rng
 	var pos := Vector2(
-		clampf(GameConfig.BATTLEFIELD_WIDTH * 0.5 + randf_range(-220.0, 220.0),
+		clampf(GameConfig.BATTLEFIELD_WIDTH * 0.5 + r.randf_range(-220.0, 220.0),
 			120.0, GameConfig.BATTLEFIELD_WIDTH - 120.0),
 		GameConfig.MAGE_LINE_Y - 190.0)
 	if at != Vector2.INF:
-		pos = Vector2(clampf(at.x + randf_range(-70.0, 70.0), 60.0,
-			GameConfig.BATTLEFIELD_WIDTH - 60.0), at.y + randf_range(20.0, 70.0))
+		pos = Vector2(clampf(at.x + r.randf_range(-70.0, 70.0), 60.0,
+			GameConfig.BATTLEFIELD_WIDTH - 60.0), at.y + r.randf_range(20.0, 70.0))
 	var node: Node = Fx.sprite(self, "magicbubbles", pos, 130.0, true,
 		Color(Fx.COL_SUMMON.r, Fx.COL_SUMMON.g, Fx.COL_SUMMON.b, 0.95))
 	allies.append({"time": duration, "damage": damage, "cooldown": 0.5,
@@ -1526,11 +1528,10 @@ func spawn_river(y: float, duration: float = 0.0, sheet: String = "",
 	for cx in nav.cols:
 		ordre.append(cx)
 	# Melange de Fisher-Yates avec le generateur fourni : un test peut ainsi
-	# rejouer des centaines de tirages sans dependre du hasard global.
-	var r: RandomNumberGenerator = rng
-	if r == null:
-		r = RandomNumberGenerator.new()
-		r.randomize()
+	# rejouer des centaines de tirages sans dependre du hasard global. Sans
+	# generateur (le sort en jeu), le hasard du MONDE de la partie : la graine
+	# fixe aussi le pont.
+	var r: RandomNumberGenerator = rng if rng != null else RunState.world_rng
 	for i in range(ordre.size() - 1, 0, -1):
 		var j: int = r.randi_range(0, i)
 		var t: int = ordre[i]

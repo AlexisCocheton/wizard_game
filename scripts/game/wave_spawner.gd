@@ -130,11 +130,13 @@ static func build_membership() -> Dictionary:
 	return out
 
 
+## Sans graine explicite (la partie reelle, le banc), la graine vient du hasard
+## du MONDE de la partie (RunState.world_seed) et non plus de randomize() :
+## RunState.set_seed() fixe alors aussi les couloirs, les cotes d apparition et
+## la composition des vagues infinies. Le jeu reel ne seme jamais RunState,
+## donc ses vagues restent tirees au hasard comme avant.
 func _seed(rng_seed: int) -> void:
-	if rng_seed != 0:
-		_rng.seed = rng_seed
-	else:
-		_rng.randomize()
+	_rng.seed = rng_seed if rng_seed != 0 else RunState.world_seed()
 
 
 func start_next() -> bool:
