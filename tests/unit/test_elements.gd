@@ -582,7 +582,6 @@ func _test_la_carte_porte_son_logo() -> void:
 ## neuf les grisees viennent apres les obtenues, donc pas en page 1.
 func _test_l_ecran_de_deck_porte_le_sceau() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var panel := DeckPanel.new()
 	attach(panel)
 	panel.refresh()
@@ -626,7 +625,6 @@ func _test_l_ecran_de_deck_porte_le_sceau() -> void:
 	ok(grisees > 0, "un profil neuf montre des cartes a obtenir dans l ecran de deck")
 	detach(panel)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _contient(lignes: Array[String], morceau: String) -> bool:

@@ -27,7 +27,6 @@ func get_suite_name() -> String:
 
 func run() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	_test_un_ecran_par_acte()
 	_test_les_fleches_changent_d_acte()
 	_test_un_acte_verrouille_reste_visible()
@@ -49,7 +48,6 @@ func run() -> void:
 	_test_aucune_cible_ne_chevauche_une_autre()
 	_test_l_etoile_vide_se_lit_sur_chaque_fond()
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 func _map() -> CampaignMap:
@@ -268,7 +266,6 @@ func _test_l_ouverture_se_cale_sur_l_acte_en_cours() -> void:
 ## la carte est une couche de navigation par-dessus, pas un remplacement.
 func _test_le_panneau_bascule_carte_detail() -> void:
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 	var p := CampaignPanel.new()
 	attach(p)
 	p.refresh()
@@ -288,7 +285,6 @@ func _test_le_panneau_bascule_carte_detail() -> void:
 	ok(p.showing_map(), "le retour ramene a la carte")
 	detach(p)
 	SaveData.reset_profile()
-	ContentDB.discover_starters()
 
 
 ## Le nom d un acte affiche a l ecran doit etre celui de `docs/histoire.md`.

@@ -52,36 +52,25 @@ static func counter(counts: Array, word: String) -> String:
 	return "%d / %d %s" % [int(counts[0]), int(counts[1]), word]
 
 
-## OU OBTENIR une carte grisee. Deux chemins, dits differemment parce que le
-## geste n est pas le meme :
-##   - elle est dans le DECK d un niveau ouvert : il suffit de JOUER ce niveau
-##     (jouer un deck obtient ses cartes) ;
-##   - sinon elle est dans son pool de montee de niveau (cartes nouvelles,
-##     cartes d objectifs reussis) : il faut la PRENDRE a une montee.
-## L ancienne phrase disait "prends-la a la montee de niveau" pour les deux, et
-## envoyait le joueur guetter une offre pour une carte que le niveau lui donne.
+## OU OBTENIR une carte grisee : la montee de niveau des niveaux ouverts qui la
+## proposent (cartes nouvelles, cartes d objectifs reussis).
+##
+## Il y avait un second chemin, "joue tel niveau, elle est dans son deck" : il
+## n existe plus depuis la regle du livre de sorts (SaveData, 01/10). Une carte
+## du deck d un niveau ouvert est deja OBTENUE, elle n est donc jamais grisee ;
+## seule la montee de niveau reste a dire.
 static func where_to_obtain(card: SpellCard) -> String:
 	if card == null:
 		return ""
 	if card.is_passive:
 		return "A OBTENIR : prends-le a une montee de niveau, en campagne, des l acte %d" \
 			% LevelDef.PASSIVES_FROM_ACT
-	var jouer: Array[String] = []
 	var prendre: Array[String] = []
-	var donnent: Array[LevelDef] = SaveData.levels_dealing(card.id)
 	for lv: LevelDef in SaveData.levels_offering(card.id):
-		if donnent.has(lv):
-			jouer.append(lv.display_name)
-		else:
-			prendre.append(lv.display_name)
-	var morceaux: Array[String] = []
-	if not jouer.is_empty():
-		morceaux.append("joue %s, elle est dans son deck" % ", ".join(jouer))
-	if not prendre.is_empty():
-		morceaux.append("prends-la a la montee de niveau de %s" % ", ".join(prendre))
-	if morceaux.is_empty():
+		prendre.append(lv.display_name)
+	if prendre.is_empty():
 		return "A OBTENIR en combat"
-	return "A OBTENIR : " + " ; ou ".join(morceaux)
+	return "A OBTENIR : prends-la a la montee de niveau de %s" % ", ".join(prendre)
 
 
 ## OU RENCONTRER un monstre grise : les niveaux ouverts ou il descend.
