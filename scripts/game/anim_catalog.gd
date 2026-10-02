@@ -309,4 +309,9 @@ static func frames(key: StringName) -> SpriteFrames:
 
 
 static func modulate_for(enemy_id: StringName) -> Color:
+	# OUTILS DU TESTEUR (vague 8) : une teinte reglee depuis l atelier prime, en
+	# mode testeur seulement (TesterOverrides rend null sinon).
+	var reglee: Variant = TesterOverrides.tint_override(enemy_id)
+	if reglee != null:
+		return reglee
 	return MODULATE.get(String(enemy_id), Color.WHITE)

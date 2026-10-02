@@ -128,3 +128,129 @@ seconde » sur les cartes, soit on revoit les chiffres.
 - **Il n'écrit aucune donnée de jeu.**
 - **Il n'est pas dans le harnais.** C'est un outil de jugement, comme
   `tools/ui_preview.gd`.
+
+---
+
+# L'atelier du testeur (vague 8)
+
+> « Dans les paramètres, au niveau du menu testeur, créer une option où je peux
+> avoir accès à tous les sorts, tous les monstres et tout le contenu des niveaux
+> […] Créer un onglet TEST […] Créer la possibilité de télécharger un document
+> de changement que je pourrai te transmettre. »
+
+**Où :** Réglages → activer le mode testeur → bouton **ATELIER : cartes,
+monstres, vagues**. C'est une page à part (`scenes/tester/TesterTools.tscn`),
+cinq onglets :
+
+| Onglet | Ce qu'on y fait |
+|---|---|
+| SORTS / MONSTRES / NIVEAUX | liste avec recherche, puis la **fiche** : chaque champ exporté de la Resource, réglable (boutons − / + ou saisie au clavier numérique). Un champ réglé affiche sa valeur d'origine et un bouton **ORIGINE**. Aperçu du monstre ou de l'icône. |
+| TEST | composer une vague (monstres et nombres, difficulté), choisir les cartes de la partie (deck de départ, deck d'un niveau, ou carte par carte), la vitesse de départ, le fond, une graine ; **JOUER LA VAGUE** lance une vraie partie, et la fin ramène à l'atelier avec le bilan. |
+| DOC | la liste des réglages, **EXPORTER** (fichier dans `user://changements/`), **COPIER** (presse-papiers, à coller dans un message depuis le téléphone), **IMPORTER** (depuis le presse-papiers), **RÉINITIALISER**. |
+
+## Comment ça marche
+
+- Un **réglage** (une « surcharge ») = `{cible, champ, valeur}`, gardé dans
+  `user://tester_overrides.json`. Il est rejoué par `TesterOverrides` juste après
+  le chargement de `ContentDB` (une seule accroche, `content_db.gd`) en
+  modifiant les Resources **sur place** : elles sont partagées, toute la partie
+  voit la valeur sans autre branchement.
+- **Seulement en mode testeur.** Éteindre le mode rend le jeu d'origine
+  **immédiatement, sans redémarrer** (`sync()` est branché sur
+  `SaveData.profile_changed`). Les réglages restent en réserve et reviennent en
+  rallumant. Une remise à zéro du profil éteint le mode, donc pareil.
+- **Une saisie invalide est écartée et signalée**, jamais appliquée à moitié :
+  hors bornes, mauvais type, id inconnu, champ non éditable (`id`, textures,
+  `is_passive`, `check_key`, `immune_tags` déprécié). Bornes : `@export_range`
+  d'abord, puis la table `TesterOverrides.BOUNDS` (garde-fous contre la faute
+  de frappe, pas des règles d'équilibrage).
+- Les **résistances** affichées et réglées sont les valeurs **jouées** (déjà
+  passées par `EnemyDef.accentuate`). L'outil ci-dessous retraduit en valeur de
+  table.
+- La **teinte du sprite** n'est pas un champ d'`EnemyDef` : c'est
+  `AnimCatalog.MODULATE`. Le champ virtuel `tint` écrit dans une table que
+  `AnimCatalog.modulate_for()` consulte d'abord.
+- Les **vagues de campagne** sont embarquées dans les `LevelDef`
+  (`resources/waves/` n'est lu par aucun code de jeu) : un réglage porte sur une
+  vague **entière** (`waves/<i>`) ou sur leur nombre (`waves/#`). Ajouter une vague
+  copie la dernière sans le drapeau de boss ; retirer la vague *k* fait descendre
+  les suivantes d'un cran.
+- La **vague de test** est un `LevelDef` fabriqué (`TesterRun.make_level`, comme
+  `MassacreMode.level_def()`), jamais dans `ContentDB` : ni campagne, ni écran de
+  victoire, ni récompense. Son hasard passe par `RunState.world_rng` comme toute
+  partie ; une graine non nulle rejoue la même vague. Abandonner depuis la pause
+  ramène au menu (le HUD n'est pas touché).
+
+## Document de changement
+
+Le même JSON sert d'export, d'import et de fichier de sauvegarde. Format
+(version 1) :
+
+```json
+{
+  "format": "time_wizard_changements",
+  "version": 1,
+  "jeu": {"nom": "Wizard Story", "version": "", "commit": "edb0ebc421b0 (main)"},
+  "date": "2026-10-02T17:46:08",
+  "mode_testeur": true,
+  "resume": "3 changements : 1 sort, 1 monstre, 1 niveau",
+  "changements": [
+    {"cible": "enemy:gnome", "nom": "Gnome", "champ": "max_hp", "libelle": "PV",
+     "avant": 12.0, "apres": 30.0, "texte": "Monstre Gnome : PV 12 -> 30"},
+    {"cible": "card:frost_field", "nom": "Champ de givre",
+     "champ": "effects/0/radius", "libelle": "effet 1 : rayon",
+     "avant": 180.0, "apres": 240.0, "texte": "..."},
+    {"cible": "level:lvl_01", "nom": "Les Marches du Temps", "champ": "waves/0",
+     "libelle": "vague 1",
+     "avant": {"id": "w1", "duration": 26.0, "difficulty": 1.0, "is_miniboss": false,
+               "is_boss": false, "entries": [{"enemy": "gnome", "count": 5,
+               "spawn_delay": 2.2, "start_offset": 0.0}]},
+     "apres": {"...": "meme forme"}, "texte": "..."}
+  ],
+  "ignores": [{"cible": "...", "champ": "...", "apres": "...", "raison": "..."}]
+}
+```
+
+- `cible` : `card:<id>`, `enemy:<id>`, `level:<id>`, `objective:<id>`.
+- `champ` : nom de propriété (`max_hp`), clé de dictionnaire
+  (`resistances/feu`, `params/pct`), brique d'effet (`effects/0/magnitude`,
+  `effects/0/params/slow_pct`), vague (`waves/2`, `waves/#`), teinte (`tint`).
+- valeurs : nombres, booléens, textes ; enum par son nom (`"Rare"`), couleur
+  `"#rrggbbaa"`, références par id, listes de listes d'ids (un deck répète ses
+  exemplaires).
+- `commit` vaut `inconnu` sur le téléphone : c'est `avant` qui permet de voir
+  qu'un contenu a bougé depuis l'export.
+- À l'import, seuls `cible`, `champ`, `apres` comptent ; `avant` et `texte`
+  sont recalculés.
+
+### Chez nous : `tools/apply_changes.py`
+
+```bash
+python tools/apply_changes.py changements.json             # rapport + diff affiché
+python tools/apply_changes.py changements.json --patch x.diff   # puis git apply x.diff
+python tools/apply_changes.py changements.json --ecrire    # modifie les générateurs
+Godot --headless --path . tools/make_content.tscn          # régénère les .tres
+bash tools/run_tests.sh
+```
+
+Pour chaque changement, le rapport dit **où** (fichier:ligne dans
+`tools/make_content.gd`, `tools/make_passives.gd` ou
+`scripts/game/anim_catalog.gd`) et un statut :
+
+| Statut | Sens |
+|---|---|
+| DIFF | modification mécanique proposée dans le diff (argument d'`_enemy`/`_card`/`_spec`, ligne `var.champ = …` remplacée ou ajoutée, table `_resist`, entrées `_entry(...)` d'une vague, `_deck([...])`, pool, teinte) |
+| DÉJÀ FAIT | le code porte déjà la valeur « après » |
+| À VÉRIFIER | le code ne porte pas la valeur « avant » : le contenu a bougé depuis l'export, ou la valeur est calculée. Rien n'est proposé. |
+| À LA MAIN | pas mécanique : nombre de vagues, table `_progression_de` (objectifs, cartes nouvelles, récompenses), paramètres d'un objectif **partagé** (son id se déduit des paramètres, DEC-023), passifs |
+
+Points d'attention que le rapport signale lui-même :
+
+- **Résistances** : la valeur jouée est retraduite en valeur de table
+  (inverse d'`accentuate`) ; quand l'arrondi au centième empêche d'atteindre
+  exactement la valeur demandée, il dit laquelle sera jouée.
+- **Rareté d'une carte** : l'enum change, mais le `_save()` écrit toujours dans
+  l'ancien dossier `resources/cards/<rareté>/`.
+- Le diff n'est **jamais** appliqué sans `--patch`/`--ecrire`, et l'outil ne
+  lance jamais Godot : relire, régénérer, passer le harnais, et mesurer au banc
+  ce qui touche l'équilibrage.

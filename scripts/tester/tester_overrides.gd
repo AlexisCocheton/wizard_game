@@ -1,6 +1,6 @@
 class_name TesterOverrides
 extends RefCounted
-## LES SURCHARGES DU TESTEUR — reglages du contenu faits depuis le telephone.
+## LES SURCHARGES DU TESTEUR - reglages du contenu faits depuis le telephone.
 ##
 ## Demande du co-auteur (vague 8) : "modifier les visuels, les statistiques, les
 ## resistances et toutes les valeurs de zone, duree, etc. pour ajuster les cartes
@@ -132,7 +132,19 @@ const LABELS: Dictionary = {
 	"exploration_deck": "deck du niveau", "levelup_cards": "cartes nouvelles",
 	"objectives": "objectifs", "objective_rewards": "cartes des objectifs",
 	"enemy_pool": "monstres du mode infini", "next_levels": "niveaux suivants",
+	"tint": "teinte du sprite",
 }
+
+## LA TEINTE D UN MONSTRE n est pas un champ d EnemyDef : le sprite est teinte
+## par AnimCatalog.MODULATE (table par id, scripts/game/anim_catalog.gd), et
+## `EnemyDef.color` ne colore que la forme de secours. Le champ virtuel "tint"
+## ecrit donc dans cette table-ci, que AnimCatalog.modulate_for() consulte en
+## premier. Un objet porteur plutot qu un dictionnaire nu : le retour arriere
+## passe par le meme `obj.set(prop, ancien)` que tout le reste.
+class TintTable extends RefCounted:
+	var table: Dictionary = {}
+
+static var _tints: TintTable = TintTable.new()
 
 static var _entries: Array = []          # [{target, field, value}]
 static var _undo: Array = []             # [[Object, String, Variant]] dans l ordre
@@ -141,9 +153,11 @@ static var _rejected: Array = []         # [{target, field, value, reason}]
 static var _active: bool = false
 static var _loaded: bool = false
 static var _plists: Dictionary = {}      # chemin de script -> Array de proprietes
-## Faux en test : rien n est ecrit dans user://. Recopie SaveData.persistence_enabled
-## au premier chargement (aucune persistance en headless, DEC-008).
-static var persist: bool = true
+## PERSISTANCE : on lit SaveData.persistence_enabled A CHAQUE ecriture, jamais une
+## copie prise au demarrage. Verifie : l etage `visual` tourne en fenetre (donc
+## persistance ALLUMEE quand ContentDB charge) puis le pilote l eteint ; une
+## copie figee au chargement avait ecrit les reglages de vitrine du SMOKE dans
+## le vrai user://tester_overrides.json du poste.
 
 
 ## --- CYCLE DE VIE --------------------------------------------------------
@@ -154,7 +168,6 @@ static var persist: bool = true
 static func after_content_load() -> void:
 	if not _loaded:
 		_loaded = true
-		persist = SaveData.persistence_enabled
 		_load_store()
 	if not SaveData.profile_changed.is_connected(TesterOverrides.sync):
 		SaveData.profile_changed.connect(TesterOverrides.sync)
@@ -170,6 +183,13 @@ static func sync() -> void:
 
 static func is_active() -> bool:
 	return _active
+
+
+## Teinte reglee pour ce monstre, ou null. Lue par AnimCatalog.modulate_for().
+static func tint_override(enemy_id: StringName) -> Variant:
+	if not _active:
+		return null
+	return _tints.table.get(String(enemy_id))
 
 
 static func _wanted_active() -> bool:
@@ -256,7 +276,7 @@ static func _index_of(target: String, field: String) -> int:
 	return -1
 
 
-## Pose (ou remplace) une surcharge. Rend "" si elle tient, la raison sinon —
+## Pose (ou remplace) une surcharge. Rend "" si elle tient, la raison sinon -
 ## et dans ce cas l etat d avant est rendu tel quel. Une valeur egale a
 ## l origine RETIRE la surcharge : "revenir a l origine" a la main ou par le
 ## bouton donne le meme resultat, et le document ne porte pas de faux changement.
@@ -390,11 +410,18 @@ static func exported_properties(obj: Object) -> Array:
 	if _plists.has(cle):
 		return _plists[cle]
 	var out: Array = []
+	var vu_variable: bool = false
 	for p: Dictionary in obj.get_property_list():
 		var usage: int = int(p["usage"])
+		# Les groupes du MOTEUR ("Resource") precedent les variables du script :
+		# on ne retient que ceux poses par @export_group, donc apres la premiere
+		# variable. Sinon PV et vitesse tombaient dans un groupe "Resource" plie.
 		if usage & PROPERTY_USAGE_GROUP:
-			out.append({"group": String(p["name"])})
+			if vu_variable:
+				out.append({"group": String(p["name"])})
 			continue
+		if usage & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			vu_variable = true
 		if (usage & PROPERTY_USAGE_SCRIPT_VARIABLE) and (usage & PROPERTY_USAGE_STORAGE):
 			out.append(p)
 	_plists[cle] = out
@@ -415,6 +442,11 @@ static func _prop(obj: Object, name: String) -> Dictionary:
 ##           enum_list name_list dict_value wave wave_count
 ##   sub     cle du dictionnaire (dict_value) ou indice (wave)
 static func resolve_field(res: Resource, field: String) -> Dictionary:
+	if field == "tint":
+		if not (res is EnemyDef):
+			return {}
+		return {"holder": _tints, "prop": "table", "kind": "tint",
+			"sub": String((res as EnemyDef).id)}
 	var segs: PackedStringArray = field.split("/")
 	var holder: Object = res
 	var i: int = 0
@@ -618,6 +650,10 @@ static func _read(f: Dictionary) -> Variant:
 			return ch[v] if v >= 0 and v < ch.size() else v
 		"color":
 			return "#" + (raw as Color).to_html(true)
+		"tint":
+			var c: Color = (raw as Dictionary).get(f["sub"],
+				AnimCatalog.MODULATE.get(f["sub"], Color.WHITE))
+			return "#" + c.to_html(true)
 		"ref":
 			return _id_of(raw)
 		"ref_list":
@@ -671,7 +707,7 @@ static func _write(f: Dictionary, value: Variant, undo: bool = true) -> String:
 	var old: Variant = holder.get(prop)
 	var neuf: Variant = dec[1]
 	match String(f["kind"]):
-		"dict_value":
+		"dict_value", "tint":
 			var d: Dictionary = (old as Dictionary).duplicate()
 			d[f["sub"]] = neuf
 			neuf = d
@@ -746,7 +782,7 @@ static func decode(f: Dictionary, v: Variant) -> Array:
 			if typeof(v) == TYPE_STRING and noms.has(v):
 				return ["", noms.find(v)]
 			return ["valeur inconnue : %s" % str(v), null]
-		"color":
+		"color", "tint":
 			if typeof(v) != TYPE_STRING or not Color.html_is_valid(String(v)):
 				return ["couleur #rrggbbaa attendue", null]
 			return ["", Color.html(String(v))]
@@ -900,7 +936,7 @@ static func _apply_entry(e: Dictionary) -> String:
 	var f: Dictionary = resolve_field(res, field)
 	if f.is_empty():
 		# Une vague AU-DELA de l origine n existe qu apres son "waves/#" : sans
-		# lui, l indice est hors limites — c est bien une surcharge invalide.
+		# lui, l indice est hors limites - c est bien une surcharge invalide.
 		return "champ inconnu ou non modifiable : %s" % field
 	var k: String = target + "|" + field
 	if not _originals.has(k):
@@ -947,7 +983,7 @@ static func _fmt(x: Variant) -> String:
 ## --- FICHIER ----------------------------------------------------------------
 
 static func _load_store() -> void:
-	if not persist or not FileAccess.file_exists(STORE_PATH):
+	if not SaveData.persistence_enabled or not FileAccess.file_exists(STORE_PATH):
 		return
 	var text: String = FileAccess.get_file_as_string(STORE_PATH)
 	var lu: Dictionary = TesterDocument.parse(text)
@@ -958,7 +994,7 @@ static func _load_store() -> void:
 
 
 static func _save_store() -> void:
-	if not persist:
+	if not SaveData.persistence_enabled:
 		return
 	var fa := FileAccess.open(STORE_PATH, FileAccess.WRITE)
 	if fa == null:

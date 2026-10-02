@@ -1,6 +1,6 @@
 class_name TesterDocument
 extends RefCounted
-## LE DOCUMENT DE CHANGEMENT — ce que le co-auteur nous transmet.
+## LE DOCUMENT DE CHANGEMENT - ce que le co-auteur nous transmet.
 ##
 ## "Creer la possibilite de telecharger un document de changement que je pourrai
 ## te transmettre pour que tu modifies le jeu en consequence."

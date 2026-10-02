@@ -180,6 +180,8 @@ func _run_all() -> void:
 	await _check_end_screens()
 	await _check_cosmetics_in_battle()
 	await _check_massacre_deck()
+	# OUTILS DU TESTEUR (vague 8) : l atelier, ses fiches et le document.
+	await TesterSmoke.run(self)
 
 	# 4) La defaite doit aussi fonctionner.
 	_check_defeat_path()

@@ -135,6 +135,13 @@ static func is_test_payload(payload: Dictionary) -> bool:
 ## remet la jauge a neuf (meme piege que `running`, voir la memoire du projet).
 static func start_in(game: GameController, payload: Dictionary) -> void:
 	var comp: Dictionary = payload.get(PAYLOAD_KEY, {})
+	# LE HASARD DE LA VAGUE passe par RunState.world_rng, comme toute partie :
+	# start_level() seme le WaveSpawner sur RunState.world_seed(). Une graine
+	# donnee dans la composition rejoue donc la MEME vague (couloirs, esquives),
+	# ce qui permet de comparer deux reglages a hasard egal. 0 = au hasard.
+	var graine: int = int(comp.get("seed", 0))
+	if graine != 0:
+		RunState.set_seed(graine)
 	game.start_level(make_level(comp), GameEnums.Mode.EXPLORATION)
 	apply_speed(comp)
 
@@ -158,9 +165,9 @@ static func end_run(level: LevelDef, won: bool) -> bool:
 static func result_of(won: bool) -> Dictionary:
 	return {
 		"won": won,
-		"seconds": RunState.elapsed_time if "elapsed_time" in RunState else 0.0,
+		"seconds": RunState.run_time,
 		"speed": SpeedGauge.speed_percent,
-		"kills": RunState.kills if "kills" in RunState else 0,
+		"kills": RunState.kill_times.size(),
 	}
 
 
@@ -170,5 +177,6 @@ static func result_text() -> String:
 	var t: String = "Derniere partie : %s" % ("VICTOIRE" if last_result["won"] else "DEFAITE")
 	if float(last_result.get("seconds", 0.0)) > 0.0:
 		t += " en %d s" % int(last_result["seconds"])
+	t += ", %d morts" % int(last_result.get("kills", 0))
 	t += ", vitesse finale %d %%" % int(last_result.get("speed", 0))
 	return t
