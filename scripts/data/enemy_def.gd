@@ -89,8 +89,8 @@ extends Resource
 ## A la mort, engendre `split_count` exemplaires de `split_into` (recursif).
 @export var split_into: EnemyDef
 @export var split_count: int = 0
-## Encaisse le premier coup sans degat (halo visible tant qu il tient). Un degat
-## continu (zone, poison) ne le brise pas et bute dessus (vague 9).
+## Encaisse le premier coup sans degat (halo visible tant qu il tient). Une zone
+## ou un poison le brisent aussi, une seule fois : ce n est pas un compteur.
 @export var first_hit_shield: bool = false
 ## Soigne tous les autres monstres de N PV par seconde tant qu il est en vie.
 @export var heal_per_second: float = 0.0

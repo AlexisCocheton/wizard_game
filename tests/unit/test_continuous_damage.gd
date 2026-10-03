@@ -72,7 +72,7 @@ func _zone_sous(bf: Battlefield, e: Enemy, dps: float) -> void:
 func run() -> void:
 	_test_la_zone_n_use_pas_le_compteur_de_coups()
 	_test_le_poison_n_use_pas_le_compteur_de_coups()
-	_test_la_zone_ne_brise_pas_le_bouclier()
+	_test_la_zone_brise_le_bouclier_une_fois()
 	_test_la_zone_ne_declenche_pas_la_riposte_laser()
 	_test_les_coups_montres_ne_suivent_pas_les_images()
 	_test_la_morsure_de_givre_ne_suit_pas_les_images()
@@ -113,17 +113,24 @@ func _test_le_poison_n_use_pas_le_compteur_de_coups() -> void:
 	detach(bf)
 
 
-func _test_la_zone_ne_brise_pas_le_bouclier() -> void:
+## Le bouclier du PREMIER coup n est pas un compteur : il tombe a la premiere
+## morsure, zone comprise (il absorbe une seule image), et la zone mord ensuite.
+## Le bloquer derriere ce bouclier rendait les zones nulles contre le Chevalier
+## du vide et le Squelette pareur (banc : lvl_21 30 -> 19 / 30).
+func _test_la_zone_brise_le_bouclier_une_fois() -> void:
 	var bf := _fresh()
 	var d := _def("t_cont_bouclier")
 	d.first_hit_shield = true
 	var e: Enemy = bf.spawn_enemy(d, 540.0, 1.0, Vector2(540, 600))
 	ok(e.has_shield(), "il entre bouclier leve")
-	_zone_sous(bf, e, 50.0)
-	_avancer(bf, 1.0)
-	ok(e.has_shield(), "une zone ne brise pas le bouclier du premier coup")
-	bf.damage_enemy(e, 1.0, _card(&"damage_single", 1.0, GameEnums.DamageTag.ARCANE))
-	not_ok(e.has_shield(), "un coup le brise")
+	var debit: float = 50.0
+	_zone_sous(bf, e, debit)
+	var duree: float = 1.0
+	_avancer(bf, duree)
+	not_ok(e.has_shield(), "la zone brise le bouclier du premier coup")
+	var perdu: float = d.max_hp - e.hp
+	between(perdu / (debit * duree), 0.9, 1.0,
+		"puis mord : seule la premiere image est absorbee (%.1f PV)" % perdu)
 	detach(bf)
 
 

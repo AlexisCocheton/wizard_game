@@ -68,9 +68,9 @@ const ENRAGE_HIT_INTERVAL: float = 0.5
 ## Deux sortes de degats arrivent par Battlefield._hit() :
 ##   - le COUP : un evenement discret (projectile, impact, chaine, eclair, tir
 ##     d allie, explosion de Combustion). Il compte pour tout ce qui se compte
-##     en coups : le compteur « immunise aux N premiers coups », le bouclier du
-##     premier coup, l esquive (un tirage), la riposte des monstres a laser, le
-##     renvoi au mage, l eclair blanc et le son de coup, la Morsure de givre ;
+##     en coups : le compteur « immunise aux N premiers coups », l esquive (un
+##     tirage), la riposte des monstres a laser, le renvoi au mage, l eclair
+##     blanc et le son de coup, la Morsure de givre ;
 ##   - le DEGAT CONTINU (`continu = true`) : une zone au sol ou un poison, qui
 ##     mord un peu a CHAQUE IMAGE. Il n est PAS un coup. Compte comme un coup, il
 ##     dependait de la frequence d images : un dard depouillait un Mage des
@@ -79,8 +79,14 @@ const ENRAGE_HIT_INTERVAL: float = 0.5
 ## Le degat continu suit donc les regles des DEGATS (resistances, faiblesses,
 ## vulnerabilite, passifs, parties d un boss morcele, phase de l Ombre) mais
 ## jamais celles des COUPS :
-##   - un compteur de coups ou un bouclier encore leve l ARRETE sans s user : le
-##     monstre est protege tant qu un vrai coup ne l a pas depouille ;
+##   - un compteur de coups encore plein l ARRETE sans s user : le monstre est
+##     protege tant que de vrais coups ne l ont pas depouille ;
+##   - le bouclier du PREMIER coup, lui, tombe a la premiere morsure, quelle
+##     qu elle soit (il absorbe cette image-la). Ce n est pas un compteur : il ne
+##     depend pas des images, et le banc l a tranche. Bloquer aussi le degat
+##     continu derriere ce bouclier faisait d une zone un sort nul contre le
+##     Chevalier du vide et le Squelette pareur : lvl_21 30 -> 19, lvl_20
+##     26 -> 18 victoires sur 30 ;
 ##   - il ne s esquive pas par tirage : il est reduit de la part esquivee (meme
 ##     moyenne, sans dependre du nombre d images) ;
 ##   - il ne declenche pas de riposte ;
@@ -697,9 +703,8 @@ func take_damage(amount: float, tags: Array, continu: bool = false) -> bool:
 		return false
 
 	if _shield_up:
-		# Meme regle : seul un COUP brise le bouclier du premier coup.
-		if continu:
-			return false
+		# Coup OU degat continu : le bouclier du premier coup ne sert qu une fois,
+		# il tombe a la premiere morsure (voir CONTINUOUS_FEEDBACK_INTERVAL).
 		_shield_up = false
 		if _body != null:
 			_body.set_shield(false)
