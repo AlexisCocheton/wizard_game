@@ -5979,7 +5979,19 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	var p4 := WaveDef.new()
 	p4.id = &"w13_4"
 	p4.duration = 31.0
-	p4.difficulty = 1.45
+	# 1,45 -> 1,25 (incantations plus longues, GameConfig.CAST_TIME_SCALE) : a
+	# 1,45 cette vague pesait 879 PV joues apres les 385 de w13_3, un saut x2,28,
+	# et c etait la vague de TOUTES les defaites du niveau (26 sur 26 au banc).
+	# Le pentacle est limite par la PIOCHE, pas par l incantation : le mage a la
+	# main vide quasiment chaque fois qu il n incante pas (Trait et Etincelle
+	# partent vite), donc rallonger les sorts ne changeait presque rien
+	# (34/60 a x1,8 comme a x2,25) et la vague demandait plus de cartes que la
+	# pioche n en donne en 31 s. A 1,25 elle vaut 758 PV, x1,97 : sous la regle
+	# du saut x2, verrouillee pour ce niveau dans test_balance. Banc (60 parties) :
+	# 34 -> 43 victoires a x1,8, 29 -> 37 a x1,9 (le reglage retenu). Essai rejete :
+	# retirer le Totem ancien (mini-boss, 175 PV) de la vague ne changeait rien
+	# (34/60) — ce sont les Berserkers et les echos de Kaltek qui touchent, pas lui.
+	p4.difficulty = 1.25
 	# LE MELANGE DES QUATRE, litteralement : le document (section 6) decrit ce
 	# niveau comme « melange des quatre », et cette vague est l endroit ou les
 	# seigneurs reviennent. Ymoa et Kaltek descendent ensemble, l aura de l un

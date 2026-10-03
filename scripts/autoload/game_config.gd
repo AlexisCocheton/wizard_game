@@ -107,11 +107,31 @@ const DRAW_INTERVAL: float = 6.5
 ##
 ## Applique dans `RunState.effective_cast_time()`, le point de passage UNIQUE.
 ##
-## 1,5 -> 2,25 (vague 8, co-auteur : « augmente SIGNIFICATIVEMENT le temps de
-## lancement de tous les sorts, quitte a le diminuer un peu plus tard ») : une
-## fois et demie l ancien reglage, soit 2,25 fois les temps ecrits sur les
-## cartes. Chiffres du banc avant/apres dans le rapport du chantier.
-const CAST_TIME_SCALE: float = 2.25
+## 1,5 -> 1,9 (vague 8, co-auteur : « augmente SIGNIFICATIVEMENT le temps de
+## lancement de tous les sorts, quitte a le diminuer un peu plus tard ») : +27 %
+## sur l ancien reglage. Un premier essai a 2,25 cassait la campagne.
+##
+## LE BANC QUI LE JUSTIFIE (tools/sim_balance, 60 parties par niveau, 21 niveaux,
+## banc deterministe ; victoires sur 1260, puis les niveaux les plus bas) :
+##   1,5  : 1192  lvl_13 42, lvl_05 41, lvl_11 49
+##   1,8  : 1146  lvl_13 43, lvl_18 37, lvl_11 39   (avec le correctif de w13_4)
+##   1,9  : 1135  lvl_13 37, lvl_18 37, lvl_11 38   <- retenu
+##   1,95 : 1115  lvl_11 36, lvl_13 37, lvl_20 38   (lvl_20 perd 9 parties)
+##   2,0  : 1106  lvl_13 31, lvl_11 33, lvl_18 34   (sans le correctif de w13_4)
+##   2,25 :  987  lvl_18 15, lvl_20 19, lvl_11 22, lvl_13 34, lvl_14 35
+## Repere : 36 victoires sur 60 (60 %) pour TOUT niveau. A 1,9 les trois plus bas
+## sont a une partie du repere ; 1,95 y pose lvl_11 pile et la courbe plonge
+## entre 1,9 et 2,0. Le bot du banc joue mieux qu un doigt : on garde la marge.
+## Le pentacle (lvl_13) ne suit pas ce chiffre : il est limite par la pioche,
+## sa correction est dans w13_4 (tools/make_content.gd).
+##
+## CONSEQUENCE ASSUMEE : le mage incante plus de 60 % du temps sur 19 niveaux
+## sur 21 (77 a 97 % ; deja 62 a 86 % a 1,5). C est ce que la demande rallonge.
+##
+## POUR LE CHANGER : ce seul chiffre, puis le banc complet sur les 21 niveaux
+## (README_equilibrage : plusieurs processus en parallele, --parties=60), en
+## surveillant d abord lvl_11, lvl_18, lvl_20 et lvl_13, les premiers a tomber.
+const CAST_TIME_SCALE: float = 1.9
 
 const DRAW_COUNT: int = 2
 ## 6 et non 8 : a 8 cartes chacune tombait sous 130 px de large et le nom se

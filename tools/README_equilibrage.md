@@ -211,3 +211,44 @@ Ce que disent ces chiffres :
 Les garde-fous sont dans `tests/unit/test_balance.gd` : ils verrouillent les
 rapports (pas de saut superieur a x2 entre deux vagues, enchainement des niveaux,
 pioche suffisante). Le banc reste la mesure de verite.
+
+## Vague 8 : l incantation nettement plus longue (`GameConfig.CAST_TIME_SCALE`)
+
+Demande du co-auteur : « augmente significativement le temps de lancement de
+tous les sorts ». Le premier essai, x2,25, faisait tomber cinq niveaux sous
+60 %. Banc complet (21 niveaux x 60 parties, deterministe) pour chaque valeur :
+
+| `CAST_TIME_SCALE` | victoires / 1260 | niveaux les plus bas (sur 60) |
+|---|---|---|
+| 1,5 (avant) | 1192 | lvl_05 41, lvl_13 42, lvl_11 49 |
+| 1,8 | 1146 | lvl_18 37, lvl_11 39, lvl_13 43 |
+| **1,9 (retenu)** | **1135** | lvl_13 37, lvl_18 37, lvl_11 38 |
+| 1,95 | 1115 | lvl_11 36, lvl_13 37, lvl_20 38 |
+| 2,0 | 1106 | lvl_13 31, lvl_11 33, lvl_18 34 |
+| 2,25 | 987 | lvl_18 15, lvl_20 19, lvl_11 22, lvl_13 34, lvl_14 35 |
+
+1,8 a 1,95 sont comptes AVEC la correction de w13_4 ci-dessous, 2,0 et 2,25
+sans. 1,95 passe encore le repere, mais pile (lvl_11 36 / 60) et lvl_20 y perd
+neuf parties : la courbe plonge entre 1,9 et 2,0, et le bot joue mieux qu un
+doigt.
+
+- **Le pentacle (lvl_13) ne dependait pas de l incantation** : 34 / 60 a x1,8
+  comme a x2,25. Toutes ses defaites tombaient dans w13_4, qui sautait x2,28 sur
+  la vague precedente, et le mage y avait la MAIN VIDE presque chaque fois qu il
+  n incantait pas : le niveau est limite par la pioche. Difficulte de w13_4
+  1,45 -> 1,25 (x1,97) : 34 -> 43 a x1,8, 29 -> 37 a x1,9. Retirer le Totem
+  ancien de la vague a la place ne changeait rien (34 / 60). Verrouille par
+  `test_balance` (regle du saut x2 etendue a lvl_13).
+- **Temps passe a incanter** : au-dessus du repere de 60 % sur 19 niveaux sur
+  21 a x1,9 (77 a 97 %), et deja sur 19 a x1,5 (62 a 86 %). C est la demande
+  elle-meme ; le repere est a revoir avec le co-auteur, pas a corriger ici.
+- **Massacre** (20 parties, banc lance seul apres ouverture des 21 niveaux,
+  `--niveaux=lvl_16 --parties=0 --massacre=20`) : vague 12,1 a x1,9 contre 7,8
+  a x2,25, mesures de la meme facon.
+
+Incident de mesure : douze bancs lances ensemble se sont figes apres leur
+premier niveau, processus vivants et CPU quasi nul, pendant deux heures. Cause
+non etablie ; le suspect est un `tail -F` qui suivait leurs sorties. Relances
+sans lui, ils ont fini en quinze minutes, avec des resultats identiques (banc
+deterministe). Pour suivre un banc : compter les lignes de temps en temps, ne
+pas garder ses sorties ouvertes.
