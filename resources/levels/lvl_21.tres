@@ -31,22 +31,22 @@
 
 [sub_resource type="Resource" id="Resource_sw1il"]
 script = ExtResource("21_6gits")
-id = &"obj_kill_type_with_card_arcane_bolt_3_fire_worm"
-description = "Ver de feu : en tuer 3 avec Trait arcanique"
-check_key = &"kill_type_with_card"
-params = {
-"card": "arcane_bolt",
-"count": 3,
-"enemy": "fire_worm"
-}
-
-[sub_resource type="Resource" id="Resource_ia684"]
-script = ExtResource("21_6gits")
 id = &"obj_no_card_tag_fire"
 description = "Gagner sans sort de feu"
 check_key = &"no_card_tag"
 params = {
 "tag": "FIRE"
+}
+
+[sub_resource type="Resource" id="Resource_ia684"]
+script = ExtResource("21_6gits")
+id = &"obj_kill_type_with_card_arcane_bolt_5_fire_worm"
+description = "Ver de feu : en tuer 5 avec Trait arcanique"
+check_key = &"kill_type_with_card"
+params = {
+"card": "arcane_bolt",
+"count": 5,
+"enemy": "fire_worm"
 }
 
 [sub_resource type="Resource" id="Resource_jxcgh"]

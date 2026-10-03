@@ -105,7 +105,9 @@ func _enemy(id: String, dname: String, kind: GameEnums.EnemyKind, power: int,
 ## l immunite y aurait annule une carte du deck de depart et deplace huit niveaux
 ## mesures pour un seul exemple. Vharn ferme lvl_07, dont le deck porte la
 ## Spirale de sel (une attraction de vent : l exemple exact) et la Rupture de
-## chaine ; son Echo descend dans lvl_16 (Fleche percante au deck) et lvl_13.
+## chaine ; son Echo descend dans lvl_13 et lvl_16, ou le joueur porte au
+## moins les Fleches percantes gagnees en route (hors campagne) et la regle se
+## lit au bestiaire. test_eight_elements exige qu un niveau montre l exemple.
 ## test_elements lit cette liste : une autre exception rougit.
 const ANCRES_AU_SOL: Array[String] = ["demon_anvil", "demon_anvil_echo"]
 const WIND_FLYER_MIN: float = 1.2
@@ -2212,7 +2214,7 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
-		"Inflige 26 degats d ARCANE a une cible.", GameEnums.Rarity.COMMON, 1.1,
+		"Inflige 26 degats ARCANIQUES a une cible.", GameEnums.Rarity.COMMON, 1.1,
 		GameEnums.Targeting.TARGET, [],
 		[_spec("damage_single", 26.0)], 4)
 	bolt.fx_key = &"orb_burst"
@@ -2498,7 +2500,7 @@ func _cards() -> void:
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
 
 	var resonance := _card("resonance", "Resonance",
-		"6 degats d ARCANE par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
+		"6 degats ARCANIQUES par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
 		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [],
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
 	resonance.fx_key = &"pulse_ring"
@@ -4020,18 +4022,23 @@ func _acte_3(C: String, E: String) -> void:
 	#
 	# DISSIPATION (chantier W9) : un Gardien-totem descend dans w5_5 et son aura
 	# rend la vague intouchable ; le deck n avait plus de reponse depuis que la
-	# Lumiere purifiante en etait sortie (regle des 6). Elle y revient a la place
-	# du Meteore (un exemplaire) : la Lumiere et le Vide d emprise sont deja au
-	# livre a ce stade (decks de lvl_19, lvl_06, lvl_20), seul le deck les met
-	# dans le pool de montee d un niveau de campagne. La Rupture de chaine reste :
-	# c est la carte que ce niveau fait decouvrir.
+	# Lumiere purifiante en etait sortie (regle des 6). La Lumiere et le Vide
+	# d emprise sont deja au livre a ce stade (decks de lvl_19, lvl_06, lvl_20) :
+	# seul le deck les met dans le pool de montee d un niveau de campagne. La
+	# Rupture de chaine reste : c est la carte que ce niveau fait decouvrir. Il
+	# fallait donc sortir un autre id (regle des 6). Banc, 60 parties : deck
+	# d avant 44 victoires ; Lumiere a la place du Meteore 39 ; Lumiere a la
+	# place des deux Pluies de givre, Meteore monte a 2 : 52. La Pluie sort :
+	# hors le Colosse, tout ici resiste au givre ou l ignore (lenteur nulle), et
+	# le Meteore est le paquet de degats que la combo du niveau veut.
+	# Paragraphe ci-dessus : « la Pluie reste pour ses degats » ne vaut plus.
 	lvl5.exploration_deck = _deck([
 		[C + "rare/purifying_light.tres", 1],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "rare/chain_break.tres", 1],
-		[C + "common/frost_rain.tres", 2],
+		[C + "rare/meteor.tres", 2],
 	])
 	_poser_progression(lvl5)
 	# CHANTIER N2 — la fourche retombe dans `lvl_21`, LE PENTACLE, qui ferme
@@ -6821,15 +6828,14 @@ courir pour voir jusqu ou tu irais."
 	# DISSIPATION (chantier W9) : l Echo d Ymoa descend dans w16_3 et son aura
 	# couvre les echos de Kaltek et de Vharn qui marchent avec lui ; le deck
 	# n avait aucune carte pour la couper. Le Vide d emprise (x2) prend la place
-	# des Boules de feu : l Enfant ne craint que l arcane, et le Vide en est. La
-	# Fleche percante reste et monte a 3 : elle traverse les rangs d echos, et
-	# l Echo de Vharn, immunise au vent (ANCRES_AU_SOL), est la qu on apprend
-	# qu elle ne l entame pas. Le Vide est deja au livre : seul le deck le met
-	# dans le pool de montee.
+	# des Fleches percantes. Banc (60 parties) : deck d avant 54 victoires ; Vide
+	# a la place des Boules de feu (Fleche montee a 3) 20 ; a la place des
+	# Fleches 51. Le Vide est deja au livre : seul le deck le met dans le pool de
+	# montee.
 	lvl16.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
+		[C + "common/fireball.tres", 3],
 		[C + "epic/void_grip.tres", 2],
-		[C + "common/piercing_arrow.tres", 3],
 		[C + "legendary/time_rift.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 		[C + "legendary/world_loom.tres", 1],
@@ -7247,10 +7253,14 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# arcanique, puis gagner sans aucun sort de feu, la bonne lecture du niveau.
 			# Le combat court passe de 118 a 90 s apres la vague 8 : 118 s se tenait 53
 			# fois sur 60, plus que les deux autres ; 90 s : 13.
+			# Chantier W9 (Lumiere purifiante au deck a la place de la Concentration) :
+			# trois Vers au Trait (57 / 60) et « sans feu » (58) se rejoignaient. « Sans
+			# feu » passe au rang 1 et les Vers au rang 2, a cinq au lieu de trois :
+			# un ecart d une partie ne classe rien.
 			# Nouvelles : Etincelle, Epuration, Flux de mana.
 			return {"nouvelles": ["spark", "deck_purge", "mana_flow"], "objectifs": [
-				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 3}), "cycle_of_thought"],
-				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "bastion"],
+				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "cycle_of_thought"],
+				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 5}), "bastion"],
 				[_objectif(&"win_under_time", {"seconds": 90}), "twin_channeling"],
 			]}
 		&"lvl_07":
@@ -7271,6 +7281,15 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# colonne, et la Volte-face du deck les fait remonter. A 0,8 longueur avant
 			# la vague 8 : 48 parties sur 60, plus facile que « sans degats » (38) ;
 			# 1,2 : 38 ; 1,4 : 18 ; 1,5 : 9.
+			# « Tres grande distance » (chantier W9, audit) : 1,5 longueur reste le
+			# plafond FAISABLE ici. Remesure sur 60 parties : 1,7 longueur 0 / 60,
+			# 2,0 longueurs 0 / 60 — un objectif jamais reussi est refuse. La raison
+			# tient au niveau : deux Cacodemons seulement, en fin de niveau (w10_4),
+			# qui descendent en diagonale d un bord a l autre ; meme retenus par la
+			# Volte-face du deck, aucun n a couvert 1,7 longueur avant de tomber ou
+			# de toucher le mage sur 120 parties. Le vrai defi
+			# de distance est celui de lvl_17 (dix longueurs a un Serpent, qui
+			# ondule sur place dans le givre).
 			# Nouvelles : Bastion (un mur permanent allonge le chemin), Metier du monde,
 			# Flux de mana. Legendaire : la Riviere, qui fait marcher.
 			return {"nouvelles": ["bastion", "world_loom", "mana_flow"], "objectifs": [
@@ -7345,10 +7364,14 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Bastion, Echo de la main, Clef de l Appel.
 			# Rangs re-mesures apres la vague 8 : 58 sorts d arcane (40 / 60) passent
 			# devant l Enfant acheve en 9 s apres son releve (28).
+			# Chantier W9, deck refait (Vide d emprise x2 a la place des Fleches) :
+			# le bot qui joue l arcane d abord gaspille ses lancers en Vide et perd
+			# plus souvent (58 sorts d arcane : 21 / 60) ; l Enfant en 9 s ne bouge pas
+			# (28). Rangs echanges, ids gardes.
 			return {"nouvelles": ["bastion", "echo_of_the_hand", "summoners_key"], "objectifs": [
 				[_objectif(&"no_hit_from", {"enemy": "demon_chain_echo"}), "cycle_of_thought"],
-				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "deck_purge"],
-				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "venom_mire"],
+				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "deck_purge"],
+				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "venom_mire"],
 			]}
 	printerr("Niveau %s absent de la table de progression" % level_id)
 	return {}
