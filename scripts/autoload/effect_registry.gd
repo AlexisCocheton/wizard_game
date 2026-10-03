@@ -29,7 +29,6 @@ func register_defaults() -> void:
 		EffectHandlers.DamagePerEnemy.new(),
 		EffectHandlers.ReverseEnemies.new(),
 		EffectHandlers.EmpowerNext.new(),
-		EffectHandlers.DiscardHandForSpeed.new(),
 		EffectHandlers.Knockback.new(),
 		EffectHandlers.VortexPull.new(),
 		EffectHandlers.DispelZone.new(),

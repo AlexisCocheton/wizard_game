@@ -1058,8 +1058,18 @@ func _refresh_parts_visual() -> void:
 ## centre ils seraient caches par sa silhouette et le joueur ne comprendrait pas
 ## d ou ils sortent.
 func _do_summon() -> void:
-	_summoned = _summoned.filter(func(s: Enemy) -> bool:
-		return s != null and is_instance_valid(s) and not s.is_dead())
+	# Parametre NON type, et is_instance_valid AVANT tout : un sbire tue est
+	# libere a la fin de l image (queue_free). Un lambda `func(s: Enemy)` refuse
+	# alors l objet libere (« Cannot convert argument 1 from Object to Object »),
+	# le filtre echoue, `_do_summon` s arrete sur une SCRIPT ERROR et le boss
+	# n invoque PLUS JAMAIS. Invisible au banc et aux tests, qui enchainent les
+	# images sans laisser le moteur liberer quoi que ce soit (voir
+	# GameController.flush_freed) ; en jeu, des la premiere mort d un sbire.
+	# Un sbire arrive au CONTACT du mage quitte le terrain sans mourir : il ne
+	# compte plus non plus, qu il soit deja libere ou pas encore.
+	_summoned = _summoned.filter(func(s: Variant) -> bool:
+		return is_instance_valid(s) and not (s as Enemy).is_dead() \
+			and (battlefield == null or battlefield.enemies.has(s)))
 	var place: int = definition.summon_max_alive - _summoned.size()
 	if place <= 0:
 		return

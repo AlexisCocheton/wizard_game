@@ -56,6 +56,9 @@ const GRAINE_BASE: int = 1000
 const GRAINE_PAS: int = 37
 ## Une empreinte de la partie toutes les N images (voir play_game).
 const EMPREINTE_TOUTES: int = 30
+## GARDE-FOU MEMOIRE (celui du banc d equilibrage) : au-dela, la partie est
+## ARRETEE, comptee perdue et signalee, plutot que d emporter le processus.
+const PLAFOND_OBJETS: int = SimBalance.PLAFOND_OBJETS
 
 
 ## Une partie complete, jouee par le bot avec la politique `p` (null : bot du
@@ -64,8 +67,19 @@ const EMPREINTE_TOUTES: int = 30
 ##   reussis    {id d objectif -> bool} pour chaque objectif du niveau, juge a
 ##              la victoire (tous faux sur une defaite)
 ##   temps, vague, vitesse, empreinte
+##   liberes    noeuds liberes en cours de partie (voir plus bas)
+##   en_attente noeuds encore en attente de liberation a la fin (toujours 0)
+##   objets_pic objets moteur en plus du depart, au plus haut de la partie
+##   alerte     "" ou la raison d un arret par le garde-fou memoire
 ## `max_seconds` : garde-fou anti-blocage ; une partie qui l atteint est perdue.
 ## Statique : le test de determinisme joue exactement cette boucle.
+##
+## LIBERATION A CHAQUE IMAGE (GameController.flush_freed) : toute la partie se
+## joue dans UNE image moteur, le moteur ne libere donc jamais ce qui est
+## `queue_free`. Sans cela, la main du HUD recreee a chaque carte jouee
+## s accumulait jusqu a la fin : sur une partie figee jusqu a MAX_SECONDS (lvl_21,
+## graine 2110, objectif sans feu), 17 000 cartes de main et le plantage
+## « Element limit reached ». Verrouille par tests/unit/test_objective_bench.gd.
 static func play_game(g: GameController, p: AutoPick.Politique,
 		max_seconds: float = MAX_SECONDS) -> Dictionary:
 	var vus: Dictionary = {}
@@ -74,6 +88,10 @@ static func play_game(g: GameController, p: AutoPick.Politique,
 	var fini: bool = false
 	var trace: PackedStringArray = []
 	var orientee: AutoPick.Politique = p if p != null and not p.neutre() else null
+	var objets_depart: int = int(Performance.get_monitor(Performance.OBJECT_COUNT))
+	var objets_pic: int = 0
+	var liberes: int = 0
+	var alerte: String = ""
 	while t < max_seconds:
 		t += FIXED_DELTA
 		image += 1
@@ -90,12 +108,21 @@ static func play_game(g: GameController, p: AutoPick.Politique,
 				vus.values(), orientee))
 		if image % EMPREINTE_TOUTES == 0:
 			trace.append(_instant(g))
+		# Fin de l image : ce que le moteur liberait, on le libere.
+		liberes += g.flush_freed()
+		var objets: int = int(Performance.get_monitor(Performance.OBJECT_COUNT)) - objets_depart
+		objets_pic = maxi(objets_pic, objets)
+		if objets > PLAFOND_OBJETS:
+			alerte = "%d objets de plus qu au depart a %.1f s (plafond %d) : partie arretee" % [
+				objets, t, PLAFOND_OBJETS]
+			push_warning("BANC DES OBJECTIFS : " + alerte)
+			break
 		if SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0:
 			break
 		if g.spawner.is_finished():
 			fini = true
 			break
-	var gagne: bool = fini and not (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0)
+	var gagne: bool = fini and alerte == "" 		and not (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0)
 	var reussis: Dictionary = {}
 	if g.level_def != null:
 		for o: ObjectiveDef in g.level_def.objectives:
@@ -106,6 +133,8 @@ static func play_game(g: GameController, p: AutoPick.Politique,
 		"gagne": gagne, "reussis": reussis, "temps": t,
 		"vague": RunState.wave_index, "vitesse": SpeedGauge.speed_percent,
 		"empreinte": "|".join(trace).md5_text(),
+		"liberes": liberes, "en_attente": GameController.count_queued_below(g),
+		"objets_pic": objets_pic, "alerte": alerte,
 	}
 
 
@@ -242,9 +271,13 @@ func _mesurer_niveau(lv: LevelDef) -> void:
 				if bool(r["reussis"].get(id, false)):
 					reussites[id] = int(reussites.get(id, 0)) + 1
 			if _detail:
-				print("    [%s] partie %d graine %d : %s en %.1f s, vague %d, vitesse %d %%, objectifs %s, empreinte %s"
+				print("    [%s] partie %d graine %d : %s en %.1f s, vague %d, vitesse %d %%, objectifs %s, objets +%d, empreinte %s"
 					% [nom, i, graine_de(_decalage, i), "victoire" if r["gagne"] else "defaite",
-						r["temps"], r["vague"], r["vitesse"], _bits(lv, r["reussis"]), r["empreinte"]])
+						r["temps"], r["vague"], r["vitesse"], _bits(lv, r["reussis"]),
+						r["objets_pic"], r["empreinte"]])
+			if String(r["alerte"]) != "":
+				print("    ALERTE MEMOIRE [%s] partie %d graine %d : %s"
+					% [nom, i, graine_de(_decalage, i), r["alerte"]])
 		for id in gr["ids"]:
 			victoires[id] = gagnees
 	# Le rapport, dans l ordre du niveau, avec le rang MESURE (1 = le plus facile).

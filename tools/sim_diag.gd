@@ -208,6 +208,8 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 
 		if RunState.pending_offer.size() > 0:
 			RunState.pick_offer(0)
+		# Fin de l image : ce que le moteur liberait (GameController.flush_freed).
+		g.flush_freed()
 		if (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0) or g.spawner.is_finished():
 			break
 		if stop_after_wave > 0 and wave_reached >= stop_after_wave:

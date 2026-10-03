@@ -24,7 +24,7 @@ temporelle, Sablier fendu.
 Clés : `damage_single`, `pierce_line`, `ground_zone` (`slow_pct`, `vuln_mult`),
 `damage_per_enemy`, `slow_enemy_gauge`, `reverse_enemies`, `empower_next`, `self_haste`,
 `cost_reduction`, `summon_ally`, `discard_draw`, `haste_enemies_boon`, `remove_cards`,
-`build_wall`, `discard_hand_for_speed`. **Composer ces clés couvre presque toutes les idées.**
+`build_wall`. **Composer ces clés couvre presque toutes les idées.**
 
 ### Monstres (21) — hiérarchie de puissance P1..P4, boss hors budget
 

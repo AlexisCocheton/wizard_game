@@ -56,11 +56,12 @@ const PARTIES_DU_BANC: int = 60
 ## tools/make_content.gd (_progression_de, le pourquoi de chaque reglage y est
 ## ecrit a cote du niveau).
 ##
-## lvl_21, obj_no_card_tag_fire : le banc PLANTE a la partie 30 (graine 2110,
-## « Element limit reached », memoire epuisee) quand le bot ne joue aucun sort
-## de feu. Defaut du jeu ou du banc, hors de ce reglage. Le chiffre est celui
-## des parties 0 a 29 (28) et 31 a 59 (27, --graine=31 --parties=29), la partie
-## 30 comptee ratee : 55 (56 si elle etait reussie, le classement tient).
+## lvl_21, obj_no_card_tag_fire : le banc PLANTAIT a la partie 30 (graine 2110,
+## « Element limit reached ») : il ne liberait jamais ce qui etait queue_free
+## pendant une partie, et celle-ci durait jusqu a la limite de 900 s. Corrige
+## (GameController.flush_freed a chaque image du banc) ; les 60 parties
+## re-jouees d une traite rendent 57 / 55 / 13, la partie 30 etant une defaite :
+## la ligne ne change pas.
 const MESURES: Dictionary = {
 	"lvl_01": [["obj_card_casts_piercing_arrow_9", 54], ["obj_no_card_fireball", 49], ["obj_win_above_speed_250", 19]],
 	"lvl_02": [["obj_win_above_speed_300", 43], ["obj_boss_quick_after_revive_8", 35], ["obj_kill_type_one_cast_4_hopper", 6]],

@@ -123,7 +123,7 @@ const TYPE_TERRAIN_KEYS: Array[StringName] = [
 ]
 const TYPE_GRIMOIRE_KEYS: Array[StringName] = [
 	&"draw_cards", &"discard_draw", &"retain_next", &"remove_cards", &"double_cast",
-	&"draw_boost", &"discard_hand_for_speed", &"cost_reduction", &"empower_next",
+	&"draw_boost", &"cost_reduction", &"empower_next",
 	&"self_haste",
 ]
 

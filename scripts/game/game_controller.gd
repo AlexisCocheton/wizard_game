@@ -185,6 +185,54 @@ func _process(delta: float) -> void:
 	simulate(delta)
 
 
+## LIBERE TOUT DE SUITE les noeuds de la partie en attente de liberation
+## (queue_free), comme le moteur le fait a la fin de CHAQUE image. Rend le
+## nombre de noeuds liberes (sous-arbres comptes par leur racine).
+##
+## POURQUOI : en jeu, `_process` appelle simulate() une fois par image moteur, et
+## tout ce qui a ete `queue_free` dans l image disparait a sa fin. Un banc ou une
+## sonde qui enchaine les images de simulation DANS UNE SEULE image moteur ne
+## laisse jamais le moteur liberer quoi que ce soit : la main du HUD, recreee a
+## chaque `hand_changed`, les monstres morts, les tirs s accumulent jusqu a la fin
+## de la partie. Une partie figee jusqu a la limite de 900 s du banc (lvl_21, le
+## Sceau de Tombol que le bot ne pouvait plus blesser) a ainsi entasse 17 000
+## cartes de main, 400 000 objets, puis « Element limit reached » et le plantage.
+## Liberer comme le moteur rend aussi la partie simulee FIDELE au jeu : un objet
+## tenu par une reference apres sa mort y est un objet libere (voir
+## Enemy._do_summon, qui plantait en jeu et jamais au banc).
+##
+## A appeler ENTRE deux images simulees, jamais depuis un signal ou un rappel de
+## la partie : on ne libere pas un noeud au milieu de son propre traitement.
+func flush_freed() -> int:
+	return GameController.free_queued_below(self)
+
+
+## Libere les noeuds en attente de liberation sous `racine` (elle exclue). Un
+## noeud libere emporte ses enfants : on ne descend que dans les vivants.
+static func free_queued_below(racine: Node) -> int:
+	var n: int = 0
+	for c: Node in racine.get_children():
+		if c.is_queued_for_deletion():
+			c.free()
+			n += 1
+		else:
+			n += GameController.free_queued_below(c)
+	return n
+
+
+## Nombre de noeuds en attente de liberation sous `racine` (elle exclue) : ce
+## qu un flush_freed() ferait disparaitre. Zero apres chaque image simulee par
+## les bancs.
+static func count_queued_below(racine: Node) -> int:
+	var n: int = 0
+	for c: Node in racine.get_children():
+		if c.is_queued_for_deletion():
+			n += 1
+		else:
+			n += GameController.count_queued_below(c)
+	return n
+
+
 ## Extrait pour que le smoke test puisse piloter la partie avec un delta fixe.
 ## En pause pendant un choix de carte : rien n avance tant que le joueur n a pas choisi.
 func simulate(delta: float) -> void:

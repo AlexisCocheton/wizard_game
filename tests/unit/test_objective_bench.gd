@@ -48,6 +48,8 @@ func run() -> void:
 	_test_laisser_marcher_puis_viser()
 	_test_zones_sur_l_espece()
 	_test_politique_neutre_egale_le_bot_du_banc()
+	_test_la_main_reconstruite_est_liberee()
+	_test_la_partie_qui_plantait_ne_garde_rien()
 	_nettoyer()
 
 
@@ -429,3 +431,124 @@ func _test_politique_neutre_egale_le_bot_du_banc() -> void:
 	var a: Enemy = g.battlefield.spawn_enemy(_def("a"), 300.0, 1.0, Vector2(300.0, 900.0))
 	g.battlefield.spawn_enemy(_def("b"), 700.0, 1.0, Vector2(700.0, 500.0))
 	eq(AutoPick.choose_target(g, p), a, "meme cible")
+
+
+# --- 5. La memoire d une partie simulee ------------------------------------------
+#
+# LE PLANTAGE DU BANC : lvl_21, objectif sans sort de feu, partie 30 (graine
+# 2110). Le bot avait exile par Epuration toutes ses communes, c est-a-dire tous
+# ses degats qui ne sont pas du feu ; le Sceau de Tombol, immobile, restait a
+# quelques PV et la partie allait jusqu a la limite de 900 s, a x5, en jouant
+# sans fin ses cartes sans degats. Toute la partie se jouait dans UNE image
+# moteur : la main du HUD, recreee a chaque carte jouee (queue_free des
+# anciennes), n etait jamais liberee. 17 000 cartes de main, 400 000 objets,
+# « Element limit reached », signal 11.
+#
+# La regle verrouillee : apres chaque image simulee par le banc, plus rien
+# n attend d etre libere (GameController.flush_freed), comme dans le jeu ou le
+# moteur libere a la fin de chaque image.
+
+
+## Cartes de main VIVANTES (pas en attente de liberation) sous `n`.
+func _cartes_de_main(n: Node) -> int:
+	var total: int = 0
+	for c: Node in n.get_children():
+		if c.is_queued_for_deletion():
+			continue
+		if c is CardView:
+			total += 1
+		total += _cartes_de_main(c)
+	return total
+
+
+## Toutes les cartes affichees sous `n`, en attente de liberation comprises :
+## ce qui occupe la memoire.
+func _cartes_en_memoire(n: Node) -> int:
+	var total: int = 0
+	for c: Node in n.get_children():
+		if c is CardView:
+			total += 1
+		total += _cartes_en_memoire(c)
+	return total
+
+
+## Le mecanisme seul : chaque `hand_changed` recree la main du HUD. Sans
+## liberation, les cartes s empilent ; apres flush_freed, il n en reste que
+## celles de la main affichee.
+func _test_la_main_reconstruite_est_liberee() -> void:
+	seed(1)
+	if _g != null:
+		detach(_g)
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	_g = packed.instantiate()
+	_g.headless_mode = true
+	attach(_g)
+	_g.set_process(false)
+	_g.set_physics_process(false)
+	RunState.set_seed(_banc_graine())
+	_g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
+	for c in _deux_sorts():
+		RunState.hand.append(c)
+	RunState.hand_changed.emit()
+	_g.flush_freed()
+	var affichees: int = _cartes_de_main(_g)
+	ok(affichees > 0, "la main est affichee par le HUD")
+	# Autant de reconstructions que de cartes affichees, plus une : de quoi voir
+	# l empilement sans dependre d une valeur de reglage.
+	var tours: int = affichees + 1
+	for i in tours:
+		RunState.hand_changed.emit()
+	ok(_cartes_en_memoire(_g) > affichees * tours,
+		"le test mord : sans liberation, les mains reconstruites s empilent")
+	ok(_g.flush_freed() > 0, "flush_freed libere les cartes remplacees")
+	eq(_cartes_en_memoire(_g), affichees, "apres liberation, seules les cartes affichees restent")
+	eq(GameController.count_queued_below(_g), 0, "plus rien n attend d etre libere")
+	detach(_g)
+	_g = null
+	RunState.reset()
+
+
+func _banc_graine() -> int:
+	var banc: GDScript = load(BANC_PATH)
+	return banc.graine_de(0, 0)
+
+
+## La partie qui plantait, rejouee par la boucle du banc (play_game), sur la duree
+## des parties de ce test : elle produit bien des noeuds a liberer, et a la fin
+## aucun n attend. Sans la liberation par image, ils restaient tous en memoire
+## jusqu a la fin de la partie.
+func _test_la_partie_qui_plantait_ne_garde_rien() -> void:
+	var lv: LevelDef = ContentDB.levels.get(&"lvl_21")
+	ok(lv != null, "lvl_21 existe")
+	if lv == null:
+		return
+	var p: AutoPick.Politique = null
+	for o: ObjectiveDef in lv.objectives:
+		if o != null and o.check_key == &"no_card_tag" \
+				and String(o.params.get("tag", "")) == "FIRE":
+			p = AutoPick.politique_pour(o, lv)
+	ok(p != null and not p.neutre(), "lvl_21 a son objectif « sans sort de feu », a politique orientee")
+	if p == null:
+		return
+	var banc: GDScript = load(BANC_PATH)
+	# La partie 30 du banc : graine_de(30, 0), celle qui plantait.
+	seed(1)
+	if _g != null:
+		detach(_g)
+	var packed: PackedScene = load("res://scenes/game/Game.tscn")
+	_g = packed.instantiate()
+	_g.headless_mode = true
+	attach(_g)
+	_g.set_process(false)
+	_g.set_physics_process(false)
+	RunState.set_seed(banc.graine_de(30, 0))
+	_g.start_level(lv, GameEnums.Mode.EXPLORATION)
+	var r: Dictionary = banc.play_game(_g, p, DUREE_PARTIE)
+	ok(int(r["liberes"]) > 0, "le test mord : la partie produit des noeuds a liberer")
+	eq(int(r["en_attente"]), 0, "a la fin de la partie, rien n attend d etre libere")
+	eq(GameController.count_queued_below(_g), 0, "rien en attente sous la partie")
+	eq(String(r["alerte"]), "", "le garde-fou memoire ne s est pas declenche")
+	ok(int(r["objets_pic"]) < int(banc.PLAFOND_OBJETS), "les objets restent sous le plafond du banc")
+	detach(_g)
+	_g = null
+	RunState.reset()

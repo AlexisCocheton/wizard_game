@@ -215,6 +215,12 @@ func _run_all() -> void:
 		# Le mage tue tout : on veut atteindre la victoire, pas mourir de faiblesse.
 		_autoplay()
 		_game.simulate(FIXED_DELTA)
+		# Fin de l image, comme en jeu : ce qui a ete queue_free est libere. Sans
+		# cela toute la partie vit dans une seule image moteur, les monstres morts
+		# restent des objets valides, et un acces a un monstre LIBERE (le filtre
+		# de sbires du Sceau de Tombol plantait ainsi en jeu) ne se produit jamais
+		# ici. Voir GameController.flush_freed.
+		_game.flush_freed()
 		steps += 1
 		# Vers la vague 5 : des monstres varies, des zones au sol, une incantation.
 		if _visual and not shot_done and RunState.wave_index >= 4 				and _game.battlefield.alive_count() >= 5 and RunState.pending_offer.is_empty():
