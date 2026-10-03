@@ -1253,7 +1253,9 @@ func _on_burn_aim_requested(card: SpellCard) -> void:
 	tray.add_child(centre)
 	var cv := CardView.new()
 	cv.name = "CarteBrulee"
-	cv.setup_hand(card, 200.0, 230.0)
+	# `instant` : la carte brulee part SANS incantation (cast_burned) ; elle dit
+	# « instantane » au lieu d un temps d incantation qu elle ne subira pas.
+	cv.setup_hand(card, 200.0, 230.0, true)
 	cv.gui_input.connect(_on_burn_card_input.bind(card))
 	centre.add_child(cv)
 	_root.add_child(tray)

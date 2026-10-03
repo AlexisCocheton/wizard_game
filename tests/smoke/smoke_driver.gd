@@ -1006,6 +1006,7 @@ func _check_menu_screens() -> void:
 		await _check_deck_drag_refused(deck_ecran)
 		await _check_deck_scroll(deck_ecran)
 		await _vitrine_passifs_deck(deck_ecran)
+		await _vitrine_fiches_a_logos(deck_ecran)
 
 	# Le profil est l onglet de droite depuis la vague 8 ; on le reprend ici avec
 	# un compte rempli, ses trois sections une par une.
@@ -2489,6 +2490,48 @@ func _vitrine_passifs_deck(panel: DeckPanel) -> void:
 		_fail("le premier toucher sur un passif l a equipe sans le laisser lire")
 	await _shot("deck_passif_fiche")
 	await _boutons_dans_l_ecran(panel, "fiche du passif")
+	panel.close_passive_picker()
+	SaveData.load_from_dictionary(profil)
+	panel.refresh()
+
+
+## RETOUCHES W8 — les fiches du deck (sort et passif) d une carte qui cite un
+## element : la description y porte les logos dans la phrase, comme la CardView
+## de detail. Captures pour juger la ligne (taille du logo, repli, contraste).
+func _vitrine_fiches_a_logos(panel: DeckPanel) -> void:
+	var profil: Dictionary = SaveData.to_dictionary()
+	var px: int = ElementIcons.inline_px(UiTheme.FONT_BODY)
+	var ids: Array = ContentDB.cards.keys()
+	ids.sort_custom(func(a, b) -> bool: return String(a) < String(b))
+	var sort: SpellCard = null
+	var passif: SpellCard = null
+	for id in ids:
+		var c: SpellCard = ContentDB.cards[id]
+		if c == null or ElementIcons.decorate(c.description, px) == c.description:
+			continue
+		if c.is_passive and passif == null:
+			passif = c
+		elif not c.is_passive and sort == null:
+			sort = c
+	if sort == null or passif == null:
+		_fail("fiches a logos : aucun sort ou passif ne cite d element")
+		return
+	SaveData.discover_card(sort.id)
+	SaveData.discover_card(passif.id)
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv.allows_passives():
+			SaveData.unlock_level(lv.id)
+			break
+	panel.refresh()
+	panel._on_collection_tap(sort)
+	await _shot("deck_fiche_sort_logos")
+	await _boutons_dans_l_ecran(panel, "fiche de sort a logos")
+	panel.refresh()
+	panel.open_passive_picker(0)
+	panel.tap_passive(passif)
+	if panel.passive_detail() != passif:
+		_fail("fiches a logos : la fiche du passif ne s ouvre pas")
+	await _shot("deck_passif_fiche_logos")
 	panel.close_passive_picker()
 	SaveData.load_from_dictionary(profil)
 	panel.refresh()

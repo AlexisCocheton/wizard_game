@@ -48,6 +48,10 @@ func _textes(racine: Node) -> String:
 	for n in _tous(racine):
 		if n is Label and (n as Label).is_visible_in_tree():
 			t += (n as Label).text + "\n"
+		# L effet d une carte est un texte a logos (ElementIcons.decorated_label) :
+		# on le relit sans ses logos, tel que le joueur le lit.
+		elif n is RichTextLabel and (n as RichTextLabel).is_visible_in_tree():
+			t += ElementIcons.strip_inline((n as RichTextLabel).text) + "\n"
 	return t
 
 

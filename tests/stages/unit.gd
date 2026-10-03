@@ -63,6 +63,8 @@ const SUITES: Array[String] = [
 	# Chantier W8 : montee de niveau, maturation, vagues qui trainent, protecteurs.
 	"res://tests/unit/test_level_up_w8.gd",
 	"res://tests/unit/test_waves_protectors_w8.gd",
+	# Retouches W8 : logos d element dans tous les textes de carte, carte brulee.
+	"res://tests/unit/test_text_logos.gd",
 ]
 
 var _total_checks: int = 0

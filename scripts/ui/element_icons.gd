@@ -315,3 +315,12 @@ static func rich_label(bbcode: String, font_size: int, ink: Color,
 		r.add_theme_font_override(&"normal_font", f)
 	r.text = ("[center]%s[/center]" % bbcode) if center else bbcode
 	return r
+
+
+## Un TEXTE DE CARTE (description d un sort ou d un passif) pret a poser :
+## `rich_label(decorate(...))` a la taille de logo de cette police. C est la
+## seule facon d afficher un texte de carte dans l interface ; un Label nu
+## perdrait les logos d element (verrouille par test_text_logos).
+static func decorated_label(text: String, font_size: int, ink: Color,
+		center: bool = false) -> RichTextLabel:
+	return rich_label(decorate(text, inline_px(font_size)), font_size, ink, center)
