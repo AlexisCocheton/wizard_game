@@ -820,3 +820,87 @@ des commits de branche (`git log <fusion>^2`) ; les raisons dans la memoire proj
 - Le banc ne va pas chercher les campeurs ni les invocateurs, ne lit pas les renvois.
 - Le motif **spirale** n est porte par aucun monstre livre.
 - **Slime colossal** a gros pixels ; niveaux sans boss (`lvl_08`, `17`, `18`, `20`) voulus.
+
+## 14. Etat au 3 octobre au soir, apres l audit independant du 03/10
+
+Un audit independant du jeu livre en §13 a releve des ecarts entre ce que le jeu
+affiche, ce qu il fait et ce que ce document disait. Quatre chantiers correctifs (UI,
+moteur, contenu, banc) ont ete fusionnes dans `main` le 03/10, une branche a la fois,
+harnais vert a chaque fois (66 suites UNIT). Chiffres : `git log <fusion>^2` des
+fusions `37b9600`, `e0a52ce`, `c2433c4` (et `df4e3f3` pour le banc) ; raisons : memoire
+projet, `decisions.md` DEC-053 a DEC-057.
+
+### Corrige
+
+| Releve de l audit | Correction |
+|---|---|
+| La carte en main affichait le temps BRUT du `.tres` (« 1.4s » pour 2,66 s joues) | En combat, le temps **reel** (`RunState.effective_cast_time`, meme calcul que l incantation), rafraichi a chaque image : il raccourcit quand on accelere. Au grimoire et au deck : base x 1,9, le temps a 100 %. Le chiffre brut ne s affiche plus nulle part (test qui balaie `scripts/ui`) |
+| Atelier du testeur peu utilisable sur telephone | **COPIER LE DOCUMENT** en tete avec le mode d emploi ; saisie validee aussi a la perte du focus et a la fermeture du clavier |
+| Defilement de la pause non verifie | Onglets MAIN, VAGUE et fiche de monstre remplis pour deborder et testes au doigt |
+| Libelles et cibles tactiles | Portrait par defaut « Le vieux mage » ; « **Arcanique** » partout a l ecran ; pastilles de passifs 80 px (toucher 100 px, ouvre la fiche) ; boutons >= 90 px |
+| Un poison ou une zone comptait comme un COUP a chaque image | **Un degat continu n est pas un coup** : il n use plus les « N premiers coups », ne fait plus riposter le laser, ne declenche la Morsure, l eclair et le son qu une fois par 0,5 s, et le Miroir ne renvoie plus un coup par image. Le bouclier du premier coup tombe a la premiere morsure |
+| Un sort a 4 voies n offrait plus que 2 puis 1 voie a ses dernieres maturations | **Trois voies a chaque maturation** : un sort murit (voies - 2) fois, au plus 5. 20 sorts murissent 2 fois, les 33 autres 5 fois |
+| La vague qui traine partait sans prevenir | « **Vague suivante dans N s** » pendant les 10 dernieres secondes, rouge sous 3 s |
+| Des niveaux a porteur d aura sans aucune dissipation jouable | **Une dissipation dans chaque niveau a aura** (deck, nouvelle ou recompense), verifie par test |
+| L exemple du co-auteur (une enclume ne s envole pas) n etait pas dans le jeu | **Vharn et son Echo immunises au vent** ; seuls eux, pour ne pas annuler les Fleches du deck de depart |
+| Le motif spirale etait code sans porteur | **Oeil des courants** et **Grand Oeil** en spirale ; un test exige que chaque motif soit porte |
+| Pas d objet de glace | **Mur de glace** (rare, Glace, mur permanent de 70 PV), nouvelle de lvl_05 |
+| Objectifs mesures avant ces changements | Les 21 niveaux re-mesures (60 parties) ; lvl_19 « sans degats » (0 / 60) remplace par « ne pas etre touche par une Goule des fosses » ; w13_4 a 1,05 |
+| Le banc plantait sur lvl_21 | Bancs liberes a chaque image ; **vrai bug de jeu** trouve au passage : le Sceau de Tombol n invoquait plus apres la mort d un sbire (deja en §13) |
+
+### Ce qui etait faux dans ce document et a ete corrige
+
+- §13 « Motif de deplacement spirale (porte par aucun monstre livre) » : porte par deux
+  monstres depuis le 03/10 au soir.
+- §13 « cinq maturations » : cinq AU PLUS ; 20 sorts n en ont que deux.
+- §13 « 84 reprises » : 82 apres les deplacements de cartes de la vague 9.
+- §13 « rangs 3 les plus durs a 3-4 / 60 (lvl_07, 08, 09, 15, 19) » : re-mesures,
+  voir ci-dessous.
+
+### Equilibrage au 03/10 au soir
+
+| Mesure | Valeur |
+|---|---|
+| Banc 21 x 30, avant / apres le moteur de la vague 9 | **571 -> 581 / 630** (lvl_05 20 -> 30, lvl_16 28 -> 24) |
+| Massacre | vague **11,4** (11,9 avant ; repere 4-8) |
+| lvl_13 | Vide d emprise au deck : 47 -> 30 / 60 a w13_4 1,25 ; **44** a 1,05 |
+| Banc complet 21 x 60 | **non relance** depuis la vague 8 (1135 / 1260) : a refaire avant tout reglage |
+| Objectifs | 21 niveaux re-mesures ; rangs 3 les plus durs : lvl_15 2 / 60, lvl_07 et lvl_09 4, lvl_04 5, lvl_02 et lvl_08 6 |
+
+### Reste — actions du testeur (l assistant ne peut pas les faire)
+
+1. **URGENT : licence Batareya** (icones de cartes).
+2. **Licence de la fee** (`Fairy.zip` : ni licence ni auteur).
+3. `python tools/assets/fetch_craftpix.py login` : pack **Free Undead Tileset**.
+4. **Witches Pack complet** : les vraies apprenties (ecuyer et fee provisoires).
+5. Archives completes du **renard** et du **cacodemon** (elthen).
+6. **Licence rvros** du `Slime.zip`.
+7. Packs absents pour des boss : **frost-guardian, c3-3dobject, sci-fi-9**.
+8. **L image du necromancien** citee par le co-auteur.
+9. Avant toute vente : contribution a **BDragon1727**, courriel a **John Carroll**,
+   origine de **FreeSFX**.
+
+### Reste — decisions pour le co-auteur
+
+1. **Incantation** x1,9 ou x1,95, et le temps passe a incanter (77-97 %) : garder le
+   repere de 60 % ?
+2. **19 sorts limites a 2 maturations** (20 avec le Mur de glace, dont le Trait et le
+   Mur de pierre du deck de depart) : l accepter, ou leur donner des voies ?
+3. **Compte plafonne au niveau 12** : la banniere cristal est inatteignable.
+4. Garde-robe et decor : **robes de meme silhouette** ; **ecuyer** peu « eleve » ;
+   **arbre-nid** qui se lit comme un buisson.
+5. **82 reprises** de cartes « nouvelles » qu un joueur a pu deja prendre en combat.
+6. **lvl_10 « grande distance »** du Cacodemon a 1,5 longueur (1,7 et 2,0 : 0 / 60).
+7. **Rangs 3 tres durs** (2 a 6 reussites sur 60 sur six niveaux).
+8. Toujours ouverts depuis §13 : plafond de rarete des decks de 12, Rappel d ossements
+   et Epuration classes Poison, boss d Infini au bestiaire, niveaux au-dessus de 95 % et
+   regle du saut x2, Massacre au-dessus du repere.
+
+### Reste — limites connues
+
+- Le bot du banc ne **medite** ni ne **brule**, et ne vise pas le **porteur d aura**
+  avec la dissipation : ces choix ne sont pas mesures.
+- Le document du testeur s exporte en fichier sur PC seulement ; sur Android il se
+  COPIE (pas de partage de fichier).
+- Pas d `export_presets.cfg` dans le depot : aucun export Android reproductible.
+- Un boss immobile face a un deck sans degats jouables ne peut plus etre blesse (§13).
