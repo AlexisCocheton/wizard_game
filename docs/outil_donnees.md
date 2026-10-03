@@ -139,7 +139,10 @@ seconde » sur les cartes, soit on revoit les chiffres.
 > de changement que je pourrai te transmettre. »
 
 **Où :** Réglages → activer le mode testeur → bouton **ATELIER : cartes,
-monstres, vagues**. C'est une page à part (`scenes/tester/TesterTools.tscn`),
+monstres, vagues**. Depuis le 03/10, MODE TESTEUR et ATELIER sont **en haut** de la
+page des réglages, visibles sans défiler (sur le téléphone du co-auteur, la page ne
+défilait pas et ils étaient hors d'atteinte ; tous les écrans de l'atelier défilent
+au doigt, `TouchScroll`). C'est une page à part (`scenes/tester/TesterTools.tscn`),
 cinq onglets :
 
 | Onglet | Ce qu'on y fait |
@@ -166,7 +169,10 @@ cinq onglets :
   de frappe, pas des règles d'équilibrage).
 - Les **résistances** affichées et réglées sont les valeurs **jouées** (déjà
   passées par `EnemyDef.accentuate`). L'outil ci-dessous retraduit en valeur de
-  table.
+  table. Depuis la vague 8 il y a **huit éléments** plus le ralentissement :
+  `resistances/feu`, `eau`, `nature`, `vent`, `foudre`, `glace`, `arcane`,
+  `poison`, `ralentissement` (nom joueur, `GameEnums.tag_name`).
+- L'**élément d'un sort** (`element`) est un champ réglable comme un autre.
 - La **teinte du sprite** n'est pas un champ d'`EnemyDef` : c'est
   `AnimCatalog.MODULATE`. Le champ virtuel `tint` écrit dans une table que
   `AnimCatalog.modulate_for()` consulte d'abord.
@@ -248,7 +254,14 @@ Points d'attention que le rapport signale lui-même :
 
 - **Résistances** : la valeur jouée est retraduite en valeur de table
   (inverse d'`accentuate`) ; quand l'arrondi au centième empêche d'atteindre
-  exactement la valeur demandée, il dit laquelle sera jouée.
+  exactement la valeur demandée, il dit laquelle sera jouée. Les tables de
+  `make_content.gd` sont restées écrites avec `givre` (= glace) et `phys` ; **vent,
+  nature et eau y sont DÉRIVÉS** par `_resist()` (de `phys` et de `feu`). Régler
+  l'un d'eux écrit une clé explicite (`"vent": …`) dans la table du monstre : c'est
+  la porte des exceptions voulues, elle l'emporte sur la règle de dérivation.
+- **Élément d'un sort** : il vit dans la table `ELEMENT_DES_SORTS` de
+  `make_content.gd`, avec une raison par carte ; le diff change l'élément, la
+  raison est à réécrire à la main.
 - **Rareté d'une carte** : l'enum change, mais le `_save()` écrit toujours dans
   l'ancien dossier `resources/cards/<rareté>/`.
 - Le diff n'est **jamais** appliqué sans `--patch`/`--ecrire`, et l'outil ne
