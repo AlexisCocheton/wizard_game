@@ -612,6 +612,66 @@ class StunZone extends EffectHandler:
 			EffectHandlers._tags(ctx))
 
 
+## POISON PORTE PAR UN MONSTRE (vague 8, demande du co-auteur : « un sort commun
+## de poison mono-cible qui fait perdre 2 PV par seconde jusqu a la mort »).
+##
+## magnitude = degats PAR SECONDE de monde, sans duree : le poison dure jusqu a
+## la mort de la cible. Il ne tient pas dans une zone au sol (une zone reste ou
+## on l a posee, le monstre en sort) : c est le MONSTRE qui le porte, et
+## Battlefield le fait mordre a chaque image (`poison_enemy`). Chaque morsure
+## passe par le point de degats unique, donc la resistance au poison de l espece
+## s applique, et elle est attribuee au LANCER qui l a pose (objectifs). Deux
+## lancers sur la meme cible s additionnent : deux poisons.
+class PoisonDot extends EffectHandler:
+	func get_key() -> StringName:
+		return &"poison_dot"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null or ctx.target_enemy == null:
+			return
+		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
+		var to: Vector2 = (ctx.target_enemy as Node2D).position
+		Fx.projectile(ctx.battlefield, ctx.caster_position(), to, col, Fx.card_sheet(ctx.card))
+		ctx.battlefield.poison_enemy(ctx.target_enemy, spec.magnitude * ctx.damage_mult,
+			ctx.card)
+
+
+## GAGNER DE LA VITESSE (vague 8, demande du co-auteur : « une carte qui augmente
+## la vitesse du jeu »). La vitesse du mage est a la fois sa vie et l horloge du
+## monde : `magnitude` points de pourcentage rendus d un coup, par le soin de
+## SpeedGauge (plafonne au maximum, sans effet pendant l agonie). C est un pari
+## autant qu un soin : le monde accelere avec le mage.
+class GainSpeed extends EffectHandler:
+	func get_key() -> StringName:
+		return &"gain_speed"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
+		SpeedGauge.heal(int(round(maxf(spec.magnitude, 0.0))))
+
+
+## CONCENTRATION (vague 8, co-auteur : « ne fonctionne pas », remplacee par
+## « donne 1 XP a toutes les cartes de ta main »). L XP de carte fait MURIR les
+## sorts (maturations) : magnitude points par carte DISTINCTE de la main, par
+## RunState.grant_card_xp, la meme semantique que MEDITER — deux copies d un
+## sort partagent leur XP, et cette XP n est pas un lancer pour les objectifs.
+class HandCardXp extends EffectHandler:
+	func get_key() -> StringName:
+		return &"hand_card_xp"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		var n: int = maxi(int(round(spec.magnitude)), 0)
+		var vues: Dictionary = {}
+		for c: SpellCard in RunState.hand.duplicate():
+			if c == null or c.is_passive or vues.has(c.id):
+				continue
+			vues[c.id] = true
+			RunState.grant_card_xp(c, n)
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
+
+
 ## Nappe d eau : un COURANT qui remonte les monstres vers le haut.
 ##
 ## Ce n est pas un champ de givre en bleu. Un ralentissement est un facteur : il

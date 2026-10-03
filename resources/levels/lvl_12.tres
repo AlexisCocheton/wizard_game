@@ -15,18 +15,18 @@
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_ii67q"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="14_x0noc"]
 [ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="15_ecpup"]
-[ext_resource type="Resource" path="res://resources/cards/rare/arcane_insight.tres" id="16_mct3y"]
 [ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="17_2752f"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="19_xwln5"]
+[ext_resource type="Resource" path="res://resources/cards/epic/arcane_insight.tres" id="17_xwln5"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="18_plhp6"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="19_u62p1"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="20_8lpo7"]
-[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="20_plhp6"]
-[ext_resource type="Resource" path="res://resources/cards/rare/cycle_of_thought.tres" id="20_u62p1"]
+[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="20_scsrq"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="21_1gbag"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="22_letu6"]
-[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="22_u62p1"]
+[ext_resource type="Resource" path="res://resources/cards/rare/cycle_of_thought.tres" id="21_letu6"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="22_ss2tw"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="22_y85qu"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="23_a5d1i"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="23_s2dmi"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="23_scsrq"]
 
 [sub_resource type="Resource" id="Resource_xwln5"]
 script = ExtResource("20_8lpo7")
@@ -229,8 +229,8 @@ terrain = "sand"
 backdrop = "act3_demon"
 waves = Array[ExtResource("22_y85qu")]([SubResource("Resource_scsrq"), SubResource("Resource_letu6"), SubResource("Resource_ss2tw"), SubResource("Resource_a5d1i"), SubResource("Resource_ii67q")])
 enemy_pool = Array[ExtResource("1_3j5bi")]([ExtResource("2_1dvci"), ExtResource("3_2ilfx"), ExtResource("4_hjhg3"), ExtResource("5_xwln5"), ExtResource("6_plhp6"), ExtResource("7_u62p1"), ExtResource("8_3j5bi"), ExtResource("9_letu6"), ExtResource("10_6lvqg")])
-exploration_deck = Array[ExtResource("10_ss2tw")]([ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("12_ii67q"), ExtResource("12_ii67q"), ExtResource("12_ii67q"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("17_2752f"), ExtResource("17_2752f"), ExtResource("16_mct3y")])
+exploration_deck = Array[ExtResource("10_ss2tw")]([ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("12_ii67q"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("17_2752f"), ExtResource("17_xwln5")])
 objectives = Array[ExtResource("20_8lpo7")]([SubResource("Resource_xwln5"), SubResource("Resource_plhp6"), SubResource("Resource_u62p1")])
-levelup_cards = Array[ExtResource("10_ss2tw")]([ExtResource("22_letu6"), ExtResource("19_xwln5"), ExtResource("20_plhp6")])
-objective_rewards = Array[ExtResource("10_ss2tw")]([ExtResource("20_u62p1"), ExtResource("22_u62p1"), ExtResource("23_scsrq")])
+levelup_cards = Array[ExtResource("10_ss2tw")]([ExtResource("18_plhp6"), ExtResource("19_u62p1"), ExtResource("20_scsrq")])
+objective_rewards = Array[ExtResource("10_ss2tw")]([ExtResource("21_letu6"), ExtResource("22_ss2tw"), ExtResource("23_a5d1i")])
 next_levels = Array[StringName]([&"lvl_13"])

@@ -183,7 +183,7 @@ const MAX_TRAVEL_LENGTHS: float = 20.0
 const KILLING_EFFECTS: Array[StringName] = [
 	&"damage_single", &"pierce_line", &"ground_zone", &"damage_per_enemy",
 	&"knockback", &"meteor_storm", &"stun_zone", &"taunt_prop", &"place_terrain",
-	&"summon_ally",
+	&"summon_ally", &"poison_dot",
 ]
 
 ## Parametres attendus par cle : {nom: type}. Une cle sans parametre a {}.

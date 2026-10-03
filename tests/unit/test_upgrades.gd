@@ -235,7 +235,10 @@ func _a_des_degats(c: SpellCard) -> bool:
 			return true
 		if s.magnitude > 0.0 and s.key in [&"damage_single", &"pierce_line",
 				&"ground_zone", &"damage_per_enemy", &"summon_ally", &"knockback",
-				&"meteor_storm", &"stun_zone", &"place_terrain", &"taunt_prop"]:
+				&"meteor_storm", &"stun_zone", &"place_terrain", &"taunt_prop",
+				# Vague 8 : le poison porte par le monstre (Dard venimeux) est un
+				# debit de degats, comme une zone.
+				&"poison_dot"]:
 			return true
 	return false
 

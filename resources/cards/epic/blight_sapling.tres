@@ -8,7 +8,7 @@ script = ExtResource("1_0bp55")
 key = &"place_terrain"
 magnitude = 9.0
 duration = 0.0
-radius = 230.0
+radius = 300.0
 params = {
 &"kind": "tree",
 &"prop_hp": 120.0
