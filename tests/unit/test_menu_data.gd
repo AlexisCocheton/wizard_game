@@ -16,6 +16,7 @@ func run() -> void:
 	_test_migration_ancien_deck_unique()
 	_test_reglages()
 	_test_les_credits_obligatoires_sont_affiches()
+	_test_chaque_bouton_des_reglages_se_touche()
 	_test_victoire_debloque_le_niveau_suivant()
 	_test_objectifs_cumulatifs_sans_legendaire()
 	_test_niveau_courant()
@@ -537,3 +538,30 @@ func _tous(racine: Node) -> Array[Node]:
 		out.append(c)
 		out.append_array(_tous(c))
 	return out
+
+
+## CIBLES TACTILES DES REGLAGES (audit vague 9) : la case Vibrations faisait
+## ~75 px de haut, sous le plancher de 90 px du projet (ecrit en dur : c est la
+## regle, pas un reglage). Tout bouton, case ou interrupteur de l ecran, mode
+## testeur allume ou non, doit l atteindre.
+func _test_chaque_bouton_des_reglages_se_touche() -> void:
+	var avant: bool = SaveData.tester_mode()
+	for testeur in [false, true]:
+		SaveData.set_tester_mode(testeur)
+		var panel := SettingsPanel.new()
+		attach(panel)
+		var vus: int = 0
+		var vibrations: bool = false
+		for n in _tous(panel):
+			if not (n is BaseButton) or not (n as Control).visible:
+				continue
+			var b: BaseButton = n
+			var h: float = b.get_combined_minimum_size().y
+			ok(h >= 90.0, "reglages (testeur %s) : %s « %s » fait %d px de haut, pas 90"
+				% [testeur, b.get_class(), b.get("text"), int(h)])
+			vus += 1
+			vibrations = vibrations or b.name == "HapticsToggle"
+		ok(vus > 0, "(des boutons verifies)")
+		ok(vibrations, "(la case Vibrations est verifiee)")
+		detach(panel)
+	SaveData.set_tester_mode(avant)

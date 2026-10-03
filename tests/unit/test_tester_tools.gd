@@ -30,6 +30,7 @@ func run() -> void:
 	_test_vagues_de_campagne()
 	_test_aller_retour_export_import()
 	_test_fichier_du_document()
+	_test_document_sur_telephone_copier_d_abord()
 	_test_vague_de_test_se_joue()
 	_test_atelier_se_construit()
 	TesterOverrides.reset_for_tests()
@@ -490,3 +491,68 @@ func _test_atelier_se_construit() -> void:
 		"mode eteint : pas d atelier")
 	detach(reglages)
 	_off()
+
+
+## LE DOCUMENT SUR TELEPHONE (audit vague 9). EXPORTER ecrivait dans
+## user://changements, un dossier PRIVE sur Android, et l ecran affichait un
+## chemin /data/... inutilisable. Sur mobile : COPIER est la voie, en tete, avec
+## le mode d emploi (« colle-le dans un message »), aucun bouton d export ni
+## chemin de fichier. Sur PC : EXPORTER et COPIER, comme avant.
+func _test_document_sur_telephone_copier_d_abord() -> void:
+	_on()
+	var d: EnemyDef = _un_monstre()
+	TesterOverrides.set_override(TesterOverrides.target_of(d), "max_hp", d.max_hp + 1.0)
+	var tab: TesterDocTab = TesterDocTab.new()
+	attach(tab)
+	tab.setup(null)
+	# Le harnais tourne sur PC : la presentation par defaut garde l export.
+	eq(tab.mobile, TesterDocTab.is_mobile_os(), "la presentation suit l OS par defaut")
+
+	tab.set_mobile(true)
+	var copier: Button = tab.find_child("CopyButton", true, false) as Button
+	ok(copier != null, "telephone : un bouton COPIER")
+	eq(tab.find_child("ExportButton", true, false), null, "telephone : pas de bouton EXPORTER")
+	var boutons: Array = []
+	_boutons(tab, boutons)
+	if copier != null:
+		eq(boutons.find(copier), 0, "telephone : COPIER est le PREMIER bouton de l ecran")
+		ok(copier.get_combined_minimum_size().y >= TesterField.TOUCH, "COPIER se touche")
+		for b: Button in boutons:
+			ok(copier.get_combined_minimum_size().y >= b.get_combined_minimum_size().y,
+				"COPIER est au moins aussi grand que %s" % b.text)
+	for b: Button in boutons:
+		not_ok(b.text.to_upper().contains("EXPORT") or b.text.to_upper().contains("DOSSIER"),
+			"telephone : aucun bouton d export ni de dossier (%s)" % b.text)
+	var aide: Label = tab.find_child("DocMessage", true, false) as Label
+	ok(aide != null and aide.text.to_lower().contains("message"),
+		"telephone : le mode d emploi dit de le coller dans un message")
+	ok(tab.find_child("NoExportNote", true, false) != null, "telephone : l absence d export est expliquee")
+	# La copie : le presse-papiers recoit le document, le message dit quoi faire.
+	tab.copy_now()
+	# Le presse-papiers n existe pas en headless : on ne le relit qu en fenetre.
+	if DisplayServer.get_name() != "headless":
+		ok(TesterDocument.parse(DisplayServer.clipboard_get())["error"] == "",
+			"COPIER met le document dans le presse-papiers")
+	tab._build()
+	aide = tab.find_child("DocMessage", true, false) as Label
+	ok(aide != null and aide.text.to_lower().contains("colle"),
+		"apres la copie : « colle-le » (%s)" % (aide.text if aide != null else "absent"))
+	for l in _labels(tab):
+		not_ok(l.text.contains("user://") or l.text.contains("/data/"),
+			"telephone : aucun chemin de fichier a l ecran (%s)" % l.text)
+
+	tab.set_mobile(false)
+	ok(tab.find_child("ExportButton", true, false) != null, "PC : EXPORTER reste")
+	ok(tab.find_child("CopyButton", true, false) != null, "PC : COPIER reste")
+	detach(tab)
+	TesterOverrides.clear_all()
+	_off()
+
+
+func _labels(n: Node) -> Array[Label]:
+	var out: Array[Label] = []
+	if n is Label:
+		out.append(n)
+	for c in n.get_children():
+		out.append_array(_labels(c))
+	return out

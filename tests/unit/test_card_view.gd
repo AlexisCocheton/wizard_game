@@ -26,6 +26,10 @@ func run() -> void:
 	_test_l_icone_corrige_l_occupation_de_la_case()
 	_test_chaque_encre_se_lit_sur_tous_ses_papiers()
 	_test_les_encres_restent_distinctes()
+	_test_aucun_ecran_n_affiche_le_temps_brut()
+	_test_la_main_affiche_le_temps_reel_et_suit_la_vitesse()
+	_test_le_hud_rafraichit_le_temps_de_la_main()
+	_test_hors_combat_le_temps_a_100_pourcent()
 
 
 ## La police est le point le plus important du retour. Un fichier absent ferait
@@ -79,7 +83,8 @@ func _test_la_main_montre_icone_nom_et_temps() -> void:
 		ok(recolle.contains(CardView.short_name(card)),
 			"%s : la carte en main porte son nom court ('%s' dans '%s')"
 			% [card.id, CardView.short_name(card), recolle])
-		var attendu: String = ("%.1f" % card.base_cast_time).trim_suffix(".0") + "s"
+		# Le temps REEL (audit vague 9) : celui du Caster, pas le chiffre du .tres.
+		var attendu: String = _txt(RunState.effective_cast_time(card)) + "s"
 		ok(textes.has(attendu),
 			"%s : la carte en main porte son temps d incantation (%s)" % [card.id, attendu])
 		cv.free()
@@ -387,3 +392,224 @@ func _ratio(a: Color, b: Color) -> float:
 	var la: float = _lum(a)
 	var lb: float = _lum(b)
 	return (maxf(la, lb) + 0.05) / (minf(la, lb) + 0.05)
+
+
+# --- Le temps d incantation affiche (audit independant, vague 9) ---
+#
+# La carte en main ecrivait base_cast_time, le chiffre brut du .tres : une carte
+# marquee « 1.4s » prenait 2,66 s a x1 (GameConfig.CAST_TIME_SCALE, passifs,
+# ameliorations et vitesse s y ajoutent). Regles : en COMBAT le temps reel
+# (RunState.effective_cast_time), HORS COMBAT base x CAST_TIME_SCALE a 100 %.
+
+## Le chiffre brut ne s affiche NULLE PART : dans tout scripts/ui, la seule
+## lecture de base_cast_time (hors commentaire) est CardView.menu_cast_seconds,
+## qui le multiplie par CAST_TIME_SCALE.
+func _test_aucun_ecran_n_affiche_le_temps_brut() -> void:
+	var fichiers: Array[String] = _scripts("res://scripts/ui")
+	ok(fichiers.size() > 5, "(les ecrans sont lus : %d fichiers)" % fichiers.size())
+	var re_func := RegEx.new()
+	re_func.compile("^(?:static\\s+)?func\\s+(\\w+)")
+	var fautes: Array[String] = []
+	var autorisees: int = 0
+	for chemin in fichiers:
+		var fonction: String = ""
+		for ligne in _lignes_sans_commentaires(chemin):
+			var m: RegExMatch = re_func.search(ligne)
+			if m != null:
+				fonction = m.get_string(1)
+			if not ligne.contains("base_cast_time"):
+				continue
+			if chemin.get_file() == "card_view.gd" and fonction == "menu_cast_seconds" \
+					and ligne.contains("CAST_TIME_SCALE"):
+				autorisees += 1
+				continue
+			fautes.append("%s (%s) : %s" % [chemin.get_file(), fonction, ligne.strip_edges()])
+	ok(fautes.is_empty(), "aucun ecran ne lit base_cast_time hors CardView.menu_cast_seconds : %s"
+		% "; ".join(fautes))
+	ok(autorisees > 0, "(CardView.menu_cast_seconds lit bien base_cast_time x CAST_TIME_SCALE)")
+
+
+## En main : le temps REEL, et il suit la vitesse sans reconstruire la carte.
+func _test_la_main_affiche_le_temps_reel_et_suit_la_vitesse() -> void:
+	RunState.reset()
+	SpeedGauge.reset()
+	var c: SpellCard = _carte_dont_le_brut_ment()
+	ok(c != null, "(un sort dont le temps brut differe du temps reel)")
+	if c == null:
+		return
+	var cv := CardView.new()
+	cv.setup_hand(c, 125.0, 230.0)
+	var l: Label = cv.find_child("CastTime", true, false) as Label
+	ok(l != null, "la carte de main a sa ligne de temps")
+	if l == null:
+		cv.free()
+		return
+	eq(l.text, _txt(RunState.effective_cast_time(c)) + "s",
+		"%s : en main, le temps reel a la vitesse de depart" % c.id)
+	not_ok(l.text == _txt(c.base_cast_time) + "s",
+		"%s : en main, pas le chiffre brut du .tres (%ss)" % [c.id, _txt(c.base_cast_time)])
+	# Le mage accelere : le temps raccourcit, la carte suit.
+	var au_depart: String = l.text
+	SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)
+	cv.refresh_cast_time()
+	eq(l.text, _txt(RunState.effective_cast_time(c)) + "s",
+		"%s : a vitesse maximale, la carte suit le temps reel" % c.id)
+	not_ok(l.text == au_depart, "%s : le temps affiche change avec la vitesse" % c.id)
+	# A 100 % (x1) : base x CAST_TIME_SCALE, sans passif ni amelioration.
+	SpeedGauge.set_speed_percent(100)
+	cv.refresh_cast_time()
+	eq(l.text, _txt(c.base_cast_time * GameConfig.CAST_TIME_SCALE) + "s",
+		"%s : a x1, base x CAST_TIME_SCALE" % c.id)
+	cv.free()
+	# Une carte INSTANTANEE garde son mot, meme rafraichie.
+	var inst := CardView.new()
+	inst.setup_hand(c, 125.0, 230.0, true)
+	inst.refresh_cast_time()
+	var li: Label = inst.find_child("CastTime", true, false) as Label
+	ok(li != null and li.text == CardView.INSTANT_TEXT,
+		"une carte instantanee rafraichie dit toujours %s" % CardView.INSTANT_TEXT)
+	inst.free()
+	SpeedGauge.reset()
+	RunState.reset()
+
+
+## Le HUD rafraichit la ligne de temps a chaque image : la vitesse change en
+## pleine vague, la main n est pas reconstruite pour autant.
+func _test_le_hud_rafraichit_le_temps_de_la_main() -> void:
+	RunState.reset()
+	SpeedGauge.reset()
+	var c: SpellCard = _carte_dont_le_brut_ment()
+	if c == null:
+		return
+	RunState.hand.append(c)
+	var hud: Node = load("res://scenes/hud/HUD.tscn").instantiate()
+	attach(hud)
+	hud.call("_refresh_hand")
+	var cv: CardView = null
+	for n in _descendants(hud.get("_hand")):
+		if n is CardView and not n.is_queued_for_deletion():
+			cv = n
+	ok(cv != null, "(la main du HUD porte la carte)")
+	if cv != null:
+		var l: Label = cv.find_child("CastTime", true, false) as Label
+		SpeedGauge.set_speed_percent(GameConfig.SPEED_MAX_PERCENT)
+		hud.call("_refresh_gauges")
+		ok(l != null and l.text == _txt(RunState.effective_cast_time(c)) + "s",
+			"le HUD remet le temps de la main a la vitesse courante (%s)"
+			% (l.text if l != null else "absent"))
+	detach(hud)
+	SpeedGauge.reset()
+	RunState.reset()
+
+
+## Hors combat (grimoire, fiche du deck) : base x CAST_TIME_SCALE, ce que le
+## joueur vivra a 100 %, egal au temps reel a x1 d une partie neuve.
+func _test_hors_combat_le_temps_a_100_pourcent() -> void:
+	RunState.reset()
+	SpeedGauge.reset()
+	SpeedGauge.set_speed_percent(100)
+	var vus: int = 0
+	for c: SpellCard in ContentDB.cards.values():
+		if c == null or c.is_passive:
+			continue
+		feq(CardView.menu_cast_seconds(c), RunState.effective_cast_time(c),
+			"%s : le temps hors combat est le temps reel a x1" % c.id, 0.001)
+		vus += 1
+	ok(vus > 0, "(des sorts verifies)")
+	SpeedGauge.reset()
+
+	var carte: SpellCard = _carte_dont_le_brut_ment()
+	if carte == null:
+		return
+	var menu: String = CardView.menu_cast_text(carte)
+	var brut: String = _txt(carte.base_cast_time) + " s"
+	SaveData.reset_profile()
+	SaveData.discover_card(carte.id)
+	# Le GRIMOIRE : la fiche du sort.
+	var gp := GalleryPanel.new()
+	gp.size = Vector2(1000, 1500)
+	attach(gp)
+	gp.show_section(GalleryPanel.Section.SPELLS)
+	var idx: int = gp.entries().find(carte)
+	ok(idx >= 0, "(%s est au grimoire)" % carte.id)
+	if idx >= 0:
+		gp.open_detail(idx)
+		var textes: Array[String] = _textes(gp)
+		ok(textes.has(menu), "grimoire : %s affiche %s (base x CAST_TIME_SCALE)" % [carte.id, menu])
+		for t in textes:
+			not_ok(t == brut, "grimoire : %s n affiche pas le chiffre brut %s" % [carte.id, brut])
+	detach(gp)
+	# L ECRAN DE DECK : la fiche ouverte par le premier toucher.
+	var dp := DeckPanel.new()
+	attach(dp)
+	dp.refresh()
+	dp._on_collection_tap(carte)
+	var vu: bool = false
+	for t in _textes(dp):
+		if t.contains("incantation"):
+			vu = vu or t.contains(menu)
+			not_ok(t.contains(" " + brut), "deck : %s n affiche pas le chiffre brut (%s)" % [carte.id, t])
+	ok(vu, "deck : la fiche de %s affiche %s" % [carte.id, menu])
+	detach(dp)
+	SaveData.reset_profile()
+	RunState.reset()
+
+
+## Un sort (par id, ordre stable) dont le chiffre brut, le temps a x1 et le
+## temps au depart et a vitesse maximale s ecrivent tous differemment : sur lui,
+## afficher le mauvais chiffre se voit forcement.
+func _carte_dont_le_brut_ment() -> SpellCard:
+	var ids: Array = ContentDB.cards.keys()
+	ids.sort_custom(func(a, b) -> bool: return String(a) < String(b))
+	var depart: float = float(GameConfig.SPEED_START_PERCENT) * 0.01
+	var plafond: float = float(GameConfig.SPEED_MAX_PERCENT) * 0.01
+	for id in ids:
+		var c: SpellCard = ContentDB.cards[id]
+		if c == null or c.is_passive:
+			continue
+		var x1: float = c.base_cast_time * GameConfig.CAST_TIME_SCALE
+		var textes: Dictionary = {}
+		for v in [c.base_cast_time, x1, x1 / depart, x1 / plafond]:
+			textes[_txt(v)] = true
+		if textes.size() == 4:
+			return c
+	return null
+
+
+func _txt(v: float) -> String:
+	return ("%.1f" % v).trim_suffix(".0")
+
+
+func _scripts(dossier: String) -> Array[String]:
+	var out: Array[String] = []
+	var d := DirAccess.open(dossier)
+	if d == null:
+		return out
+	for f in d.get_files():
+		if f.ends_with(".gd"):
+			out.append(dossier.path_join(f))
+	for sous in d.get_directories():
+		out.append_array(_scripts(dossier.path_join(sous)))
+	return out
+
+
+## Les lignes du fichier, chacune privee de son commentaire (un « # » dans une
+## chaine n en est pas un).
+func _lignes_sans_commentaires(chemin: String) -> Array[String]:
+	var out: Array[String] = []
+	var f := FileAccess.open(chemin, FileAccess.READ)
+	if f == null:
+		return out
+	while not f.eof_reached():
+		var ligne: String = f.get_line()
+		var dans: bool = false
+		var coupe: int = ligne.length()
+		for i in ligne.length():
+			var ch: String = ligne[i]
+			if ch == "\"":
+				dans = not dans
+			elif ch == "#" and not dans:
+				coupe = i
+				break
+		out.append(ligne.substr(0, coupe))
+	return out

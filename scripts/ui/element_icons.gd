@@ -85,7 +85,7 @@ static func type_name(key: StringName) -> String:
 		&"vent": return "Vent"
 		&"foudre": return "Foudre"
 		&"glace": return "Glace"
-		&"arcane": return "Arcane"
+		&"arcane": return "Arcanique"
 		&"poison": return "Poison"
 		&"ralentissement": return "Ralentissement"
 		&"invocation": return "Invocation"
@@ -265,12 +265,15 @@ const _ELEMENT_WORDS: Dictionary = {
 	"NATURE": GameEnums.DamageTag.NATURE, "VENT": GameEnums.DamageTag.WIND,
 	"FOUDRE": GameEnums.DamageTag.LIGHTNING, "GLACE": GameEnums.DamageTag.ICE,
 	"ARCANE": GameEnums.DamageTag.ARCANE, "POISON": GameEnums.DamageTag.POISON,
+	# Le nom de l element est « Arcanique » (vague 9) : une description qui
+	# l ecrit ainsi recoit le meme logo que l ancienne forme « ARCANE ».
+	"ARCANIQUE": GameEnums.DamageTag.ARCANE, "ARCANIQUES": GameEnums.DamageTag.ARCANE,
 }
 
 
 static func decorate(text: String, px: int) -> String:
 	var re := RegEx.new()
-	re.compile("\\b(FEU|EAU|NATURE|VENT|FOUDRE|GLACE|ARCANE|POISON)\\b")
+	re.compile("\\b(FEU|EAU|NATURE|VENT|FOUDRE|GLACE|ARCANIQUES|ARCANIQUE|ARCANE|POISON)\\b")
 	var out: String = ""
 	var debut: int = 0
 	for m in re.search_all(text):

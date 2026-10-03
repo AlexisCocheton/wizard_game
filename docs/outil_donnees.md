@@ -170,8 +170,10 @@ cinq onglets :
 - Les **résistances** affichées et réglées sont les valeurs **jouées** (déjà
   passées par `EnemyDef.accentuate`). L'outil ci-dessous retraduit en valeur de
   table. Depuis la vague 8 il y a **huit éléments** plus le ralentissement :
-  `resistances/feu`, `eau`, `nature`, `vent`, `foudre`, `glace`, `arcane`,
-  `poison`, `ralentissement` (nom joueur, `GameEnums.tag_name`).
+  `resistances/feu`, `eau`, `nature`, `vent`, `foudre`, `glace`, `arcanique`,
+  `poison`, `ralentissement` (nom joueur, `GameEnums.tag_name`). Depuis la
+  vague 9 l'élément s'affiche « arcanique » ; l'ancienne clé `resistances/arcane`
+  d'un document déjà écrit reste acceptée.
 - L'**élément d'un sort** (`element`) est un champ réglable comme un autre.
 - La **teinte du sprite** n'est pas un champ d'`EnemyDef` : c'est
   `AnimCatalog.MODULATE`. Le champ virtuel `tint` écrit dans une table que
