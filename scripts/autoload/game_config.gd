@@ -274,8 +274,9 @@ const UPGRADE_DISCARD_PRICE: int = 1
 ## trois suivants s ecartent de plus en plus (48, 80, 120) : ils recompensent le
 ## sort qu on joue en boucle sur une longue partie sans multiplier les ecrans
 ## modaux d une partie courte. Mesure au banc dans le rapport du chantier W8
-## (ecrans par partie avant / apres). Un sort dont le pool compte moins de voies
-## que de paliers murit autant de fois qu il a de voies (RunState.upgrade_tiers_for).
+## (ecrans par partie avant / apres). Chaque maturation montre LEVEL_UP_CHOICES
+## voies : un sort au petit pool murit moins souvent, autant de fois qu il peut
+## encore en montrer trois (RunState.upgrade_tiers_for, vague 9).
 const CARD_UPGRADE_TIERS: int = 5
 ## L ecart entre deux maturations GRANDIT de ce nombre de lancers a chaque
 ## palier : 8, puis 16, 24, 32, 40 (paliers cumules a 8, 24, 48, 80, 120).

@@ -335,9 +335,12 @@ func _test_plusieurs_paliers_bornes_par_le_pool() -> void:
 	for c: SpellCard in [riviere, boule]:
 		if c == null:
 			continue
+		# Vague 9 : chaque maturation montre LEVEL_UP_CHOICES voies, donc pas plus
+		# de maturations que le pool ne peut en montrer trois fois de suite.
 		eq(RunState.upgrade_tiers_for(c),
-			mini(GameConfig.CARD_UPGRADE_TIERS, RunState.upgrade_pool_for(c).size()),
-			"%s : autant de maturations que de paliers, jamais plus que de voies" % c.id)
+			clampi(RunState.upgrade_pool_for(c).size() - (GameConfig.LEVEL_UP_CHOICES - 1),
+				0, GameConfig.CARD_UPGRADE_TIERS),
+			"%s : autant de maturations que de paliers, tant qu il reste trois voies a montrer" % c.id)
 	# Un sort qui a pris TOUTES ses maturations a un lisere plein, et ne
 	# redemande plus rien, meme tres au-dela du dernier palier.
 	var c2: SpellCard = _carte("t_tiers", [_spec(&"ground_zone", 6.0, 3.0, 140.0)])

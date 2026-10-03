@@ -69,6 +69,16 @@ func _sim(seconds: float) -> void:
 		t += 1.0 / 60.0
 
 
+## Un coup discret par image pendant `seconds` de monde a x1.
+func _coups_par_image(e: Enemy, seconds: float) -> void:
+	var t: float = 0.0
+	while t < seconds:
+		if is_instance_valid(e) and not e.is_dead():
+			_bf._hit(e, 1.0, [])
+		_step()
+		t += 1.0 / 60.0
+
+
 func _step() -> void:
 	_bf.simulate(1.0 / 60.0)
 	if SpeedGauge.is_dying:
@@ -442,13 +452,13 @@ func _test_laser_respecte_son_delai_minimal() -> void:
 	_fresh()
 	var d := _golem()
 	var g: Enemy = _bf.spawn_enemy(d, 540.0, 1.0, Vector2(540.0, 600.0))
-	# Une Mare de venin : un coup a chaque image.
-	_bf.zones.append({"pos": g.position, "radius": 200.0, "time": 99.0, "dps": 1.0,
-		"slow_pct": 0.0, "vuln_mult": 1.0, "tags": [], "node": null})
-	_sim(d.laser_cooldown * 0.5)
+	# Un COUP a chaque image. (Vague 9 : une zone n est plus un coup et ne fait
+	# plus riposter, voir test_continuous_damage ; le delai se mesure donc avec
+	# de vrais coups.)
+	_coups_par_image(g, d.laser_cooldown * 0.5)
 	eq(_bf.lasers_fired, 1, "trente coups en une demi-seconde : UN seul laser")
 	var duree: float = d.laser_cooldown * 4.0
-	_sim(duree)
+	_coups_par_image(g, duree)
 	ok(_bf.lasers_fired >= 4, "le delai passe, il riposte de nouveau (%d)" % _bf.lasers_fired)
 	ok(_bf.lasers_fired <= int(duree / d.laser_cooldown) + 2,
 		"mais jamais plus d un par delai (%d)" % _bf.lasers_fired)

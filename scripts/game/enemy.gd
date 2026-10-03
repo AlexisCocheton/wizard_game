@@ -62,6 +62,43 @@ var _enrage_lock: float = 0.0
 ## Une demi-seconde : deux sorts lances a la suite comptent tous deux (une
 ## incantation dure plus longtemps), une zone compte comme deux coups par seconde.
 const ENRAGE_HIT_INTERVAL: float = 0.5
+
+## QU EST-CE QU UN COUP ? (vague 9, audit du Dard venimeux)
+##
+## Deux sortes de degats arrivent par Battlefield._hit() :
+##   - le COUP : un evenement discret (projectile, impact, chaine, eclair, tir
+##     d allie, explosion de Combustion). Il compte pour tout ce qui se compte
+##     en coups : le compteur « immunise aux N premiers coups », l esquive (un
+##     tirage), la riposte des monstres a laser, le renvoi au mage, l eclair
+##     blanc et le son de coup, la Morsure de givre ;
+##   - le DEGAT CONTINU (`continu = true`) : une zone au sol ou un poison, qui
+##     mord un peu a CHAQUE IMAGE. Il n est PAS un coup. Compte comme un coup, il
+##     dependait de la frequence d images : un dard depouillait un Mage des
+##     arcanes de ses 10 coups en 10 images, et un poison tirait la riposte et
+##     la Morsure 60 fois par seconde.
+## Le degat continu suit donc les regles des DEGATS (resistances, faiblesses,
+## vulnerabilite, passifs, parties d un boss morcele, phase de l Ombre) mais
+## jamais celles des COUPS :
+##   - un compteur de coups encore plein l ARRETE sans s user : le monstre est
+##     protege tant que de vrais coups ne l ont pas depouille ;
+##   - le bouclier du PREMIER coup, lui, tombe a la premiere morsure, quelle
+##     qu elle soit (il absorbe cette image-la). Ce n est pas un compteur : il ne
+##     depend pas des images, et le banc l a tranche. Bloquer aussi le degat
+##     continu derriere ce bouclier faisait d une zone un sort nul contre le
+##     Chevalier du vide et le Squelette pareur : lvl_21 30 -> 19, lvl_20
+##     26 -> 18 victoires sur 30 ;
+##   - il ne s esquive pas par tirage : il est reduit de la part esquivee (meme
+##     moyenne, sans dependre du nombre d images) ;
+##   - il ne declenche pas de riposte ;
+##   - son renvoi au mage s accumule et part par points entiers ;
+##   - il ne se MONTRE (eclair, son, Morsure de givre) qu une fois par
+##     CONTINUOUS_FEEDBACK_INTERVAL de monde.
+## Verrouille par test_continuous_damage.
+const CONTINUOUS_FEEDBACK_INTERVAL: float = 0.5
+## Temps de MONDE avant que le degat continu puisse de nouveau se montrer.
+var _continu_lock: float = 0.0
+## Part de degat continu renvoyee au mage, pas encore assez grosse pour un point.
+var _reflect_continu: float = 0.0
 var _shield_up: bool = false
 var _burst_timer: float = 0.0
 var _burst_dashing: bool = true
@@ -349,6 +386,8 @@ func advance(world_delta: float) -> void:
 	# recu pendant un sommeil doit pouvoir enrager au reveil.
 	if _enrage_lock > 0.0:
 		_enrage_lock = maxf(0.0, _enrage_lock - world_delta)
+	if _continu_lock > 0.0:
+		_continu_lock = maxf(0.0, _continu_lock - world_delta)
 	# CYCLE DE RENVOI. Place AVANT le retour d etourdissement, volontairement :
 	# si un stun figeait le cycle, etourdir le boss pendant sa garde la
 	# verrouillerait ouverte a jamais et le joueur serait puni d avoir joue la
@@ -590,7 +629,9 @@ func _recompute_path() -> void:
 ## invisible, ou absorbes par le bouclier du premier coup).
 ## `tags` est un Array NON type : Godot 4.4 refuse de convertir un Array vers un
 ## Array[GameEnums.DamageTag] a l appel, ce qui casserait tous les degats.
-func take_damage(amount: float, tags: Array) -> bool:
+## `continu` : degat sur la duree (zone, poison), qui n est PAS un coup : voir
+## CONTINUOUS_FEEDBACK_INTERVAL.
+func take_damage(amount: float, tags: Array, continu: bool = false) -> bool:
 	if _dead or definition == null:
 		return false
 	# Intouchable pendant le fondu : frapper un monstre a peine visible, qui n a
@@ -625,8 +666,14 @@ func take_damage(amount: float, tags: Array) -> bool:
 	if _hidden:
 		amount *= PHASE_DAMAGE_FACTOR
 	# Hasard du MONDE de la partie, pas le hasard global : fixe par la graine.
-	if definition.dodge_chance > 0.0 and RunState.world_rng.randf() < definition.dodge_chance:
-		return false
+	if definition.dodge_chance > 0.0:
+		if continu:
+			# On n esquive pas un poison image par image : le degat continu est
+			# reduit de la part esquivee, la meme en moyenne, sans tirage (un
+			# tirage par image consommait le hasard du monde au rythme de l ecran).
+			amount *= 1.0 - clampf(definition.dodge_chance, 0.0, 1.0)
+		elif RunState.world_rng.randf() < definition.dodge_chance:
+			return false
 	amount *= _chameleon_factor(tags)
 
 	# IMMUNISE AUX N PREMIERS COUPS. On teste ICI, apres l esquive et avant tout
@@ -637,6 +684,10 @@ func take_damage(amount: float, tags: Array) -> bool:
 	# `false` est renvoye pour que le joueur ne voie ni eclair ni son de coup :
 	# il doit LIRE que son sort n a pas mordu, sinon il croit son deck en panne.
 	if _hits_immune_left > 0:
+		# Le degat continu n est pas un coup : il bute sur le compteur SANS
+		# l user (et sans le son de bris, qui annoncerait un coup consomme).
+		if continu:
+			return false
 		_hits_immune_left -= 1
 		AudioBus.play_sfx(&"shield_break")
 		# Le halo tombe au DERNIER coup absorbe : le joueur voit a l ecran que le
@@ -652,6 +703,8 @@ func take_damage(amount: float, tags: Array) -> bool:
 		return false
 
 	if _shield_up:
+		# Coup OU degat continu : le bouclier du premier coup ne sert qu une fois,
+		# il tombe a la premiere morsure (voir CONTINUOUS_FEEDBACK_INTERVAL).
 		_shield_up = false
 		if _body != null:
 			_body.set_shield(false)
@@ -688,7 +741,10 @@ func take_damage(amount: float, tags: Array) -> bool:
 		_enrage_lock = ENRAGE_HIT_INTERVAL
 	if hp <= 0.0:
 		kill()
-	elif _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "hurt"):
+	# Le degat continu ne relance la pose de douleur qu au rythme ou il se montre
+	# (le verrou est consomme juste apres par Battlefield._hit).
+	elif (not continu or _continu_lock <= 0.0) and _anim != null and _anim.visible \
+			and AnimCatalog.has_anim(sheet_key(), "hurt"):
 		_anim.play("hurt")
 		if not _anim.animation_finished.is_connected(_back_to_walk):
 			_anim.animation_finished.connect(_back_to_walk)
@@ -1029,6 +1085,38 @@ func reflect_share() -> float:
 	if _reflect_left <= 0.0 or definition == null:
 		return 0.0
 	return clampf(definition.reflect_pct * 0.01, 0.0, 1.0)
+
+
+## RENVOI DU DEGAT CONTINU : la part renvoyee s ACCUMULE, et ne part vers le mage
+## qu une fois `seuil` atteint (rend ce qui part, 0 sinon). Renvoyee image par
+## image, une zone sur un Miroir coutait au mage un coup par IMAGE (chaque renvoi
+## vaut au moins un point) : 60 coups par seconde.
+func accumulate_continuous_reflect(part: float, seuil: float) -> float:
+	_reflect_continu += maxf(part, 0.0)
+	if _reflect_continu < seuil:
+		return 0.0
+	var du: float = _reflect_continu
+	_reflect_continu = 0.0
+	return du
+
+
+## Le degat continu peut-il se MONTRER maintenant (eclair, son, Morsure de
+## givre) ? Consomme le verrou : au plus une fois par
+## CONTINUOUS_FEEDBACK_INTERVAL de monde, quelle que soit la frequence d images.
+func continuous_feedback_due() -> bool:
+	if _continu_lock > 0.0:
+		return false
+	_continu_lock = CONTINUOUS_FEEDBACK_INTERVAL
+	return true
+
+
+## Les degats portant ces tags n entament-ils RIEN chez ce monstre (immunite
+## elementaire) ? Lu par le Dard venimeux : un poison qui ne mordra jamais ne
+## doit ni se poser ni s afficher.
+func immune_to_damage(tags: Array) -> bool:
+	if definition == null:
+		return false
+	return _immune_to_elements(tags)
 
 
 func enrage_bonus() -> float:
