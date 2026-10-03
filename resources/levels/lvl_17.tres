@@ -27,15 +27,6 @@
 
 [sub_resource type="Resource" id="Resource_hf8a2"]
 script = ExtResource("18_0qchf")
-id = &"obj_kill_flying_21"
-description = "Abattre 21 monstres volants"
-check_key = &"kill_flying"
-params = {
-"count": 21
-}
-
-[sub_resource type="Resource" id="Resource_jg7in"]
-script = ExtResource("18_0qchf")
 id = &"obj_card_casts_resonance_7"
 description = "Lancer 7 fois Resonance"
 check_key = &"card_casts"
@@ -44,13 +35,22 @@ params = {
 "count": 7
 }
 
+[sub_resource type="Resource" id="Resource_jg7in"]
+script = ExtResource("18_0qchf")
+id = &"obj_kill_flying_21"
+description = "Abattre 21 monstres volants"
+check_key = &"kill_flying"
+params = {
+"count": 21
+}
+
 [sub_resource type="Resource" id="Resource_npl76"]
 script = ExtResource("18_0qchf")
-id = &"obj_enemy_travel_8280_0_sand_serpent"
-description = "Serpent des sables : en faire marcher un sur 6 longueurs de terrain"
+id = &"obj_enemy_travel_13800_0_sand_serpent"
+description = "Serpent des sables : en faire marcher un sur 10 longueurs de terrain"
 check_key = &"enemy_travel"
 params = {
-"distance": 8280.0,
+"distance": 13800.0,
 "enemy": "sand_serpent"
 }
 

@@ -49,19 +49,21 @@ params = {
 
 [sub_resource type="Resource" id="Resource_amgrg"]
 script = ExtResource("26_ju63x")
+id = &"obj_win_under_time_130"
+description = "Gagner en moins de 2 min 10"
+check_key = &"win_under_time"
+params = {
+"seconds": 130
+}
+
+[sub_resource type="Resource" id="Resource_6lwi4"]
+script = ExtResource("26_ju63x")
 id = &"obj_no_hit_from_imp_archer"
 description = "Lutin archer : gagner sans en etre touche"
 check_key = &"no_hit_from"
 params = {
 "enemy": "imp_archer"
 }
-
-[sub_resource type="Resource" id="Resource_6lwi4"]
-script = ExtResource("26_ju63x")
-id = &"obj_untouched"
-description = "Gagner sans subir de degats"
-check_key = &"no_damage_taken"
-params = {}
 
 [sub_resource type="Resource" id="Resource_2d5xm"]
 script = ExtResource("29_4aop1")

@@ -30,16 +30,6 @@
 
 [sub_resource type="Resource" id="Resource_lckoi"]
 script = ExtResource("21_6fehv")
-id = &"obj_kill_type_one_cast_4_rat_swarm"
-description = "Oiseau mirage : en tuer 4 d un seul sort"
-check_key = &"kill_type_one_cast"
-params = {
-"count": 4,
-"enemy": "rat_swarm"
-}
-
-[sub_resource type="Resource" id="Resource_wd4fe"]
-script = ExtResource("21_6fehv")
 id = &"obj_kill_type_with_card_fireball_8_jelly_small"
 description = "Gelee (petite) : en tuer 8 avec Boule de feu"
 check_key = &"kill_type_with_card"
@@ -47,6 +37,16 @@ params = {
 "card": "fireball",
 "count": 8,
 "enemy": "jelly_small"
+}
+
+[sub_resource type="Resource" id="Resource_wd4fe"]
+script = ExtResource("21_6fehv")
+id = &"obj_kill_type_one_cast_4_rat_swarm"
+description = "Oiseau mirage : en tuer 4 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 4,
+"enemy": "rat_swarm"
 }
 
 [sub_resource type="Resource" id="Resource_u5o4w"]

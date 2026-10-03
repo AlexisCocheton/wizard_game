@@ -33,12 +33,12 @@
 
 [sub_resource type="Resource" id="Resource_jmste"]
 script = ExtResource("15_01qir")
-id = &"obj_card_casts_piercing_arrow_6"
-description = "Lancer 6 fois Fleche percante"
+id = &"obj_card_casts_piercing_arrow_9"
+description = "Lancer 9 fois Fleche percante"
 check_key = &"card_casts"
 params = {
 "card": "piercing_arrow",
-"count": 6
+"count": 9
 }
 
 [sub_resource type="Resource" id="Resource_mjm5p"]

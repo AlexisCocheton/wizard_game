@@ -46,16 +46,6 @@ params = {
 
 [sub_resource type="Resource" id="Resource_keyfv"]
 script = ExtResource("22_wfffn")
-id = &"obj_card_casts_frost_rain_26"
-description = "Lancer 26 fois Pluie de givre"
-check_key = &"card_casts"
-params = {
-"card": "frost_rain",
-"count": 26
-}
-
-[sub_resource type="Resource" id="Resource_eqdet"]
-script = ExtResource("22_wfffn")
 id = &"obj_kill_type_with_card_frost_rain_15_rat_swarm"
 description = "Oiseau mirage : en tuer 15 avec Pluie de givre"
 check_key = &"kill_type_with_card"
@@ -63,6 +53,16 @@ params = {
 "card": "frost_rain",
 "count": 15,
 "enemy": "rat_swarm"
+}
+
+[sub_resource type="Resource" id="Resource_eqdet"]
+script = ExtResource("22_wfffn")
+id = &"obj_card_casts_frost_rain_26"
+description = "Lancer 26 fois Pluie de givre"
+check_key = &"card_casts"
+params = {
+"card": "frost_rain",
+"count": 26
 }
 
 [sub_resource type="Resource" id="Resource_joktu"]

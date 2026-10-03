@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_u6xnw"]
+
+[resource]
+script = ExtResource("1_u6xnw")
+id = &"obj_win_under_time_90"
+description = "Gagner en moins de 90 s"
+check_key = &"win_under_time"
+params = {
+"seconds": 90
+}
