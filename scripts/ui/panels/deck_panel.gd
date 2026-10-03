@@ -764,8 +764,11 @@ func _render_passive_sheet(card: SpellCard) -> void:
 	if not types.is_empty():
 		box.add_child(UiTheme.label("Type : " + ", ".join(types), UiTheme.FONT_SMALL,
 			Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
-	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY,
-		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+	# L effet, avec le logo de chaque element cite (meme rendu que la CardView).
+	var effet: RichTextLabel = ElementIcons.decorated_label(card.description,
+		UiTheme.FONT_BODY, UiTheme.TEXT_DARK, true)
+	effet.name = "Description"
+	box.add_child(effet)
 	var ou: int = equipped_passive_cards().find(card)
 	if ou != -1:
 		box.add_child(UiTheme.label("Deja equipe (emplacement %d)" % (ou + 1),
@@ -1628,8 +1631,11 @@ func _render_detail() -> void:
 	box.add_child(UiTheme.label("%s   -   incantation %s s" % [
 		GameEnums.rarity_name(card.rarity).capitalize(), _fmt(card.base_cast_time)],
 		UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
-	box.add_child(UiTheme.label(card.description, UiTheme.FONT_BODY,
-		UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+	# L effet, avec le logo de chaque element cite (meme rendu que la CardView).
+	var effet: RichTextLabel = ElementIcons.decorated_label(card.description,
+		UiTheme.FONT_BODY, UiTheme.TEXT_DARK, true)
+	effet.name = "Description"
+	box.add_child(effet)
 
 	var have: int = DeckRules.count_of(_ids, card.id)
 	var cap: int = DeckRules.max_copies(card.rarity)

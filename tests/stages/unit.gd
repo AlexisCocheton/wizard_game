@@ -65,6 +65,8 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_waves_protectors_w8.gd",
 	# Chantier W8 : les sorts du co-auteur (poison, vitesse, raretes).
 	"res://tests/unit/test_w8_sorts.gd",
+	# Retouches W8 : logos d element dans tous les textes de carte, carte brulee.
+	"res://tests/unit/test_text_logos.gd",
 ]
 
 var _total_checks: int = 0

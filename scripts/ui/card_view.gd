@@ -45,13 +45,23 @@ const PAPER_MARGIN: float = 22.0
 ## du tout : mieux vaut tronquer que d afficher une bouillie (voir _fit_name).
 const NAME_MIN_SIZE: int = 20
 
+## Ce qu affiche une carte de main qui part SANS incantation (la carte BRULEE de
+## la montee de niveau, chantier W8). Son temps d incantation y etait ecrit
+## (« 1.4s ») alors qu elle part a l instant ou on la lache : le chiffre mentait.
+const INSTANT_TEXT: String = "instantane"
+
 var card: SpellCard = null
+## Vrai si la carte part sans incantation (voir INSTANT_TEXT).
+var _instant: bool = false
 var _hovered: bool = false
 var _tween: Tween = null
 
 
 ## Carte de MAIN : le strict minimum, dimensionne pour etre reconnu, pas lu.
-func setup_hand(c: SpellCard, width: float, height: float) -> void:
+## `instant` : la carte part sans incantation (carte brulee) ; la ligne du temps
+## dit alors INSTANT_TEXT au lieu d un temps qu elle ne subira pas.
+func setup_hand(c: SpellCard, width: float, height: float, instant: bool = false) -> void:
+	_instant = instant
 	_setup(c, width, height, Mode.HAND, 0, 0)
 
 
@@ -133,9 +143,15 @@ func _build_hand(box: VBoxContainer, c: SpellCard, width: float, height: float) 
 		box.add_child(title)
 
 	# Le temps d incantation en DORE et en gros : c est la donnee de decision.
-	var temps := UiTheme.label("%ss" % _fmt(c.base_cast_time), 26,
+	# Une carte qui part sans incantation ne montre pas un temps qu elle ne
+	# subira pas : elle dit qu elle est instantanee, a une taille qui tient.
+	var texte_temps: String = INSTANT_TEXT if _instant else "%ss" % _fmt(c.base_cast_time)
+	var taille_temps: int = _fit_name(texte_temps, interne) if _instant else 26
+	var temps := UiTheme.label(texte_temps, taille_temps,
 		UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_CENTER, false)
+	temps.name = "CastTime"
 	temps.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	temps.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(temps)
 
 
@@ -177,21 +193,13 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 
 	# Les ELEMENTS cites en majuscules (« degats de FEU ») recoivent leur logo
 	# dans la phrase (vague 8) : le meme que le sceau de la carte et que celui
-	# de la fiche du monstre. Texte sans element : un Label, comme avant.
-	var deco: String = ElementIcons.decorate(c.description, ElementIcons.inline_px(body_size))
-	if deco != c.description:
-		var riche: RichTextLabel = ElementIcons.rich_label(deco, body_size,
-			Color(0.30, 0.23, 0.15), true)
-		riche.name = "Description"
-		riche.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		box.add_child(riche)
-	else:
-		var desc := UiTheme.label(c.description, body_size, Color(0.30, 0.23, 0.15),
-			HORIZONTAL_ALIGNMENT_CENTER)
-		desc.name = "Description"
-		desc.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(desc)
+	# de la fiche du monstre. Toujours par le helper, meme sans element : une
+	# seule voie pour un texte de carte (verrouille par test_text_logos).
+	var riche: RichTextLabel = ElementIcons.decorated_label(c.description, body_size,
+		Color(0.30, 0.23, 0.15), true)
+	riche.name = "Description"
+	riche.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(riche)
 
 	if c.targeting != GameEnums.Targeting.NONE:
 		var aim := UiTheme.label(_targeting_hint(c.targeting), body_size - 2,

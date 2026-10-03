@@ -198,6 +198,9 @@ func row_text(card: SpellCard) -> String:
 			var t: String = ""
 			for n in _labels_of(row):
 				t += n.text + "\n"
+			# L effet est un texte a logos : relu sans eux, tel que le joueur le lit.
+			for n in row.find_children("*", "RichTextLabel", true, false):
+				t += ElementIcons.strip_inline((n as RichTextLabel).text) + "\n"
 			return t
 	return ""
 
@@ -253,8 +256,12 @@ func _row(g: Dictionary) -> Control:
 
 	col.add_child(UiTheme.label(piles_text(g), UiTheme.FONT_SMALL, INK_SOFT,
 		HORIZONTAL_ALIGNMENT_LEFT, false))
-	# L effet, lui, DOIT se replier : c est une phrase.
-	col.add_child(UiTheme.label(card.description, UiTheme.FONT_SMALL, INK_TEXT))
+	# L effet, lui, DOIT se replier : c est une phrase. Les elements cites y
+	# portent leur logo, comme dans la CardView de detail.
+	var effet: RichTextLabel = ElementIcons.decorated_label(card.description,
+		UiTheme.FONT_SMALL, INK_TEXT)
+	effet.name = "Description"
+	col.add_child(effet)
 	col.add_child(UiTheme.label(maturation_text(card), UiTheme.FONT_SMALL, INK_SOFT))
 
 	if mode == Mode.PICK:
