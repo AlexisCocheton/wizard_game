@@ -286,6 +286,7 @@ func _run_all() -> void:
 	await _check_precast()
 	await _check_upgrade_panel()
 	await _check_w8_screens()  # CHANTIER W8 : mediter, bruler vise, echange de passif, aura
+	await _check_overtime_countdown()  # VAGUE 9 : compte a rebours de la vague qui traine
 	await _check_pause_menu()
 	await _check_cartes_petrifiees()
 	await _showcase_mecaniques_v3()
@@ -2554,6 +2555,67 @@ func _vitrine_fiches_a_logos(panel: DeckPanel) -> void:
 ##   - l echange d un quatrieme passif, trois cartes et un refus ;
 ##   - le bandeau « la vague suivante arrive » et deux Gardiens-totems dont l un
 ##     est dissipe (son halo disparait).
+## VAGUE 9 : le compte a rebours de la vague qui TRAINE, dans une vraie partie.
+## Deux vagues de monstres immobiles (des campeurs) : la premiere ne se vide
+## jamais, son delai court, et le HUD doit l afficher dans ses dernieres secondes.
+func _check_overtime_countdown() -> void:
+	var base: EnemyDef = ContentDB.enemies.get(&"gnome")
+	var lvl: LevelDef = (ContentDB.levels.get(&"lvl_01") as LevelDef).duplicate()
+	if base == null or lvl == null:
+		_fail("compte a rebours : gnome ou lvl_01 introuvable")
+		return
+	var campeur: EnemyDef = base.duplicate()
+	campeur.id = &"smoke_campeur"
+	campeur.base_speed = 0.0
+	campeur.max_hp = 100000.0
+	var vagues: Array[WaveDef] = []
+	for k in 2:
+		var w := WaveDef.new()
+		w.id = StringName("smoke_traine_%d" % k)
+		var e := WaveEntry.new()
+		e.enemy = campeur
+		e.count = 3
+		var entrees: Array[WaveEntry] = [e]
+		w.entries = entrees
+		vagues.append(w)
+	lvl.waves = vagues
+	var g: GameController = (load("res://scenes/game/Game.tscn") as PackedScene).instantiate()
+	add_child(g)
+	g.start_level(lvl, GameEnums.Mode.EXPLORATION)
+	g.running = false
+	var hud: Node = g.get_node_or_null("HUD")
+	if hud == null:
+		_fail("compte a rebours : pas de HUD")
+		g.queue_free()
+		return
+	var fenetre: float = float((hud.get_script() as GDScript).get_script_constant_map().get(
+		"OVERTIME_COUNTDOWN_SECONDS", 0.0))
+	if fenetre <= 0.0:
+		_fail("compte a rebours : fenetre d affichage introuvable")
+	var vu_avant: String = ""
+	var garde: int = 0
+	while garde < 20000 and g.spawner.index == 0:
+		garde += 1
+		SpeedGauge.set_speed_percent(GameConfig.SPEED_START_PERCENT)
+		g.simulate(FIXED_DELTA)
+		g.flush_freed()
+		var reste: float = float(hud.call("overtime_seconds_left"))
+		if reste > 0.0 and reste > fenetre + 1.0:
+			hud.call("_refresh_overtime_countdown")
+			vu_avant = String(hud.call("overtime_countdown_text"))
+		if reste > 0.0 and reste <= fenetre * 0.6:
+			break
+	if vu_avant != "":
+		_fail("le compte a rebours s affiche trop tot : %s" % vu_avant)
+	await get_tree().process_frame
+	var texte: String = String(hud.call("overtime_countdown_text"))
+	if texte == "":
+		_fail("le compte a rebours de la vague qui traine ne s affiche pas")
+	await _shot("w9_compte_a_rebours_vague")
+	g.queue_free()
+	await get_tree().process_frame
+
+
 func _check_w8_screens() -> void:
 	var g: GameController = (load("res://scenes/game/Game.tscn") as PackedScene).instantiate()
 	add_child(g)

@@ -192,8 +192,52 @@ static func number_row(v: Variant, entier: bool, step: float, bounds: Array,
 			on_commit.call(snappedf(x, 0.001))
 	moins.pressed.connect(func() -> void: envoyer.call(lire.call() - step))
 	plus.pressed.connect(func() -> void: envoyer.call(lire.call() + step))
-	champ.text_submitted.connect(func(_t: String) -> void: envoyer.call(lire.call()))
+	commit_on_leave(champ, func(t: String) -> void:
+		# Une saisie illisible n est pas un reglage : le champ reprend la valeur
+		# en cours sous les yeux du testeur, rien n est enregistre.
+		if not t.strip_edges().replace(",", ".").is_valid_float():
+			champ.text = TesterOverrides._fmt(v) if v != null else ""
+			return
+		envoyer.call(lire.call()))
 	return row
+
+
+## VALIDER EN QUITTANT LE CHAMP (vague 9, audit : sur telephone on ferme le
+## clavier sans toucher Entree, et la valeur tapee etait perdue SANS message).
+## Une saisie part donc par Entree (text_submitted), a la fermeture de l edition
+## (editing_toggled a faux : clavier virtuel ferme) ET a la perte du focus (doigt
+## pose ailleurs, bouton - / + touche). Seul un texte DIFFERENT du dernier envoye
+## part : Entree puis la perte du focus qui la suit n enregistrent pas deux fois,
+## et la reconstruction du champ apres l envoi ne relance rien.
+static func commit_on_leave(champ: Control, envoyer: Callable) -> void:
+	var dernier: Array = [_saisie(champ)]
+	var valider := func() -> void:
+		if not is_instance_valid(champ):
+			return
+		var t: String = _saisie(champ)
+		if t == String(dernier[0]):
+			return
+		dernier[0] = t
+		envoyer.call(t)
+		# Relu APRES l envoi : l envoi peut reecrire le champ (saisie illisible
+		# remise a la valeur en cours), et ce texte-la n est pas a renvoyer.
+		if is_instance_valid(champ):
+			dernier[0] = _saisie(champ)
+	if champ is LineEdit:
+		(champ as LineEdit).text_submitted.connect(func(_t: String) -> void: valider.call())
+	if champ.has_signal(&"editing_toggled"):
+		champ.connect(&"editing_toggled", func(on: bool) -> void:
+			if not on:
+				valider.call())
+	champ.focus_exited.connect(valider)
+
+
+static func _saisie(champ: Control) -> String:
+	if champ is LineEdit:
+		return (champ as LineEdit).text
+	if champ is TextEdit:
+		return (champ as TextEdit).text
+	return ""
 
 
 ## Le pas des boutons : une "jolie" fraction de la valeur, pour qu un PV de 12
@@ -243,6 +287,7 @@ func _text_editor(t: String, multiline: bool) -> Control:
 		te.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 		te.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
 		box.add_child(te)
+		commit_on_leave(te, func(x: String) -> void: commit(x))
 		ok.pressed.connect(func() -> void: commit(te.text))
 	else:
 		var le := LineEdit.new()
@@ -251,7 +296,7 @@ func _text_editor(t: String, multiline: bool) -> Control:
 		le.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		le.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
 		box.add_child(le)
-		le.text_submitted.connect(func(x: String) -> void: commit(x))
+		commit_on_leave(le, func(x: String) -> void: commit(x))
 		ok.pressed.connect(func() -> void: commit(le.text))
 	box.add_child(ok)
 	return box

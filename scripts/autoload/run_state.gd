@@ -2160,7 +2160,12 @@ func _maturation_ready(card: SpellCard) -> bool:
 		return false
 	if maturations_done(card) >= upgrade_tiers_for(card):
 		return false
-	return card_xp(card) >= next_upgrade_at(card)
+	if card_xp(card) < next_upgrade_at(card):
+		return false
+	# Filet de la regle des trois propositions : un plafond (ralentissement deja
+	# monte) peut retirer des voies du pool. Moins de trois a montrer : pas
+	# d ecran a moitie vide (jamais vu sur le catalogue, test_maturation_offers).
+	return upgrade_offerable_for(card).size() >= GameConfig.LEVEL_UP_CHOICES
 
 
 ## Apres un choix ou un refus : une autre carte attendait-elle son ecran ? C est
@@ -2213,14 +2218,29 @@ func upgrade_gap(faites: int) -> int:
 
 
 ## Nombre de maturations que CETTE carte peut faire dans une partie : le reglage
-## (GameConfig.CARD_UPGRADE_TIERS), mais jamais plus que son pool ne compte de
-## voies. Une voie prise n est plus proposee : la Riviere (4 voies) n a donc que
-## quatre maturations. Sans cette borne, son lisere resterait plein a jamais en
-## attendant un ecran qui ne peut plus s ouvrir.
+## (GameConfig.CARD_UPGRADE_TIERS), borne par son pool.
+##
+## REGLE DES TROIS PROPOSITIONS (vague 9, retour du co-auteur : « plus d options
+## differentes, mais n en propose que trois a chaque montee »). CHAQUE maturation
+## montre exactement GameConfig.LEVEL_UP_CHOICES voies. Une voie prise n est plus
+## proposee ; l ancienne borne (une maturation par voie du pool) laissait donc un
+## sort a 4 voies (Trait arcanique, Riviere) n en montrer que 2 a sa 3e maturation
+## et 1 a sa 4e. La carte n a donc une maturation de plus que s il lui reste au
+## moins trois voies a montrer : pool - (LEVEL_UP_CHOICES - 1) maturations au plus.
+##
+## Pourquoi pas les deux autres lectures :
+##   - laisser revenir une voie deja prise (cumul) : une forte paierait deux fois
+##     son prix, et « +10 % degats » deja pris se relirait comme un ecran repete ;
+##   - ajouter des voies de complement a tous les sorts : de la puissance neuve
+##     sur 50 sorts, a mesurer au banc, pour un gain de lisibilite nul.
+## Cout mesure : les paliers 3 a 5 ne sont presque jamais atteints en campagne
+## (5,8 maturations par partie, toutes cartes confondues).
+## Verrouille par test_maturation_offers (toutes les maturations de tous les sorts).
 func upgrade_tiers_for(card: SpellCard) -> int:
 	if card == null:
 		return 0
-	return mini(GameConfig.CARD_UPGRADE_TIERS, upgrade_pool_for(card).size())
+	var montrables: int = upgrade_pool_for(card).size() - (GameConfig.LEVEL_UP_CHOICES - 1)
+	return clampi(montrables, 0, GameConfig.CARD_UPGRADE_TIERS)
 
 
 ## Maturations deja passees (voie prise OU refusee).
