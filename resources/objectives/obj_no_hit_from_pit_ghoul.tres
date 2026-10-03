@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_hjsum"]
+
+[resource]
+script = ExtResource("1_hjsum")
+id = &"obj_no_hit_from_pit_ghoul"
+description = "Goule des fosses : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "pit_ghoul"
+}

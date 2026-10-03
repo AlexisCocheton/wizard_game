@@ -6082,7 +6082,16 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# 34 -> 43 victoires a x1,8, 29 -> 37 a x1,9 (le reglage retenu). Essai rejete :
 	# retirer le Totem ancien (mini-boss, 175 PV) de la vague ne changeait rien
 	# (34/60) — ce sont les Berserkers et les echos de Kaltek qui touchent, pas lui.
-	p4.difficulty = 1.25
+	# 1,25 -> 1,05 (chantier W9) : le deck recoit le Vide d emprise, la reponse
+	# ecrite a cette vague (l aura de l Echo d Ymoa couvre la rage des
+	# Berserkers ; le Vide efface les deux), a la place de la derniere Marque.
+	# Le bot du banc ne garde pas une dissipation pour le bon moment : il la
+	# lance des qu elle est en main, sur le monstre le plus avance, et dans un
+	# niveau limite par la pioche une carte jouee a vide coute cher. Banc (60
+	# parties, moteur de la vague 9) : deck d avant a 1,25 : 47 ; Vide a 1,25 :
+	# 30 (a la place du Meteore : 6 ; des Boules de feu, Etincelle x4 : 30) ;
+	# Vide a 1,15 : 35 ; Vide a 1,05 : 44. Le saut sur w13_3 descend d autant.
+	p4.difficulty = 1.05
 	# LE MELANGE DES QUATRE, litteralement : le document (section 6) decrit ce
 	# niveau comme « melange des quatre », et cette vague est l endroit ou les
 	# seigneurs reviennent. Ymoa et Kaltek descendent ensemble, l aura de l un
@@ -6181,7 +6190,8 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# DISSIPATION (chantier W9) : l Echo d Ymoa descend dans w13_4, la vague la
 	# plus dure du niveau, et son aura couvre la vague ; le deck n avait aucune
 	# carte pour la couper. Le Vide d emprise prend la place de la derniere
-	# Marque (qu il valait deja mieux retirer, mesure ci-dessus). Deja au livre
+	# Marque ; la difficulte de w13_4 descend de 1,25 a 1,05 pour que le niveau
+	# reste dans la fenetre (mesures a cote de `p4.difficulty`). Deja au livre
 	# (decks de lvl_06, lvl_07, lvl_20) : seul le deck le met dans le pool.
 	lvl13.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
@@ -7127,6 +7137,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Mesure apres la vague 8 (60 parties) : six longueurs, le seuil provisoire,
 			# se reussissaient 59 fois ; 9 : 44 ; 10 : 25 ; 11 : 1. Le classement suit
 			# la mesure : Resonance 7 fois (50), 21 volants (46), 10 longueurs (25).
+			# Chantier W9 : l Oeil des courants descend en spirale ; dix longueurs
+			# tombent a 7 / 60 (moteur de la vague 9), toujours le plus dur.
 			# Nouvelles : Volte-face (fait remonter les serpents), Rupture de chaine (les
 			# Oeils des courants craignent le physique), toutes deux deja proposees en
 			# lvl_01, et le Totem de coeur-de-bois, un appat qui detourne les serpents. Le
@@ -7159,11 +7171,12 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Etincelle (deja proposee en lvl_09), Pacte imprudent, Racine de
 			# tonnerre. Recompenses : Lumiere purifiante, Epuration, Metier du monde.
 			# Rangs re-mesures apres la vague 8 : achever 15 Oiseaux a la Pluie (41 / 60)
-			# est plus facile que de la lancer 26 fois (31).
+			# est plus facile que de la lancer 26 fois (31). Et de nouveau echanges
+			# apres le chantier moteur de la vague 9 : 26 lancers 46, 15 Oiseaux 39.
 			return {"nouvelles": ["spark", "reckless_bargain", "thunder_root"], "objectifs": [
 				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "purifying_light"],
-				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "deck_purge"],
-				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "world_loom"],
+				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "deck_purge"],
+				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "world_loom"],
 			]}
 		&"lvl_04":
 			# Le Grand Appel : l Ensevelisseur leve des goules sans fin ; les achever aux
@@ -7185,13 +7198,19 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Sorciere de givre du trio craint le feu, que le deck porte en majorite :
 			# 60 sorts de feu, le plus facile apres la vague 8 (44 se reussissaient 60
 			# fois sur 60 ; 60 : 48 / 60, contre 33 pour les quatre goules).
+			# Apres le chantier moteur de la vague 9 (un degat continu n est plus un
+			# coup, trois voies a chaque maturation), « sans degats » ne se reussit
+			# plus (0 / 60 ; 4 avant). Il est remplace par « ne pas etre touche par
+			# une Goule des fosses » (37 / 60 ; « par un Squelette pareur » : 58,
+			# « finir sous 160 % » : 0), et les quatre Goules d un seul sort (31)
+			# passent au rang 3.
 			# Nouvelles : Racine de tonnerre (foudre, que les goules craignent), Volte-
 			# face, Brasier, toutes deja proposees. Recompenses : Rupture de chaine,
 			# Bastion, Echo de la main.
 			return {"nouvelles": ["thunder_root", "about_face", "brazier"], "objectifs": [
 				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "chain_break"],
-				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "bastion"],
-				[_objectif(&"no_damage_taken"), "echo_of_the_hand"],
+				[_objectif(&"no_hit_from", {"enemy": "pit_ghoul"}), "bastion"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "echo_of_the_hand"],
 			]}
 		&"lvl_20":
 			# La cour des rois morts, niveau dur : le Vide d emprise du deck dissipe les
@@ -7353,8 +7372,10 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# pendant leur garde : ne jamais les frapper a ce moment. Puis finir au-dessus
 			# de 380 %. (« Sans legendaire » ne coutait rien : 30 parties sur 30.)
 			# Nouvelles : Pacte imprudent, Fosse, Canalisation jumelle.
+			# Chantier W9 (Vide d emprise au deck, moteur de la vague 9) : 50 sorts de
+			# feu se reussissaient 60 fois sur 60 ; 56 : 60 ; 60 : 57 ; 64 : 51.
 			return {"nouvelles": ["reckless_bargain", "terrain_pit", "twin_channeling"], "objectifs": [
-				[_objectif(&"element_casts", {"element": "FIRE", "count": 50}), "terrain_brambles"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "terrain_brambles"],
 				[_objectif(&"never_hit_reflect"), "terrain_altar"],
 				[_objectif(&"win_above_speed", {"pct": 380}), "forge_dial"],
 			]}
@@ -7366,8 +7387,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# devant l Enfant acheve en 9 s apres son releve (28).
 			# Chantier W9, deck refait (Vide d emprise x2 a la place des Fleches) :
 			# le bot qui joue l arcane d abord gaspille ses lancers en Vide et perd
-			# plus souvent (58 sorts d arcane : 21 / 60) ; l Enfant en 9 s ne bouge pas
-			# (28). Rangs echanges, ids gardes.
+			# plus souvent : 58 sorts d arcane passent sous l Enfant en 9 s. Rangs
+			# echanges, ids gardes. Mesure finale (moteur de la vague 9) : 55, 21, 17.
 			return {"nouvelles": ["bastion", "echo_of_the_hand", "summoners_key"], "objectifs": [
 				[_objectif(&"no_hit_from", {"enemy": "demon_chain_echo"}), "cycle_of_thought"],
 				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "deck_purge"],

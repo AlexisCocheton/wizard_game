@@ -62,28 +62,39 @@ const PARTIES_DU_BANC: int = 60
 ## (GameController.flush_freed a chaque image du banc) ; les 60 parties
 ## re-jouees d une traite rendent 57 / 55 / 13, la partie 30 etant une defaite :
 ## la ligne ne change pas.
+##
+## Chantier W9 (contenu, 03/10) : les 21 niveaux re-joues (60 parties chacun)
+## sur le main qui porte le chantier moteur de la vague 9 (un degat continu
+## n est plus un coup, trois voies a chaque maturation) et les retouches de
+## contenu (dissipation au deck ou en carte nouvelle, Mur de glace, enclumes
+## immunisees au vent, Oeil des courants en spirale). Regles depuis : lvl_03
+## (rangs 2 et 3 echanges), lvl_13 (deck et w13_4), lvl_15 (60 sorts de feu au
+## lieu de 50, jamais rate), lvl_16 (rangs 2 et 3 echanges), lvl_19 (« sans
+## degats », 0 / 60, remplace), lvl_21 (« sans feu » au rang 1, cinq Vers au
+## rang 2). lvl_10 : la distance du Cacodemon reste 1,5 longueur (1,7 et 2,0 :
+## 0 / 60). Le pourquoi est ecrit a cote de chaque niveau dans _progression_de.
 const MESURES: Dictionary = {
-	"lvl_01": [["obj_card_casts_piercing_arrow_9", 54], ["obj_no_card_fireball", 49], ["obj_win_above_speed_250", 19]],
+	"lvl_01": [["obj_card_casts_piercing_arrow_9", 56], ["obj_no_card_fireball", 46], ["obj_win_above_speed_250", 15]],
 	"lvl_02": [["obj_win_above_speed_300", 45], ["obj_boss_quick_after_revive_8", 39], ["obj_kill_type_one_cast_4_hopper", 6]],
 	"lvl_08": [["obj_kill_type_with_card_fireball_8_jelly_small", 37], ["obj_kill_type_one_cast_4_rat_swarm", 32], ["obj_multi_kill_15_1", 6]],
 	"lvl_09": [["obj_no_legendary", 55], ["obj_hit_from_sleepy_fox", 53], ["obj_win_below_speed_200", 4]],
-	"lvl_17": [["obj_card_casts_resonance_7", 51], ["obj_kill_flying_21", 36], ["obj_enemy_travel_13800_0_sand_serpent", 4]],
-	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 39], ["obj_win_below_speed_190", 21], ["obj_card_casts_weakness_mark_11", 13]],
-	"lvl_03": [["obj_multi_kill_8_1", 48], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 41], ["obj_card_casts_frost_rain_26", 31]],
-	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 38], ["obj_win_under_time_130", 20], ["obj_no_hit_from_imp_archer", 5]],
-	"lvl_19": [["obj_element_casts_60_fire", 48], ["obj_kill_type_one_cast_4_pit_ghoul", 33], ["obj_untouched", 4]],
-	"lvl_20": [["obj_no_card_void_grip", 45], ["obj_card_casts_piercing_arrow_21", 37], ["obj_win_below_speed_170", 8]],
-	"lvl_05": [["obj_element_casts_48_arcane", 51], ["obj_kill_type_one_cast_2_golem", 31], ["obj_win_above_speed_310", 7]],
-	"lvl_06": [["obj_element_casts_7_lightning", 48], ["obj_kill_type_one_cast_3_hopper", 38], ["obj_win_under_time_108", 6]],
+	"lvl_17": [["obj_card_casts_resonance_7", 52], ["obj_kill_flying_21", 40], ["obj_enemy_travel_13800_0_sand_serpent", 7]],
+	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 36], ["obj_win_below_speed_190", 26], ["obj_card_casts_weakness_mark_11", 14]],
+	"lvl_03": [["obj_multi_kill_8_1", 48], ["obj_card_casts_frost_rain_26", 46], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 39]],
+	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 39], ["obj_win_under_time_130", 17], ["obj_no_hit_from_imp_archer", 5]],
+	"lvl_19": [["obj_element_casts_60_fire", 53], ["obj_no_hit_from_pit_ghoul", 37], ["obj_kill_type_one_cast_4_pit_ghoul", 31]],
+	"lvl_20": [["obj_no_card_void_grip", 45], ["obj_card_casts_piercing_arrow_21", 37], ["obj_win_below_speed_170", 9]],
+	"lvl_05": [["obj_element_casts_48_arcane", 53], ["obj_kill_type_one_cast_2_golem", 32], ["obj_win_above_speed_310", 8]],
+	"lvl_06": [["obj_element_casts_7_lightning", 45], ["obj_kill_type_one_cast_3_hopper", 40], ["obj_win_under_time_108", 7]],
 	"lvl_21": [["obj_no_card_tag_fire", 58], ["obj_kill_type_with_card_arcane_bolt_5_fire_worm", 22], ["obj_win_under_time_90", 11]],
-	"lvl_07": [["obj_no_card_mirror_apprentice", 49], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 47], ["obj_win_above_speed_350", 3]],
-	"lvl_10": [["obj_kill_flying_1", 52], ["obj_untouched", 38], ["obj_enemy_travel_2070_0_cacodaemon", 9]],
-	"lvl_11": [["obj_element_casts_32_ice", 36], ["obj_kill_flying_4", 34], ["obj_win_below_speed_120", 8]],
+	"lvl_07": [["obj_no_card_mirror_apprentice", 52], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 51], ["obj_win_above_speed_350", 4]],
+	"lvl_10": [["obj_kill_flying_1", 52], ["obj_untouched", 38], ["obj_enemy_travel_2070_0_cacodaemon", 7]],
+	"lvl_11": [["obj_element_casts_32_ice", 35], ["obj_kill_flying_4", 34], ["obj_win_below_speed_120", 8]],
 	"lvl_12": [["obj_kill_type_with_card_arcane_bolt_7_shade", 55], ["obj_card_casts_focus_28", 52], ["obj_same_card_casts_38", 35]],
-	"lvl_13": [["obj_no_legendary", 29], ["obj_card_casts_spark_25", 25], ["obj_win_above_speed_300", 8]],
-	"lvl_14": [["obj_hit_from_sleepy_fox", 54], ["obj_kill_type_one_cast_3_rat_swarm", 43], ["obj_no_hit_from_imp_archer", 23]],
-	"lvl_15": [["obj_element_casts_50_fire", 57], ["obj_never_hit_reflect", 25], ["obj_win_above_speed_380", 7]],
-	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 57], ["obj_boss_quick_after_revive_9", 28], ["obj_element_casts_58_arcane", 21]],
+	"lvl_13": [["obj_no_legendary", 46], ["obj_card_casts_spark_25", 37], ["obj_win_above_speed_300", 15]],
+	"lvl_14": [["obj_hit_from_sleepy_fox", 53], ["obj_kill_type_one_cast_3_rat_swarm", 44], ["obj_no_hit_from_imp_archer", 21]],
+	"lvl_15": [["obj_element_casts_60_fire", 57], ["obj_never_hit_reflect", 46], ["obj_win_above_speed_380", 2]],
+	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 55], ["obj_boss_quick_after_revive_9", 21], ["obj_element_casts_58_arcane", 17]],
 }
 
 
