@@ -126,6 +126,7 @@ func bind(controller: GameController) -> void:
 
 func _process(_delta: float) -> void:
 	_refresh_gauges()
+	_refresh_overtime_countdown()
 
 
 func _refresh_all() -> void:
@@ -1367,3 +1368,73 @@ func _ensure_overtime_banner() -> void:
 	col.add_child(_overtime_title)
 	col.add_child(sous)
 	_root.add_child(_overtime_banner)
+
+
+# --- Compte a rebours de la vague qui TRAINE (vague 9) ---
+#
+# WaveSpawner.overtime_left() savait depuis la vague 8 quand la vague suivante
+# allait tomber sur les restants, mais aucun ecran ne le disait : le joueur ne
+# voyait que le bandeau, au moment ou il etait trop tard. Un petit compte a
+# rebours sous le compteur de vagues, SEULEMENT pendant les dernieres secondes
+# (au-dela, ce serait un chiffre de plus a ignorer), en secondes REELLES : a x4
+# le delai de monde fond quatre fois plus vite, et c est ce que le joueur vit.
+
+## Le compte a rebours apparait sous ce nombre de secondes reelles.
+const OVERTIME_COUNTDOWN_SECONDS: float = 10.0
+const OVERTIME_COUNTDOWN_Y: float = 146.0
+
+var _overtime_countdown: Label = null
+
+
+## Secondes REELLES avant que la vague en cours cede la place, -1 si elle ne le
+## fera pas (apparitions pas finies, vague de boss, derniere vague, pas de partie).
+func overtime_seconds_left() -> float:
+	if game == null or not is_instance_valid(game) or game.spawner == null:
+		return -1.0
+	var monde: float = game.spawner.overtime_left()
+	if monde < 0.0:
+		return -1.0
+	# world_delta(1 s) : secondes de monde par seconde reelle, agonie comprise.
+	return monde / maxf(SpeedGauge.world_delta(1.0), 0.01)
+
+
+## Pour les tests et le SMOKE : le texte affiche, "" si le compte est cache.
+func overtime_countdown_text() -> String:
+	if _overtime_countdown == null or not _overtime_countdown.visible:
+		return ""
+	return _overtime_countdown.text
+
+
+func _refresh_overtime_countdown() -> void:
+	var reste: float = overtime_seconds_left()
+	var montrer: bool = reste > 0.0 and reste <= OVERTIME_COUNTDOWN_SECONDS
+	if not montrer:
+		if _overtime_countdown != null and is_instance_valid(_overtime_countdown):
+			_overtime_countdown.visible = false
+		return
+	_ensure_overtime_countdown()
+	_overtime_countdown.visible = true
+	_overtime_countdown.text = "Vague suivante dans %d s" % int(ceilf(reste))
+	# Les trois dernieres secondes virent au rouge : le joueur lit l urgence
+	# sans avoir a lire le chiffre.
+	_overtime_countdown.add_theme_color_override(&"font_color",
+		UiTheme.RED.lightened(0.25) if reste <= 3.0 else UiTheme.GOLD)
+
+
+func _ensure_overtime_countdown() -> void:
+	if _overtime_countdown != null and is_instance_valid(_overtime_countdown):
+		return
+	_overtime_countdown = UiTheme.label_hud("", UiTheme.FONT_SMALL, UiTheme.GOLD,
+		HORIZONTAL_ALIGNMENT_CENTER)
+	_overtime_countdown.name = "OvertimeCountdown"
+	# Laisse passer le doigt : il est pose au-dessus du terrain, la ou l on vise.
+	_overtime_countdown.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overtime_countdown.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_overtime_countdown.anchor_left = 0.2
+	_overtime_countdown.anchor_right = 0.8
+	_overtime_countdown.offset_left = 0.0
+	_overtime_countdown.offset_right = 0.0
+	_overtime_countdown.offset_top = OVERTIME_COUNTDOWN_Y
+	_overtime_countdown.offset_bottom = OVERTIME_COUNTDOWN_Y + 56.0
+	_overtime_countdown.visible = false
+	_root.add_child(_overtime_countdown)

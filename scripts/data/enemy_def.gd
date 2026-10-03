@@ -89,7 +89,8 @@ extends Resource
 ## A la mort, engendre `split_count` exemplaires de `split_into` (recursif).
 @export var split_into: EnemyDef
 @export var split_count: int = 0
-## Encaisse le premier coup sans degat (halo visible tant qu il tient).
+## Encaisse le premier coup sans degat (halo visible tant qu il tient). Un degat
+## continu (zone, poison) ne le brise pas et bute dessus (vague 9).
 @export var first_hit_shield: bool = false
 ## Soigne tous les autres monstres de N PV par seconde tant qu il est en vie.
 @export var heal_per_second: float = 0.0
@@ -182,10 +183,12 @@ extends Resource
 ## pas une esquive ni un bouclier), il tire un rayon sur le mage qui coute
 ## `laser_damage` points de vitesse. 0 = pas de laser.
 ##
-## `laser_cooldown` est le delai MINIMAL entre deux tirs. Sans lui, un poison ou
-## une pluie qui frappent dix fois par seconde declencheraient dix lasers : la
-## punition des sorts a coups multiples deviendrait une execution. Le moteur
-## impose de toute facon un plancher (Enemy.LASER_MIN_COOLDOWN).
+## `laser_cooldown` est le delai MINIMAL entre deux tirs. Sans lui, une pluie
+## qui frappe dix fois par seconde declencherait dix lasers : la punition des
+## sorts a coups multiples deviendrait une execution. Le moteur impose de toute
+## facon un plancher (Enemy.LASER_MIN_COOLDOWN). Une zone ou un poison ne font
+## PAS riposter (vague 9) : un degat continu n est pas un coup (voir
+## Enemy.CONTINUOUS_FEEDBACK_INTERVAL).
 @export var laser_damage: int = 0
 @export var laser_cooldown: float = 1.5
 
@@ -282,8 +285,10 @@ enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP, SPIRAL }
 ## monstre ordinaire : ici le compteur EST le combat, et la fiche du bestiaire le
 ## dit en toutes lettres — sinon le joueur croit que ses sorts ne fonctionnent pas.
 ##
-## Le compteur ne mange QUE des degats : un etourdissement ou un ralentissement
-## n en consomme aucun. Sinon la mecanique cesserait d etre « depense tes coups »
+## Le compteur ne mange QUE des COUPS : un etourdissement ou un ralentissement
+## n en consomme aucun, un degat continu (zone, poison) non plus, et il bute sur
+## le compteur tant que celui-ci n est pas vide (vague 9 : un dard le videait en
+## dix images). Sinon la mecanique cesserait d etre « depense tes coups »
 ## pour devenir « N secondes d invulnerabilite totale », ce qui ne se joue pas.
 @export_range(0, 12) var hits_immune: int = 0
 

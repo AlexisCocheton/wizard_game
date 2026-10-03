@@ -206,7 +206,7 @@ func _simulate_zones(wd: float) -> void:
 			if e.position.distance_to(z["pos"]) > z["radius"]:
 				continue
 			if z["dps"] > 0.0:
-				_hit(e, z["dps"] * wd, z["tags"])
+				_hit(e, z["dps"] * wd, z["tags"], true)
 			if z["slow_pct"] > 0.0:
 				e.apply_slow(1.0 - z["slow_pct"] * 0.01, 0.4, z["tags"])
 		RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
@@ -224,6 +224,10 @@ var poisons: Array[Dictionary] = []
 ## Meta posee sur un monstre empoisonne : sa marque visible (une seule, meme
 ## pour plusieurs poisons).
 const POISON_MARKER_META: StringName = &"poison_marker"
+## Eclat du dard sur un monstre IMMUNISE : gris, la couleur du « sans effet ».
+const POISON_IMMUNE_COLOR: Color = Color(0.62, 0.62, 0.62)
+## Poisons refuses pour immunite depuis la creation du terrain (tests).
+var poison_refused: int = 0
 
 
 ## Empoisonne `target` : il perd `dps` PV par seconde de MONDE jusqu a sa mort.
@@ -236,8 +240,16 @@ func poison_enemy(target: Object, dps: float, card: SpellCard) -> bool:
 	var e: Enemy = target as Enemy
 	if not _targetable(e) or dps <= 0.0:
 		return false
-	poisons.append({"enemy": e, "dps": dps,
-		"tags": (card.combat_tags() if card != null else [GameEnums.DamageTag.POISON]) as Array,
+	var tags: Array = (card.combat_tags() if card != null else [GameEnums.DamageTag.POISON]) as Array
+	# IMMUNISE au poison (une trentaine de monstres) : le poison ne mordra
+	# jamais, il ne se pose donc PAS et sa marque ne s affiche pas. Le dard
+	# s ecrase en un eclat GRIS sur le monstre et rien ne reste : le joueur lit
+	# « sans effet », comme un sort qui ne mord pas (ni eclair ni son de coup).
+	if e.immune_to_damage(tags):
+		poison_refused += 1
+		Fx.impact(self, e.position, POISON_IMMUNE_COLOR, maxf(e.radius() * 0.8, 40.0))
+		return false
+	poisons.append({"enemy": e, "dps": dps, "tags": tags,
 		"src": RunState.damage_source})
 	# LISIBLE SUR LE MONSTRE : la feuille de la carte tourne en boucle au-dessus
 	# de lui, enfant de son noeud, donc elle le suit et meurt avec lui.
@@ -272,7 +284,7 @@ func _simulate_poisons(wd: float) -> void:
 			continue
 		# OBJECTIFS : le poison mord au nom du lancer qui l a pose.
 		var obj_src_avant: Dictionary = RunState.swap_damage_source(p.get("src", {}))
-		_hit(e as Enemy, float(p["dps"]) * wd, p["tags"])
+		_hit(e as Enemy, float(p["dps"]) * wd, p["tags"], true)
 		RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 
 
@@ -799,7 +811,9 @@ func object_hit(amount: float, who: Enemy, tags: Array) -> float:
 	return amount * f
 
 
-func _hit(e: Enemy, amount: float, tags: Array) -> bool:
+## `continu` : degat sur la duree (zone, poison). Ce n est PAS un coup : la regle
+## entiere est ecrite dans Enemy (CONTINUOUS_FEEDBACK_INTERVAL).
+func _hit(e: Enemy, amount: float, tags: Array, continu: bool = false) -> bool:
 	if not _targetable(e):
 		return false
 	if is_shielded_by_aura(e):
@@ -833,14 +847,27 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 	# faire PAYER le lancement mal choisi.
 	var part_renvoyee: float = e.reflect_share()
 
-	var applied: bool = e.take_damage(total, tags)
+	var applied: bool = e.take_damage(total, tags, continu)
 	if applied:
 		# Le renvoi ne part que si le coup a reellement mordu : un sort esquive,
 		# absorbe par un bouclier ou avale par le compteur de coups n a rien a
 		# renvoyer. Sinon le joueur serait puni deux fois pour un sort qui n a
 		# meme pas fonctionne.
 		if part_renvoyee > 0.0:
-			_reflect_to_mage(e, total * part_renvoyee)
+			if not continu:
+				_reflect_to_mage(e, total * part_renvoyee)
+			else:
+				# Le degat continu renvoie par POINTS ENTIERS de degats de mage :
+				# une part s accumule et ne part qu une fois un point atteint.
+				var du: float = e.accumulate_continuous_reflect(total * part_renvoyee,
+					1.0 / REFLECT_TO_MAGE_SCALE)
+				if du > 0.0:
+					_reflect_to_mage(e, du)
+		# Ce qui suit se MONTRE ou se compte en coups : un degat continu ne le
+		# declenche qu une fois par intervalle de monde, et jamais la riposte.
+		if continu and not e.continuous_feedback_due():
+			return applied
+		hit_feedbacks += 1
 		Fx.hit_flash(e)
 		AudioBus.play_sfx(&"hit")
 		# PASSIF "Morsure de givre" : TOUT degat ralentit, quel que soit l element
@@ -851,8 +878,15 @@ func _hit(e: Enemy, amount: float, tags: Array) -> bool:
 			# Vague 8 : la Morsure est de GLACE, son ralentissement suit la
 			# resistance a la glace (et la ligne SLOW, comme tout ralentissement).
 			e.apply_slow(maxf(0.25, 1.0 - chill * 0.01), 1.5, [GameEnums.DamageTag.ICE])
-		_v3_after_hit(e)
+		# La RIPOSTE des monstres a laser repond a un coup, pas a une zone.
+		if not continu:
+			_v3_after_hit(e)
 	return applied
+
+
+## Coups MONTRES (eclair + son) depuis la creation du terrain. Lu par les tests :
+## un degat continu ne doit pas en produire un par image.
+var hit_feedbacks: int = 0
 
 
 # --- API appelee par les handlers d effet ---

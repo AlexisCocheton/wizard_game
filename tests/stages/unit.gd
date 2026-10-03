@@ -69,6 +69,14 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_text_logos.gd",
 	# Defilement au doigt sur chaque zone qui defile (retour du co-auteur, 03/10).
 	"res://tests/unit/test_touch_scroll.gd",
+	# Vague 9 : un degat continu (zone, poison) n est pas un coup.
+	"res://tests/unit/test_continuous_damage.gd",
+	# Vague 9 : trois propositions a chaque maturation de chaque sort.
+	"res://tests/unit/test_maturation_offers.gd",
+	# Vague 9 : l atelier valide une saisie a la perte du focus.
+	"res://tests/unit/test_tester_field_commit.gd",
+	# Vague 9 : compte a rebours de la vague qui traine dans le HUD.
+	"res://tests/unit/test_overtime_countdown.gd",
 ]
 
 var _total_checks: int = 0
