@@ -38,7 +38,7 @@
 [sub_resource type="Resource" id="Resource_tefmi"]
 script = ExtResource("21_cvhwm")
 id = &"obj_element_casts_48_arcane"
-description = "Lancer 48 sorts d arcane"
+description = "Lancer 48 sorts d arcanique"
 check_key = &"element_casts"
 params = {
 "count": 48,

@@ -266,19 +266,32 @@ static func _combat(bilan: Dictionary) -> void:
 	for k in 20:
 		g.simulate(1.0 / 60.0)
 
-	# PAUSE : les trois onglets, et la fiche du monstre le plus charge.
+	# Audit vague 9 : seul l onglet DECK debordait, MAIN, VAGUE et la fiche de
+	# monstre etaient « verifiees » sur une page qui tenait sans defiler (bilan
+	# a 0, rien de touche). On les REMPLIT pour qu elles debordent, comme en fin
+	# de partie : main pleine et passifs equipes, vague de types varies.
+	_remplir_main_et_passifs()
+	_remplir_la_vague(g)
+	await _disposer()
+
+	# PAUSE : les trois onglets, la fiche du monstre la plus longue, la fiche
+	# d un passif.
 	var pause := PausePanel.new(g)
 	_driver.add_child(pause)
 	for t in PausePanel.TABS.size():
 		pause.show_tab(t)
 		await _ecran(pause, "pause_" + PausePanel.TABS[t].to_lower(), bilan)
-	var charge: EnemyDef = null
-	for d: EnemyDef in ContentDB.enemies.values():
-		if charge == null or d.resistances.size() > charge.resistances.size():
-			charge = d
-	pause.open_enemy(charge)
-	await _ecran(pause, "pause_fiche", bilan)
+	if await _fiche_qui_deborde(pause) != null:
+		await _ecran(pause, "pause_fiche", bilan)
+	if not RunState.equipped_passives.is_empty():
+		pause.open_passive(RunState.equipped_passives[0])
+		await _ecran(pause, "pause_passif", bilan)
 	pause.queue_free()
+	for ecran in ["pause_main", "pause_vague", "pause_fiche"]:
+		if int(bilan.get(ecran, 0)) == 0:
+			_fail("defilement : l ecran %s n a pas ete verifie au doigt (il ne deborde pas)" % ecran)
+	# Apres la pause : le glisser de carte du controle du rail joue une carte.
+	await _rail_au_doigt(g)
 
 	# EPURATION : la liste du deck de la partie.
 	var epuration: Control = DeckBrowser.purge_overlay(1)
@@ -287,6 +300,121 @@ static func _combat(bilan: Dictionary) -> void:
 	epuration.queue_free()
 	g.queue_free()
 	await _disposer()
+
+
+## Main PLEINE des sorts aux plus longues descriptions et passifs equipes jusqu au
+## dernier emplacement : l onglet MAIN tel qu il est en fin de partie.
+static func _remplir_main_et_passifs() -> void:
+	var sorts: Array[SpellCard] = []
+	var passifs: Array[SpellCard] = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c == null:
+			continue
+		if c.is_passive:
+			passifs.append(c)
+		else:
+			sorts.append(c)
+	var plus_long := func(a: SpellCard, b: SpellCard) -> bool:
+		if a.description.length() != b.description.length():
+			return a.description.length() > b.description.length()
+		return String(a.id) < String(b.id)
+	sorts.sort_custom(plus_long)
+	passifs.sort_custom(plus_long)
+	RunState.hand.clear()
+	for c in sorts.slice(0, GameConfig.MAX_HAND_SIZE):
+		RunState.hand.append(c)
+	RunState.hand_changed.emit()
+	RunState.equipped_passives.clear()
+	for p in passifs.slice(0, GameConfig.PASSIVE_SLOTS):
+		RunState.equip_passive(p)
+
+
+## Assez de types de monstres sur le terrain pour que la liste VAGUE depasse la
+## hauteur de l ecran : une ligne par type (PausePanel.PORTRAIT_PX + 24 px).
+static func _remplir_la_vague(g: GameController) -> void:
+	var hauteur: float = float(ProjectSettings.get_setting("display/window/size/viewport_height"))
+	var voulus: int = int(ceil(hauteur / (PausePanel.PORTRAIT_PX + 24.0)))
+	var defs: Array = ContentDB.enemies.values().filter(func(d: EnemyDef) -> bool:
+		return d != null and not d.projectile and not d.is_boss())
+	defs.sort_custom(func(a: EnemyDef, b: EnemyDef) -> bool: return String(a.id) < String(b.id))
+	var largeur: float = GameConfig.BATTLEFIELD_WIDTH
+	for i in mini(voulus, defs.size()):
+		g.battlefield.spawn_enemy(defs[i], largeur * (0.1 + 0.8 * float(i) / float(maxi(1, voulus - 1))))
+
+
+## La fiche de monstre la plus LONGUE : on ouvre les plus chargees (competences
+## et groupes de resistances) jusqu a en trouver une qui deborde. null si aucune
+## ne deborde (le controle le signale alors).
+static func _fiche_qui_deborde(pause: PausePanel) -> EnemyDef:
+	var defs: Array = ContentDB.enemies.values().filter(func(d: EnemyDef) -> bool:
+		return d != null and not d.projectile)
+	var poids := func(d: EnemyDef) -> int:
+		return BestiaryLore.behaviours(d).size() * 2 + BestiaryLore.resistance_groups(d).size()
+	defs.sort_custom(func(a: EnemyDef, b: EnemyDef) -> bool:
+		var pa: int = poids.call(a)
+		var pb: int = poids.call(b)
+		return pa > pb if pa != pb else String(a.id) < String(b.id))
+	for d: EnemyDef in defs.slice(0, 8):
+		pause.open_enemy(d)
+		await _disposer()
+		for sc in _zones(pause):
+			if _deborde(sc):
+				return d
+	return null
+
+
+## LE RAIL DES PASSIFS AU DOIGT (audit vague 9) : un vrai toucher sur une
+## pastille met en pause et ouvre la fiche du passif ; REPRENDRE, touche aussi,
+## relance. Puis le geste qui ne doit PAS l ouvrir : une carte glissee de la
+## main et lachee sur la pastille.
+static func _rail_au_doigt(g: GameController) -> void:
+	var hud: Node = g.get_node_or_null("HUD")
+	if hud == null:
+		_fail("rail : HUD introuvable")
+		return
+	var zone: Button = null
+	for n in _descendants(hud):
+		if n is Button and String(n.name).begins_with("PassiveHit_"):
+			zone = n
+			break
+	if zone == null:
+		_fail("rail : aucune zone de toucher de passif")
+		return
+	var p: SpellCard = zone.get_meta(&"carte") as SpellCard
+	var centre: Vector2 = zone.get_global_rect().get_center()
+	await _toucher(centre)
+	await _disposer()
+	var pause: PausePanel = hud.get("_pause_panel") as PausePanel
+	if not _driver.get_tree().paused or pause == null:
+		_fail("rail : toucher la pastille de %s n ouvre pas la pause" % p.id)
+		return
+	if pause.open_passive_sheet() != p:
+		_fail("rail : la pause s ouvre sans la fiche de %s" % p.id)
+	await _driver._shot("rail_fiche_passif")
+	var reprendre: Control = pause.find_child("Resume", true, false) as Control
+	if reprendre != null:
+		await _toucher(reprendre.get_global_rect().get_center())
+		await _disposer()
+	if _driver.get_tree().paused:
+		_fail("rail : REPRENDRE, touche au doigt, ne relance pas la partie")
+		_driver.get_tree().paused = false
+
+	# Une carte A VISER glissee de la main et lachee sur la pastille : le geste
+	# appartient a la carte (HUD._input), la fiche ne s ouvre pas.
+	var main: Control = hud.get("_hand")
+	var carte: CardView = null
+	for n in main.get_children():
+		if n is CardView and not n.is_queued_for_deletion() \
+				and (n as CardView).card.targeting != GameEnums.Targeting.NONE:
+			carte = n
+			break
+	if carte == null:
+		return
+	await _glisser(carte.get_global_rect().get_center(), zone.get_global_rect().get_center())
+	await _disposer()
+	if _driver.get_tree().paused or hud.get("_pause_panel") != null:
+		_fail("rail : une carte lachee sur la pastille a ouvert la fiche du passif")
+		_driver.get_tree().paused = false
 
 
 static func _atelier(bilan: Dictionary) -> void:

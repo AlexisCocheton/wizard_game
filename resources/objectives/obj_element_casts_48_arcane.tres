@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_cnf8y")
 id = &"obj_element_casts_48_arcane"
-description = "Lancer 48 sorts d arcane"
+description = "Lancer 48 sorts d arcanique"
 check_key = &"element_casts"
 params = {
 "count": 48,

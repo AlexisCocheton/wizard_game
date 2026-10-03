@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_4hryk")
 id = &"rw_avatar_mage"
-display_name = "Le gardien"
+display_name = "Le vieux mage"
 description = "La tete du mage, le portrait de depart."
 at_level = 1
 kind = 1

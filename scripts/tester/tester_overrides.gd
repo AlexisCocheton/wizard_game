@@ -501,7 +501,10 @@ static func _dict_field(holder: Object, prop: String, key_text: String) -> Dicti
 	var d: Dictionary = holder.get(prop)
 	if prop == "resistances":
 		for t in RESIST_TAGS:
-			if GameEnums.tag_name(t) == key_text:
+			# « arcane » : le nom affiche avant la vague 9 (devenu « arcanique »).
+			# Un document de testeur deja ecrit avec l ancienne cle reste lisible.
+			if GameEnums.tag_name(t) == key_text \
+					or (t == GameEnums.DamageTag.ARCANE and key_text == "arcane"):
 				return {"holder": holder, "prop": prop, "kind": "dict_value", "sub": t,
 					"value_type": TYPE_FLOAT, "bounds": BOUNDS["resistances"],
 					"default": 1.0}

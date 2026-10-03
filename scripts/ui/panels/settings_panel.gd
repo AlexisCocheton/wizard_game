@@ -77,7 +77,11 @@ func _build() -> void:
 
 	_body.add_child(UiTheme.label("JEU", UiTheme.FONT_BODY, Color(0.20, 0.13, 0.02)))
 	var haptics := CheckButton.new()
+	haptics.name = "HapticsToggle"
 	haptics.text = "Vibrations"
+	# ~75 px de haut a sa taille naturelle (audit vague 9) : sous la cible
+	# tactile du projet. Toute la ligne se touche, sur 100 px.
+	haptics.custom_minimum_size = Vector2(0, 100)
 	haptics.button_pressed = bool(SaveData.get_setting("haptics", true))
 	haptics.toggled.connect(func(on: bool) -> void:
 		SaveData.set_setting("haptics", on)

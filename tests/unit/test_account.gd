@@ -31,6 +31,7 @@ func run() -> void:
 	_test_les_succes_de_campagne_suivent_le_contenu()
 	_test_un_succes_deja_merite_est_rattrape()
 	_test_chaque_cosmetique_a_un_apercu()
+	_test_le_portrait_du_mage_ne_porte_pas_le_nom_du_gardien()
 	SaveData.reset_profile()
 
 
@@ -401,3 +402,17 @@ func _test_les_succes_de_campagne_suivent_le_contenu() -> void:
 	if vus.has(&"ch_act_one"):
 		eq(int(vus[&"ch_act_one"]), acte1,
 			"le succes de l acte 1 demande ses %d niveaux" % acte1)
+
+
+## Le portrait PAR DEFAUT (la tete du mage) s appelait « Le gardien », alors que
+## le Gardien est un autre personnage de l histoire (audit vague 9) : le joueur
+## lisait le nom d un adversaire sur son propre visage.
+func _test_le_portrait_du_mage_ne_porte_pas_le_nom_du_gardien() -> void:
+	var vus: int = 0
+	for r: AccountRewardDef in ContentDB.rewards.values():
+		if r == null or r.texture_name != WardrobeData.AVATAR_MAGE:
+			continue
+		vus += 1
+		not_ok(r.display_name.to_lower().contains("gardien"),
+			"%s : le portrait du mage ne s appelle pas comme le Gardien (%s)" % [r.id, r.display_name])
+	ok(vus > 0, "(le portrait du mage est une recompense)")
