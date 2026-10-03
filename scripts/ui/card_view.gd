@@ -22,6 +22,23 @@ extends PanelContainer
 ##     du papier porte deja la rarete, le mot occupait une ligne pour rien.
 ##   - l indice de ciblage ("glisser pour viser") : il est identique pour la
 ##     moitie des cartes, donc il ne distingue rien.
+##
+## LE TEMPS D INCANTATION AFFICHE (audit independant, vague 9). La carte ecrivait
+## `base_cast_time`, le chiffre brut du .tres : une carte marquee « 1.4s » prenait
+## 2,66 s a x1, parce que le jeu applique GameConfig.CAST_TIME_SCALE (x1,9), les
+## passifs, les ameliorations et la vitesse. Deux regles, et deux seulement :
+##   - EN COMBAT (main, carte de detail du choix et de l echange de passif) : le
+##     temps REEL, RunState.effective_cast_time, le meme calcul que le Caster.
+##     Choisi plutot que « le temps a x1 » : la vitesse monte et descend sans
+##     cesse, et le chiffre qui aide a decider (lancer maintenant ou attendre ?)
+##     est la duree que la barre d incantation va REELLEMENT mettre. Le joueur
+##     voit le temps raccourcir quand il accelere et s allonger quand il prend un
+##     coup : c est la mecanique signature, lue sur la carte. Le HUD le
+##     rafraichit a chaque image (refresh_cast_time), sans reconstruire la carte.
+##   - HORS COMBAT (grimoire, ecran de deck) : base x CAST_TIME_SCALE, le temps
+##     a 100 % de vitesse sans passif ni amelioration (menu_cast_seconds). Le
+##     chiffre brut du .tres ne s affiche nulle part (verrouille par
+##     test_card_view : balayage de scripts/ui).
 
 signal pressed(card: SpellCard)
 
@@ -53,6 +70,8 @@ const INSTANT_TEXT: String = "instantane"
 var card: SpellCard = null
 ## Vrai si la carte part sans incantation (voir INSTANT_TEXT).
 var _instant: bool = false
+## Ligne du temps d une carte de MAIN, rafraichie par refresh_cast_time().
+var _cast_label: Label = null
 var _hovered: bool = false
 var _tween: Tween = null
 
@@ -145,7 +164,8 @@ func _build_hand(box: VBoxContainer, c: SpellCard, width: float, height: float) 
 	# Le temps d incantation en DORE et en gros : c est la donnee de decision.
 	# Une carte qui part sans incantation ne montre pas un temps qu elle ne
 	# subira pas : elle dit qu elle est instantanee, a une taille qui tient.
-	var texte_temps: String = INSTANT_TEXT if _instant else "%ss" % _fmt(c.base_cast_time)
+	# Le temps REEL (voir l en-tete) : celui que la barre d incantation mettra.
+	var texte_temps: String = INSTANT_TEXT if _instant else hand_cast_text(c)
 	var taille_temps: int = _fit_name(texte_temps, interne) if _instant else 26
 	var temps := UiTheme.label(texte_temps, taille_temps,
 		UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_CENTER, false)
@@ -153,6 +173,42 @@ func _build_hand(box: VBoxContainer, c: SpellCard, width: float, height: float) 
 	temps.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	temps.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	box.add_child(temps)
+	_cast_label = temps
+
+
+## Remet a jour le temps d une carte de MAIN : la vitesse change sans cesse, la
+## carte n est pas reconstruite pour autant. N ecrit que si le texte change (au
+## dixieme de seconde), donc rien a l image ou rien n a bouge. Une carte
+## instantanee garde son mot.
+func refresh_cast_time() -> void:
+	if card == null or _instant or _cast_label == null or not is_instance_valid(_cast_label):
+		return
+	var t: String = hand_cast_text(card)
+	if _cast_label.text != t:
+		_cast_label.text = t
+
+
+## « 2.7s » : le temps REEL d incantation, tel que l ecrit la carte de main.
+static func hand_cast_text(c: SpellCard) -> String:
+	return "%ss" % seconds_text(RunState.effective_cast_time(c))
+
+
+## Temps d incantation HORS COMBAT (grimoire, deck) : base x CAST_TIME_SCALE, a
+## 100 % de vitesse, sans passif ni amelioration. Le meme plancher que
+## RunState.effective_cast_time, donc egal a lui a x1 sur une partie neuve.
+## C est le SEUL endroit de scripts/ui qui lit base_cast_time (test_card_view).
+static func menu_cast_seconds(c: SpellCard) -> float:
+	return maxf(0.1, c.base_cast_time) * GameConfig.CAST_TIME_SCALE
+
+
+## « 2.7 s » : le temps hors combat, pour les fiches du grimoire et du deck.
+static func menu_cast_text(c: SpellCard) -> String:
+	return "%s s" % seconds_text(menu_cast_seconds(c))
+
+
+## Une duree au dixieme, sans « .0 » final : « 2.7 », « 3 ».
+static func seconds_text(v: float) -> String:
+	return ("%.1f" % v).trim_suffix(".0")
 
 
 ## DETAIL : la carte telle qu on la lit quand on a le temps.
@@ -186,8 +242,15 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 		_fit_size(c.display_name, name_size, width - 30.0))
 	box.add_child(title)
 
-	var meta := UiTheme.label("%s  -  %ss" % [GameEnums.rarity_name(c.rarity), _fmt(c.base_cast_time)],
+	# La carte de detail ne s ouvre qu EN COMBAT (choix, echange de passif) : le
+	# temps reel. Un PASSIF ne s incante pas : il dit a quelle vitesse il
+	# s allume, ce que « 0s » ne disait pas.
+	var meta_txt: String = ("%s  -  des %d %%" % [GameEnums.rarity_name(c.rarity),
+		c.speed_threshold]) if c.is_passive \
+		else "%s  -  %s" % [GameEnums.rarity_name(c.rarity), hand_cast_text(c)]
+	var meta := UiTheme.label(meta_txt,
 		body_size, UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_CENTER, false)
+	meta.name = "Meta"
 	meta.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(meta)
 
@@ -317,10 +380,6 @@ func _fit_size(text: String, wanted: int, width: float) -> int:
 	if longest <= width or longest <= 0.0:
 		return wanted
 	return clampi(int(floor(float(wanted) * width / longest)), 16, wanted)
-
-
-func _fmt(v: float) -> String:
-	return ("%.1f" % v).trim_suffix(".0")
 
 
 func _targeting_hint(t: int) -> String:

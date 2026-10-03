@@ -163,6 +163,9 @@ func _refresh_gauges() -> void:
 		if child is CardView:
 			var cv := child as CardView
 			cv.modulate = _teinte_carte(cv.card, int(cv.get_meta(&"slot", -1)), en_attente)
+			# Le temps REEL suit la vitesse (CardView, en-tete) : n ecrit que
+			# s il change au dixieme.
+			cv.refresh_cast_time()
 
 	# Compte a rebours de la prochaine pioche : le joueur jouait a l aveugle
 	# entre deux pioches, sans savoir s il devait garder une carte ou la depenser.
@@ -205,7 +208,15 @@ func _refresh_gauges() -> void:
 const RAIL_BAS: float = 1484.0      ## y de 100 % (bas de la barre)
 const RAIL_HAUT: float = 234.0      ## y du maximum (haut de la barre)
 const RAIL_X: float = 104.0         ## a droite de la barre, hors de son epaisseur
-const ICONE: float = 54.0
+## Pastille d un passif. 54 -> 80 px (audit vague 9, lisibilite telephone) :
+## l icone se reconnaissait mal a 42 px utiles. Pas plus : le rail empiete sur
+## la voie gauche du terrain, ou descendent les monstres.
+const ICONE: float = 80.0
+## Zone de TOUCHER d une pastille : un toucher ouvre la fiche du passif. Plus
+## grande que la pastille (cible tactile du projet : 90 px au moins) et
+## prolongee sur le seuil ecrit a droite, qu on touche aussi naturellement.
+const TOUCHE: float = 100.0
+const TOUCHE_SEUIL: float = 80.0
 
 
 func _build_passive_rail() -> void:
@@ -321,10 +332,35 @@ func _build_passive_rail() -> void:
 		pastille.set_meta(&"seuil_label", seuil)
 		pastille.set_meta(&"carte", p)
 
+		# LE TOUCHER (audit vague 9) : la pastille ne reagissait a rien, le
+		# joueur voyait une icone sans pouvoir apprendre ce qu elle fait. Un
+		# bouton TRANSPARENT par-dessus, pas la pastille elle-meme : elle reste
+		# IGNORE et purement visuelle. Le glisser d une carte n est pas gene :
+		# il part de la main et son relachement est pris dans _input(), avant
+		# l interface (piege du Button en memoire).
+		var toucher := Button.new()
+		toucher.name = "PassiveHit_" + String(p.id)
+		toucher.flat = true
+		toucher.focus_mode = Control.FOCUS_NONE
+		toucher.mouse_filter = Control.MOUSE_FILTER_STOP
+		toucher.process_mode = Node.PROCESS_MODE_ALWAYS
+		var vide := StyleBoxEmpty.new()
+		for etat in [&"normal", &"hover", &"pressed", &"focus", &"disabled"]:
+			toucher.add_theme_stylebox_override(etat, vide)
+		toucher.position = Vector2(RAIL_X + (ICONE - TOUCHE) * 0.5, y - TOUCHE * 0.5)
+		toucher.size = Vector2(TOUCHE + TOUCHE_SEUIL, TOUCHE)
+		toucher.custom_minimum_size = toucher.size
+		toucher.set_meta(&"carte", p)
+		toucher.pressed.connect(func() -> void:
+			AudioBus.play_sfx(&"ui_tap")
+			open_passive_sheet(p))
+
 		_passive_rail.add_child(pastille)
 		_passive_rail.add_child(seuil)
+		_passive_rail.add_child(toucher)
 		_passive_icons.append(pastille)
 		_passive_nodes.append(pastille)
+		_passive_nodes.append(toucher)
 		# L ETIQUETTE AUSSI, sinon elle survit a la reconstruction du rail.
 		#
 		# Le defaut, vu sur capture : deux "150 %" a l ecran, dont un sans
@@ -798,6 +834,22 @@ func _on_pause_pressed() -> void:
 ## son propre fichier, scripts/ui/pause_panel.gd. Le HUD ne fait plus que le
 ## poser et brancher ses deux sorties.
 var _pause_panel: Control = null
+
+
+## FICHE D UN PASSIF, ouverte en touchant sa pastille du rail (audit vague 9).
+## Elle vit dans la PAUSE (onglet MAIN) : lire un texte demande d arreter le
+## temps, et REPRENDRE / RETOUR y sont deja sous le pouce. Si la pause est deja
+## ouverte, on y montre simplement la fiche.
+func open_passive_sheet(p: SpellCard) -> void:
+	if p == null:
+		return
+	var tree: SceneTree = get_tree()
+	if not tree.paused:
+		tree.paused = true
+		_pause_btn.text = ">"
+	if _pause_panel == null or not is_instance_valid(_pause_panel):
+		_show_pause_panel()
+	(_pause_panel as PausePanel).open_passive(p)
 
 
 func _show_pause_panel() -> void:

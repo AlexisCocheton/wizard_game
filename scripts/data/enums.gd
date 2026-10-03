@@ -56,6 +56,8 @@ const ELEMENTS: Array[int] = [
 
 ## Nom joueur d un element, au masculin sans article. Sert partout ou l element
 ## doit s ecrire : fiche de monstre, carte, bilan de fin.
+## « arcanique » et non « arcane » (vague 9) : c est le nom que le co-auteur a
+## donne a l element. L IDENTIFIANT interne reste ARCANE / &"arcane".
 static func tag_name(tag: int) -> String:
 	match tag:
 		DamageTag.FIRE: return "feu"
@@ -64,7 +66,7 @@ static func tag_name(tag: int) -> String:
 		DamageTag.WIND: return "vent"
 		DamageTag.LIGHTNING: return "foudre"
 		DamageTag.ICE: return "glace"
-		DamageTag.ARCANE: return "arcane"
+		DamageTag.ARCANE: return "arcanique"
 		DamageTag.POISON: return "poison"
 		DamageTag.SLOW: return "ralentissement"
 		DamageTag.SUMMON: return "invocation"

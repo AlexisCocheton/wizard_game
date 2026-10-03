@@ -392,7 +392,7 @@ func _test_labels() -> void:
 	eq(ObjectiveChecker.label(_obj(&"no_card_key", {"key": "build_wall"})),
 		"Gagner sans poser de mur", "sans poser de mur")
 	eq(ObjectiveChecker.label(_obj(&"no_card_tag", {"tag": "ARCANE"})),
-		"Gagner sans sort d arcane", "elision devant une voyelle")
+		"Gagner sans sort d arcanique", "elision devant une voyelle")
 	eq(ObjectiveChecker.label(_obj(&"element_casts", {"element": "ICE", "count": 4})),
 		"Lancer 4 sorts de glace", "element de la vague 8, sans elision")
 	eq(ObjectiveChecker.label(_obj(&"win_under_time", {"seconds": 150})),

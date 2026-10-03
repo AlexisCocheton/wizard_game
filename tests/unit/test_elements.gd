@@ -90,6 +90,7 @@ func run() -> void:
 	_test_chaque_sort_a_exactement_un_element()
 	_test_la_regle_de_passage_des_resistances()
 	_test_les_logos_dans_le_texte()
+	_test_l_element_s_appelle_arcanique()
 
 
 ## Les HUIT elements du co-auteur (vague 8) : Feu, Eau, Nature, Vent, Foudre,
@@ -104,7 +105,7 @@ func _test_la_palette_couvre_les_huit_elements() -> void:
 	var noms: Array = []
 	for e in voulus:
 		noms.append(GameEnums.tag_name(e))
-	eq(noms, ["feu", "eau", "nature", "vent", "foudre", "glace", "arcane", "poison"],
+	eq(noms, ["feu", "eau", "nature", "vent", "foudre", "glace", "arcanique", "poison"],
 		"chaque element a son nom joueur")
 	not_ok(T.SLOW in GameEnums.ELEMENTS, "le ralentissement n est pas un element")
 	not_ok(T.SUMMON in GameEnums.ELEMENTS, "l invocation n est pas un element")
@@ -785,3 +786,68 @@ func _test_les_logos_dans_le_texte() -> void:
 				"legende du Cameleon : logo de %s" % GameEnums.tag_name(int(t)))
 			ok(nu.contains(GameEnums.tag_name(int(t))), "et le texte nu le nomme")
 		not_ok(nu.contains("[img"), "le texte nu ne contient aucun BBCode")
+
+
+## « Arcanique », pas « Arcane » (audit vague 9) : le co-auteur a nomme les huit
+## elements Feu, Eau, Nature, Vent, Foudre, Glace, Arcanique, Poison. Les
+## IDENTIFIANTS internes (ARCANE, &"arcane", arcane_bolt) ne changent pas ; les
+## libelles affiches, si. Verrous : les noms de type, la phrase de resistance,
+## le logo dans un texte qui ecrit ARCANIQUE, l ancienne cle du testeur ; puis
+## un balayage de scripts/ui : aucune chaine n ecrit « arcane » / « Arcane ».
+func _test_l_element_s_appelle_arcanique() -> void:
+	var noms: Array = []
+	for e in GameEnums.ELEMENTS:
+		noms.append(ElementIcons.type_name(SpellCard.type_of_tag(e)))
+	eq(noms, ["Feu", "Eau", "Nature", "Vent", "Foudre", "Glace", "Arcanique", "Poison"],
+		"les noms de type affiches sont ceux du co-auteur")
+	var phrase: String = BestiaryLore._tag_name(GameEnums.DamageTag.ARCANE)
+	ok(phrase.contains("arcanique"), "la fiche de monstre dit « arcanique » (%s)" % phrase)
+	var px: int = ElementIcons.inline_px(UiTheme.FONT_BODY)
+	for mot in ["ARCANIQUE", "ARCANIQUES"]:
+		var texte: String = "6 degats %s ici" % mot
+		var deco: String = ElementIcons.decorate(texte, px)
+		ok(deco.contains(ElementIcons.path(&"arcane")), "%s recoit le logo de l element" % mot)
+		eq(ElementIcons.strip_inline(deco), texte, "%s : le mot reste entier" % mot)
+	# Un document de testeur ecrit avant le renommage garde sa cle.
+	var monstre: EnemyDef = null
+	for d: EnemyDef in ContentDB.enemies.values():
+		if d != null:
+			monstre = d
+			break
+	if monstre != null:
+		ok(not TesterOverrides.resolve_field(monstre, "resistances/arcane").is_empty(),
+			"l ancienne cle resistances/arcane du testeur reste lisible")
+		ok(not TesterOverrides.resolve_field(monstre, "resistances/"
+			+ GameEnums.tag_name(GameEnums.DamageTag.ARCANE)).is_empty(), "la nouvelle cle aussi")
+	# Balayage : une chaine (pas un StringName &"...") qui ecrit le mot en
+	# minuscules ou avec une majuscule initiale serait un libelle affiche.
+	var re := RegEx.new()
+	re.compile("(?<!&)\"[^\"]*\\b(arcanes?|Arcanes?)\\b[^\"]*\"")
+	var fautes: Array[String] = []
+	for chemin in _scripts_ui("res://scripts/ui"):
+		var f := FileAccess.open(chemin, FileAccess.READ)
+		if f == null:
+			continue
+		var n: int = 0
+		while not f.eof_reached():
+			var ligne: String = f.get_line()
+			n += 1
+			var code: String = ligne.strip_edges()
+			if code.begins_with("#"):
+				continue
+			if re.search(code) != null:
+				fautes.append("%s:%d %s" % [chemin.get_file(), n, code])
+	ok(fautes.is_empty(), "aucun libelle « arcane » dans scripts/ui : %s" % "; ".join(fautes))
+
+
+func _scripts_ui(dossier: String) -> Array[String]:
+	var out: Array[String] = []
+	var d := DirAccess.open(dossier)
+	if d == null:
+		return out
+	for f in d.get_files():
+		if f.ends_with(".gd"):
+			out.append(dossier.path_join(f))
+	for sous in d.get_directories():
+		out.append_array(_scripts_ui(dossier.path_join(sous)))
+	return out

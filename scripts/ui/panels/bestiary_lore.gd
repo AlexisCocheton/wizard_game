@@ -134,7 +134,7 @@ static func _tag_name(tag: int) -> String:
 		GameEnums.DamageTag.WIND: return "au vent"
 		GameEnums.DamageTag.LIGHTNING: return "a la foudre"
 		GameEnums.DamageTag.ICE: return "a la glace"
-		GameEnums.DamageTag.ARCANE: return "aux arcanes"
+		GameEnums.DamageTag.ARCANE: return "a l arcanique"
 		GameEnums.DamageTag.POISON: return "au poison"
 		GameEnums.DamageTag.SLOW: return "au ralentissement"
 		GameEnums.DamageTag.SUMMON: return "aux invocations"

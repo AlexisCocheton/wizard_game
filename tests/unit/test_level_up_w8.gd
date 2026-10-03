@@ -33,6 +33,8 @@ func run() -> void:
 	_test_le_cumul_des_voies_se_lit_par_axe()
 	_test_l_ecran_de_maturation_montre_l_icone_du_sort()
 	_test_le_rail_montre_l_icone_des_passifs()
+	_test_toucher_un_passif_ouvre_sa_fiche()
+	_test_la_fiche_du_passif_dit_s_il_est_allume()
 	RunState.reset()
 	SpeedGauge.reset()
 
@@ -417,4 +419,98 @@ func _test_le_rail_montre_l_icone_des_passifs() -> void:
 			"%s : le contour garde la couleur de rarete" % carte.id)
 	detach(hud)
 	RunState.reset()
+	SpeedGauge.reset()
+
+
+## LE RAIL SE TOUCHE (audit vague 9) : les pastilles faisaient 54 px et ne
+## reagissaient a rien. Chaque passif a maintenant une zone de toucher d au
+## moins 90 px (plancher tactile du projet, en dur), plus grande que l ancienne
+## pastille, qui ne recouvre ni la main ni la jauge ; la toucher met en pause et
+## ouvre la FICHE du passif (onglet MAIN de la pause), REPRENDRE la referme.
+func _test_toucher_un_passif_ouvre_sa_fiche() -> void:
+	RunState.reset()
+	reset_gauge_at_normal_speed()
+	var hud: Node = load("res://scenes/hud/HUD.tscn").instantiate()
+	attach(hud)
+	var equipes: Array[SpellCard] = _equipe_en_desordre()
+	hud.call("_build_passive_rail")
+	var zones: Array[Button] = []
+	for n in hud.get("_passive_nodes"):
+		if n is Button and is_instance_valid(n):
+			zones.append(n)
+	eq(zones.size(), equipes.size(), "une zone de toucher par passif")
+	var main: Rect2 = (hud.get("_hand") as Control).get_global_rect()
+	var jauge_c: Control = hud.get("_enemy_bar")
+	var jauge: Rect2 = jauge_c.get_global_transform() * Rect2(Vector2.ZERO, jauge_c.size)
+	var pastilles: Array = hud.get("_passive_icons")
+	for z: Button in zones:
+		var p: SpellCard = z.get_meta(&"carte") as SpellCard
+		ok(z.size.x >= 90.0 and z.size.y >= 90.0,
+			"%s : zone de toucher d au moins 90 px (%s)" % [p.id, z.size])
+		ok(z.mouse_filter == Control.MOUSE_FILTER_STOP, "%s : la zone recoit le doigt" % p.id)
+		not_ok(z.get_global_rect().intersects(main), "%s : la zone ne mord pas sur la main" % p.id)
+		# La jauge est une barre fine a gauche : la zone peut l effleurer, pas
+		# couvrir son centre (la ou on la lit).
+		not_ok(z.get_global_rect().has_point(jauge.get_center()),
+			"%s : la zone ne couvre pas la jauge" % p.id)
+	for pa: Control in pastilles:
+		eq(pa.mouse_filter, Control.MOUSE_FILTER_IGNORE, "la pastille reste purement visuelle")
+	ok(not hud.get_tree().paused, "(la partie tourne)")
+	if not zones.is_empty():
+		var z0: Button = zones[0]
+		var p0: SpellCard = z0.get_meta(&"carte") as SpellCard
+		z0.pressed.emit()
+		ok(hud.get_tree().paused, "toucher un passif met la partie en pause")
+		var pause: PausePanel = hud.get("_pause_panel") as PausePanel
+		ok(pause != null, "la pause s ouvre")
+		if pause != null:
+			eq(pause.open_passive_sheet(), p0, "sur la fiche du passif touche")
+			eq(pause.current_tab(), PausePanel.Tab.HAND, "dans l onglet MAIN")
+			var etat: Label = pause.find_child("PassiveState", true, false) as Label
+			ok(etat != null and etat.text == PausePanel.passive_state_text(p0),
+				"la fiche dit si le passif est allume")
+			var desc: Node = pause.find_child("Description", true, false)
+			ok(desc is RichTextLabel and ElementIcons.strip_inline(
+				(desc as RichTextLabel).text).contains(p0.description),
+				"la fiche porte la description du passif")
+			var retour: Button = pause.find_child("PassiveBack", true, false) as Button
+			ok(retour != null and retour.custom_minimum_size.y >= 90.0,
+				"RETOUR A LA MAIN se touche (>= 90 px)")
+			if retour != null:
+				retour.pressed.emit()
+				eq(pause.open_passive_sheet(), null, "RETOUR ferme la fiche")
+			# Un second passif touche pendant la pause : la fiche change, la
+			# pause ne se referme pas.
+			if zones.size() > 1:
+				var p1: SpellCard = zones[1].get_meta(&"carte") as SpellCard
+				zones[1].pressed.emit()
+				ok(hud.get_tree().paused, "la pause reste ouverte")
+				eq((hud.get("_pause_panel") as PausePanel).open_passive_sheet(), p1,
+					"la fiche du second passif s ouvre")
+			(hud.get("_pause_panel") as PausePanel).resume_requested.emit()
+		ok(not hud.get_tree().paused, "REPRENDRE relance la partie")
+	hud.get_tree().paused = false
+	detach(hud)
+	RunState.reset()
+	SpeedGauge.reset()
+
+
+## Les deux etats de la fiche disent la verite sur la vitesse courante.
+func _test_la_fiche_du_passif_dit_s_il_est_allume() -> void:
+	var p: SpellCard = null
+	for c: SpellCard in _passifs():
+		if c.speed_threshold > 100 and c.speed_threshold < GameConfig.SPEED_MAX_PERCENT:
+			p = c
+			break
+	ok(p != null, "(un passif a seuil intermediaire)")
+	if p == null:
+		return
+	SpeedGauge.reset()
+	SpeedGauge.set_speed_percent(p.speed_threshold - 1)
+	not_ok(PausePanel.passive_lit(p), "%s : eteint sous son seuil" % p.id)
+	ok(PausePanel.passive_state_text(p).begins_with("ETEINT"), "la fiche dit ETEINT")
+	ok(PausePanel.passive_state_text(p).contains("%d %%" % 1), "et ce qu il manque")
+	SpeedGauge.set_speed_percent(p.speed_threshold)
+	ok(PausePanel.passive_lit(p), "%s : allume a son seuil" % p.id)
+	ok(PausePanel.passive_state_text(p).begins_with("ALLUME"), "la fiche dit ALLUME")
 	SpeedGauge.reset()

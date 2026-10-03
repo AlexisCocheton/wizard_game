@@ -90,6 +90,16 @@ static func run(driver: Node) -> void:
 		await driver._shot("atelier_document")
 		await _scroll_to(tools, "APERCU", tree)
 		await driver._shot("atelier_document_apercu")
+		# Audit vague 9 : la presentation TELEPHONE (COPIER d abord, pas
+		# d export vers un dossier prive), avant et apres la copie.
+		doc.set_mobile(true)
+		await tree.process_frame
+		await _scroll_to(tools, "DOCUMENT DE CHANGEMENT", tree)
+		# Pas de COPIER ici : en fenetre reelle sous Windows, le presse-papiers
+		# peut etre tenu par une autre application (« Unable to open
+		# clipboard »). La copie est verifiee par test_tester_tools.
+		await driver._shot("atelier_document_telephone")
+		doc.set_mobile(false)
 		if chemin != "":
 			DirAccess.remove_absolute(chemin)
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SMOKE_DOC_DIR))

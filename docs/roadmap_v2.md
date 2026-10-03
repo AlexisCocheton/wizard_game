@@ -115,7 +115,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Demande | Etat | Chantier |
 |---|---|---|
 | Structure titre / centre / menu bas | FAIT | — |
-| Niveau du joueur + cartes en haut, profil en haut a droite | **FAIT** | C |
+| Niveau du joueur + cartes en haut, profil en haut a droite | **FAIT**. **Change le 02/10** (co-auteur) : REGLAGES en haut a droite, PROFIL en 5e onglet, tete du mage en portrait par defaut (§13) | C |
 | Fusionner bestiaire et galerie (onglets Sorts / Passifs / Bestiaire) | **FAIT** | C |
 | Livre a pages (asset magic book), fleches gauche/droite | **FAIT** | C |
 | Detail avec nb d'utilisations, monstres tues, ameliorations | **FAIT** (le crochet des ameliorations attend G) | C |
@@ -124,12 +124,12 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 | Police plus lisible, tout un peu plus grand | **FAIT** (la cause etait le contour de 6 px, pas la taille) | C |
 | Vraies icones de menu (pas un steak) | **FAIT** | C |
 | Titre stylise, nom "Time Wizard" | **FAIT** | C |
-| Deck : 15 cartes exactement, 0-3 passifs, ~~≤3 legendaires, ≤3 epiques~~ | **FAIT**, puis **remplace le 27/09** par la regle des 6 cartes differentes (plafonds de rarete retires, voir §11) | K |
+| Deck : ~~15~~ **12** cartes exactement, 0-3 passifs, ~~≤3 legendaires, ≤3 epiques~~ | **FAIT**, puis **remplace le 27/09** par la regle des 6 cartes differentes (plafonds de rarete retires, voir §11). **12 cartes depuis le 02/10** (§13) : la regle des 6 laisse alors passer 4 legendaires ou 6 epiques | K |
 | Plusieurs onglets de deck | **FAIT** | K |
 | Profil : succes par rarete au lieu des defis | **FAIT** (16 succes, XP deduite de la rarete) | L |
 | Contour de couleur par rarete (cartes, monstres, succes) | **FAIT** (epaisseur croissante en plus de la couleur) | L |
-| Cosmetiques : couleur du mage, chapeau, tour ; onglet dedie | **FAIT** (11 pieces, avec apercu) | L |
-| Fond de la barre de titre selon le niveau | **FAIT** (bois / argent / or / cristal) | L |
+| Cosmetiques : couleur du mage, chapeau, tour ; onglet dedie | **FAIT** (11 pieces, avec apercu). **Refait le 02/10** : garde-robe (chapeaux dessines en calque, apprentis provisoires, tours, robes, portraits, §13) | L |
+| Fond de la barre de titre selon le niveau | **FAIT** (bois / argent / or / cristal). Le cristal (niveau 14) est **inatteignable** : le compte plafonne au niveau 12 (§13) | L |
 
 ### Campagne
 | Demande | Etat | Chantier |
@@ -152,11 +152,11 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 |---|---|---|
 | Passifs hors du deck, actifs des le debut, 3 emplacements, echange au 4e | **FAIT**, **restreint le 30/09** : rien avant l acte 2, et les 3 emplacements n agissent qu en Infini et en Massacre, pas en campagne (§12) | F |
 | Passif actif seulement au-dela d'une vitesse (ex. 140 %) | **FAIT** | F |
-| Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | **FAIT** (14 passifs) | F |
+| Plus de passifs, avec raretes ; 20 % de passifs a la montee de niveau | **FAIT** (14 passifs ; **30** depuis le 02/10, dont 16 elementaires, §13) | F |
 | Icone des passifs a cote de la barre de vitesse, a leur seuil | **FAIT** | F |
-| Amelioration des cartes en combat (XP par lancer, choix parmi 3) | **FAIT** (8 lancers, 3 pactes, per-partie). ~~3 pactes~~ **remplaces le 29-30/09** : pool de voies propre a chaque sort, 3 tirees, legeres ou fortes, deux maturations (§12) | G |
+| Amelioration des cartes en combat (XP par lancer, choix parmi 3) | **FAIT** (8 lancers, 3 pactes, per-partie). ~~3 pactes~~ **remplaces le 29-30/09** : pool de voies propre a chaque sort, 3 tirees, legeres ou fortes, deux maturations (§12) ; **cinq maturations** depuis le 02/10 (§13) | G |
 | Arbre qui attire les ennemis ; sort de stun ; arbre a zone de poison ; eau qui ralentit | **FAIT** (4 cartes, 3 verbes d effet neufs) | H |
-| Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre). **30/09** : ecarts accentues, appliques aussi aux effets, logo d element et type sur chaque sort (§12) | B3 |
+| Element sur chaque sort de degats + resistances en % par monstre | **FAIT** (6 elements, table par monstre). **30/09** : ecarts accentues, appliques aussi aux effets, logo d element et type sur chaque sort (§12). **02/10** : **huit elements**, un par sort (§13) | B3 |
 
 ### Monstres
 | Demande | Etat | Chantier |
@@ -173,7 +173,7 @@ sources interdite** — c'est ce qui justifie de garder `raw_assets/` hors du de
 |---|---|---|
 | Vitesse non accelerable manuellement, +1 % toutes les 0,5 s | **FAIT** (bouton et barre supprimes) | B1 |
 | Main a 6 cartes | FAIT | — |
-| Quitter le combat depuis la pause | **FAIT** | B1 |
+| Quitter le combat depuis la pause | **FAIT** ; pause a onglets MAIN / DECK / VAGUE depuis le 02/10 (§13) | B1 |
 
 ---
 
@@ -564,7 +564,7 @@ en relancant le harnais. Le detail et les chiffres sont dans les messages des co
 | Regle de deck : 6 cartes differentes | `DeckRules.MAX_DISTINCT = 6` ; plafonds de rarete retires (la regle borne deja a 3 legendaires, 4 epiques) ; `is_valid()` verifie enfin les exemplaires ; 20 decks de campagne recomposes ; deck sauvegarde hors regle garde et explique, refuse en Massacre |
 | Trois objectifs par niveau, coherents | *(refait le 30/09, §12)* Moteur a 16 controles parametres, libelle genere, AUDIT impossible/gratuit ; 63 objectifs sur 21 niveaux, 15 controles differents, chacun appuye sur le contenu du niveau ; exemples du co-auteur presents ; progression suivie EN COMBAT (bandeau, echec annonce) |
 | Riviere (legendaire) | ligne d eau, un pont au hasard qui garde toujours un chemin, une seule a la fois, volants et projectiles passent dessus |
-| Sorts de terrain permanents | `duration <= 0` = fin du combat, 6 objets au plus (le plus ancien cede), garantie de chemin avant et apres la pose (Mur et Bastion compris) ; Autel d appel, Ronces, Fosse ; Totem a 3500 PV (mesure), Semis permanent qui n attire plus |
+| Sorts de terrain permanents | `duration <= 0` = fin du combat, 6 objets au plus (le plus ancien cede), garantie de chemin avant et apres la pose (Mur et Bastion compris) ; Autel d appel, Ronces, Fosse ; Totem a 3500 PV (mesure ; **800 PV depuis le 02/10**, essai du co-auteur, §13), Semis permanent qui n attire plus |
 | Monstres (§0.4 du plan) | mecaniques v3 : vies multiples depuis le haut, renaissance differee avec marque au sol (slime fantome -> squelette), reanimateur, laser de riposte, sommeil qui coupe la magie, zigzag / rebond / sauts |
 | Boss (§0.7) | mecaniques v3 : Horloger, Jumeaux, Cameleon, Voleur de sorts, Devoreur-invocateur, Miroir du mage, chacune avec sa garantie de fin ; Briseur de tertres (epargne l eau) |
 | Packs de monstres (§0.8) | 23 monstres et boss neufs : trio de mages, Mecha-golem, slimes geants (colossal -> enorme -> moyen), renard dormeur, cacodemon, Malyk le Seigneur demon (Duelyst), Fossoyeur, Horloger, Greffier, Cameleon ; les tetes manquantes des actes 3 a 5 |
@@ -657,7 +657,7 @@ de branche (`git log <fusion>^2`) ; les raisons dans la memoire projet
 | Objectifs (contenu) | 3 objectifs par niveau, **lies au deck et aux monstres** (deux sur trois au moins), **classes par difficulte** ; classement MESURE (60 parties par objectif, bot qui le vise) et verrouille par `test_level_progression.MESURES` ; tout le catalogue est obtenable en campagne |
 | Resistances | **Accentuees** par une regle unique (`EnemyDef.accentuate` : 0,5 -> 0,30 ; 1,2 -> 1,58 ; plafond x2) et **appliquees aux effets** (`control_factor` : ralentir, etourdir, repousser, aspirer, attirer, volte-face, vulnerabilite...). Defaut corrige : le Champ de givre ne faisait AUCUN degat a un monstre immunise au ralentissement (Chronos, golem, Behemoth). Berserker retouche (givre -> poison) |
 | Logos | Logo d element (forme + couleur + image, formes toutes differentes) sur la carte ET devant chaque pourcentage du bestiaire ; type de chaque sort (`SpellCard.spell_type()`) ; sceau de type aussi a l ecran de deck |
-| Ameliorations | Pool de voies **propre a chaque sort** (4 a 12, derive de ses effets), **3 tirees** a chaque maturation, **legeres** (+10 %, sans prix) ou **fortes** (+30 % contre -15 % ailleurs), **deux maturations** (8 puis 24 lancers) |
+| Ameliorations | Pool de voies **propre a chaque sort** (4 a 12, derive de ses effets), **3 tirees** a chaque maturation, **legeres** (+10 %, sans prix) ou **fortes** (+30 % contre -15 % ailleurs), **deux maturations** (8 puis 24 lancers ; **cinq** depuis le 02/10, §13) |
 | Banc | Bot **AutoPick** qui choisit comme un joueur raisonnable et vise hors de l aura des totems ; **rage des Berserkers** bornee dans le temps (elle dependait des images par seconde) ; **Chronos du tutoriel** allege (vague `w1_boss` a difficulte 0,6, 87 abattus sur 87) ; aucun niveau sous 60 % |
 | Lisibilite | Encres de rarete du theme partout (l AUDIT refuse une couleur de rarete ecrite en dur) ; les **4 encres >= 4,5:1** sur le papier creme, la page du grimoire et le papier de leur carte ; bandeau des passifs de l ecran de deck entier ; compteurs du profil alignes |
 
@@ -678,16 +678,19 @@ de branche (`git log <fusion>^2`) ; les raisons dans la memoire projet
 
 - Plusieurs niveaux **au-dessus de 95 %** : ils ne demandent plus de choix.
 - **`lvl_13`** : saut de PV **x2,28** d une vague a l autre (`w13_4` : 879 PV apres 385).
+  **Corrige le 03/10** (w13_4 a x1,97, regle du saut verrouillee sur lvl_13, §13).
 - La regle « jamais plus de x2 entre deux vagues » n est verifiee par `test_balance`
   que sur `lvl_01` et `lvl_02`. Mesure des .tres le 30/09 : **10 niveaux** la depassent
   (lvl_03 x2,41, lvl_04, 06, 07, 10, lvl_12 x2,61, lvl_13, 14, 15, 17).
 - **Massacre** : 10,4 vagues au banc complet (repere 4-8), et le chiffre depend du
   profil (cartes obtenues) : 7,7 vagues lance seul sur un profil neuf.
-- Anciens leviers du 28/09 encore ouverts : arbre appat a 3500 PV dans `lvl_04`,
-  Boule de feu a 26 reels.
+- Anciens leviers du 28/09 encore ouverts : arbre appat a 3500 PV dans `lvl_04`
+  (**800 PV depuis le 02/10**, essai du co-auteur), Boule de feu a 26 reels.
 
 Le banc n est pas deterministe d un processus a l autre : 60 a 90 parties pour
-departager deux reglages proches (`--parties=60`).
+departager deux reglages proches (`--parties=60`). **Devenu faux le 02/10** : le banc
+est deterministe (`RunState.world_rng`, §13) ; les 60 a 90 parties restent necessaires
+a cause de la variance entre graines.
 
 ### Reste — actions du testeur (l assistant ne peut pas les faire)
 
@@ -720,8 +723,100 @@ departager deux reglages proches (`--parties=60`).
 
 ### Reste — limites connues
 
-- **Le banc des objectifs n a pas d outil permanent** : la sonde qui a produit la table
-  `MESURES` a ete supprimee. Retoucher un objectif change son id et fait rougir sa
-  ligne ; le re-mesurer demandera d ecrire une nouvelle sonde.
+- ~~**Le banc des objectifs n a pas d outil permanent**~~ : **leve le 02/10**,
+  `tools/objective_bench.tscn` (§13).
 - Le **Slime colossal** est une feuille agrandie a gros pixels : a juger en jeu.
 - Niveaux sans boss (`lvl_08`, `17`, `18`, `20`) et sans mini-boss (`lvl_16`) : voulu.
+
+---
+
+## 13. Etat au 3 octobre, apres la vague 8 (retour du co-auteur du 02/10)
+
+Retour du co-auteur du 02/10 (plan « vague 8 ») : regle du livre de sorts, vraies
+nouveautes par niveau, garde-robe, outils du testeur, menus, huit elements, combat,
+sorts et decks de 12, incantation plus longue, defilement au doigt ; puis recalibrage
+des 63 objectifs et correction du banc. Quatorze fusions dans `main` les 02 et 03/10,
+une branche a la fois, harnais vert a chaque fois. Les chiffres sont dans les messages
+des commits de branche (`git log <fusion>^2`) ; les raisons dans la memoire projet
+(`decisions.md`, DEC-038 a DEC-053) et dans `tools/README_equilibrage.md`.
+
+### Fait
+
+| Demande | Livre |
+|---|---|
+| Livre de sorts | Une carte est **obtenue** si elle est dans le deck d un niveau OUVERT ou si le joueur l a **prise** en combat (brulee : non), rien d autre. Deduit a chaque lecture (`SaveData.cards_owned_by_decks`) : profil neuf = deck de lvl_01, sans migration. `copies_in_starter` ne donne plus rien |
+| Vraies nouveautes | Dans l ordre de jeu, aucune carte nouvelle ni recompense n est deja possedee (avant : 33 et 19 l etaient). 42 sorts a decouvrir, 84 reprises jamais sur deux niveaux de suite. Deux defis du co-auteur places (sous 120 %, distance du Serpent) |
+| Banc | **Deterministe** : tout le hasard du monde suit la graine (`RunState.world_rng`). **Banc des objectifs permanent** (`tools/objective_bench.tscn`) : bot oriente vers l objectif, une politique par cle, ligne prete pour `MESURES`. Motif de deplacement **spirale** (porte par aucun monstre livre) |
+| Garde-robe | 12 **chapeaux dessines** poses en calque image par image, cumulables avec la robe ; apprentis **provisoires** (ecuyer, fee) et teintes par apprenti ; apprenti **x1,5** ; 7 tours ; 4 robes ; 10 portraits ; tete du mage en portrait par defaut. Tout tient dans les 12 niveaux de compte atteignables |
+| Atelier du testeur | Surcharges du contenu actives en mode testeur seulement, editeur (sorts, monstres, niveaux, vagues de campagne, resistances, element), onglet **TEST** (vraie partie), **document de changement** (COPIER + JSON), `tools/apply_changes.py` (rapport + diff sur les generateurs). Voir `docs/outil_donnees.md` |
+| Menus | REGLAGES en haut a droite, PROFIL en 5e onglet ; **pause a onglets** MAIN / DECK / VAGUE (temps d incantation reel, fiche des monstres au toucher) ; **Epuration au choix** (0 a 2 cartes) dans un parcours du deck ; un passif se lit avant de s equiper ; plus de cases « vide » |
+| Elements | **Huit** : Feu, Eau, Nature, Vent, Foudre, Glace, Arcanique, Poison. Un element par sort ; resistances des 86 monstres remappees par une regle ; objets de terrain d un element ; **16 passifs elementaires** ; logos dans tous les textes de carte |
+| Combat | **Bruler** = viser ou l on veut (sans incantation, partie figee pendant la visee) ; **MEDITER** (+1 XP a chaque carte de la main) ; echange de passif sur les trois cartes, refus possible ; **cinq maturations** (8, 24, 48, 80, 120 lancers) ; **vague qui traine** (la suivante part quand des monstres calent) ; **auras dissipables** et pat d aura ; **devoreurs** plus forts a chaque proie ; un seul etat de partie figee |
+| Sorts du co-auteur | **Dard venimeux** (commune, poison), **Elan du temps** (rare, +30 de vitesse), Concentration = +1 XP a la main, Nappe montante rare, Intuition epique pioche 2, Totem 800 PV, Marque 8 s, Semis rayon 300, Rappel 1 carte, Pluie de meteorites et Registre des marees plus lents. **Decks de 12 cartes** |
+| Incantation | `CAST_TIME_SCALE` **x1,9** (x1,5 avant). Le premier essai a x2,25 faisait tomber cinq niveaux sous 60 % |
+| Defilement | Tous les ecrans qui defilent suivent le doigt (`TouchScroll`) ; MODE TESTEUR et ATELIER en haut des reglages. Teste par de vrais evenements tactiles sur 4 formats d ecran |
+| Objectifs | Les 63 **re-mesures** (60 parties chacun) et recales : 12 niveaux sur 21 etaient hors regle, les 21 sont conformes |
+| Banc (memoire) | Les bancs liberent a chaque image comme le moteur (plantage de lvl_21 corrige) ; **vrai bug de jeu** trouve au passage : l invocateur (Sceau de Tombol) n invoquait plus apres la mort d un premier sbire |
+
+### Ce qui etait faux dans ce document et a ete corrige
+
+- §2 « profil en haut a droite » : ce sont les REGLAGES ; le profil est un onglet.
+- §2 « Deck : 15 cartes » : 12 depuis le 02/10.
+- §2 « 6 elements », « 14 passifs », « deux maturations » : huit elements, 30 passifs,
+  cinq maturations.
+- §2 « bois / argent / or / cristal » : le cristal est inatteignable (compte plafonne
+  au niveau 12).
+- §11 et §12 « Totem a 3500 PV » : 800 PV (essai du co-auteur).
+- §12 « le banc n est pas deterministe » : il l est depuis le 02/10.
+- §12 « `lvl_13` et son saut x2,28 » : corrige (w13_4 a x1,97, verrouille par test).
+- §12 « le banc des objectifs n a pas d outil permanent » : il en a un.
+
+### Equilibrage au 03/10
+
+| Mesure | Valeur |
+|---|---|
+| Victoires, banc complet x1,9 (21 x 60) | **1135 / 1260** ; les plus bas lvl_13 37, lvl_18 37, lvl_11 38 (repere : 36) |
+| Autres valeurs essayees | 1,5 : 1192 ; 1,8 : 1146 ; 1,95 : 1115 ; 2,0 : 1106 ; 2,25 : 987 |
+| Temps passe a incanter | 77 a 97 % sur 19 niveaux (repere < 60 %) ; 62-86 % a x1,5 |
+| Massacre | vague **12,1** (repere 4-8) |
+| Objectifs | 21 niveaux conformes ; rangs 3 les plus durs a 3-4 / 60 (lvl_07, 08, 09, 15, 19) |
+
+### Reste — actions du testeur (l assistant ne peut pas les faire)
+
+1. **URGENT : licence Batareya** (icones de cartes ; aucune neuve n en vient depuis le
+   27/09, les icones de la vague 8 sont toutes craftpix).
+2. `python tools/assets/fetch_craftpix.py login` : pack **Free Undead Tileset**.
+3. **Witches Pack complet** : les vraies apprenties (l ecuyer et la fee sont provisoires).
+4. Archives completes du **renard** et du **cacodemon** (elthen, PNG nus) ; licence de
+   la **fee** (`Fairy.zip` : trois PNG, ni licence ni auteur).
+5. **Licence rvros** du `Slime.zip`.
+6. Packs absents pour des boss : **frost-guardian, c3-3dobject, sci-fi-9**.
+7. **L image du necromancien** citee par le co-auteur : jamais transmise.
+8. **ART-004** (taille des monstres), **AUDIO-003** (volumes) : a l oeil et a l oreille.
+9. Avant toute vente : contribution a **BDragon1727**, courriel a **John Carroll**,
+   origine de **FreeSFX**.
+
+### Reste — decisions pour le co-auteur
+
+1. **Incantation** : x1,9 ou x1,95 ? x1,95 passe le repere de justesse (lvl_11 36 / 60,
+   lvl_20 perd 9 parties). Et le temps passe a incanter (77-97 %) : garder le repere de
+   60 % ou l abandonner, puisque c est la demande ?
+2. **Compte plafonne au niveau 12** (seuls les succes donnent de l XP) : la banniere
+   cristal du niveau 14 est inatteignable.
+3. **Decks de 12** : jusqu a 4 legendaires ou 6 epiques possibles ; un plafond de
+   rarete doit-il revenir ?
+4. **Rappel d ossements** et **Epuration** classes Poison faute d element evident.
+5. Un boss croise en **Infini** passe directement a « rencontre » au bestiaire.
+6. Niveaux **au-dessus de 95 %** ; regle du saut x2 encore depassee sur 9 niveaux
+   (mesure du 30/09) ; Massacre a 12,1 vagues.
+7. **Rangs 3 tres durs** : 3 ou 4 reussites sur 60 sur cinq niveaux.
+
+### Reste — limites connues
+
+- Le bot du banc ne **medite** ni ne **brule** : ces choix ne sont pas mesures.
+- Un **boss immobile** face a un deck qui n a plus de degats jouables ne peut plus etre
+  blesse : la partie ne finit qu a la limite du banc (vu sur lvl_21, objectif « sans
+  feu », communes exilees par l Epuration).
+- Le banc ne va pas chercher les campeurs ni les invocateurs, ne lit pas les renvois.
+- Le motif **spirale** n est porte par aucun monstre livre.
+- **Slime colossal** a gros pixels ; niveaux sans boss (`lvl_08`, `17`, `18`, `20`) voulus.
