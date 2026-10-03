@@ -738,8 +738,7 @@ static func passive_sheet_line(card: SpellCard) -> String:
 
 ## La fiche d un passif, a la place de la grille du choix. Encre SOMBRE : papier.
 func _render_passive_sheet(card: SpellCard) -> void:
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detail_box.add_child(scroll)
 	var box := VBoxContainer.new()
@@ -821,8 +820,7 @@ func _render_passive_picker() -> void:
 		_render_passive_sheet(_passive_detail)
 		return
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detail_box.add_child(scroll)
 	var box := VBoxContainer.new()
@@ -1606,8 +1604,7 @@ func _render_detail() -> void:
 	_page_label.text = "%d / %d dans le deck" % [_ids.size(), DeckRules.DECK_SIZE]
 	_page_label.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detail_box.add_child(scroll)
 	var box := VBoxContainer.new()

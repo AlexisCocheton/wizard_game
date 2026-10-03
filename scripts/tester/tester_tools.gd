@@ -127,8 +127,7 @@ func _build_layout() -> void:
 	page.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	page.add_theme_stylebox_override(&"panel", UiTheme.book_page_box())
 	col.add_child(page)
-	_scroll = ScrollContainer.new()
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll = TouchScroll.make()
 	# Un glissement du doigt sur un bouton doit faire defiler, pas appuyer.
 	_scroll.scroll_deadzone = 24
 	page.add_child(_scroll)
@@ -352,9 +351,8 @@ func open_picker(title: String, items: Array, on_pick: Callable) -> void:
 	recherche.custom_minimum_size = Vector2(0, 110)
 	recherche.clear_button_enabled = true
 	col.add_child(recherche)
-	var scroll := ScrollContainer.new()
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.scroll_deadzone = 24
 	col.add_child(scroll)
 	var liste := VBoxContainer.new()

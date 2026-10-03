@@ -59,6 +59,17 @@ func _slider(title: String, key: String) -> void:
 
 
 func _build() -> void:
+	# Le MODE TESTEUR (et son ATELIER) EN HAUT DE LA PAGE, visibles sans
+	# defiler. Retour du co-auteur (03/10) : sur son telephone la page ne
+	# defilait pas, et le mode, pose tout en bas, etait hors d atteinte. Le
+	# defilement est corrige (TouchScroll) ; ce qu un testeur vient chercher
+	# dans cet ecran ne doit pas dependre de lui pour autant. Verrouille par
+	# tests/smoke/touch_scroll_check.gd, a plusieurs formats d ecran.
+	_tester_box = VBoxContainer.new()
+	_tester_box.add_theme_constant_override(&"separation", 10)
+	_body.add_child(_tester_box)
+	_build_tester()
+
 	_body.add_child(UiTheme.label("AUDIO", UiTheme.FONT_BODY, Color(0.20, 0.13, 0.02)))
 	_slider("Volume general", "master_volume")
 	_slider("Effets", "sfx_volume")
@@ -81,15 +92,9 @@ func _build() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body.add_child(spacer)
 
-	# Le mode testeur est pose JUSTE AU-DESSUS de la remise a zero : ce sont les
-	# deux seules actions de cet ecran qui touchent la progression, et le testeur
-	# qui cherche l une trouve l autre au meme endroit.
-	_tester_box = VBoxContainer.new()
-	_tester_box.add_theme_constant_override(&"separation", 10)
-	_body.add_child(_tester_box)
-	_build_tester()
-
 	# Remise a zero en deux touchers : le premier arme, le second confirme.
+	# EN BAS, apres un defilement : c est l action la plus destructrice de
+	# l ecran, elle ne se touche pas par megarde en ouvrant les reglages.
 	_reset_btn = Button.new()
 	_reset_btn.text = "Reinitialiser la progression"
 	_reset_btn.custom_minimum_size = Vector2(0, 100)
@@ -239,7 +244,7 @@ func _build_tester() -> void:
 	_tester_box.add_child(l)
 	# OUTILS DU TESTEUR (vague 8) : editeur de contenu, onglet TEST et document
 	# de changement. Une PAGE A PART (scenes/tester/) et non une section de cette
-	# colonne, qui n a pas de defilement. Seulement mode allume : les surcharges
+	# colonne, deja longue. Seulement mode allume : les surcharges
 	# ne sont jouees qu en mode testeur, regler sans les voir n aurait pas de sens.
 	if actif:
 		var outils := Button.new()

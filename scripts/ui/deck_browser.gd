@@ -97,8 +97,7 @@ func refresh() -> void:
 	_summary.name = "Summary"
 	add_child(_summary)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(scroll)
 	_list = VBoxContainer.new()

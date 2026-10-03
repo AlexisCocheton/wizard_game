@@ -67,6 +67,8 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_w8_sorts.gd",
 	# Retouches W8 : logos d element dans tous les textes de carte, carte brulee.
 	"res://tests/unit/test_text_logos.gd",
+	# Defilement au doigt sur chaque zone qui defile (retour du co-auteur, 03/10).
+	"res://tests/unit/test_touch_scroll.gd",
 ]
 
 var _total_checks: int = 0
