@@ -6924,9 +6924,12 @@ func _longueurs(n: float) -> float:
 func _progression_de(level_id: StringName) -> Dictionary:
 	match level_id:
 		&"lvl_01":
-			# Tutoriel, l exemple du co-auteur mot pour mot quand il tient dans le
-			# niveau : Fleche 6 fois (elle est au deck), gagner sans Boule de feu (au deck
-			# aussi : les degats doivent venir d ailleurs). Le « plus de 300 % » ne se joue
+			# Tutoriel, l exemple du co-auteur quand il tient dans le niveau : Fleche
+			# 9 fois (elle est au deck), gagner sans Boule de feu (au deck aussi : les
+			# degats doivent venir d ailleurs). La Fleche etait a 6 fois, le chiffre du
+			# co-auteur : apres la vague 8 (deck de 12, incantation x1,9) 6 lancers
+			# reussissaient 60 parties sur 60, un objectif qui ne se rate jamais ; 9 :
+			# 54 / 60, 12 : 6 / 60. Le « plus de 300 % » ne se joue
 			# pas ici : 96 s de combat ne laissent monter la vitesse que vers 340 % sans un
 			# coup, le seuil descend a 250 et l exemple passe au niveau suivant.
 			# Nouvelles : Pluie de givre, Dard venimeux, Rupture de chaine, trois sorts
@@ -6939,7 +6942,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Ni le Meteore ni la Nappe : ils sont au deck de lvl_02, que cette victoire
 			# ouvre.
 			return {"nouvelles": ["frost_rain", "venom_dart", "chain_break"], "objectifs": [
-				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 6}), "about_face"],
+				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 9}), "about_face"],
 				[_objectif(&"no_card", {"card": "fireball"}), "maelstrom"],
 				[_objectif(&"win_above_speed", {"pct": 250}), "time_rift"],
 			]}
@@ -6955,9 +6958,11 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# accelere l incantation. Recompenses : Rappel d ossements, Concentration (au
 			# deck de lvl_09) et le Sablier fendu, lui aussi au deck de lvl_09 : c est sa
 			# derniere fenetre.
+			# Rangs re-mesures apres la vague 8 (60 parties) : le pari des 300 % (43)
+			# passe devant l achevement du releve en 8 s (35).
 			return {"nouvelles": ["time_surge", "quickening", "salt_spiral"], "objectifs": [
-				[_objectif(&"boss_quick_after_revive", {"seconds": 8}), "bone_recall"],
-				[_objectif(&"win_above_speed", {"pct": 300}), "deep_focus"],
+				[_objectif(&"win_above_speed", {"pct": 300}), "bone_recall"],
+				[_objectif(&"boss_quick_after_revive", {"seconds": 8}), "deep_focus"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "hopper", "count": 4}), "hourglass_shard"],
 			]}
 		&"lvl_08":
@@ -6969,9 +6974,11 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# purifiante (le Totem ancien craint l arcane). Recompenses : Onde de
 			# repulsion, Resonance (au deck de lvl_17) et le Cadran des forges, feu en
 			# pluie.
+			# Rangs re-mesures apres la vague 8 : les gelees a la Boule de feu (37 / 60)
+			# sont plus faciles que la nuee d un seul sort (28).
 			return {"nouvelles": ["brazier", "focus", "purifying_light"], "objectifs": [
-				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 4}), "repulsion_wave"],
-				[_objectif(&"kill_type_with_card", {"enemy": "jelly_small", "card": "fireball", "count": 8}), "resonance"],
+				[_objectif(&"kill_type_with_card", {"enemy": "jelly_small", "card": "fireball", "count": 8}), "repulsion_wave"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 4}), "resonance"],
 				[_objectif(&"multi_kill", {"count": 15, "window": 1}), "forge_dial"],
 			]}
 		&"lvl_09":
@@ -6989,15 +6996,17 @@ func _progression_de(level_id: StringName) -> Dictionary:
 				[_objectif(&"win_below_speed", {"pct": 200}), "venom_mire"],
 			]}
 		&"lvl_17":
-			# Vingt et un volants : les abattre tous. La Resonance du deck frappe chaque
-			# monstre present : la jouer souvent. Le plus dur est le defi du co-auteur
-			# « faire parcourir une tres grande distance a un monstre » (vague 8) : six
+			# La Resonance du deck frappe chaque monstre present : la jouer souvent.
+			# Vingt et un volants : les abattre tous. Le plus dur est le defi du co-auteur
+			# « faire parcourir une tres grande distance a un monstre » (vague 8) : dix
 			# longueurs de terrain a un Serpent des sables avant de l abattre. Le Serpent
 			# ONDULE et son ondulation ne ralentit pas : retenu par le givre du deck (Pluie
 			# x4, Champ x1) ou renvoye en haut par la Volte-face, il serpente sur place et
 			# allonge son chemin. Mais il craint le givre (x1,9) : le retenir sans le tuer
 			# trop tot est tout le geste. Remplace « tenir la ligne haute a 70 % ».
-			# Seuil PROVISOIRE, a mesurer au banc des objectifs apres la vague 8.
+			# Mesure apres la vague 8 (60 parties) : six longueurs, le seuil provisoire,
+			# se reussissaient 59 fois ; 9 : 44 ; 10 : 25 ; 11 : 1. Le classement suit
+			# la mesure : Resonance 7 fois (50), 21 volants (46), 10 longueurs (25).
 			# Nouvelles : Volte-face (fait remonter les serpents), Rupture de chaine (les
 			# Oeils des courants craignent le physique), toutes deux deja proposees en
 			# lvl_01, et le Totem de coeur-de-bois, un appat qui detourne les serpents. Le
@@ -7005,9 +7014,9 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# place : un terrain permanent n entre pas en acte 1, et le port ouvre l
 			# ossuaire.
 			return {"nouvelles": ["about_face", "chain_break", "heartwood_totem"], "objectifs": [
-				[_objectif(&"kill_flying", {"count": 21}), "salt_spiral"],
-				[_objectif(&"card_casts", {"card": "resonance", "count": 7}), "blight_sapling"],
-				[_objectif(&"enemy_travel", {"enemy": "sand_serpent", "distance": _longueurs(6.0)}), "twin_channeling"],
+				[_objectif(&"card_casts", {"card": "resonance", "count": 7}), "salt_spiral"],
+				[_objectif(&"kill_flying", {"count": 21}), "blight_sapling"],
+				[_objectif(&"enemy_travel", {"enemy": "sand_serpent", "distance": _longueurs(10.0)}), "twin_channeling"],
 			]}
 		&"lvl_18":
 			# Les Pillards arrivent par le cote et craignent le feu : les abattre a la
@@ -7029,49 +7038,56 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# permanent : pas de « d un seul sort » ici.
 			# Nouvelles : Etincelle (deja proposee en lvl_09), Pacte imprudent, Racine de
 			# tonnerre. Recompenses : Lumiere purifiante, Epuration, Metier du monde.
+			# Rangs re-mesures apres la vague 8 : achever 15 Oiseaux a la Pluie (41 / 60)
+			# est plus facile que de la lancer 26 fois (31).
 			return {"nouvelles": ["spark", "reckless_bargain", "thunder_root"], "objectifs": [
 				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "purifying_light"],
-				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "deck_purge"],
-				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "world_loom"],
+				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "deck_purge"],
+				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "world_loom"],
 			]}
 		&"lvl_04":
 			# Le Grand Appel : l Ensevelisseur leve des goules sans fin ; les achever aux
 			# Braises (elles craignent le feu). Deux Lutins archers tirent de loin :
-			# exemple du co-auteur, ne pas se faire toucher par eux. Puis sans une
-			# egratignure.
+			# exemple du co-auteur, ne pas se faire toucher par eux : c est le plus dur
+			# (5 / 60 apres la vague 8). Entre les deux, un combat court contre un appel
+			# sans fin. « Sans une egratignure » ne se reussissait plus (0 / 60) et n a
+			# pas de parametre : il est remplace par ce pari de fin de combat.
 			# Nouvelles : Vide d emprise, Flux de mana et Precipitation (deja proposees en
 			# acte 1 : le catalogue s epuise, voir l en-tete). Legendaire : la Clef de l
 			# Appel, a sa place dans le Grand Appel.
 			return {"nouvelles": ["void_grip", "mana_flow", "quickening"], "objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "risen_ghoul", "card": "ember_pool", "count": 2}), "temporal_drag"],
-				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "deep_freeze"],
-				[_objectif(&"no_damage_taken"), "summoners_key"],
+				[_objectif(&"win_under_time", {"seconds": 130}), "deep_freeze"],
+				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "summoners_key"],
 			]}
 		&"lvl_19":
 			# Les Goules des fosses arrivent par six : en tuer quatre d un seul sort. La
-			# Sorciere de givre du trio craint le feu, que le deck porte en majorite.
+			# Sorciere de givre du trio craint le feu, que le deck porte en majorite :
+			# 60 sorts de feu, le plus facile apres la vague 8 (44 se reussissaient 60
+			# fois sur 60 ; 60 : 48 / 60, contre 33 pour les quatre goules).
 			# Nouvelles : Racine de tonnerre (foudre, que les goules craignent), Volte-
 			# face, Brasier, toutes deja proposees. Recompenses : Rupture de chaine,
 			# Bastion, Echo de la main.
 			return {"nouvelles": ["thunder_root", "about_face", "brazier"], "objectifs": [
-				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "chain_break"],
-				[_objectif(&"element_casts", {"element": "FIRE", "count": 44}), "bastion"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "chain_break"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "bastion"],
 				[_objectif(&"no_damage_taken"), "echo_of_the_hand"],
 			]}
 		&"lvl_20":
 			# La cour des rois morts, niveau dur : le Vide d emprise du deck dissipe les
 			# auras des Gardiens-totems, s en passer se paie ; la Fleche percante (x3)
-			# traverse les rangs de squelettes pareurs ; le pari de finir sous 120 %,
-			# defi du co-auteur (vague 8) : le plus bas de la campagne, dans son niveau le
-			# plus dur, ou un coup encaisse pres de la fin est le plus probable. A 150 %
-			# auparavant ; seuil a mesurer au banc des objectifs apres la vague 8.
+			# traverse les rangs de squelettes pareurs ; le pari de finir sous 170 %.
+			# Le defi du co-auteur « sous 120 % » etait ici a la vague 8 : 0 partie sur
+			# 60 au banc des objectifs (la plus basse victoire finit a 127 %). Il est
+			# passe a l arene de Kaltek (lvl_11), ou les berserkers frappent tard ; ici
+			# le seuil remonte a 170 % (8 / 60).
 			# Nouvelles : Fosse, Intuition arcanique, Flux de mana (totems et squelettes
 			# craignent l arcane). Recompenses : Ronces, Autel d appel, Pluie de
 			# meteorites (au deck du pentacle).
 			return {"nouvelles": ["terrain_pit", "arcane_insight", "mana_flow"], "objectifs": [
 				[_objectif(&"no_card", {"card": "void_grip"}), "terrain_brambles"],
 				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 21}), "terrain_altar"],
-				[_objectif(&"win_below_speed", {"pct": 120}), "meteor_storm"],
+				[_objectif(&"win_below_speed", {"pct": 170}), "meteor_storm"],
 			]}
 		&"lvl_05":
 			# Les forges : Golems et Behemoths craignent l ARCANE, que le deck porte
@@ -7090,25 +7106,31 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			]}
 		&"lvl_06":
 			# La Racine de tonnerre est a UN exemplaire et le Seigneur spectre craint la
-			# foudre : lancer cinq sorts de foudre. Les Sauterelles s arretent en groupe :
+			# foudre : lancer sept sorts de foudre. Les Sauterelles s arretent en groupe :
 			# en tuer trois d un seul sort. Et un combat court.
+			# Mesure apres la vague 8 (60 parties) : 5 sorts de foudre se reussissaient
+			# 60 fois, 7 : 48 (trois Sauterelles : 38). Le combat court passe de 100 a
+			# 108 s : l incantation x1,9 allonge les combats, 100 s n etait plus tenu
+			# qu une fois sur 60 (108 s : 6).
 			# Nouvelles : Volte-face, Intuition arcanique, Precipitation (arcane, que
 			# craignent Seigneur, Ombres et Bourreau). Legendaire : la Faille temporelle
 			# revient (lvl_01), premiere reprise de legendaire : les onze ont toutes ete
 			# proposees une fois avant.
 			return {"nouvelles": ["about_face", "arcane_insight", "quickening"], "objectifs": [
-				[_objectif(&"element_casts", {"element": "LIGHTNING", "count": 5}), "temporal_drag"],
+				[_objectif(&"element_casts", {"element": "LIGHTNING", "count": 7}), "temporal_drag"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "hopper", "count": 3}), "deep_freeze"],
-				[_objectif(&"win_under_time", {"seconds": 100}), "time_rift"],
+				[_objectif(&"win_under_time", {"seconds": 108}), "time_rift"],
 			]}
 		&"lvl_21":
 			# Le pentacle : les Vers de feu sont IMMUNISES au feu. Les abattre au Trait
 			# arcanique, puis gagner sans aucun sort de feu, la bonne lecture du niveau.
+			# Le combat court passe de 118 a 90 s apres la vague 8 : 118 s se tenait 53
+			# fois sur 60, plus que les deux autres ; 90 s : 13.
 			# Nouvelles : Etincelle, Epuration, Flux de mana.
 			return {"nouvelles": ["spark", "deck_purge", "mana_flow"], "objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 3}), "cycle_of_thought"],
 				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "bastion"],
-				[_objectif(&"win_under_time", {"seconds": 118}), "twin_channeling"],
+				[_objectif(&"win_under_time", {"seconds": 90}), "twin_channeling"],
 			]}
 		&"lvl_07":
 			# La forge de Vharn : l Apprenti miroir est la carte du niveau. S en passer,
@@ -7124,35 +7146,43 @@ func _progression_de(level_id: StringName) -> Dictionary:
 		&"lvl_10":
 			# Les fosses de Sesh : deux Cacodemons volent en fin de niveau. En abattre
 			# un ; sans degats (pas de tireur) ; et le plus dur, en faire marcher un sur
-			# 0,8 longueur de terrain avant de l abattre : ils sautent de colonne en
-			# colonne, et la Volte-face du deck les fait remonter.
+			# 1,5 longueur de terrain avant de l abattre : ils sautent de colonne en
+			# colonne, et la Volte-face du deck les fait remonter. A 0,8 longueur avant
+			# la vague 8 : 48 parties sur 60, plus facile que « sans degats » (38) ;
+			# 1,2 : 38 ; 1,4 : 18 ; 1,5 : 9.
 			# Nouvelles : Bastion (un mur permanent allonge le chemin), Metier du monde,
 			# Flux de mana. Legendaire : la Riviere, qui fait marcher.
 			return {"nouvelles": ["bastion", "world_loom", "mana_flow"], "objectifs": [
 				[_objectif(&"kill_flying", {"count": 1}), "cycle_of_thought"],
 				[_objectif(&"no_damage_taken"), "deck_purge"],
-				[_objectif(&"enemy_travel", {"enemy": "cacodaemon", "distance": _longueurs(0.8)}), "terrain_river"],
+				[_objectif(&"enemy_travel", {"enemy": "cacodaemon", "distance": _longueurs(1.5)}), "terrain_river"],
 			]}
 		&"lvl_11":
 			# L arene de Kaltek : Ecumeur du ciel et feux follets volent, Kaltek craint
-			# le givre (le deck en est plein). Les berserkers accelerent : finir sous
-			# 150 % demande de le vouloir.
+			# le givre (le deck en est plein). Les berserkers accelerent et frappent
+			# tard : c est ici que tombe le defi du co-auteur « finir sous 120 % »
+			# (vague 8). Il est passe de la cour des rois morts a l arene apres la
+			# re-mesure de la vague 8 : 0 partie sur 60 sous 120 % dans la cour, 8 ici
+			# (sous 150 % : 17).
 			# Nouvelles : Pacte imprudent, Fosse, Ronces (le deck est au givre et a la
 			# lenteur). Legendaire : la Mare de venin (Kaltek craint le poison).
 			return {"nouvelles": ["reckless_bargain", "terrain_pit", "terrain_brambles"], "objectifs": [
-				[_objectif(&"kill_flying", {"count": 4}), "quickening"],
-				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "terrain_altar"],
-				[_objectif(&"win_below_speed", {"pct": 150}), "venom_mire"],
+				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "quickening"],
+				[_objectif(&"kill_flying", {"count": 4}), "terrain_altar"],
+				[_objectif(&"win_below_speed", {"pct": 120}), "venom_mire"],
 			]}
 		&"lvl_12":
-			# Le temple d Ymoa : la Focalisation est le coeur du deck ; les Ombres
-			# craignent l arcane, les abattre au Trait arcanique ; et l exemple du
+			# Le temple d Ymoa : les Ombres craignent l arcane, les abattre au Trait
+			# arcanique ; la Focalisation est le coeur du deck ; et l exemple du
 			# co-auteur « jouer la meme carte » pousse a 38 fois.
+			# Mesure apres la vague 8 (60 parties) : 14 Focalisations se reussissaient
+			# 60 fois, 21 : 59, 26 : 52, 28 : 49 ; les Ombres au Trait (56) passent
+			# devant, la meme carte 38 fois (37) reste la plus dure.
 			# Nouvelles : Epuration, Echo de la main, Flux de mana, pour un deck tourne
 			# vers la main.
 			return {"nouvelles": ["deck_purge", "echo_of_the_hand", "mana_flow"], "objectifs": [
-				[_objectif(&"card_casts", {"card": "focus", "count": 14}), "cycle_of_thought"],
-				[_objectif(&"kill_type_with_card", {"enemy": "shade", "card": "arcane_bolt", "count": 7}), "bastion"],
+				[_objectif(&"kill_type_with_card", {"enemy": "shade", "card": "arcane_bolt", "count": 7}), "cycle_of_thought"],
+				[_objectif(&"card_casts", {"card": "focus", "count": 28}), "bastion"],
 				[_objectif(&"same_card_casts", {"count": 38}), "summoners_key"],
 			]}
 		&"lvl_13":
@@ -7169,9 +7199,11 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# deux Renards dormeurs (exemple du co-auteur : gagner en ayant pris leur
 			# coup) et les deux Lutins archers (ne pas etre touche par eux).
 			# Nouvelles : Bastion, Riviere, Registre des marees.
+			# Rangs re-mesures apres la vague 8 : le coup du Renard (54 / 60) passe
+			# devant les trois Oiseaux d un sort (43).
 			return {"nouvelles": ["bastion", "terrain_river", "tide_ledger"], "objectifs": [
-				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 3}), "cycle_of_thought"],
-				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "deck_purge"],
+				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "cycle_of_thought"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 3}), "deck_purge"],
 				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "world_loom"],
 			]}
 		&"lvl_15":
@@ -7190,10 +7222,12 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Le siege vide : les Echos de Kaltek frappent au contact, les tenir a
 			# distance ; l Enfant se RELEVE ; il ne craint que l arcane.
 			# Nouvelles : Bastion, Echo de la main, Clef de l Appel.
+			# Rangs re-mesures apres la vague 8 : 58 sorts d arcane (40 / 60) passent
+			# devant l Enfant acheve en 9 s apres son releve (28).
 			return {"nouvelles": ["bastion", "echo_of_the_hand", "summoners_key"], "objectifs": [
 				[_objectif(&"no_hit_from", {"enemy": "demon_chain_echo"}), "cycle_of_thought"],
-				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "deck_purge"],
-				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "venom_mire"],
+				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "deck_purge"],
+				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "venom_mire"],
 			]}
 	printerr("Niveau %s absent de la table de progression" % level_id)
 	return {}

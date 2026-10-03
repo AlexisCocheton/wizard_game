@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_crxio"]
+
+[resource]
+script = ExtResource("1_crxio")
+id = &"obj_card_casts_piercing_arrow_9"
+description = "Lancer 9 fois Fleche percante"
+check_key = &"card_casts"
+params = {
+"card": "piercing_arrow",
+"count": 9
+}

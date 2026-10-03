@@ -40,14 +40,23 @@ const EXEMPLES_CO_AUTEUR: Array[StringName] = [
 ## en ayant pris des degats d un renard dormeur". Ecrits avec LEURS chiffres :
 ## ce sont les phrases du co-auteur, pas des reglages. Un exemple dont le seuil
 ## serait retouche au banc doit etre retire d ici en le disant, pas maquille.
+## Retire a la re-mesure d apres la vague 8 (03/10) : "jouer Fleche 6 fois"
+## se reussissait 60 parties sur 60 au banc des objectifs (deck de 12 cartes,
+## incantation x1,9) ; la Fleche est passee a 9 fois. La phrase reste, son
+## chiffre est libre : voir EXEMPLES_AU_SEUIL_RETOUCHE.
 const EXEMPLES_30_09: Array[Dictionary] = [
 	{"key": &"kill_type_one_cast", "params": {"enemy": "rat_swarm", "count": 4}},
 	{"key": &"multi_kill", "params": {"count": 8, "window": 1}},
-	{"key": &"card_casts", "params": {"card": "piercing_arrow", "count": 6}},
 	{"key": &"no_card", "params": {"card": "fireball"}},
 	{"key": &"win_above_speed", "params": {"pct": 300}},
 	{"key": &"no_hit_from", "params": {"enemy": "imp_archer"}},
 	{"key": &"hit_from", "params": {"enemy": "sleepy_fox"}},
+]
+## Les exemples du co-auteur dont le CHIFFRE a ete retouche au banc : la phrase
+## doit rester dans la campagne (meme controle, memes parametres hors du seuil),
+## le seuil est celui que la mesure a donne.
+const EXEMPLES_AU_SEUIL_RETOUCHE: Array[Dictionary] = [
+	{"key": &"card_casts", "params": {"card": "piercing_arrow"}},
 ]
 
 
@@ -163,6 +172,30 @@ func _test_exemples_du_co_auteur() -> void:
 				if o != null and o.check_key == ex["key"] and _memes_params(o.params, ex["params"]):
 					trouve = true
 		ok(trouve, "l exemple du co-auteur %s %s est dans la campagne" % [ex["key"], ex["params"]])
+	for ex: Dictionary in EXEMPLES_AU_SEUIL_RETOUCHE:
+		ok(porte_l_exemple(_niveaux(), ex),
+			"l exemple du co-auteur %s %s (seuil retouche) est dans la campagne"
+			% [ex["key"], ex["params"]])
+	# Sabotage : le meme exemple sur une carte qu aucun objectif ne nomme.
+	not_ok(porte_l_exemple(_niveaux(), {"key": &"card_casts", "params": {"card": "aucune_carte"}}),
+		"un exemple absent de la campagne n est pas trouve")
+
+
+## Un niveau porte-t-il le controle `ex.key` avec AU MOINS les parametres de
+## `ex.params` (le seuil, absent de `ex.params`, est libre) ?
+static func porte_l_exemple(niveaux: Array[LevelDef], ex: Dictionary) -> bool:
+	for lv in niveaux:
+		for o: ObjectiveDef in lv.objectives:
+			if o == null or o.check_key != ex["key"]:
+				continue
+			var tous: bool = true
+			for k in ex["params"]:
+				var v: Variant = o.params.get(k, o.params.get(StringName(k)))
+				if v == null or str(v) != str(ex["params"][k]):
+					tous = false
+			if tous:
+				return true
+	return false
 
 
 ## Le niveau donne-t-il de quoi faire marcher un monstre (deck ou cartes

@@ -39,7 +39,7 @@ params = {
 "count": 1
 }
 
-[sub_resource type="Resource" id="Resource_6lwi4"]
+[sub_resource type="Resource" id="Resource_pvtfm"]
 script = ExtResource("23_aa37k")
 id = &"obj_untouched"
 description = "Gagner sans subir de degats"
@@ -48,11 +48,11 @@ params = {}
 
 [sub_resource type="Resource" id="Resource_xnxle"]
 script = ExtResource("23_aa37k")
-id = &"obj_enemy_travel_1104_0_cacodaemon"
-description = "Cacodemon : en faire marcher un sur 0,8 longueur de terrain"
+id = &"obj_enemy_travel_2070_0_cacodaemon"
+description = "Cacodemon : en faire marcher un sur 1,5 longueur de terrain"
 check_key = &"enemy_travel"
 params = {
-"distance": 1104.0,
+"distance": 2070.0,
 "enemy": "cacodaemon"
 }
 
@@ -228,7 +228,7 @@ backdrop = "act3_demon"
 waves = Array[ExtResource("25_1r1p4")]([SubResource("Resource_cdd3h"), SubResource("Resource_13lwu"), SubResource("Resource_j06ms"), SubResource("Resource_vac0b"), SubResource("Resource_w2mk4")])
 enemy_pool = Array[ExtResource("1_c4pak")]([ExtResource("2_3t80o"), ExtResource("3_1maxx"), ExtResource("4_038uy"), ExtResource("5_xnxle"), ExtResource("6_cdd3h"), ExtResource("7_13lwu"), ExtResource("8_j06ms"), ExtResource("9_vac0b"), ExtResource("10_w2mk4"), ExtResource("11_r352n"), ExtResource("12_ntw4e")])
 exploration_deck = Array[ExtResource("12_6t36y")]([ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("13_nwen4"), ExtResource("13_nwen4"), ExtResource("21_vvwhi"), ExtResource("20_fnnop"), ExtResource("18_l5tjt")])
-objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_038uy"), SubResource("Resource_6lwi4"), SubResource("Resource_xnxle")])
+objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_038uy"), SubResource("Resource_pvtfm"), SubResource("Resource_xnxle")])
 levelup_cards = Array[ExtResource("12_6t36y")]([ExtResource("21_xnxle"), ExtResource("21_038uy"), ExtResource("22_xnxle")])
 objective_rewards = Array[ExtResource("12_6t36y")]([ExtResource("23_13lwu"), ExtResource("24_j06ms"), ExtResource("25_vac0b")])
 next_levels = Array[StringName]([&"lvl_13"])

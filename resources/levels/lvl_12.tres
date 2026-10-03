@@ -30,16 +30,6 @@
 
 [sub_resource type="Resource" id="Resource_xwln5"]
 script = ExtResource("20_8lpo7")
-id = &"obj_card_casts_focus_14"
-description = "Lancer 14 fois Focalisation"
-check_key = &"card_casts"
-params = {
-"card": "focus",
-"count": 14
-}
-
-[sub_resource type="Resource" id="Resource_plhp6"]
-script = ExtResource("20_8lpo7")
 id = &"obj_kill_type_with_card_arcane_bolt_7_shade"
 description = "Ombre : en tuer 7 avec Trait arcanique"
 check_key = &"kill_type_with_card"
@@ -47,6 +37,16 @@ params = {
 "card": "arcane_bolt",
 "count": 7,
 "enemy": "shade"
+}
+
+[sub_resource type="Resource" id="Resource_plhp6"]
+script = ExtResource("20_8lpo7")
+id = &"obj_card_casts_focus_28"
+description = "Lancer 28 fois Focalisation"
+check_key = &"card_casts"
+params = {
+"card": "focus",
+"count": 28
 }
 
 [sub_resource type="Resource" id="Resource_u62p1"]

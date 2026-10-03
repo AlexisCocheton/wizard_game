@@ -35,11 +35,11 @@
 
 [sub_resource type="Resource" id="Resource_qoior"]
 script = ExtResource("25_o1m5h")
-id = &"obj_element_casts_5_lightning"
-description = "Lancer 5 sorts de foudre"
+id = &"obj_element_casts_7_lightning"
+description = "Lancer 7 sorts de foudre"
 check_key = &"element_casts"
 params = {
-"count": 5,
+"count": 7,
 "element": "LIGHTNING"
 }
 
@@ -55,11 +55,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_itjfv"]
 script = ExtResource("25_o1m5h")
-id = &"obj_win_under_time_100"
-description = "Gagner en moins de 100 s"
+id = &"obj_win_under_time_108"
+description = "Gagner en moins de 108 s"
 check_key = &"win_under_time"
 params = {
-"seconds": 100
+"seconds": 108
 }
 
 [sub_resource type="Resource" id="Resource_1x0vq"]

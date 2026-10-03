@@ -34,6 +34,15 @@
 [ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="28_qhu6a"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="29_t6kx1"]
 
+[sub_resource type="Resource" id="Resource_pj7ba"]
+script = ExtResource("25_7esuy")
+id = &"obj_hit_from_sleepy_fox"
+description = "Renard dormeur : gagner apres en avoir ete touche"
+check_key = &"hit_from"
+params = {
+"enemy": "sleepy_fox"
+}
+
 [sub_resource type="Resource" id="Resource_lk4y5"]
 script = ExtResource("25_7esuy")
 id = &"obj_kill_type_one_cast_3_rat_swarm"
@@ -44,16 +53,7 @@ params = {
 "enemy": "rat_swarm"
 }
 
-[sub_resource type="Resource" id="Resource_pj7ba"]
-script = ExtResource("25_7esuy")
-id = &"obj_hit_from_sleepy_fox"
-description = "Renard dormeur : gagner apres en avoir ete touche"
-check_key = &"hit_from"
-params = {
-"enemy": "sleepy_fox"
-}
-
-[sub_resource type="Resource" id="Resource_amgrg"]
+[sub_resource type="Resource" id="Resource_6lwi4"]
 script = ExtResource("25_7esuy")
 id = &"obj_no_hit_from_imp_archer"
 description = "Lutin archer : gagner sans en etre touche"
@@ -292,7 +292,7 @@ backdrop = "act5_divine"
 waves = Array[ExtResource("27_xhh80")]([SubResource("Resource_4jdvf"), SubResource("Resource_it8ya"), SubResource("Resource_xlx3v"), SubResource("Resource_qhu6a"), SubResource("Resource_t6kx1"), SubResource("Resource_rtnxx")])
 enemy_pool = Array[ExtResource("1_70dm8")]([ExtResource("2_fe3w6"), ExtResource("3_6yp3l"), ExtResource("4_1s8yj"), ExtResource("5_0t5bb"), ExtResource("6_lk4y5"), ExtResource("7_4jdvf"), ExtResource("8_it8ya"), ExtResource("9_xlx3v"), ExtResource("10_qhu6a"), ExtResource("11_t6kx1"), ExtResource("12_70dm8"), ExtResource("13_70dm8"), ExtResource("14_fe3w6"), ExtResource("15_6yp3l"), ExtResource("16_1s8yj")])
 exploration_deck = Array[ExtResource("17_70dm8")]([ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("19_6yp3l"), ExtResource("19_6yp3l"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj"), ExtResource("21_0t5bb"), ExtResource("21_0t5bb"), ExtResource("22_lk4y5"), ExtResource("23_4jdvf")])
-objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_lk4y5"), SubResource("Resource_pj7ba"), SubResource("Resource_amgrg")])
+objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_pj7ba"), SubResource("Resource_lk4y5"), SubResource("Resource_6lwi4")])
 levelup_cards = Array[ExtResource("17_70dm8")]([ExtResource("24_lk4y5"), ExtResource("25_lk4y5"), ExtResource("25_4jdvf")])
 objective_rewards = Array[ExtResource("17_70dm8")]([ExtResource("27_xlx3v"), ExtResource("28_qhu6a"), ExtResource("29_t6kx1")])
 next_levels = Array[StringName]([&"lvl_15"])

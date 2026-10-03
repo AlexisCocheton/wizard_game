@@ -49,13 +49,41 @@ const PARTIES_DU_BANC: int = 60
 ## l id, et ce test refuse alors la ligne — un objectif retouche doit etre
 ## re-mesure, sinon le classement ne serait plus qu une supposition.
 ##
-## A RE-MESURER APRES LA VAGUE 8. Ces chiffres datent du 30/09 (chantier W7).
-## Depuis, les cartes nouvelles et les recompenses ont change (W8) et un retour
-## du co-auteur va changer les decks (12 cartes), les elements et les temps
-## d incantation : tout sera re-mesure avec le banc des objectifs APRES ces
-## changements. Les objectifs neufs de W8 n ont pas de chiffre : leur ligne
-## porte A_MESURER, et ils sont listes nommement dans OBJECTIFS_A_MESURER.
-const MESURES: Dictionary = MESURES_W7
+## Mesure du 03/10, apres la vague 8 (decks de 12 cartes, huit elements,
+## incantation x1,9, sorts retouches) : les 63 objectifs re-joues avec
+## tools/objective_bench.tscn, 60 parties chacun, graines 1000 + 37 i. Les
+## objectifs mal classes ont ete regles sur ces mesures dans
+## tools/make_content.gd (_progression_de, le pourquoi de chaque reglage y est
+## ecrit a cote du niveau).
+##
+## lvl_21, obj_no_card_tag_fire : le banc PLANTE a la partie 30 (graine 2110,
+## « Element limit reached », memoire epuisee) quand le bot ne joue aucun sort
+## de feu. Defaut du jeu ou du banc, hors de ce reglage. Le chiffre est celui
+## des parties 0 a 29 (28) et 31 a 59 (27, --graine=31 --parties=29), la partie
+## 30 comptee ratee : 55 (56 si elle etait reussie, le classement tient).
+const MESURES: Dictionary = {
+	"lvl_01": [["obj_card_casts_piercing_arrow_9", 54], ["obj_no_card_fireball", 49], ["obj_win_above_speed_250", 19]],
+	"lvl_02": [["obj_win_above_speed_300", 43], ["obj_boss_quick_after_revive_8", 35], ["obj_kill_type_one_cast_4_hopper", 6]],
+	"lvl_08": [["obj_kill_type_with_card_fireball_8_jelly_small", 37], ["obj_kill_type_one_cast_4_rat_swarm", 28], ["obj_multi_kill_15_1", 3]],
+	"lvl_09": [["obj_no_legendary", 55], ["obj_hit_from_sleepy_fox", 53], ["obj_win_below_speed_200", 4]],
+	"lvl_17": [["obj_card_casts_resonance_7", 50], ["obj_kill_flying_21", 46], ["obj_enemy_travel_13800_0_sand_serpent", 25]],
+	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 39], ["obj_win_below_speed_190", 21], ["obj_card_casts_weakness_mark_11", 13]],
+	"lvl_03": [["obj_multi_kill_8_1", 48], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 41], ["obj_card_casts_frost_rain_26", 31]],
+	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 38], ["obj_win_under_time_130", 20], ["obj_no_hit_from_imp_archer", 5]],
+	"lvl_19": [["obj_element_casts_60_fire", 48], ["obj_kill_type_one_cast_4_pit_ghoul", 33], ["obj_untouched", 4]],
+	"lvl_20": [["obj_no_card_void_grip", 45], ["obj_card_casts_piercing_arrow_21", 37], ["obj_win_below_speed_170", 8]],
+	"lvl_05": [["obj_element_casts_48_arcane", 46], ["obj_kill_type_one_cast_2_golem", 34], ["obj_win_above_speed_310", 7]],
+	"lvl_06": [["obj_element_casts_7_lightning", 48], ["obj_kill_type_one_cast_3_hopper", 38], ["obj_win_under_time_108", 6]],
+	"lvl_21": [["obj_kill_type_with_card_arcane_bolt_3_fire_worm", 57], ["obj_no_card_tag_fire", 55], ["obj_win_under_time_90", 13]],
+	"lvl_07": [["obj_no_card_mirror_apprentice", 51], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 50], ["obj_win_above_speed_350", 3]],
+	"lvl_10": [["obj_kill_flying_1", 52], ["obj_untouched", 38], ["obj_enemy_travel_2070_0_cacodaemon", 9]],
+	"lvl_11": [["obj_element_casts_32_ice", 36], ["obj_kill_flying_4", 34], ["obj_win_below_speed_120", 8]],
+	"lvl_12": [["obj_kill_type_with_card_arcane_bolt_7_shade", 56], ["obj_card_casts_focus_28", 49], ["obj_same_card_casts_38", 37]],
+	"lvl_13": [["obj_no_legendary", 44], ["obj_card_casts_spark_25", 42], ["obj_win_above_speed_300", 11]],
+	"lvl_14": [["obj_hit_from_sleepy_fox", 54], ["obj_kill_type_one_cast_3_rat_swarm", 43], ["obj_no_hit_from_imp_archer", 23]],
+	"lvl_15": [["obj_element_casts_50_fire", 59], ["obj_never_hit_reflect", 32], ["obj_win_above_speed_380", 4]],
+	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 56], ["obj_element_casts_58_arcane", 40], ["obj_boss_quick_after_revive_9", 28]],
+}
 
 
 ## Marque d un objectif pas encore joue au banc. Ce n est PAS un taux : il ne
@@ -63,38 +91,9 @@ const MESURES: Dictionary = MESURES_W7
 const A_MESURER: int = -1
 
 ## Les SEULS objectifs admis sans mesure, nommement : un objectif retouche ou
-## ajoute qui ne serait pas ici reste refuse. Vague 8 (01/10) : les deux defis
-## du co-auteur mal exploites, places en rang 3 de leur niveau.
-## A VIDER a la re-mesure d apres la vague 8.
-const OBJECTIFS_A_MESURER: Array[String] = [
-	"obj_enemy_travel_8280_0_sand_serpent",
-	"obj_win_below_speed_120",
-]
-
-
-const MESURES_W7: Dictionary = {
-	"lvl_01": [["obj_card_casts_piercing_arrow_6", 59], ["obj_no_card_fireball", 48], ["obj_win_above_speed_250", 28]],
-	"lvl_02": [["obj_boss_quick_after_revive_8", 50], ["obj_win_above_speed_300", 31], ["obj_kill_type_one_cast_4_hopper", 8]],
-	"lvl_08": [["obj_kill_type_one_cast_4_rat_swarm", 39], ["obj_kill_type_with_card_fireball_8_jelly_small", 29], ["obj_multi_kill_15_1", 16]],
-	"lvl_09": [["obj_no_legendary", 56], ["obj_hit_from_sleepy_fox", 19], ["obj_win_below_speed_200", 10]],
-	"lvl_17": [["obj_kill_flying_21", 51], ["obj_card_casts_resonance_7", 26], ["obj_enemy_travel_8280_0_sand_serpent", A_MESURER]],
-	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 40], ["obj_win_below_speed_190", 21], ["obj_card_casts_weakness_mark_11", 10]],
-	"lvl_03": [["obj_multi_kill_8_1", 50], ["obj_card_casts_frost_rain_26", 20], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 16]],
-	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 47], ["obj_no_hit_from_imp_archer", 32], ["obj_untouched", 21]],
-	"lvl_19": [["obj_kill_type_one_cast_4_pit_ghoul", 31], ["obj_element_casts_44_fire", 10], ["obj_untouched", 6]],
-	"lvl_20": [["obj_no_card_void_grip", 55], ["obj_card_casts_piercing_arrow_21", 27], ["obj_win_below_speed_120", A_MESURER]],
-	"lvl_05": [["obj_element_casts_48_arcane", 46], ["obj_kill_type_one_cast_2_golem", 31], ["obj_win_above_speed_310", 17]],
-	"lvl_06": [["obj_element_casts_5_lightning", 53], ["obj_kill_type_one_cast_3_hopper", 36], ["obj_win_under_time_100", 9]],
-	"lvl_21": [["obj_kill_type_with_card_arcane_bolt_3_fire_worm", 47], ["obj_no_card_tag_fire", 33], ["obj_win_under_time_118", 15]],
-	"lvl_07": [["obj_no_card_mirror_apprentice", 56], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 24], ["obj_win_above_speed_350", 9]],
-	"lvl_10": [["obj_kill_flying_1", 49], ["obj_untouched", 44], ["obj_enemy_travel_1104_0_cacodaemon", 13]],
-	"lvl_11": [["obj_kill_flying_4", 46], ["obj_element_casts_32_ice", 26], ["obj_win_below_speed_150", 21]],
-	"lvl_12": [["obj_card_casts_focus_14", 45], ["obj_kill_type_with_card_arcane_bolt_7_shade", 30], ["obj_same_card_casts_38", 12]],
-	"lvl_13": [["obj_no_legendary", 51], ["obj_card_casts_spark_25", 35], ["obj_win_above_speed_300", 20]],
-	"lvl_14": [["obj_kill_type_one_cast_3_rat_swarm", 44], ["obj_hit_from_sleepy_fox", 21], ["obj_no_hit_from_imp_archer", 6]],
-	"lvl_15": [["obj_element_casts_50_fire", 37], ["obj_never_hit_reflect", 29], ["obj_win_above_speed_380", 12]],
-	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 56], ["obj_boss_quick_after_revive_9", 31], ["obj_element_casts_58_arcane", 13]],
-}
+## ajoute qui ne serait pas ici reste refuse. Vide depuis la re-mesure du 03/10
+## (les deux defis de la vague 8 sont mesures) : tout objectif livre a son taux.
+const OBJECTIFS_A_MESURER: Array[String] = []
 
 
 func run() -> void:
@@ -670,8 +669,19 @@ func _test_objectifs_classes_par_difficulte() -> void:
 				sans_mesure[String(ligne[0])] = true
 	for id: String in OBJECTIFS_A_MESURER:
 		ok(sans_mesure.has(id), "%s, admis sans mesure, est bien une ligne A_MESURER" % id)
-	print("  [W8] %d objectif(s) a mesurer apres la vague 8 : %s"
-		% [OBJECTIFS_A_MESURER.size(), OBJECTIFS_A_MESURER])
+	if not OBJECTIFS_A_MESURER.is_empty():
+		print("  [MESURES] %d objectif(s) a mesurer : %s"
+			% [OBJECTIFS_A_MESURER.size(), OBJECTIFS_A_MESURER])
+	# Re-mesure du 03/10 : TOUT est mesure, et la table ne garde aucun niveau
+	# disparu (une ligne orpheline ne verrouillerait plus rien).
+	eq(sans_mesure.size(), OBJECTIFS_A_MESURER.size(),
+		"autant de lignes A_MESURER que d objectifs admis sans mesure")
+	var niveaux_livres: Dictionary = {}
+	for lv in _niveaux():
+		niveaux_livres[String(lv.id)] = true
+	for niveau: String in MESURES:
+		ok(niveaux_livres.has(niveau), "MESURES[%s] est un niveau livre" % niveau)
+	eq(MESURES.size(), niveaux_livres.size(), "une ligne MESURES par niveau livre")
 
 
 ## L AUDIT ne fait qu AVERTIR sur un niveau incomplet, un objectif gratuit ou un
