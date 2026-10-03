@@ -62,28 +62,39 @@ const PARTIES_DU_BANC: int = 60
 ## (GameController.flush_freed a chaque image du banc) ; les 60 parties
 ## re-jouees d une traite rendent 57 / 55 / 13, la partie 30 etant une defaite :
 ## la ligne ne change pas.
+##
+## Chantier W9 (contenu, 03/10) : les 21 niveaux re-joues (60 parties chacun)
+## sur le main qui porte le chantier moteur de la vague 9 (un degat continu
+## n est plus un coup, trois voies a chaque maturation) et les retouches de
+## contenu (dissipation au deck ou en carte nouvelle, Mur de glace, enclumes
+## immunisees au vent, Oeil des courants en spirale). Regles depuis : lvl_03
+## (rangs 2 et 3 echanges), lvl_13 (deck et w13_4), lvl_15 (60 sorts de feu au
+## lieu de 50, jamais rate), lvl_16 (rangs 2 et 3 echanges), lvl_19 (« sans
+## degats », 0 / 60, remplace), lvl_21 (« sans feu » au rang 1, cinq Vers au
+## rang 2). lvl_10 : la distance du Cacodemon reste 1,5 longueur (1,7 et 2,0 :
+## 0 / 60). Le pourquoi est ecrit a cote de chaque niveau dans _progression_de.
 const MESURES: Dictionary = {
-	"lvl_01": [["obj_card_casts_piercing_arrow_9", 54], ["obj_no_card_fireball", 49], ["obj_win_above_speed_250", 19]],
-	"lvl_02": [["obj_win_above_speed_300", 43], ["obj_boss_quick_after_revive_8", 35], ["obj_kill_type_one_cast_4_hopper", 6]],
-	"lvl_08": [["obj_kill_type_with_card_fireball_8_jelly_small", 37], ["obj_kill_type_one_cast_4_rat_swarm", 28], ["obj_multi_kill_15_1", 3]],
+	"lvl_01": [["obj_card_casts_piercing_arrow_9", 56], ["obj_no_card_fireball", 46], ["obj_win_above_speed_250", 15]],
+	"lvl_02": [["obj_win_above_speed_300", 45], ["obj_boss_quick_after_revive_8", 39], ["obj_kill_type_one_cast_4_hopper", 6]],
+	"lvl_08": [["obj_kill_type_with_card_fireball_8_jelly_small", 37], ["obj_kill_type_one_cast_4_rat_swarm", 32], ["obj_multi_kill_15_1", 6]],
 	"lvl_09": [["obj_no_legendary", 55], ["obj_hit_from_sleepy_fox", 53], ["obj_win_below_speed_200", 4]],
-	"lvl_17": [["obj_card_casts_resonance_7", 50], ["obj_kill_flying_21", 46], ["obj_enemy_travel_13800_0_sand_serpent", 25]],
-	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 39], ["obj_win_below_speed_190", 21], ["obj_card_casts_weakness_mark_11", 13]],
-	"lvl_03": [["obj_multi_kill_8_1", 48], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 41], ["obj_card_casts_frost_rain_26", 31]],
-	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 38], ["obj_win_under_time_130", 20], ["obj_no_hit_from_imp_archer", 5]],
-	"lvl_19": [["obj_element_casts_60_fire", 48], ["obj_kill_type_one_cast_4_pit_ghoul", 33], ["obj_untouched", 4]],
-	"lvl_20": [["obj_no_card_void_grip", 45], ["obj_card_casts_piercing_arrow_21", 37], ["obj_win_below_speed_170", 8]],
-	"lvl_05": [["obj_element_casts_48_arcane", 46], ["obj_kill_type_one_cast_2_golem", 34], ["obj_win_above_speed_310", 7]],
-	"lvl_06": [["obj_element_casts_7_lightning", 48], ["obj_kill_type_one_cast_3_hopper", 38], ["obj_win_under_time_108", 6]],
-	"lvl_21": [["obj_kill_type_with_card_arcane_bolt_3_fire_worm", 57], ["obj_no_card_tag_fire", 55], ["obj_win_under_time_90", 13]],
-	"lvl_07": [["obj_no_card_mirror_apprentice", 51], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 50], ["obj_win_above_speed_350", 3]],
-	"lvl_10": [["obj_kill_flying_1", 52], ["obj_untouched", 38], ["obj_enemy_travel_2070_0_cacodaemon", 9]],
-	"lvl_11": [["obj_element_casts_32_ice", 36], ["obj_kill_flying_4", 34], ["obj_win_below_speed_120", 8]],
-	"lvl_12": [["obj_kill_type_with_card_arcane_bolt_7_shade", 56], ["obj_card_casts_focus_28", 49], ["obj_same_card_casts_38", 37]],
-	"lvl_13": [["obj_no_legendary", 44], ["obj_card_casts_spark_25", 42], ["obj_win_above_speed_300", 11]],
-	"lvl_14": [["obj_hit_from_sleepy_fox", 54], ["obj_kill_type_one_cast_3_rat_swarm", 43], ["obj_no_hit_from_imp_archer", 23]],
-	"lvl_15": [["obj_element_casts_50_fire", 59], ["obj_never_hit_reflect", 32], ["obj_win_above_speed_380", 4]],
-	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 56], ["obj_element_casts_58_arcane", 40], ["obj_boss_quick_after_revive_9", 28]],
+	"lvl_17": [["obj_card_casts_resonance_7", 52], ["obj_kill_flying_21", 40], ["obj_enemy_travel_13800_0_sand_serpent", 7]],
+	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 36], ["obj_win_below_speed_190", 26], ["obj_card_casts_weakness_mark_11", 14]],
+	"lvl_03": [["obj_multi_kill_8_1", 48], ["obj_card_casts_frost_rain_26", 46], ["obj_kill_type_with_card_frost_rain_15_rat_swarm", 39]],
+	"lvl_04": [["obj_kill_type_with_card_ember_pool_2_risen_ghoul", 39], ["obj_win_under_time_130", 17], ["obj_no_hit_from_imp_archer", 5]],
+	"lvl_19": [["obj_element_casts_60_fire", 53], ["obj_no_hit_from_pit_ghoul", 37], ["obj_kill_type_one_cast_4_pit_ghoul", 31]],
+	"lvl_20": [["obj_no_card_void_grip", 45], ["obj_card_casts_piercing_arrow_21", 37], ["obj_win_below_speed_170", 9]],
+	"lvl_05": [["obj_element_casts_48_arcane", 53], ["obj_kill_type_one_cast_2_golem", 32], ["obj_win_above_speed_310", 8]],
+	"lvl_06": [["obj_element_casts_7_lightning", 45], ["obj_kill_type_one_cast_3_hopper", 40], ["obj_win_under_time_108", 7]],
+	"lvl_21": [["obj_no_card_tag_fire", 58], ["obj_kill_type_with_card_arcane_bolt_5_fire_worm", 22], ["obj_win_under_time_90", 11]],
+	"lvl_07": [["obj_no_card_mirror_apprentice", 52], ["obj_kill_type_with_card_mirror_apprentice_5_sprite", 51], ["obj_win_above_speed_350", 4]],
+	"lvl_10": [["obj_kill_flying_1", 52], ["obj_untouched", 38], ["obj_enemy_travel_2070_0_cacodaemon", 7]],
+	"lvl_11": [["obj_element_casts_32_ice", 35], ["obj_kill_flying_4", 34], ["obj_win_below_speed_120", 8]],
+	"lvl_12": [["obj_kill_type_with_card_arcane_bolt_7_shade", 55], ["obj_card_casts_focus_28", 52], ["obj_same_card_casts_38", 35]],
+	"lvl_13": [["obj_no_legendary", 46], ["obj_card_casts_spark_25", 37], ["obj_win_above_speed_300", 15]],
+	"lvl_14": [["obj_hit_from_sleepy_fox", 53], ["obj_kill_type_one_cast_3_rat_swarm", 44], ["obj_no_hit_from_imp_archer", 21]],
+	"lvl_15": [["obj_element_casts_60_fire", 57], ["obj_never_hit_reflect", 46], ["obj_win_above_speed_380", 2]],
+	"lvl_16": [["obj_no_hit_from_demon_chain_echo", 55], ["obj_boss_quick_after_revive_9", 21], ["obj_element_casts_58_arcane", 17]],
 }
 
 
@@ -106,6 +117,7 @@ func run() -> void:
 	_test_cartes_vraiment_nouvelles()
 	_test_objectifs_lies_au_deck_et_aux_monstres()
 	_test_un_seul_sort_sans_tueur_permanent()
+	_test_chaque_protecteur_a_sa_reponse()
 	_test_objectifs_classes_par_difficulte()
 	_test_aucun_avertissement_de_progression()
 	_test_les_detecteurs_mordent()
@@ -468,6 +480,29 @@ static func defauts_un_seul_sort(lv: LevelDef) -> Array[String]:
 	return out
 
 
+## PROTECTEURS SANS REPONSE (chantier W9). Une aura d invulnerabilite
+## (Gardien-totem, Echo d Ymoa, Sceau de Tombol...) ne cede qu a une dissipation
+## (dispel_zone) ou au pat (DEC-048). En campagne le deck est IMPOSE et le pool de
+## montee ne lit que le deck, les cartes nouvelles et les recompenses : un niveau
+## ou descend un porteur d aura doit offrir une dissipation dans l une de ces
+## trois listes, sinon le joueur n a que le pat pour reponse.
+static func defauts_protecteurs(lv: LevelDef) -> Array[String]:
+	var out: Array[String] = []
+	var porteurs: Array[String] = []
+	for d: EnemyDef in ObjectiveChecker.level_enemies(lv):
+		if d.aura_shield_radius > 0.0:
+			porteurs.append(String(d.id))
+	if porteurs.is_empty():
+		return out
+	for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards]:
+		for c in liste:
+			if c != null and &"dispel_zone" in (c as SpellCard).effect_keys():
+				return out
+	out.append("%s protege(nt) par une aura, aucune dissipation au deck, en carte nouvelle ni en recompense"
+		% [porteurs])
+	return out
+
+
 ## Le classement mesure : ids identiques au contenu, chaque objectif reussi ET
 ## rate au moins une fois, taux strictement decroissant du rang 1 au rang 3.
 ## Une ligne A_MESURER n est admise que pour un id de `a_mesurer` ; elle est
@@ -656,6 +691,21 @@ func _test_un_seul_sort_sans_tueur_permanent() -> void:
 		ok(d.is_empty(), "%s : « d un seul sort » sans tueur permanent %s" % [lv.id, d])
 
 
+func _test_chaque_protecteur_a_sa_reponse() -> void:
+	var avec_aura: int = 0
+	for lv in _niveaux():
+		if lv.act <= 0:
+			continue
+		for d: EnemyDef in ObjectiveChecker.level_enemies(lv):
+			if d.aura_shield_radius > 0.0:
+				avec_aura += 1
+				break
+		var d: Array[String] = defauts_protecteurs(lv)
+		ok(d.is_empty(), "%s : une dissipation contre ses protecteurs %s" % [lv.id, d])
+	# Le test ne passe pas a vide : la campagne compte bien des porteurs d aura.
+	ok(avec_aura >= 5, "%d niveaux de campagne ont un porteur d aura" % avec_aura)
+
+
 func _test_objectifs_classes_par_difficulte() -> void:
 	for lv in _niveaux():
 		var d: Array[String] = defauts_classement(lv, MESURES.get(String(lv.id)),
@@ -763,6 +813,44 @@ func _test_les_detecteurs_mordent() -> void:
 		lv5.levelup_cards = avec
 		not_ok(defauts_un_seul_sort(lv5).is_empty(),
 			"« d un seul sort » a cote d un tueur permanent est refuse")
+	# Un porteur d aura sans dissipation jouable, puis avec (deck, nouvelle).
+	var totem := EnemyDef.new()
+	totem.id = &"t_totem"
+	totem.aura_shield_radius = 240.0
+	var entree := WaveEntry.new()
+	entree.enemy = totem
+	var vague := WaveDef.new()
+	vague.entries = [entree] as Array[WaveEntry]
+	var lv6: LevelDef = modele.duplicate()
+	lv6.waves = [vague] as Array[WaveDef]
+	var sans_dissipation: Array[SpellCard] = []
+	for c: SpellCard in modele.exploration_deck:
+		if c != null and not &"dispel_zone" in c.effect_keys():
+			sans_dissipation.append(c)
+	lv6.exploration_deck = sans_dissipation
+	var nouvelles_sans: Array[SpellCard] = []
+	for c: SpellCard in modele.levelup_cards:
+		if c != null and not &"dispel_zone" in c.effect_keys():
+			nouvelles_sans.append(c)
+	lv6.levelup_cards = nouvelles_sans
+	var recompenses_sans: Array[SpellCard] = []
+	for c: SpellCard in modele.objective_rewards:
+		if c != null and not &"dispel_zone" in c.effect_keys():
+			recompenses_sans.append(c)
+	lv6.objective_rewards = recompenses_sans
+	not_ok(defauts_protecteurs(lv6).is_empty(), "un porteur d aura sans dissipation est refuse")
+	var lumiere: SpellCard = ContentDB.cards.get(&"purifying_light")
+	ok(lumiere != null, "la Lumiere purifiante existe")
+	if lumiere != null:
+		var avec: Array[SpellCard] = nouvelles_sans.duplicate()
+		avec.append(lumiere)
+		lv6.levelup_cards = avec
+		ok(defauts_protecteurs(lv6).is_empty(), "une dissipation en carte nouvelle suffit")
+		lv6.levelup_cards = nouvelles_sans
+		var deck_avec: Array[SpellCard] = sans_dissipation.duplicate()
+		deck_avec.append(lumiere)
+		lv6.exploration_deck = deck_avec
+		ok(defauts_protecteurs(lv6).is_empty(), "une dissipation au deck suffit")
 	# Un classement egal, un taux jamais rate, des ids perimes.
 	var ids: Array = []
 	for o: ObjectiveDef in modele.objectives:

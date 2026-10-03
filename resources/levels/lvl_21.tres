@@ -16,7 +16,7 @@
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="13_ngw11"]
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="14_jablq"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="16_bret4"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="18_vk0ai"]
+[ext_resource type="Resource" path="res://resources/cards/rare/purifying_light.tres" id="17_sw1il"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/meteor_storm.tres" id="19_cnvpr"]
 [ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="19_sw1il"]
 [ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="20_ia684"]
@@ -31,22 +31,22 @@
 
 [sub_resource type="Resource" id="Resource_sw1il"]
 script = ExtResource("21_6gits")
-id = &"obj_kill_type_with_card_arcane_bolt_3_fire_worm"
-description = "Ver de feu : en tuer 3 avec Trait arcanique"
-check_key = &"kill_type_with_card"
-params = {
-"card": "arcane_bolt",
-"count": 3,
-"enemy": "fire_worm"
-}
-
-[sub_resource type="Resource" id="Resource_ia684"]
-script = ExtResource("21_6gits")
 id = &"obj_no_card_tag_fire"
 description = "Gagner sans sort de feu"
 check_key = &"no_card_tag"
 params = {
 "tag": "FIRE"
+}
+
+[sub_resource type="Resource" id="Resource_ia684"]
+script = ExtResource("21_6gits")
+id = &"obj_kill_type_with_card_arcane_bolt_5_fire_worm"
+description = "Ver de feu : en tuer 5 avec Trait arcanique"
+check_key = &"kill_type_with_card"
+params = {
+"card": "arcane_bolt",
+"count": 5,
+"enemy": "fire_worm"
 }
 
 [sub_resource type="Resource" id="Resource_jxcgh"]
@@ -206,7 +206,7 @@ terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("23_belrn")]([SubResource("Resource_1k6lh"), SubResource("Resource_wosyd"), SubResource("Resource_y52nd"), SubResource("Resource_h3ov4")])
 enemy_pool = Array[ExtResource("1_nrv4l")]([ExtResource("2_qoti4"), ExtResource("3_e42nv"), ExtResource("4_2bcqe"), ExtResource("5_sw1il"), ExtResource("6_ia684"), ExtResource("7_jxcgh"), ExtResource("8_1k6lh"), ExtResource("9_wosyd"), ExtResource("10_y52nd"), ExtResource("11_vpd72")])
-exploration_deck = Array[ExtResource("11_h3ov4")]([ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("16_bret4"), ExtResource("18_vk0ai"), ExtResource("19_cnvpr")])
+exploration_deck = Array[ExtResource("11_h3ov4")]([ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("16_bret4"), ExtResource("17_sw1il"), ExtResource("19_cnvpr")])
 objectives = Array[ExtResource("21_6gits")]([SubResource("Resource_sw1il"), SubResource("Resource_ia684"), SubResource("Resource_jxcgh")])
 levelup_cards = Array[ExtResource("11_h3ov4")]([ExtResource("19_sw1il"), ExtResource("20_ia684"), ExtResource("21_jxcgh")])
 objective_rewards = Array[ExtResource("11_h3ov4")]([ExtResource("22_1k6lh"), ExtResource("23_wosyd"), ExtResource("24_y52nd")])

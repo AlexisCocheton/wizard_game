@@ -90,8 +90,26 @@ func _enemy(id: String, dname: String, kind: GameEnums.EnemyKind, power: int,
 ##
 ## Une valeur ECRITE sous le nouveau nom (« vent », « nature », « eau »,
 ## « glace ») l emporte sur la regle : c est la porte des exceptions voulues,
-## et il n y en a aucune au 02/10. Les valeurs neutres (1,0) ne sont pas
+## et il n y en avait aucune au 02/10. Les valeurs neutres (1,0) ne sont pas
 ## stockees : la fiche n affiche que les ecarts.
+##
+## LES ANCRES AU SOL (chantier W9) — la premiere exception, et la seule : le
+## second exemple du co-auteur, « un monstre IMMUNISE au VENT n est pas attire par
+## une attraction de vent », n existait que dans les tests (le vent le plus bas
+## du bestiaire etait 0,3). Vharn l Enclume et son Echo sont des ENCLUMES de
+## fonte : aucun souffle ne les deplace, aucune fleche ne les entame. Ecrit
+## « vent » = 0 dans leur table ; la nature (pierre, ronce) garde la regle, elle
+## frappe la matiere et l enclume en est. Pourquoi eux et pas le Golem ou le
+## Behemoth : ils sont aussi lourds, mais l un ou l autre descend dans HUIT
+## niveaux, des le tutoriel dont le deck porte trois Fleches percantes (vent) :
+## l immunite y aurait annule une carte du deck de depart et deplace huit niveaux
+## mesures pour un seul exemple. Vharn ferme lvl_07, dont le deck porte la
+## Spirale de sel (une attraction de vent : l exemple exact) et la Rupture de
+## chaine ; son Echo descend dans lvl_13 et lvl_16, ou le joueur porte au
+## moins les Fleches percantes gagnees en route (hors campagne) et la regle se
+## lit au bestiaire. test_eight_elements exige qu un niveau montre l exemple.
+## test_elements lit cette liste : une autre exception rougit.
+const ANCRES_AU_SOL: Array[String] = ["demon_anvil", "demon_anvil_echo"]
 const WIND_FLYER_MIN: float = 1.2
 const NATURE_FLYER_MAX: float = 0.65
 const WATER_FROM_FIRE_MIN: float = 0.65
@@ -863,15 +881,24 @@ func _enemies() -> void:
 	#
 	# 14 PV pour un P2 : il est fragile parce qu il est difficile a toucher.
 	# Un volant ondulant blinde serait une taxe de temps, pas une cible.
-	var flying_eye := _enemy("current_eye", "Oeil des courants", K.WAVER, 2,
+	var flying_eye := _enemy("current_eye", "Oeil des courants", K.EVASIVE, 2,
 		14.0, 72.0, 3, S.CIRCLE, Color(0.70, 0.85, 0.95), 24.0)
 	flying_eye.anim_key = &"flyingeye"
 	flying_eye.flying = true
-	# 210 px d amplitude, plus large que le Serpent des sables (170) : le
-	# serpent ondule dans un couloir, l oeil traverse le terrain de part en
-	# part. C est la difference entre « viser mieux » et « ne pas viser ».
-	flying_eye.wave_amplitude = 210.0
-	flying_eye.wave_frequency = 0.42
+	# EN SPIRALE (chantier W9). Il ondulait (210 px) comme un Serpent des sables
+	# qui vole ; MovePattern.SPIRAL etait code et teste sans qu aucun monstre ne
+	# s en serve. L oeil des COURANTS est pris dans les tourbillons du niveau des
+	# courants d air : il descend en tournant sur un cercle de 280 px, plus vite
+	# sur son cercle qu a la descente (100 contre 72), donc il fait des boucles et
+	# remonte un instant a chaque tour. Le propos ne change pas — il ne se vise
+	# pas, la reponse reste la zone posee devant — mais il se lit autrement : il
+	# tourne AUTOUR de sa colonne, et le centre du cercle est la ou poser la zone
+	# (c est ce que dit sa ligne de bestiaire). Volant : ni mur ni chemin A* ne
+	# coupent son motif. L ondulation est retiree : les deux cumules faisaient un
+	# trace que personne ne lit.
+	flying_eye.move_pattern = EnemyDef.MovePattern.SPIRAL
+	flying_eye.pattern_width = 280.0
+	flying_eye.pattern_lateral_speed = 100.0
 	# Une pupille nue, sans chair ni carapace : le physique la creve, le froid
 	# la trouble. Rien a empoisonner dans un oeil, et l air des courants la
 	# rend indifferente a la foudre qui y tombe sans arret.
@@ -903,11 +930,13 @@ func _enemies() -> void:
 	# coup d oeil, sans avoir a comparer deux barres de vie.
 	great_eye.sprite_scale = 1.5
 	great_eye.flying = true
-	# Il ondule MOINS que le petit (150 contre 210) et plus lentement : un
-	# mini-boss doit rester visable, sinon le combat se gagne par chance. Ce qui
-	# le rend dur est sa portee, pas son imprevisibilite.
-	great_eye.wave_amplitude = 150.0
-	great_eye.wave_frequency = 0.35
+	# Il tourne comme le petit (chantier W9 : la lignee fait la MEME chose en
+	# pire), mais sur un cercle plus serre (200 contre 280) et sans boucle : sa
+	# vitesse sur le cercle est celle de sa descente (une roue qui roule, il ne
+	# remonte jamais). Un mini-boss doit rester visable, sinon le combat se
+	# gagne par chance. Ce qui le rend dur est sa portee, pas son imprevisibilite.
+	great_eye.move_pattern = EnemyDef.MovePattern.SPIRAL
+	great_eye.pattern_width = 200.0
 	great_eye.shoot_interval = 3.2
 	# 4 degats : au-dessus de la fleche du lutin (2), sous le trait du mage noir
 	# (5) qui, lui, ne bouge pas. Un tireur mobile doit taper moins fort qu un
@@ -1224,8 +1253,12 @@ func _enemies() -> void:
 	# c est le propos du personnage — mais elle laisse DEUX portes ouvertes
 	# (givre, arcane), sinon le niveau serait une impasse de deck et non une
 	# question posee au joueur.
-	_resist(demon_anvil, {&"phys": 0.55, &"feu": 0.6, &"givre": 1.35, &"arcane": 1.25,
-		&"poison": 0, &"foudre": 1.1, &"lent": 0.5})
+	#
+	# IMMUNISE AU VENT (chantier W9, voir ANCRES_AU_SOL) : une enclume ne
+	# s envole pas. La Spirale de sel et la Rupture de chaine de son niveau ne
+	# l aspirent ni ne la repoussent, et ne l entament pas.
+	_resist(demon_anvil, {&"phys": 0.55, &"vent": 0.0, &"feu": 0.6, &"givre": 1.35,
+		&"arcane": 1.25, &"poison": 0, &"foudre": 1.1, &"lent": 0.5})
 	_save(demon_anvil, E + "demon_anvil.tres")
 
 	# SESH, LA FAIM — `lvl_10`, les fosses. « tout se mange » (document).
@@ -1972,8 +2005,10 @@ func _enemies_v3(E: String) -> void:
 	anvil_echo.anim_key = &"golem_blue"
 	anvil_echo.hits_immune = 2
 	anvil_echo.demoted_from = &"demon_anvil"
-	_resist(anvil_echo, {&"phys": 0.7, &"feu": 0.75, &"givre": 1.25, &"arcane": 1.2,
-		&"poison": 0, &"foudre": 1.05, &"lent": 0.6})
+	# Immunise au vent comme son seigneur (ANCRES_AU_SOL) : l echo est la meme
+	# enclume en petit, le joueur doit y lire la meme regle.
+	_resist(anvil_echo, {&"phys": 0.7, &"vent": 0.0, &"feu": 0.75, &"givre": 1.25,
+		&"arcane": 1.2, &"poison": 0, &"foudre": 1.05, &"lent": 0.6})
 	_save(anvil_echo, E + "demon_anvil_echo.tres")
 
 	# ECHO DE SESH — il gobe encore, comme le Glouton dont il porte la feuille :
@@ -2114,6 +2149,7 @@ const ELEMENT_DES_SORTS: Dictionary = {
 	"frost_field": [GameEnums.DamageTag.ICE, "un champ de givre"],
 	"frost_rain": [GameEnums.DamageTag.ICE, "une pluie de givre"],
 	"deep_freeze": [GameEnums.DamageTag.ICE, "le gel"],
+	"ice_wall": [GameEnums.DamageTag.ICE, "un mur de glace (chantier W9 : le premier OBJET de glace)"],
 	# --- ARCANIQUE : la magie pure, le temps, l esprit du mage ---
 	"arcane_bolt": [GameEnums.DamageTag.ARCANE, "un trait arcanique"],
 	"arcane_insight": [GameEnums.DamageTag.ARCANE, "une intuition arcanique"],
@@ -2178,7 +2214,7 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
-		"Inflige 26 degats d ARCANE a une cible.", GameEnums.Rarity.COMMON, 1.1,
+		"Inflige 26 degats ARCANIQUES a une cible.", GameEnums.Rarity.COMMON, 1.1,
 		GameEnums.Targeting.TARGET, [],
 		[_spec("damage_single", 26.0)], 4)
 	bolt.fx_key = &"orb_burst"
@@ -2297,6 +2333,32 @@ func _cards() -> void:
 	wall.fx_key = &"stone_peak"
 	wall.sfx_key = &"stone_shove"
 	_save(wall, "res://resources/cards/rare/stone_wall.tres")
+
+	# MUR DE GLACE (chantier W9) — l exemple du co-auteur sur les elements : « un mur
+	# de GLACE subit moins de degats d un monstre faible a la glace ». La regle
+	# existait (Battlefield.object_hit, EnemyDef.object_hit_factor) mais aucune carte
+	# ne posait d objet de glace : tous les objets etaient de nature, la Riviere
+	# d eau. Un mur qui ne prend pas de coups ne montre rien : celui-ci est CASSABLE
+	# (des PV, comme le Bastion), donc les monstres qu il enferme le frappent, et
+	# ceux qui craignent le froid le frappent moins fort (faible x2 -> coups x0,7).
+	#
+	# Chiffres tenus contre ses deux voisins de famille :
+	#   Mur de pierre (rare) : 1,5 s, 200 px, 20 s, ni PV ni coups ;
+	#   Bastion (epique)     : 2,0 s, 200 px, permanent, 120 PV ;
+	#   Mur de glace (rare)  : 1,6 s, 180 px, permanent, 70 PV.
+	# Rare comme le Mur de pierre, un peu plus long a lever ; il dure jusqu a ce
+	# qu on le brise (la glace ne fond pas pendant un combat, c est le sort qui la
+	# tient), mais il cede deux fois plus vite que le Bastion et barre moins large :
+	# c est le Bastion du pauvre, pas son remplacant. Permanent, il n entre pas en
+	# acte 1 (test_level_progression, cartes simples).
+	var ice_wall := _card("ice_wall", "Mur de glace",
+		"Mur de glace permanent de 70 PV : les monstres le contournent, et ceux qui craignent le froid le frappent moins fort.",
+		GameEnums.Rarity.RARE, 1.6, GameEnums.Targeting.POSITION, [],
+		[_spec("build_wall", 0.0, 0.0, 180.0,
+			{&"thickness": 60.0, &"permanent": true, &"wall_hp": 70.0})])
+	ice_wall.fx_key = &"freezing"
+	ice_wall.sfx_key = &"zap_short"
+	_save(ice_wall, "res://resources/cards/rare/ice_wall.tres")
 
 	# --- Epiques ---
 	var ally := _card("mirror_apprentice", "Apprenti miroir",
@@ -2438,7 +2500,7 @@ func _cards() -> void:
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
 
 	var resonance := _card("resonance", "Resonance",
-		"6 degats d ARCANE par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
+		"6 degats ARCANIQUES par monstre present dans la zone, a chacun d eux. Plus ils sont serres, plus ca frappe.",
 		GameEnums.Rarity.EPIC, 1.7, GameEnums.Targeting.POSITION, [],
 		[_spec("damage_per_enemy", 6.0, 0.0, 220.0)])
 	resonance.fx_key = &"pulse_ring"
@@ -3957,13 +4019,26 @@ func _acte_3(C: String, E: String) -> void:
 	# Decouverte : Rupture de chaine. Sortent la Lumiere, la Fleche et le Mur (un
 	# exemplaire chacun) : le Trait monte a 4, l arcane etant ce que les Forges
 	# craignent le plus (x1.11 en moyenne ponderee par les PV).
+	#
+	# DISSIPATION (chantier W9) : un Gardien-totem descend dans w5_5 et son aura
+	# rend la vague intouchable ; le deck n avait plus de reponse depuis que la
+	# Lumiere purifiante en etait sortie (regle des 6). La Lumiere et le Vide
+	# d emprise sont deja au livre a ce stade (decks de lvl_19, lvl_06, lvl_20) :
+	# seul le deck les met dans le pool de montee d un niveau de campagne. La
+	# Rupture de chaine reste : c est la carte que ce niveau fait decouvrir. Il
+	# fallait donc sortir un autre id (regle des 6). Banc, 60 parties : deck
+	# d avant 44 victoires ; Lumiere a la place du Meteore 39 ; Lumiere a la
+	# place des deux Pluies de givre, Meteore monte a 2 : 52. La Pluie sort :
+	# hors le Colosse, tout ici resiste au givre ou l ignore (lenteur nulle), et
+	# le Meteore est le paquet de degats que la combo du niveau veut.
+	# Paragraphe ci-dessus : « la Pluie reste pour ses degats » ne vaut plus.
 	lvl5.exploration_deck = _deck([
-		[C + "rare/meteor.tres", 1],
+		[C + "rare/purifying_light.tres", 1],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
 		[C + "rare/chain_break.tres", 1],
-		[C + "common/frost_rain.tres", 2],
+		[C + "rare/meteor.tres", 2],
 	])
 	_poser_progression(lvl5)
 	# CHANTIER N2 — la fourche retombe dans `lvl_21`, LE PENTACLE, qui ferme
@@ -5396,12 +5471,20 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Pluie de meteorites. Sortent la derniere Boule de feu et la
 	# Focalisation ; Trait et Fleche montent a 4.
+	#
+	# DISSIPATION (chantier W9) : « une aura qu il faut percer » — les
+	# Gardiens-totems de w21_3 et l aura du Sceau de Tombol — et le deck ne
+	# portait aucune dissipation : la Fleche traverse jusqu au porteur, mais un
+	# porteur couvert par un second porteur ne tombe pas. La Lumiere purifiante
+	# prend la place de la Concentration (de l XP de carte, rien qui touche le
+	# terrain). Elle est deja au livre (deck de lvl_19) : seul le deck la met
+	# dans le pool de montee de ce niveau.
 	lvl21.exploration_deck = _deck([
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/frost_rain.tres", 3],
 		[C + "rare/meteor.tres", 1],
-		[C + "epic/deep_focus.tres", 1],
+		[C + "rare/purifying_light.tres", 1],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	_poser_progression(lvl21)
@@ -5867,12 +5950,20 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 	# fond ; chaque niveau fait decouvrir au moins une carte qu aucun deck joue
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Intuition arcanique. Sortent la Boule de feu, le Mur et la Marque.
+	#
+	# DISSIPATION (chantier W9) : quatre vagues de Gardiens-totems puis Ymoa, dont
+	# l aura protege tout le cercle, et aucune carte pour la couper. Le Vide
+	# d emprise (« efface rage, boucliers et auras ») prend la place de la
+	# Concentration, qui depuis la vague 8 ne donne que de l XP de carte : ce
+	# n est plus le coup unique dont parle le paragraphe ci-dessus. Il est deja au
+	# livre (decks de lvl_06, lvl_07, lvl_20) : seul le deck le met dans le pool
+	# de montee de ce niveau.
 	lvl12.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/piercing_arrow.tres", 1],
 		[C + "rare/meteor.tres", 2],
 		[C + "rare/focus.tres", 3],
-		[C + "epic/deep_focus.tres", 1],
+		[C + "epic/void_grip.tres", 1],
 		[C + "epic/arcane_insight.tres", 1],
 	])
 	_poser_progression(lvl12)
@@ -5991,7 +6082,16 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# 34 -> 43 victoires a x1,8, 29 -> 37 a x1,9 (le reglage retenu). Essai rejete :
 	# retirer le Totem ancien (mini-boss, 175 PV) de la vague ne changeait rien
 	# (34/60) — ce sont les Berserkers et les echos de Kaltek qui touchent, pas lui.
-	p4.difficulty = 1.25
+	# 1,25 -> 1,05 (chantier W9) : le deck recoit le Vide d emprise, la reponse
+	# ecrite a cette vague (l aura de l Echo d Ymoa couvre la rage des
+	# Berserkers ; le Vide efface les deux), a la place de la derniere Marque.
+	# Le bot du banc ne garde pas une dissipation pour le bon moment : il la
+	# lance des qu elle est en main, sur le monstre le plus avance, et dans un
+	# niveau limite par la pioche une carte jouee a vide coute cher. Banc (60
+	# parties, moteur de la vague 9) : deck d avant a 1,25 : 47 ; Vide a 1,25 :
+	# 30 (a la place du Meteore : 6 ; des Boules de feu, Etincelle x4 : 30) ;
+	# Vide a 1,15 : 35 ; Vide a 1,05 : 44. Le saut sur w13_3 descend d autant.
+	p4.difficulty = 1.05
 	# LE MELANGE DES QUATRE, litteralement : le document (section 6) decrit ce
 	# niveau comme « melange des quatre », et cette vague est l endroit ou les
 	# seigneurs reviennent. Ymoa et Kaltek descendent ensemble, l aura de l un
@@ -6086,12 +6186,19 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# Vague 8, deck de 12 : le Trait (arcane, x1,36 ici) garde ses 4 exemplaires et
 	# la Marque en perd un. Au banc (60 parties, incantations x2,25) : 25 victoires
 	# avec Trait 3 / Marque 2, 34 avec Trait 4 / Marque 1.
+	#
+	# DISSIPATION (chantier W9) : l Echo d Ymoa descend dans w13_4, la vague la
+	# plus dure du niveau, et son aura couvre la vague ; le deck n avait aucune
+	# carte pour la couper. Le Vide d emprise prend la place de la derniere
+	# Marque ; la difficulte de w13_4 descend de 1,25 a 1,05 pour que le niveau
+	# reste dans la fenetre (mesures a cote de `p4.difficulty`). Deja au livre
+	# (decks de lvl_06, lvl_07, lvl_20) : seul le deck le met dans le pool.
 	lvl13.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 2],
 		[C + "common/spark.tres", 3],
 		[C + "rare/meteor.tres", 1],
-		[C + "epic/weakness_mark.tres", 1],
+		[C + "epic/void_grip.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	_poser_progression(lvl13)
@@ -6532,11 +6639,18 @@ depuis le pentacle, et il marche devant."
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Precipitation. Sortent le Trait, la Fleche, le Mur et la Marque ;
 	# la Focalisation monte a 3, c est elle qui fait d un sort deux coups.
+	#
+	# DISSIPATION (chantier W9) : un Gardien-totem descend dans r4 avec le
+	# Behemoth et les adeptes, et rien dans le deck ne coupait son aura. Le Vide
+	# d emprise prend la place de la Concentration (de l XP de carte : elle ne
+	# frappe rien, et ce deck est fait de coups lourds). La Precipitation reste :
+	# c est la carte que ce niveau fait decouvrir. Le Vide est deja au livre
+	# (decks de lvl_06, lvl_07, lvl_20) : seul le deck le met dans le pool.
 	lvl15.exploration_deck = _deck([
 		[C + "common/fireball.tres", 4],
 		[C + "rare/meteor.tres", 3],
 		[C + "rare/focus.tres", 2],
-		[C + "epic/deep_focus.tres", 1],
+		[C + "epic/void_grip.tres", 1],
 		[C + "rare/quickening.tres", 1],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
@@ -6720,10 +6834,18 @@ courir pour voir jusqu ou tu irais."
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouvertes : Faille temporelle et Metier du monde. Sortent le Meteore, la
 	# Focalisation, le Mur, la Concentration et la Marque.
+	#
+	# DISSIPATION (chantier W9) : l Echo d Ymoa descend dans w16_3 et son aura
+	# couvre les echos de Kaltek et de Vharn qui marchent avec lui ; le deck
+	# n avait aucune carte pour la couper. Le Vide d emprise (x2) prend la place
+	# des Fleches percantes. Banc (60 parties) : deck d avant 54 victoires ; Vide
+	# a la place des Boules de feu (Fleche montee a 3) 20 ; a la place des
+	# Fleches 51. Le Vide est deja au livre : seul le deck le met dans le pool de
+	# montee.
 	lvl16.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 3],
-		[C + "common/piercing_arrow.tres", 2],
+		[C + "epic/void_grip.tres", 2],
 		[C + "legendary/time_rift.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 		[C + "legendary/world_loom.tres", 1],
@@ -6960,7 +7082,13 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# derniere fenetre.
 			# Rangs re-mesures apres la vague 8 (60 parties) : le pari des 300 % (43)
 			# passe devant l achevement du releve en 8 s (35).
-			return {"nouvelles": ["time_surge", "quickening", "salt_spiral"], "objectifs": [
+			# Chantier W9 : un Gardien-totem descend dans w2_6 et son aura rend la
+			# vague intouchable ; ni le deck ni les cartes nouvelles ne la coupaient.
+			# La Lumiere purifiante (rare, ni terrain ni objet : une carte simple
+			# d acte 1) prend la place de la Spirale de sel, qui passe en lvl_08 ou
+			# elle remplace la Lumiere : meme nombre de reprises, aucune carte deux
+			# niveaux de suite.
+			return {"nouvelles": ["time_surge", "quickening", "purifying_light"], "objectifs": [
 				[_objectif(&"win_above_speed", {"pct": 300}), "bone_recall"],
 				[_objectif(&"boss_quick_after_revive", {"seconds": 8}), "deep_focus"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "hopper", "count": 4}), "hourglass_shard"],
@@ -6970,13 +7098,15 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# l exemple du co-auteur « 4 Oiseaux mirage en une attaque » est ici, une nuee
 			# en compte quatre. Les petites gelees craignent le feu : les achever a la
 			# Boule de feu. Et la plus longue serie, 15 morts en moins d une seconde.
-			# Nouvelles : Brasier (sa premiere sortie depuis la vague 8), Focalisation, Lumiere
-			# purifiante (le Totem ancien craint l arcane). Recompenses : Onde de
+			# Nouvelles : Brasier (sa premiere sortie depuis la vague 8), Focalisation,
+			# Spirale de sel (chantier W9 : elle venait de lvl_02, qui prend la Lumiere
+			# purifiante contre son Gardien-totem ; ici elle aspire les nuees et les
+			# gelees en paquets pour la Boule de feu). Recompenses : Onde de
 			# repulsion, Resonance (au deck de lvl_17) et le Cadran des forges, feu en
 			# pluie.
 			# Rangs re-mesures apres la vague 8 : les gelees a la Boule de feu (37 / 60)
 			# sont plus faciles que la nuee d un seul sort (28).
-			return {"nouvelles": ["brazier", "focus", "purifying_light"], "objectifs": [
+			return {"nouvelles": ["brazier", "focus", "salt_spiral"], "objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "jelly_small", "card": "fireball", "count": 8}), "repulsion_wave"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 4}), "resonance"],
 				[_objectif(&"multi_kill", {"count": 15, "window": 1}), "forge_dial"],
@@ -7007,6 +7137,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Mesure apres la vague 8 (60 parties) : six longueurs, le seuil provisoire,
 			# se reussissaient 59 fois ; 9 : 44 ; 10 : 25 ; 11 : 1. Le classement suit
 			# la mesure : Resonance 7 fois (50), 21 volants (46), 10 longueurs (25).
+			# Chantier W9 : l Oeil des courants descend en spirale ; dix longueurs
+			# tombent a 7 / 60 (moteur de la vague 9), toujours le plus dur.
 			# Nouvelles : Volte-face (fait remonter les serpents), Rupture de chaine (les
 			# Oeils des courants craignent le physique), toutes deux deja proposees en
 			# lvl_01, et le Totem de coeur-de-bois, un appat qui detourne les serpents. Le
@@ -7039,11 +7171,12 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Etincelle (deja proposee en lvl_09), Pacte imprudent, Racine de
 			# tonnerre. Recompenses : Lumiere purifiante, Epuration, Metier du monde.
 			# Rangs re-mesures apres la vague 8 : achever 15 Oiseaux a la Pluie (41 / 60)
-			# est plus facile que de la lancer 26 fois (31).
+			# est plus facile que de la lancer 26 fois (31). Et de nouveau echanges
+			# apres le chantier moteur de la vague 9 : 26 lancers 46, 15 Oiseaux 39.
 			return {"nouvelles": ["spark", "reckless_bargain", "thunder_root"], "objectifs": [
 				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "purifying_light"],
-				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "deck_purge"],
-				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "world_loom"],
+				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "deck_purge"],
+				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "world_loom"],
 			]}
 		&"lvl_04":
 			# Le Grand Appel : l Ensevelisseur leve des goules sans fin ; les achever aux
@@ -7065,13 +7198,19 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Sorciere de givre du trio craint le feu, que le deck porte en majorite :
 			# 60 sorts de feu, le plus facile apres la vague 8 (44 se reussissaient 60
 			# fois sur 60 ; 60 : 48 / 60, contre 33 pour les quatre goules).
+			# Apres le chantier moteur de la vague 9 (un degat continu n est plus un
+			# coup, trois voies a chaque maturation), « sans degats » ne se reussit
+			# plus (0 / 60 ; 4 avant). Il est remplace par « ne pas etre touche par
+			# une Goule des fosses » (37 / 60 ; « par un Squelette pareur » : 58,
+			# « finir sous 160 % » : 0), et les quatre Goules d un seul sort (31)
+			# passent au rang 3.
 			# Nouvelles : Racine de tonnerre (foudre, que les goules craignent), Volte-
 			# face, Brasier, toutes deja proposees. Recompenses : Rupture de chaine,
 			# Bastion, Echo de la main.
 			return {"nouvelles": ["thunder_root", "about_face", "brazier"], "objectifs": [
 				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "chain_break"],
-				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "bastion"],
-				[_objectif(&"no_damage_taken"), "echo_of_the_hand"],
+				[_objectif(&"no_hit_from", {"enemy": "pit_ghoul"}), "bastion"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "echo_of_the_hand"],
 			]}
 		&"lvl_20":
 			# La cour des rois morts, niveau dur : le Vide d emprise du deck dissipe les
@@ -7097,9 +7236,16 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# 30 au banc, le bot ne sait pas attendre la fin d une garde ; il reste au
 			# Registre.) Presque tout ici est immunise a la lenteur : un sort givre +
 			# lenteur ne mord pas (minimum des resistances) : les nouvelles n en portent
-			# pas (Etincelle, Epuration, Pacte imprudent). Legendaire : le Registre des
+			# pas (Etincelle, Epuration, Mur de glace). Legendaire : le Registre des
 			# marees, la onzieme et derniere legendaire proposee pour la premiere fois.
-			return {"nouvelles": ["spark", "deck_purge", "reckless_bargain"], "objectifs": [
+			# Chantier W9 : le Mur de glace (premier objet de glace) remplace le Pacte
+			# imprudent, une reprise (propose en lvl_03, lvl_07, lvl_11...). C est sa
+			# premiere et seule sortie : la reprise devient une decouverte, les
+			# reprises restent au minimum. Il est ICI parce que le Colosse de forge
+			# craint la glace (x2) : enferme derriere le mur, il le frappe moins fort
+			# — l exemple du co-auteur — et le mur ne porte pas de lenteur, que tout
+			# le niveau ignore.
+			return {"nouvelles": ["spark", "deck_purge", "ice_wall"], "objectifs": [
 				[_objectif(&"element_casts", {"element": "ARCANE", "count": 48}), "cycle_of_thought"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "golem", "count": 2}), "mirror_apprentice"],
 				[_objectif(&"win_above_speed", {"pct": 310}), "tide_ledger"],
@@ -7126,10 +7272,14 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# arcanique, puis gagner sans aucun sort de feu, la bonne lecture du niveau.
 			# Le combat court passe de 118 a 90 s apres la vague 8 : 118 s se tenait 53
 			# fois sur 60, plus que les deux autres ; 90 s : 13.
+			# Chantier W9 (Lumiere purifiante au deck a la place de la Concentration) :
+			# trois Vers au Trait (57 / 60) et « sans feu » (58) se rejoignaient. « Sans
+			# feu » passe au rang 1 et les Vers au rang 2, a cinq au lieu de trois :
+			# un ecart d une partie ne classe rien.
 			# Nouvelles : Etincelle, Epuration, Flux de mana.
 			return {"nouvelles": ["spark", "deck_purge", "mana_flow"], "objectifs": [
-				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 3}), "cycle_of_thought"],
-				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "bastion"],
+				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "cycle_of_thought"],
+				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 5}), "bastion"],
 				[_objectif(&"win_under_time", {"seconds": 90}), "twin_channeling"],
 			]}
 		&"lvl_07":
@@ -7150,6 +7300,15 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# colonne, et la Volte-face du deck les fait remonter. A 0,8 longueur avant
 			# la vague 8 : 48 parties sur 60, plus facile que « sans degats » (38) ;
 			# 1,2 : 38 ; 1,4 : 18 ; 1,5 : 9.
+			# « Tres grande distance » (chantier W9, audit) : 1,5 longueur reste le
+			# plafond FAISABLE ici. Remesure sur 60 parties : 1,7 longueur 0 / 60,
+			# 2,0 longueurs 0 / 60 — un objectif jamais reussi est refuse. La raison
+			# tient au niveau : deux Cacodemons seulement, en fin de niveau (w10_4),
+			# qui descendent en diagonale d un bord a l autre ; meme retenus par la
+			# Volte-face du deck, aucun n a couvert 1,7 longueur avant de tomber ou
+			# de toucher le mage sur 120 parties. Le vrai defi
+			# de distance est celui de lvl_17 (dix longueurs a un Serpent, qui
+			# ondule sur place dans le givre).
 			# Nouvelles : Bastion (un mur permanent allonge le chemin), Metier du monde,
 			# Flux de mana. Legendaire : la Riviere, qui fait marcher.
 			return {"nouvelles": ["bastion", "world_loom", "mana_flow"], "objectifs": [
@@ -7213,8 +7372,10 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# pendant leur garde : ne jamais les frapper a ce moment. Puis finir au-dessus
 			# de 380 %. (« Sans legendaire » ne coutait rien : 30 parties sur 30.)
 			# Nouvelles : Pacte imprudent, Fosse, Canalisation jumelle.
+			# Chantier W9 (Vide d emprise au deck, moteur de la vague 9) : 50 sorts de
+			# feu se reussissaient 60 fois sur 60 ; 56 : 60 ; 60 : 57 ; 64 : 51.
 			return {"nouvelles": ["reckless_bargain", "terrain_pit", "twin_channeling"], "objectifs": [
-				[_objectif(&"element_casts", {"element": "FIRE", "count": 50}), "terrain_brambles"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "terrain_brambles"],
 				[_objectif(&"never_hit_reflect"), "terrain_altar"],
 				[_objectif(&"win_above_speed", {"pct": 380}), "forge_dial"],
 			]}
@@ -7224,10 +7385,14 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Bastion, Echo de la main, Clef de l Appel.
 			# Rangs re-mesures apres la vague 8 : 58 sorts d arcane (40 / 60) passent
 			# devant l Enfant acheve en 9 s apres son releve (28).
+			# Chantier W9, deck refait (Vide d emprise x2 a la place des Fleches) :
+			# le bot qui joue l arcane d abord gaspille ses lancers en Vide et perd
+			# plus souvent : 58 sorts d arcane passent sous l Enfant en 9 s. Rangs
+			# echanges, ids gardes. Mesure finale (moteur de la vague 9) : 55, 21, 17.
 			return {"nouvelles": ["bastion", "echo_of_the_hand", "summoners_key"], "objectifs": [
 				[_objectif(&"no_hit_from", {"enemy": "demon_chain_echo"}), "cycle_of_thought"],
-				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "deck_purge"],
-				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "venom_mire"],
+				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "deck_purge"],
+				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "venom_mire"],
 			]}
 	printerr("Niveau %s absent de la table de progression" % level_id)
 	return {}
