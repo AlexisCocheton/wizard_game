@@ -620,7 +620,9 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 	# les titres.
 	stats.add_theme_constant_override(&"separation", 96)
 	box.add_child(stats)
-	stats.add_child(_stat("Incantation", "%s s" % _fmt(card.base_cast_time),
+	# Hors combat : le temps a 100 % de vitesse, CAST_TIME_SCALE compris
+	# (CardView.menu_cast_text) ; jamais le chiffre brut du .tres.
+	stats.add_child(_stat("Incantation a 100 %", CardView.menu_cast_text(card),
 		UiTheme.INK_RARE))
 	# Le compteur demande par le testeur : combien de fois ce sort a ete lance.
 	stats.add_child(_stat("Lance", str(card_uses(card.id)), UiTheme.INK_LEGENDARY))
@@ -825,10 +827,6 @@ func _stat(titre: String, valeur: String, ink: Color) -> Control:
 	v.add_child(UiTheme.label(valeur, UiTheme.FONT_BUTTON, ink,
 		HORIZONTAL_ALIGNMENT_CENTER, false))
 	return v
-
-
-func _fmt(v: float) -> String:
-	return ("%.1f" % v).trim_suffix(".0")
 
 
 func _targeting_name(t: int) -> String:

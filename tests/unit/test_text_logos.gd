@@ -211,7 +211,8 @@ func _test_la_carte_brulee_ne_ment_pas_sur_son_temps() -> void:
 	ok(boule != null, "(un sort avec un temps d incantation)")
 	if boule == null:
 		return
-	var temps: String = ("%.1f" % boule.base_cast_time).trim_suffix(".0") + "s"
+	# Le temps REEL (audit vague 9) : celui que la carte de main affiche.
+	var temps: String = ("%.1f" % RunState.effective_cast_time(boule)).trim_suffix(".0") + "s"
 
 	# Une carte de main ordinaire garde son temps : c est la donnee de decision.
 	var main := CardView.new()
@@ -247,7 +248,7 @@ func _test_la_carte_brulee_ne_ment_pas_sur_son_temps() -> void:
 	ok(visee != null, "(un sort a viser avec un temps d incantation)")
 	var hud: Node = g.get_node_or_null("HUD")
 	if visee != null and hud != null:
-		var t_visee: String = ("%.1f" % visee.base_cast_time).trim_suffix(".0") + "s"
+		var t_visee: String = ("%.1f" % RunState.effective_cast_time(visee)).trim_suffix(".0") + "s"
 		RunState.pending_offer = [visee]
 		eq(g.burn_card(0), visee, "(la carte est brulee)")
 		var cv: CardView = hud.find_child("CarteBrulee", true, false) as CardView

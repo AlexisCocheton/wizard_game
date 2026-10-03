@@ -46,7 +46,7 @@ params = {
 [sub_resource type="Resource" id="Resource_00s4r"]
 script = ExtResource("25_kvakk")
 id = &"obj_element_casts_58_arcane"
-description = "Lancer 58 sorts d arcane"
+description = "Lancer 58 sorts d arcanique"
 check_key = &"element_casts"
 params = {
 "count": 58,

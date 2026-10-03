@@ -61,6 +61,8 @@ var _tab: int = Tab.HAND
 var _tab_buttons: Array[Button] = []
 var _content: VBoxContainer = null
 var _enemy: EnemyDef = null
+## La fiche de passif ouverte dans l onglet MAIN (toucher sur le rail du HUD).
+var _passive: SpellCard = null
 var _browser: DeckBrowser = null
 
 
@@ -149,6 +151,7 @@ func _build() -> void:
 func show_tab(index: int) -> void:
 	_tab = clampi(index, 0, TABS.size() - 1)
 	_enemy = null
+	_passive = null
 	for i in _tab_buttons.size():
 		_tab_buttons[i].add_theme_color_override(&"font_color",
 			UiTheme.GOLD if i == _tab else UiTheme.TEXT)
@@ -177,6 +180,26 @@ func close_enemy() -> void:
 	_render()
 
 
+## La fiche de passif ouverte dans l onglet MAIN, null sinon.
+func open_passive_sheet() -> SpellCard:
+	return _passive
+
+
+## Ouvre la FICHE d un passif dans l onglet MAIN (le HUD l appelle quand on
+## touche une pastille du rail).
+func open_passive(p: SpellCard) -> void:
+	if p == null:
+		return
+	show_tab(Tab.HAND)
+	_passive = p
+	_render()
+
+
+func close_passive() -> void:
+	_passive = null
+	_render()
+
+
 ## Le composant DeckBrowser de l onglet DECK (null sur les autres onglets).
 func deck_browser() -> DeckBrowser:
 	return _browser if is_instance_valid(_browser) else null
@@ -190,7 +213,11 @@ func _render() -> void:
 		c.queue_free()
 	_browser = null
 	match _tab:
-		Tab.HAND: _render_hand()
+		Tab.HAND:
+			if _passive != null:
+				_render_passive(_passive)
+			else:
+				_render_hand()
 		Tab.DECK: _render_deck()
 		Tab.WAVE:
 			if _enemy != null:
@@ -300,6 +327,59 @@ func _render_deck() -> void:
 	_browser = DeckBrowser.new(DeckBrowser.Mode.BROWSE)
 	_browser.name = "DeckBrowser"
 	_content.add_child(_browser)
+
+
+## La FICHE d un passif, a la place de la main : ouverte en touchant sa
+## pastille sur le rail du HUD (audit vague 9).
+func _render_passive(p: SpellCard) -> void:
+	var box: VBoxContainer = _scroll_box()
+	fill_passive_sheet(box, p)
+	var retour := Button.new()
+	retour.name = "PassiveBack"
+	retour.text = "RETOUR A LA MAIN"
+	retour.custom_minimum_size = Vector2(0, BUTTON_H - 14.0)
+	retour.process_mode = Node.PROCESS_MODE_ALWAYS
+	retour.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"ui_tap")
+		close_passive())
+	_content.add_child(retour)
+
+
+## Remplit `box` avec la fiche du passif `p` : icone et sceau, nom, ETAT (allume
+## ou non, et ce qu il manque), description a logos. Statique pour les tests.
+static func fill_passive_sheet(box: VBoxContainer, p: SpellCard) -> void:
+	var ico: TextureRect = CardIcons.make_rect(p, SHEET_PORTRAIT_PX)
+	if ico != null:
+		var centre := HBoxContainer.new()
+		centre.alignment = BoxContainer.ALIGNMENT_CENTER
+		centre.add_child(CardView.with_type_badge(ico, p, SHEET_PORTRAIT_PX))
+		box.add_child(centre)
+	box.add_child(UiTheme.label(p.display_name, UiTheme.FONT_TITLE,
+		UiTheme.rarity_ink(p.rarity), HORIZONTAL_ALIGNMENT_CENTER, false))
+	box.add_child(UiTheme.label("Pouvoir passif  -  %s" % GameEnums.rarity_name(p.rarity),
+		UiTheme.FONT_SMALL, INK_SOFT, HORIZONTAL_ALIGNMENT_CENTER, false))
+	var etat: Label = UiTheme.label(passive_state_text(p), UiTheme.FONT_BODY,
+		INK_GOOD if passive_lit(p) else INK_BAD, HORIZONTAL_ALIGNMENT_CENTER)
+	etat.name = "PassiveState"
+	box.add_child(etat)
+	var desc: RichTextLabel = ElementIcons.decorated_label(p.description, UiTheme.FONT_BODY,
+		INK_TEXT, true)
+	desc.name = "Description"
+	box.add_child(desc)
+
+
+static func passive_lit(p: SpellCard) -> bool:
+	return SpeedGauge.speed_percent >= p.speed_threshold
+
+
+## « ALLUME : ... » ou « ETEINT : ... il te manque N % ». Le seuil est le seul
+## chiffre du rail ; la fiche dit ce qu il veut dire maintenant.
+static func passive_state_text(p: SpellCard) -> String:
+	if passive_lit(p):
+		return "ALLUME : ta vitesse (%d %%) atteint son seuil de %d %%." % [
+			SpeedGauge.speed_percent, p.speed_threshold]
+	return "ETEINT : il s allume a %d %% de vitesse, il te manque %d %%." % [
+		p.speed_threshold, p.speed_threshold - SpeedGauge.speed_percent]
 
 
 # --- VAGUE : les monstres de la vague en cours ---

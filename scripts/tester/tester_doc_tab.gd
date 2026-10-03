@@ -11,9 +11,26 @@ extends VBoxContainer
 ##   REINITIALISER  efface tous les reglages.
 ## Importer et reinitialiser REMPLACENT ce qui existe : deux touchers, comme la
 ## remise a zero de la progression.
+##
+## SUR TELEPHONE (audit vague 9) : EXPORTER ecrivait dans user://changements,
+## c est-a-dire /data/data/<jeu>/files/... sur Android, un dossier PRIVE que le
+## testeur ne peut ni ouvrir ni partager, et l ecran affichait ce chemin
+## inutilisable. Sur mobile, COPIER est donc LA voie : un grand bouton dore en
+## tete, et un message qui dit quoi faire ensuite (« colle-le dans un
+## message »). L export fichier n y est pas propose ; une ligne explique
+## pourquoi. Sur PC rien ne change : EXPORTER, COPIER, OUVRIR LE DOSSIER.
 
 const TOUCH: float = TesterField.TOUCH
 const INK: Color = TesterField.INK
+## Mode d emploi sur telephone, avant la copie.
+const COPY_HOWTO: String = "Touche COPIER, puis colle-le dans un message (SMS, mail, " \
+	+ "Discord...) : appui long dans le champ de texte, puis Coller."
+## Apres la copie, sur telephone.
+const COPIED_HOWTO: String = "Copie ! Ouvre ta messagerie et colle-le dans un message " \
+	+ "(appui long dans le champ de texte, puis Coller). %d reglage%s."
+## Pourquoi il n y a pas d EXPORTER sur telephone.
+const NO_EXPORT_NOTE: String = "Pas d export en fichier sur telephone : le fichier " \
+	+ "resterait dans un dossier prive du jeu, que tu ne peux pas ouvrir."
 
 var host: Node = null
 var last_path: String = ""
@@ -23,6 +40,22 @@ var _reset_btn: Button = null
 var _import_armed: bool = false
 var _reset_armed: bool = false
 var _message: String = ""
+## Vrai sur telephone : COPIER est la seule voie proposee. Pose a la creation
+## d apres l OS ; les tests le forcent par set_mobile().
+var mobile: bool = is_mobile_os()
+
+
+## Android, iOS, ou toute plateforme qui se dit mobile (web sur telephone).
+static func is_mobile_os() -> bool:
+	return OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios") \
+		or OS.has_feature("web_android") or OS.has_feature("web_ios")
+
+
+## Force la presentation telephone ou PC (tests, captures) et reconstruit.
+func set_mobile(on: bool) -> void:
+	mobile = on
+	_message = ""
+	_build()
 
 
 func setup(p_host: Node) -> TesterDocTab:
@@ -45,15 +78,21 @@ func _build() -> void:
 		c.free()
 	var n: int = TesterOverrides.count()
 	add_child(UiTheme.label("DOCUMENT DE CHANGEMENT", UiTheme.FONT_BODY, INK))
-	add_child(UiTheme.label(TesterDocument.summary(_par_genre(), n) + ". Exporte-le puis "
-		+ "colle-le dans un message : il dit, pour chaque reglage, la cible, le champ, "
-		+ "l avant et l apres.", UiTheme.FONT_SMALL, TesterField.INK_NOTE))
-
-	var l1 := HBoxContainer.new()
-	l1.add_theme_constant_override(&"separation", 10)
-	add_child(l1)
-	l1.add_child(_button("EXPORTER", export_now))
-	l1.add_child(_button("COPIER", copy_now))
+	if mobile:
+		_build_copy_first(n)
+	else:
+		add_child(UiTheme.label(TesterDocument.summary(_par_genre(), n) + ". Exporte-le puis "
+			+ "colle-le dans un message : il dit, pour chaque reglage, la cible, le champ, "
+			+ "l avant et l apres.", UiTheme.FONT_SMALL, TesterField.INK_NOTE))
+		var l1 := HBoxContainer.new()
+		l1.add_theme_constant_override(&"separation", 10)
+		add_child(l1)
+		var exporter: Button = _button("EXPORTER", export_now)
+		exporter.name = "ExportButton"
+		l1.add_child(exporter)
+		var cop: Button = _button("COPIER", copy_now)
+		cop.name = "CopyButton"
+		l1.add_child(cop)
 	var l2 := HBoxContainer.new()
 	l2.add_theme_constant_override(&"separation", 10)
 	add_child(l2)
@@ -66,13 +105,14 @@ func _build() -> void:
 		_reset_btn.text = "CONFIRMER : tout effacer"
 	_reset_btn.disabled = n == 0 and TesterOverrides.rejected().is_empty()
 	l2.add_child(_reset_btn)
-	if OS.has_feature("pc"):
+	if not mobile and OS.has_feature("pc"):
 		add_child(_button("OUVRIR LE DOSSIER DES DOCUMENTS", func() -> void:
 			DirAccess.make_dir_recursive_absolute(
 				ProjectSettings.globalize_path(TesterOverrides.DOC_DIR))
 			OS.shell_open(ProjectSettings.globalize_path(TesterOverrides.DOC_DIR))))
-	if _message != "":
+	if _message != "" and not mobile:
 		var m: Label = UiTheme.label(_message, UiTheme.FONT_SMALL, TesterField.INK_CHANGED)
+		m.name = "DocMessage"
 		add_child(m)
 
 	add_child(UiTheme.label("REGLAGES (%d)" % n, UiTheme.FONT_BODY, INK))
@@ -98,6 +138,30 @@ func _build() -> void:
 	_apercu.text = TesterDocument.build()
 	add_child(UiTheme.label("APERCU", UiTheme.FONT_BODY, INK))
 	add_child(_apercu)
+
+
+## TELEPHONE : le bouton COPIER en tete, grand et dore, le mode d emploi en
+## clair juste dessous, puis pourquoi il n y a pas d export.
+func _build_copy_first(n: int) -> void:
+	add_child(UiTheme.label(TesterDocument.summary(_par_genre(), n) + ". Il dit, pour "
+		+ "chaque reglage, la cible, le champ, l avant et l apres.",
+		UiTheme.FONT_SMALL, TesterField.INK_NOTE))
+	var cop: Button = _button("COPIER LE DOCUMENT", copy_now)
+	cop.name = "CopyButton"
+	cop.custom_minimum_size = Vector2(0, 140)
+	cop.add_theme_font_size_override(&"font_size", UiTheme.FONT_BODY)
+	UiTheme.style_primary(cop)
+	add_child(cop)
+	# Le message : ce qu il faut faire APRES la copie. Toujours affiche, plus
+	# visible encore une fois la copie faite.
+	var aide: Label = UiTheme.label(_message if _message != "" else COPY_HOWTO,
+		UiTheme.FONT_SMALL if _message == "" else UiTheme.FONT_BODY,
+		TesterField.INK_CHANGED if _message != "" else INK)
+	aide.name = "DocMessage"
+	add_child(aide)
+	var note: Label = UiTheme.label(NO_EXPORT_NOTE, UiTheme.FONT_SMALL, TesterField.INK_NOTE)
+	note.name = "NoExportNote"
+	add_child(note)
 
 
 func _par_genre() -> Dictionary:
@@ -153,7 +217,9 @@ func export_now(dir: String = TesterOverrides.DOC_DIR) -> String:
 
 func copy_now() -> void:
 	DisplayServer.clipboard_set(TesterDocument.build())
-	_message = "Document copie dans le presse-papiers (%d reglages)." % TesterOverrides.count()
+	var n: int = TesterOverrides.count()
+	_message = (COPIED_HOWTO % [n, "s" if n > 1 else ""]) if mobile \
+		else "Document copie dans le presse-papiers (%d reglages)." % n
 	_rebuild()
 
 

@@ -1625,8 +1625,10 @@ func _render_detail() -> void:
 	# Encre SOMBRE partout : fond de PAPIER.
 	box.add_child(UiTheme.label(card.display_name, UiTheme.FONT_TITLE,
 		UiTheme.rarity_ink(card.rarity), HORIZONTAL_ALIGNMENT_CENTER, false))
-	box.add_child(UiTheme.label("%s   -   incantation %s s" % [
-		GameEnums.rarity_name(card.rarity).capitalize(), _fmt(card.base_cast_time)],
+	# Hors combat : base x CAST_TIME_SCALE a 100 % (CardView.menu_cast_text), le
+	# temps que le joueur vivra a x1 ; jamais le chiffre brut du .tres.
+	box.add_child(UiTheme.label("%s   -   incantation %s a 100 %%" % [
+		GameEnums.rarity_name(card.rarity).capitalize(), CardView.menu_cast_text(card)],
 		UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
 	# L effet, avec le logo de chaque element cite (meme rendu que la CardView).
 	var effet: RichTextLabel = ElementIcons.decorated_label(card.description,
@@ -1672,10 +1674,6 @@ func _render_detail() -> void:
 		_detail_card = null
 		_render())
 	boutons.add_child(close)
-
-
-func _fmt(v: float) -> String:
-	return ("%.1f" % v).trim_suffix(".0")
 
 
 # --- Renommage : une boite posee sur la page ---
