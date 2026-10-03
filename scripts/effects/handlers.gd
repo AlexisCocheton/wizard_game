@@ -330,19 +330,6 @@ class BuildWall extends EffectHandler:
 			EffectHandlers._tags(ctx))
 
 
-## Defausse la main ; chaque carte defaussee reduit l incantation de cette carte.
-class DiscardHandForSpeed extends EffectHandler:
-	func get_key() -> StringName:
-		return &"discard_hand_for_speed"
-
-	func apply(spec: EffectSpec, ctx: CastContext) -> void:
-		var discarded: int = RunState.discard_hand()
-		var per_card: float = float(spec.get_param(&"seconds_per_card", 1.0))
-		RunState.apply_cost_reduction(discarded * per_card, spec.duration)
-		if ctx.battlefield != null:
-			Fx.self_aura(ctx.battlefield, Fx.COL_HASTE, Fx.card_sheet(ctx.card))
-
-
 # --- Verbes demandes par le testeur ---
 
 ## Souffle : degats en zone PUIS repousse loin du centre.

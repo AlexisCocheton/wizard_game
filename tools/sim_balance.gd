@@ -28,6 +28,15 @@ const FIXED_DELTA: float = 1.0 / 60.0
 ## reelle du niveau le plus long (214 s de vagues au niveau 7, soit ~330 s joue)
 ## sinon on mesure la longueur du niveau et non sa difficulte.
 const MAX_SECONDS: float = 900.0
+## GARDE-FOU MEMOIRE (partage avec tools/objective_bench.gd) : objets moteur en
+## PLUS de ceux du depart de la partie au-dela desquels la partie est ARRETEE,
+## comptee perdue et signalee. Une partie normale en ajoute quelques milliers ;
+## celle qui a fait planter le banc des objectifs (lvl_21, graine 2110) en avait
+## ajoute 400 000 avant « Element limit reached ». La cause est corrigee (chaque
+## image libere ce que le moteur libererait, GameController.flush_freed) ; le
+## plafond reste pour qu une fuite FUTURE se lise dans le rapport au lieu
+## d emporter le processus.
+const PLAFOND_OBJETS: int = 100000
 ## Les niveaux de campagne mesures par le banc — DEDUITS du contenu.
 ##
 ## C etait une liste ecrite a la main, avec le commentaire « ajouter ici tout
@@ -482,6 +491,7 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 	## la limite de temps sans finir comptait pour une victoire : les niveaux les
 	## plus longs paraissaient les plus faciles.
 	var fini: bool = false
+	var objets_depart: int = int(Performance.get_monitor(Performance.OBJECT_COUNT))
 
 	while t < MAX_SECONDS:
 		t += FIXED_DELTA
@@ -521,6 +531,18 @@ func _play(g: GameController, stop_after_wave: int = 0) -> Dictionary:
 			var prise: SpellCard = RunState.pending_offer[k]
 			_cartes_prises[String(prise.id)] = int(_cartes_prises.get(String(prise.id), 0)) + 1
 			RunState.pick_offer(k)
+		# Fin de l image : ce que le moteur liberait, on le libere. Toute la partie
+		# se joue dans UNE image moteur ; sans cela, la main du HUD recreee a chaque
+		# carte et les monstres morts s accumulent jusqu a la fin de la partie
+		# (voir GameController.flush_freed).
+		g.flush_freed()
+		var objets: int = int(Performance.get_monitor(Performance.OBJECT_COUNT)) - objets_depart
+		if objets > PLAFOND_OBJETS:
+			push_warning("BANC : %d objets de plus qu au depart a %.1f s (plafond %d) : partie arretee"
+				% [objets, t, PLAFOND_OBJETS])
+			print("  ALERTE MEMOIRE : %d objets de plus qu au depart a %.1f s, partie arretee" % [objets, t])
+			fini = false
+			break
 		if SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0:
 			break
 		if g.spawner.is_finished():

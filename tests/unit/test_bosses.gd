@@ -74,6 +74,7 @@ func run() -> void:
 	_test_invocateur_fabrique_des_monstres()
 	_test_invocateur_mort_cesse_d_invoquer()
 	_test_invocateur_ne_noie_pas_l_ecran()
+	_test_invocateur_apres_liberation_d_un_sbire()
 	_test_ressuscite_se_releve_une_fois()
 	_test_ressuscite_ne_se_releve_qu_une_fois()
 	_test_ressuscite_ne_donne_pas_deux_fois_l_xp()
@@ -264,6 +265,41 @@ func _test_invocateur_ne_noie_pas_l_ecran() -> void:
 	_sim(8.0)
 	ok(_bf.alive_count() <= 5, "le plafond tient : 4 sbires + le boss au plus")
 	ok(_bf.alive_count() >= 3, "mais il invoque quand meme")
+
+
+## Un sbire tue est LIBERE a la fin de l image (queue_free), et l invocateur
+## garde sa liste de sbires. En jeu, le Sceau de Tombol cessait d invoquer des
+## la premiere mort d un squelette : son filtre, type `func(s: Enemy)`, refusait
+## l objet libere et `_do_summon` s arretait sur une SCRIPT ERROR, a chaque
+## intervalle. Ni le banc ni les tests ne le voyaient : ils enchainent les images
+## sans laisser le moteur liberer quoi que ce soit. Ici on libere comme lui.
+func _test_invocateur_apres_liberation_d_un_sbire() -> void:
+	_fresh()
+	var sbire := _def("sbire4", 5.0, 0.0, 1)
+	var d := _def("invocateur4", 500.0, 0.0, 10)
+	d.summon_def = sbire
+	d.summon_interval = 0.5
+	d.summon_count = 1
+	# Plafond d UN sbire : le suivant n a de place que si le premier est compte
+	# comme parti, ce qui oblige le filtre a traiter l objet libere.
+	d.summon_max_alive = 1
+	var boss: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 400.0))
+	var seul: int = _bf.alive_count()
+	_sim(d.summon_interval * 1.2)
+	eq(_bf.alive_count(), seul + 1, "une premiere invocation")
+	var premier: Enemy = null
+	for e in _bf.enemies:
+		if e != boss and is_instance_valid(e) and not e.is_dead():
+			premier = e
+	ok(premier != null, "le sbire est sur le terrain")
+	if premier == null:
+		return
+	premier.take_damage(premier.hp * 10.0, [])
+	ok(premier.is_dead(), "le sbire est mort")
+	# Ce que fait le moteur a la fin de l image.
+	premier.free()
+	_sim(d.summon_interval * 2.4)
+	eq(_bf.alive_count(), seul + 1, "un sbire libere laisse sa place : l invocateur en releve un autre")
 
 
 # --- 4. Boss qui RESSUSCITE --------------------------------------------------

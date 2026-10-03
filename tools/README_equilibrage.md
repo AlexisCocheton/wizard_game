@@ -172,6 +172,31 @@ marcher le monstre jusqu a sa distance, puis le viser. Les paris de fin de
 combat (vitesse, chrono, intact, multi_kill) : bot tel quel. Une cle ajoutee au
 moteur sans politique documentee fait rougir `test_objective_bench`.
 
+## Memoire : le banc libere a chaque image comme le moteur (03/10)
+
+Le banc des objectifs PLANTAIT sur lvl_21, objectif sans sort de feu, partie 30
+(graine 2110) : « Element limit reached », memoire epuisee, signal 11. Cause :
+une partie de banc se joue tout entiere dans UNE image moteur, et le moteur ne
+libere ce qui est `queue_free` qu a la fin d une image. La main du HUD, recreee a
+chaque carte jouee, les monstres morts, s accumulaient jusqu a la fin de la
+partie. Cette partie-la durait jusqu a la limite de 900 s : le bot avait exile
+par Epuration toutes ses communes (ses seuls degats qui ne sont pas du feu), le
+Sceau de Tombol, immobile, ne pouvait plus etre blesse, et les cartes sans degats
+tournaient a x5 : 17 000 cartes de main, 400 000 objets.
+
+Les trois bancs (`objective_bench`, `sim_balance`, `sim_diag`) et la partie du
+smoke appellent maintenant `GameController.flush_freed()` apres chaque image.
+Effet de bord voulu : la partie simulee est FIDELE au jeu, ou un monstre mort ou
+arrive au contact est libere a la fin de l image. Ce n etait pas le cas, et
+cela cachait un vrai defaut de jeu (le filtre de sbires de `Enemy._do_summon`
+plantait sur un sbire libere : en jeu, le Sceau n invoquait plus apres la
+premiere mort d un squelette). lvl_21 re-mesure en entier : 57 / 55 / 13, comme
+avant.
+
+Garde-fou : une partie qui depasse `SimBalance.PLAFOND_OBJETS` objets de plus
+qu a son depart est ARRETEE, comptee perdue, et signalee (`ALERTE MEMOIRE`).
+`--detail` affiche, par partie, le pic d objets (`objets +N`).
+
 ## Chantier W8 (combat) : vagues qui trainent, protecteurs, devoreurs, paliers
 
 Banc complet (21 niveaux x 30 parties + Massacre x 20, `--sans-vagues`), meme
