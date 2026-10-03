@@ -28,16 +28,16 @@
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="22_1dx4t"]
 [ext_resource type="Resource" path="res://resources/cards/common/ember_pool.tres" id="24_y12dx"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="25_uyova"]
-[ext_resource type="Resource" path="res://resources/cards/common/tidal_pool.tres" id="26_78ho8"]
-[ext_resource type="Resource" path="res://resources/cards/rare/arcane_insight.tres" id="28_vo2kc"]
+[ext_resource type="Resource" path="res://resources/cards/rare/tidal_pool.tres" id="27_vo2kc"]
+[ext_resource type="Resource" path="res://resources/cards/rare/time_surge.tres" id="28_17akq"]
+[ext_resource type="Resource" path="res://resources/cards/rare/quickening.tres" id="29_krw0l"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="29_ylptl"]
-[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="30_17akq"]
-[ext_resource type="Resource" path="res://resources/cards/rare/quickening.tres" id="30_krw0l"]
-[ext_resource type="Resource" path="res://resources/cards/rare/bone_recall.tres" id="31_krw0l"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="32_17akq"]
+[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="30_me4lm"]
+[ext_resource type="Resource" path="res://resources/cards/rare/bone_recall.tres" id="31_1dx4t"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="32_wfytj"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="33_8pshf"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="33_tbed1"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="33_wfytj"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="33_y12dx"]
 [ext_resource type="Resource" path="res://resources/enemies/skyreaver.tres" id="37_q8nio"]
 [ext_resource type="Resource" path="res://resources/enemies/blood_coagulum.tres" id="38_g7smm"]
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_matron.tres" id="38_vo2kc"]
@@ -307,8 +307,8 @@ terrain = "sand"
 backdrop = "act1_sky"
 waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_me4lm"), SubResource("Resource_1dx4t"), SubResource("Resource_wfytj"), SubResource("Resource_y12dx"), SubResource("Resource_uyova"), SubResource("Resource_78ho8")])
 enemy_pool = Array[ExtResource("1_ktaj7")]([ExtResource("2_5i0p2"), ExtResource("3_710or"), ExtResource("4_o0ilu"), ExtResource("5_e17r0"), ExtResource("8_fowiy"), ExtResource("7_jvhjg"), ExtResource("8_tbed1"), ExtResource("9_oiogm"), ExtResource("7_plo7r"), ExtResource("4_60b13"), ExtResource("12_dnda2"), ExtResource("13_ktaj7"), ExtResource("14_vo2kc"), ExtResource("15_e17r0"), ExtResource("16_dnda2"), ExtResource("17_vo2kc"), ExtResource("18_17akq"), ExtResource("19_17akq"), ExtResource("20_dnda2")])
-exploration_deck = Array[ExtResource("20_krw0l")]([ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("24_y12dx"), ExtResource("24_y12dx"), ExtResource("24_y12dx"), ExtResource("22_1dx4t"), ExtResource("22_1dx4t"), ExtResource("22_1dx4t"), ExtResource("21_me4lm"), ExtResource("21_me4lm"), ExtResource("21_me4lm"), ExtResource("29_ylptl"), ExtResource("29_ylptl"), ExtResource("26_78ho8")])
+exploration_deck = Array[ExtResource("20_krw0l")]([ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("24_y12dx"), ExtResource("24_y12dx"), ExtResource("22_1dx4t"), ExtResource("22_1dx4t"), ExtResource("22_1dx4t"), ExtResource("21_me4lm"), ExtResource("29_ylptl"), ExtResource("29_ylptl"), ExtResource("27_vo2kc")])
 objectives = Array[ExtResource("18_e17r0")]([SubResource("Resource_vo2kc"), SubResource("Resource_17akq"), SubResource("Resource_krw0l")])
-levelup_cards = Array[ExtResource("20_krw0l")]([ExtResource("28_vo2kc"), ExtResource("30_krw0l"), ExtResource("30_17akq")])
-objective_rewards = Array[ExtResource("20_krw0l")]([ExtResource("31_krw0l"), ExtResource("32_17akq"), ExtResource("33_wfytj")])
+levelup_cards = Array[ExtResource("20_krw0l")]([ExtResource("28_17akq"), ExtResource("29_krw0l"), ExtResource("30_me4lm")])
+objective_rewards = Array[ExtResource("20_krw0l")]([ExtResource("31_1dx4t"), ExtResource("32_wfytj"), ExtResource("33_y12dx")])
 next_levels = Array[StringName]([&"lvl_08"])

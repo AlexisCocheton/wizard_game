@@ -2322,7 +2322,7 @@ const _UP_ORDER: Array[StringName] = [&"damage", &"slow", &"tempo", &"force",
 ## degats ferait grossir ce que le joueur paie.
 const _UP_DAMAGE_KEYS: Array[StringName] = [&"damage_single", &"pierce_line",
 	&"ground_zone", &"damage_per_enemy", &"summon_ally", &"knockback",
-	&"meteor_storm", &"stun_zone", &"place_terrain", &"taunt_prop"]
+	&"meteor_storm", &"stun_zone", &"place_terrain", &"taunt_prop", &"poison_dot"]
 ## Cles dont la duree n est PAS un bienfait a allonger :
 ##   - meteor_storm etale la MEME pluie sur plus longtemps (plus lente, pas plus
 ##     forte) ;

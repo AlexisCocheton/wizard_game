@@ -34,6 +34,8 @@ const MAGNITUDE_SENS: Dictionary = {
 	"damage_per_enemy": "degats par monstre", "meteor_storm": "degats par impact",
 	"summon_ally": "degats de l allie", "taunt_prop": "degats au total",
 	"ground_zone": "degats PAR SECONDE (x duree = total)",
+	"poison_dot": "degats PAR SECONDE jusqu a la mort de la cible",
+	"gain_speed": "points de vitesse rendus au mage",
 	"slow_enemy_gauge": "pourcentage de ralentissement", "draw_cards": "nombre de cartes",
 }
 

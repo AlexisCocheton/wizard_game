@@ -106,7 +106,12 @@ const DRAW_INTERVAL: float = 6.5
 ## chiffre — alors que retoucher 46 cartes une a une la deformerait a coup sur.
 ##
 ## Applique dans `RunState.effective_cast_time()`, le point de passage UNIQUE.
-const CAST_TIME_SCALE: float = 1.5
+##
+## 1,5 -> 2,25 (vague 8, co-auteur : « augmente SIGNIFICATIVEMENT le temps de
+## lancement de tous les sorts, quitte a le diminuer un peu plus tard ») : une
+## fois et demie l ancien reglage, soit 2,25 fois les temps ecrits sur les
+## cartes. Chiffres du banc avant/apres dans le rapport du chantier.
+const CAST_TIME_SCALE: float = 2.25
 
 const DRAW_COUNT: int = 2
 ## 6 et non 8 : a 8 cartes chacune tombait sous 130 px de large et le nom se
@@ -417,7 +422,13 @@ const TERRAIN_PERMANENT_MAX: int = 6
 ## pire. L ancien totem de 90 PV tombait en 0,13 s — « il meurt en 1 s » etait
 ## encore genereux. Il doit tenir PLUSIEURS secondes, pas devenir invulnerable :
 ## le plafond MAX existe pour que la verification morde aussi dans l autre sens.
-const TERRAIN_TAUNT_MIN_HOLD: float = 4.0
+##
+## VAGUE 8 : 4,0 -> 1,0. Le co-auteur passe l arbre a 800 PV « pour voir »
+## (3500 avant) : il tient alors environ une seconde de monde au pied de la
+## vague mediane. C est un essai de design assume, pas un oubli ; la borne dit
+## seulement qu il ne tombe pas a l instant. Revenir a 4,0 avec les 3500 PV si
+## l essai est abandonne.
+const TERRAIN_TAUNT_MIN_HOLD: float = 1.0
 const TERRAIN_TAUNT_MAX_HOLD: float = 12.0
 
 ## Bornes de hauteur de la riviere, en rangees de la grille de navigation

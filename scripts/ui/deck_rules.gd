@@ -9,7 +9,9 @@ extends RefCounted
 ## jeu : celui qui en mettait 8 revoyait sa meilleure carte deux fois plus souvent
 ## que celui qui en mettait 20, donc la cadence de pioche, la courbe d XP et
 ## l equilibrage des vagues n avaient plus de reference commune. Le testeur a
-## tranche : "ni une de plus ni une de moins" — 15 cartes, toujours.
+## tranche : "ni une de plus ni une de moins" — 15 cartes, puis 12 depuis la
+## vague 8 (co-auteur, 02/10) : un deck plus court revoit plus souvent ses
+## sorts, et chaque carte prise en combat y pese davantage.
 ##
 ## POURQUOI SIX CARTES DIFFERENTES AU MAXIMUM, ET PLUS DE PLAFOND PAR RARETE
 ## --------------------------------------------------------------------------
@@ -17,17 +19,16 @@ extends RefCounted
 ## en campagne comme dans le deck que le joueur construit. Un deck de 15 cartes
 ## en 11 ids differents se pioche comme une loterie : on ne revoit jamais deux
 ## fois le meme sort dans une partie, donc on n apprend pas a le placer.
+## Il n y a AUCUN minimum : « si on atteint 12 cartes on n est pas oblige de
+## remplir les 6 cases » (trois communes a 4 exemplaires font un deck valide).
 ##
-## Cette regle suffit a limiter la rarete, et c est pourquoi les anciens
-## plafonds MAX_EPIC = 3 et MAX_LEGENDARY = 3 ont ete RETIRES. Avec au plus 6
-## ids et 4/3/2/1 exemplaires, il faut que les copies autorisees atteignent 15 :
-##   - 3 legendaires au plus : 3 x 1 + 3 communes x 4 = 15 tout juste ; une 4e
-##     legendaire laisse 2 ids, soit 4 + 2 x 4 = 12 < 15 ;
-##   - 4 epiques au plus : 4 x 2 + 2 communes x 4 = 16 ; une 5e epique laisse un
-##     seul id, soit 5 x 2 + 4 = 14 < 15.
-## Plus une carte est rare, plus elle coute de "places d ids" pour peu de
-## copies : la rarete se paie d elle-meme. test_deck_rules.gd le verifie en
-## ENUMERANT les compositions contre is_valid(), pas en recopiant ces chiffres.
+## Les anciens plafonds MAX_EPIC = 3 et MAX_LEGENDARY = 3 ont ete RETIRES quand
+## la regle des 6 les bornait d elle-meme a 15 cartes (3 x 1 + 3 x 4 = 15). A 12
+## cartes elle borne moins : 4 legendaires (4 x 1 + 2 communes x 4 = 12) et 6
+## epiques (6 x 2 = 12) deviennent possibles. C est ACCEPTE par la demande du
+## co-auteur, qui n a fixe que la taille, les 6 ids et les exemplaires ; si un
+## plafond de rarete devait revenir, test_deck_rules.gd (qui ENUMERE les
+## compositions contre is_valid()) dira lesquelles il retire.
 ##
 ## UNE SEULE SOURCE POUR "PEUT-ON AJOUTER CETTE CARTE"
 ## ---------------------------------------------------
@@ -39,12 +40,14 @@ extends RefCounted
 ## POURQUOI LES PASSIFS N Y SONT PLUS
 ## ----------------------------------
 ## Les pouvoirs passifs s EQUIPENT a part, de 0 a 3 emplacements (chantier F) :
-## ils ne se piochent plus. Un deck de 15 cartes ne contient donc que des sorts,
+## ils ne se piochent plus. Un deck ne contient donc que des sorts,
 ## et can_add() refuse explicitement un passif — sinon l ecran de deck offrirait
 ## de composer avec des cartes que la partie ne distribuera jamais.
 
-## La taille exacte, l unique reference de tout le jeu.
-const DECK_SIZE: int = 15
+## La taille exacte, l unique reference de tout le jeu (15 jusqu a la vague 8).
+## Un deck SAUVEGARDE de 15 cartes n est ni tronque ni efface : il devient
+## invalide, et validation_message() dit au joueur combien en retirer.
+const DECK_SIZE: int = 12
 
 ## Alias conserves : le reste du code (GameController, smoke, campagne) parle
 ## encore en MIN/MAX. Les deux valent DECK_SIZE, donc les bornes se referment
@@ -56,7 +59,7 @@ const MAX_CARDS: int = DECK_SIZE
 ## seule limite de composition en plus des exemplaires (voir l en-tete).
 const MAX_DISTINCT: int = 6
 
-## Emplacements de pouvoirs passifs. Ils sont HORS du deck de 15 : le joueur en
+## Emplacements de pouvoirs passifs. Ils sont HORS du deck : le joueur en
 ## equipe de 0 a 3 dans une zone distincte.
 const MAX_PASSIVES: int = 3
 
@@ -131,7 +134,7 @@ static func _rarity_hint(id: String) -> int:
 ## corrigeable : une carte non decouverte ne s ajoutera pas meme deck vide.
 ##
 ## Toute regle se REFUSE des l ajout plutot que d invalider apres coup : un
-## joueur qui remplit 15 cases puis apprend que son deck est injouable a perdu
+## joueur qui remplit toutes les cases puis apprend que son deck est injouable a perdu
 ## son temps, et ne sait pas laquelle retirer.
 static func refusal_reason(deck_ids: Array, card: SpellCard, discovered: bool) -> String:
 	if card == null:
@@ -242,7 +245,7 @@ static func resolve(deck_ids: Array) -> Array[SpellCard]:
 ## Toujours un deck VALIDE (is_valid) de cartes OBTENUES (SaveData.is_discovered).
 ##
 ## C est le deck de campagne du PREMIER niveau. Il est valide par construction
-## (le contenu fait des decks de campagne de 15 cartes en 6 ids au plus) et il
+## (le contenu fait des decks de campagne de DECK_SIZE cartes en 6 ids au plus) et il
 ## est obtenu sur tout profil, puisque son niveau est ouvert d office et que le
 ## deck d un niveau ouvert est dans le livre de sorts (SaveData, 01/10). Avant,
 ## il se composait des "cartes de depart" (copies_in_starter) : des cartes que
@@ -250,7 +253,7 @@ static func resolve(deck_ids: Array) -> Array[SpellCard]:
 ##
 ## Repli, pour un profil ou un contenu qui ne permettrait pas ce deck (premier
 ## niveau absent ou ferme par un profil edite) : un deck compose des cartes
-## OBTENUES ; et seulement si elles ne suffisent pas a faire 15 cartes, completer
+## OBTENUES ; et seulement si elles ne suffisent pas a faire DECK_SIZE cartes, completer
 ## avec n importe quel sort, parce qu un deck de base injouable interdirait de
 ## jouer du tout.
 static func default_deck_ids() -> Array:
@@ -276,7 +279,7 @@ static func default_deck_ids() -> Array:
 		if SaveData.is_discovered(c2.id):
 			obtenues.append(c2)
 	# Les plus COMMUNES d abord : ce sont elles qui ont le plus d exemplaires, donc
-	# qui remplissent 15 cartes en 6 ids. Comparaison sur String : le tri de
+	# qui remplissent DECK_SIZE cartes en 6 ids. Comparaison sur String : le tri de
 	# StringName n est pas fiable en 4.4 (voir gotchas).
 	var ordre: Callable = func(a: SpellCard, b: SpellCard) -> bool:
 		if a.rarity != b.rarity:
