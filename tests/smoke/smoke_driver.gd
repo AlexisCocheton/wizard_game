@@ -291,6 +291,9 @@ func _run_all() -> void:
 	if _visual:
 		await WardrobeShowcase.new().run(self)
 	await _check_massacre_deck()
+	# Le DEFILEMENT AU DOIGT sur chaque ecran qui deborde (retour du co-auteur :
+	# les reglages ne defilaient pas sur son telephone).
+	await TouchScrollCheck.run(self)
 	# OUTILS DU TESTEUR (vague 8) : l atelier, ses fiches et le document.
 	await TesterSmoke.run(self)
 

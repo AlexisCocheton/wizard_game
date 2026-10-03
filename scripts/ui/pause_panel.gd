@@ -200,8 +200,7 @@ func _render() -> void:
 
 
 func _scroll_box() -> VBoxContainer:
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_content.add_child(scroll)
 	var box := VBoxContainer.new()

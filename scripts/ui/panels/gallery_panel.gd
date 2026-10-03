@@ -559,8 +559,7 @@ func _render_detail() -> void:
 	_header.text = ""
 	_page_label.text = "fiche %d / %d" % [_detail_index + 1, list.size()]
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	# Sans ce drapeau, le contenu garde sa hauteur minimale et l alignement
 	# centre ci-dessous n a rien a centrer.

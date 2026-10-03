@@ -47,9 +47,8 @@ func _ready() -> void:
 	add_theme_constant_override(&"separation", 14)
 	_build_section_bar()
 
-	var scroll := ScrollContainer.new()
+	var scroll := TouchScroll.make()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
 	_box = VBoxContainer.new()
 	_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL

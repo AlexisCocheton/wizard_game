@@ -193,9 +193,11 @@ func _build_settings_layer() -> void:
 	# hauts que la zone de contenu. Poses tels quels, leur hauteur minimale
 	# poussait la barre du haut et les onglets HORS de l ecran (vu sur capture :
 	# plus d engrenage, plus de barre du bas, seul FERMER restait).
-	var defile := ScrollContainer.new()
+	# AU DOIGT (TouchScroll) : un ScrollContainer nu ne defilait pas sur le
+	# telephone du co-auteur, la page de livre (PanelContainer, STOP par
+	# defaut) avalait chaque toucher. Le detail est dans touch_scroll.gd.
+	var defile := TouchScroll.make()
 	defile.name = "SettingsScroll"
-	defile.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	defile.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(defile)
 	_settings_panel = SettingsPanel.new()
