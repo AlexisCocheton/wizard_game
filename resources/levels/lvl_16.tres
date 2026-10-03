@@ -18,7 +18,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/adept_arcane.tres" id="16_v27ae"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="17_1uh55"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="18_v27ae"]
-[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="19_iqwbf"]
+[ext_resource type="Resource" path="res://resources/cards/epic/void_grip.tres" id="19_pegq6"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="20_0beht"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="21_pegq6"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/hourglass_shard.tres" id="22_00s4r"]
@@ -224,7 +224,7 @@ terrain = "sand"
 backdrop = "act5_divine"
 waves = Array[ExtResource("27_noohh")]([SubResource("Resource_k3q17"), SubResource("Resource_h83vr"), SubResource("Resource_4s603"), SubResource("Resource_j1bo7")])
 enemy_pool = Array[ExtResource("1_phey4")]([ExtResource("2_phey4"), ExtResource("3_1uh55"), ExtResource("4_phey4"), ExtResource("5_1uh55"), ExtResource("6_v27ae"), ExtResource("7_iqwbf"), ExtResource("10_h83vr"), ExtResource("11_4s603"), ExtResource("12_0beht"), ExtResource("13_pegq6"), ExtResource("12_phey4"), ExtResource("15_fn1rf"), ExtResource("14_phey4"), ExtResource("15_1uh55"), ExtResource("16_v27ae")])
-exploration_deck = Array[ExtResource("17_1uh55")]([ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("19_iqwbf"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("21_pegq6"), ExtResource("22_00s4r"), ExtResource("23_fn1rf")])
+exploration_deck = Array[ExtResource("17_1uh55")]([ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("18_v27ae"), ExtResource("19_pegq6"), ExtResource("19_pegq6"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("20_0beht"), ExtResource("21_pegq6"), ExtResource("22_00s4r"), ExtResource("23_fn1rf")])
 objectives = Array[ExtResource("25_kvakk")]([SubResource("Resource_pegq6"), SubResource("Resource_00s4r"), SubResource("Resource_fn1rf")])
 levelup_cards = Array[ExtResource("17_1uh55")]([ExtResource("24_pegq6"), ExtResource("25_pegq6"), ExtResource("29_4s603")])
 objective_rewards = Array[ExtResource("17_1uh55")]([ExtResource("27_fn1rf"), ExtResource("28_h83vr"), ExtResource("29_00s4r")])

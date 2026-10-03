@@ -698,17 +698,28 @@ func _test_chaque_sort_a_exactement_un_element() -> void:
 ## et contre les constantes de make_content.gd : pas 86 valeurs a relire, une
 ## regle. Le vent et la nature naissent de l ancienne durete (« phys ») — donc
 ## egaux pour un monstre au sol ; un volant craint le vent et resiste a la
-## nature ; l eau est le miroir borne du feu.
+## nature ; l eau est le miroir borne du feu. Une seule exception, nommee dans
+## make_content (ANCRES_AU_SOL, chantier W9) : les enclumes, immunisees au vent.
 func _test_la_regle_de_passage_des_resistances() -> void:
 	var MC: GDScript = load("res://tools/make_content.gd")
 	var T := GameEnums.DamageTag
 	var vus_volants: int = 0
+	var vus_ancres: int = 0
 	for id in ContentDB.enemies.keys():
 		var d: EnemyDef = ContentDB.enemies[id]
 		if d == null or d.chameleon_interval > 0.0:
 			continue
 		var vent: float = d.resistance_to(T.WIND)
 		var nature: float = d.resistance_to(T.NATURE)
+		if String(id) in MC.ANCRES_AU_SOL:
+			# LA SEULE EXCEPTION ECRITE (chantier W9) : une enclume ne s envole
+			# pas. Immunise au vent, la nature suit encore la regle (pas immunise).
+			vus_ancres += 1
+			not_ok(d.flying, "%s est une ancre au sol : il ne vole pas" % id)
+			feq(vent, 0.0, "%s : ancre au sol, immunise au vent" % id, 0.001)
+			ok(nature > 0.0, "%s : la nature, elle, l entame encore" % id)
+			continue
+		ok(vent > 0.0, "%s : seules les ancres au sol sont immunisees au vent" % id)
 		if d.flying:
 			vus_volants += 1
 			ok(vent >= EnemyDef.accentuate(MC.WIND_FLYER_MIN) - 0.001,
@@ -731,6 +742,8 @@ func _test_la_regle_de_passage_des_resistances() -> void:
 			feq(eau, 1.0, "%s neutre au feu : neutre a l eau" % id, 0.001)
 		not_ok(d.resistances.has(T.NONE), "%s : aucune ligne a l ancien physique" % id)
 	ok(vus_volants > 0, "des volants ont ete verifies")
+	eq(vus_ancres, (MC.ANCRES_AU_SOL as Array).size(),
+		"chaque ancre au sol nommee par make_content est un monstre livre")
 	# Le Cameleon ne declare aucun element de son cycle (les tables se multiplieraient).
 	var cam: EnemyDef = ContentDB.enemies.get(&"season_chameleon")
 	if cam != null:

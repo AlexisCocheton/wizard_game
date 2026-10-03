@@ -15,7 +15,7 @@
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_ii67q"]
 [ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="14_x0noc"]
 [ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="15_ecpup"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="17_2752f"]
+[ext_resource type="Resource" path="res://resources/cards/epic/void_grip.tres" id="16_xwln5"]
 [ext_resource type="Resource" path="res://resources/cards/epic/arcane_insight.tres" id="17_xwln5"]
 [ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="18_plhp6"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="19_u62p1"]
@@ -229,7 +229,7 @@ terrain = "sand"
 backdrop = "act3_demon"
 waves = Array[ExtResource("22_y85qu")]([SubResource("Resource_scsrq"), SubResource("Resource_letu6"), SubResource("Resource_ss2tw"), SubResource("Resource_a5d1i"), SubResource("Resource_ii67q")])
 enemy_pool = Array[ExtResource("1_3j5bi")]([ExtResource("2_1dvci"), ExtResource("3_2ilfx"), ExtResource("4_hjhg3"), ExtResource("5_xwln5"), ExtResource("6_plhp6"), ExtResource("7_u62p1"), ExtResource("8_3j5bi"), ExtResource("9_letu6"), ExtResource("10_6lvqg")])
-exploration_deck = Array[ExtResource("10_ss2tw")]([ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("12_ii67q"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("17_2752f"), ExtResource("17_xwln5")])
+exploration_deck = Array[ExtResource("10_ss2tw")]([ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("11_a5d1i"), ExtResource("12_ii67q"), ExtResource("14_x0noc"), ExtResource("14_x0noc"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("15_ecpup"), ExtResource("16_xwln5"), ExtResource("17_xwln5")])
 objectives = Array[ExtResource("20_8lpo7")]([SubResource("Resource_xwln5"), SubResource("Resource_plhp6"), SubResource("Resource_u62p1")])
 levelup_cards = Array[ExtResource("10_ss2tw")]([ExtResource("18_plhp6"), ExtResource("19_u62p1"), ExtResource("20_scsrq")])
 objective_rewards = Array[ExtResource("10_ss2tw")]([ExtResource("21_letu6"), ExtResource("22_ss2tw"), ExtResource("23_a5d1i")])

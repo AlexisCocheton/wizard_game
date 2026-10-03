@@ -29,6 +29,8 @@ func run() -> void:
 	_test_un_mur_de_glace_et_ses_frappeurs()
 	_test_un_objet_pose_porte_l_element_de_sa_carte()
 	_test_l_immunite_au_vent_annule_l_attraction()
+	_test_les_deux_exemples_existent_en_campagne()
+	_test_les_detecteurs_d_exemples_mordent()
 	_test_l_allie_frappe_a_l_element_de_sa_carte()
 	_test_deux_passifs_par_element()
 	_test_le_passif_de_degats_ne_sert_que_son_element()
@@ -197,6 +199,154 @@ func _test_l_immunite_au_vent_annule_l_attraction() -> void:
 		var c: SpellCard = ContentDB.cards.get(id)
 		if c != null:
 			eq(c.main_element(), T.WIND, "%s est un sort de vent" % id)
+
+
+# --- 2 bis. LES DEUX EXEMPLES DANS LE CONTENU LIVRE (chantier W9) ---------------
+#
+# Les deux tests ci-dessus jouent les regles sur des monstres FABRIQUES. Un audit
+# a releve que le joueur ne les rencontrait jamais : aucune carte ne posait
+# d objet de glace (tous les objets etaient de nature, la Riviere d eau), aucun
+# monstre n etait immunise au vent (0,3 au plus bas). Ici, le CONTENU : chaque
+# exemple doit exister dans un niveau de campagne, la ou le joueur peut le voir.
+
+
+## La carte pose-t-elle un objet que les monstres FRAPPENT (un mur cassable) ?
+## Un mur a duree n a pas de PV : les monstres le contournent sans le toucher,
+## la regle des objets ne s y voit pas.
+static func pose_un_objet_frappe(c: SpellCard) -> bool:
+	if c == null:
+		return false
+	for sp: EffectSpec in c.effects:
+		if sp != null and sp.key == &"build_wall" \
+				and bool(sp.get_param(&"permanent", false)) \
+				and float(sp.get_param(&"wall_hp", 0.0)) > 0.0:
+			return true
+	return false
+
+
+## « niveau : carte : monstre » pour chaque niveau de campagne ou une carte de
+## GLACE qui pose un objet frappe est jouable (deck, cartes nouvelles,
+## recompenses) ET ou descend un monstre faible a la glace (il frappera ce mur
+## moins fort : l exemple du co-auteur).
+static func exemples_mur_de_glace(niveaux: Array) -> Array[String]:
+	var out: Array[String] = []
+	for lv: LevelDef in niveaux:
+		if lv == null or lv.act <= 0:
+			continue
+		var faibles: Array[String] = []
+		for d: EnemyDef in ObjectiveChecker.level_enemies(lv):
+			if d.resistance_to(GameEnums.DamageTag.ICE) > 1.0:
+				faibles.append(String(d.id))
+		if faibles.is_empty():
+			continue
+		for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards]:
+			for c in liste:
+				var carte: SpellCard = c
+				if carte != null and carte.main_element() == GameEnums.DamageTag.ICE \
+						and pose_un_objet_frappe(carte):
+					out.append("%s : %s : %s" % [lv.id, carte.id, faibles[0]])
+	return out
+
+
+## « niveau : monstre : carte » pour chaque niveau de campagne ou descend un
+## monstre IMMUNISE au vent et dont le DECK porte une attraction de vent (le
+## joueur l a en main : il voit le monstre ne pas bouger).
+static func exemples_ancre_au_vent(niveaux: Array) -> Array[String]:
+	var out: Array[String] = []
+	for lv: LevelDef in niveaux:
+		if lv == null or lv.act <= 0:
+			continue
+		var attraction: String = ""
+		for c in lv.exploration_deck:
+			var carte: SpellCard = c
+			if carte != null and carte.main_element() == GameEnums.DamageTag.WIND \
+					and &"vortex_pull" in carte.effect_keys():
+				attraction = String(carte.id)
+		if attraction == "":
+			continue
+		for d: EnemyDef in ObjectiveChecker.level_enemies(lv):
+			if d.resistance_to(GameEnums.DamageTag.WIND) <= 0.0:
+				out.append("%s : %s : %s" % [lv.id, d.id, attraction])
+	return out
+
+
+func _test_les_deux_exemples_existent_en_campagne() -> void:
+	var niveaux: Array = ContentDB.levels.values()
+	var glace: Array[String] = exemples_mur_de_glace(niveaux)
+	ok(not glace.is_empty(),
+		"un mur de GLACE s obtient en campagne face a un monstre faible a la glace %s" % [glace])
+	var vent: Array[String] = exemples_ancre_au_vent(niveaux)
+	ok(not vent.is_empty(),
+		"un monstre IMMUNISE au vent descend la ou le deck porte une attraction de vent %s" % [vent])
+	# Le mur de glace livre joue vraiment la regle : pose sur un vrai terrain, il
+	# porte la glace et un monstre faible a la glace le frappe moins fort.
+	for c: SpellCard in ContentDB.cards.values():
+		if c == null or c.main_element() != GameEnums.DamageTag.ICE \
+				or not pose_un_objet_frappe(c):
+			continue
+		_fresh()
+		var ctx := CastContext.new()
+		ctx.battlefield = _bf
+		ctx.target_position = Vector2(540.0, 900.0)
+		EffectRegistry.cast(c, ctx)
+		ok(_bf.walls.size() == 1, "%s pose un mur" % c.id)
+		if _bf.walls.size() == 1:
+			eq(Battlefield.element_of(_bf.walls[0].get("tags", []) as Array), T.ICE,
+				"%s : le mur est de glace" % c.id)
+			ok(_bf.wall_hp_at(Vector2(540.0, 900.0)) > 0.0, "%s : le mur a des PV" % c.id)
+		_cleanup()
+
+
+## Sabotage : les deux detecteurs ne voient rien sur des niveaux qui n ont pas
+## l exemple, et le voient quand on l y met.
+func _test_les_detecteurs_d_exemples_mordent() -> void:
+	var lv := LevelDef.new()
+	lv.id = &"t_exemples"
+	lv.act = 1
+	var w := WaveDef.new()
+	var faible := _def("faible_glace", {T.ICE: 1.5, T.WIND: 0.0})
+	w.entries = [_entree(faible)] as Array[WaveEntry]
+	lv.waves = [w] as Array[WaveDef]
+	var niveaux: Array = [lv]
+	ok(exemples_mur_de_glace(niveaux).is_empty(), "sans carte de glace, pas d exemple de mur")
+	ok(exemples_ancre_au_vent(niveaux).is_empty(), "sans attraction de vent au deck, pas d exemple")
+	# Un mur de pierre cassable : un objet frappe, mais pas de glace.
+	var pierre: SpellCard = _carte_mur(T.NATURE, true)
+	lv.levelup_cards = [pierre] as Array[SpellCard]
+	ok(exemples_mur_de_glace(niveaux).is_empty(), "un mur de nature ne fait pas l exemple")
+	# Un mur de glace A DUREE : de la glace, mais aucun coup ne le touche.
+	lv.levelup_cards = [_carte_mur(T.ICE, false)] as Array[SpellCard]
+	ok(exemples_mur_de_glace(niveaux).is_empty(), "un mur de glace sans PV ne fait pas l exemple")
+	lv.levelup_cards = [_carte_mur(T.ICE, true)] as Array[SpellCard]
+	eq(exemples_mur_de_glace(niveaux).size(), 1, "un mur de glace cassable face a un faible")
+	# Une attraction d ARCANE : le monstre est immunise au vent, pas a elle.
+	var spirale_arcane: SpellCard = _card(T.ARCANE, ["vortex_pull"])
+	lv.exploration_deck = [spirale_arcane] as Array[SpellCard]
+	ok(exemples_ancre_au_vent(niveaux).is_empty(), "une attraction d un autre element ne fait pas l exemple")
+	lv.exploration_deck = [_card(T.WIND, ["vortex_pull"])] as Array[SpellCard]
+	eq(exemples_ancre_au_vent(niveaux).size(), 1, "attraction de vent face a une ancre")
+	faible.resistances = {T.ICE: 1.5, T.WIND: 0.3}
+	ok(exemples_ancre_au_vent(niveaux).is_empty(), "un monstre qui RESISTE au vent n est pas une ancre")
+
+
+func _entree(d: EnemyDef) -> WaveEntry:
+	var e := WaveEntry.new()
+	e.enemy = d
+	e.count = 1
+	return e
+
+
+func _carte_mur(element: int, cassable: bool) -> SpellCard:
+	var c := _card(element)
+	var sp := EffectSpec.new()
+	sp.key = &"build_wall"
+	sp.radius = 150.0
+	if cassable:
+		sp.params = {&"permanent": true, &"wall_hp": 70.0}
+	else:
+		sp.duration = 20.0
+	c.effects = [sp] as Array[EffectSpec]
+	return c
 
 
 # --- 3. LES ALLIES ---------------------------------------------------------------

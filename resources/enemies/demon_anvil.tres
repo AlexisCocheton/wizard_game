@@ -26,7 +26,7 @@ resistances = {
 7: 1.27,
 8: 2.0,
 9: 0.35,
-10: 0.35
+10: 0.0
 }
 immune_tags = Array[int]([])
 dodge_chance = 0.0

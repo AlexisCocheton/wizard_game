@@ -127,6 +127,8 @@ func run() -> void:
 	_test_motif_au_sol_ne_traverse_pas_un_mur(EnemyDef.MovePattern.SPIRAL)
 	_test_motif_au_sol_enferme_ne_traverse_pas(EnemyDef.MovePattern.SPIRAL)
 	_test_motif_volant_ignore_les_murs(EnemyDef.MovePattern.SPIRAL)
+	_test_chaque_motif_porte_en_campagne()
+	_test_le_detecteur_de_motifs_mord()
 	_test_gros_monstre_par_le_cote_reste_visible()
 	_test_gros_monstre_par_le_cote_ne_se_coince_pas()
 	_test_bestiaire_dit_chaque_mecanique()
@@ -865,6 +867,54 @@ func _test_motif_spirale_sans_recul_par_defaut() -> void:
 		t += 1.0 / 60.0
 	ok(recul < 0.01, "il ne remonte jamais (%.3f px)" % recul)
 	ok(x_max - x_min > d.pattern_width * 0.8, "mais il tourne bien (%.0f px)" % (x_max - x_min))
+
+
+## MOTIFS SANS PORTEUR (chantier W9). La spirale etait codee et testee, et aucun
+## monstre ne s en servait : du moteur que le joueur ne voyait jamais. Chaque
+## motif autre que la ligne droite doit etre porte par au moins un monstre
+## ORDINAIRE (ni boss ni mini-boss : une tete ne passe qu une fois) qui descend
+## dans un niveau de campagne. Rend les motifs orphelins.
+static func motifs_sans_porteur(niveaux: Array) -> Array[String]:
+	var portes: Dictionary = {}
+	for lv in niveaux:
+		var niveau: LevelDef = lv
+		if niveau == null or niveau.act <= 0:
+			continue
+		for d: EnemyDef in ObjectiveChecker.level_enemies(niveau):
+			if d.kind in [GameEnums.EnemyKind.BOSS, GameEnums.EnemyKind.MINIBOSS]:
+				continue
+			portes[int(d.move_pattern)] = true
+	var out: Array[String] = []
+	for m in EnemyDef.MovePattern.values():
+		if m != EnemyDef.MovePattern.STRAIGHT and not portes.has(int(m)):
+			out.append(String(EnemyDef.MovePattern.keys()[m]))
+	return out
+
+
+func _test_chaque_motif_porte_en_campagne() -> void:
+	var orphelins: Array[String] = motifs_sans_porteur(ContentDB.levels.values())
+	ok(orphelins.is_empty(),
+		"chaque motif est porte par un monstre ordinaire de la campagne %s" % [orphelins])
+
+
+func _test_le_detecteur_de_motifs_mord() -> void:
+	var lv := LevelDef.new()
+	lv.id = &"t_motifs"
+	lv.act = 1
+	var w := WaveDef.new()
+	var e := WaveEntry.new()
+	e.enemy = _def("droit")
+	w.entries = [e] as Array[WaveEntry]
+	lv.waves = [w] as Array[WaveDef]
+	eq(motifs_sans_porteur([lv]).size(), EnemyDef.MovePattern.size() - 1,
+		"un niveau de monstres droits laisse tous les motifs orphelins")
+	e.enemy.move_pattern = EnemyDef.MovePattern.SPIRAL
+	not_ok("SPIRAL" in motifs_sans_porteur([lv]), "un porteur ordinaire couvre son motif")
+	e.enemy.kind = GameEnums.EnemyKind.MINIBOSS
+	ok("SPIRAL" in motifs_sans_porteur([lv]), "un mini-boss ne couvre pas un motif")
+	e.enemy.kind = GameEnums.EnemyKind.NORMAL
+	lv.act = 0
+	ok("SPIRAL" in motifs_sans_porteur([lv]), "un niveau hors campagne ne couvre rien")
 
 
 # --- 7. ENTREE PAR LE COTE D UN GROS MONSTRE -----------------------------------

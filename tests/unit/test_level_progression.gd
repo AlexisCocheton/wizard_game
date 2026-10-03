@@ -106,6 +106,7 @@ func run() -> void:
 	_test_cartes_vraiment_nouvelles()
 	_test_objectifs_lies_au_deck_et_aux_monstres()
 	_test_un_seul_sort_sans_tueur_permanent()
+	_test_chaque_protecteur_a_sa_reponse()
 	_test_objectifs_classes_par_difficulte()
 	_test_aucun_avertissement_de_progression()
 	_test_les_detecteurs_mordent()
@@ -468,6 +469,29 @@ static func defauts_un_seul_sort(lv: LevelDef) -> Array[String]:
 	return out
 
 
+## PROTECTEURS SANS REPONSE (chantier W9). Une aura d invulnerabilite
+## (Gardien-totem, Echo d Ymoa, Sceau de Tombol...) ne cede qu a une dissipation
+## (dispel_zone) ou au pat (DEC-048). En campagne le deck est IMPOSE et le pool de
+## montee ne lit que le deck, les cartes nouvelles et les recompenses : un niveau
+## ou descend un porteur d aura doit offrir une dissipation dans l une de ces
+## trois listes, sinon le joueur n a que le pat pour reponse.
+static func defauts_protecteurs(lv: LevelDef) -> Array[String]:
+	var out: Array[String] = []
+	var porteurs: Array[String] = []
+	for d: EnemyDef in ObjectiveChecker.level_enemies(lv):
+		if d.aura_shield_radius > 0.0:
+			porteurs.append(String(d.id))
+	if porteurs.is_empty():
+		return out
+	for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards]:
+		for c in liste:
+			if c != null and &"dispel_zone" in (c as SpellCard).effect_keys():
+				return out
+	out.append("%s protege(nt) par une aura, aucune dissipation au deck, en carte nouvelle ni en recompense"
+		% [porteurs])
+	return out
+
+
 ## Le classement mesure : ids identiques au contenu, chaque objectif reussi ET
 ## rate au moins une fois, taux strictement decroissant du rang 1 au rang 3.
 ## Une ligne A_MESURER n est admise que pour un id de `a_mesurer` ; elle est
@@ -656,6 +680,21 @@ func _test_un_seul_sort_sans_tueur_permanent() -> void:
 		ok(d.is_empty(), "%s : « d un seul sort » sans tueur permanent %s" % [lv.id, d])
 
 
+func _test_chaque_protecteur_a_sa_reponse() -> void:
+	var avec_aura: int = 0
+	for lv in _niveaux():
+		if lv.act <= 0:
+			continue
+		for d: EnemyDef in ObjectiveChecker.level_enemies(lv):
+			if d.aura_shield_radius > 0.0:
+				avec_aura += 1
+				break
+		var d: Array[String] = defauts_protecteurs(lv)
+		ok(d.is_empty(), "%s : une dissipation contre ses protecteurs %s" % [lv.id, d])
+	# Le test ne passe pas a vide : la campagne compte bien des porteurs d aura.
+	ok(avec_aura >= 5, "%d niveaux de campagne ont un porteur d aura" % avec_aura)
+
+
 func _test_objectifs_classes_par_difficulte() -> void:
 	for lv in _niveaux():
 		var d: Array[String] = defauts_classement(lv, MESURES.get(String(lv.id)),
@@ -763,6 +802,44 @@ func _test_les_detecteurs_mordent() -> void:
 		lv5.levelup_cards = avec
 		not_ok(defauts_un_seul_sort(lv5).is_empty(),
 			"« d un seul sort » a cote d un tueur permanent est refuse")
+	# Un porteur d aura sans dissipation jouable, puis avec (deck, nouvelle).
+	var totem := EnemyDef.new()
+	totem.id = &"t_totem"
+	totem.aura_shield_radius = 240.0
+	var entree := WaveEntry.new()
+	entree.enemy = totem
+	var vague := WaveDef.new()
+	vague.entries = [entree] as Array[WaveEntry]
+	var lv6: LevelDef = modele.duplicate()
+	lv6.waves = [vague] as Array[WaveDef]
+	var sans_dissipation: Array[SpellCard] = []
+	for c: SpellCard in modele.exploration_deck:
+		if c != null and not &"dispel_zone" in c.effect_keys():
+			sans_dissipation.append(c)
+	lv6.exploration_deck = sans_dissipation
+	var nouvelles_sans: Array[SpellCard] = []
+	for c: SpellCard in modele.levelup_cards:
+		if c != null and not &"dispel_zone" in c.effect_keys():
+			nouvelles_sans.append(c)
+	lv6.levelup_cards = nouvelles_sans
+	var recompenses_sans: Array[SpellCard] = []
+	for c: SpellCard in modele.objective_rewards:
+		if c != null and not &"dispel_zone" in c.effect_keys():
+			recompenses_sans.append(c)
+	lv6.objective_rewards = recompenses_sans
+	not_ok(defauts_protecteurs(lv6).is_empty(), "un porteur d aura sans dissipation est refuse")
+	var lumiere: SpellCard = ContentDB.cards.get(&"purifying_light")
+	ok(lumiere != null, "la Lumiere purifiante existe")
+	if lumiere != null:
+		var avec: Array[SpellCard] = nouvelles_sans.duplicate()
+		avec.append(lumiere)
+		lv6.levelup_cards = avec
+		ok(defauts_protecteurs(lv6).is_empty(), "une dissipation en carte nouvelle suffit")
+		lv6.levelup_cards = nouvelles_sans
+		var deck_avec: Array[SpellCard] = sans_dissipation.duplicate()
+		deck_avec.append(lumiere)
+		lv6.exploration_deck = deck_avec
+		ok(defauts_protecteurs(lv6).is_empty(), "une dissipation au deck suffit")
 	# Un classement egal, un taux jamais rate, des ids perimes.
 	var ids: Array = []
 	for o: ObjectiveDef in modele.objectives:
