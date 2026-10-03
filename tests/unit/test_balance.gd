@@ -21,8 +21,14 @@ func run() -> void:
 
 ## Les PV d une vague ne doivent jamais plus que doubler d une vague a l autre :
 ## c est ce saut qui rendait la premiere vague du niveau 2 infranchissable.
+##
+## `lvl_13` (incantations plus longues) : sa vague w13_4 sautait x2,28 et
+## portait toutes les defaites du niveau, que rallonger ou raccourcir les sorts
+## ne changeait pas (le pentacle est limite par la pioche). Elle est revenue
+## sous x2 et ce test l y tient. Les autres niveaux qui depassent x2 ne sont pas
+## listes : leur saut ne tue pas au banc, le reglage est laisse au co-auteur.
 func _test_la_courbe_monte_sans_a_coup() -> void:
-	for level_id in [&"lvl_01", &"lvl_02"]:
+	for level_id in [&"lvl_01", &"lvl_02", &"lvl_13"]:
 		var level: LevelDef = ContentDB.levels.get(level_id)
 		if level == null:
 			continue
