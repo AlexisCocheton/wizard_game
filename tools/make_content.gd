@@ -5233,12 +5233,16 @@ laisse une GARDE, et une garde ne protege pas un fuyard, elle retarde un poursui
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Vide d emprise. Sortent la Spirale, le Mur et la Focalisation ;
 	# la Fleche monte a 4, c est la carte du niveau.
+	# Vague 8, deck de 12 : Fleche 3 (objectif « 21 Fleches »), le Trait (arcane,
+	# x1,48 ici) garde ses 4 exemplaires et la Marque en perd un. Au banc (60
+	# parties, incantations x2,25) : 15 victoires avec Trait 3 / Marque 2, 19 avec
+	# Trait 4 / Marque 1.
 	lvl20.exploration_deck = _deck([
 		[C + "common/piercing_arrow.tres", 3],
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 2],
 		[C + "rare/meteor.tres", 1],
-		[C + "epic/weakness_mark.tres", 2],
+		[C + "epic/weakness_mark.tres", 1],
 		[C + "epic/void_grip.tres", 1],
 	])
 	_poser_progression(lvl20)
@@ -6067,12 +6071,15 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	# avant lui n avait montree (verifie dans l ordre de jeu par test_deck_rules).
 	# Decouverte : Etincelle. Sortent la Fleche, le Champ de givre, le Mur, la
 	# Focalisation, la Resonance et la Concentration.
+	# Vague 8, deck de 12 : le Trait (arcane, x1,36 ici) garde ses 4 exemplaires et
+	# la Marque en perd un. Au banc (60 parties, incantations x2,25) : 25 victoires
+	# avec Trait 3 / Marque 2, 34 avec Trait 4 / Marque 1.
 	lvl13.exploration_deck = _deck([
-		[C + "common/arcane_bolt.tres", 3],
+		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 2],
 		[C + "common/spark.tres", 3],
 		[C + "rare/meteor.tres", 1],
-		[C + "epic/weakness_mark.tres", 2],
+		[C + "epic/weakness_mark.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
 	_poser_progression(lvl13)
