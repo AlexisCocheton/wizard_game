@@ -117,7 +117,7 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 	# Le son PROPRE au sort. Trois sons generiques couvraient 45 cartes : a
 	# l oreille, tous les sorts etaient le meme.
 	if card.sfx_key != &"":
-		AudioBus.play_sfx(card.sfx_key)
+		AudioBus.play_card(card)  # A4 W10 : son du sort, table de AudioBus prioritaire
 	# Focalisation : le multiplicateur est consomme par le sort suivant, quel qu il soit.
 	ctx.damage_mult = RunState.take_next_spell_multiplier()
 	# AMELIORATION DE LA CARTE (chantier G) : les valeurs appliquees ne sortent

@@ -387,7 +387,7 @@ func enemy_shockwave(from: Enemy, radius: float, damage: int) -> void:
 	})
 	shockwaves_fired += 1
 	from.play_attack()
-	AudioBus.play_sfx(&"wall")
+	AudioBus.play_sfx(&"quake")  # A4 W10 : l onde fait trembler le sol, pas un mur
 
 
 func _simulate_shockwaves(wd: float) -> void:
@@ -476,7 +476,7 @@ func _blocked_by_wall(point: Vector2) -> bool:
 func enemy_shoot(from: Enemy, damage: int) -> void:
 	var pos: Vector2 = from.position + Vector2(0.0, from.radius())
 	var node: Node = Fx.shot_visual(self, pos, from.definition.color if from.definition != null else Color.WHITE)
-	AudioBus.play_sfx(&"arrow")
+	AudioBus.play_sfx(AudioBus.shot_sfx_key(from.definition))  # A4 W10 : tir selon la famille
 	# On retient le TIREUR, pas le noeud : le monstre peut mourir avant que sa
 	# fleche arrive, et l ecran de defaite doit quand meme pouvoir le nommer.
 	shots.append({"pos": pos, "damage": damage, "node": node,
@@ -538,8 +538,8 @@ func _on_enemy_died(e: Enemy) -> void:
 	var where: Vector2 = e.position
 	var diff: float = e.difficulty
 	enemies.erase(e)
-	Fx.death(self, where, e.radius())
-	AudioBus.play_sfx(&"explosion" if (def != null and def.is_boss()) else &"enemy_die")
+	Fx.death(self, where, e.radius(), e)  # A4 W10 : anim de mort de la feuille, sans retarder la logique
+	AudioBus.play_enemy_death(def)  # A4 W10 : son de mort de la famille du monstre
 	if def != null:
 		# Une boule de poison ne rapporte ni XP ni statistique de chasse : sinon
 		# le joueur monterait de niveau en tapant des munitions au lieu de
@@ -869,7 +869,7 @@ func _hit(e: Enemy, amount: float, tags: Array, continu: bool = false) -> bool:
 			return applied
 		hit_feedbacks += 1
 		Fx.hit_flash(e)
-		AudioBus.play_sfx(&"hit")
+		AudioBus.play_enemy_hit(e.definition)  # A4 W10 : son de coup de la famille
 		# PASSIF "Morsure de givre" : TOUT degat ralentit, quel que soit l element
 		# du sort. C est une regle, pas un bonus chiffre : les sorts de feu se
 		# mettent a freiner les monstres.
@@ -1010,7 +1010,7 @@ func spawn_wall(center: Vector2, half_width: float, duration: float,
 	var cells: Array[Vector2i] = nav.block_rect(center, half_width, thickness)
 	if cells.is_empty():
 		return
-	AudioBus.play_sfx(&"wall")
+	AudioBus.play_sfx(AudioBus.wall_sfx_key(tags, false))  # A4 W10 : un mur de glace tinte
 	var node: Node = Fx.spawn_wall_visual(self, center, half_width, thickness, duration,
 		element_of(tags))
 	var w: Dictionary = {"cells": cells, "time": maxf(duration, 0.1), "node": node,
@@ -1182,7 +1182,7 @@ func _break_wall(index: int) -> void:
 		node.queue_free()
 	Fx.impact(self, w.get("center", Vector2.ZERO), Fx.COL_WALL,
 		float(w.get("half_width", 60.0)))
-	AudioBus.play_sfx(&"wall")
+	AudioBus.play_sfx(AudioBus.wall_sfx_key(w.get("tags", []), true))  # A4 W10 : le mur s eboule
 	_free_anchor(w.get("anchor"))
 	walls.remove_at(index)
 
@@ -1270,7 +1270,7 @@ func spawn_prop(kind: int, center: Vector2, duration: float, hp: float,
 	# et un anneau qui mentirait sur la portee serait pire que pas d anneau du tout
 	# — le joueur s en sert pour decider ou poser le sort suivant.
 	p.node = Fx.prop_visual(self, p.position, kind, p.time_left, sheet, tint, p.area)
-	AudioBus.play_sfx(&"drip_frost" if kind == TerrainProp.Kind.WATER else &"wall")
+	AudioBus.play_sfx(AudioBus.prop_sfx_key(kind, false))  # A4 W10 : un son par type d objet
 	props.append(p)
 	_anchor_prop(p)
 	p.set_meta(&"obj_src", RunState.damage_source)  # OBJECTIFS : allies d autel
@@ -1443,7 +1443,7 @@ func _destroy_prop(index: int, brise: bool) -> void:
 	p.anchor = null
 	if brise:
 		Fx.impact(self, p.position, Fx.COL_WALL, maxf(p.reach, 60.0))
-		AudioBus.play_sfx(&"wall")
+		AudioBus.play_sfx(AudioBus.prop_sfx_key(p.kind, true))  # A4 W10 : bris propre a l objet
 	props.remove_at(index)
 
 
@@ -1719,7 +1719,7 @@ func spawn_river(y: float, duration: float = 0.0, sheet: String = "",
 	_wash_upstream(row, pont)
 	p.node = Fx.river_visual(self, p.position.y, NavGrid.CELL_SIZE,
 		nav.to_world(Vector2i(pont, row)).x, sheet)
-	AudioBus.play_sfx(&"drip_frost")
+	AudioBus.play_sfx(AudioBus.prop_sfx_key(TerrainProp.Kind.RIVER, false))  # A4 W10
 	props.append(p)
 	_anchor_prop(p)
 	return p
@@ -1904,7 +1904,7 @@ func _v3_tick_rebirths(wd: float) -> void:
 				enfant.v3_set_rebirth_depth(int(r["depth"]))
 		if Fx.enabled():
 			Fx.impact(self, ou, Color(0.75, 0.95, 1.0), 90.0)
-		AudioBus.play_sfx(&"spell_rise")
+		AudioBus.play_sfx(&"revive")  # A4 W10 : renaissance, plus le son d un sort
 
 
 ## Le verrou de magie : un dormeur vivant coupe la magie, aucun dormeur la rend.
@@ -1939,7 +1939,7 @@ func v3_grant_sleep(_sleeper: Enemy) -> bool:
 		return false
 	_v3_silenced = true
 	RunState.set_silenced(true)
-	AudioBus.play_sfx(&"drip_frost")
+	AudioBus.play_sfx(&"magic_silence")  # A4 W10 : la magie s endort
 	return true
 
 
@@ -1970,7 +1970,7 @@ func v3_reanimate_near(source: Enemy, radius: float) -> bool:
 	reanimations += 1
 	if Fx.enabled():
 		Fx.reanimate_link(self, source.position, ou)
-	AudioBus.play_sfx(&"heal")
+	AudioBus.play_sfx(&"reanimate")  # A4 W10 : plus le son du soin du mage
 	return true
 
 
@@ -1990,7 +1990,7 @@ func _v3_fire_laser(e: Enemy) -> void:
 	# La pose de TIR de la feuille (le noyau du golem qui se charge), l attaque
 	# generique a defaut : voir Enemy.shot_anim().
 	e.play_shot_pose(true)
-	AudioBus.play_sfx(&"arrow")
+	AudioBus.play_sfx(&"laser_beam")  # A4 W10 : un laser n est pas une fleche
 	# Un mur de pierre arrete le rayon comme il arrete les fleches : le joueur
 	# qui s abrite doit etre recompense, sinon le mur mentirait sur ce qu il protege.
 	var arret: Vector2 = _v3_first_wall_on(depart, mage)

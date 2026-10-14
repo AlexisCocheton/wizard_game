@@ -111,6 +111,7 @@ func _on_cast_started(_card: SpellCard, _duration: float) -> void:
 	if _charge == null or not is_instance_valid(_charge):
 		_charge = Fx.cast_charge(self, Vector2(0.0, 30.0))
 	AudioBus.play_sfx(&"cast_start")
+	AudioBus.play_cast_voice(_card)  # A4 W10 : replique par element, avec un repit
 
 
 func _on_cast_finished(_card: SpellCard) -> void:

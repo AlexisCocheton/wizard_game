@@ -288,6 +288,7 @@ func _setup_visual() -> void:
 			add_child(sp)
 			_anim.visible = false
 			_apply_scale(sp, float(tex.get_height()))
+			Fx.idle_motion(self, sp)  # A4 W10 : une image fixe flotte et son aura respire
 			# Sans animation, le halo de la tour sert d aura.
 	else:
 		_anim.sprite_frames = AnimCatalog.frames(key)
@@ -689,7 +690,7 @@ func take_damage(amount: float, tags: Array, continu: bool = false) -> bool:
 		if continu:
 			return false
 		_hits_immune_left -= 1
-		AudioBus.play_sfx(&"shield_break")
+		AudioBus.play_sfx(&"seal_tick")  # A4 W10 : un sceau use, pas un bouclier brise
 		# Le halo tombe au DERNIER coup absorbe : le joueur voit a l ecran que le
 		# compteur est vide et que le combat vrai commence. Sans ce signal il ne
 		# saurait pas quand cesser de gaspiller ses petites cartes.
@@ -722,7 +723,7 @@ func take_damage(amount: float, tags: Array, continu: bool = false) -> bool:
 		_parts[i] = _parts[i] - amount
 		if _parts[i] <= 0.0:
 			_parts.remove_at(i)
-			AudioBus.play_sfx(&"shield_break")
+			AudioBus.play_sfx(&"armor_break")  # A4 W10 : une partie tombe
 			if _body != null:
 				_body.set_shield(not _parts.is_empty())
 			if _parts.is_empty() and _shield_fx != null and is_instance_valid(_shield_fx):
@@ -960,7 +961,7 @@ func _try_revive() -> bool:
 	# AILLEURS — il vient de croire le combat gagne.
 	if Fx.enabled():
 		Fx.impact(self, position, Color(1.0, 0.95, 0.65), visual_radius() * 1.8)
-	AudioBus.play_sfx(&"spell_rise")
+	AudioBus.play_sfx(&"revive")  # A4 W10 : releve, plus le son d un sort du joueur
 	modulate = Color(1.6, 1.5, 1.1)
 	var tw: Tween = create_tween()
 	tw.tween_property(self, "modulate", Color.WHITE, REVIVE_GRACE)
@@ -1173,7 +1174,7 @@ func _do_summon() -> void:
 			_summoned.append(sbire)
 	# Pas de son d invocation dedie dans assets/sfx : "grow" est le plus proche
 	# (quelque chose qui sort et s etend) parmi les cles existantes.
-	AudioBus.play_sfx(&"grow")
+	AudioBus.play_sfx(&"summon_call")  # A4 W10 : l appel a maintenant son son
 
 
 func max_hp() -> float:
@@ -1360,7 +1361,7 @@ func _v3_try_extra_life() -> bool:
 	# La mort se VOIT la ou il tombe : sans l explosion, le joueur verrait le
 	# monstre se teleporter et croirait a un bug d affichage.
 	if Fx.enabled() and battlefield != null:
-		Fx.death(battlefield, position, radius())
+		Fx.death(battlefield, position, radius(), self)  # A4 W10 : il joue sa pose de mort la ou il tombe
 	# DEPUIS LE HAUT, dans la meme colonne : le joueur le retrouve la ou il
 	# regarde deja, et le chemin a refaire est la recompense de l avoir tue.
 	position = Vector2(position.x, GameConfig.SPAWN_LINE_Y)
@@ -1384,7 +1385,7 @@ func _v3_try_extra_life() -> bool:
 	tw.tween_property(self, "modulate", teinte, REVIVE_GRACE)
 	if Fx.enabled() and battlefield != null:
 		Fx.impact(battlefield, position, Color(1.0, 0.45, 0.35), visual_radius() * 1.4)
-	AudioBus.play_sfx(&"spell_rise")
+	AudioBus.play_sfx(&"revive")  # A4 W10
 	return true
 
 
@@ -1873,7 +1874,7 @@ func _do_rewind() -> void:
 	_refresh_hp_bar()
 	if Fx.enabled() and battlefield != null:
 		Fx.rewind_flash(battlefield, avant, position, visual_radius())
-	AudioBus.play_sfx(&"spell_rise")
+	AudioBus.play_sfx(&"time_rewind")  # A4 W10 : une horloge jouee a l envers
 	if not _rewind_active():
 		_drop_ghost()
 
@@ -1953,7 +1954,7 @@ func _try_twin_fall() -> bool:
 	# `modulate` sur le monstre grisait aussi la legende, et le compte a rebours
 	# devenait illisible au moment precis ou le joueur en a besoin.
 	_twin_tint(true)
-	AudioBus.play_sfx(&"shield_break")
+	AudioBus.play_sfx(&"twin_fall")  # A4 W10
 	return true
 
 
@@ -1978,7 +1979,7 @@ func _twin_rise() -> void:
 	tw.tween_property(self, "modulate", Color.WHITE, 0.5)
 	if Fx.enabled() and battlefield != null:
 		Fx.impact(battlefield, position, Color(1.0, 0.95, 0.65), visual_radius() * 1.6)
-	AudioBus.play_sfx(&"spell_rise")
+	AudioBus.play_sfx(&"revive")  # A4 W10
 
 
 ## Le dernier debout vient de tomber : les jumeaux a terre meurent AVEC lui.
@@ -2068,7 +2069,7 @@ func _tick_chameleon(world_delta: float) -> void:
 	_cham_index += 1
 	_cham_apply()
 	_cham_retint()
-	AudioBus.play_sfx(&"ward_deep")
+	AudioBus.play_sfx(&"chameleon_shift")  # A4 W10
 
 
 func _cham_apply() -> void:
@@ -2225,7 +2226,7 @@ func _tick_thief(world_delta: float) -> void:
 	_stolen_card = c
 	_steal_cast_left = maxf(definition.steal_cast_delay, 0.1)
 	play_attack()
-	AudioBus.play_sfx(&"ward_deep")
+	AudioBus.play_sfx(&"card_steal")  # A4 W10 : une carte arrachee a la main
 	if Fx.enabled() and battlefield != null:
 		Fx.sprite(battlefield, "diamond_mark", position, visual_radius() * 1.6, false,
 			Fx.color_for(c.combat_tags()))
@@ -2284,7 +2285,7 @@ func devour(prey: Enemy) -> void:
 		heal(maxf(prey.hp, 0.0) * definition.devour_heal_pct * 0.01)
 		if Fx.enabled() and battlefield != null:
 			Fx.heal_effect(battlefield, position)
-		AudioBus.play_sfx(&"heal")
+		AudioBus.play_sfx(&"devour")  # A4 W10 : il mange, ce n est pas le soin du mage
 		return
 	grow(prey.max_hp() * 0.5, 0.18)
 	devour_prey += 1  # CHANTIER W8 : la proie ajoute aussi a sa FORCE (devour_force)
@@ -2596,7 +2597,7 @@ func suppress_aura(seconds: float) -> void:
 	_aura_off_time = maxf(_aura_off_time, seconds)
 	_refresh_aura_fx()
 	if cedait:
-		AudioBus.play_sfx(&"shield_break")
+		AudioBus.play_sfx(&"aura_break")  # A4 W10 : l aura s eteint
 		if Fx.enabled() and battlefield != null:
 			Fx.impact(battlefield, position, Color(1.0, 0.92, 0.6),
 				definition.aura_shield_radius * 0.5)

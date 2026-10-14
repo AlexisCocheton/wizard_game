@@ -83,6 +83,8 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_campaign_progression.gd",
 	# Vague 10 (ecrans) : bilan des degats et conseil, briefing refait, sceau.
 	"res://tests/unit/test_screens_w10.gd",
+	# Vague 10 (A4) : sons par famille, objet, sort, musique par acte, voix, morts.
+	"res://tests/unit/test_audio_w10.gd",
 ]
 
 var _total_checks: int = 0

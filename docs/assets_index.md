@@ -530,6 +530,26 @@ empêchaient de cumuler chapeau et robe. Les profils sont migrés
 étranger au pixel art, et crédit obligatoire. Les Human Avatars de Tiny Swords
 sont du même pack que le mage et ne demandent rien.
 
+### 6.7 Sons et musiques de la vague 10 (revue globale, 2026-10-14) — EXTRAITS
+
+`tools/assets/extract_w10_audio.py` (Python + numpy, **ffmpeg** pour les
+musiques). Aucun pack neuf : uniquement les quatre archives audio déjà
+auditées ci-dessus. Rien de Batareya.
+
+| Quoi | Fichiers | Source | Licence |
+|---|---|---|---|
+| 22 sons de familles de monstres (coup / mort) | `assets/sfx/hit_*.wav`, `die_*.wav` | 400 Sounds (Combat and Gore, Human, Materials, Retro), FreeSFX (Roar, Animal Insects, Impact) | Chequered Ink ; FreeSFX (§1.3, origine à confirmer) |
+| 16 sons de mécaniques (sceau, armure, relevé, invocation, retour dans le temps, vol de carte, dévoreur, laser, silence...) | `seal_tick`, `armor_break`, `revive`, `time_rewind`... | idem ; `time_rewind` = horloge du pack **jouée à l'envers** | idem |
+| 6 sons d'objets de terrain | `wood_creak`, `wood_break`, `wall_break`, `earth_dig`, `bramble_rustle`, `altar_hum` | 400 Sounds | Chequered Ink |
+| 23 sons de sorts | `fire_*`, `ice_*`, `time_*`, `poison_*`, `water_*`, `wind_*`... | 400 Sounds + FreeSFX ; quelques **mélanges** (tic d'horloge sous une montée) | idem |
+| 6 musiques | `assets/music/battle_act2..5.ogg`, `boss_final.ogg`, `massacre.ogg` | HydroGene (Traveling the Sky, Battle Theme II/III/IV) ; xDeviruchi (Decisive Battle 2, Final Battle - For Love) | HydroGene : crédit non obligatoire ; **xDeviruchi : crédit obligatoire, déjà à l'écran** |
+
+Traitement : mono 16 bits, silence de tête retiré, durée bornée avec fondu
+(plusieurs sources duraient 3 à 7 s), crête à -1 dBFS ; musiques ré-encodées en
+Vorbis q3 depuis les WAV du pack (6,9 Mo pour six titres au lieu de ~20 Mo).
+Le script mesure ensuite TOUS les sons et écrit la table de gains de
+`AudioBus` (écart mesuré de 18 dB entre le son le plus fort et le plus faible).
+
 ---
 
 ## 7. Crédits — mise à jour
