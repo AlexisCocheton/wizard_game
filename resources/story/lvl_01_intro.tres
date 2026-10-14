@@ -20,7 +20,7 @@ lines = Array[Dictionary]([{
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Et je suis vide. De quoi lancer trois sorts et courir vite. Ca ira."
+"text": "Et je suis vide. De quoi lancer quelques sorts et courir vite. Ca ira."
 }, {
 "portrait": &"",
 "side": "left",

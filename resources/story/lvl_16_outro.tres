@@ -42,6 +42,16 @@ lines = Array[Dictionary]([{
 "speaker": "L Enfant",
 "text": "C est cense etre un cadeau. Tu verras a la millieme vague."
 }, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Moi je repare. Meme une boucle, ca se repare."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Je reste. Plus de royaume, autant avoir une boucle."
+}, {
 "portrait": &"",
 "side": "left",
 "speaker": "",
@@ -50,5 +60,5 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "MODE INFINI DEBLOQUE."
+"text": "LE MASSACRE, la boucle sans fin, s ouvre quand chaque niveau de la campagne est fini."
 }])

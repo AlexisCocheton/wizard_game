@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_t45ob")
 id = &"lvl_11_intro"
-scene_background = "talk_path"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
@@ -14,7 +14,7 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Kaltek",
 "text": "Le vieux ! On m a dit qu un homme avait recule le temps. C etait toi ?"
 }, {
 "portrait": &"mage",
@@ -24,7 +24,7 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Kaltek",
 "text": "Alors tu comprends ce qu est une laisse. Moi je tiens quarante mille laisses."
 }, {
 "portrait": &"mage",
@@ -34,6 +34,6 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Kaltek",
 "text": "Personne ne me tient ! Personne ! Frappe-moi, tu vas voir comme je suis libre."
 }])

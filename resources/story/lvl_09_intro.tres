@@ -30,7 +30,7 @@ lines = Array[Dictionary]([{
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "C est le Gardien ! C est lui qui protege la foret, il va nous aider !"
+"text": "C est le Gardien ! Le vrai, celui de l arbre. C est lui qui protege la foret, il va nous aider !"
 }, {
 "portrait": &"mage_grave",
 "side": "left",

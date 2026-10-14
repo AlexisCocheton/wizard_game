@@ -10,22 +10,27 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Au fond de Tombol, une salle ronde et un pentacle qui tourne lentement au ras du sol. Devant, un squelette couronne, dos au cercle, qui n a plus nulle part ou reculer."
+"text": "Au fond de Tombol, une salle ronde et un pentacle qui tourne lentement au ras du sol."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Devant, un squelette couronne, dos au cercle. Il n a plus nulle part ou reculer."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Encore toi. Tu cours vite pour un homme qui n a plus rien."
+"text": "Te voila enfin. Tu cours vite pour un homme qui n a plus rien."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Tu as signe l extinction de mon royaume."
+"text": "Tu as signe la fin de Nuri et de Nox."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "J ai signe pour SAUVER le mien. Ils sont venus avec un contrat deja ecrit, mage."
+"text": "J ai signe pour SAUVER Tombol. Ils sont venus avec un contrat deja ecrit, mage."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",

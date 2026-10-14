@@ -10,7 +10,12 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Sur la ligne du mage, la date a ete raturee une fois, et quelqu un a ecrit dans la marge. L ecriture est petite et soignee."
+"text": "L Horloger s arrete au milieu d un tour de cle, et le registre cesse de tourner ses pages. Il s ouvre sur la ligne du mage."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "La date y a ete raturee une fois, et quelqu un a ecrit dans la marge. L ecriture est petite et soignee."
 }, {
 "portrait": &"mage",
 "side": "left",
@@ -20,7 +25,7 @@ lines = Array[Dictionary]([{
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Ca dit : inattendu, souligne. Et il y a un trait dessous, comme quand on souligne ce qui amuse."
+"text": "Un seul mot : inattendu. Souligne deux fois, comme on souligne ce qui fait rire."
 }, {
 "portrait": &"mage_grave",
 "side": "left",

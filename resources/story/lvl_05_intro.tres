@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_vb5i8"]
+
+[resource]
+script = ExtResource("1_vb5i8")
+id = &"lvl_05_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L escalier qui descend ne mene pas a une crypte. Il mene a une forge, et la forge tourne a plein, rouge jusqu au plafond."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Tout est chaud. Le roi est passe par ici ?"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il a traverse sans s arreter, comme quelqu un qui connait le chemin."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Tombol enterre ses morts. Elle ne coule pas d armures. Ca, quelqu un l a installe sous ses pieds."
+}])

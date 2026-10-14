@@ -45,7 +45,17 @@ lines = Array[Dictionary]([{
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Tu as change la date, pas la fin. Fais-moi une place, je descends avec toi. Je n ai plus de royaume a perdre."
+"text": "Tu as change la date, pas la fin. Fais-moi une place, je descends avec toi. Je n ai plus rien a perdre."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au bord du puits, la nacelle attend, moteur deja chaud."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "J ai dit que je restais avec la nacelle. Elle descend, alors je descends."
 }, {
 "portrait": &"child",
 "side": "right",

@@ -10,7 +10,12 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Le dernier pillard tombe sur ses propres soudures. Au bout du quai, deux passages : celui de droite et celui de gauche."
+"text": "Le Mage noir de Haute-Nacelle s effondre. Sous sa robe, la meme soudure noire."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au bout du quai, deux passages : celui de droite et celui de gauche."
 }, {
 "portrait": &"child",
 "side": "right",
