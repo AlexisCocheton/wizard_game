@@ -122,7 +122,9 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 		mage.bind(caster)
 	_connect_once(spawner.wave_started, _on_wave_started)
 	_connect_once(SpeedGauge.speed_lost, _on_speed_lost)
-	AudioBus.play_music(&"battle")
+	AudioBus.play_music(AudioBus.battle_music_for(def, mode))  # A4 W10 : une musique par acte
+	_connect_once(spawner.world_changed, AudioBus.on_world_changed)  # A4 W10 : Infini, musique du monde traverse
+	AudioBus.play_voice(&"level_start")  # A4 W10 : le mage salue l entree en combat
 
 	spawner.start_next()
 	running = true
@@ -548,7 +550,7 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 		AudioBus.play_sfx(&"boss")
 		AudioBus.play_voice(&"attack")
 		if wave.is_boss:
-			AudioBus.play_music(&"boss")
+			AudioBus.play_music(AudioBus.boss_music_for(wave))  # A4 W10 : le boss final a son theme
 	else:
 		AudioBus.play_sfx(&"wave_start")
 

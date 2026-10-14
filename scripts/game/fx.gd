@@ -537,37 +537,376 @@ static func spawn_wall_visual(parent: Node2D, center: Vector2, half_width: float
 	return root
 
 
-## Flash blanc sur un monstre touche (teinte, pas dessin).
-static func hit_flash(enemy: Node2D) -> void:
-	if not enabled() or enemy == null or not is_instance_valid(enemy):
-		return
+## Le noeud qui DESSINE le monstre : la feuille animee si elle est montree,
+## sinon l image fixe, sinon la forme de secours.
+static func body_of(enemy: Node2D) -> CanvasItem:
+	if enemy == null or not is_instance_valid(enemy):
+		return null
 	var body: CanvasItem = enemy.get_node_or_null("Anim") as CanvasItem
 	if body == null or not body.visible:
 		body = enemy.get_node_or_null("Static") as CanvasItem
 	if body == null:
 		body = enemy.get_node_or_null("Body") as CanvasItem
+	return body
+
+
+## --- VAGUE 10 (chantier A4) : retour de coup, morts animees, images fixes ---
+
+## Teinte de REPOS d un corps, memorisee le temps d un flash.
+##
+## LE DEFAUT QUE CECI REPARE. Le flash relisait `body.modulate` comme teinte de
+## base. Or un second coup qui tombe pendant le flash du premier (moins de 0,19 s :
+## pluie de meteores, eclair, Combustion, zone + projectile) tue le premier tween
+## AU MILIEU, quand la teinte vaut encore ~3 : le second flash prenait ce blanc
+## pour la base et y RETOURNAIT. Le monstre restait blanc incandescent pour le
+## reste du combat. On garde donc la vraie base en meta tant qu un flash court,
+## et on ne la relit que lorsqu aucun flash n est en cours.
+const META_FLASH_BASE := &"fx_flash_base"
+const META_SQUASH_BASE := &"fx_squash_base"
+const META_SQUASH_LAST := &"fx_squash_last"
+const META_RECOIL_TW := &"fx_recoil_tween"
+
+
+## Le corps a-t-il besoin du retour de coup GENERIQUE ? Oui quand la feuille n a
+## pas de pose de douleur a elle (45 monstres sur 86 a la vague 10) : sans cela,
+## seul un flash de 0,2 s disait le coup, et sur un fond clair il ne se voyait pas.
+static func needs_generic_hurt(body: CanvasItem) -> bool:
+	if body is AnimatedSprite2D:
+		var sf: SpriteFrames = (body as AnimatedSprite2D).sprite_frames
+		return sf == null or not sf.has_animation(&"hurt")
+	return true
+
+
+## Flash sur un monstre touche (teinte, pas dessin). Blanc quand la feuille joue
+## sa propre douleur ; chaud (blanc rose) et accompagne d un recul quand elle
+## n en a pas.
+static func hit_flash(enemy: Node2D) -> void:
+	if not enabled() or enemy == null or not is_instance_valid(enemy):
+		return
+	var body: CanvasItem = body_of(enemy)
 	if body == null:
 		return
 	if enemy.has_method("reset_flash"):
 		enemy.reset_flash()
 	var base: Color = body.modulate
+	if body.has_meta(META_FLASH_BASE):
+		base = body.get_meta(META_FLASH_BASE)
+	body.set_meta(META_FLASH_BASE, base)
+	var generique: bool = needs_generic_hurt(body)
+	var pic: Color = Color(3.2, 1.8, 1.6, base.a) if generique else Color(4.0, 4.0, 4.0, base.a)
 	var tw: Tween = enemy.create_tween()
-	tw.tween_property(body, "modulate", Color(4.0, 4.0, 4.0, base.a), 0.05)
-	tw.tween_property(body, "modulate", base, 0.14)
+	tw.tween_property(body, "modulate", pic, 0.05)
+	tw.tween_property(body, "modulate", base, 0.18 if generique else 0.14)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(body):
+			body.remove_meta(META_FLASH_BASE))
 	if enemy.has_method("set_flash_tween"):
 		enemy.set_flash_tween(tw)
+	if generique and body is Node2D:
+		hurt_recoil(body as Node2D)
 
 
-## Mort d un monstre : explosion du pack, proportionnee a sa taille.
-## Trois paliers : les gros monstres meurent avec `boom_hd` (cases de 160 px), qui
-## tient l agrandissement la ou `explosion_e` (192 px, mais 100 % de case) pixelisait.
-static func death(parent: Node2D, at: Vector2, radius: float) -> void:
-	var sheet: String = "explosion_d"
+## RETOUR DE COUP GENERIQUE : le corps est ECRASE (plus large, plus bas), RECULE
+## vers le haut — loin du mage, d ou vient le sort — et penche, puis revient.
+## 0,18 s : lisible a 100 %, et encore perceptible a 500 % ou les coups pleuvent.
+##
+## L echelle du corps n appartient pas a Fx : Enemy la recalcule (gobage, boss
+## morcele qui maigrit a chaque partie perdue, et ce DANS le coup qui declenche
+## ce recul). L ecrasement est donc applique comme un FACTEUR sur une base qu on
+## relit a chaque pas : si quelqu un d autre a change l echelle entre deux pas,
+## sa valeur devient la nouvelle base. Ni derive, ni retour a une taille perimee.
+const HURT_TIME: float = 0.18
+const HURT_SQUASH: Vector2 = Vector2(0.12, -0.14)
+const HURT_RECOIL_PX: float = 14.0
+const HURT_TILT: float = 0.10
+
+
+static func hurt_recoil(body: Node2D) -> void:
+	if body == null or not is_instance_valid(body):
+		return
+	# Deux tweens (l ecrasement court sur toute la duree, le recul a deux
+	# temps) : un coup qui tombe pendant le precedent les arrete tous les deux.
+	var prev: Variant = body.get_meta(META_RECOIL_TW, [])
+	if prev is Array:
+		for t in prev:
+			if t is Tween and (t as Tween).is_valid():
+				(t as Tween).kill()
+	# Base de l ecrasement : celle du coup precedent s il a ete interrompu.
+	var base: Vector2 = body.scale
+	if body.has_meta(META_SQUASH_LAST) and body.scale.is_equal_approx(body.get_meta(META_SQUASH_LAST)):
+		base = body.get_meta(META_SQUASH_BASE, body.scale)
+	body.set_meta(META_SQUASH_BASE, base)
+	# LAST = l echelle REELLE du moment (peut-etre encore ecrasee par le coup
+	# interrompu) : sinon le premier pas prendrait cet ecrasement pour un recalage
+	# d Enemy et en ferait la nouvelle base — le corps resterait ecrase.
+	body.set_meta(META_SQUASH_LAST, body.scale)
+	var echelle: float = maxf(absf(base.y), 0.01)
+	var recul := Vector2(0.0, -HURT_RECOIL_PX / echelle)
+	var penche: float = HURT_TILT
+	if body is AnimatedSprite2D and (body as AnimatedSprite2D).flip_h:
+		penche = -HURT_TILT
+	var ecrase: Tween = body.create_tween()
+	ecrase.tween_method(func(t: float) -> void: _squash_step(t, body), 0.0, 1.0, HURT_TIME)
+	var bouge: Tween = body.create_tween().set_parallel(true)
+	bouge.tween_property(body, "offset", recul, HURT_TIME * 0.3)
+	bouge.tween_property(body, "rotation", penche, HURT_TIME * 0.3)
+	bouge.chain().tween_property(body, "offset", Vector2.ZERO, HURT_TIME * 0.7) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	bouge.tween_property(body, "rotation", 0.0, HURT_TIME * 0.7)
+	body.set_meta(META_RECOIL_TW, [ecrase, bouge])
+
+
+## Facteur d ecrasement a l instant t (0 = coup, 1 = repos). Statique et pur :
+## le test verifie qu il part ecrase et revient EXACTEMENT a 1.
+static func squash_factor(t: float) -> Vector2:
+	var k: float = (1.0 - clampf(t, 0.0, 1.0))
+	k *= k
+	return Vector2(1.0 + HURT_SQUASH.x * k, 1.0 + HURT_SQUASH.y * k)
+
+
+static func _squash_step(t: float, body: Node2D) -> void:
+	if body == null or not is_instance_valid(body):
+		return
+	var base: Vector2 = body.get_meta(META_SQUASH_BASE, body.scale)
+	var dernier: Vector2 = body.get_meta(META_SQUASH_LAST, body.scale)
+	if not body.scale.is_equal_approx(dernier):
+		# Enemy a recale l echelle pendant le recul : c est la nouvelle base.
+		base = body.scale
+		body.set_meta(META_SQUASH_BASE, base)
+	var v: Vector2 = base * squash_factor(t)
+	body.scale = v
+	body.set_meta(META_SQUASH_LAST, v)
+
+
+## Mort d un monstre.
+##
+## Jusqu a la vague 10, TOUTE mort etait la meme explosion, alors que 37 feuilles
+## du catalogue (57 monstres sur 86) portent une pose de mort dessinee (le squelette qui s effondre,
+## la gelee qui fond, le golem qui se disloque) jamais jouee. Maintenant :
+##   - la feuille a une pose `death` : un CADAVRE la joue a la place du monstre,
+##     avec une bouffee de poussiere au sol ; un boss la joue PUIS explose ;
+##   - elle n en a pas : l explosion historique, et l image du monstre
+##     s affaisse dessous au lieu de disparaitre d un coup.
+##
+## La logique n attend RIEN : le monstre est deja mort pour le jeu (retire de la
+## liste, XP, division, objectifs) et libere a la fin de l image. Le cadavre est
+## une simple copie de son dessin, enfant du champ de bataille, sous les vivants
+## (z -1), qui ne se cible pas, ne bloque rien et se libere seul.
+const DEATH_ANIM_MAX_S: float = 1.1
+const DEATH_HOLD_S: float = 0.15
+const DEATH_FADE_S: float = 0.3
+const COLLAPSE_S: float = 0.28
+## Au-dela, une vague dense a 500 % empilerait des dizaines de copies sur un
+## telephone : le surplus meurt a l ancienne (explosion seule).
+const DEATH_CORPSE_MAX: int = 24
+static var _corpses: int = 0
+
+
+## L explosion historique, en trois paliers : les gros monstres meurent avec
+## `boom_hd` (cases de 160 px), qui tient l agrandissement la ou `explosion_e`
+## (192 px, mais 100 % de case) pixelisait.
+static func explosion_sheet(radius: float) -> String:
 	if radius >= 70.0:
-		sheet = "boom_hd"
-	elif radius >= 45.0:
-		sheet = "explosion_e"
-	sprite(parent, sheet, at, radius * 3.2, false)
+		return "boom_hd"
+	if radius >= 45.0:
+		return "explosion_e"
+	return "explosion_d"
+
+
+## Ce que montre une mort. Statique et pur : le test le verifie sans ecran.
+## corpse : "anim" (pose de mort jouee) ou "collapse" (l image s affaisse) ;
+## sheet / size : l effet joue au point de mort ; after_anim : l effet attend la
+## fin de la pose (le boss s effondre, PUIS explose).
+static func death_plan(has_death_anim: bool, radius: float, is_boss: bool) -> Dictionary:
+	if not has_death_anim:
+		return {"corpse": "collapse", "sheet": explosion_sheet(radius),
+			"size": radius * 3.2, "after_anim": false}
+	if is_boss:
+		return {"corpse": "anim", "sheet": explosion_sheet(radius),
+			"size": radius * 3.2, "after_anim": true}
+	return {"corpse": "anim", "sheet": "dust", "size": radius * 1.8, "after_anim": false}
+
+
+static func has_death_anim(body: CanvasItem) -> bool:
+	return body is AnimatedSprite2D and (body as AnimatedSprite2D).sprite_frames != null \
+		and (body as AnimatedSprite2D).sprite_frames.has_animation(&"death")
+
+
+## `enemy` (facultatif) : le monstre qui meurt, pour copier son dessin. Sans lui,
+## l explosion seule, comme avant.
+static func death(parent: Node2D, at: Vector2, radius: float, enemy: Node2D = null) -> void:
+	var body: CanvasItem = body_of(enemy)
+	var boss: bool = false
+	if enemy != null and is_instance_valid(enemy):
+		var def: Variant = enemy.get("definition")
+		boss = def is EnemyDef and (def as EnemyDef).is_boss()
+	var plan: Dictionary = death_plan(has_death_anim(body), radius, boss)
+	var duree: float = -1.0
+	if enabled() and parent != null and body != null and _corpses < DEATH_CORPSE_MAX:
+		duree = _corpse(parent, at, body, enemy, plan["corpse"] == "anim")
+	if duree < 0.0 and plan["corpse"] == "anim":
+		# Pas de cadavre (plafond, headless) : on retombe sur l explosion.
+		plan = death_plan(false, radius, boss)
+	if plan["after_anim"] and duree > 0.0 and parent != null:
+		var tw: Tween = parent.create_tween()
+		tw.tween_interval(duree)
+		tw.tween_callback(func() -> void:
+			if is_instance_valid(parent):
+				sprite(parent, plan["sheet"], at, plan["size"], false))
+	else:
+		sprite(parent, plan["sheet"], at, plan["size"], false)
+
+
+## Teinte de repos d un corps : jamais celle d un flash en cours.
+static func rest_tint(body: CanvasItem, enemy: Node2D) -> Color:
+	var m: Color = body.modulate
+	if body.has_meta(META_FLASH_BASE):
+		m = body.get_meta(META_FLASH_BASE)
+	elif m.r > 1.01 or m.g > 1.01 or m.b > 1.01:
+		var def: Variant = enemy.get("definition") if enemy != null else null
+		m = AnimCatalog.modulate_for((def as EnemyDef).id) if def is EnemyDef else Color.WHITE
+	if enemy != null and is_instance_valid(enemy):
+		m.a *= clampf(enemy.modulate.a, 0.0, 1.0)
+	return m
+
+
+## Pose le cadavre et rend la duree de sa pose (0 pour un affaissement), ou -1
+## s il n a pas pu etre pose.
+static func _corpse(parent: Node2D, at: Vector2, body: CanvasItem, enemy: Node2D,
+		joue_la_mort: bool) -> float:
+	var src: Node2D = body as Node2D
+	if src == null:
+		return -1.0
+	var c: Node2D = null
+	var duree: float = 0.0
+	if joue_la_mort:
+		var a := AnimatedSprite2D.new()
+		var sf: SpriteFrames = (body as AnimatedSprite2D).sprite_frames
+		a.sprite_frames = sf
+		a.flip_h = (body as AnimatedSprite2D).flip_h
+		var n: int = sf.get_frame_count(&"death")
+		var naturelle: float = float(n) / maxf(float(sf.get_animation_speed(&"death")), 1.0)
+		# Une pose de mort lente (gorgone : 3 images a 3 i/s) est ACCELEREE pour
+		# tenir en DEATH_ANIM_MAX_S : a 500 %, un cadavre qui traine une seconde
+		# et demie encombre l ecran pendant que la vague suivante descend.
+		a.speed_scale = maxf(1.0, naturelle / DEATH_ANIM_MAX_S)
+		duree = naturelle / a.speed_scale
+		c = a
+	else:
+		var tex: Texture2D = null
+		if body is AnimatedSprite2D:
+			var s: AnimatedSprite2D = body as AnimatedSprite2D
+			if s.sprite_frames != null and s.sprite_frames.has_animation(s.animation):
+				tex = s.sprite_frames.get_frame_texture(s.animation, s.frame)
+		elif body is Sprite2D:
+			tex = (body as Sprite2D).texture
+		if tex == null:
+			return -1.0
+		var sp := Sprite2D.new()
+		sp.texture = tex
+		if body is AnimatedSprite2D:
+			sp.flip_h = (body as AnimatedSprite2D).flip_h
+		c = sp
+	# L echelle de REPOS, pas celle d un ecrasement en cours.
+	var echelle: Vector2 = src.scale
+	if src.has_meta(META_SQUASH_LAST) and src.scale.is_equal_approx(src.get_meta(META_SQUASH_LAST)):
+		echelle = src.get_meta(META_SQUASH_BASE, src.scale)
+	c.scale = echelle
+	c.position = at + src.position
+	c.modulate = rest_tint(body, enemy)
+	c.z_index = -1
+	parent.add_child(c)
+	_corpses += 1
+	c.tree_exiting.connect(func() -> void: _corpse_gone())
+	var tw: Tween = c.create_tween()
+	if joue_la_mort:
+		(c as AnimatedSprite2D).play(&"death")
+		tw.tween_interval(duree + DEATH_HOLD_S)
+	else:
+		# L affaissement : l image s ecrase vers le sol et s eteint SOUS
+		# l explosion, au lieu de disparaitre d une image a l autre.
+		var haut: float = (c as Sprite2D).texture.get_height() * absf(echelle.y)
+		tw.set_parallel(true)
+		tw.tween_property(c, "scale", Vector2(echelle.x * 1.25, echelle.y * 0.15), COLLAPSE_S)
+		tw.tween_property(c, "position:y", c.position.y + haut * 0.35, COLLAPSE_S)
+		# Retour au sequentiel : le fondu puis la liberation viennent APRES.
+		tw.set_parallel(false)
+	tw.tween_property(c, "modulate:a", 0.0, DEATH_FADE_S if joue_la_mort else 0.08)
+	tw.tween_callback(c.queue_free)
+	return duree
+
+
+static func _corpse_gone() -> void:
+	_corpses = maxi(0, _corpses - 1)
+
+
+## Cadavres a l ecran (lu par la vitrine et les tests).
+static func corpse_count() -> int:
+	return _corpses
+
+
+## IMAGE FIXE QUI VIT (Ymoa, son Echo, Totem ancien, Gardien-totem) : la tour du
+## pack n a aucune animation, et a cote de monstres qui respirent elle se lisait
+## comme un decor pose sur le terrain. Elle FLOTTE (quelques pixels, lentement),
+## sa pierre s ILLUMINE au meme rythme, un anneau de runes PULSE a son pied, et
+## son aura (si elle en porte une) respire en transparence.
+##
+## Rien de cela ne touche l echelle (Enemy la possede) ni `modulate` (le flash la
+## possede) : position, `self_modulate` et un enfant a part.
+const IDLE_BOB_PX: float = 7.0
+const IDLE_PERIOD: float = 2.6
+const IDLE_GLOW := Color(1.18, 1.12, 0.96)
+const IDLE_RUNE_TINT := Color(1.0, 0.85, 0.45, 0.75)
+
+
+static func idle_motion(enemy: Node2D, body: Node2D) -> void:
+	if not enabled() or enemy == null or body == null:
+		return
+	var bob: Tween = body.create_tween().set_loops()
+	bob.tween_property(body, "position:y", -IDLE_BOB_PX, IDLE_PERIOD * 0.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob.tween_property(body, "position:y", IDLE_BOB_PX * 0.4, IDLE_PERIOD * 0.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var lueur: Tween = body.create_tween().set_loops()
+	lueur.tween_property(body, "self_modulate", IDLE_GLOW, IDLE_PERIOD * 0.5)
+	lueur.tween_property(body, "self_modulate", Color.WHITE, IDLE_PERIOD * 0.5)
+	# `halo_ring` : anneau blanc a epines, joue par AUCUNE carte (le joueur ne
+	# doit pas croire qu un de ses sorts est pose sous le totem). Il se teinte.
+	var r: float = 40.0
+	if enemy.has_method("visual_radius"):
+		r = float(enemy.call("visual_radius"))
+	var rune: AnimatedSprite2D = sprite(enemy, "halo_ring", Vector2(0.0, r * 0.75), r * 2.0,
+		true, IDLE_RUNE_TINT)
+	if rune != null:
+		rune.name = "IdleRune"
+		rune.z_index = -1
+	# L aura est posee APRES l image par Enemy._setup_visual : on la cherche a
+	# l image suivante, par un tween LIE au monstre — s il meurt avant, le tween
+	# meurt avec lui (une connexion a process_frame appelait alors un lambda dont
+	# la capture etait liberee : erreur moteur vue a l etage visual).
+	var e: Variant = enemy
+	var plus_tard: Tween = enemy.create_tween()
+	plus_tard.tween_callback(func() -> void: _pulse_aura(e))
+
+
+## Parametre NON type : le monstre peut etre libere avant l image suivante, et un
+## parametre type refuse un objet libere (gotchas : lambda type).
+static func _pulse_aura(enemy: Variant) -> void:
+	if enemy == null or not is_instance_valid(enemy):
+		return
+	var aura: Variant = (enemy as Node).get("_aura_fx")
+	if not (aura is CanvasItem) or not is_instance_valid(aura):
+		return
+	var a: CanvasItem = aura as CanvasItem
+	# DERRIERE la tour : vu sur la capture, l hexagone vert pose apres l image la
+	# recouvrait entierement et la tour se lisait comme une tache verte. L aura
+	# est un champ au sol ; les monstres qu elle protege passent devant elle.
+	a.z_index = -1
+	var tw: Tween = a.create_tween().set_loops()
+	tw.tween_property(a, "self_modulate:a", 0.5, IDLE_PERIOD * 0.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tw.tween_property(a, "self_modulate:a", 1.0, IDLE_PERIOD * 0.5) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Aura sur le mage : sorts qui agissent sur soi.

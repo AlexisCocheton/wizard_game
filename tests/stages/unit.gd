@@ -77,6 +77,8 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_tester_field_commit.gd",
 	# Vague 9 : compte a rebours de la vague qui traine dans le HUD.
 	"res://tests/unit/test_overtime_countdown.gd",
+	# Vague 10 (A4) : sons par famille, objet, sort, musique par acte, voix, morts.
+	"res://tests/unit/test_audio_w10.gd",
 ]
 
 var _total_checks: int = 0

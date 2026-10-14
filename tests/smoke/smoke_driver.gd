@@ -297,6 +297,7 @@ func _run_all() -> void:
 	# Garde-robe de la vague 8 (chapeaux, apprentis, tours, onglet) : captures.
 	if _visual:
 		await WardrobeShowcase.new().run(self)
+	if _visual: await MonsterFeedbackShowcase.new().run(self)  # A4 W10 : morts, coups, tours
 	await _check_massacre_deck()
 	# Le DEFILEMENT AU DOIGT sur chaque ecran qui deborde (retour du co-auteur :
 	# les reglages ne defilaient pas sur son telephone).
