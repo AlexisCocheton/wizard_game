@@ -36,7 +36,11 @@ static func wall_cells(spec: EffectSpec, bf: Node, at: Vector2) -> Array[Vector2
 static func placement_allowed(card: SpellCard, point: Vector2, bf: Node) -> bool:
 	if card == null or bf == null or point == Vector2.INF:
 		return true
-	for spec in card.effects:
+	# VAGUE 10 A1 : les effets TELS QU ILS PARTIRONT (RunState.cast_specs), pas
+	# ceux du .tres. Une majeure peut allonger un mur (« mur geant ») ou en
+	# ajouter un : verifier la version du .tres accepterait a la visee un mur que
+	# la resolution refuserait, carte payee pour rien.
+	for spec in RunState.cast_specs(card):
 		if spec == null:
 			continue
 		if spec.key == &"build_wall":
@@ -76,6 +80,7 @@ static func plant(spec: EffectSpec, ctx: CastContext, taunt_radius: float,
 		taunt_radius, 0.0, 0.0, Fx.card_sheet(ctx.card), col, _tags(ctx))
 	if p == null:
 		return null
+	EffectHandlers.w10_unbreakable(p, spec)  # VAGUE 10 A1 : objet incassable
 	if zone_radius > 0.0:
 		# Duree de la zone = duree de l objet : INF pour un objet permanent. Elle
 		# ne meurt de toute facon qu avec lui (`_destroy_prop`).
@@ -121,14 +126,19 @@ class PierceLine extends EffectHandler:
 		var max_targets: int = int(spec.get_param(&"max_targets", 99))
 		var origin: Vector2 = ctx.caster_position()
 		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
-		Fx.beam(ctx.battlefield, origin, ctx.direction, spec.radius, col)
+		# VAGUE 10 A1 : une SECONDE LIGNE (majeure « duplicate ») part avec un angle
+		# et / ou un decalage lateral. Lus ici, sur la spec, et non sur le
+		# contexte : les deux lignes partent du meme lancer, donc du meme contexte.
+		var dir: Vector2 = EffectHandlers.w10_line_direction(spec, ctx.direction)
+		origin += EffectHandlers.w10_line_offset(spec, dir)
+		Fx.beam(ctx.battlefield, origin, dir, spec.radius, col)
 		# La fleche du pack est la meme pour tous les sorts en ligne. L eclat de
 		# DEPART, lui, porte la feuille de la carte : c est ce qui distingue la
 		# Fleche percante de la Faille temporelle, qui partent du meme point dans
 		# la meme direction.
 		Fx.impact(ctx.battlefield, origin, col, maxf(spec.radius, 60.0) * 0.5,
 			Fx.card_sheet(ctx.card))
-		var hit: Array = ctx.battlefield.enemies_in_line(origin, ctx.direction, spec.radius, max_targets)
+		var hit: Array = ctx.battlefield.enemies_in_line(origin, dir, spec.radius, max_targets)
 		for e in hit:
 			ctx.battlefield.damage_enemy(e, spec.magnitude * ctx.damage_mult, ctx.card)
 
@@ -142,11 +152,13 @@ class GroundZone extends EffectHandler:
 	func apply(spec: EffectSpec, ctx: CastContext) -> void:
 		if ctx.battlefield == null:
 			return
-		ctx.battlefield.spawn_ground_zone(
+		var z: Variant = ctx.battlefield.spawn_ground_zone(
 			ctx.target_position, spec.radius, spec.duration,
 			spec.magnitude * ctx.damage_mult,
 			float(spec.get_param(&"slow_pct", 0.0)), ctx.card,
 			float(spec.get_param(&"vuln_mult", 1.0)))
+		# VAGUE 10 A1 : zone qui grandit puis decroit, residu apres la sortie.
+		EffectHandlers.w10_zone_extras(z, spec, ctx)
 
 
 ## Degats immediats a chaque monstre de la zone, PROPORTIONNELS a leur nombre :
@@ -319,15 +331,21 @@ class BuildWall extends EffectHandler:
 		if not ctx.battlefield.can_block(EffectHandlers.wall_cells(spec, ctx.battlefield,
 				ctx.target_position)):
 			return
+		# VAGUE 10 A1 : le nombre de murs AVANT la pose, pour reconnaitre le mur
+		# que cette pose ajoute (une pose refusee par la grille n en ajoute aucun).
+		var avant: int = ctx.battlefield.wall_count() if ctx.battlefield.has_method("wall_count") else -1
 		# Mur PERMANENT : il ne s efface pas au bout de N secondes, il tombe quand
 		# les monstres enfermes l ont casse. Meme cle d effet, meme carte-donnee :
 		# c est un parametre, pas un second handler.
 		if bool(spec.get_param(&"permanent", false)):
 			ctx.battlefield.spawn_breakable_wall(ctx.target_position, half, thickness,
 				float(spec.get_param(&"wall_hp", 80.0)), EffectHandlers._tags(ctx))
-			return
-		ctx.battlefield.spawn_wall(ctx.target_position, half, spec.duration, thickness,
-			EffectHandlers._tags(ctx))
+		else:
+			ctx.battlefield.spawn_wall(ctx.target_position, half, spec.duration, thickness,
+				EffectHandlers._tags(ctx))
+		# VAGUE 10 A1 : mur qui arrete aussi les VOLANTS, mur incassable.
+		if avant >= 0 and ctx.battlefield.has_method("w10_flag_new_wall"):
+			ctx.battlefield.w10_flag_new_wall(avant, spec)
 
 
 # --- Verbes demandes par le testeur ---
@@ -683,3 +701,186 @@ class WaterFlood extends EffectHandler:
 		ctx.battlefield.spawn_prop(TerrainProp.Kind.WATER, ctx.target_position,
 			spec.duration, 0.0, 0.0, spec.magnitude, spec.radius,
 			Fx.card_sheet(ctx.card), Fx.COL_FROST, EffectHandlers._tags(ctx))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — nouveaux verbes et parametres des MAJEURES
+#
+# Six verbes demandes par le co-auteur (vent du sud, marque electrique, pluie
+# abondante, sable mouvant, jet en I, « monte une carte de ta main ») et les
+# parametres que les ameliorations majeures posent sur les effets existants
+# (seconde ligne de fleches, zone qui respire, residu, mur anti-volants, objet
+# incassable). Les REGLES vivent dans Battlefield (section VAGUE 10) : un
+# handler ne fait que lire la spec et la transmettre.
+# =====================================================================
+
+
+## Direction d une ligne : celle du lancer, tournee de `angle_deg` (majeure
+## « seconde volee »). Sans param, la direction du lancer telle quelle.
+static func w10_line_direction(spec: EffectSpec, base_dir: Vector2) -> Vector2:
+	var d: Vector2 = base_dir.normalized() if base_dir.length() > 0.001 else Vector2.UP
+	var a: float = float(spec.get_param(&"angle_deg", 0.0))
+	return d.rotated(deg_to_rad(a)) if a != 0.0 else d
+
+
+## Decalage LATERAL de l origine d une ligne (`offset_px`, perpendiculaire a sa
+## direction) : deux lignes paralleles plutot qu un eventail.
+static func w10_line_offset(spec: EffectSpec, dir: Vector2) -> Vector2:
+	var o: float = float(spec.get_param(&"offset_px", 0.0))
+	return dir.orthogonal() * o if o != 0.0 else Vector2.ZERO
+
+
+## Parametres de zone poses par une majeure, recopies dans le dictionnaire de la
+## zone que Battlefield fait vivre :
+##   grow_start, grow_peak : la zone part a `radius x start`, culmine a
+##     `radius x peak` a mi-vie, puis revient (Battlefield._w10_zone_tick) ;
+##   residue_dps, residue_duration : qui a ete dans la zone garde un degat
+##     CONTINU apres en etre sorti.
+## `z` est un Variant : un champ de bataille factice (tests) peut ne rien rendre.
+static func w10_zone_extras(z: Variant, spec: EffectSpec, ctx: CastContext) -> void:
+	if not (z is Dictionary) or spec == null:
+		return
+	var zd: Dictionary = z
+	var pic: float = float(spec.get_param(&"grow_peak", 0.0))
+	if pic > 0.0:
+		zd["w10_base_r"] = float(zd.get("radius", spec.radius))
+		zd["w10_grow_start"] = maxf(float(spec.get_param(&"grow_start", 0.5)), 0.05)
+		zd["w10_grow_peak"] = pic
+		zd["w10_life"] = maxf(float(zd.get("time", spec.duration)), 0.1)
+		# Le PREMIER rayon est deja le bon : sans cela la zone mordrait une image a
+		# son rayon plein avant de se retracter a son depart.
+		zd["radius"] = float(zd["w10_base_r"]) * float(zd["w10_grow_start"])
+	var residu: float = float(spec.get_param(&"residue_dps", 0.0))
+	if residu > 0.0:
+		zd["w10_residue_dps"] = residu * (ctx.damage_mult if ctx != null else 1.0)
+		zd["w10_residue_time"] = maxf(float(spec.get_param(&"residue_duration", 2.0)), 0.1)
+
+
+## OBJET INCASSABLE (majeure) : `unbreakable` sur une pose de terrain. Ni les
+## coups des monstres (plus de PV) ni le Briseur (meta sur l ancre) ne le font
+## tomber ; seule sa DUREE, que la majeure borne, le retire.
+static func w10_unbreakable(p: TerrainProp, spec: EffectSpec) -> void:
+	if p == null or spec == null or not bool(spec.get_param(&"unbreakable", false)):
+		return
+	p.hp = 0.0
+	p.max_hp = 0.0
+	p.set_meta(&"w10_unbreakable", true)
+	if p.anchor != null and is_instance_valid(p.anchor):
+		p.anchor.set_meta(&"w10_unbreakable", true)
+
+
+## VENT DU SUD : sur TOUT le terrain, pendant `duration` s de monde, les
+## monstres plus rapides que la normale reviennent a la normale, ceux qui
+## zigzaguent, ondulent, foncent par a-coups ou sautent marchent droit, et les
+## VOLANTS restent sur place. Tout passe par la resistance au VENT de chaque
+## monstre (Enemy.control_factor) : un immunise n est pas touche, un resistant
+## l est en partie.
+## params : normal_speed (px/s de base, GameConfig.WIND_NORMAL_SPEED par defaut).
+class GlobalWind extends EffectHandler:
+	func get_key() -> StringName:
+		return &"global_wind"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		ctx.battlefield.w10_apply_wind(maxf(spec.duration, 0.1),
+			float(spec.get_param(&"normal_speed", GameConfig.WIND_NORMAL_SPEED)),
+			EffectHandlers._tags(ctx), Fx.card_sheet(ctx.card))
+
+
+## MARQUE ELECTRIQUE : la cible encaisse `magnitude` degats et porte la marque.
+## Quand elle MEURT (de quoi que ce soit), la marque saute sur le monstre le
+## plus proche a moins de `jump_range` px en infligeant `decay` degat de moins,
+## et ainsi de suite jusqu a zero. Un monstre peut porter plusieurs marques.
+## params : jump_range (GameConfig.MARK_JUMP_RANGE), marks_per_death (1 : nombre
+## de marques que CHAQUE marque transmet a la mort, vers autant de voisins
+## distincts), decay (1).
+class ElectricMark extends EffectHandler:
+	func get_key() -> StringName:
+		return &"electric_mark"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null or ctx.target_enemy == null:
+			return
+		var col: Color = Fx.color_for(EffectHandlers._tags(ctx))
+		var to: Vector2 = (ctx.target_enemy as Node2D).position
+		Fx.projectile(ctx.battlefield, ctx.caster_position(), to, col, Fx.card_sheet(ctx.card))
+		ctx.battlefield.w10_mark_enemy(ctx.target_enemy, spec.magnitude * ctx.damage_mult,
+			ctx.card,
+			float(spec.get_param(&"jump_range", GameConfig.MARK_JUMP_RANGE)),
+			int(spec.get_param(&"marks_per_death", 1)),
+			float(spec.get_param(&"decay", 1.0)))
+
+
+## PLUIE ABONDANTE : sur tout le terrain, pendant `duration` s de monde,
+## `magnitude` degats (a l element de la carte, l EAU) toutes les `interval` s a
+## TOUS les monstres. Degat CONTINU au sens de DEC-054 : il suit les regles des
+## degats (resistances, passifs) mais n est pas un coup (pas de compteur use,
+## pas de riposte, eclair et son bornes).
+## params : interval (GameConfig.RAIN_INTERVAL).
+class GlobalRain extends EffectHandler:
+	func get_key() -> StringName:
+		return &"global_rain"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		ctx.battlefield.w10_start_rain(maxf(spec.duration, 0.1),
+			spec.magnitude * ctx.damage_mult,
+			maxf(float(spec.get_param(&"interval", GameConfig.RAIN_INTERVAL)), 0.1),
+			ctx.card)
+
+
+## SABLE MOUVANT : une zone qui ralentit de `slow_pct` pendant `duration` s ; a
+## la FIN, chaque monstre encore dedans encaisse `magnitude` degats (un coup).
+## C est une zone au sol ordinaire (ralentissement, resistance, vulnerabilite)
+## a qui Battlefield fait payer la sortie tardive (Battlefield._w10_zone_end).
+class Quicksand extends EffectHandler:
+	func get_key() -> StringName:
+		return &"quicksand"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		var z: Variant = ctx.battlefield.spawn_ground_zone(ctx.target_position,
+			spec.radius, spec.duration, 0.0,
+			float(spec.get_param(&"slow_pct", 0.0)), ctx.card)
+		if z is Dictionary:
+			(z as Dictionary)["w10_end_damage"] = spec.magnitude * ctx.damage_mult
+		EffectHandlers.w10_zone_extras(z, spec, ctx)
+
+
+## JET D EAU EN I : une bande FINE (demi-largeur `radius`) et HAUTE (`length`)
+## centree sur le point vise. Chaque monstre dedans est REPOUSSE vers le haut de
+## `push` px (moins s il resiste a l element) et encaisse `magnitude` degats par
+## tranche de GameConfig.JET_DAMAGE_STEP_PX px REELLEMENT parcourus : un monstre
+## colle a la ligne d apparition, qui ne recule presque pas, n encaisse presque
+## rien.
+## params : length (700), push (260).
+class WaterJet extends EffectHandler:
+	func get_key() -> StringName:
+		return &"water_jet"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield == null:
+			return
+		ctx.battlefield.w10_water_jet(ctx.target_position, maxf(spec.radius, 20.0),
+			float(spec.get_param(&"length", 700.0)),
+			float(spec.get_param(&"push", 260.0)),
+			spec.magnitude * ctx.damage_mult, ctx.card)
+
+
+## « MONTE D UN NIVEAU UNE CARTE DE TA MAIN » (carte d XP, majeure de la
+## Concentration) : le joueur choisit un sort de sa main, qui recoit l XP qui lui
+## manque pour sa PROCHAINE maturation (RunState.grant_card_xp : meme chemin que
+## MEDITER). Le choix passe par un ecran (GameController), tranche par AutoPick
+## quand personne ne peut toucher l ecran.
+## params : count (1 : nombre de cartes a faire murir).
+class HandCardLevel extends EffectHandler:
+	func get_key() -> StringName:
+		return &"hand_card_level"
+
+	func apply(spec: EffectSpec, ctx: CastContext) -> void:
+		if ctx.battlefield != null:
+			Fx.self_aura(ctx.battlefield, Fx.COL_ARCANE, Fx.card_sheet(ctx.card))
+		RunState.request_hand_level(maxi(int(spec.get_param(&"count", 1)), 1))

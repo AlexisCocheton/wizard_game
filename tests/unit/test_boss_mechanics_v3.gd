@@ -98,7 +98,7 @@ func run() -> void:
 	_test_cameleon_change_et_boucle()
 	_test_voleur_vole_puis_lance_contre_le_mage()
 	_test_voleur_tue_a_temps_rend_la_carte()
-	_test_voleur_laisse_toujours_une_carte_jouable()
+	_test_voleur_suit_la_regle_commune()
 	_test_voleur_qui_quitte_le_terrain_rend_la_carte()
 	_test_deux_voleurs_rendent_chacun_leur_exemplaire()
 	_test_deux_voleurs_lancent_chacun_leur_exemplaire()
@@ -411,28 +411,31 @@ func _test_voleur_tue_a_temps_rend_la_carte() -> void:
 	ok(RunState.play_card(longue), "elle redevient jouable")
 
 
-## Le plafond de la main vaut pour le voleur comme pour la gorgone : il reste
-## TOUJOURS une carte jouable, meme quand les deux se cumulent.
-func _test_voleur_laisse_toujours_une_carte_jouable() -> void:
+## Le plafond COMMUN (vague 10, regle du co-auteur) vaut pour le voleur comme
+## pour la gorgone : une main d UNE carte se vole, et voleur + gorgone ensemble
+## ne prennent jamais la 6e carte d une main pleine — ni plus, ni moins.
+func _test_voleur_suit_la_regle_commune() -> void:
 	_fresh()
 	var d := _voleur("voleur3")
 	RunState.hand.clear()
-	for i in RunState.MIN_PLAYABLE_CARDS:
-		RunState.hand.append(_card("seule%d" % i, 2.0))
+	RunState.hand.append(_card("seule", 2.0))
 	var v: Enemy = _bf.spawn_enemy(d, 500.0, 1.0, Vector2(500.0, 300.0))
 	v.advance(d.steal_interval + DT)
-	eq(v.stolen_card(), null, "main minimale : il ne peut rien prendre")
+	ok(v.stolen_card() != null, "une seule carte en main : il la vole quand meme")
 
-	_main_de_trois()
-	v.advance(d.steal_interval + DT)
-	ok(v.stolen_card() != null, "main plus grande : il vole")
+	_fresh()
+	RunState.hand.clear()
+	for i in GameConfig.MAX_HAND_SIZE:
+		RunState.hand.append(_card("main%d" % i, 1.0 + i))
+	var v2: Enemy = _bf.spawn_enemy(_voleur("voleur3b"), 500.0, 1.0, Vector2(500.0, 300.0))
+	v2.advance(d.steal_interval + DT)
+	ok(v2.stolen_card() != null, "main pleine : il vole")
 	RunState.set_card_block_count(99)   # une gorgone enorme par-dessus
 	var jouables: int = 0
-	for c in RunState.hand:
-		if not RunState.is_card_blocked(c):
+	for i in RunState.hand.size():
+		if not RunState.is_slot_blocked(i):
 			jouables += 1
-	ok(jouables >= RunState.MIN_PLAYABLE_CARDS,
-		"voleur + gorgone : il reste %d carte(s) jouable(s)" % jouables)
+	eq(jouables, 1, "voleur + gorgone sur une main pleine : la 6e carte, et elle seule")
 
 
 ## Gobe, arrive au mage, fin de partie : un voleur qui quitte le terrain SANS

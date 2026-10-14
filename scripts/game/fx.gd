@@ -1539,3 +1539,125 @@ static func ground_crack(parent: Node2D, from: Vector2, to: Vector2) -> void:
 	tw.tween_callback(l.queue_free)
 	sprite(parent, "dust", from, 150.0, false, Color(0.85, 0.75, 0.60))
 	sprite(parent, "shatter_burst", to, 190.0, false, COL_BREAK.lightened(0.2))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — visuels des nouveaux verbes
+#
+# Rien n est dessine : des feuilles du pack (la feuille PROPRE de la carte
+# quand elle en a une, DEC-017), deplacees par des Tween. Seul le saut de la
+# marque est un trait (Fx.laser) : le trait EST l information, il dit de quel
+# mort vers quel vivant la marque est partie (DEC-015).
+# =====================================================================
+
+const W10_WEATHER_RAIN: int = 0
+const W10_WEATHER_WIND: int = 1
+## Grille de la meteo : assez de gouttes pour couvrir TOUT le terrain (la regle
+## frappe partout, le visuel doit le dire), assez peu pour rester lisible a x4.
+const W10_WEATHER_COLS: int = 5
+const W10_WEATHER_ROWS: int = 6
+const W10_WEATHER_PX: float = 72.0
+
+
+## METEO SUR TOUT LE TERRAIN (pluie, vent), jusqu a ce que Battlefield libere le
+## noeud rendu. Pluie : les gouttes TOMBENT ; vent : les rafales filent de gauche
+## a droite. Une grille decalee d une demi-case une rangee sur deux, pour qu on
+## ne lise pas un damier. La feuille notee AVANT le retour headless (le mouchard
+## de test_card_fx doit la voir).
+static func w10_weather(parent: Node2D, kind: int, sheet: String, col: Color) -> Node:
+	var feuille: String = sheet
+	if feuille == "":
+		feuille = "orb_cyan" if kind == W10_WEATHER_RAIN else "ring_expand"
+	_note(feuille)
+	if not enabled() or parent == null:
+		return null
+	var root := Node2D.new()
+	root.name = "W10Meteo"
+	root.z_index = 4
+	parent.add_child(root)
+	var largeur: float = GameConfig.BATTLEFIELD_WIDTH
+	var haut: float = GameConfig.SPAWN_LINE_Y
+	var bas: float = GameConfig.MAGE_LINE_Y
+	# La feuille PROPRE de la carte garde ses couleurs (les feuilles du pack sont
+	# deja teintees, DEC-017 : une teinte MULTIPLIE et les salirait) ; seule la
+	# feuille de repli prend la couleur de l element.
+	var teinte := Color(1.0, 1.0, 1.0, 0.65) if sheet != "" else Color(col.r, col.g, col.b, 0.55)
+	for r in W10_WEATHER_ROWS:
+		for c in W10_WEATHER_COLS:
+			var x: float = (c + 0.25 + 0.5 * (r % 2)) * largeur / W10_WEATHER_COLS
+			var y: float = haut + (r + 0.5) * (bas - haut) / W10_WEATHER_ROWS
+			var sp: AnimatedSprite2D = sprite(root, feuille, Vector2(x, y),
+				W10_WEATHER_PX, true, teinte)
+			if sp == null:
+				continue
+			var tw: Tween = sp.create_tween().set_loops()
+			if kind == W10_WEATHER_RAIN:
+				tw.tween_property(sp, "position:y", y + 110.0, 0.55).from(y - 60.0)
+			else:
+				tw.tween_property(sp, "position:x", x + 150.0, 0.75).from(x - 90.0)
+	return root
+
+
+## MARQUE ELECTRIQUE au-dessus d un monstre : la feuille de la carte en boucle et
+## la valeur de la marque en clair. Enfant du monstre : elle le suit et meurt
+## avec lui. Le chiffre est pose par w10_mark_marker_set.
+static func w10_mark_marker(enemy: Node2D, sheet: String, radius: float) -> Node:
+	_note(sheet if sheet != "" else "lightning_fork")
+	if not enabled() or enemy == null or not is_instance_valid(enemy):
+		return null
+	var root := Node2D.new()
+	root.name = "W10Marque"
+	root.z_index = 7
+	root.position = Vector2(0.0, -radius * 1.25)
+	enemy.add_child(root)
+	sprite(root, sheet if sheet != "" else "lightning_fork", Vector2.ZERO,
+		maxf(radius * 1.1, 50.0), true, Color(1.0, 1.0, 1.0, 0.9) if sheet != ""
+			else Color(COL_LIGHTNING.r, COL_LIGHTNING.g, COL_LIGHTNING.b, 0.9))
+	var l := Label.new()
+	l.name = "Valeur"
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.add_theme_font_override(&"font", UiTheme.font())
+	l.add_theme_font_size_override(&"font_size", UiTheme.FONT_SMALL)
+	l.add_theme_color_override(&"font_color", COL_LIGHTNING.lightened(0.4))
+	l.add_theme_color_override(&"font_outline_color", Color(0.08, 0.06, 0.02))
+	l.add_theme_constant_override(&"outline_size", 10)
+	l.size = Vector2(160.0, 50.0)
+	l.position = Vector2(-80.0, -70.0)
+	root.add_child(l)
+	return root
+
+
+static func w10_mark_marker_set(marker: Variant, text: String) -> void:
+	if marker == null or not (marker is Node) or not is_instance_valid(marker):
+		return
+	var l: Label = (marker as Node).get_node_or_null("Valeur") as Label
+	if l != null:
+		l.text = text
+
+
+## JET D EAU EN I : une colonne de feuilles le long de la bande, a sa LARGEUR
+## exacte (DEC-014 : le visuel d une regle est a l echelle de la regle), jouee
+## une fois du bas vers le haut — le sens du recul.
+static func w10_jet_column(parent: Node2D, center: Vector2, half_width: float,
+		length: float, sheet: String, col: Color) -> void:
+	var feuille: String = sheet if sheet != "" else "tide_waves"
+	_note(feuille)
+	if not enabled() or parent == null:
+		return
+	var cote: float = maxf(half_width * 2.0, 30.0)
+	var n: int = maxi(1, int(ceil(length / cote)))
+	var pas: float = length / float(n)
+	for i in n:
+		var y: float = center.y + length * 0.5 - pas * (i + 0.5)
+		var sp: AnimatedSprite2D = sprite(parent, feuille, Vector2(center.x, y), cote,
+			false, Color(1.0, 1.0, 1.0, 0.95) if sheet != "" else Color(col.r, col.g, col.b, 0.9))
+		if sp == null:
+			continue
+		# Decale dans le temps du bas vers le haut : le jet MONTE.
+		sp.visible = false
+		var tw: Tween = sp.create_tween()
+		tw.tween_interval(0.03 * i)
+		tw.tween_callback(func() -> void:
+			if is_instance_valid(sp):
+				sp.visible = true)

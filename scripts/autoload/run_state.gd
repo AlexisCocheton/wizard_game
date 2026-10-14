@@ -152,6 +152,7 @@ func reset() -> void:
 	pending_upgrade_paths = []
 	# Un choix d Epuration oublie gelerait la partie suivante des son debut.
 	pending_purge = 0
+	pending_hand_level = 0  # VAGUE 10 A1 : meme raison, carte de la main a faire murir
 	# Compteurs du moteur d objectifs (voir la section OBJECTIFS PARAMETRES).
 	_reset_objective_counters()
 
@@ -360,17 +361,28 @@ func play_card(card: SpellCard, slot: int = -1) -> bool:
 
 # --- REGARD PETRIFIANT ------------------------------------------------------
 #
-# LE PLAFOND. Une main fait MAX_HAND_SIZE (6) cartes ; on en gele au plus 5.
-# Le testeur l a demande mot pour mot : « Fait en sorte que l on puisse pas
-# avoir plus de 5 carte sur 6 bloquer. » La raison est la meme que celle du
-# plafond d invocation : un joueur qui ne peut RIEN lancer ne perd plus sur une
-# erreur de jeu, il perd mecaniquement en regardant l ecran. Une carte jouable
-# de reste, c est toujours une decision — laquelle, et sur quelle cible.
+# LE PLAFOND (vague 10, regle du co-auteur). Les gorgones bloquent les cartes
+# MEME quand la main n en compte qu une ; ce qu elles ne peuvent PAS bloquer,
+# c est la 6e carte d une main pleine : au plus MAX_HAND_SIZE - 1 exemplaires
+# tenus. Le voleur de sorts suit la meme regle commune (petrifies + voles).
 #
-# Exprime comme un ecart a la main REELLE et non comme le nombre 5 : avec trois
-# cartes en main et trois regards, geler « 5 au plus » gelerait la main entiere.
-# La regle est donc « il en reste toujours une », ce qui donne 5 sur 6 et 2 sur 3.
-const MIN_PLAYABLE_CARDS: int = 1
+# Avant la vague 10, il restait TOUJOURS une carte jouable (« 5 sur 6, 2 sur
+# 3 ») : avec une seule carte en main, une gorgone ne bloquait rien et le regard
+# ne se voyait jamais en debut de vague. Le blocage complet d une petite main ne
+# fige pas la partie : la pioche automatique continue, et la carte qui remplit
+# la main est la 6e, celle qu aucun regard ne prend — la main repart toujours.
+#
+# MIN_PLAYABLE_CARDS a ete RETIRE plutot que garde avec un autre sens (voir
+# gotchas : un nom dont le sens change doit changer) : un appelant oublie casse
+# a la compilation au lieu de calculer l ancien plafond en silence.
+## Positions d une main PLEINE que rien ne peut tenir (la « 6e carte »).
+const UNHOLDABLE_IN_FULL_HAND: int = 1
+
+
+## Le plafond des exemplaires TENUS (petrifies ET voles) pour la main actuelle :
+## toute la main, sauf la 6e carte d une main pleine.
+func max_held_cards() -> int:
+	return maxi(0, mini(hand.size(), GameConfig.MAX_HAND_SIZE - UNHOLDABLE_IN_FULL_HAND))
 
 
 ## Les cartes actuellement petrifiees, une entree PAR EXEMPLAIRE : deux copies
@@ -435,8 +447,8 @@ func set_card_block_count(wanted: int) -> void:
 	# plafond compterait des blocages que le joueur ne voit pas.
 	var change: bool = _heal_holds()
 	# Les cartes volees comptent dans le plafond : une gorgone et un voleur
-	# ensemble ne doivent jamais geler la derniere carte jouable.
-	var plafond: int = maxi(0, hand.size() - MIN_PLAYABLE_CARDS - _stolen.size())
+	# ensemble ne prennent jamais la 6e carte d une main pleine.
+	var plafond: int = maxi(0, max_held_cards() - _stolen.size())
 	var cible: int = clampi(wanted, 0, plafond)
 	while _blocked.size() > cible:
 		_blocked.pop_back()
@@ -492,8 +504,9 @@ func is_silenced() -> bool:
 # joueur. Liberation, lancement et « tiens-tu encore ? » passent donc par l id.
 
 ## Prend un exemplaire pour un voleur et rend l id qui le designe, ou 0 s il ne
-## peut rien prendre sans violer le plafond (il reste toujours
-## MIN_PLAYABLE_CARDS carte jouable). 0 n est jamais un id : le compteur part de 1.
+## peut rien prendre sans violer le plafond commun (max_held_cards : petrifies et
+## voles ensemble, jamais la 6e carte d une main pleine). 0 n est jamais un id :
+## le compteur part de 1.
 ##
 ## LA CARTE PRISE est la plus LONGUE a incanter (a egalite, la plus a gauche) :
 ## c est la plus precieuse, donc le vol se lit comme un vol, et c est celle qui
@@ -505,7 +518,7 @@ func steal_hold() -> int:
 		var c: SpellCard = hand[i]
 		if c != null and not c.is_passive and not is_slot_blocked(i):
 			libres.append(i)
-	if libres.size() <= MIN_PLAYABLE_CARDS:
+	if libres.is_empty() or _blocked.size() + _stolen.size() >= max_held_cards():
 		return 0
 	var choix: int = libres[0]
 	for i in libres:
@@ -2542,9 +2555,26 @@ func upgrade_offerable_for(card: SpellCard) -> Array:
 ## que l offre est melangee : il choisit par une regle, AutoPick.upgrade_index.)
 ##
 ## Un pool pas plus grand que l ecran est rendu tel quel, sans consommer le RNG.
+##
+## VAGUE 10 A1 : a partir de GameConfig.MAJOR_UPGRADE_FROM_TIER, une MAJEURE du
+## sort (s il en declare une qu il peut encore prendre) prend UNE des places ;
+## les autres sont tirees par la meme regle. Un sort sans majeure suit
+## exactement l ancien chemin, tirages du RNG compris : le banc ne bouge pas
+## tant que le contenu n en declare pas.
 func draw_upgrade_offer(card: SpellCard) -> Array:
 	var libres: Array = upgrade_offerable_for(card)
 	var n: int = GameConfig.LEVEL_UP_CHOICES
+	var majeure: Dictionary = _w10_major_for_offer(card)
+	if not majeure.is_empty():
+		var voies: Array = _draw_voies(libres, n - 1)
+		voies.insert(_rng.randi_range(0, voies.size()), majeure)
+		return voies
+	return _draw_voies(libres, n)
+
+
+## Le tirage des voies ordinaires (au plus `n`), extrait de draw_upgrade_offer
+## pour laisser une place a la majeure. Meme regle, memes appels au RNG.
+func _draw_voies(libres: Array, n: int) -> Array:
 	if libres.size() <= n:
 		return libres
 	var tirees: Array = []
@@ -2920,6 +2950,10 @@ func _pct(f: float) -> String:
 func upgrade_path_by_id(card: SpellCard, id: StringName) -> Dictionary:
 	if card == null:
 		return {}
+	# VAGUE 10 A1 : une MAJEURE se retrouve par son id declare (« major:<id> »).
+	if is_major_id(id):
+		var m: MajorUpgradeDef = card.major_upgrade(StringName(String(id).trim_prefix(MAJOR_PREFIX)))
+		return major_path(card, m) if m != null else {}
 	var morceaux: PackedStringArray = String(id).split("_")
 	if morceaux.size() < 2 or morceaux.size() > 3:
 		return {}
@@ -2985,6 +3019,10 @@ func upgrade_cumul_lines(card: SpellCard) -> Array[String]:
 		if absf(val) < 0.005:
 			continue
 		out.append(_mod_text(card, a, val))
+	# VAGUE 10 A1 : une majeure change la structure, aucun total ne la dit : son
+	# NOM est ecrit, apres les chiffres (ses prix chiffres y sont deja comptes).
+	for m in taken_majors(card):
+		out.append("MAJEURE " + m.title)
 	return out
 
 
@@ -3032,6 +3070,18 @@ func upgrade_lines_for(card: SpellCard) -> Array:
 			"unlocked": prises.has(StringName(v.get("id", &""))),
 			"form": StringName(v.get("form", &"")),
 		})
+	# VAGUE 10 A1 : les MAJEURES du sort, apres ses voies, pour que la fiche dise
+	# aussi ce qu il peut devenir de plus grand (et a quel prix).
+	if card != null:
+		for m in card.major_upgrades:
+			if m == null:
+				continue
+			var mv: Dictionary = major_path(card, m)
+			out.append({
+				"text": String(mv.get("text", "")),
+				"unlocked": prises.has(StringName(mv.get("id", &""))),
+				"form": UP_MAJOR,
+			})
 	return out
 
 
@@ -3099,7 +3149,12 @@ func cast_specs(card: SpellCard) -> Array[EffectSpec]:
 	for a in sommes:
 		if not [UP_CAST, UP_DRAW, UP_DISCARD].has(StringName(a)):
 			touche = true
-	for spec in card.effects:
+	# VAGUE 10 A1 : une MAJEURE prise change la STRUCTURE (effet ajoute, double,
+	# param remplace) AVANT les axes : les pourcentages des voies s appliquent
+	# ensuite a tout, effets ajoutes compris (+30 % de degats vaut pour les deux
+	# lignes de fleches). Sans majeure, la liste est celle du .tres, intacte.
+	var base: Array[EffectSpec] = _w10_structured_specs(card)
+	for spec in base:
 		if spec == null:
 			continue
 		if not touche:
@@ -3147,7 +3202,9 @@ func _apply_element_passives(card: SpellCard, out: Array[EffectSpec]) -> void:
 ## Les axes en CARTES (pioche, defausse) et la vitesse ne vivent pas dans les
 ## effets : ils sont ignores ici.
 func _apply_axis(c: EffectSpec, axis: StringName, pct: float) -> void:
-	var f: float = 1.0 + pct
+	# Plancher (vague 10) : une majeure a -50 % plus des voies fortes ne rendent
+	# jamais un chiffre nul ou negatif. Sans effet sur le contenu d avant.
+	var f: float = maxf(1.0 + pct, GameConfig.UPGRADE_FACTOR_FLOOR)
 	var k: StringName = c.key
 	match axis:
 		UP_DAMAGE:
@@ -3231,6 +3288,350 @@ func upgrade_cast_factor(card: SpellCard) -> float:
 	if card == null or upgrade_ids_of(card).is_empty():
 		return 1.0
 	var mods: Dictionary = _summed_mods(taken_paths(card))
+	# VAGUE 10 A1 : une majeure « cast_time » multiplie le temps (0.15 = quasi
+	# instantane) ; le plancher de 0,1 s d effective_cast_time tient toujours.
+	var majeure: float = _w10_major_cast_factor(card)
 	if not mods.has(UP_CAST):
-		return 1.0
-	return 1.0 / maxf(0.05, 1.0 + float(mods[UP_CAST]))
+		return majeure
+	return majeure / maxf(0.05, 1.0 + float(mods[UP_CAST]))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — AMELIORATIONS MAJEURES (« enormes »)
+#
+# Une voie ordinaire pousse un chiffre ; une MAJEURE change la structure du
+# sort (format : MajorUpgradeDef). Elle vit dans le MEME registre que les voies
+# (upgrades_taken, sous l id « major:<id> ») : maturations, cumul, grimoire,
+# fiche de deck et bot la voient sans chemin a part. Ce qu elle a en propre :
+#   - l OFFRE : jamais a la premiere maturation, au plus UNE parmi les trois
+#     propositions, une seule prise par sort et par partie
+#     (GameConfig.MAJOR_UPGRADE_FROM_TIER, MAJOR_UPGRADES_PER_CARD) ;
+#   - la STRUCTURE : ses ops add_effect / set / scale / duplicate s appliquent
+#     dans cast_specs, sur des COPIES, avant les axes des voies ;
+#   - le RYTHME : ses ops repeat (vague supplementaire, EffectRegistry) et
+#     cast_time (upgrade_cast_factor).
+# Le nombre de maturations d un sort ne change pas (upgrade_tiers_for) : une
+# majeure prend la place d une voie a l ecran, elle n en consomme aucune.
+# =====================================================================
+
+## Prefixe des ids de majeure dans upgrades_taken. Un id de voie s ecrit
+## « <axe>_<forme>[_<prix>] » : aucun ne commence par « major: ».
+const MAJOR_PREFIX: String = "major:"
+## Axe et forme d une majeure dans l offre : l ecran, le bot et le grimoire la
+## reconnaissent a cette forme.
+const UP_MAJOR: StringName = &"major"
+## Les axes qu une op « axis » peut viser (validation du contenu).
+const MAJOR_AXES: Array[StringName] = [&"damage", &"slow", &"tempo", &"force",
+	&"amplify", &"hp", &"count", &"area", &"duration", &"cast", &"draw", &"discard"]
+
+
+static func major_id_of(m: MajorUpgradeDef) -> StringName:
+	return StringName(MAJOR_PREFIX + String(m.id)) if m != null else &""
+
+
+static func is_major_id(id: StringName) -> bool:
+	return String(id).begins_with(MAJOR_PREFIX)
+
+
+## La majeure sous la forme d une VOIE de l offre (meme contrat que _make_path,
+## plus `major`, `major_id` et `cost_lines`) :
+##   - mods : la somme de ses ops « axis », gain ET prix. _summed_mods
+##     l additionne aux voies : c est ce qui fait mordre « -50 % degats » ;
+##   - gain_text : sa description, signee « + » (le signe double la couleur) ;
+##   - cost_lines : ses prix, un par ligne, signes « - » ; cost_text les joint.
+func major_path(card: SpellCard, m: MajorUpgradeDef) -> Dictionary:
+	if card == null or m == null:
+		return {}
+	var mods: Dictionary = {}
+	for op in m.all_ops():
+		if MajorUpgradeDef.op_of(op) == MajorUpgradeDef.OP_AXIS:
+			var a: StringName = StringName(str(MajorUpgradeDef.field(op, "axis", "")))
+			mods[a] = float(mods.get(a, 0.0)) + float(MajorUpgradeDef.field(op, "pct", 0.0))
+	var couts: Array[String] = []
+	for op in m.prices:
+		var t: String = _w10_op_text(card, op).strip_edges()
+		if t == "":
+			continue
+		if not t.begins_with("-"):
+			t = "- " + t
+		couts.append(t)
+	var gain: String = m.description.strip_edges()
+	if not gain.begins_with("+"):
+		gain = "+ " + gain
+	var prix: String = ", ".join(couts)
+	var texte: String = "MAJEURE %s : %s" % [m.title, gain]
+	if prix != "":
+		texte += ", " + prix
+	return {
+		"id": major_id_of(m),
+		"axis": UP_MAJOR,
+		"form": UP_MAJOR,
+		"price_axis": &"",
+		"mods": mods,
+		"title": m.title,
+		"gain_text": gain,
+		"cost_text": prix,
+		"cost_lines": couts,
+		"text": texte,
+		"major": true,
+		"major_id": m.id,
+	}
+
+
+## Le texte d une op, pour l ecran : son « text » s il en a un, sinon une phrase
+## deduite pour les ops chiffrees. Vide pour un ajout d effet sans texte (c est
+## la description de la majeure qui le dit).
+func _w10_op_text(card: SpellCard, op: Dictionary) -> String:
+	var t: String = str(MajorUpgradeDef.field(op, "text", ""))
+	if t != "":
+		return t
+	match MajorUpgradeDef.op_of(op):
+		MajorUpgradeDef.OP_AXIS:
+			return _mod_text(card, StringName(str(MajorUpgradeDef.field(op, "axis", ""))),
+				float(MajorUpgradeDef.field(op, "pct", 0.0)))
+		MajorUpgradeDef.OP_CAST_TIME:
+			var f: float = float(MajorUpgradeDef.field(op, "factor", 1.0))
+			if f > 1.0:
+				return "-%s vitesse de lancement" % _pct(1.0 - 1.0 / f)
+			return "+incantation %s plus courte" % _pct(1.0 - f)
+		MajorUpgradeDef.OP_REPEAT:
+			return "+le sort repart %s s plus tard" % str(MajorUpgradeDef.field(op, "delay", 1.0))
+		MajorUpgradeDef.OP_SCALE:
+			var f2: float = float(MajorUpgradeDef.field(op, "factor", 1.0))
+			var nom: String = str(MajorUpgradeDef.field(op, "field", ""))
+			if nom == "":
+				nom = str(MajorUpgradeDef.field(op, "param", ""))
+			var mot: String = {"magnitude": "puissance", "duration": "duree",
+				"radius": "taille"}.get(nom, nom)
+			return "%s%s %s" % ["+" if f2 >= 1.0 else "-", _pct(absf(f2 - 1.0)), mot]
+	return ""
+
+
+## Les majeures PRISES pour cette carte, dans l ordre.
+func taken_majors(card: SpellCard) -> Array[MajorUpgradeDef]:
+	var out: Array[MajorUpgradeDef] = []
+	if card == null:
+		return out
+	for id in upgrade_ids_of(card):
+		if not is_major_id(id):
+			continue
+		var m: MajorUpgradeDef = card.major_upgrade(StringName(String(id).trim_prefix(MAJOR_PREFIX)))
+		if m != null:
+			out.append(m)
+	return out
+
+
+## Les majeures que la PROCHAINE maturation de cette carte peut proposer.
+func offerable_majors(card: SpellCard) -> Array[MajorUpgradeDef]:
+	var out: Array[MajorUpgradeDef] = []
+	if card == null or card.major_upgrades.is_empty():
+		return out
+	if maturations_done(card) + 1 < GameConfig.MAJOR_UPGRADE_FROM_TIER:
+		return out
+	if taken_majors(card).size() >= GameConfig.MAJOR_UPGRADES_PER_CARD:
+		return out
+	var prises: Array[StringName] = upgrade_ids_of(card)
+	for m in card.major_upgrades:
+		if m != null and not prises.has(major_id_of(m)):
+			out.append(m)
+	return out
+
+
+## La majeure de l offre en cours de tirage, {} si aucune. Le RNG de la partie
+## n est consomme que si le sort en a plusieurs a proposer : un sort sans
+## majeure rejoue exactement ses anciens tirages.
+func _w10_major_for_offer(card: SpellCard) -> Dictionary:
+	var libres: Array[MajorUpgradeDef] = offerable_majors(card)
+	if libres.is_empty():
+		return {}
+	var m: MajorUpgradeDef = libres[0]
+	if libres.size() > 1:
+		m = libres[_rng.randi_range(0, libres.size() - 1)]
+	return major_path(card, m)
+
+
+## Les effets du sort APRES la structure des majeures prises : ajout, double,
+## remplacement, mise a l echelle, dans l ordre des ops (modificateurs puis
+## prix). Sans majeure : les EffectSpec du .tres eux-memes, sans copie.
+func _w10_structured_specs(card: SpellCard) -> Array[EffectSpec]:
+	var out: Array[EffectSpec] = []
+	if card == null:
+		return out
+	for s in card.effects:
+		if s != null:
+			out.append(s)
+	var majeures: Array[MajorUpgradeDef] = taken_majors(card)
+	if majeures.is_empty():
+		return out
+	for i in out.size():
+		out[i] = _w10_copy(out[i])
+	for m in majeures:
+		for op in m.all_ops():
+			_w10_apply_op(out, op)
+	return out
+
+
+func _w10_apply_op(out: Array[EffectSpec], op: Dictionary) -> void:
+	var cle: StringName = StringName(str(MajorUpgradeDef.field(op, "key", "")))
+	match MajorUpgradeDef.op_of(op):
+		MajorUpgradeDef.OP_ADD_EFFECT:
+			var s: EffectSpec = _w10_spec_from(op)
+			if s != null:
+				out.append(s)
+		MajorUpgradeDef.OP_SET:
+			for s in out:
+				if cle == &"" or s.key == cle:
+					_w10_set(s, op)
+		MajorUpgradeDef.OP_SCALE:
+			for s in out:
+				if cle == &"" or s.key == cle:
+					_w10_scale(s, op)
+		MajorUpgradeDef.OP_DUPLICATE:
+			var copies: Array[EffectSpec] = []
+			var extra: Dictionary = _w10_params(MajorUpgradeDef.field(op, "params", {}))
+			for s in out:
+				if cle == &"" or s.key == cle:
+					var c: EffectSpec = _w10_copy(s)
+					for p in extra:
+						c.params[p] = extra[p]
+					copies.append(c)
+			out.append_array(copies)
+
+
+## Un effet AJOUTE : une EffectSpec ecrite telle quelle (« spec »), ou ses
+## champs a plat (key, magnitude, duration, radius, params).
+func _w10_spec_from(op: Dictionary) -> EffectSpec:
+	var brut: Variant = MajorUpgradeDef.field(op, "spec", null)
+	if brut is EffectSpec:
+		return _w10_copy(brut as EffectSpec)
+	var s := EffectSpec.new()
+	s.key = StringName(str(MajorUpgradeDef.field(op, "key", "")))
+	if s.key == &"":
+		return null
+	s.magnitude = float(MajorUpgradeDef.field(op, "magnitude", 0.0))
+	s.duration = float(MajorUpgradeDef.field(op, "duration", 0.0))
+	s.radius = float(MajorUpgradeDef.field(op, "radius", 0.0))
+	s.params = _w10_params(MajorUpgradeDef.field(op, "params", {}))
+	return s
+
+
+func _w10_set(s: EffectSpec, op: Dictionary) -> void:
+	var champ: StringName = StringName(str(MajorUpgradeDef.field(op, "field", "")))
+	var v: Variant = MajorUpgradeDef.field(op, "value", null)
+	if MajorUpgradeDef.SPEC_FIELDS.has(champ):
+		s.set(champ, float(v))
+		return
+	var param: StringName = StringName(str(MajorUpgradeDef.field(op, "param", "")))
+	if param != &"":
+		s.params[param] = v
+
+
+func _w10_scale(s: EffectSpec, op: Dictionary) -> void:
+	var f: float = float(MajorUpgradeDef.field(op, "factor", 1.0))
+	var champ: StringName = StringName(str(MajorUpgradeDef.field(op, "field", "")))
+	if MajorUpgradeDef.SPEC_FIELDS.has(champ):
+		s.set(champ, float(s.get(champ)) * f)
+		return
+	var param: StringName = StringName(str(MajorUpgradeDef.field(op, "param", "")))
+	if param != &"" and s.params.has(param):
+		s.params[param] = float(s.params[param]) * f
+
+
+## Les params d un .tres arrivent en String ou en StringName selon l auteur ;
+## les handlers lisent des StringName (EffectSpec.get_param). On normalise ici.
+static func _w10_params(brut: Variant) -> Dictionary:
+	var out: Dictionary = {}
+	if brut is Dictionary:
+		for k in (brut as Dictionary):
+			out[StringName(str(k))] = (brut as Dictionary)[k]
+	return out
+
+
+static func _w10_copy(s: EffectSpec) -> EffectSpec:
+	var c: EffectSpec = s.duplicate() as EffectSpec
+	c.params = s.params.duplicate(true)
+	return c
+
+
+## Les rejeux des majeures prises : [{delay, factor}] (EffectRegistry).
+func major_repeats(card: SpellCard) -> Array:
+	var out: Array = []
+	for m in taken_majors(card):
+		for op in m.all_ops():
+			if MajorUpgradeDef.op_of(op) == MajorUpgradeDef.OP_REPEAT:
+				out.append({"delay": maxf(float(MajorUpgradeDef.field(op, "delay", 1.0)), 0.0),
+					"factor": float(MajorUpgradeDef.field(op, "factor", 1.0))})
+	return out
+
+
+## Facteur de TEMPS d incantation des majeures prises (produit des cast_time).
+func _w10_major_cast_factor(card: SpellCard) -> float:
+	var f: float = 1.0
+	for m in taken_majors(card):
+		for op in m.all_ops():
+			if MajorUpgradeDef.op_of(op) == MajorUpgradeDef.OP_CAST_TIME:
+				f *= maxf(float(MajorUpgradeDef.field(op, "factor", 1.0)), 0.01)
+	return f
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — « MONTE D UN NIVEAU UNE CARTE DE TA MAIN »
+#
+# Cle hand_card_level. Le joueur designe un sort de sa main ; il recoit l XP qui
+# lui manque pour sa PROCHAINE maturation, par grant_card_xp (le chemin de
+# MEDITER : ce n est pas un lancer pour les objectifs). Meme grammaire que
+# l Epuration : une demande, la partie figee (GameController.
+# game_frozen_by_choice), un ecran, puis resolve. Sans ecran, AutoPick tranche.
+# =====================================================================
+
+signal hand_level_requested(count: int)
+signal hand_level_resolved(card: SpellCard)
+## Cartes a faire murir qui attendent le choix du joueur (0 = aucun choix).
+var pending_hand_level: int = 0
+
+
+## Demande `count` choix. Rien a faire murir dans la main (tout est muri, ou la
+## main est vide) : pas d ecran du tout, la carte est simplement partie.
+func request_hand_level(count: int) -> void:
+	if hand_level_candidates().is_empty():
+		return
+	pending_hand_level += maxi(count, 1)
+	hand_level_requested.emit(pending_hand_level)
+
+
+## Les sorts DISTINCTS de la main qui ont encore une maturation devant eux, dans
+## l ordre de la main. Deux copies partagent leur XP (indexee par id) : elles ne
+## font qu un choix.
+func hand_level_candidates() -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	var vus: Dictionary = {}
+	for c in hand:
+		if c == null or c.is_passive or vus.has(c.id):
+			continue
+		vus[c.id] = true
+		if maturations_done(c) < upgrade_tiers_for(c):
+			out.append(c)
+	return out
+
+
+## L XP qui manque a `card` pour sa prochaine maturation.
+func hand_level_xp_needed(card: SpellCard) -> int:
+	return maxi(0, next_upgrade_at(card) - card_xp(card))
+
+
+## Le choix du joueur. `card` null ou hors des candidats : le choix est consomme
+## sans effet (bouton PASSER). Rend vrai si une carte a gagne son XP.
+func resolve_hand_level(card: SpellCard) -> bool:
+	if pending_hand_level <= 0:
+		return false
+	pending_hand_level -= 1
+	var fait: bool = false
+	if card != null and hand_level_candidates().has(card):
+		fait = grant_card_xp(card, maxi(1, hand_level_xp_needed(card)))
+	hand_level_resolved.emit(card)
+	if pending_hand_level > 0:
+		if hand_level_candidates().is_empty():
+			pending_hand_level = 0
+		else:
+			hand_level_requested.emit(pending_hand_level)
+	return fait

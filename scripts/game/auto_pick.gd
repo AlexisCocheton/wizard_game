@@ -51,6 +51,11 @@ static var first_offer: bool = false
 static func upgrade_index(card: SpellCard, paths: Array) -> int:
 	if paths.is_empty() or first_upgrade:
 		return 0
+	# VAGUE 10 A1 : une MAJEURE acceptable passe AVANT tout (voir major_acceptable).
+	for i in paths.size():
+		if paths[i] is Dictionary and bool((paths[i] as Dictionary).get("major", false)) \
+				and major_acceptable(card, paths[i]):
+			return i
 	var identite: StringName = RunState.upgrade_identity_axis(card)
 	var naturel: StringName = StringName("%s_%s" % [identite, RunState.UP_STRONG])
 	var vitesse: StringName = StringName("%s_%s" % [RunState.UP_CAST, RunState.UP_STRONG])
@@ -65,6 +70,10 @@ static func upgrade_index(card: SpellCard, paths: Array) -> int:
 		for i in paths.size():
 			if paths[i] is Dictionary and regle.call(paths[i]):
 				return i
+	# Dernier recours : la premiere VOIE, jamais une majeure refusee plus haut.
+	for i in paths.size():
+		if not (paths[i] is Dictionary and bool((paths[i] as Dictionary).get("major", false))):
+			return i
 	return 0
 
 
@@ -637,3 +646,49 @@ class Politique extends RefCounted:
 				return int(compte[a]) > int(compte[b])
 			return ordre.find(a) < ordre.find(b))
 		return tri.slice(0, maxi(n, 0))
+
+
+# =============================================================================
+# VAGUE 10, CHANTIER A1 — MAJEURES et « monte une carte de ta main »
+# =============================================================================
+
+## Au-dela de cette perte sur l axe d IDENTITE du sort (somme de ses ops
+## « axis », en part), le bot refuse une majeure.
+const MAJOR_MAX_IDENTITY_LOSS: float = 0.30
+
+
+## LA REGLE DU BOT FACE A UNE MAJEURE. Un joueur qui a choisi un sort pour ce
+## qu il fait prend volontiers ce qui en change la structure — une seconde
+## ligne, une vague de plus, un mur que les volants ne passent plus — et paie
+## volontiers AILLEURS (vitesse, duree, zone). Il refuse de payer le coeur du
+## sort au-dela de MAJOR_MAX_IDENTITY_LOSS : « deux lignes a -50 % de degats »
+## sur un sort de degats ne double rien, elle partage. La regle ne lit que ce que
+## l ecran chiffre : les ops « axis » de la majeure (mods), jamais un effet ajoute
+## qu il faudrait simuler pour juger. Une majeure acceptable passe AVANT toutes
+## les voies (upgrade_index) ; une majeure refusee n est jamais prise, meme en
+## dernier recours.
+static func major_acceptable(card: SpellCard, path: Dictionary) -> bool:
+	if card == null or not bool(path.get("major", false)):
+		return false
+	var identite: StringName = RunState.upgrade_identity_axis(card)
+	var mods: Dictionary = path.get("mods", {}) as Dictionary
+	var sur_identite: float = float(mods.get(identite, 0.0))
+	return sur_identite >= -MAJOR_MAX_IDENTITY_LOSS - 0.0001
+
+
+## La carte de la main que le bot fait murir (cle hand_card_level) : celle a qui
+## il manque le PLUS d XP — le choix donne alors le plus. A egalite, l id le plus
+## petit : le choix ne depend pas de l ordre de la main. Null si aucune.
+static func hand_level_choice(cards: Array) -> SpellCard:
+	var best: SpellCard = null
+	var best_xp: int = -1
+	for c in cards:
+		var carte: SpellCard = c as SpellCard
+		if carte == null:
+			continue
+		var manque: int = RunState.hand_level_xp_needed(carte)
+		if manque > best_xp or (manque == best_xp and best != null \
+				and String(carte.id) < String(best.id)):
+			best = carte
+			best_xp = manque
+	return best

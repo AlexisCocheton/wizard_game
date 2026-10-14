@@ -115,8 +115,9 @@ func _test_le_joueur_ne_lance_pas_la_copie_gelee_qu_il_touche() -> void:
 	ok(RunState.is_slot_blocked(1), "la copie gelee l est toujours, en position 1")
 
 
-## Six copies de la meme carte et une gorgone enorme : le plafond laisse une
-## copie jouable. L ancien registre gelait « la carte » : zero jouable.
+## Six copies de la meme carte et une gorgone enorme : le plafond laisse la 6e
+## copie jouable (vague 10 : la seule carte qu un regard ne prend pas). L ancien
+## registre gelait « la carte » : zero jouable.
 func _test_plafond_sur_une_main_de_copies() -> void:
 	var a := _card("a")
 	var cartes: Array = []
@@ -124,8 +125,8 @@ func _test_plafond_sur_une_main_de_copies() -> void:
 		cartes.append(a)
 	_main(cartes)
 	RunState.set_card_block_count(99)
-	eq(_gelees(), RunState.hand.size() - RunState.MIN_PLAYABLE_CARDS,
-		"toutes gelees sauf le plancher jouable")
+	eq(_gelees(), RunState.hand.size() - 1,
+		"main pleine : toutes gelees sauf une")
 	not_ok(RunState.is_card_blocked(a), "il reste une copie de A jouable")
 	ok(RunState.play_card(a), "et elle se lance")
 
@@ -171,7 +172,8 @@ func _test_une_main_videe_ne_laisse_rien_de_gele() -> void:
 	_main([a, a, a])
 	RunState.set_card_block_count(2)
 	var prise: SpellCard = RunState.steal_card()
-	ok(prise == null, "(plafond : le voleur ne peut rien prendre sur une main deja gelee)")
+	# Vague 10 : regle commune, le voleur prend la derniere carte d une PETITE main.
+	ok(prise != null, "(plafond commun : le voleur prend la derniere copie libre)")
 	RunState.discard_hand()
 	RunState.hand.append(a)
 	RunState.hand.append(a)

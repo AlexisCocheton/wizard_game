@@ -207,3 +207,21 @@ func has_damage() -> bool:
 		if e != null and e.magnitude > 0.0:
 			return true
 	return false
+
+
+## --- AMELIORATIONS MAJEURES (vague 10, chantier A1) ---
+##
+## Les majeures DECLAREES de ce sort (voir MajorUpgradeDef pour le format). Une
+## voie ordinaire est derivee des effets ; une majeure change la STRUCTURE du
+## sort, elle ne se devine pas et s ecrit donc dans le contenu. Proposees a
+## partir de la 2e maturation, une au plus par ecran, une seule prise par partie
+## (RunState, section MAJEURES).
+@export var major_upgrades: Array[MajorUpgradeDef] = []
+
+
+## La majeure d identifiant `major_id`, ou null.
+func major_upgrade(major_id: StringName) -> MajorUpgradeDef:
+	for m in major_upgrades:
+		if m != null and m.id == major_id:
+			return m
+	return null
