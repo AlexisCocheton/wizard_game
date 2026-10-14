@@ -369,7 +369,10 @@ Ordre de jeu : 01, 02, 08, 09 | 17, 18, 03, 04 | 19, 20, fourche 05 ou 06, 21 |
     premier monstre de la vague de boss (lvl_02 : « Mini-boss : Écumeur, Boss :
     Reine gorgone » contre « Boss : Le Coagulé » ; lvl_09 : « Mini-boss : Gardien »
     sans boss ; lvl_03, 07, 19 : mauvais mini-boss). *Proposition* : lire les vagues
-    marquées mini-boss / boss.
+    marquées mini-boss / boss. **Mise à jour** : le briefing a été refait par le
+    chantier des écrans (`97066f6`, `loading_screen.gd` : toutes les têtes, triées
+    par rôle puis par vague) ; reste à aligner la fiche de campagne
+    (`campaign_panel.gd:255-262`) sur la même lecture.
 21. **Le Rat et le Roi n'ont pas d'adieu** (le Rat disparaît après lvl_15, le Roi
     après `lvl_16_intro` ; le Rat « reste avec la nacelle », :379, puis revient à
     l'acte IV sans un mot). Dans `lvl_16_outro` :
