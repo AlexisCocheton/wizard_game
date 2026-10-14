@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_lbye6")
 id = &"lvl_17_outro"
-scene_background = "talk_path"
+scene_background = "talk_greattree"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "L Ecumeur du ciel tombe a cote de la nacelle et reste accroche au bastingage par une aile."
+"text": "Le Grand Oeil des courants s abat sur la nacelle et reste pris dans les cordages."
 }, {
 "portrait": &"rat",
 "side": "right",
@@ -25,7 +25,7 @@ lines = Array[Dictionary]([{
 "portrait": &"rat",
 "side": "right",
 "speaker": "Le Rat pilote",
-"text": "Sous l aile. La meme soudure noire que dans la poitrine de votre Gardien."
+"text": "Derriere l oeil. La meme soudure noire que dans la poitrine de votre Gardien."
 }, {
 "portrait": &"mage",
 "side": "left",

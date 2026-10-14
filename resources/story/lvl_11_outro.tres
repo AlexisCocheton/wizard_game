@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_fvfys")
 id = &"lvl_11_outro"
-scene_background = "talk_path"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
@@ -15,7 +15,7 @@ lines = Array[Dictionary]([{
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Voila. Il gueulait parce qu il ne pouvait pas regarder en l air."
+"text": "Voila. Il criait parce qu il ne pouvait pas regarder en l air."
 }, {
 "portrait": &"mage",
 "side": "left",
@@ -30,7 +30,7 @@ lines = Array[Dictionary]([{
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Il en reste. Tu veux te reposer avant ?"
+"text": "Tu veux te reposer avant la suite ?"
 }, {
 "portrait": &"mage",
 "side": "left",

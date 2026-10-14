@@ -14,7 +14,7 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Ymoa",
 "text": "Tu es celui qui est revenu en arriere. Approche, si tu peux."
 }, {
 "portrait": &"mage",
@@ -24,16 +24,16 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Ymoa",
 "text": "Je ne me bats jamais. Je PROTEGE. C est une fonction, pas un caractere."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Tu protegeais mon royaume de quoi, exactement ?"
+"text": "Tu protegeais quoi, au juste ? Nuri a brule. Nox aussi."
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
-"text": "Rien du tout. Je protegeais l ordre. On ne m a pas dit ce qu il contenait."
+"speaker": "Ymoa",
+"text": "Je protegeais l ordre. On ne m a pas dit ce qu il contenait."
 }])

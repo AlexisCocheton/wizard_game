@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_4pu6b")
 id = &"lvl_04_intro"
-scene_background = "talk_greattree"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Au centre du cimetiere de bordure, un cercle deja trace et des Pretres qui chantent depuis assez longtemps pour que la pierre soit chaude."
+"text": "Au centre du cimetiere de bordure, un cercle deja trace et des Pretres goules qui chantent depuis assez longtemps pour que la pierre soit chaude."
 }, {
 "portrait": &"mage",
 "side": "left",

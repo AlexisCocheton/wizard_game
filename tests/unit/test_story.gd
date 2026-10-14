@@ -24,6 +24,10 @@ func run() -> void:
 	_test_chaque_personnage_a_un_visage()
 	_test_le_mage_nest_plus_un_demon()
 	_test_les_fonds_de_dialogue_sont_des_decors()
+	_test_aucune_scene_orpheline()
+	_test_chaque_niveau_de_campagne_est_encadre()
+	_test_le_narrateur_ne_nomme_que_ce_qui_est_joue()
+	_test_les_textes_du_niveau_sont_sans_accents()
 	SaveData.reset_profile()
 
 
@@ -313,6 +317,148 @@ func _test_les_fonds_de_dialogue_sont_des_decors() -> void:
 			"%s : fond de dialogue dedie, pas un fond de combat (%s)"
 			% [file, d.scene_background])
 	ok(vus > 0, "des scenes ont ete relues (%d)" % vus)
+
+
+## UNE SCENE QU AUCUN NIVEAU NE CITE NE SE JOUE JAMAIS (vague 10, revue A4 n° 1).
+## Les deux scenes de Vharn (`lvl_07`) ont vecu ainsi des semaines : generees,
+## relues, sur le disque, et jamais jouees, parce que `lvl_07` ne posait pas son
+## `intro_story`. `_test_les_scenes_citees_existent` ne regarde que le sens
+## niveau -> scene ; celui-ci regarde l autre sens. Le prologue est la seule
+## scene sans niveau : `SceneRouter` le joue avant le premier.
+func _test_aucune_scene_orpheline() -> void:
+	var citees: Dictionary = {String(SceneRouter.PROLOGUE_STORY): true}
+	for lvl: LevelDef in ContentDB.levels.values():
+		if lvl == null:
+			continue
+		for sid: StringName in [lvl.intro_story, lvl.outro_story]:
+			if String(sid) != "":
+				citees[String(sid)] = true
+	var dir: DirAccess = DirAccess.open(DialogueDef.DIR)
+	if dir == null:
+		return
+	var vues: int = 0
+	for file: String in dir.get_files():
+		if not file.ends_with(".tres"):
+			continue
+		vues += 1
+		var id: String = file.get_basename()
+		ok(citees.has(id),
+			"la scene %s est citee par un niveau (sinon elle ne se joue jamais)" % id)
+	ok(vues > 0, "des scenes ont ete relues (%d)" % vues)
+
+
+## CHAQUE NIVEAU DE LA CAMPAGNE A SON INTRO ET SON OUTRO. La fourche de l acte 3
+## (`lvl_05`, `lvl_06`) et la forge de Vharn n en avaient pas : trois niveaux
+## muets au milieu d une campagne qui raconte une histoire, et aucun test pour le
+## voir. Les QUETES ANNEXES ne sont pas concernees (`is_campaign_level`) : une
+## annexe peut se jouer sans scene.
+func _test_chaque_niveau_de_campagne_est_encadre() -> void:
+	var niveaux: Array[LevelDef] = ContentDB.campaign_levels()
+	ok(not niveaux.is_empty(), "la campagne a des niveaux (%d)" % niveaux.size())
+	for lvl: LevelDef in niveaux:
+		ok(DialogueDef.load_by_id(lvl.intro_story) != null,
+			"%s a une scene d intro jouable (%s)" % [lvl.id, lvl.intro_story])
+		ok(DialogueDef.load_by_id(lvl.outro_story) != null,
+			"%s a une scene d outro jouable (%s)" % [lvl.id, lvl.outro_story])
+
+
+## LE NARRATEUR NE NOMME QUE CE QUI EST JOUE. Une replique de narrateur decrit ce
+## qui se passe a l ecran ; si elle nomme un monstre, ce monstre doit etre dans
+## les vagues du niveau. Le defaut que ce test attrape : l outro de `lvl_17`
+## faisait tomber « l Ecumeur du ciel », absent du niveau (revue A4, n° 9). Il
+## sert surtout de GARDE entre l ecriture et les vagues : retirer d un niveau un
+## monstre qu une scene fait tomber rougit ici, et dit quelle scene reprendre.
+##
+## Les personnages, eux, ont le droit de se souvenir (« le corniste, au
+## village ») : seules les repliques SANS locuteur sont lues. Les noms sont lus
+## sans leur article (« L Horloger » -> « Horloger », le narrateur ecrit
+## « l Horloger ») et, pour les seigneurs, avant la virgule (« Malyk, Seigneur
+## demon » -> « Malyk »). La casse compte : « les gardiens de la galerie » n est
+## pas le Gardien.
+func _test_le_narrateur_ne_nomme_que_ce_qui_est_joue() -> void:
+	var cles: Dictionary = {}
+	for def: EnemyDef in ContentDB.enemies.values():
+		if def == null or def.display_name.strip_edges() == "":
+			continue
+		cles[_cle_de_nom(def.display_name)] = true
+	var lus: int = 0
+	for lvl: LevelDef in ContentDB.levels.values():
+		if lvl == null:
+			continue
+		var joues: Array[String] = []
+		for w: WaveDef in lvl.waves:
+			if w == null:
+				continue
+			for e: WaveEntry in w.entries:
+				if e != null and e.enemy != null:
+					joues.append(e.enemy.display_name)
+		for sid: StringName in [lvl.intro_story, lvl.outro_story]:
+			var d: DialogueDef = DialogueDef.load_by_id(sid)
+			if d == null:
+				continue
+			for i: int in d.line_count():
+				var ligne: Dictionary = d.line(i)
+				if String(ligne.get("speaker", "")) != "":
+					continue
+				lus += 1
+				var texte: String = String(ligne.get("text", ""))
+				for cle: String in cles:
+					if not _mot_entier(texte, cle):
+						continue
+					var trouve: bool = false
+					for nom: String in joues:
+						if nom.contains(cle):
+							trouve = true
+							break
+					ok(trouve, "%s : le narrateur nomme « %s », absent des vagues du niveau"
+						% [sid, cle])
+	ok(lus > 0, "des repliques de narrateur ont ete lues (%d)" % lus)
+
+
+## Le nom d un monstre tel qu un narrateur l ecrit : sans article, et pour un
+## seigneur, sans son titre.
+func _cle_de_nom(nom: String) -> String:
+	var cle: String = nom.strip_edges()
+	if cle.contains(","):
+		cle = cle.get_slice(",", 0).strip_edges()
+	for article: String in ["L ", "Le ", "La ", "Les "]:
+		if cle.begins_with(article) and cle.length() > article.length():
+			return cle.substr(article.length())
+	return cle
+
+
+## `cle` apparait-elle dans `texte` comme un mot entier ? Une lettre collee
+## avant ou apres en fait un autre mot (« Ombre » dans « Ombres » compte, pas
+## dans « Sombre »).
+func _mot_entier(texte: String, cle: String) -> bool:
+	var de: int = texte.find(cle)
+	while de >= 0:
+		var avant: bool = de == 0 or not _est_lettre(texte[de - 1])
+		var fin: int = de + cle.length()
+		var apres: bool = fin >= texte.length() or not _est_lettre(texte[fin]) \
+			or (texte[fin] == "s" and (fin + 1 >= texte.length() or not _est_lettre(texte[fin + 1])))
+		if avant and apres:
+			return true
+		de = texte.find(cle, de + 1)
+	return false
+
+
+func _est_lettre(c: String) -> bool:
+	var u: int = c.unicode_at(0)
+	return (u >= 65 and u <= 90) or (u >= 97 and u <= 122)
+
+
+## Le briefing affiche `intro_text` depuis la vague 10 (loading_screen.gd), la
+## carte de campagne le nom et le sous-titre. Meme police que les scenes, meme
+## regle : un accent ou un tiret long sort en carre. Trois intro_text portaient
+## un tiret long (« — ») au 14/10.
+func _test_les_textes_du_niveau_sont_sans_accents() -> void:
+	for lvl: LevelDef in ContentDB.levels.values():
+		if lvl == null:
+			continue
+		for champ: String in ["display_name", "subtitle", "intro_text"]:
+			ok(not _a_des_accents(String(lvl.get(champ))),
+				"%s.%s : sans accents ni tiret long" % [lvl.id, champ])
 
 
 ## Les cles de portrait citees par toutes les scenes du disque.

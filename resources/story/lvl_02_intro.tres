@@ -10,20 +10,25 @@ lines = Array[Dictionary]([{
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "C est la ! La maison bleue, c est chez moi !"
+"text": "C est la ! La maison sous le grand arbre, c est chez moi !"
 }, {
-"portrait": &"mage",
+"portrait": &"",
 "side": "left",
-"speaker": "Le Mage",
-"text": "Ne regarde pas la maison. Regarde la ligne."
+"speaker": "",
+"text": "Le village est debout. Ses gens aussi : en pierre, figes au milieu d un geste."
 }, {
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Quelle ligne ?"
+"text": "Ils ne repondent pas. Pourquoi ils ne repondent pas ?"
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Des gorgones sont passees. Il en reste. Si l une d elles regarde mes sorts, ils se figeront dans ma main."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Ils avancent en rang. Des nuisibles pillent au hasard. Ceux-la marchent. Quelqu un leur bat la mesure."
+"text": "Alors on les abat en premier. Et regarde les autres : ils marchent au pas. Quelqu un leur bat la mesure."
 }])

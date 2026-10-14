@@ -468,6 +468,131 @@ annoncer l'Enfant.
   « act4_origin » (l.493, 579) ; le Rat « rejoint a l acte 2 » (l.27) ; lvl_01
   « uniquement gnome, sprite, hopper » (l.118-119).
 
+### 2.6 Suivi du chantier B4 (14/10) — ce qui a été fait de chaque constat
+
+Le texte vit dans `tools/make_story.gd` (scènes) et, pour les niveaux, dans les
+seuls champs `display_name`, `intro_text`, `intro_story`, `outro_story` de
+`tools/make_content.gd` (périmètre de B4). Tout ce qui demande de toucher aux
+vagues, aux boss, aux sous-titres ou au code est **renvoyé** (§2.7).
+`docs/histoire.md` a été réécrit pour décrire l'état réel.
+
+Trois gardes ajoutées à `tests/unit/test_story.gd` (sabotage vérifié : 4 échecs
+pour 3 sabotages, puis vert) :
+- **aucune scène orpheline** : toute scène du disque est citée par un niveau
+  (ou est le prologue) — attrape le n° 1 ;
+- **chaque niveau de la campagne a son intro et son outro** (les quêtes annexes
+  n'y sont pas tenues) ;
+- **le narrateur ne nomme que ce qui est joué** : une réplique SANS locuteur qui
+  nomme un monstre exige ce monstre dans les vagues du niveau — attrape le n° 9,
+  et rougira si B2 retire d'un niveau une tête qu'une scène fait tomber ;
+- et `display_name` / `subtitle` / `intro_text` sans accents ni tiret long
+  (trois `intro_text` en portaient un, affiché au briefing depuis la vague 10).
+
+| N° | Constat | État | Détail |
+|---|---|---|---|
+| 1 | Scènes de Vharn non branchées | **corrigé** | `lvl_07.intro_story/outro_story` posés ; garde « scène orpheline » |
+| 2 | Acte IV non commutatif, pentacle ouvert après un démon | **texte corrigé**, déblocage **renvoyé** | aucune scène ne compte ni ne suppose d'ordre (`lvl_07/11/12_outro`, `lvl_13_intro`, `lvl_13.intro_text`) ; le déblocage est du code (§2.7) |
+| 3 | Gardien tué au tutoriel puis présenté en allié | **texte corrigé**, vague **renvoyée** | `lvl_09_intro` : « Le vrai, celui de l arbre » ; aucune scène de lvl_01 ne cite le mini-boss ; le remplacer est pour B2 |
+| 4 | lvl_02 à deux identités | **corrigé** (sauf sous-titre) | « Le village petrifie », `intro_text` et scènes au village pétrifié ; sous-titre renvoyé |
+| 5 | Fourche 05/06 sans scène, monde démoniaque trop tôt | **corrigé** | « Les forges sous Tombol » / « La cour brisee », 4 scènes, `intro_text` ; l'outro de lvl_20 annonce les deux escaliers ; le fond rouge devient un indice (« ce qui remonte d en dessous ») sans gâcher lvl_21 |
+| 6 | « MODE INFINI DEBLOQUE » | **corrigé** | dernière ligne : le Massacre s'ouvre quand chaque niveau de la campagne est fini (vrai : `massacre_unlocked()` = `campaign_cleared()`, fourche comprise) |
+| 7 | Noms de mondes de l'ancienne histoire (`WaveBudget.WORLDS`) | **renvoyé** | code ; ces noms ne sont plus affichés nulle part (`battle_backdrop` ignore `_world_name`) |
+| 8 | Pentacle à 4 branches contre 5 | **corrigé** | « cinq branches, quatre portent un nom » (lvl_07) ; poinçon à cinq branches (lvl_05) |
+| 9 | lvl_17 fait tomber l'Écumeur absent | **corrigé** | le Grand Œil ; garde « narrateur » |
+| 10 | « Pretres des fosses » | **corrigé** | « les trois mages des fosses » |
+| 11 | Malyk et la Reine jamais nommés | **corrigé** | `lvl_13_intro/outro`, `lvl_13.intro_text` |
+| 12 | Contrats contradictoires | **corrigé** | Sesh « a signé sans lire » ; une seule logique : signature du roi + au-dessus une écriture « petite et soignée » (celle du registre, lvl_15) |
+| 13 | Le Rat cite le corniste | **corrigé** | réplique donnée au mage, « au village » |
+| 14 | lvl_04 promet sans tenir | **corrigé** | l'outro nomme l'Ensevelisseur |
+| 15 | « Personne n est venu defendre la galerie » | **corrigé** | les gardiens tombent « sans bruit » ; `intro_text` « un par saison » |
+| 16 | « Encore toi » | **corrigé** | « Te voila enfin » |
+| 17 | Chronos jamais nommé | **corrigé** | lvl_01_outro (le mage le reconnaît) ; lvl_16_intro : le boss final a « la forme de Chronos » en or |
+| 18 | La Reine morte à l'acte I revient à l'acte IV | **corrigé** | « Ici, on recolle les statues » |
+| 19 | Décors de scène tous forestiers | **partiel**, **renvoyé** | choisis par ce que l'image montre : nuages pour les courants, sanctuaire de pierre pour tout le funéraire et le souterrain (lvl_03/04/19/20, actes III-IV) ; des décors dédiés restent à faire (asset-pipeline) |
+| 20 | Fiche et briefing ne nomment pas la même tête | **renvoyé** | code (`campaign_panel.gd`) |
+| 21 | Le Rat et le Roi sans adieu | **corrigé** | le rat revient dans `lvl_21_outro` ; adieux dans `lvl_16_outro` |
+| 22 | « Mon royaume » | **corrigé** | Nuri et Nox (lvl_21, lvl_12) |
+| 23 | Mage à droite au lvl_08 | **corrigé** | |
+| 24 | « Tas de bois mort » pour un chevalier | **corrigé** | l'armure s'ouvre comme une écorce |
+| 25 | Sous-titres qui gâchent | **renvoyé** | champ hors périmètre B4 (§2.7) |
+| 26 | Styles mélangés | **partiel** | noms de niveaux harmonisés (minuscule après le premier mot : « La cour brisee », « L ossuaire de bordure »…) ; sous-titres et vouvoiement du bestiaire renvoyés |
+
+§2.3 : toutes les réécritures proposées sont faites (réplique de 182 car. coupée
+en deux, plus aucune au-delà de 145) ; locuteurs « Sesh », « Kaltek », « Ymoa ».
+§2.4 : faite en entier, échos compris (lvl_08, lvl_13, lvl_16). §2.5 : les
+`intro_text` de lvl_01 à lvl_06 (et lvl_11, 13, 14) sont réécrits ; les
+`outro_text` et les commentaires hors `make_story.gd` sont renvoyés.
+
+Captures relues (fenêtre réelle 540×960, scène temporaire supprimée) :
+`lvl_02_intro` (narrateur, mage), `lvl_02_outro`, `lvl_05_intro`, `lvl_06_outro`,
+`lvl_07_outro`, `lvl_10_intro` (locuteur « Sesh »), `lvl_13_intro` (réplique la
+plus longue, 3 lignes), `lvl_16_intro`, `lvl_16_outro`, briefings lvl_02 et
+lvl_05. Tout tient dans la boîte, le texte sombre se lit sur le papier.
+
+### 2.7 Pour B2 (et ce qui n'est pas du texte)
+
+**Vagues et têtes** — B2 refait les niveaux ; ces points dépendent de lui :
+
+1. **lvl_01, `w1_miniboss`** : remplacer le Gardien (`warden`) par un autre
+   mini-boss. Le Gardien est présenté comme un allié au lvl_09 puis y meurt ;
+   tant qu'il meurt aussi au tutoriel, seule la réplique « Le vrai, celui de
+   l arbre » sauve la cohérence. Garder **Chronos** en boss du lvl_01 : il est
+   nommé dans `lvl_01_outro` et le boss final porte sa silhouette (`lvl_16_intro`).
+2. **lvl_02** : garder la **lignée des gorgones** (Matrone en mini-boss, Gorgones,
+   **Reine gorgone** dans la vague de boss : `lvl_02_outro` la fait tomber, et
+   `lvl_13_intro` dit que le mage l'a brisée au village) et un **Corniste**
+   (`lvl_02_intro` : « ils marchent au pas, quelqu un leur bat la mesure »,
+   repris chez Vharn).
+3. **Têtes nommées par les scènes** (à garder, ou prévenir l'écriture) : lvl_03
+   le Reliquaire ; lvl_04 l'Ensevelisseur ; lvl_09 le Gardien (boss) ; lvl_13 la
+   Reine gorgone et Malyk ; lvl_15 l'Horloger ; lvl_17 le Grand Œil des
+   courants ; lvl_18 le Mage noir de Haute-Nacelle ; lvl_19 le trio des mages ;
+   lvl_05 « le dernier colosse de la forge » ; lvl_06 « le dernier seigneur de la
+   cour » ; lvl_07/10/11/12 les quatre démons. `test_story` vérifie ce que dit le
+   narrateur ; les répliques des personnages, elles, ne sont pas vérifiées.
+4. **Sesh** : `lvl_10_outro` ne dit plus que ses proies « ressortent intactes » ;
+   la proposition « L'outre » (§1.3) reste compatible avec le texte.
+
+**Champs de niveau hors périmètre B4** (`make_content.gd`) :
+
+5. **Sous-titres** à changer :
+   - lvl_02 « L ile qui a commence a tomber » (ancienne histoire) → par exemple
+     « Ils marchent au pas » ou « Le regard qui fige » ;
+   - lvl_13 « Quatre contrats, pas une signature en commun » (compte les démons,
+     et c'est désormais l'inverse : la même écriture sur tous) → par exemple
+     « Celui qui porte les ordres » ;
+   - lvl_21 « Il ne fuyait pas devant toi » (gâche le retournement) → par
+     exemple « Le roi ne fuit plus » ;
+   - choisir une ligne pour tous : conseil de jeu (« L ordre des cibles ») ou
+     récit (« Ton nom y est, avec une date »), pas les deux.
+6. **`outro_text`** : affiché nulle part et faux presque partout (lvl_01 « Le
+   Gardien a ri en mourant… Chronos n etait qu un huissier » ; lvl_02 « Sous la
+   tour… Grand Cimetiere » ; lvl_03 « Une Gelee prisonniere… » ; lvl_04 « Les
+   goules croyaient invoquer un allie » ; lvl_05 l'horloge et le cadran ; lvl_06
+   « Le Chevalier du vide qui gardait le cadran » ; lvl_10 « ressort intact et
+   vivant » ; lvl_14 « Personne n est venu » ; lvl_17 l'Écumeur ; lvl_16 et
+   lvl_02 portent un tiret long). Le vider ou le recopier de l'outro jouée.
+7. **Fonds** : lvl_05 et lvl_06 gardent `act3_demon`, que leurs textes
+   expliquent désormais (« rouge de ce qui remonte d en dessous ») ; passer
+   lvl_06 (salle du trône de Tombol) en `act2_graveyard` est possible, en
+   retouchant alors son `intro_text`. `terrain = "sand"` de lvl_02 est inopérant
+   (le fond prime) ; les commentaires de `make_content.gd` parlent encore de
+   « la tour » (lvl_02), de « la Reine sans niveau », de la « fourche en lvl_04 ».
+
+**Code et assets** (gdscript-dev, asset-pipeline) :
+
+8. **Ouvrir lvl_13 après les QUATRE démons** (`SaveData.record_victory` ouvre
+   tout `next_levels` dès la première victoire) : ouvrir un niveau quand tous les
+   niveaux qui le citent sont finis. Les scènes tiennent dans les deux cas.
+9. `WaveBudget.WORLDS` (noms de l'ancienne histoire, n° 7), `campaign_panel`
+   (n° 20), commentaires de `level_def.gd` (4 actes, « lu au briefing »),
+   `campaign_map.gd:8`, vouvoiement du bestiaire (`bestiary_lore.gd`).
+10. **Décors de dialogue dédiés** (n° 19) : port, forge, fosses, arène, temple,
+    galerie/registre. Les actes III à V jouent tous devant `talk_shrine`.
+11. **Cartes** : régénérer `make_content.gd` réécrit les 53 `.tres` de cartes
+    (le champ `major_upgrades` de la vague 10 n'y a jamais été écrit). B4 ne les
+    a pas gardées ; c'est au chantier des cartes (B1a) de les régénérer.
+
 ---
 
 ## 3. Sprites, animations et sons : ce qui reste en deçà après A4

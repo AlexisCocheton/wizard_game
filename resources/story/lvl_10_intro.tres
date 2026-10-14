@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_jma7i")
 id = &"lvl_10_intro"
-scene_background = "talk_path"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
@@ -19,7 +19,7 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Sesh",
 "text": "Monter ? On ne m a rien demande. J ai suivi l odeur."
 }, {
 "portrait": &"mage",
@@ -29,11 +29,11 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Sesh",
 "text": "Celle d un monde qui allait finir. Ca sent tres bon, un monde qui finit."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Il dit vrai, mage. Lui n a jamais rien signe. Il est juste arrive a table."
+"text": "Il dit vrai, mage. Il a signe sans lire. Il etait deja a table."
 }])

@@ -10,7 +10,7 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Personne n est venu defendre la galerie. On les laisse passer d une salle a l autre comme on laisse passer des visiteurs."
+"text": "Les gardiens de la galerie tombent sans bruit, comme des pieces qu on range. On laisse passer le mage en visiteur."
 }, {
 "portrait": &"rat",
 "side": "right",
@@ -20,7 +20,7 @@ lines = Array[Dictionary]([{
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Le Gardien de la foret ne valait rien."
+"text": "Le Gardien de la foret ne valait rien ?"
 }, {
 "portrait": &"skeleton_king",
 "side": "right",

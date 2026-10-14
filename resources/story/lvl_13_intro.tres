@@ -7,20 +7,30 @@ script = ExtResource("1_2knk7")
 id = &"lvl_13_intro"
 scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
-"portrait": &"skeleton_king",
-"side": "right",
-"speaker": "Le Roi squelette",
-"text": "Quatre. Quatre seigneurs, quatre contrats, et pas une seule signature en commun."
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au centre du monde demoniaque, le pentacle. Devant sa porte, une silhouette que le mage connait."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Donc aucun des quatre n a donne l ordre."
+"text": "La Reine gorgone. Je l ai brisee dans le village de l enfant."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Aucun des quatre n a meme lu l ordre. Ils l ont RECU."
+"text": "Ici, on recolle les statues. Elle garde la porte. Derriere, Malyk ramasse ce qui a deja servi."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Malyk ?"
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Celui qui porte les ordres aux seigneurs. Il mange ce qu il appelle. Les seigneurs n ont jamais lu l ordre : ils l ont RECU de lui."
 }, {
 "portrait": &"rat",
 "side": "right",
@@ -30,5 +40,5 @@ lines = Array[Dictionary]([{
 "portrait": &"mage_grave",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Alors on monte encore. Je suis descendu pour rien."
+"text": "Alors Malyk n est qu un coursier de plus. Je suis descendu pour rien."
 }])

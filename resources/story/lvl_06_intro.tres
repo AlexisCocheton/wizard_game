@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_aocea"]
+
+[resource]
+script = ExtResource("1_aocea")
+id = &"lvl_06_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L escalier qui remonte mene a la salle du trone de Tombol. Le trone est vide, et la cour du roi se dechire tout autour."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Ils se battent entre eux. Ils ne nous regardent meme pas."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Leur roi est parti sans dire a qui revenait le trone. Ils se le disputent."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Nous, on ne fait que passer. Mais ici, tout ce qui passe, ils le tuent quand meme."
+}])

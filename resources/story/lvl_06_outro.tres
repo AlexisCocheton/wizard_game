@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_1nlkr"]
+
+[resource]
+script = ExtResource("1_1nlkr")
+id = &"lvl_06_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le dernier seigneur de la cour tombe sur les marches du trone vide, la main sur le sceau royal. Le sceau est casse en deux."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ils se battaient pour un sceau qui ne vaut plus rien. Le roi a signe avec, et ce qu il a signe est deja parti."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Parti ou ?"
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "En bas. Par le meme chemin que lui."
+}])
