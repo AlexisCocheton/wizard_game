@@ -295,6 +295,11 @@ func is_discovered(card_id: StringName) -> bool:
 		return ContentDB.cards.has(card_id)
 	if profile().get("discovered_cards", []).has(String(card_id)):
 		return true
+	# VAGUE 10 : un PASSIF n est dans aucun deck ; il est obtenu s il est
+	# DEBLOQUE (passifs de base, victoire d un niveau, quete annexe).
+	var c: SpellCard = ContentDB.cards.get(card_id)
+	if c != null and c.is_passive:
+		return _passive_unlocked_by_progress(c)
 	return _open_decks_hold(card_id)
 
 
@@ -307,20 +312,30 @@ func discovered_count() -> int:
 	var ids: Dictionary = {}
 	for id in profile().get("discovered_cards", []):
 		ids[String(id)] = true
-	for id2: StringName in cards_owned_by_decks(unlocked_levels()):
-		ids[String(id2)] = true
+	for lid in open_level_ids():
+		var lv: LevelDef = ContentDB.levels.get(StringName(lid))
+		if lv == null:
+			continue
+		for c: SpellCard in campaign_deck(lv):
+			ids[String(c.id)] = true
 	return ids.size()
 
 
 ## (a) : la carte est-elle dans le deck de campagne d un niveau OUVERT ?
 ## Parcours direct plutot que cards_owned_by_decks() : is_discovered est appele
 ## pour chaque vignette du grimoire, inutile de trier une liste a chaque fois.
+##
+## VAGUE 10 : le deck de campagne est celui du MOMENT (SaveData.campaign_deck) :
+## ses communes de base, plus les cartes que les objectifs reussis y ont fait
+## entrer. Une recompense d objectif qui rejoint le deck rejoint donc le livre —
+## « les cartes de notre deck sont directement dans le livre ». En repli (niveau
+## sans deck de base), c est exploration_deck, exactement comme avant.
 func _open_decks_hold(card_id: StringName) -> bool:
-	for id in unlocked_levels():
+	for id in open_level_ids():
 		var lv: LevelDef = ContentDB.levels.get(StringName(id))
 		if lv == null:
 			continue
-		for c: SpellCard in lv.exploration_deck:
+		for c: SpellCard in campaign_deck(lv):
 			if c != null and c.id == card_id:
 				return true
 	return false
@@ -346,7 +361,10 @@ static func cards_owned_by_decks(level_ids: Array) -> Array[StringName]:
 		var lv: LevelDef = ContentDB.levels.get(StringName(id))
 		if lv == null:
 			continue
-		for c: SpellCard in lv.exploration_deck:
+		# Le deck de BASE (vague 10) : communes de base, ou exploration_deck en
+		# repli. Les cartes que les objectifs ajoutent dependent du PROFIL : elles
+		# n entrent pas dans cette reponse du contenu seul.
+		for c: SpellCard in lv.campaign_base_cards():
 			if c != null:
 				vus[String(c.id)] = true
 	# Tri sur String : le tri de StringName n est pas fiable en 4.4 (gotchas).
@@ -628,8 +646,14 @@ func playable_levels() -> Array[LevelDef]:
 	return out
 
 
+## Un niveau est ouvert s il est dans la liste ecrite (campagne), ou si c est une
+## QUETE ANNEXE dont la condition d ouverture est remplie (DEDUIT, voir
+## side_quest_open : rien n est ecrit pour une annexe).
 func is_level_unlocked(level_id: StringName) -> bool:
-	return unlocked_levels().has(String(level_id))
+	if unlocked_levels().has(String(level_id)):
+		return true
+	var lv: LevelDef = ContentDB.levels.get(level_id)
+	return lv != null and lv.side_quest and side_quest_open(lv)
 
 
 func unlock_level(level_id: StringName) -> void:
@@ -680,10 +704,17 @@ func is_level_cleared(level_id: StringName) -> bool:
 ## Rend [finis, total]. Un seul endroit qui compte, parce que trois ecrans
 ## posent la question (le deblocage du Massacre, le profil, les succes) et que
 ## trois comptages separes finiraient par diverger.
+##
+## VAGUE 10 : seuls les niveaux du FIL de la campagne comptent
+## (LevelDef.is_campaign_level). Une QUETE ANNEXE n y entre pas : comptee, elle
+## deviendrait obligatoire pour ouvrir le Massacre. Un niveau sans acte (act = 0,
+## hors campagne) n y entrait deja que par accident.
 func campaign_progress() -> Array:
 	var finis: int = 0
 	var total: int = 0
 	for lv: LevelDef in ContentDB.levels.values():
+		if lv == null or not lv.is_campaign_level():
+			continue
 		total += 1
 		if is_level_cleared(lv.id):
 			finis += 1
@@ -702,12 +733,13 @@ func campaign_cleared() -> bool:
 	return int(p[1]) > 0 and int(p[0]) >= int(p[1])
 
 
-# --- Modes sans fin : ouverture et records (chantier M) ---
+# --- Modes : ouverture et records (chantier M, vague 10) ---
 
-## L INFINI d un niveau est ouvert des que le niveau l est. Pas de verrou de
-## fin de campagne : le mode sans fin d un niveau deja atteint ne devoile rien
-## de l histoire, et le cacher coupait le joueur du seul mode ou son deck compte.
-func infinite_unlocked(level_id: StringName) -> bool:
+## Le mode LIBRE d un niveau est ouvert des que le niveau l est (« deux modes
+## accessibles des que le niveau est ouvert », co-auteur, 14/10). Il remplace
+## l Infini par niveau (infinite_unlocked, RETIREE : un appelant oublie casse a
+## la compilation au lieu de croire qu il ouvre un mode sans fin).
+func free_unlocked(level_id: StringName) -> bool:
 	return ContentDB.levels.has(level_id) and is_level_unlocked(level_id)
 
 
@@ -724,15 +756,12 @@ func massacre_unlocked() -> bool:
 	return campaign_cleared()
 
 
-## Record INFINI d un niveau. Distinct de "best_wave", qui est celui de
-## l Exploration : les deux se melangeaient, et une partie infinie de 14 vagues
-## affichait "Meilleure vague : 14" sur un niveau qui n en compte que six.
-func infinite_best_wave(level_id: StringName) -> int:
-	if not ContentDB.levels.has(level_id):
-		return 0
-	return int(level_record(level_id).get("best_wave_infinite", 0))
-
-
+## LE RECORD INFINI PAR NIVEAU N EXISTE PLUS (vague 10 : l Infini par niveau est
+## remplace par le LIBRE, qui a une fin). Migration : la cle
+## "best_wave_infinite" des fiches de niveau est LAISSEE dans le profil (rien
+## n est retire a un profil existant), mais plus rien ne l ecrit ni ne
+## l affiche ; infinite_best_wave() est retiree. Le seul record sans fin est
+## celui du Massacre.
 func massacre_best_wave() -> int:
 	return int(profile().get("massacre_best_wave", 0))
 
@@ -741,19 +770,21 @@ func massacre_best_wave() -> int:
 ## nouveau record. Un seul point d ecriture, appele par GameController a chaque
 ## vague nettoyee et par l ecran de defaite : sans lui, l ecran de defaite
 ## creait une fiche de niveau "massacre" fantome dans "levels".
+##
+## Le LIBRE n ecrit RIEN : « Meilleure vague » est le record de la campagne, et
+## une partie libre (ton deck) ne doit ni le gonfler ni le melanger.
 func record_run_waves(level_id: StringName, mode: GameEnums.Mode, waves: int) -> bool:
 	if mode == GameEnums.Mode.MASSACRE:
 		if waves <= massacre_best_wave():
 			return false
 		profile()["massacre_best_wave"] = waves
 		return true
-	if not ContentDB.levels.has(level_id):
+	if mode != GameEnums.Mode.EXPLORATION or not ContentDB.levels.has(level_id):
 		return false
 	var rec: Dictionary = level_record(level_id)
-	var cle: String = "best_wave_infinite" if mode == GameEnums.Mode.INFINITE else "best_wave"
-	if waves <= int(rec.get(cle, 0)):
+	if waves <= int(rec.get("best_wave", 0)):
 		return false
-	rec[cle] = waves
+	rec["best_wave"] = waves
 	return true
 
 
@@ -789,11 +820,19 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 		return false
 	var cartes_avant: Array[SpellCard] = objective_rewards_unlocked(level)
 	var rec: Dictionary = level_record(level.id)
-	if mode == GameEnums.Mode.EXPLORATION:
+	# VAGUE 10 : seule la CAMPAGNE fait avancer la campagne. Une victoire en
+	# LIBRE (ton deck) ne compte que pour les objectifs : le niveau n est pas
+	# marque fini, rien ne s ouvre, « Meilleure vague » ne bouge pas. Elle est
+	# notee a part ("cleared_free"), pour l affichage seulement : rien ne la
+	# lit pour ouvrir quoi que ce soit. L ancienne branche ecrivait
+	# "cleared_massacre" pour tout mode hors Exploration, ce qui aurait fait
+	# compter une victoire libre comme une victoire de campagne.
+	var avance: bool = GameEnums.advances_campaign(mode)
+	if avance:
 		rec["cleared_exploration"] = true
-	else:
-		rec["cleared_massacre"] = true
-	rec["best_wave"] = maxi(int(rec.get("best_wave", 0)), waves)
+		rec["best_wave"] = maxi(int(rec.get("best_wave", 0)), waves)
+	elif mode == GameEnums.Mode.FREE:
+		rec["cleared_free"] = true
 
 	# Un objectif reussi une fois reste acquis : on cumule d un run a l autre.
 	var objs: Dictionary = rec.get("objectives", {})
@@ -802,8 +841,9 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 			objs[String(obj_id)] = true
 	rec["objectives"] = objs
 
-	for nxt in level.next_levels:
-		unlock_level(nxt)
+	if avance:
+		for nxt in level.next_levels:
+			unlock_level(nxt)
 
 	var newly: bool = false
 	for c in objective_rewards_unlocked(level):
@@ -885,16 +925,18 @@ func card_visibility(card_id: StringName) -> int:
 
 
 ## Ids (StringName -> true) de toutes les cartes presentes dans le pool de
-## montee de niveau d au moins un niveau OUVERT, obtenues ou non. Recalcule a
-## chaque appel : 21 niveaux x une douzaine de cartes, et c est la seule facon
-## que le grimoire suive un objectif reussi sans cache a invalider.
+## montee de niveau d au moins un niveau OUVERT, hors la part « cartes deja
+## obtenues » de ce pool (RunState.levelup_pool_to_obtain) : les appelants
+## testent is_discovered AVANT, une carte obtenue n a pas besoin d y etre.
+## Recalcule a chaque appel : 21 niveaux x une douzaine de cartes, et c est la
+## seule facon que le grimoire suive un objectif reussi sans cache a invalider.
 func obtainable_ids() -> Dictionary:
 	var out: Dictionary = {}
-	for id in unlocked_levels():
+	for id in open_level_ids():
 		var lv: LevelDef = ContentDB.levels.get(StringName(id))
 		if lv == null:
 			continue
-		for c: SpellCard in RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION):
+		for c: SpellCard in RunState.levelup_pool_to_obtain(lv, GameEnums.Mode.EXPLORATION):
 			out[c.id] = true
 	return out
 
@@ -903,11 +945,11 @@ func obtainable_ids() -> Dictionary:
 ## tries par id. C est la reponse a "ou l obtenir ?" pour une carte grisee.
 func levels_offering(card_id: StringName) -> Array[LevelDef]:
 	var out: Array[LevelDef] = []
-	for id in unlocked_levels():
+	for id in open_level_ids():
 		var lv: LevelDef = ContentDB.levels.get(StringName(id))
 		if lv == null:
 			continue
-		for c: SpellCard in RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION):
+		for c: SpellCard in RunState.levelup_pool_to_obtain(lv, GameEnums.Mode.EXPLORATION):
 			if c.id == card_id:
 				out.append(lv)
 				break
@@ -1015,7 +1057,7 @@ func enemy_visibility(enemy_id: StringName) -> int:
 ## s ouvre doit se voir au grimoire sans cache a invalider.
 func reachable_enemy_ids() -> Dictionary:
 	var out: Dictionary = {}
-	for id in unlocked_levels():
+	for id in open_level_ids():
 		var lv: LevelDef = ContentDB.levels.get(StringName(id))
 		if lv == null:
 			continue
@@ -1028,7 +1070,7 @@ func reachable_enemy_ids() -> Dictionary:
 ## a "ou le rencontrer ?" pour un monstre grise.
 func levels_with_enemy(enemy_id: StringName) -> Array[LevelDef]:
 	var out: Array[LevelDef] = []
-	for id in unlocked_levels():
+	for id in open_level_ids():
 		var lv: LevelDef = ContentDB.levels.get(StringName(id))
 		if lv == null:
 			continue
@@ -1466,3 +1508,137 @@ func tester_account_level() -> int:
 		if r != null:
 			palier = maxi(palier, r.at_level)
 	return palier
+
+
+# =====================================================================
+# CHANTIER A3 (vague 10) — DECK DE CAMPAGNE, QUETES ANNEXES, PASSIFS.
+# Tout est DEDUIT du contenu et de ce que le profil ecrivait deja (niveaux
+# ouverts et finis, objectifs acquis, cartes prises, niveau de compte) : aucune
+# cle neuve, donc aucune migration a ecrire, et un ancien profil se lit juste
+# des la mise a jour. Verrouille par test_campaign_progression.
+# =====================================================================
+
+## Les niveaux OUVERTS : la liste ecrite de la campagne, plus les QUETES ANNEXES
+## dont la condition est remplie. Ce que lisent le livre de sorts, les cartes
+## obtenables et le bestiaire ; unlocked_levels() reste la liste ECRITE.
+func open_level_ids() -> Array:
+	var out: Array = unlocked_levels().duplicate()
+	for lv: LevelDef in ContentDB.side_quests():
+		if not out.has(String(lv.id)) and side_quest_open(lv):
+			out.append(String(lv.id))
+	return out
+
+
+## Une QUETE ANNEXE est-elle ouverte ? Toutes ses conditions doivent tenir :
+##   - `side_quest_after` (un niveau de campagne) FINI, s il est renseigne ;
+##   - `side_quest_character` (un apprenti) DEBLOQUE au compte, s il l est ;
+##   - sans aucune des deux : un niveau de campagne de son acte de rattachement
+##     est ouvert (l annexe suit le voyage, elle ne le devance pas).
+## Mode testeur : tout est ouvert, comme pour la campagne.
+func side_quest_open(lv: LevelDef) -> bool:
+	if lv == null or not lv.side_quest:
+		return false
+	if tester_mode():
+		return true
+	if lv.side_quest_after != &"" and not is_level_cleared(lv.side_quest_after):
+		return false
+	if lv.side_quest_character != "" and not character_unlocked(lv.side_quest_character):
+		return false
+	if lv.side_quest_after == &"" and lv.side_quest_character == "":
+		for id in unlocked_levels():
+			var autre: LevelDef = ContentDB.levels.get(StringName(id))
+			if autre != null and autre.is_campaign_level() and autre.act == lv.act:
+				return true
+		return false
+	return true
+
+
+## Ce qu il manque pour ouvrir une annexe, en une phrase joueur ("" si ouverte).
+## Lu par la carte de campagne, sous le nom d une annexe verrouillee.
+func side_quest_lock_reason(lv: LevelDef) -> String:
+	if lv == null or side_quest_open(lv):
+		return ""
+	var morceaux: Array[String] = []
+	if lv.side_quest_after != &"" and not is_level_cleared(lv.side_quest_after):
+		var avant: LevelDef = ContentDB.levels.get(lv.side_quest_after)
+		morceaux.append("Termine %s" % (avant.display_name if avant != null
+			else String(lv.side_quest_after)))
+	if lv.side_quest_character != "" and not character_unlocked(lv.side_quest_character):
+		morceaux.append("Debloque %s" % _character_name(lv.side_quest_character))
+	if morceaux.is_empty():
+		morceaux.append("Atteins l acte %d" % lv.act)
+	return " ; ".join(morceaux)
+
+
+## Un personnage (cle AnimCatalog d une recompense CHARACTER) est-il debloque au
+## compte ? Le mage l est toujours.
+func character_unlocked(key: String) -> bool:
+	if key == "" or key == AccountRewardDef.CHARACTER_MAGE:
+		return true
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.kind == GameEnums.RewardKind.CHARACTER \
+				and r.texture_name == key and r.at_level <= account_level():
+			return true
+	return false
+
+
+func _character_name(key: String) -> String:
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.kind == GameEnums.RewardKind.CHARACTER and r.texture_name == key:
+			return r.display_name
+	return key
+
+
+## Les RANGS (1 = le plus facile) des objectifs deja reussis de ce niveau.
+func achieved_ranks(level: LevelDef) -> Array[int]:
+	var out: Array[int] = []
+	if level == null:
+		return out
+	for i in level.objectives.size():
+		var obj: ObjectiveDef = level.objectives[i]
+		if obj != null and is_objective_done(level.id, obj.id):
+			out.append(LevelDef.objective_rank(i))
+	return out
+
+
+## LE DECK DE CAMPAGNE DE CE PROFIL pour ce niveau : la table du co-auteur
+## appliquee aux objectifs deja reussis (LevelDef.campaign_deck). La partie, le
+## briefing, la fiche et le livre de sorts le lisent ici.
+func campaign_deck(level: LevelDef) -> Array[SpellCard]:
+	if level == null:
+		var vide: Array[SpellCard] = []
+		return vide
+	return level.campaign_deck(achieved_ranks(level))
+
+
+## PASSIFS DEBLOQUES PAR LA PROGRESSION (le profil ecrit, regle (c), est lu
+## avant par is_discovered) :
+##   - les passifs de BASE, des qu un niveau de l acte des passifs est ouvert ;
+##   - les `passive_unlocks` d un niveau FINI en campagne (annexes comprises) ;
+##   - REPLI, contenu d avant la vague 10 (aucun niveau n ecrit de
+##     passive_unlocks) : rien de plus. Les autres passifs restent alors
+##     proposables au pool de montee de niveau des l acte 2, comme avant, et
+##     s obtiennent en les prenant (RunState.levelup_pool).
+func _passive_unlocked_by_progress(card: SpellCard) -> bool:
+	if card == null or not card.is_passive:
+		return false
+	if GameConfig.BASE_PASSIVES.has(card.id) and passives_unlocked():
+		return true
+	for lv: LevelDef in ContentDB.levels.values():
+		if lv == null or not lv.passive_unlocks.has(card):
+			continue
+		if is_level_cleared(lv.id):
+			return true
+	return false
+
+
+## Les passifs que la victoire de ce niveau debloque (pour la fiche et l ecran
+## de victoire). Copie : l appelant peut la trier.
+func passive_unlocks_of(level: LevelDef) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	if level == null:
+		return out
+	for p in level.passive_unlocks:
+		if p != null and p.is_passive and not out.has(p):
+			out.append(p)
+	return out

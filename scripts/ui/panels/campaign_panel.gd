@@ -6,11 +6,15 @@ extends VBoxContainer
 ##      de l acte, avec les points des niveaux, leurs noms et leurs etoiles.
 ##      On change d acte avec les fleches de bord. C est l ecran d accueil.
 ##   2. LE DETAIL : exactement l ecran qui existait avant (nom, vagues, boss,
-##      objectifs, segment Exploration/Infini, gros JOUER), plus un RETOUR.
+##      objectifs, segment de mode, gros JOUER), plus un RETOUR.
 ##
 ## Le second bouton du segment s appelait MASSACRE et ne s ouvrait qu a la fin
-## de la campagne. Depuis le 29/09 c est l INFINI du niveau, ouvert des que le
-## niveau l est ; le Massacre est devenu un niveau a part, dans son onglet.
+## de la campagne. Depuis le 29/09 c etait l INFINI du niveau ; depuis la vague
+## 10 (14/10) le segment dit CAMPAGNE / LIBRE, tous deux ouverts des que le
+## niveau l est : CAMPAGNE joue le deck de campagne (qui evolue avec les
+## objectifs reussis) et fait avancer le voyage ; LIBRE joue les MEMES vagues et
+## objectifs avec le deck du joueur, et sa victoire ne sert qu aux objectifs. Le
+## sans fin est l onglet Massacre.
 ##
 ## POURQUOI garder le detail tel quel : le testeur a demande que le niveau
 ## « amene a une interface qui ressemble a l actuelle ». On ne refait pas la
@@ -19,6 +23,10 @@ extends VBoxContainer
 ## ou elles tournent les pages du voyage.
 
 var _mode: GameEnums.Mode = GameEnums.Mode.EXPLORATION
+
+## Les deux boutons du segment de mode (vague 10).
+const MODE_LABEL_CAMPAIGN: String = "CAMPAGNE"
+const MODE_LABEL_FREE: String = "LIBRE"
 
 ## Vue 1 : la carte.
 var _map: CampaignMap
@@ -29,7 +37,7 @@ var _detail_id: StringName = &""
 var _card: PanelContainer
 var _card_body: VBoxContainer
 var _explore_btn: Button
-var _infinite_btn: Button
+var _free_btn: Button
 var _hint: Label
 var _play_btn: Button
 var _back_btn: Button
@@ -72,29 +80,41 @@ func _build() -> void:
 	_card.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_detail.add_child(_card)
 
+	# La fiche DEFILE au doigt (vague 10) : le deck de campagne et les passifs
+	# debloques s ajoutent aux objectifs, et un petit telephone n a plus la
+	# hauteur. TouchScroll et jamais un ScrollContainer nu (voir touch_scroll.gd).
+	var defile: ScrollContainer = TouchScroll.make()
+	defile.name = "FicheScroll"
+	defile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	defile.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_card.add_child(defile)
+
 	_card_body = VBoxContainer.new()
 	_card_body.add_theme_constant_override(&"separation", 18)
-	_card.add_child(_card_body)
+	_card_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_card_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	defile.add_child(_card_body)
 
 	# Segment de mode : deux boutons, un seul enfonce.
 	var modes := HBoxContainer.new()
 	modes.add_theme_constant_override(&"separation", 12)
 	_detail.add_child(modes)
 	_explore_btn = Button.new()
-	_explore_btn.text = "EXPLORATION"
+	_explore_btn.name = "CampaignButton"
+	_explore_btn.text = MODE_LABEL_CAMPAIGN
 	_explore_btn.toggle_mode = true
 	_explore_btn.custom_minimum_size = Vector2(0, 100)
 	_explore_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_explore_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.EXPLORATION))
 	modes.add_child(_explore_btn)
-	_infinite_btn = Button.new()
-	_infinite_btn.name = "InfiniteButton"
-	_infinite_btn.text = "INFINI"
-	_infinite_btn.toggle_mode = true
-	_infinite_btn.custom_minimum_size = Vector2(0, 100)
-	_infinite_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_infinite_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.INFINITE))
-	modes.add_child(_infinite_btn)
+	_free_btn = Button.new()
+	_free_btn.name = "FreeButton"
+	_free_btn.text = MODE_LABEL_FREE
+	_free_btn.toggle_mode = true
+	_free_btn.custom_minimum_size = Vector2(0, 100)
+	_free_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_free_btn.pressed.connect(func() -> void: _set_mode(GameEnums.Mode.FREE))
+	modes.add_child(_free_btn)
 
 	_hint = UiTheme.label("", UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER)
 	_detail.add_child(_hint)
@@ -134,7 +154,7 @@ func detail_level_id() -> StringName:
 
 ## Le detail garde bien les commandes de l ancien ecran.
 func has_detail_controls() -> bool:
-	return _play_btn != null and _explore_btn != null and _infinite_btn != null \
+	return _play_btn != null and _explore_btn != null and _free_btn != null \
 		and _explore_btn.get_parent() != null and _play_btn.get_parent() != null
 
 
@@ -148,11 +168,29 @@ func current_mode() -> GameEnums.Mode:
 
 
 func mode_labels() -> Array[String]:
-	return [_explore_btn.text, _infinite_btn.text]
+	return [_explore_btn.text, _free_btn.text]
 
 
-func infinite_available() -> bool:
-	return _infinite_btn != null and not _infinite_btn.disabled
+## Le bouton LIBRE est-il actif ? (remplace infinite_available, vague 10)
+func free_available() -> bool:
+	return _free_btn != null and not _free_btn.disabled
+
+
+## Le texte d aide sous le segment de mode (pour les tests et le SMOKE).
+func hint_text() -> String:
+	return _hint.text if _hint != null else ""
+
+
+## Tous les textes de la fiche, dans l ordre (pour les tests : ils jugent ce qui
+## est AFFICHE, pas ce que le code croit avoir pose).
+func detail_texts() -> Array[String]:
+	var out: Array[String] = []
+	if _card_body == null:
+		return out
+	for n: Node in _card_body.find_children("*", "Label", true, false):
+		if not n.is_queued_for_deletion():
+			out.append((n as Label).text)
+	return out
 
 
 func play_enabled() -> bool:
@@ -197,9 +235,12 @@ func _current() -> LevelDef:
 
 func _render_detail() -> void:
 	for c in _card_body.get_children():
+		# Retire tout de suite de l arbre : detail_texts() ne doit lire que la
+		# fiche du moment, pas celle d avant qui attend sa liberation.
+		_card_body.remove_child(c)
 		c.queue_free()
 	_explore_btn.button_pressed = _mode == GameEnums.Mode.EXPLORATION
-	_infinite_btn.button_pressed = _mode == GameEnums.Mode.INFINITE
+	_free_btn.button_pressed = _mode == GameEnums.Mode.FREE
 
 	var level: LevelDef = _current()
 	if level == null:
@@ -210,7 +251,10 @@ func _render_detail() -> void:
 	var unlocked: bool = SaveData.is_level_unlocked(level.id)
 	var cleared: bool = SaveData.is_level_cleared(level.id)
 
-	if level.act > 0:
+	if level.side_quest:
+		_card_body.add_child(UiTheme.label(side_quest_header(level),
+			UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
+	elif level.act > 0:
 		_card_body.add_child(UiTheme.label(String(CampaignMap.ACT_NAMES.get(level.act, "")),
 			UiTheme.FONT_SMALL, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
 	_card_body.add_child(UiTheme.label(level.display_name, UiTheme.FONT_TITLE,
@@ -275,21 +319,22 @@ func _render_detail() -> void:
 	# niveau qu ils decrivent. Le vide va APRES le dernier bloc, pas entre deux
 	# blocs lies.
 	if not unlocked:
-		_card_body.add_child(UiTheme.label("VERROUILLE\nTermine le niveau precedent",
+		var pourquoi: String = SaveData.side_quest_lock_reason(level) if level.side_quest \
+			else "Termine le niveau precedent"
+		_card_body.add_child(UiTheme.label("VERROUILLE\n%s" % pourquoi,
 			UiTheme.FONT_BODY, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
 	else:
 		var rec: Dictionary = SaveData.level_record(level.id)
 		var best: int = int(rec.get("best_wave", 0))
 		var status: String = "Termine" if cleared else "Meilleure vague : %d" % best
 		var status_ink: Color = UiTheme.GREEN if cleared else UiTheme.TEXT_DARK
-		# En INFINI, la ligne d etat porte le RECORD INFINI du niveau : c est le
-		# seul chiffre qui compte pour ce mode, et celui de l Exploration (6
-		# vagues au plus) n en dit rien.
-		if _mode == GameEnums.Mode.INFINITE:
-			var record: int = SaveData.infinite_best_wave(level.id)
-			status = "Record Infini : aucun"
-			if record > 0:
-				status = "Record Infini : vague %d" % record
+		# En LIBRE (vague 10), la ligne d etat dit la REGLE du mode : c est la
+		# seule chose que le joueur ne peut pas deviner (sa victoire n ouvre
+		# rien). « Meilleure vague » est le record de la campagne.
+		if _mode == GameEnums.Mode.FREE:
+			status = FREE_STATUS_TEXT
+			if bool(rec.get("cleared_free", false)):
+				status += "\nDeja gagne en Libre"
 			status_ink = UiTheme.TEXT_DARK
 		_card_body.add_child(UiTheme.label(status, UiTheme.FONT_BODY,
 			status_ink, HORIZONTAL_ALIGNMENT_CENTER))
@@ -313,36 +358,117 @@ func _render_detail() -> void:
 			box.add_child(UiTheme.label(objective_reward_line(level, i),
 				UiTheme.FONT_SMALL, _reward_ink(level, i)))
 
+		# LE DECK DE CAMPAGNE (vague 10) : ce que le joueur emporte EN CAMPAGNE,
+		# tel que ses objectifs reussis l ont regle. En Libre il joue son deck :
+		# le montrer ici serait annoncer des cartes qu il n aura pas.
+		if _mode == GameEnums.Mode.EXPLORATION:
+			_add_campaign_deck(level)
+		# Les passifs que la victoire en campagne debloque.
+		var passifs: Array[SpellCard] = SaveData.passive_unlocks_of(level)
+		if not passifs.is_empty():
+			_card_body.add_child(UiTheme.label(passive_unlock_line(level),
+				UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
+
 	# Le vide restant se met en BAS, une fois tout dit.
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_card_body.add_child(spacer)
 
-	# L INFINI s ouvre avec le NIVEAU, sans attendre la fin de la campagne
-	# (decision du 29/09). La regle vit dans SaveData.infinite_unlocked().
-	var infini_ouvert: bool = SaveData.infinite_unlocked(level.id)
-	_infinite_btn.disabled = not infini_ouvert
-	if not infini_ouvert and _mode == GameEnums.Mode.INFINITE:
+	# Le LIBRE s ouvre avec le NIVEAU, comme la campagne (regle du 14/10). La
+	# regle vit dans SaveData.free_unlocked().
+	var libre_ouvert: bool = SaveData.free_unlocked(level.id)
+	_free_btn.disabled = not libre_ouvert
+	if not libre_ouvert and _mode == GameEnums.Mode.FREE:
 		# Un mode verrouille ne doit pas rester selectionne : sinon le joueur
 		# voit un bouton JOUER mort sans comprendre pourquoi.
 		_mode = GameEnums.Mode.EXPLORATION
 		_explore_btn.button_pressed = true
-		_infinite_btn.button_pressed = false
+		_free_btn.button_pressed = false
 
 	# Bouton JOUER et message d aide selon le mode.
 	var reason: String = ""
 	if not unlocked:
 		reason = "Niveau verrouille"
-	elif _mode == GameEnums.Mode.INFINITE:
+	elif _mode == GameEnums.Mode.FREE:
 		reason = DeckRules.validation_message(SaveData.massacre_deck())
 	_play_btn.disabled = reason != ""
 	if reason != "":
 		_hint.text = reason
 	elif _mode == GameEnums.Mode.EXPLORATION:
-		_hint.text = "Deck pre-etabli du niveau (%d cartes)" % level.exploration_deck.size()
+		_hint.text = CAMPAIGN_HINT % SaveData.campaign_deck(level).size()
 	else:
-		_hint.text = "Vagues INFINIES avec ton deck (%d cartes)  -  un sort a choisir toutes les %d vagues" % [
-			SaveData.massacre_deck().size(), GameController.WAVES_PER_CHOICE]
+		_hint.text = FREE_HINT % SaveData.massacre_deck().size()
+
+
+## --- VAGUE 10 : textes et blocs de la fiche CAMPAGNE / LIBRE (chantier A3) ---
+
+## La regle du Libre, en une ligne d etat.
+const FREE_STATUS_TEXT: String = "Libre : seuls les objectifs comptent"
+const CAMPAIGN_HINT: String = "Deck de campagne du niveau (%d cartes)  -  la victoire ouvre la suite"
+const FREE_HINT: String = "Ton deck (%d cartes)  -  memes vagues, memes objectifs, la campagne n avance pas"
+
+
+## L en-tete d une QUETE ANNEXE sur la fiche : elle n appartient pas au fil de
+## l acte, mais y est RATTACHEE (passifs, communes).
+static func side_quest_header(level: LevelDef) -> String:
+	var acte: String = String(CampaignMap.ACT_NAMES.get(level.act, "ACTE %d" % level.act))
+	return "QUETE ANNEXE  -  %s" % acte
+
+
+## Le deck de campagne, compte par carte (« Nom x4 »), la nouvelle commune
+## nommee comme telle. Les communes d abord, puis les recompenses des objectifs.
+func _add_campaign_deck(level: LevelDef) -> void:
+	var deck: Array[SpellCard] = SaveData.campaign_deck(level)
+	if deck.is_empty():
+		return
+	_card_body.add_child(UiTheme.label("DECK DE CAMPAGNE  (%d cartes)" % deck.size(),
+		UiTheme.FONT_SMALL, UiTheme.GOLD.darkened(0.25), HORIZONTAL_ALIGNMENT_CENTER))
+	var wrap := HFlowContainer.new()
+	wrap.name = "CampaignDeck"
+	wrap.alignment = FlowContainer.ALIGNMENT_CENTER
+	wrap.add_theme_constant_override(&"h_separation", 18)
+	wrap.add_theme_constant_override(&"v_separation", 6)
+	_card_body.add_child(wrap)
+	for ligne: Array in campaign_deck_lines(level):
+		var tag: Label = UiTheme.label(String(ligne[0]), UiTheme.FONT_SMALL,
+			UiTheme.rarity_ink(int(ligne[1])))
+		tag.autowrap_mode = TextServer.AUTOWRAP_OFF
+		wrap.add_child(tag)
+
+
+## Le deck de campagne en lignes [texte, rarete], dans l ordre du deck, une par
+## carte distincte. Statique : la fiche, le test et l ecran de lancement peuvent
+## lire la meme phrase.
+static func campaign_deck_lines(level: LevelDef) -> Array:
+	var out: Array = []
+	if level == null:
+		return out
+	var copies: Dictionary = {}
+	var ordre: Array[SpellCard] = []
+	for c: SpellCard in SaveData.campaign_deck(level):
+		if not copies.has(c.id):
+			copies[c.id] = 0
+			ordre.append(c)
+		copies[c.id] = int(copies[c.id]) + 1
+	var nouvelle: SpellCard = level.new_common()
+	for c2 in ordre:
+		var texte: String = "%s x%d" % [c2.display_name, int(copies[c2.id])]
+		if c2 == nouvelle:
+			texte += " (nouvelle)"
+		out.append([texte, int(c2.rarity)])
+	return out
+
+
+## Ce que la victoire en campagne debloque comme passifs, en une phrase.
+static func passive_unlock_line(level: LevelDef) -> String:
+	var noms: Array[String] = []
+	for p: SpellCard in SaveData.passive_unlocks_of(level):
+		noms.append(p.display_name)
+	if noms.is_empty():
+		return ""
+	var deja: bool = SaveData.is_level_cleared(level.id)
+	return "%s : passif%s %s" % ["Victoire obtenue" if deja else "La victoire debloque",
+		"s" if noms.size() > 1 else "", ", ".join(noms)]
 
 
 func _on_play() -> void:
@@ -358,8 +484,11 @@ func _on_play() -> void:
 ##
 ## Une ligne sous chaque objectif dit ce qu il rapporte. La carte est NOMMEE
 ## meme avant d etre gagnee : c est la promesse qui donne envie de tenter
-## l objectif. Elle n est pas donnee, elle rejoint le pool de montee de niveau.
-## Statique : le test et l ecran de victoire lisent la meme phrase.
+## l objectif. Statique : le test et l ecran de victoire lisent la meme phrase.
+##
+## VAGUE 10 : sur un niveau a deck de base, la carte ENTRE AU DECK DE CAMPAGNE
+## (table du co-auteur) ; sur un niveau d avant (repli), elle rejoint le pool de
+## montee de niveau et s obtient en la prenant en combat, comme avant.
 static func objective_reward_line(level: LevelDef, index: int) -> String:
 	var carte: SpellCard = level.objective_reward(index) if level != null else null
 	if carte == null:
@@ -367,7 +496,10 @@ static func objective_reward_line(level: LevelDef, index: int) -> String:
 	var obj: ObjectiveDef = level.objectives[index] if index < level.objectives.size() else null
 	var acquis: bool = obj != null and SaveData.is_objective_done(level.id, obj.id)
 	var etat: String = ""
-	if SaveData.is_discovered(carte.id):
+	if level.has_base_commons() and not carte.is_passive:
+		# Court : la ligne doit tenir sur la largeur du papier (vu sur capture).
+		etat = "  (dans ton deck)" if acquis else "  (ira dans ton deck)"
+	elif SaveData.is_discovered(carte.id):
 		etat = "  (obtenue)"
 	elif acquis:
 		etat = "  (a prendre en combat)"

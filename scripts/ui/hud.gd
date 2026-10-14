@@ -901,7 +901,8 @@ func _speed_color(part: float) -> Color:
 
 func _on_wave_changed(index: int) -> void:
 	var total: int = 0
-	if RunState.current_level_def != null and RunState.mode == GameEnums.Mode.EXPLORATION:
+	# Vague 10 : Campagne ET Libre jouent les vagues ecrites du niveau.
+	if RunState.current_level_def != null and not GameEnums.is_endless(RunState.mode):
 		total = RunState.current_level_def.waves.size()
 	if total > 0:
 		_wave_label.text = "Vague %d/%d   Niv.%d" % [mini(index + 1, total), total, RunState.level]
@@ -964,7 +965,8 @@ func _build_objective_strip() -> void:
 	_obj_box = null
 	_obj_lines.clear()
 	var lvl: LevelDef = RunState.current_level_def
-	if lvl == null or RunState.mode != GameEnums.Mode.EXPLORATION or lvl.objectives.is_empty():
+	# Vague 10 : le Libre a les MEMES objectifs que la campagne.
+	if lvl == null or GameEnums.is_endless(RunState.mode) or lvl.objectives.is_empty():
 		return
 	_obj_panel = PanelContainer.new()
 	_obj_panel.name = "ObjectiveStrip"

@@ -77,6 +77,10 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_tester_field_commit.gd",
 	# Vague 9 : compte a rebours de la vague qui traine dans le HUD.
 	"res://tests/unit/test_overtime_countdown.gd",
+	# Vague 10 (A3) : deck de campagne qui evolue avec les objectifs (table du
+	# co-auteur, huit cas), pool de montee de niveau, passifs, quetes annexes.
+	"res://tests/unit/test_campaign_deck.gd",
+	"res://tests/unit/test_campaign_progression.gd",
 	# Vague 10 (ecrans) : bilan des degats et conseil, briefing refait, sceau.
 	"res://tests/unit/test_screens_w10.gd",
 ]

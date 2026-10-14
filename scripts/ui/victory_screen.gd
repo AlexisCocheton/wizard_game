@@ -59,6 +59,11 @@ func _ready() -> void:
 	# Ce que les objectifs avaient deja ouvert AVANT cette victoire : la
 	# difference avec l apres est ce qui vient de s ouvrir, et seul cela se fete.
 	var avant: Array[SpellCard] = SaveData.objective_rewards_unlocked(level)
+	# Vague 10 (A3) : les passifs que CETTE victoire debloque (premiere victoire
+	# en campagne du niveau seulement).
+	_passifs_gagnes.clear()
+	if GameEnums.advances_campaign(RunState.mode) and not SaveData.is_level_cleared(level.id):
+		_passifs_gagnes = SaveData.passive_unlocks_of(level)
 	SaveData.record_victory(level, RunState.mode, done, RunState.wave_index)
 	SaveData.save_profile()
 	var nouvelles: Array[SpellCard] = []
@@ -67,6 +72,10 @@ func _ready() -> void:
 			nouvelles.append(c)
 
 	_remplir(level, done, nouvelles)
+
+
+## Passifs debloques par cette victoire (vague 10, A3), lus par _remplir.
+var _passifs_gagnes: Array[SpellCard] = []
 
 
 ## Le chiffre du succes « Collectionneur » : les cartes OBTENUES (sorts et
@@ -148,15 +157,24 @@ func _remplir(level: LevelDef, done: Dictionary, nouvelles: Array[SpellCard]) ->
 	# La carte n est pas DONNEE : elle entre dans le pool de montee de niveau du
 	# niveau, et s obtient en la prenant en combat. Le texte le dit, sinon le
 	# joueur la cherche dans son deck et croit a un bug.
+	# Vague 10 (A3) : sur un niveau a deck de base, la carte ENTRE au deck de
+	# campagne ; sur un niveau de repli, elle rejoint le pool comme avant.
+	var au_deck: bool = level.has_base_commons()
 	for c in nouvelles:
 		_objectives.add_child(UiTheme.label(
-			"Nouvelle carte a gagner ici : %s" % c.display_name,
+			"%s : %s" % ["Nouvelle carte dans ton deck" if au_deck else "Nouvelle carte a gagner ici",
+				c.display_name],
 			UiTheme.FONT_BODY, UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_CENTER))
 	if not nouvelles.is_empty():
 		_objectives.add_child(UiTheme.label(
-			"Elle pourra t etre proposee a la montee de niveau de ce niveau",
+			"Elle rejoint ton deck de campagne de ce niveau" if au_deck
+			else "Elle pourra t etre proposee a la montee de niveau de ce niveau",
 			UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
-	if not level.next_levels.is_empty():
+	for p in _passifs_gagnes:
+		_objectives.add_child(UiTheme.label("Passif debloque : %s" % p.display_name,
+			UiTheme.FONT_BODY, UiTheme.rarity_ink(p.rarity), HORIZONTAL_ALIGNMENT_CENTER))
+	# Une victoire LIBRE n ouvre rien (vague 10) : ne pas le promettre.
+	if not level.next_levels.is_empty() and GameEnums.advances_campaign(RunState.mode):
 		_objectives.add_child(UiTheme.label("Niveau suivant debloque",
 			UiTheme.FONT_BODY, UiTheme.INK_HINT, HORIZONTAL_ALIGNMENT_CENTER))
 

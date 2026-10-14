@@ -209,6 +209,42 @@ const ACT_NAMES: Dictionary = {
 ## encore) plutot que de laisser un ecran nu que le joueur lirait comme un bug.
 const EMPTY_NOTICE: String = "Le voyage ne va pas encore jusqu ici."
 
+## --- LA PAGE « QUETES ANNEXES » (vague 10, chantier A3) ---
+##
+##   +--------------------------------------------------+
+##   |               QUETES ANNEXES                     |
+##   |   Hors du chemin : elles ne comptent pas...      |  <- avis
+##   |                                                  |
+##   |      .--.    .--.     .--.    .--.               |
+##   |  <  (    )  (    )   (    )  (    )              |  <- rangees de 4 au
+##   |      `--'    `--'     `--'    `--'               |     plus, sans cambrure
+##   |     Nom     Nom      Nom     Nom                 |     (ce n est pas une
+##   |     o o o   Termine  o o o   Debloque            |     convergence)
+##   |             X        ...     l ecuyer            |  <- condition, si fermee
+##   +--------------------------------------------------+
+##
+## Une PAGE de plus apres les actes, et non un point sur la page de son acte :
+## une annexe n est pas une etape du voyage, et la poser dans l acte la ferait
+## lire comme un passage oblige (elle ne compte pas dans campaign_progress). La
+## page n existe que si le contenu porte au moins une annexe : une page vide
+## promettrait un contenu qui n existe pas.
+##
+## Cle de page : SIDE_PAGE, un entier hors de toute plage d acte, pour que la
+## navigation par fleches (une liste triee d entiers) la range en dernier sans
+## code a part.
+const SIDE_PAGE: int = 1000
+const SIDE_TITLE: String = "QUETES ANNEXES"
+const SIDE_NOTICE: String = "Hors du chemin : elles ne comptent pas pour finir la campagne."
+## Fond : le sentier de la foret. Une annexe est un chemin de traverse ; un fond
+## d acte la rattacherait a un seul acte alors que la page les reunit tous.
+const SIDE_BACKDROP: String = "talk_path"
+## Au plus quatre annexes par rangee : c est la rangee la plus large que l acte
+## IV tient deja entre les fleches (noms de deux lignes, tuiles de ~185 px).
+const SIDE_ROW_MAX: int = 4
+## Tuile d annexe : celle de l eventail, plus une ligne pour la CONDITION
+## d ouverture quand l annexe est fermee (elle remplace alors les etoiles).
+const SIDE_HIT_H: float = 330.0
+
 ## Etat calcule : acte -> [ids ordonnes], et id -> donnees du point.
 var _by_act: Dictionary = {}          # int -> Array[StringName]
 var _rows: Dictionary = {}            # int -> Array[Array[StringName]], par profondeur
@@ -346,7 +382,9 @@ func _compute() -> void:
 	var ids: Array[StringName] = _ordre_de_jeu()
 	for id in ids:
 		var lv: LevelDef = ContentDB.levels[id]
-		var a: int = lv.act
+		# Une QUETE ANNEXE va sur SA page, jamais sur celle de son acte de
+		# rattachement (vague 10) : elle n est pas une etape du voyage.
+		var a: int = SIDE_PAGE if lv.side_quest else lv.act
 		if not _by_act.has(a):
 			_by_act[a] = []
 		(_by_act[a] as Array).append(StringName(id))
@@ -375,6 +413,15 @@ func _compute() -> void:
 		_acts.append(int(a))
 	_acts.sort()
 
+	# La page des annexes suit l ordre de ContentDB.side_quests() (acte de
+	# rattachement, puis id), et non le chainage : les annexes ne se suivent pas.
+	if _by_act.has(SIDE_PAGE):
+		var annexes: Array = []
+		for sq: LevelDef in ContentDB.side_quests():
+			if (_by_act[SIDE_PAGE] as Array).has(sq.id):
+				annexes.append(sq.id)
+		_by_act[SIDE_PAGE] = annexes
+
 	_compute_rows()
 	_assign_signatures(ids)
 
@@ -398,6 +445,18 @@ func _compute_rows() -> void:
 	_rows.clear()
 	for a in _by_act.keys():
 		var ids: Array = _by_act[a]
+		# Page des annexes : des rangees de SIDE_ROW_MAX, dans l ordre de la page.
+		if int(a) == SIDE_PAGE:
+			var paquets: Array = []
+			for i in ids.size():
+				if i % SIDE_ROW_MAX == 0:
+					paquets.append([])
+				(paquets[paquets.size() - 1] as Array).append(ids[i])
+			_rows[a] = paquets
+			for ri in paquets.size():
+				for sid in paquets[ri]:
+					_nodes[sid]["row"] = ri
+			continue
 		var dans: Dictionary = {}
 		var rang: Dictionary = {}
 		for id in ids:
@@ -743,7 +802,24 @@ func current_act() -> int:
 
 
 func act_title(act: int) -> String:
+	if act == SIDE_PAGE:
+		return SIDE_TITLE
 	return String(ACT_NAMES.get(act, "ACTE %d" % act))
+
+
+## La carte a-t-elle une page de quetes annexes ? (seulement si le contenu en a)
+func has_side_page() -> bool:
+	return _acts.has(SIDE_PAGE)
+
+
+## Les annexes de la page, dans l ordre affiche.
+func side_quest_ids() -> Array[StringName]:
+	return levels_in_act(SIDE_PAGE)
+
+
+func show_side_page() -> void:
+	if has_side_page():
+		show_act(SIDE_PAGE)
 
 
 func empty_notice() -> String:
@@ -818,7 +894,10 @@ func show_act(act: int) -> void:
 		return
 	_backdrop.texture = SheetLib.texture(BACKDROP_DIR + backdrop_for_act(act) + ".png")
 	_title.text = act_title(act)
-	_fork_lbl.visible = act_has_fork(act)
+	# Sur la page des annexes, la bande sous le titre dit ce qu elles NE sont
+	# pas (un passage oblige) ; ailleurs, l avis d ordre libre d un eventail.
+	_fork_lbl.text = SIDE_NOTICE if act == SIDE_PAGE else FORK_NOTICE
+	_fork_lbl.visible = act == SIDE_PAGE or act_has_fork(act)
 	if _prev_btn != null:
 		_prev_btn.disabled = not can_go_previous()
 		_next_btn.disabled = not can_go_next()
@@ -829,6 +908,8 @@ func show_act(act: int) -> void:
 ## l UI : combat et carte montrent alors forcement le meme lieu. La table
 ## `ACT_BACKDROPS` n est qu un repli pour un acte encore sans niveau.
 func backdrop_for_act(act: int) -> String:
+	if act == SIDE_PAGE:
+		return SIDE_BACKDROP
 	for id in levels_in_act(act):
 		var lv: LevelDef = _nodes[id]["level"]
 		if lv.backdrop != "":
@@ -856,8 +937,21 @@ func _layout_dots() -> void:
 ## Vrai si toutes les rangees de l acte passent en tuiles d eventail a la taille
 ## actuelle de la carte (voir `_all_compact`).
 func _compact_for(act: int) -> bool:
+	if act == SIDE_PAGE:
+		return true
 	var h: float = maxf(size.y, 1.0)
 	return _all_compact(_rows.get(act, []), h * (GROUND_BOTTOM - GROUND_TOP))
+
+
+## Hauteur d une tuile d eventail sur cette page, et cambrure de ses rangees de
+## trois et plus. La page des annexes a des tuiles plus hautes (la condition
+## d ouverture) et des rangees droites : ses annexes ne convergent vers rien.
+func _fan_h(act: int) -> float:
+	return SIDE_HIT_H if act == SIDE_PAGE else FAN_HIT_H
+
+
+func _fan_arc(act: int) -> float:
+	return 0.0 if act == SIDE_PAGE else FAN_ARC
 
 
 ## Calcule la place de chaque niveau d un acte. Ne deplace que les boutons de
@@ -874,7 +968,9 @@ func _layout_act(act: int) -> void:
 	var top: float = h * GROUND_TOP
 	var bottom: float = h * GROUND_BOTTOM
 	var fourche: bool = act_has_fork(act)
-	var tout_compact: bool = _all_compact(rows, bottom - top)
+	var tout_compact: bool = act == SIDE_PAGE or _all_compact(rows, bottom - top)
+	var fan_h: float = _fan_h(act)
+	var fan_arc: float = _fan_arc(act)
 
 	# Chaque rangee recoit une bande proportionnelle a ce qu elle doit loger :
 	# une tuile large (170) ou une tuile d eventail (280, plus la cambrure). Sur
@@ -885,9 +981,9 @@ func _layout_act(act: int) -> void:
 	for r in rows.size():
 		var k: int = (rows[r] as Array).size()
 		var compact: bool = tout_compact or k > 1
-		var besoin: float = (FAN_HIT_H if compact else DOT_HIT_H) + ROW_GAP
+		var besoin: float = (fan_h if compact else DOT_HIT_H) + ROW_GAP
 		if k >= 3:
-			besoin += FAN_ARC
+			besoin += fan_arc
 		besoins.append(besoin)
 		total += besoin
 	var echelle: float = (bottom - top) / maxf(total, 1.0)
@@ -923,7 +1019,7 @@ func _layout_act(act: int) -> void:
 		# Rangee d eventail : colonnes egales entre les fleches, centrees.
 		var col: float = minf((w - 2.0 * SIDE_MARGIN) / float(k), FAN_COL_MAX)
 		var x0: float = w * 0.5 - col * float(k) * 0.5
-		var hit := Vector2(maxf(col - FAN_GAP, DOT_SIZE), FAN_HIT_H)
+		var hit := Vector2(maxf(col - FAN_GAP, DOT_SIZE), fan_h)
 		# Cambrure en parabole, recentree sur zero pour que la rangee reste au
 		# milieu de sa bande : les bords descendent, le centre monte.
 		var moyenne: float = 0.0
@@ -931,7 +1027,7 @@ func _layout_act(act: int) -> void:
 			moyenne += _arc_t2(c, k)
 		moyenne /= float(k)
 		for c in k:
-			var creux: float = (_arc_t2(c, k) - moyenne) * FAN_ARC if k >= 3 else 0.0
+			var creux: float = (_arc_t2(c, k) - moyenne) * fan_arc if k >= 3 else 0.0
 			_place(rangee[c], Vector2(x0 + col * (float(c) + 0.5), cy + creux), hit)
 
 
@@ -1015,7 +1111,8 @@ func _add_dot(id: StringName) -> void:
 	b.name = "Niveau_%s" % id
 	b.flat = true
 	b.focus_mode = Control.FOCUS_NONE
-	b.size = Vector2(DOT_SIZE, FAN_HIT_H) if eventail else Vector2(DOT_HIT_W, DOT_HIT_H)
+	b.size = Vector2(DOT_SIZE, _fan_h(int(data["act"]))) if eventail \
+		else Vector2(DOT_HIT_W, DOT_HIT_H)
 	b.custom_minimum_size = b.size
 	b.disabled = not enabled
 	# Un bouton desactive ne montre pas d infobulle ; on met la raison dans le
@@ -1072,6 +1169,19 @@ func _add_dot(id: StringName) -> void:
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vb.add_child(name_lbl)
+
+	# ANNEXE FERMEE (vague 10) : sa CONDITION d ouverture a la place des
+	# etoiles. Sur la page d un acte, le chemin est evident (le niveau d avant) ;
+	# une annexe s ouvre par une etape ou un apprenti que rien d autre ne nomme.
+	if lv.side_quest and not enabled:
+		var cond: Label = UiTheme.label_hud(SaveData.side_quest_lock_reason(lv),
+			UiTheme.FONT_SMALL, Color(1.0, 0.86, 0.55), HORIZONTAL_ALIGNMENT_CENTER, true)
+		cond.name = "Condition"
+		cond.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cond.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vb.add_child(cond)
+		b.tooltip_text = cond.text
+		return
 
 	# LES ETOILES : une par objectif (jamais du texte ASCII, qui ne se lit pas
 	# comme une note). Pleines = pieces d or, vides = anneaux creux.

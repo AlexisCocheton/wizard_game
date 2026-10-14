@@ -6,9 +6,10 @@ extends Node2D
 ## doublerait silencieusement la montee automatique du multiplicateur.
 ##
 ## Modes (GameEnums.Mode) :
-##   Exploration : vagues ecrites du niveau, choix de carte a chaque montee de niveau.
-##   Infini      : UN niveau prolonge sans fin, vagues par budget a travers les
-##                 cinq mondes, choix de carte toutes les N vagues.
+##   Campagne (EXPLORATION) : vagues ecrites du niveau, deck de campagne IMPOSE
+##                 (SaveData.campaign_deck), choix de carte a chaque montee de niveau.
+##   Libre (FREE) : les MEMES vagues et objectifs, le deck du joueur, choix de
+##                 carte a chaque montee de niveau (vague 10, remplace l Infini).
 ##   Massacre    : le niveau infini A PART (MassacreMode) : monstres de tous les
 ##                 niveaux melanges, boss de tout le jeu, fond fixe.
 ## Dans tous les modes, les cartes proposees viennent de RunState.levelup_pool().
@@ -21,8 +22,8 @@ signal cards_offered(cards: Array[SpellCard])
 signal burn_aim_requested(card: SpellCard)
 signal burn_resolved(card: SpellCard)
 
-## Modes sans fin (Infini et Massacre) : un choix de 3 cartes toutes les N
-## vagues nettoyees.
+## Mode sans fin (le Massacre) : un choix de 3 cartes toutes les N vagues
+## nettoyees.
 const WAVES_PER_CHOICE: int = 2
 
 @onready var battlefield: Battlefield = $Battlefield
@@ -79,19 +80,19 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	RunState.build_deck_from_list(_build_deck())
 	RunState.draw(GameConfig.START_HAND_SIZE)
 	# PASSIFS EQUIPES AU DECK : actifs DES LE DEBUT du combat, mais SEULEMENT en
-	# Infini et en Massacre, et des l acte 2 atteint (retouche du 30/09). Un
+	# Libre et en Massacre, et des l acte 2 atteint (retouche du 30/09). Un
 	# niveau de campagne part sans eux : ses passifs viennent des montees de
 	# niveau. APRES reset(), qui vide la barre, et apres current_level_def /
 	# mode, dont depend la regle.
 	RunState.equip_saved_passives()
 
-	# MODES (chantier M). L Infini traverse les cinq mondes (le lieu pese sur le
-	# tirage, le fond change) ; le Massacre les MELANGE : aucun monde, donc aucun
-	# poids local et aucun changement de fond, et ses paliers tirent dans les
-	# boss de tout le jeu.
-	if mode == GameEnums.Mode.INFINITE:
-		spawner.setup_procedural(battlefield, _procedural_pool(), _boss_pool())
-	elif mode == GameEnums.Mode.MASSACRE:
+	# MODES (chantier M, vague 10). Le Massacre MELANGE les mondes : aucun monde,
+	# donc aucun poids local et aucun changement de fond, et ses paliers tirent
+	# dans les boss de tout le jeu. Campagne et Libre jouent les vagues ECRITES
+	# du niveau. L Infini par niveau (descente a travers les cinq mondes) est
+	# retire : WaveSpawner garde la descente (setup_procedural, mondes actifs par
+	# defaut), que plus aucun mode n appelle.
+	if mode == GameEnums.Mode.MASSACRE:
 		spawner.setup_procedural(battlefield, _procedural_pool(),
 			MassacreMode.boss_pool(), 0, {}, false)
 	else:
@@ -133,31 +134,37 @@ func _connect_once(sig: Signal, callable: Callable) -> void:
 		sig.connect(callable)
 
 
-## Deck de la partie selon le mode.
-##   Exploration : la liste pre-etablie du niveau (une entree = un exemplaire).
-##   Infini et Massacre : deck de depart SIMPLE — le deck compose par le joueur
-##                 s il est valide, sinon les communes. Les cartes fortes arrivent
-##                 par les choix.
+## Deck de la partie selon le mode : voir run_deck(), lue aussi par le briefing.
 func _build_deck() -> Array[SpellCard]:
-	if GameEnums.is_endless(mode):
+	return GameController.run_deck(level_def, mode)
+
+
+## LE DECK D UNE PARTIE, pour (niveau, mode). Une seule fonction, lue par la
+## partie (_build_deck) et par le briefing : l ecran de lancement ne doit pas
+## annoncer un deck que la partie ne distribue pas.
+##   Campagne : le deck de campagne du PROFIL (SaveData.campaign_deck : les
+##              communes de base reglees par les objectifs reussis, ou
+##              exploration_deck en repli). Une entree = un exemplaire.
+##   Libre et Massacre : le deck compose par le joueur s il est valide. Sinon
+##              (deck sauvegarde hors regle : la fiche coupe deja JOUER) le deck
+##              de campagne du niveau, puis le deck de base du jeu.
+## Plus AUCUN passif dans le deck : ils sont equipes hors deck et agissent des
+## le debut du combat (voir RunState.equipped_passives).
+static func run_deck(def: LevelDef, run_mode: GameEnums.Mode) -> Array[SpellCard]:
+	if run_mode != GameEnums.Mode.EXPLORATION:
 		var ids: Array = SaveData.massacre_deck()
 		if DeckRules.is_valid(ids):
 			var chosen: Array[SpellCard] = DeckRules.resolve(ids)
 			if chosen.size() >= DeckRules.MIN_CARDS:
 				return chosen
-	# Plus AUCUN passif dans le deck : ils sont equipes hors deck et agissent des
-	# le debut du combat (voir RunState.equipped_passives). Les melanger aux
-	# cartes obligeait a les piocher puis a les incanter pour en profiter.
-	if level_def != null and not level_def.exploration_deck.is_empty():
-		var expl: Array[SpellCard] = []
-		for c: SpellCard in level_def.exploration_deck:
-			if c != null and not c.is_passive:
-				expl.append(c)
-		return expl
+	if def != null:
+		var campagne: Array[SpellCard] = SaveData.campaign_deck(def)
+		if not campagne.is_empty():
+			return campagne
 	return DeckRules.resolve(DeckRules.default_deck_ids())
 
 
-## Pool des modes sans fin : les monstres du niveau, boss exclus. Pour le
+## Pool du mode sans fin : les monstres du niveau, boss exclus. Pour le
 ## Massacre, le "niveau" est celui de MassacreMode, dont le pool reunit deja les
 ## monstres de tous les niveaux.
 func _procedural_pool() -> Array[EnemyDef]:
@@ -167,14 +174,6 @@ func _procedural_pool() -> Array[EnemyDef]:
 		source = ContentDB.enemies.values()
 	for d in source:
 		if d != null and not d.is_boss():
-			out.append(d)
-	return out
-
-
-func _boss_pool() -> Array[EnemyDef]:
-	var out: Array[EnemyDef] = []
-	for d: EnemyDef in ContentDB.enemies.values():
-		if d.is_boss():
 			out.append(d)
 	return out
 
@@ -520,7 +519,9 @@ func _on_upgrade_declined() -> void:
 
 func _on_level_up(_new_level: int) -> void:
 	AudioBus.play_sfx(&"level_up")
-	if mode == GameEnums.Mode.EXPLORATION:
+	# Campagne ET Libre (un niveau joue) : un choix a chaque montee de niveau. Le
+	# Massacre propose toutes les WAVES_PER_CHOICE vagues (_on_wave_cleared).
+	if not GameEnums.is_endless(mode):
 		_offer_cards()
 
 
@@ -637,7 +638,7 @@ func _on_wave_cleared(index: int) -> void:
 	RunState.wave_index = index + 1
 	RunState.wave_changed.emit(RunState.wave_index)
 	ChallengeTracker.record_best(&"max_speed_reached", SpeedGauge.speed_percent)
-	# MODES (chantier M) : les deux modes sans fin comptent pour les succes de
+	# MODES (chantier M) : le mode sans fin compte pour les succes de
 	# survie, et chaque vague nettoyee met le record a jour tout de suite. Le
 	# tenir ici plutot qu a l ecran de defaite, c est ne pas le perdre quand le
 	# joueur ABANDONNE depuis la pause, qui ne passe par aucun ecran de fin.
@@ -651,9 +652,9 @@ func _on_wave_cleared(index: int) -> void:
 	# distribuait des legendaires. Les cartes fortes s obtiennent maintenant par
 	# les objectifs du niveau (LevelDef.objective_rewards). La vague de boss suit
 	# donc la cadence ordinaire.
-	# Les offres des modes sans fin passent par RunState.offer_choices(), qui
-	# tire dans RunState.levelup_pool(level_def, mode) : hors campagne, toutes
-	# les cartes obtenues (niveau fabrique du Massacre compris).
+	# Les offres du mode sans fin passent par RunState.offer_choices(), qui
+	# tire dans RunState.levelup_pool(level_def, mode) : au Massacre, toutes
+	# les cartes obtenues (niveau fabrique du Massacre).
 	if GameEnums.is_endless(mode) and RunState.wave_index % WAVES_PER_CHOICE == 0:
 		_offer_cards()
 
@@ -686,7 +687,7 @@ func _on_all_cleared() -> void:
 func abandon_run() -> void:
 	_ended = true
 	running = false
-	# Le record d un mode sans fin est deja a jour (_on_wave_cleared) ; il faut
+	# Le record du mode sans fin est deja a jour (_on_wave_cleared) ; il faut
 	# encore l ECRIRE, puisqu aucun ecran de fin ne le fera.
 	if GameEnums.is_endless(mode):
 		SaveData.save_profile()

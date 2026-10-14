@@ -33,7 +33,9 @@ extends Resource
 @export var waves: Array[WaveDef] = []
 ## Pool de monstres utilisable par la generation procedurale de vagues.
 @export var enemy_pool: Array[EnemyDef] = []
-## Deck impose en mode Exploration.
+## Deck impose en campagne AVANT la vague 10. Depuis, le deck de campagne se
+## deduit de `base_commons` et des objectifs reussis (campaign_deck) ; ce champ
+## reste le REPLI d un niveau sans deck de base.
 @export var exploration_deck: Array[SpellCard] = []
 ## Exactement 3 objectifs (verifie par l'etage AUDIT), CLASSES PAR DIFFICULTE :
 ## l objectif 1 est le plus accessible, le 3 le plus dur. Leur position est leur
@@ -42,9 +44,11 @@ extends Resource
 
 ## --- PROGRESSION DES CARTES (vague 5, chantier P) ---
 ##
-## Le pool de montee de niveau en campagne = le deck du niveau + ces cartes
-## NOUVELLES + les cartes debloquees par les objectifs deja reussis de CE niveau
-## (RunState.levelup_pool). Il n y a plus de recompense de boss d office ni de
+## Jusqu a la vague 10, le pool de montee de niveau en campagne = le deck du
+## niveau + ces cartes NOUVELLES + les cartes debloquees par les objectifs deja
+## reussis de CE niveau. Depuis (14/10) : cartes obtenues + communes de l acte, et
+## cet ancien pool seulement en REPLI, pour un niveau sans deck de base (voir
+## RunState.levelup_pool et la section A3 en fin de fichier). Il n y a plus de recompense de boss d office ni de
 ## legendaire "3/3 objectifs" : l ancien champ `legendary_reward` a ete RETIRE
 ## (un profil qui l avait obtenue la garde, voir SaveData._migrate).
 
@@ -66,6 +70,40 @@ extends Resource
 
 ## Niveaux accessibles apres victoire.
 @export var next_levels: Array[StringName] = []
+
+## --- STRUCTURE DE LA VAGUE 10 (chantier A3, regles du co-auteur du 14/10) ---
+## Tous ces champs sont FACULTATIFS : vides, le niveau se joue comme avant la
+## vague 10 (voir les replis documentes dans la section en fin de fichier).
+
+## LE DECK DE BASE DE LA CAMPAGNE : exactement BASE_COMMONS_COUNT communes,
+## distinctes. La PREMIERE est la commune NOUVELLE du niveau, les deux autres
+## font tourner les communes de l acte. Le deck joue en campagne se DEDUIT de
+## cette liste et des objectifs reussis (campaign_deck, table du co-auteur).
+## Vide = repli sur `exploration_deck` (contenu d avant la vague 10).
+@export var base_commons: Array[SpellCard] = []
+
+## Les PASSIFS que la VICTOIRE EN CAMPAGNE de ce niveau debloque (1 ou 2 par
+## niveau de campagne, le reste dans les quetes annexes, qui utilisent le meme
+## champ). Gagnes a la victoire et non par objectif : les objectifs rapportent
+## deja les cartes du deck, et une victoire est la seule etape que tout joueur
+## franchit. Deduit de l etat « niveau fini », rien n est ecrit : un ancien profil
+## qui a deja fini le niveau a ses passifs sans migration.
+@export var passive_unlocks: Array[SpellCard] = []
+
+## QUETE ANNEXE : un niveau hors du fil de la campagne. Il a un acte de
+## RATTACHEMENT (`act`, qui decide des passifs et des communes de son pool), ne
+## compte PAS dans SaveData.campaign_progress (sinon une annexe deviendrait
+## obligatoire pour ouvrir le Massacre) et s affiche sur la page « Quetes
+## annexes » de la carte, jamais sur la page de son acte.
+@export var side_quest: bool = false
+## Condition d ouverture d une annexe : ce niveau de CAMPAGNE doit etre FINI.
+## Vide = aucune condition de niveau : l annexe s ouvre des qu un niveau de
+## campagne de son acte de rattachement est ouvert.
+@export var side_quest_after: StringName = &""
+## Condition d ouverture d une annexe : ce PERSONNAGE (cle AnimCatalog d une
+## recompense CHARACTER, ex. "squire") doit etre debloque au compte. Vide =
+## aucune condition de personnage. Les deux conditions se cumulent.
+@export var side_quest_character: String = ""
 
 ## Nombre de cartes nouvelles attendues par niveau (demande du co-auteur).
 const LEVELUP_NEW_CARDS: int = 3
@@ -151,7 +189,7 @@ func progression_errors() -> Array[String]:
 		if c == null:
 			out.append("carte de montee de niveau nulle")
 			continue
-		if exploration_deck.has(c):
+		if exploration_deck.has(c) or base_commons.has(c):
 			out.append("%s est deja dans le deck : elle n est pas NOUVELLE" % c.id)
 		if vues.has(c.id):
 			out.append("%s listee deux fois en montee de niveau" % c.id)
@@ -173,6 +211,8 @@ func progression_errors() -> Array[String]:
 			out.append("l objectif %d debloque %s (%s), %s attendue" % [
 				objective_rank(i), r.id, GameEnums.rarity_name(r.rarity),
 				GameEnums.rarity_name(voulue)])
+	# Vague 10 (chantier A3) : deck de base, passifs debloques, annexes.
+	out.append_array(structure_errors())
 	return out
 
 
@@ -181,3 +221,190 @@ func boss_wave() -> WaveDef:
 		if w != null and w.is_boss:
 			return w
 	return null
+
+
+# =====================================================================
+# CHANTIER A3 (vague 10) — DECK DE CAMPAGNE QUI EVOLUE, QUETES ANNEXES.
+# Section a part pour se fusionner sans toucher au reste du fichier.
+# =====================================================================
+
+## Nombre de communes du deck de base (regle du co-auteur : « 3 communes x4 »).
+const BASE_COMMONS_COUNT: int = 3
+
+## Au plus ce nombre de passifs debloques par la victoire d un niveau (« 1 ou 2
+## debloquables par niveau de campagne »). Une annexe suit la meme borne.
+const MAX_PASSIVE_UNLOCKS: int = 2
+
+## LA TABLE DU CO-AUTEUR (14/10), a la lettre. Cle = masque des objectifs
+## REUSSIS : bit 0 = rang 1 (rare), bit 1 = rang 2 (epique), bit 2 = rang 3
+## (legendaire). Valeur = [nouvelle, 2e commune, 3e commune, rare, epique,
+## legendaire] en EXEMPLAIRES, la nouvelle etant base_commons[0], la 2e
+## base_commons[1], la 3e base_commons[2].
+##
+## LECTURE DE LA NOTATION DU CO-AUTEUR. Il ecrit les communes « a/b/c » et
+## precise pour E : « 3/3/4, la nouvelle a 4 ». La nouvelle est donc la
+## TROISIEME de sa notation, qui se lit (2e, 3e, nouvelle) ; c est la seule
+## lecture ou la nouvelle n a jamais moins de 3 exemplaires, ce qui est
+## l intention (le niveau la fait decouvrir). D ou, de sa notation a la table :
+##   aucun  4/4/4               -> [4, 4, 4, 0, 0, 0]
+##   R      3/3/3 + R x3        -> [3, 3, 3, 3, 0, 0]
+##   E      3/3/4 + E x2        -> [4, 3, 3, 0, 2, 0]
+##   L      4/4/3 + L x1        -> [3, 4, 4, 0, 0, 1]
+##   R+E    2/2/3 + R x3 + E x2 -> [3, 2, 2, 3, 2, 0]
+##   R+L    2/3/3 + R x3 + L x1 -> [3, 2, 3, 3, 0, 1]
+##   tout   2/2/3 + R x2 + E x2 + L x1 -> [3, 2, 2, 2, 2, 1]
+## E+L N EST PAS DANS LA TABLE DU CO-AUTEUR. Regle deduite et documentee :
+##   E+L    3/3/3 + E x2 + L x1 -> [3, 3, 3, 0, 2, 1]
+## Pourquoi : les recompenses gardent les exemplaires qu elles ont SEULES (E x2
+## comme dans E, L x1 comme dans L ; seul « tout » reduit la rare) ; la nouvelle
+## garde 3 comme dans toute combinaison a deux objectifs ou plus ; il reste 6
+## exemplaires pour deux communes, partages egalement (3/3), comme dans R.
+## Chaque ligne fait 12 cartes, 6 ids au plus et respecte les plafonds par
+## rarete (4/3/2/1) : verifie pour les huit cas par test_campaign_deck.
+const CAMPAIGN_DECK_TABLE: Dictionary = {
+	0: [4, 4, 4, 0, 0, 0],
+	1: [3, 3, 3, 3, 0, 0],
+	2: [4, 3, 3, 0, 2, 0],
+	4: [3, 4, 4, 0, 0, 1],
+	3: [3, 2, 2, 3, 2, 0],
+	5: [3, 2, 3, 3, 0, 1],
+	6: [3, 3, 3, 0, 2, 1],
+	7: [3, 2, 2, 2, 2, 1],
+}
+
+
+## Le niveau porte-t-il un deck de base complet (BASE_COMMONS_COUNT cartes non
+## nulles) ? Faux = repli sur exploration_deck partout ou le deck de base sert.
+func has_base_commons() -> bool:
+	if base_commons.size() != BASE_COMMONS_COUNT:
+		return false
+	for c in base_commons:
+		if c == null:
+			return false
+	return true
+
+
+## Un niveau du fil de la CAMPAGNE (un acte, pas une annexe). Seuls ceux-la
+## comptent dans campaign_progress et fournissent les communes de leur acte.
+func is_campaign_level() -> bool:
+	return act > 0 and not side_quest
+
+
+## La commune NOUVELLE du niveau (base_commons[0]), ou null en repli.
+func new_common() -> SpellCard:
+	return base_commons[0] if has_base_commons() else null
+
+
+## Masque de la table a partir des RANGS reussis (1, 2, 3 ; les autres valeurs
+## et les doublons sont ignores). Un rang dont l objectif ne rapporte AUCUNE
+## carte de deck (case vide, ou passif : un passif ne se pioche pas) ne compte
+## pas : sinon la table enleverait des communes pour une carte qui n existe pas,
+## et le deck tomberait sous 12.
+func campaign_deck_mask(ranks_done: Array) -> int:
+	var mask: int = 0
+	for r in ranks_done:
+		var rang: int = int(r)
+		if rang < 1 or rang > REWARD_RARITY_BY_RANK.size():
+			continue
+		var carte: SpellCard = objective_reward(rang - 1)
+		if carte == null or carte.is_passive:
+			continue
+		mask |= 1 << (rang - 1)
+	return mask
+
+
+## LE DECK DE CAMPAGNE du niveau quand les objectifs de rangs `ranks_done`
+## (1 = le plus facile) sont reussis. FONCTION UNIQUE : la partie, le briefing,
+## la fiche et le livre de sorts la lisent tous (via SaveData.campaign_deck).
+## Une entree = un exemplaire, dans l ordre nouvelle, 2e, 3e commune, puis rare,
+## epique, legendaire.
+##
+## REPLI (contenu d avant la vague 10) : sans deck de base complet, le deck est
+## `exploration_deck`, passifs exclus, quels que soient les objectifs reussis.
+## Les recompenses de ces niveaux restent alors au pool de montee de niveau
+## (RunState.levelup_pool), comme avant.
+func campaign_deck(ranks_done: Array) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	if not has_base_commons():
+		for c in exploration_deck:
+			if c != null and not c.is_passive:
+				out.append(c)
+		return out
+	var ligne: Array = CAMPAIGN_DECK_TABLE.get(campaign_deck_mask(ranks_done),
+		CAMPAIGN_DECK_TABLE[0])
+	var cartes: Array[SpellCard] = [base_commons[0], base_commons[1], base_commons[2],
+		objective_reward(0), objective_reward(1), objective_reward(2)]
+	for i in cartes.size():
+		var n: int = int(ligne[i]) if i < ligne.size() else 0
+		if n <= 0 or cartes[i] == null:
+			continue
+		for _k in n:
+			out.append(cartes[i])
+	return out
+
+
+## Les cartes du deck de campagne SANS aucun objectif : les communes de base, ou
+## le deck d exploration en repli. C est la part du deck que le CONTENU seul
+## garantit (SaveData.cards_owned_by_decks, regle du livre de sorts).
+func campaign_base_cards() -> Array[SpellCard]:
+	return campaign_deck([])
+
+
+## Ce qui est FAUX dans le contenu de la vague 10 (deck de base, passifs
+## debloques, annexe). Lu par progression_errors(), donc par l AUDIT : une
+## erreur de structure ne se corrige pas en ecrivant la suite du contenu.
+func structure_errors() -> Array[String]:
+	var out: Array[String] = []
+	if not base_commons.is_empty():
+		if base_commons.size() != BASE_COMMONS_COUNT:
+			out.append("%d communes de base, %d attendues"
+				% [base_commons.size(), BASE_COMMONS_COUNT])
+		var vues: Dictionary = {}
+		for c in base_commons:
+			if c == null:
+				out.append("commune de base nulle")
+				continue
+			if c.is_passive or c.rarity != GameEnums.Rarity.COMMON:
+				out.append("%s n est pas une commune : elle ne peut pas etre au deck de base" % c.id)
+			if vues.has(c.id):
+				out.append("%s listee deux fois au deck de base" % c.id)
+			vues[c.id] = true
+		if has_base_commons():
+			for mask: int in CAMPAIGN_DECK_TABLE:
+				var ids: Array = []
+				for c2: SpellCard in campaign_deck(_ranks_of_mask(mask)):
+					ids.append(String(c2.id))
+				var msg: String = DeckRules.validation_message(ids)
+				if msg != "":
+					out.append("deck de campagne (objectifs %s) invalide : %s"
+						% [str(_ranks_of_mask(mask)), msg])
+	if passive_unlocks.size() > MAX_PASSIVE_UNLOCKS:
+		out.append("%d passifs debloques, %d au plus"
+			% [passive_unlocks.size(), MAX_PASSIVE_UNLOCKS])
+	for p in passive_unlocks:
+		if p == null:
+			out.append("passif debloque nul")
+		elif not p.is_passive:
+			out.append("%s debloque a la victoire n est pas un passif" % p.id)
+		elif not allows_passives():
+			out.append("%s : passif debloque, or l acte %d n en admet aucun" % [p.id, act])
+	if not side_quest and (side_quest_after != &"" or side_quest_character != ""):
+		out.append("condition d ouverture d annexe sur un niveau de campagne")
+	if side_quest and act <= 0:
+		out.append("quete annexe sans acte de rattachement")
+	if side_quest_after != &"":
+		var avant: LevelDef = ContentDB.levels.get(side_quest_after)
+		if avant == null:
+			out.append("annexe ouverte apres '%s', qui n existe pas" % side_quest_after)
+		elif avant.side_quest:
+			out.append("annexe ouverte apres %s, une autre annexe" % side_quest_after)
+	return out
+
+
+## Les rangs (1, 2, 3) d un masque de CAMPAIGN_DECK_TABLE.
+static func _ranks_of_mask(mask: int) -> Array:
+	var out: Array = []
+	for i in REWARD_RARITY_BY_RANK.size():
+		if mask & (1 << i):
+			out.append(i + 1)
+	return out
