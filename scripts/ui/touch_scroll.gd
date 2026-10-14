@@ -75,6 +75,29 @@ static func make() -> ScrollContainer:
 	return sc
 
 
+## VAGUE 10 : glisse une zone de defilement a la PLACE de `content` dans son
+## parent, et y range `content`. Pour les ecrans ecrits en .tscn (briefing,
+## victoire, defaite), ou une zone de defilement ne peut pas etre declaree
+## (test_touch_scroll refuse un ScrollContainer dans une scene) : la zone nait en
+## code, le contenu reste dans la scene. `reparent` garde le proprietaire, donc
+## les noms uniques (%Nom) du contenu restent valides.
+static func wrap(content: Control) -> ScrollContainer:
+	var sc: ScrollContainer = make()
+	sc.name = "Scroll"
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var parent: Node = content.get_parent()
+	if parent == null:
+		sc.add_child(content)
+	else:
+		var place: int = content.get_index()
+		parent.add_child(sc)
+		parent.move_child(sc, place)
+		content.reparent(sc, false)
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return sc
+
+
 ## Accroche le defilement au doigt a une zone existante. Idempotent.
 static func attach(sc: ScrollContainer) -> TouchScroll:
 	var deja: TouchScroll = of(sc)

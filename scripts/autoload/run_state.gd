@@ -128,6 +128,7 @@ func reset() -> void:
 	used_legendary = false
 	took_any_damage = false
 	hits_by_source.clear()
+	damage_by_enemy_id.clear()  # VAGUE 10 : bilan des degats de fin de niveau
 	speed_dropped = false
 	burned_card = null
 	equipped_passives.clear()
@@ -1621,14 +1622,23 @@ func _shuffle_cards(arr: Array[SpellCard]) -> void:
 
 ## Qui a inflige les coups, pour le bilan de defaite : {nom affichable: nombre}.
 var hits_by_source: Dictionary = {}
+## VAGUE 10 — BILAN DES DEGATS (ecrans de victoire et de defaite) : points de
+## VITESSE reellement retires au mage, par espece (id d EnemyDef). Un coup recu
+## pendant l agonie ne retire rien et n ajoute rien. Les projectiles-monstres
+## sont ranges sous leur LANCEUR au moment du bilan (BattleReport.rows), comme
+## hits_from_enemy le fait pour les coups.
+var damage_by_enemy_id: Dictionary = {}
 
 
-func note_damage_taken(source: EnemyDef = null) -> void:
+## `amount` : points de vitesse que CE coup a retires (0 = inconnu, ancien appel).
+func note_damage_taken(source: EnemyDef = null, amount: int = 0) -> void:
 	took_any_damage = true
 	var nom: String = source.display_name if source != null else "Projectile"
 	hits_by_source[nom] = int(hits_by_source.get(nom, 0)) + 1
 	# OBJECTIFS (no_hit_from, hit_from) : le meme coup, range par id d espece.
 	_note_hit_from(source)
+	if source != null and amount > 0:
+		damage_by_enemy_id[source.id] = int(damage_by_enemy_id.get(source.id, 0)) + amount
 
 
 ## Le monstre qui a le plus coute de vitesse sur la partie, "" si aucun coup recu.

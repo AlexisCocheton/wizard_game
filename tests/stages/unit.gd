@@ -81,6 +81,8 @@ const SUITES: Array[String] = [
 	# co-auteur, huit cas), pool de montee de niveau, passifs, quetes annexes.
 	"res://tests/unit/test_campaign_deck.gd",
 	"res://tests/unit/test_campaign_progression.gd",
+	# Vague 10 (ecrans) : bilan des degats et conseil, briefing refait, sceau.
+	"res://tests/unit/test_screens_w10.gd",
 ]
 
 var _total_checks: int = 0

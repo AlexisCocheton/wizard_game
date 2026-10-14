@@ -301,6 +301,8 @@ func _run_all() -> void:
 	# Le DEFILEMENT AU DOIGT sur chaque ecran qui deborde (retour du co-auteur :
 	# les reglages ne defilaient pas sur son telephone).
 	await TouchScrollCheck.run(self)
+	# VAGUE 10 (ecrans) : briefing refait au doigt, bilan des degats, sceau.
+	await ScreensW10Check.run(self)
 	# OUTILS DU TESTEUR (vague 8) : l atelier, ses fiches et le document.
 	await TesterSmoke.run(self)
 

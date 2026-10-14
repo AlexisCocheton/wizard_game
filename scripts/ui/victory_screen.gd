@@ -16,6 +16,9 @@ const STAR_ICON: int = 3
 
 func _ready() -> void:
 	theme = UiTheme.make()
+	# VAGUE 10 : etoiles, objectifs, bilan des degats et compte ne tiennent plus
+	# sur une page : le contenu defile au doigt, MENU reste en bas, hors defilement.
+	TouchScroll.wrap(_objectives)
 	_menu_btn.pressed.connect(func() -> void: SceneRouter.goto(SceneRouter.MAIN_MENU))
 	_title.text = "NIVEAU TERMINE"
 	_title.add_theme_color_override(&"font_color", UiTheme.GOLD)
@@ -56,6 +59,11 @@ func _ready() -> void:
 	# Ce que les objectifs avaient deja ouvert AVANT cette victoire : la
 	# difference avec l apres est ce qui vient de s ouvrir, et seul cela se fete.
 	var avant: Array[SpellCard] = SaveData.objective_rewards_unlocked(level)
+	# Vague 10 (A3) : les passifs que CETTE victoire debloque (premiere victoire
+	# en campagne du niveau seulement).
+	_passifs_gagnes.clear()
+	if GameEnums.advances_campaign(RunState.mode) and not SaveData.is_level_cleared(level.id):
+		_passifs_gagnes = SaveData.passive_unlocks_of(level)
 	SaveData.record_victory(level, RunState.mode, done, RunState.wave_index)
 	SaveData.save_profile()
 	var nouvelles: Array[SpellCard] = []
@@ -64,6 +72,10 @@ func _ready() -> void:
 			nouvelles.append(c)
 
 	_remplir(level, done, nouvelles)
+
+
+## Passifs debloques par cette victoire (vague 10, A3), lus par _remplir.
+var _passifs_gagnes: Array[SpellCard] = []
 
 
 ## Le chiffre du succes « Collectionneur » : les cartes OBTENUES (sorts et
@@ -126,10 +138,12 @@ func _remplir(level: LevelDef, done: Dictionary, nouvelles: Array[SpellCard]) ->
 		var pris: bool = bool(done.get(obj.id, false))
 		# Plus de prefixe entre crochets : la couleur et le mot disent l etat.
 		# "[   ]" se lisait comme une case a cocher cassee.
+		# Encres du papier (vague 10) : l ancien vert (4,4:1) et l ancien brun
+		# (3,9:1) passaient sous le plancher de contraste.
 		_objectives.add_child(UiTheme.label(
 			"%s  -  %s" % ["Reussi" if pris else "A refaire", ObjectiveChecker.label(obj)],
 			UiTheme.FONT_SMALL,
-			Color(0.16, 0.46, 0.22) if pris else Color(0.52, 0.42, 0.30)))
+			UiTheme.INK_SUCCESS if pris else UiTheme.INK_SOFT))
 		# CE QUE L OBJECTIF RAPPORTE, sous lui : sans cette ligne, rater un
 		# objectif ne coute rien de visible et le reussir ne promet rien.
 		var carte: SpellCard = level.objective_reward(i)
@@ -143,23 +157,37 @@ func _remplir(level: LevelDef, done: Dictionary, nouvelles: Array[SpellCard]) ->
 	# La carte n est pas DONNEE : elle entre dans le pool de montee de niveau du
 	# niveau, et s obtient en la prenant en combat. Le texte le dit, sinon le
 	# joueur la cherche dans son deck et croit a un bug.
+	# Vague 10 (A3) : sur un niveau a deck de base, la carte ENTRE au deck de
+	# campagne ; sur un niveau de repli, elle rejoint le pool comme avant.
+	var au_deck: bool = level.has_base_commons()
 	for c in nouvelles:
 		_objectives.add_child(UiTheme.label(
-			"Nouvelle carte a gagner ici : %s" % c.display_name,
+			"%s : %s" % ["Nouvelle carte dans ton deck" if au_deck else "Nouvelle carte a gagner ici",
+				c.display_name],
 			UiTheme.FONT_BODY, UiTheme.rarity_ink(c.rarity), HORIZONTAL_ALIGNMENT_CENTER))
 	if not nouvelles.is_empty():
 		_objectives.add_child(UiTheme.label(
-			"Elle pourra t etre proposee a la montee de niveau de ce niveau",
+			"Elle rejoint ton deck de campagne de ce niveau" if au_deck
+			else "Elle pourra t etre proposee a la montee de niveau de ce niveau",
 			UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
-	if not level.next_levels.is_empty():
+	for p in _passifs_gagnes:
+		_objectives.add_child(UiTheme.label("Passif debloque : %s" % p.display_name,
+			UiTheme.FONT_BODY, UiTheme.rarity_ink(p.rarity), HORIZONTAL_ALIGNMENT_CENTER))
+	# Une victoire LIBRE n ouvre rien (vague 10) : ne pas le promettre.
+	if not level.next_levels.is_empty() and GameEnums.advances_campaign(RunState.mode):
 		_objectives.add_child(UiTheme.label("Niveau suivant debloque",
-			UiTheme.FONT_BODY, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER))
+			UiTheme.FONT_BODY, UiTheme.INK_HINT, HORIZONTAL_ALIGNMENT_CENTER))
+
+	# --- VAGUE 10 : le bilan des degats et le conseil ---
+	# La victoire n en disait rien : gagner de justesse et gagner sans un coup
+	# se lisaient pareil. Meme bloc que la defaite (BattleReport).
+	BattleReport.build(_objectives, true)
 
 	# --- Le compte : la progression qui SURVIT a la partie ---
 	# Sans ce bloc, le joueur finit un niveau sans jamais voir bouger la seule
 	# chose qui le suit d une partie a l autre.
 	_objectives.add_child(UiTheme.label("COMPTE  -  niveau %d"
-		% SaveData.account_level(), UiTheme.FONT_BODY, UiTheme.GOLD.darkened(0.25),
+		% SaveData.account_level(), UiTheme.FONT_BODY, UiTheme.INK_HEADING,
 		HORIZONTAL_ALIGNMENT_CENTER))
 	var barre := ProgressBar.new()
 	barre.custom_minimum_size = Vector2(0, 34)
