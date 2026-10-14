@@ -23,21 +23,21 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = 120.0
-offset_right = -30.0
-offset_bottom = -210.0
+offset_left = 24.0
+offset_top = 60.0
+offset_right = -24.0
+offset_bottom = -262.0
 
 [node name="Root" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 62.0
-offset_top = 165.0
-offset_right = -62.0
-offset_bottom = -250.0
-theme_override_constants/separation = 22
+offset_left = 56.0
+offset_top = 100.0
+offset_right = -56.0
+offset_bottom = -296.0
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Root"]
 unique_name_in_owner = true
@@ -51,19 +51,21 @@ layout_mode = 2
 text = ""
 horizontal_alignment = 1
 
-[node name="Waves" type="VBoxContainer" parent="Root"]
+[node name="Body" type="VBoxContainer" parent="Root"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Spacer" type="Control" parent="Root"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 34
 
-[node name="Deck" type="VBoxContainer" parent="Root"]
+[node name="Waves" type="VBoxContainer" parent="Root/Body"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 34
+
+[node name="Deck" type="VBoxContainer" parent="Root/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
 
 [node name="Buttons" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -71,21 +73,22 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 62.0
-offset_top = -190.0
-offset_right = -62.0
+offset_left = 56.0
+offset_top = -248.0
+offset_right = -56.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 16
 
 [node name="StartButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 110)
+custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 text = "COMMENCER"
 
 [node name="BackButton" type="Button" parent="Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 70)
+custom_minimum_size = Vector2(0, 92)
 layout_mode = 2
 text = "RETOUR"

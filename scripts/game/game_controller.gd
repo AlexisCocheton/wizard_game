@@ -558,6 +558,9 @@ func _on_wave_started(_index: int, wave: WaveDef) -> void:
 ## ET l ancien _on_shield_collapsed, qui annoncaient deux evenements distincts
 ## d un systeme a deux reserves. Il n y en a plus qu un.
 func _on_speed_lost(_amount: int, _percent: int) -> void:
+	# VAGUE 10 (bilan des degats) : la perte REELLE de ce coup. SpeedGauge.take_hit
+	# l emet juste AVANT que l appelant emette mage_hit, qui la consomme.
+	_perte_du_coup += _amount
 	AudioBus.play_sfx(&"hp_lost")
 	# La VOIX en plus du bruitage : le bruitage dit "quelque chose a frappe",
 	# la voix dit "c est MOI qui ai pris". A 400 % de vitesse, ou tout va vite,
@@ -569,8 +572,16 @@ func _on_speed_lost(_amount: int, _percent: int) -> void:
 	RunState.note_speed_drop()
 
 
+## VAGUE 10 : points de vitesse retires par le coup en cours (voir _on_speed_lost).
+var _perte_du_coup: int = 0
+
+
 func _on_mage_hit(_dmg: int, source: EnemyDef) -> void:
-	RunState.note_damage_taken(source)
+	# VAGUE 10 : le bilan compte la vitesse REELLEMENT retiree (plancher, agonie),
+	# pas le bareme du coup ; elle est rattachee au monstre qui a frappe. Ce que
+	# le Verrou temporel rend ensuite est un soin du joueur, pas un coup plus doux.
+	RunState.note_damage_taken(source, _perte_du_coup)
+	_perte_du_coup = 0
 	# PASSIF "Verrou temporel" (legendaire) : un coup ne coute que la moitie de
 	# la vitesse qu il devrait. Depuis que la vitesse EST la vie, c est la seule
 	# reduction de DEGATS du jeu — d ou son seuil tres haut : il faut deja avoir

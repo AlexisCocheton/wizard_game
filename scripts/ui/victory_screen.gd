@@ -16,6 +16,9 @@ const STAR_ICON: int = 3
 
 func _ready() -> void:
 	theme = UiTheme.make()
+	# VAGUE 10 : etoiles, objectifs, bilan des degats et compte ne tiennent plus
+	# sur une page : le contenu defile au doigt, MENU reste en bas, hors defilement.
+	TouchScroll.wrap(_objectives)
 	_menu_btn.pressed.connect(func() -> void: SceneRouter.goto(SceneRouter.MAIN_MENU))
 	_title.text = "NIVEAU TERMINE"
 	_title.add_theme_color_override(&"font_color", UiTheme.GOLD)
@@ -126,10 +129,12 @@ func _remplir(level: LevelDef, done: Dictionary, nouvelles: Array[SpellCard]) ->
 		var pris: bool = bool(done.get(obj.id, false))
 		# Plus de prefixe entre crochets : la couleur et le mot disent l etat.
 		# "[   ]" se lisait comme une case a cocher cassee.
+		# Encres du papier (vague 10) : l ancien vert (4,4:1) et l ancien brun
+		# (3,9:1) passaient sous le plancher de contraste.
 		_objectives.add_child(UiTheme.label(
 			"%s  -  %s" % ["Reussi" if pris else "A refaire", ObjectiveChecker.label(obj)],
 			UiTheme.FONT_SMALL,
-			Color(0.16, 0.46, 0.22) if pris else Color(0.52, 0.42, 0.30)))
+			UiTheme.INK_SUCCESS if pris else UiTheme.INK_SOFT))
 		# CE QUE L OBJECTIF RAPPORTE, sous lui : sans cette ligne, rater un
 		# objectif ne coute rien de visible et le reussir ne promet rien.
 		var carte: SpellCard = level.objective_reward(i)
@@ -153,13 +158,18 @@ func _remplir(level: LevelDef, done: Dictionary, nouvelles: Array[SpellCard]) ->
 			UiTheme.FONT_SMALL, UiTheme.TEXT_DARK, HORIZONTAL_ALIGNMENT_CENTER))
 	if not level.next_levels.is_empty():
 		_objectives.add_child(UiTheme.label("Niveau suivant debloque",
-			UiTheme.FONT_BODY, UiTheme.TEAL, HORIZONTAL_ALIGNMENT_CENTER))
+			UiTheme.FONT_BODY, UiTheme.INK_HINT, HORIZONTAL_ALIGNMENT_CENTER))
+
+	# --- VAGUE 10 : le bilan des degats et le conseil ---
+	# La victoire n en disait rien : gagner de justesse et gagner sans un coup
+	# se lisaient pareil. Meme bloc que la defaite (BattleReport).
+	BattleReport.build(_objectives, true)
 
 	# --- Le compte : la progression qui SURVIT a la partie ---
 	# Sans ce bloc, le joueur finit un niveau sans jamais voir bouger la seule
 	# chose qui le suit d une partie a l autre.
 	_objectives.add_child(UiTheme.label("COMPTE  -  niveau %d"
-		% SaveData.account_level(), UiTheme.FONT_BODY, UiTheme.GOLD.darkened(0.25),
+		% SaveData.account_level(), UiTheme.FONT_BODY, UiTheme.INK_HEADING,
 		HORIZONTAL_ALIGNMENT_CENTER))
 	var barre := ProgressBar.new()
 	barre.custom_minimum_size = Vector2(0, 34)
