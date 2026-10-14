@@ -300,8 +300,10 @@ func _check_levels() -> void:
 func _check_cards_obtainable() -> void:
 	var joignables: Dictionary = {}
 	for level: LevelDef in ContentDB.levels.values():
+		# Vague 10 : le deck de BASE (base_commons) est aussi une route
+		# d obtention (il est dans le livre des que le niveau est ouvert).
 		for liste: Array in [level.exploration_deck, level.levelup_cards,
-				level.objective_rewards]:
+				level.objective_rewards, level.base_commons]:
 			for c in liste:
 				if c != null:
 					joignables[(c as SpellCard).id] = true

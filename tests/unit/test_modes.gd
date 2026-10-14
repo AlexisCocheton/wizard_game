@@ -1,13 +1,15 @@
 extends TestCase
-## Les trois modes de jeu (chantier M, 29/09) :
-##   EXPLORATION : le niveau de campagne ;
-##   INFINITE    : "INFINI", un niveau prolonge sans fin a travers les mondes ;
-##   MASSACRE    : l onglet du menu, un niveau infini A PART (MassacreMode).
+## Les trois modes de jeu (chantier M, 29/09 ; vague 10, 14/10) :
+##   EXPLORATION : "CAMPAGNE", le niveau avec son deck de campagne ;
+##   FREE        : "LIBRE", le MEME niveau (vagues, objectifs) avec ton deck ;
+##                 remplace l Infini par niveau, garde sa valeur 1 ;
+##   MASSACRE    : l onglet du menu, le SEUL mode sans fin (MassacreMode).
 ##
 ## Ce qui est verrouille ici, c est ce qui casserait sans bruit : un renommage
-## qui decale la valeur entiere d un mode, l Infini de nouveau cache derriere la
-## fin de la campagne, un Massacre qui ne tirerait que dans un monde ou qu un
-## seul boss, un record range au mauvais endroit.
+## qui decale la valeur entiere d un mode, le Libre cache derriere la fin de la
+## campagne, une victoire libre qui ouvrirait la suite, un Massacre qui ne
+## tirerait que dans un monde ou qu un seul boss, un record range au mauvais
+## endroit.
 
 func get_suite_name() -> String:
 	return "modes"
@@ -16,13 +18,15 @@ func get_suite_name() -> String:
 func run() -> void:
 	SaveData.reset_profile()
 	_test_valeurs_et_noms_des_modes()
-	_test_la_fiche_de_niveau_propose_exploration_et_infini()
-	_test_l_infini_s_ouvre_sans_finir_la_campagne()
+	_test_la_fiche_de_niveau_propose_campagne_et_libre()
+	_test_le_libre_s_ouvre_avec_le_niveau()
+	_test_la_victoire_libre_ne_sert_qu_aux_objectifs()
 	_test_le_massacre_s_ouvre_a_la_fin_de_la_campagne()
 	_test_le_pool_du_massacre_couvre_tous_les_niveaux()
 	_test_le_massacre_melange_les_mondes_en_jouant()
 	_test_les_boss_de_tout_le_jeu_aux_paliers()
 	_test_la_partie_installe_chaque_mode()
+	_test_le_libre_joue_le_niveau_avec_ton_deck()
 	_test_le_bandeau_de_monde()
 	_test_record_par_mode()
 	_test_le_record_suit_la_partie()
@@ -32,62 +36,107 @@ func run() -> void:
 	RunState.reset()
 
 
-## INFINITE garde la valeur de l ancien MASSACRE (mode infini par niveau), le
-## nouveau MASSACRE ferme la liste. C est une regle de COMPATIBILITE, pas un
-## reglage : une valeur retenue ailleurs doit garder son sens.
+## FREE reprend la valeur 1 (l Infini par niveau, avant lui l ancien Massacre
+## par niveau), le MASSACRE ferme la liste. C est une regle de COMPATIBILITE, pas
+## un reglage : une valeur retenue ailleurs doit garder son sens.
 func _test_valeurs_et_noms_des_modes() -> void:
-	eq(int(GameEnums.Mode.EXPLORATION), 0, "l Exploration reste la valeur 0")
-	eq(int(GameEnums.Mode.INFINITE), 1,
-		"l Infini reprend la valeur de l ancien Massacre par niveau")
+	eq(int(GameEnums.Mode.EXPLORATION), 0, "la campagne reste la valeur 0")
+	eq(int(GameEnums.Mode.FREE), 1,
+		"le Libre reprend la valeur de l Infini par niveau qu il remplace")
 	eq(int(GameEnums.Mode.MASSACRE), GameEnums.Mode.size() - 1,
-		"le nouveau Massacre est ajoute EN FIN d enum")
-	eq(GameEnums.mode_name(GameEnums.Mode.INFINITE), "Infini", "l Infini s ecrit Infini")
+		"le Massacre reste EN FIN d enum")
+	not_ok(GameEnums.Mode.has("INFINITE"), "l Infini par niveau n existe plus")
+	eq(GameEnums.mode_name(GameEnums.Mode.FREE), "Libre", "le Libre s ecrit Libre")
 	eq(GameEnums.mode_name(GameEnums.Mode.MASSACRE), "Massacre", "le Massacre s ecrit Massacre")
-	eq(GameEnums.mode_name(GameEnums.Mode.EXPLORATION), "Exploration",
-		"l Exploration garde son nom")
-	not_ok(GameEnums.is_endless(GameEnums.Mode.EXPLORATION), "l Exploration a une fin")
-	ok(GameEnums.is_endless(GameEnums.Mode.INFINITE), "l Infini est sans fin")
+	eq(GameEnums.mode_name(GameEnums.Mode.EXPLORATION), "Campagne",
+		"le mode de campagne s ecrit Campagne")
+	not_ok(GameEnums.is_endless(GameEnums.Mode.EXPLORATION), "la campagne a une fin")
+	not_ok(GameEnums.is_endless(GameEnums.Mode.FREE), "le Libre a une fin : les vagues du niveau")
 	ok(GameEnums.is_endless(GameEnums.Mode.MASSACRE), "le Massacre est sans fin")
+	ok(GameEnums.advances_campaign(GameEnums.Mode.EXPLORATION), "la campagne fait avancer")
+	not_ok(GameEnums.advances_campaign(GameEnums.Mode.FREE), "le Libre ne fait pas avancer")
+	not_ok(GameEnums.advances_campaign(GameEnums.Mode.MASSACRE), "le Massacre non plus")
 
 
-## Decision 1 et 2 : la fiche garde EXPLORATION, le second bouton s appelle
-## INFINI (plus MASSACRE).
-func _test_la_fiche_de_niveau_propose_exploration_et_infini() -> void:
+## La fiche propose CAMPAGNE et LIBRE (plus EXPLORATION / INFINI, ni MASSACRE).
+func _test_la_fiche_de_niveau_propose_campagne_et_libre() -> void:
 	SaveData.reset_profile()
 	var p := CampaignPanel.new()
 	attach(p)
 	p.open_level(&"lvl_01")
 	var noms: Array[String] = p.mode_labels()
-	eq(noms, ["EXPLORATION", "INFINI"] as Array[String],
-		"la fiche propose EXPLORATION et INFINI (%s)" % str(noms))
-	not_ok(noms.has("MASSACRE"), "le mot MASSACRE a quitte la fiche de niveau")
+	eq(noms, ["CAMPAGNE", "LIBRE"] as Array[String],
+		"la fiche propose CAMPAGNE et LIBRE (%s)" % str(noms))
+	for ancien in ["MASSACRE", "INFINI", "EXPLORATION"]:
+		not_ok(noms.has(ancien), "le mot %s a quitte la fiche de niveau" % ancien)
 	detach(p)
 
 
-## L Infini d un niveau s ouvre avec le NIVEAU, pas a la fin de la campagne.
-func _test_l_infini_s_ouvre_sans_finir_la_campagne() -> void:
+## Le Libre d un niveau s ouvre avec le NIVEAU, pas a la fin de la campagne.
+func _test_le_libre_s_ouvre_avec_le_niveau() -> void:
 	SaveData.reset_profile()
 	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
 	not_ok(SaveData.campaign_cleared(), "profil neuf : la campagne n est pas finie")
-	ok(SaveData.infinite_unlocked(&"lvl_01"), "l Infini du niveau 1 est ouvert d office")
-	not_ok(SaveData.infinite_unlocked(&"lvl_02"),
-		"l Infini d un niveau verrouille reste ferme")
-	not_ok(SaveData.infinite_unlocked(MassacreMode.LEVEL_ID),
-		"le Massacre n est pas un niveau dont on ouvrirait l Infini")
+	ok(SaveData.free_unlocked(&"lvl_01"), "le Libre du niveau 1 est ouvert d office")
+	not_ok(SaveData.free_unlocked(&"lvl_02"),
+		"le Libre d un niveau verrouille reste ferme")
+	not_ok(SaveData.free_unlocked(MassacreMode.LEVEL_ID),
+		"le Massacre n est pas un niveau dont on ouvrirait le Libre")
 
 	var p := CampaignPanel.new()
 	attach(p)
 	p.open_level(&"lvl_01")
-	ok(p.infinite_available(), "le bouton INFINI est actif sans avoir fini le jeu")
-	p.select_mode(GameEnums.Mode.INFINITE)
-	eq(p.current_mode(), GameEnums.Mode.INFINITE, "le mode INFINI reste selectionne")
-	ok(p.play_enabled(), "avec un deck valide, JOUER est actif en Infini")
+	ok(p.free_available(), "le bouton LIBRE est actif sans avoir fini le jeu")
+	p.select_mode(GameEnums.Mode.FREE)
+	eq(p.current_mode(), GameEnums.Mode.FREE, "le mode LIBRE reste selectionne")
+	ok(p.play_enabled(), "avec un deck valide, JOUER est actif en Libre")
+	ok(p.hint_text().contains(str(DeckRules.DECK_SIZE)),
+		"l aide du Libre dit la taille du deck du joueur (%s)" % p.hint_text())
+	ok(p.detail_texts().has(CampaignPanel.FREE_STATUS_TEXT),
+		"la fiche dit la regle du Libre : seuls les objectifs comptent")
+	# Un deck du joueur hors regle coupe JOUER en Libre, avec la raison du deck.
+	SaveData.set_massacre_deck([])
+	p.select_mode(GameEnums.Mode.FREE)
+	not_ok(p.play_enabled(), "deck vide : JOUER est coupe en Libre")
+	eq(p.hint_text(), DeckRules.validation_message([]), "et l aide dit pourquoi")
+	# La campagne, elle, ne depend pas du deck du joueur.
+	p.select_mode(GameEnums.Mode.EXPLORATION)
+	ok(p.play_enabled(), "la campagne joue son propre deck, quel que soit celui du joueur")
 	detach(p)
+	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
 
-	# Debloquer le niveau 2 (victoire au 1) ouvre SON Infini.
+	# Debloquer le niveau 2 (victoire en CAMPAGNE au 1) ouvre SON Libre.
 	SaveData.record_victory(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION, {}, 6)
-	ok(SaveData.infinite_unlocked(&"lvl_02"), "gagner le niveau 1 ouvre l Infini du niveau 2")
+	ok(SaveData.free_unlocked(&"lvl_02"), "gagner le niveau 1 ouvre le Libre du niveau 2")
 	not_ok(SaveData.campaign_cleared(), "et la campagne n est toujours pas finie")
+	SaveData.reset_profile()
+
+
+## « Gagner ne sert qu aux objectifs » : une victoire en LIBRE marque ses
+## objectifs, et RIEN d autre — ni niveau fini, ni niveau ouvert, ni record de
+## campagne. Puis la meme victoire en campagne fait avancer.
+func _test_la_victoire_libre_ne_sert_qu_aux_objectifs() -> void:
+	SaveData.reset_profile()
+	var lv1: LevelDef = ContentDB.levels.get(SaveData.FIRST_LEVEL)
+	ok(lv1 != null and not lv1.next_levels.is_empty() and not lv1.objectives.is_empty(),
+		"le premier niveau a une suite et des objectifs")
+	if lv1 == null or lv1.next_levels.is_empty() or lv1.objectives.is_empty():
+		return
+	var suivant: StringName = lv1.next_levels[0]
+	var obj: ObjectiveDef = lv1.objectives[0]
+	SaveData.record_victory(lv1, GameEnums.Mode.FREE, {obj.id: true}, lv1.waves.size())
+	ok(SaveData.is_objective_done(lv1.id, obj.id), "Libre : l objectif reussi est acquis")
+	not_ok(SaveData.is_level_cleared(lv1.id), "Libre : le niveau n est PAS fini")
+	not_ok(SaveData.is_level_unlocked(suivant), "Libre : le niveau suivant reste ferme")
+	eq(int(SaveData.level_record(lv1.id).get("best_wave", 0)), 0,
+		"Libre : la meilleure vague de la campagne ne bouge pas")
+	ok(bool(SaveData.level_record(lv1.id).get("cleared_free", false)),
+		"Libre : la victoire est notee a part, pour l affichage")
+	eq(int(SaveData.campaign_progress()[0]), 0, "la campagne n a pas avance")
+	SaveData.record_victory(lv1, GameEnums.Mode.EXPLORATION, {}, lv1.waves.size())
+	ok(SaveData.is_level_cleared(lv1.id), "Campagne : le niveau est fini")
+	ok(SaveData.is_level_unlocked(suivant), "Campagne : le niveau suivant s ouvre")
+	ok(SaveData.is_objective_done(lv1.id, obj.id), "l objectif gagne en Libre reste acquis")
 	SaveData.reset_profile()
 
 
@@ -102,7 +151,8 @@ func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
 	not_ok(panneau.can_play(), "JOUER est coupe tant que la campagne n est pas finie")
 	ok(panneau.lock_shown(), "le bandeau du verrou est affiche")
 	# Tous les niveaux sauf UN : toujours ferme, et la raison dit le chemin.
-	var niveaux: Array = ContentDB.levels.values()
+	# Les niveaux du FIL de la campagne (vague 10 : une annexe ne compte pas).
+	var niveaux: Array = ContentDB.campaign_levels()
 	for i in niveaux.size() - 1:
 		SaveData.record_victory(niveaux[i], GameEnums.Mode.EXPLORATION, {}, 6)
 	not_ok(SaveData.massacre_unlocked(), "il reste un niveau : le Massacre reste ferme")
@@ -120,9 +170,9 @@ func _test_le_massacre_s_ouvre_a_la_fin_de_la_campagne() -> void:
 	ok(panneau.can_play(), "JOUER s active, deck valide")
 	not_ok(panneau.lock_shown(), "le bandeau du verrou disparait")
 	eq(MassacrePanel.block_reason(), "", "plus aucune raison de refus")
-	# L Infini, lui, n a pas attendu : il s ouvrait niveau par niveau.
+	# Le Libre, lui, n a pas attendu : il s ouvrait niveau par niveau.
 	for lv: LevelDef in niveaux:
-		ok(SaveData.infinite_unlocked(lv.id), "l Infini de %s est ouvert" % lv.id)
+		ok(SaveData.free_unlocked(lv.id), "le Libre de %s est ouvert" % lv.id)
 	# Un deck invalide coupe JOUER avec la raison du deck, pas celle du verrou.
 	SaveData.set_massacre_deck([])
 	panneau.refresh()
@@ -163,8 +213,8 @@ func _test_le_pool_du_massacre_couvre_tous_les_niveaux() -> void:
 	ok(niveaux > 1, "la campagne compte plusieurs niveaux")
 	eq(manquants.size(), 0, "tous les monstres de tous les niveaux sont dans le pool (%s)"
 		% ", ".join(manquants))
-	# Le pool du Massacre depasse celui de n importe quel niveau seul : c est
-	# toute la difference avec l Infini.
+	# Le pool du Massacre depasse celui de n importe quel niveau seul : c etait
+	# toute la difference avec l Infini par niveau (retire en vague 10).
 	for level_id in ContentDB.levels.keys():
 		var lvl2: LevelDef = ContentDB.levels.get(level_id)
 		ok(pool.size() > lvl2.enemy_pool.size(),
@@ -271,24 +321,131 @@ func _test_la_partie_installe_chaque_mode() -> void:
 	eq(annonces[0], 0, "le Massacre ne change jamais de monde")
 	g.spawner.world_changed.disconnect(compte)
 
+	# Le LIBRE (vague 10) joue les vagues ECRITES du niveau, comme la campagne :
+	# aucune generation, aucun monde.
 	var lvl: LevelDef = ContentDB.levels.get(&"lvl_01")
-	g.start_level(lvl, GameEnums.Mode.INFINITE)
+	g.start_level(lvl, GameEnums.Mode.FREE)
 	g.running = false
-	ok(g.spawner.worlds_enabled, "l Infini traverse les mondes")
-	ok(g.spawner.membership.size() > 0, "l Infini rattache les monstres a leur monde")
-	eq(g.spawner.pool.size(), _sans_boss(lvl.enemy_pool),
-		"l Infini garde les monstres du niveau")
+	eq(RunState.mode, GameEnums.Mode.FREE, "RunState connait le mode Libre")
+	not_ok(g.spawner.procedural, "le Libre ne genere pas ses vagues")
+	eq(g.spawner.waves.size(), lvl.waves.size(), "le Libre joue les vagues ecrites du niveau")
 	annonces[0] = 0
 	g.spawner.world_changed.connect(compte)
-	for i in WaveBudget.WORLD_EVERY * 2:
+	for i in lvl.waves.size():
 		g.spawner.start_next()
-	ok(annonces[0] >= 2, "l Infini annonce ses changements de monde (%d)" % annonces[0])
+	eq(annonces[0], 0, "le Libre n annonce aucun monde")
 	g.spawner.world_changed.disconnect(compte)
 	detach(g)
 	SaveData.reset_profile()
 
 
-## Le NOM du monde s affiche en Infini quand il change, jamais en Massacre.
+## LE LIBRE : le niveau de la campagne, avec le deck du JOUEUR, ses objectifs
+## suivis, un choix de carte a chaque montee de niveau, et les passifs equipes
+## actifs sur un niveau qui les admet (jamais en campagne).
+func _test_le_libre_joue_le_niveau_avec_ton_deck() -> void:
+	SaveData.reset_profile()
+	# Un deck du joueur DIFFERENT du deck de campagne, pour que le test morde.
+	var lv1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	var campagne: Array = []
+	for c: SpellCard in SaveData.campaign_deck(lv1):
+		campagne.append(String(c.id))
+	var mien: Array = DeckRules.default_deck_ids()
+	var autre: Array = _autre_deck_valide(campagne)
+	if not autre.is_empty():
+		mien = autre
+	SaveData.set_massacre_deck(mien)
+	var g: GameController = _partie()
+	g.start_level(lv1, GameEnums.Mode.FREE)
+	g.running = false
+	eq(_ids_tries(RunState.deck + RunState.hand + RunState.discard), _ids_tries_ids(mien),
+		"le Libre distribue le deck du joueur")
+	g.start_level(lv1, GameEnums.Mode.EXPLORATION)
+	g.running = false
+	eq(_ids_tries(RunState.deck + RunState.hand + RunState.discard), _ids_tries_ids(campagne),
+		"la campagne distribue le deck de campagne, pas celui du joueur")
+	ok(not autre.is_empty(), "les deux decks different : le test compare deux choses")
+
+	# Une montee de niveau en Libre propose des cartes (comme en campagne).
+	g.start_level(lv1, GameEnums.Mode.FREE)
+	g.running = false
+	RunState.level_up.emit(RunState.level + 1)
+	ok(not RunState.pending_offer.is_empty(), "le Libre propose des cartes a la montee de niveau")
+	RunState.pending_offer.clear()
+
+	# Passifs equipes : actifs en Libre sur un niveau qui les admet, jamais en
+	# campagne.
+	var acte2: LevelDef = null
+	for lv: LevelDef in ContentDB.campaign_levels():
+		if lv.allows_passives():
+			acte2 = lv
+			break
+	var passifs: Array = []
+	for c2: SpellCard in ContentDB.base_passives():
+		if passifs.size() < DeckRules.MAX_PASSIVES:
+			passifs.append(String(c2.id))
+	if acte2 != null:
+		SaveData.unlock_level(acte2.id)
+		SaveData.set_equipped_passives(passifs)
+		g.start_level(acte2, GameEnums.Mode.FREE)
+		g.running = false
+		eq(RunState.equipped_passives.size(), passifs.size(),
+			"Libre, acte des passifs : les passifs equipes sont actifs des le depart")
+		g.start_level(acte2, GameEnums.Mode.EXPLORATION)
+		g.running = false
+		eq(RunState.equipped_passives.size(), 0, "Campagne : aucun passif equipe d avance")
+		g.start_level(lv1, GameEnums.Mode.FREE)
+		g.running = false
+		eq(RunState.equipped_passives.size(), 0,
+			"Libre, acte sans passifs : la regle de l acte du niveau tient")
+	ok(acte2 != null, "un niveau de campagne admet les passifs")
+	detach(g)
+	SaveData.reset_profile()
+
+
+## Un deck valide de cartes obtenues, DIFFERENT de `sauf` (ids, exemplaires
+## compris). Vide si le profil n en permet pas.
+func _autre_deck_valide(sauf: Array) -> Array:
+	var cible: Array = _ids_tries_ids(sauf)
+	var obtenues: Array[SpellCard] = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and not c.is_passive and SaveData.is_discovered(c.id):
+			obtenues.append(c)
+	obtenues.sort_custom(func(a: SpellCard, b: SpellCard) -> bool:
+		return String(a.id) > String(b.id))
+	var out: Array = []
+	var progres: bool = true
+	while out.size() < DeckRules.DECK_SIZE and progres:
+		progres = false
+		for c2 in obtenues:
+			if DeckRules.can_add(out, c2, true):
+				out.append(String(c2.id))
+				progres = true
+				if out.size() >= DeckRules.DECK_SIZE:
+					break
+	if not DeckRules.is_valid(out) or _ids_tries_ids(out) == cible:
+		return []
+	return out
+
+
+func _ids_tries(cartes: Array) -> Array:
+	var out: Array = []
+	for c in cartes:
+		if c != null:
+			out.append(String((c as SpellCard).id))
+	out.sort()
+	return out
+
+
+func _ids_tries_ids(ids: Array) -> Array:
+	var out: Array = []
+	for id in ids:
+		out.append(String(id))
+	out.sort()
+	return out
+
+
+## Aucun bandeau de monde depuis la vague 10 : le Libre joue les vagues du
+## niveau, et un Massacre qui annoncerait un monde mentirait (tout est melange).
 func _test_le_bandeau_de_monde() -> void:
 	SaveData.reset_profile()
 	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
@@ -298,19 +455,14 @@ func _test_le_bandeau_de_monde() -> void:
 	if hud == null:
 		detach(g)
 		return
-	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.INFINITE)
+	var lv1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	g.start_level(lv1, GameEnums.Mode.FREE)
 	g.running = false
-	eq(hud.call("world_banner_text"), WaveBudget.world_name_for(1),
-		"la premiere vague de l Infini annonce son monde")
-	# On avance jusqu au monde suivant : le bandeau doit en changer.
-	for i in WaveBudget.WORLD_EVERY:
+	for i in lv1.waves.size():
 		g.spawner.start_next()
-	eq(hud.call("world_banner_text"), WaveBudget.world_name_for(WaveBudget.WORLD_EVERY + 1),
-		"le bandeau suit le changement de monde")
-	ok(String(hud.call("world_subtitle", 1, 2)).contains("2"),
-		"un deuxieme passage dit son tour")
+	eq(String(hud.call("world_banner_text")), "",
+		"le Libre n affiche aucun bandeau de monde")
 
-	# Un Massacre qui annoncerait un monde mentirait : tout est melange.
 	hud.call("hide_world_banner")
 	g.start_level(MassacreMode.level_def(), GameEnums.Mode.MASSACRE)
 	g.running = false
@@ -322,18 +474,19 @@ func _test_le_bandeau_de_monde() -> void:
 	SaveData.reset_profile()
 
 
-## Un record par mode, qui ne regresse pas et qui survit a la sauvegarde.
+## Un record par mode, qui ne regresse pas et qui survit a la sauvegarde. Le
+## LIBRE n en ecrit aucun (vague 10) : « Meilleure vague » est celui de la
+## campagne.
 func _test_record_par_mode() -> void:
 	SaveData.reset_profile()
 	var l1: StringName = &"lvl_01"
-	ok(SaveData.record_run_waves(l1, GameEnums.Mode.INFINITE, 5), "premier record Infini")
-	eq(SaveData.infinite_best_wave(l1), 5, "le record Infini est lu")
+	not_ok(SaveData.record_run_waves(l1, GameEnums.Mode.FREE, 5), "le Libre n ecrit aucun record")
 	eq(int(SaveData.level_record(l1).get("best_wave", 0)), 0,
-		"le record Infini ne se melange pas a celui de l Exploration")
-	not_ok(SaveData.record_run_waves(l1, GameEnums.Mode.INFINITE, 3),
+		"une partie libre ne touche pas a la meilleure vague de la campagne")
+	ok(SaveData.record_run_waves(l1, GameEnums.Mode.EXPLORATION, 3), "premier record de campagne")
+	eq(int(SaveData.level_record(l1).get("best_wave", 0)), 3, "le record de campagne est lu")
+	not_ok(SaveData.record_run_waves(l1, GameEnums.Mode.EXPLORATION, 2),
 		"une partie moins longue n est pas un record")
-	eq(SaveData.infinite_best_wave(l1), 5, "le record Infini ne regresse pas")
-	eq(SaveData.infinite_best_wave(&"lvl_02"), 0, "le record Infini est PAR niveau")
 
 	ok(SaveData.record_run_waves(MassacreMode.LEVEL_ID, GameEnums.Mode.MASSACRE, 7),
 		"premier record Massacre")
@@ -349,13 +502,26 @@ func _test_record_par_mode() -> void:
 	eq(SaveData.massacre_best_wave(), 0, "profil remis a zero")
 	SaveData.load_from_dictionary(brut)
 	eq(SaveData.massacre_best_wave(), 7, "le record Massacre survit a la sauvegarde")
-	eq(SaveData.infinite_best_wave(l1), 5, "le record Infini survit a la sauvegarde")
+	eq(int(SaveData.level_record(l1).get("best_wave", 0)), 3,
+		"le record de campagne survit a la sauvegarde")
 
 	# Un profil d avant le chantier n a pas la cle : il se charge a zero.
 	var ancien: Dictionary = SaveData.to_dictionary()
 	(ancien["profile"] as Dictionary).erase("massacre_best_wave")
 	SaveData.load_from_dictionary(ancien)
 	eq(SaveData.massacre_best_wave(), 0, "un ancien profil se charge sans record Massacre")
+
+	# MIGRATION de la vague 10 : un profil qui a un record INFINI par niveau le
+	# GARDE dans le fichier (rien n est retire), sans qu il se melange a rien.
+	var avec_infini: Dictionary = SaveData.to_dictionary()
+	var fiches: Dictionary = (avec_infini["profile"] as Dictionary).get("levels", {})
+	(fiches[String(l1)] as Dictionary)["best_wave_infinite"] = 14
+	SaveData.load_from_dictionary(avec_infini)
+	eq(int(SaveData.level_record(l1).get("best_wave_infinite", 0)), 14,
+		"l ancien record Infini reste dans le profil")
+	eq(int(SaveData.level_record(l1).get("best_wave", 0)), 3,
+		"et ne remplace pas la meilleure vague de la campagne")
+	not_ok(SaveData.is_level_cleared(l1), "et ne fait pas passer le niveau pour fini")
 	SaveData.reset_profile()
 
 
@@ -372,18 +538,20 @@ func _test_le_record_suit_la_partie() -> void:
 		"une vague nettoyee en Massacre met le record a jour")
 	ok(SaveData.massacre_best_wave() > 0, "le record n est plus nul")
 
-	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.INFINITE)
+	var massacre: int = SaveData.massacre_best_wave()
+	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.FREE)
 	g.running = false
 	g.spawner.wave_cleared.emit(0)
-	eq(SaveData.infinite_best_wave(&"lvl_01"), RunState.wave_index,
-		"une vague nettoyee en Infini met le record du niveau a jour")
+	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 0,
+		"une vague nettoyee en Libre n ecrit aucun record de niveau")
+	eq(SaveData.massacre_best_wave(), massacre, "ni celui du Massacre")
+	ok(RunState.pending_offer.is_empty(),
+		"le Libre ne propose pas de carte par vague : seulement a la montee de niveau")
 
 	g.start_level(ContentDB.levels.get(&"lvl_01"), GameEnums.Mode.EXPLORATION)
 	g.running = false
-	var avant: int = SaveData.infinite_best_wave(&"lvl_01")
 	g.spawner.wave_cleared.emit(0)
-	eq(SaveData.infinite_best_wave(&"lvl_01"), avant,
-		"l Exploration ne touche pas au record Infini")
+	eq(SaveData.massacre_best_wave(), massacre, "la campagne ne touche pas au record Massacre")
 	RunState.pending_offer.clear()
 	detach(g)
 	SaveData.reset_profile()

@@ -283,6 +283,26 @@ func _build_detail(box: VBoxContainer, c: SpellCard, width: float,
 const BADGE_RATIO: float = 0.5
 const BADGE_MIN: float = 40.0
 
+## CONTOUR NOIR DU SCEAU (vague 10, demande du co-auteur : « rajoute un petit
+## contour noir autour de l element de la carte »). Le contour d origine est
+## dans le PNG : un trait brun d un pixel a 40 px, qui se perdait sur le papier
+## teinte. Celui-ci est trace a l affichage par `seal_outline.gdshader`, a une
+## epaisseur RELATIVE au logo (0,07 : 3 px sur un sceau de 40, 4 px a 56) : net
+## sur la carte en main comme sur la vignette du grimoire. Un seul materiau
+## partage par tous les sceaux.
+const SEAL_OUTLINE: float = 0.07
+const SEAL_SHADER: String = "res://scripts/ui/seal_outline.gdshader"
+static var _seal_material: ShaderMaterial = null
+
+
+## Le materiau du contour, partage. Statique : le test le compare a celui des sceaux.
+static func seal_material() -> ShaderMaterial:
+	if _seal_material == null:
+		_seal_material = ShaderMaterial.new()
+		_seal_material.shader = load(SEAL_SHADER)
+		_seal_material.set_shader_parameter(&"epaisseur", SEAL_OUTLINE)
+	return _seal_material
+
 
 ## Statique : le grimoire pose le meme sceau sur ses vignettes.
 static func with_type_badge(icone: TextureRect, c: SpellCard, taille: float) -> Control:
@@ -297,15 +317,22 @@ static func with_type_badge(icone: TextureRect, c: SpellCard, taille: float) -> 
 	var badge: TextureRect = ElementIcons.make(c.spell_type(), cote)
 	if badge != null:
 		badge.name = "TypeBadge"
+		# VAGUE 10 : la case s agrandit de l epaisseur du contour de chaque cote ;
+		# le shader y reduit le dessin d autant. Le logo garde sa taille ET sa place,
+		# le contour deborde autour de lui.
+		var case: float = cote * (1.0 + 2.0 * SEAL_OUTLINE)
+		var bord: float = (case - cote) * 0.5
+		badge.material = seal_material()
+		badge.custom_minimum_size = Vector2(case, case)
 		# Deborde legerement du coin : colle a l icone, il la recouvrirait
 		# davantage ; decale, il se lit comme un sceau pose SUR la carte.
 		# Marges ecrites une a une : c est la seule forme que la mise en page ne
 		# reecrit pas dans un Control qui n est pas un conteneur.
 		badge.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		badge.offset_left = -cote * 0.22
-		badge.offset_top = -cote * 0.22
-		badge.offset_right = badge.offset_left + cote
-		badge.offset_bottom = badge.offset_top + cote
+		badge.offset_left = -cote * 0.22 - bord
+		badge.offset_top = -cote * 0.22 - bord
+		badge.offset_right = badge.offset_left + case
+		badge.offset_bottom = badge.offset_top + case
 		holder.add_child(badge)
 	return holder
 

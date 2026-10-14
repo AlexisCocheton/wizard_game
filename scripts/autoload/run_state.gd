@@ -128,6 +128,7 @@ func reset() -> void:
 	used_legendary = false
 	took_any_damage = false
 	hits_by_source.clear()
+	damage_by_enemy_id.clear()  # VAGUE 10 : bilan des degats de fin de niveau
 	speed_dropped = false
 	burned_card = null
 	equipped_passives.clear()
@@ -1286,13 +1287,14 @@ func offer_choices(count: int = 3) -> Array[SpellCard]:
 
 # --- POOL DE MONTEE DE NIVEAU ET PASSIFS PAR ACTE (vague 5, chantier P) -------
 #
-# Regle du co-auteur :
-#   CAMPAGNE (Mode.EXPLORATION) : le deck du niveau + ses cartes NOUVELLES
-#     (LevelDef.levelup_cards) + les cartes des objectifs DEJA REUSSIS de ce
-#     niveau (SaveData.objective_rewards_unlocked). Les passifs s y ajoutent,
-#     tout le catalogue, mais seulement a partir de l acte 2.
-#   HORS CAMPAGNE (tout autre mode : l infini par niveau, le Massacre) : toutes
-#     les cartes deja OBTENUES, passifs compris si l acte 2 est atteint.
+# Regle du co-auteur, REMPLACEE en vague 10 (14/10) — voir levelup_pool() :
+#   CAMPAGNE et LIBRE : toutes les cartes OBTENUES + les communes de l ACTE du
+#     niveau + (repli, niveau sans deck de base) l ancien pool du niveau ; les
+#     passifs DEBLOQUES a partir de l acte 2 (tous, en repli de contenu).
+#   MASSACRE : toutes les cartes deja OBTENUES, passifs compris si l acte 2 est
+#     atteint.
+# Avant la vague 10 : CAMPAGNE = le deck du niveau + ses cartes NOUVELLES + les
+# cartes des objectifs DEJA REUSSIS de ce niveau ; tous les passifs des l acte 2.
 #
 # Un objectif reussi n enrichit le pool que pour les parties SUIVANTES : les
 # objectifs se jugent a la victoire (voir system_objectives), il n existe donc
@@ -1343,7 +1345,10 @@ const CAMPAIGN_RARITY_WEIGHTS: Dictionary = {
 ## dans les deux cas, comme roll_rarity : une graine donnee garde la meme suite
 ## de tirages quel que soit le mode.
 func roll_spell_rarity(level_def: LevelDef, level_mode: GameEnums.Mode) -> GameEnums.Rarity:
-	if level_def == null or level_mode != GameEnums.Mode.EXPLORATION:
+	# VAGUE 10 : la table de campagne vaut pour tout mode qui joue UN NIVEAU
+	# (campagne et libre) : leur pool contient les communes de l acte. Le
+	# Massacre garde la table de DEC-004.
+	if level_def == null or GameEnums.is_endless(level_mode):
 		return roll_rarity()
 	var r: float = _rng.randf()
 	var acc: float = 0.0
@@ -1361,6 +1366,24 @@ func roll_spell_rarity(level_def: LevelDef, level_mode: GameEnums.Mode) -> GameE
 ## Sans niveau (tests a froid, outils du banc qui tirent hors partie), tout le
 ## catalogue : c est le comportement d avant la regle, et il n existe aucun
 ## niveau dont lire un pool. Une partie reelle a TOUJOURS un niveau.
+##
+## VAGUE 10 (regle du co-auteur, 14/10) : « toutes les cartes du jeu debloquees
+## sont disponibles lors des montees de niveau ; toutes les communes de l acte
+## sont disponibles des le niveau 1 ». Pour un mode qui joue UN NIVEAU
+## (campagne et libre) :
+##   - toutes les cartes OBTENUES (SaveData.is_discovered) ;
+##   - les communes de l ACTE du niveau (ContentDB.act_commons, union des decks
+##     de base des niveaux de campagne de l acte ; une annexe prend celles de son
+##     acte de rattachement) ;
+##   - REPLI, niveau sans deck de base (contenu d avant la vague 10) : en plus,
+##     l ancien pool du niveau — son deck, ses cartes nouvelles, les cartes de
+##     ses objectifs reussis — pour qu aucune carte du contenu actuel ne perde
+##     sa seule route d obtention ;
+##   - les PASSIFS DEBLOQUES seulement, si l acte les admet. Repli (aucun
+##     passif debloquable ecrit au contenu, ContentDB.passive_unlocks_authored) :
+##     tous les passifs, comme avant en campagne.
+## MASSACRE : les cartes obtenues, passifs obtenus compris (inchange).
+## Tirages de rarete et part des passifs : inchanges (offer_choices).
 func levelup_pool(level_def: LevelDef, level_mode: GameEnums.Mode) -> Array[SpellCard]:
 	var out: Array[SpellCard] = []
 	var passifs_ok: bool = passives_allowed(level_def, level_mode)
@@ -1368,21 +1391,61 @@ func levelup_pool(level_def: LevelDef, level_mode: GameEnums.Mode) -> Array[Spel
 		for c: SpellCard in ContentDB.cards.values():
 			_pool_add(out, c, passifs_ok)
 		return out
-	if level_mode == GameEnums.Mode.EXPLORATION:
+	# Les cartes OBTENUES (sorts, puis passifs si l acte les admet), dans tous
+	# les modes. Tri par id : l ordre du pool ne doit pas dependre de l ordre de
+	# lecture du disque (la graine d une offre en depend).
+	var catalogue: Array[SpellCard] = _catalog_sorted()
+	for c: SpellCard in catalogue:
+		if not c.is_passive and SaveData.is_discovered(c.id):
+			_pool_add(out, c, passifs_ok)
+	if passifs_ok:
+		for c: SpellCard in catalogue:
+			if c.is_passive and SaveData.is_discovered(c.id):
+				_pool_add(out, c, passifs_ok)
+	for c: SpellCard in levelup_pool_to_obtain(level_def, level_mode):
+		_pool_add(out, c, passifs_ok)
+	return out
+
+
+## La part du pool de montee de niveau qui NE VIENT PAS des cartes obtenues : ce
+## que ce niveau, dans ce mode, ajoute au livre (communes de l acte, repli du
+## contenu d avant la vague 10, passifs en repli). levelup_pool() = cartes
+## obtenues + cette part, rien d autre. Separee pour que le grimoire (cartes
+## « a obtenir », SaveData.obtainable_ids) lise la MEME regle sans relire le
+## livre entier pour chaque niveau ouvert. Peut contenir des cartes deja
+## obtenues : l appelant les retire s il le faut.
+func levelup_pool_to_obtain(level_def: LevelDef, level_mode: GameEnums.Mode) -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	if level_def == null or GameEnums.is_endless(level_mode):
+		return out
+	var passifs_ok: bool = passives_allowed(level_def, level_mode)
+	for c: SpellCard in ContentDB.act_commons(level_def.act):
+		_pool_add(out, c, passifs_ok)
+	if not level_def.has_base_commons():
 		for c: SpellCard in level_def.exploration_deck:
 			_pool_add(out, c, passifs_ok)
 		for c: SpellCard in level_def.levelup_cards:
 			_pool_add(out, c, passifs_ok)
 		for c: SpellCard in SaveData.objective_rewards_unlocked(level_def):
 			_pool_add(out, c, passifs_ok)
-		if passifs_ok:
-			for c: SpellCard in ContentDB.cards.values():
-				if c != null and c.is_passive:
-					_pool_add(out, c, passifs_ok)
-		return out
+	# REPLI des passifs : sans passif debloquable ecrit au contenu, la campagne
+	# (et le Libre, qui a son pool) propose TOUS les passifs des l acte 2, comme
+	# avant la vague 10. Des que le contenu en ecrit un, seuls les passifs
+	# DEBLOQUES (obtenus) entrent au pool.
+	if passifs_ok and not ContentDB.passive_unlocks_authored():
+		for c: SpellCard in _catalog_sorted():
+			if c.is_passive:
+				_pool_add(out, c, passifs_ok)
+	return out
+
+
+## Le catalogue trie par id (String : le tri de StringName n est pas fiable).
+func _catalog_sorted() -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
 	for c: SpellCard in ContentDB.cards.values():
-		if c != null and SaveData.is_discovered(c.id):
-			_pool_add(out, c, passifs_ok)
+		if c != null:
+			out.append(c)
+	out.sort_custom(func(a: SpellCard, b: SpellCard) -> bool: return String(a.id) < String(b.id))
 	return out
 
 
@@ -1397,10 +1460,14 @@ func _pool_add(out: Array[SpellCard], c: SpellCard, passifs_ok: bool) -> void:
 ## Les passifs existent-ils dans cette partie ? "Rien avant l acte 2" : en
 ## campagne c est l acte DU NIVEAU qui decide ; hors campagne, il faut avoir
 ## ouvert un niveau de l acte 2. Sans niveau (tests a froid), oui.
+##
+## VAGUE 10 : en LIBRE, c est la regle de la campagne qui decide (l acte du
+## niveau, ou de rattachement pour une annexe) : memes vagues, memes objectifs,
+## donc meme borne. Hors niveau (Massacre), le profil decide comme avant.
 func passives_allowed(level_def: LevelDef, level_mode: GameEnums.Mode) -> bool:
 	if level_def == null:
 		return true
-	if level_mode == GameEnums.Mode.EXPLORATION:
+	if not GameEnums.is_endless(level_mode):
 		return level_def.allows_passives()
 	return SaveData.passives_unlocked()
 
@@ -1431,8 +1498,11 @@ func roll_passive_rarity() -> GameEnums.Rarity:
 ## mesure que la collection grossit, et les objectifs perdraient leur sens. Le
 ## deck construit et ses passifs sont l affaire des modes ou le joueur compose.
 ## Hors campagne, la regle d acte tient toujours (passives_allowed).
+##
+## VAGUE 10 : les modes ou le joueur compose sont le LIBRE (qui remplace
+## l Infini par niveau) et le Massacre. Seule la CAMPAGNE part sans eux.
 func equip_saved_passives() -> int:
-	if not GameEnums.is_endless(mode):
+	if mode == GameEnums.Mode.EXPLORATION:
 		return 0
 	if not passives_allowed(current_level_def, mode):
 		return 0
@@ -1565,14 +1635,23 @@ func _shuffle_cards(arr: Array[SpellCard]) -> void:
 
 ## Qui a inflige les coups, pour le bilan de defaite : {nom affichable: nombre}.
 var hits_by_source: Dictionary = {}
+## VAGUE 10 — BILAN DES DEGATS (ecrans de victoire et de defaite) : points de
+## VITESSE reellement retires au mage, par espece (id d EnemyDef). Un coup recu
+## pendant l agonie ne retire rien et n ajoute rien. Les projectiles-monstres
+## sont ranges sous leur LANCEUR au moment du bilan (BattleReport.rows), comme
+## hits_from_enemy le fait pour les coups.
+var damage_by_enemy_id: Dictionary = {}
 
 
-func note_damage_taken(source: EnemyDef = null) -> void:
+## `amount` : points de vitesse que CE coup a retires (0 = inconnu, ancien appel).
+func note_damage_taken(source: EnemyDef = null, amount: int = 0) -> void:
 	took_any_damage = true
 	var nom: String = source.display_name if source != null else "Projectile"
 	hits_by_source[nom] = int(hits_by_source.get(nom, 0)) + 1
 	# OBJECTIFS (no_hit_from, hit_from) : le meme coup, range par id d espece.
 	_note_hit_from(source)
+	if source != null and amount > 0:
+		damage_by_enemy_id[source.id] = int(damage_by_enemy_id.get(source.id, 0)) + amount
 
 
 ## Le monstre qui a le plus coute de vitesse sur la partie, "" si aucun coup recu.
@@ -1669,9 +1748,10 @@ var _failed_objectives: Dictionary = {}
 ## passif...). Brancher chacune ouvrait dix occasions d en oublier une ; relire
 ## les compteurs une fois par image n en oublie aucune, pour trois objectifs.
 ##
-## Campagne seulement : le Massacre n a pas d objectifs (voir le briefing).
+## Campagne et LIBRE (memes objectifs, vague 10) : le Massacre n a pas
+## d objectifs (voir le briefing).
 func watch_objectives() -> void:
-	if current_level_def == null or mode != GameEnums.Mode.EXPLORATION:
+	if current_level_def == null or GameEnums.is_endless(mode):
 		return
 	for o: ObjectiveDef in current_level_def.objectives:
 		if o == null or _failed_objectives.has(o.id):

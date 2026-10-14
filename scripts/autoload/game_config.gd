@@ -468,6 +468,29 @@ func xp_required(level: int) -> int:
 
 
 # =====================================================================
+# CHANTIER A3 (vague 10) — PASSIFS DE BASE.
+# =====================================================================
+
+## LES SIX PASSIFS DE BASE, debloques des qu un niveau de l acte
+## LevelDef.PASSIVES_FROM_ACT est OUVERT (regle du co-auteur : « a partir de
+## l acte 2, 6 passifs de base, puis 1 ou 2 debloquables par niveau de campagne,
+## le reste dans les quetes annexes »). Les autres passifs viennent de
+## LevelDef.passive_unlocks (victoire d un niveau ou d une annexe).
+##
+## CHOIX PROVISOIRE (14/10), a confirmer par le chantier de contenu : les quatre
+## passifs COMMUNS sans element (un mur par vague, incantation, pioche, XP) et
+## deux rares aussi generaux (un allie par vague, vitesse a chaque mort). Sans
+## element pour qu aucun deck ne soit avantage d office, et parmi les plus
+## LISIBLES, ceux qui apprennent ce qu est un passif (meme raison que la table
+## de rarete des passifs, RunState.PASSIVE_RARITY_WEIGHTS). Un id inconnu ou qui
+## n est pas un passif fait rougir test_campaign_progression.
+const BASE_PASSIVES: Array[StringName] = [
+	&"pass_bark", &"pass_celerity", &"pass_quickhand", &"pass_scholar",
+	&"pass_companion", &"pass_pulse",
+]
+
+
+# =====================================================================
 # VAGUE 10, CHANTIER A1 — nouveaux verbes de sort et ameliorations MAJEURES.
 # Section a part : la phase B retouche l incantation plus haut, et deux
 # chantiers qui ajoutent chacun leurs constantes au meme endroit se marchent

@@ -11,21 +11,19 @@ extends Control
 func _ready() -> void:
 	theme = UiTheme.make()
 	_title.text = "DEFAITE"
-	_title.add_theme_color_override(&"font_color", UiTheme.RED)
+	_title.add_theme_color_override(&"font_color", UiTheme.INK_DANGER)
 	_title.add_theme_font_size_override(&"font_size", UiTheme.FONT_TITLE)
 	_summary.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
 	var waves: int = SceneRouter.payload.get("waves", RunState.wave_index)
 	var level_id: StringName = SceneRouter.payload.get("level_id", &"lvl_01")
 	# MODES (chantier M) : le record est range selon le MODE. L ancienne ligne
 	# ecrivait dans level_record(level_id) quel que soit le mode, ce qui creait
-	# une fiche de niveau "massacre" fantome et melangeait les vagues de
-	# l Infini a celles de l Exploration.
+	# une fiche de niveau "massacre" fantome. Vague 10 : le LIBRE n ecrit aucun
+	# record (SaveData.record_run_waves), l Infini par niveau n existe plus.
 	SaveData.record_run_waves(level_id, RunState.mode, waves)
 	var resume: String = "%d vagues survecues" % waves
 	if RunState.mode == GameEnums.Mode.MASSACRE:
 		resume += "   -   record %d" % SaveData.massacre_best_wave()
-	elif RunState.mode == GameEnums.Mode.INFINITE:
-		resume += "   -   record %d" % SaveData.infinite_best_wave(level_id)
 	# Le record sur la MEME ligne debordait du papier (vu sur la capture
 	# defaite_massacre) : en mode sans fin, le niveau du joueur passe dessous.
 	var sep: String = "
@@ -34,27 +32,22 @@ func _ready() -> void:
 	_retry_btn.pressed.connect(func() -> void:
 		SceneRouter.start_level(level_id, RunState.mode))
 	_menu_btn.pressed.connect(func() -> void: SceneRouter.goto(SceneRouter.MAIN_MENU))
+	# VAGUE 10 : le bilan et le conseil peuvent depasser la page ; REJOUER et MENU
+	# restent en bas, hors defilement, sous le pouce.
+	TouchScroll.wrap(_breakdown)
 	_build_breakdown()
 	SaveData.save_profile()
 
 
-## Ce qui a tue le joueur, compte pendant la partie par RunState.
+## Ce qui a tue le joueur, mesure pendant la partie.
 ## Sans ce bilan, l ecran disait combien de vagues on avait tenu mais jamais
 ## pourquoi on etait mort : impossible de corriger son deck ou sa visee.
+##
+## VAGUE 10 : en DEGATS (vitesse retiree) et non plus en coups — un contact de
+## boss et une fleche de gnome ne valaient pas autant — avec le portrait de
+## chaque monstre et un conseil concret contre le premier (BattleReport,
+## ThreatLore). L ancien conseil generique (« garde un sort pour... ») n est
+## plus que le repli d un monstre sans trait.
 func _build_breakdown() -> void:
-	var sources: Dictionary = RunState.hits_by_source
-	if sources.is_empty():
-		return
-	_breakdown.add_theme_constant_override(&"separation", 8)
-	_breakdown.add_child(UiTheme.label("CE QUI T A EU", UiTheme.FONT_BODY, UiTheme.GOLD))
-	var noms: Array = sources.keys()
-	noms.sort_custom(func(a, b): return int(sources[a]) > int(sources[b]))
-	for nom in noms:
-		var n: int = int(sources[nom])
-		_breakdown.add_child(UiTheme.label(
-			"%s  -  %d coup%s" % [nom, n, "s" if n > 1 else ""],
-			UiTheme.FONT_BODY, UiTheme.TEXT_DARK))
-	var pire: String = RunState.worst_threat()
-	if pire != "" and sources.size() > 1:
-		_breakdown.add_child(UiTheme.label("La prochaine fois, garde un sort pour %s." % pire,
-			UiTheme.FONT_SMALL, UiTheme.TEAL))
+	_breakdown.add_theme_constant_override(&"separation", 14)
+	BattleReport.build(_breakdown, false)

@@ -91,7 +91,7 @@ extends Control
 ## Depuis le chantier P la bande est EQUIPABLE : trois emplacements, un toucher
 ## ouvre sur la page la liste des passifs OBTENUS, un second equipe. Ils sont
 ## actifs des le debut du combat (RunState.equip_saved_passives), mais SEULEMENT
-## en Infini et en Massacre (retouche du 30/09) : un niveau de campagne part sans
+## en Libre et en Massacre (retouche du 30/09) : un niveau de campagne part sans
 ## eux. Une phrase sous la bande le dit. Avant l acte 2 la bande le dit aussi au
 ## lieu de montrer des emplacements inutilisables.
 ##
@@ -134,7 +134,8 @@ const OBTAINABLE_TINT: Color = CollectionStyle.GREY_TILE
 ## La phrase sous les emplacements de passifs. Courte, parce qu elle est lue a
 ## cote de trois boutons ; elle dit OU ils servent, c est la seule chose que le
 ## joueur ne peut pas deviner (retouche du 30/09 : pas en campagne).
-const PASSIVES_SCOPE_TEXT: String = "Actifs en Infini et en Massacre, pas en campagne"
+## Vague 10 : le LIBRE remplace l Infini par niveau.
+const PASSIVES_SCOPE_TEXT: String = "Actifs en Libre et en Massacre, pas en campagne"
 ## Hauteur d un emplacement de passif : une cible tactile (>= 90 px).
 const PASSIVE_SLOT_H: float = 100.0
 ## Ecart entre le titre PASSIFS et la phrase de verrou (avant l acte 2).

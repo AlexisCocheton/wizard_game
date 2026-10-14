@@ -2,8 +2,10 @@ extends TestCase
 ## PROGRESSION DES CARTES ET PASSIFS PAR ACTE (vague 5, chantier P).
 ##
 ## Regles du co-auteur verrouillees ici :
-##   - pool de montee de niveau en campagne = deck du niveau + ses cartes
-##     nouvelles + les cartes des objectifs REUSSIS ; hors campagne = les cartes
+##   - pool de montee de niveau en campagne (vague 10, 14/10) = les cartes
+##     OBTENUES + les communes de l ACTE ; pour un niveau sans deck de base
+##     (contenu d avant), en plus l ancien pool : deck du niveau + ses cartes
+##     nouvelles + les cartes des objectifs REUSSIS ; au Massacre = les cartes
 ##     deja OBTENUES ;
 ##   - toute offre passe par ce pool ;
 ##   - une carte s obtient la premiere fois qu on la PREND (pas en la brulant) ;
@@ -208,6 +210,28 @@ func _niveau(acte: int) -> LevelDef:
 	return lv
 
 
+## Les cartes OBTENUES (sorts) du profil : la part du pool de montee de niveau
+## commune a tous les niveaux depuis la vague 10.
+func _obtenues() -> Array:
+	var out: Array = []
+	for c: SpellCard in ContentDB.cards.values():
+		if c != null and not c.is_passive and SaveData.is_discovered(c.id):
+			out.append(c)
+	return out
+
+
+## Le pool attendu d un niveau de REPLI (sans deck de base) en campagne, sans
+## passif : cartes obtenues + communes de l acte + deck + cartes nouvelles +
+## `en_plus` (les cartes des objectifs reussis).
+func _pool_de_repli(lv: LevelDef, en_plus: Array = []) -> Array:
+	var attendu: Array = _obtenues()
+	attendu.append_array(ContentDB.act_commons(lv.act))
+	attendu.append_array(lv.exploration_deck)
+	attendu.append_array(lv.levelup_cards)
+	attendu.append_array(en_plus)
+	return attendu
+
+
 ## Ids dans l ORDRE (pas de tri) : l ordre des emplacements compte.
 func _ids_de(cartes: Array) -> Array:
 	var out: Array = []
@@ -231,14 +255,16 @@ func _test_pool_de_campagne_exact() -> void:
 	SaveData.reset_profile()
 	var lv: LevelDef = _niveau(1)
 	var pool: Array[SpellCard] = RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION)
-	var attendu: Array = []
-	attendu.append_array(lv.exploration_deck)
-	attendu.append_array(lv.levelup_cards)
-	eq(_ids(pool), _ids(attendu),
-		"campagne, aucun objectif reussi : deck du niveau + cartes nouvelles, rien d autre")
+	eq(_ids(pool), _ids(_pool_de_repli(lv)),
+		"campagne, aucun objectif reussi : obtenues + communes de l acte + deck + cartes nouvelles")
 	eq(pool.size(), _ids(pool).size(), "chaque carte n y figure qu une fois")
+	for c0 in _obtenues():
+		ok(pool.has(c0), "une carte obtenue est au pool de montee de niveau (%s)" % c0.id)
+	for c1 in ContentDB.act_commons(lv.act):
+		ok(pool.has(c1), "une commune de l acte est au pool des le niveau 1 (%s)" % c1.id)
 	for r in lv.objective_rewards:
-		not_ok(pool.has(r), "la carte d un objectif NON reussi n est pas dans le pool (%s)" % r.id)
+		if not SaveData.is_discovered(r.id):
+			not_ok(pool.has(r), "la carte d un objectif NON reussi n est pas dans le pool (%s)" % r.id)
 
 
 func _test_un_objectif_reussi_ajoute_sa_carte_au_pool() -> void:
@@ -250,13 +276,8 @@ func _test_un_objectif_reussi_ajoute_sa_carte_au_pool() -> void:
 		{premier.id: true, dernier.id: true}, 1)
 	ok(nouveau, "la victoire signale une carte nouvellement debloquee")
 	var pool: Array[SpellCard] = RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION)
-	var attendu: Array = []
-	attendu.append_array(lv.exploration_deck)
-	attendu.append_array(lv.levelup_cards)
-	attendu.append(lv.reward_of(premier))
-	attendu.append(lv.reward_of(dernier))
-	eq(_ids(pool), _ids(attendu),
-		"campagne : deck + cartes nouvelles + cartes des objectifs REUSSIS, exactement")
+	eq(_ids(pool), _ids(_pool_de_repli(lv, [lv.reward_of(premier), lv.reward_of(dernier)])),
+		"campagne, niveau de repli : l ancien pool + les cartes des objectifs REUSSIS, exactement")
 	not_ok(pool.has(lv.objective_rewards[1]), "l objectif rate ne rapporte rien")
 	# Debloquer n est pas obtenir : la carte attend d etre prise en combat.
 	not_ok(SaveData.is_discovered(lv.reward_of(premier).id),
@@ -275,8 +296,9 @@ func _test_un_objectif_reussi_ajoute_sa_carte_au_pool() -> void:
 func _test_pool_hors_campagne_egal_aux_cartes_obtenues() -> void:
 	SaveData.reset_profile()
 	var lv: LevelDef = _niveau(1)
-	var hors: GameEnums.Mode = _mode_hors_campagne()
-	ok(hors != GameEnums.Mode.EXPLORATION, "il existe un mode hors campagne")
+	# Le seul mode HORS NIVEAU depuis la vague 10 : le Massacre. Le Libre joue
+	# un niveau et suit la regle de la campagne (verifie plus bas).
+	var hors: GameEnums.Mode = GameEnums.Mode.MASSACRE
 	# Une carte obtenue de plus, hors de tout deck : elle doit y etre.
 	var rare: SpellCard = _sorts(GameEnums.Rarity.LEGENDARY)[0]
 	SaveData.discover_card(rare.id)
@@ -295,6 +317,10 @@ func _test_pool_hors_campagne_egal_aux_cartes_obtenues() -> void:
 			continue
 		eq(_ids(RunState.levelup_pool(MassacreMode.level_def(), m)), _ids(obtenues),
 			"mode sans fin %d, niveau du Massacre : les cartes obtenues" % m)
+	# Le LIBRE suit la regle de la CAMPAGNE (memes vagues, memes objectifs).
+	eq(_ids(RunState.levelup_pool(lv, GameEnums.Mode.FREE)),
+		_ids(RunState.levelup_pool(lv, GameEnums.Mode.EXPLORATION)),
+		"le Libre a le pool de la campagne : obtenues + communes de l acte")
 
 
 ## Toutes les offres tirent dans le pool du niveau en cours : aucune carte
@@ -334,8 +360,8 @@ func _test_toute_offre_vient_du_pool() -> void:
 		for c3 in RunState.offer_choices(GameConfig.LEVEL_UP_CHOICES):
 			communes[c3.id] = true
 		RunState.pending_offer.clear()
-	eq(communes.size(), _ids(maigre.exploration_deck).size(),
-		"un pool de communes seules est propose en entier")
+	eq(communes.size(), _ids(RunState.levelup_pool(maigre, GameEnums.Mode.EXPLORATION)).size(),
+		"un pool sans cartes nouvelles ni recompense est propose en entier")
 	RunState.reset()
 	RunState.current_level_def = null
 
@@ -575,7 +601,8 @@ func _test_niveau_sans_contenu_de_progression() -> void:
 	not_ok(SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, faits, 1),
 		"trois objectifs sans recompense ecrite : rien de debloque, rien ne plante")
 	var pool: Array[SpellCard] = RunState.levelup_pool(lvl1, GameEnums.Mode.EXPLORATION)
-	eq(_ids(pool), _ids(lvl1.exploration_deck), "le pool se reduit au deck du niveau")
+	eq(_ids(pool), _ids(_pool_de_repli(lvl1)),
+		"le pool se reduit aux cartes obtenues, aux communes de l acte et au deck du niveau")
 	eq(CampaignPanel.objective_reward_line(lvl1, 0).strip_edges().is_empty(), false,
 		"la fiche de campagne ecrit quand meme une ligne pour l objectif")
 	lvl1.levelup_cards = avant_cartes
@@ -636,14 +663,17 @@ func _test_passifs_rien_avant_l_acte_2() -> void:
 
 func _test_passifs_hors_campagne_selon_l_acte_atteint() -> void:
 	SaveData.reset_profile()
-	var hors: GameEnums.Mode = _mode_hors_campagne()
+	# Hors niveau (le Massacre, niveau fabrique sans acte) : c est l acte ATTEINT
+	# au profil qui decide. Le LIBRE, lui, suit l acte DU NIVEAU (vague 10).
+	var hors: GameEnums.Mode = GameEnums.Mode.MASSACRE
+	var massacre: LevelDef = MassacreMode.level_def()
 	var acte1: LevelDef = _niveau(1)
 	not_ok(SaveData.passives_unlocked(), "profil neuf : l acte 2 n est pas atteint")
-	not_ok(RunState.passives_allowed(acte1, hors),
-		"mode infini avant l acte 2 : pas de passif")
+	not_ok(RunState.passives_allowed(massacre, hors),
+		"Massacre avant l acte 2 : pas de passif")
 	var p: SpellCard = _passifs()[0]
 	SaveData.discover_card(p.id)
-	not_ok(RunState.levelup_pool(acte1, hors).has(p),
+	not_ok(RunState.levelup_pool(massacre, hors).has(p),
 		"meme obtenu, un passif n est pas proposable avant l acte 2")
 	var ouvert: LevelDef = null
 	for lv: LevelDef in ContentDB.levels.values():
@@ -655,11 +685,15 @@ func _test_passifs_hors_campagne_selon_l_acte_atteint() -> void:
 		return
 	SaveData.unlock_level(ouvert.id)
 	ok(SaveData.passives_unlocked(), "un niveau d acte 2 OUVERT suffit")
-	ok(RunState.passives_allowed(acte1, hors),
-		"mode infini, acte 2 atteint : les passifs existent, meme sur un niveau d acte 1")
-	ok(RunState.levelup_pool(acte1, hors).has(p), "et un passif obtenu y est proposable")
+	ok(RunState.passives_allowed(massacre, hors),
+		"Massacre, acte 2 atteint : les passifs existent")
+	ok(RunState.levelup_pool(massacre, hors).has(p), "et un passif obtenu y est proposable")
 	not_ok(RunState.passives_allowed(acte1, GameEnums.Mode.EXPLORATION),
 		"mais en campagne, un niveau d acte 1 reste sans passif")
+	not_ok(RunState.passives_allowed(acte1, GameEnums.Mode.FREE),
+		"et en Libre aussi : un niveau d acte 1 reste sans passif")
+	ok(RunState.passives_allowed(_niveau(LevelDef.PASSIVES_FROM_ACT), GameEnums.Mode.FREE),
+		"Libre, niveau de l acte des passifs : ils existent")
 	SaveData.reset_profile()
 
 
@@ -675,7 +709,13 @@ func _test_passifs_equipes_actifs_au_depart() -> void:
 	ok(acte2 != null and acte1 != null, "le contenu a des niveaux des deux cotes de l acte 2")
 	if acte2 == null or acte1 == null:
 		return
-	var p: Array[SpellCard] = _passifs()
+	# Des passifs HORS de la base (GameConfig.BASE_PASSIVES), pour que
+	# « obtenu » ne vienne que de discover_card : la base est obtenue d office des
+	# l acte 2 (vague 10), un intrus de la base ne serait pas un intrus.
+	var p: Array[SpellCard] = []
+	for c0: SpellCard in _passifs():
+		if not GameConfig.BASE_PASSIVES.has(c0.id):
+			p.append(c0)
 	var voulus: Array = []
 	for i in DeckRules.MAX_PASSIVES:
 		SaveData.discover_card(p[i].id)
@@ -687,22 +727,22 @@ func _test_passifs_equipes_actifs_au_depart() -> void:
 	# Le niveau d acte 2 doit etre OUVERT pour que les passifs existent hors
 	# campagne (SaveData.passives_unlocked).
 	SaveData.unlock_level(acte2.id)
-	# Trois passifs obtenus et equipes : en INFINI, les trois sont actifs DES LE
+	# Trois passifs obtenus et equipes : en LIBRE, les trois sont actifs DES LE
 	# DEPART, dans l ordre.
 	SaveData.set_equipped_passives(voulus)
-	g.start_level(acte2, GameEnums.Mode.INFINITE)
+	g.start_level(acte2, GameEnums.Mode.FREE)
 	g.running = false
 	eq(_ids_de(RunState.equipped_passives), voulus,
-		"Infini, acte 2 : les passifs equipes au deck sont actifs DES LE DEPART, dans l ordre")
+		"Libre, acte 2 : les passifs equipes au deck sont actifs DES LE DEPART, dans l ordre")
 	# Rejouer ne les empile pas (reset puis re-equipement).
-	g.start_level(acte2, GameEnums.Mode.INFINITE)
+	g.start_level(acte2, GameEnums.Mode.FREE)
 	g.running = false
 	eq(RunState.equipped_passives.size(), voulus.size(), "rejouer ne double pas les passifs")
 	# Un passif NON obtenu glisse dans la liste (profil edite) ne s equipe pas,
 	# et ne prend pas la place des autres.
 	var intrus: SpellCard = p[DeckRules.MAX_PASSIVES]
 	SaveData.set_equipped_passives([voulus[0], String(intrus.id), voulus[1]])
-	g.start_level(acte2, GameEnums.Mode.INFINITE)
+	g.start_level(acte2, GameEnums.Mode.FREE)
 	g.running = false
 	eq(_ids_de(RunState.equipped_passives), [voulus[0], voulus[1]],
 		"un passif non obtenu n est jamais active")
@@ -716,16 +756,16 @@ func _test_passifs_equipes_actifs_au_depart() -> void:
 	g.start_level(acte1, GameEnums.Mode.EXPLORATION)
 	g.running = false
 	eq(RunState.equipped_passives.size(), 0, "campagne, acte 1 : le meme profil part sans passif")
-	# Tous les modes SANS FIN les appliquent, le Massacre compris (niveau
-	# fabrique, sans acte : c est l acte 2 ATTEINT qui compte).
+	# Tous les modes HORS CAMPAGNE les appliquent : le Libre (acte du niveau) et
+	# le Massacre (niveau fabrique, sans acte : c est l acte 2 ATTEINT qui compte).
 	for m in GameEnums.Mode.values():
-		if not GameEnums.is_endless(m):
+		if m == GameEnums.Mode.EXPLORATION:
 			continue
 		var lv_m: LevelDef = MassacreMode.level_def() if m == GameEnums.Mode.MASSACRE else acte2
 		g.start_level(lv_m, m)
 		g.running = false
 		eq(RunState.equipped_passives.size(), voulus.size(),
-			"mode sans fin %s : les passifs equipes s appliquent" % GameEnums.mode_name(m))
+			"mode %s : les passifs equipes s appliquent" % GameEnums.mode_name(m))
 	detach(g)
 	RunState.reset()
 	RunState.current_level_def = null
@@ -904,8 +944,9 @@ func _test_communes_proposees_en_campagne() -> void:
 	SaveData.reset_profile()
 
 
-## Hors campagne (Infini, Massacre) et sans niveau, la table de DEC-004 reste la
-## seule : jamais une commune tiree quand le pool a des rares.
+## Hors niveau (le Massacre) et sans niveau, la table de DEC-004 reste la
+## seule : jamais une commune tiree quand le pool a des rares. Le Libre joue un
+## niveau : il tire dans la table de campagne (vague 10).
 func _test_hors_campagne_la_table_des_sorts_ne_change_pas() -> void:
 	var lv: LevelDef = _niveau(1)
 	for m in GameEnums.Mode.values():
@@ -929,9 +970,18 @@ func _test_hors_campagne_la_table_des_sorts_ne_change_pas() -> void:
 	RunState.roll_spell_rarity(lv, GameEnums.Mode.EXPLORATION)
 	var apres_campagne: float = RunState._rng.randf()
 	RunState.set_seed(4242)
-	RunState.roll_spell_rarity(lv, GameEnums.Mode.INFINITE)
+	RunState.roll_spell_rarity(lv, GameEnums.Mode.MASSACRE)
 	feq(RunState._rng.randf(), apres_campagne,
 		"la table de campagne consomme autant de tirages que celle de DEC-004")
+	# Le LIBRE tire comme la campagne : meme graine, meme rarete.
+	var ecarts: int = 0
+	for essai3 in TIRAGES:
+		RunState.set_seed(9300 + essai3)
+		var r_campagne: int = RunState.roll_spell_rarity(lv, GameEnums.Mode.EXPLORATION)
+		RunState.set_seed(9300 + essai3)
+		if RunState.roll_spell_rarity(lv, GameEnums.Mode.FREE) != r_campagne:
+			ecarts += 1
+	eq(ecarts, 0, "le Libre tire dans la table de campagne")
 
 
 ## Le contenu LIVRE (chantier W7 : 3 cartes nouvelles par niveau, une carte par

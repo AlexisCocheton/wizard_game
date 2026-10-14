@@ -633,7 +633,8 @@ class Politique extends RefCounted:
 		var compte: Dictionary = {}
 		var ordre: Array[StringName] = []
 		if lv != null:
-			for c: SpellCard in lv.exploration_deck:
+			# Vague 10 : le deck de BASE (communes de base, ou exploration_deck en repli).
+			for c: SpellCard in lv.campaign_base_cards():
 				if c == null or c.is_passive:
 					continue
 				if not compte.has(c.id):

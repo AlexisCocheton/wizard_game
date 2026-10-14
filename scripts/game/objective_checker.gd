@@ -900,14 +900,14 @@ static func trivial_reasons(o: ObjectiveDef, level: LevelDef) -> Array[String]:
 		&"no_card_key":
 			var cle: StringName = StringName(_param(o, "key"))
 			var trouve: bool = false
-			for c: SpellCard in level.exploration_deck:
+			for c: SpellCard in level.campaign_base_cards():
 				if c != null and not c.is_passive and cle in c.effect_keys():
 					trouve = true
 			if not trouve:
 				out.append("aucune carte de cet effet dans le deck du niveau")
 		&"max_distinct_cast":
 			var ids: Dictionary = {}
-			for c: SpellCard in level.exploration_deck:
+			for c: SpellCard in level.campaign_base_cards():
 				if c != null and not c.is_passive:
 					ids[c.id] = true
 			if ids.size() <= _int(o, "count"):
@@ -926,6 +926,8 @@ static func trivial_reasons(o: ObjectiveDef, level: LevelDef) -> Array[String]:
 
 ## La carte peut-elle se retrouver en main dans ce niveau ? Deck du niveau, plus
 ## le pool de montee de niveau `LevelDef.levelup_cards` s il existe.
+## Vague 10 : « deck du niveau » = son deck de BASE (LevelDef.campaign_base_cards :
+## communes de base, ou exploration_deck en repli), celui que le contenu garantit.
 ##
 ## Le champ est ajoute par un autre chantier (progression) : il est lu par NOM
 ## (`get`) pour que ce fichier compile avec ou sans lui. Tant qu il n existe pas,
@@ -935,7 +937,7 @@ static func trivial_reasons(o: ObjectiveDef, level: LevelDef) -> Array[String]:
 static func card_obtainable(level: LevelDef, card_id: StringName) -> bool:
 	if level == null or card_id == &"":
 		return false
-	for c: SpellCard in level.exploration_deck:
+	for c: SpellCard in level.campaign_base_cards():
 		if c != null and c.id == card_id:
 			return true
 	var pool: Variant = level.get("levelup_cards")
@@ -1072,7 +1074,7 @@ static func _flyers_from(d: EnemyDef, profondeur: int) -> int:
 
 static func _deck_count_tag(level: LevelDef, tag: int) -> int:
 	var n: int = 0
-	for c: SpellCard in level.exploration_deck:
+	for c: SpellCard in level.campaign_base_cards():
 		if c != null and not c.is_passive and c.has_tag(tag):
 			n += 1
 	return n
