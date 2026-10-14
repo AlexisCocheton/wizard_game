@@ -37,6 +37,12 @@ const MAGNITUDE_SENS: Dictionary = {
 	"poison_dot": "degats PAR SECONDE jusqu a la mort de la cible",
 	"gain_speed": "points de vitesse rendus au mage",
 	"slow_enemy_gauge": "pourcentage de ralentissement", "draw_cards": "nombre de cartes",
+	# VAGUE 10 A1 : les verbes neufs (le vent n a pas de magnitude, sa vitesse
+	# normale est le param normal_speed).
+	"electric_mark": "degats de la marque (un de moins a chaque saut)",
+	"global_rain": "degats par goutte (une goutte toutes les `interval` s)",
+	"quicksand": "degats a la FIN, a qui est encore dans le sable",
+	"water_jet": "degats par tranche de 100 px de recul",
 }
 
 var res: Resource = null

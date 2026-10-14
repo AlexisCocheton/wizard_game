@@ -468,6 +468,7 @@ func advance(world_delta: float) -> void:
 			battlefield.enemy_shockwave(self, definition.shockwave_radius,
 				definition.shockwave_damage)
 
+	var w10_marche: float = speed  # VAGUE 10 A1 : sa marche, avant les a-coups
 	# A-coups : fonce, puis marque une pause.
 	if definition.burst_move:
 		_burst_timer += world_delta
@@ -478,6 +479,7 @@ func advance(world_delta: float) -> void:
 			_burst_dashing = true
 			_burst_timer = 0.0
 		speed = speed * 1.7 if _burst_dashing else 0.0
+	speed = _w10_wind_speed(speed, w10_marche)  # VAGUE 10 A1 : vent du sud
 
 	# Volte-face : le monstre remonte vers le haut, moins vite s il resiste a
 	# l element de la carte (vague 5). Totalement resistant, il n est pas
@@ -519,10 +521,12 @@ func advance(world_delta: float) -> void:
 
 	# Ondulation laterale, uniquement en descente libre (le chemin A* prime).
 	if definition.wave_amplitude > 0.0 and _path.is_empty():
-		_wave_phase += world_delta * definition.wave_frequency * TAU
+		# VAGUE 10 A1 : sous le vent, la phase s arrete (la colonne aussi) : il
+		# descend droit, et reprend sans saut lateral quand le vent tombe.
+		_wave_phase += world_delta * definition.wave_frequency * TAU * _w10_pattern_keep()
 		position.x = clampf(_base_x + sin(_wave_phase) * definition.wave_amplitude,
 			40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0)
-	_v3_apply_move_pattern(speed, world_delta)
+	_v3_apply_move_pattern(speed, world_delta * _w10_pattern_keep())  # VAGUE 10 A1 : vent
 
 	# Tir sur le mage.
 	if definition.shoot_interval > 0.0 and battlefield != null and not _hidden:
@@ -549,6 +553,10 @@ func _advance_along_path(speed: float, world_delta: float) -> void:
 	# de coup porte au decor — il descend tout droit. C est tout l interet de la
 	# capacite : le joueur ne peut pas la repousser avec un mur, il doit la tuer.
 	if nav == null or definition.flying:
+		# VAGUE 10 A1 : un mur de majeure arrete aussi les volants.
+		if definition.flying and battlefield != null \
+				and battlefield.w10_flyer_blocked(self, speed * world_delta, world_delta):
+			return
 		position.y += speed * world_delta
 		return
 
@@ -2649,3 +2657,50 @@ func contact_damage() -> int:
 func shot_damage_now() -> int:
 	var base: int = definition.shot_damage if definition != null else 0
 	return int(round(float(base) * devour_force()))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — le VENT DU SUD vu par le monstre
+#
+# Le vent (Battlefield.w10_apply_wind) ne ralentit pas : il NORMALISE. Un
+# monstre plus rapide que la normale revient a la normale, un monstre aux
+# deplacements etranges (zigzag, ondulation, a-coups, sauts, spirale) marche
+# droit, un volant reste sur place. La part subie est la resistance au vent du
+# monstre (control_factor de l element de la carte) : 0 = immunise, rien ne
+# change ; entre les deux, l effet est partiel, comme tout effet de controle.
+# Accroches dans advance() et _advance_along_path(), commentees VAGUE 10 A1.
+# =====================================================================
+
+## Part du vent que subit ce monstre, 0 sans vent.
+func _w10_wind() -> float:
+	if battlefield == null or definition == null:
+		return 0.0
+	return battlefield.w10_wind_factor_for(self)
+
+
+## Ce qui reste de ses deplacements « etranges » : 1 sans vent, 0 sous un vent
+## subi en plein. Multiplie le temps que voient l ondulation et les motifs :
+## leur horloge s arrete, ils reprennent ou ils en etaient quand le vent tombe
+## (pas de saut lateral a la fin du sort).
+func _w10_pattern_keep() -> float:
+	return 1.0 - _w10_wind()
+
+
+## La vitesse sous le vent. `marche` : sa vitesse avant les a-coups.
+##   - a-coups : lisses vers sa marche (il ne fonce plus, il ne s arrete plus) ;
+##   - volant : immobilise (il reste en l air la ou il est) ;
+##   - plus rapide que la normale : ramene vers Battlefield.w10_wind_cap().
+## Un monstre plus LENT que la normale n est pas accelere : le vent ne pousse
+## personne vers le mage.
+func _w10_wind_speed(speed: float, marche: float) -> float:
+	var f: float = _w10_wind()
+	if f <= 0.0:
+		return speed
+	if definition.burst_move:
+		speed = lerpf(speed, marche, f)
+	if definition.flying:
+		return speed * (1.0 - f)
+	var cap: float = battlefield.w10_wind_cap()
+	if speed > cap:
+		speed -= (speed - cap) * f
+	return speed

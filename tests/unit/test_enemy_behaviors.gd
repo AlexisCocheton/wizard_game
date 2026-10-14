@@ -629,9 +629,8 @@ func _test_tuer_la_gorgone_degele_la_main() -> void:
 
 
 ## LE PLAFOND EXIGE PAR LE TESTEUR : jamais plus de 5 cartes sur 6. Deux
-## gorgones de boss (3 chacune) totalisent 6 regards ; le plafond doit en
-## laisser une jouable, sinon le joueur regarde son ecran sans rien pouvoir
-## faire et ce n est plus un jeu.
+## gorgones de boss (3 chacune) totalisent 6 regards ; la 6e carte d une main
+## pleine leur echappe toujours (vague 10 : c est la SEULE qui leur echappe).
 func _test_jamais_plus_de_cinq_cartes_sur_six_petrifiees() -> void:
 	_fresh()
 	_main_de(6)
@@ -647,16 +646,34 @@ func _test_jamais_plus_de_cinq_cartes_sur_six_petrifiees() -> void:
 	eq(libres, 1, "il reste EXACTEMENT une carte jouable, jamais zero")
 
 
-## Une main plus PETITE que le nombre de regards : le plafond est relatif a la
-## main reelle, pas au maximum theorique. Avec 3 cartes en main et 3 regards,
-## le joueur doit encore pouvoir en jouer une.
+## Une main plus PETITE que pleine (vague 10, regle du co-auteur) : les gorgones
+## la bloquent EN ENTIER. Seule la 6e carte d une main pleine leur echappe ;
+## avant la vague 10, une carte restait toujours jouable (2 sur 3), et une main
+## d UNE carte ne se petrifiait jamais.
 func _test_le_plafond_suit_la_main_reelle() -> void:
 	_fresh()
 	_main_de(3)
 	_bf.spawn_enemy(_gorgone(3), 500.0, 1.0, Vector2(500.0, 400.0))
 	_sim(0.6)
-	eq(RunState.blocked_cards().size(), 2,
-		"3 cartes en main : au plus 2 petrifiees, jamais la main entiere")
+	eq(RunState.blocked_cards().size(), 3,
+		"3 cartes en main et 3 regards : les 3 sont petrifiees")
+	_fresh()
+	_main_de(1)
+	_bf.spawn_enemy(_gorgone(1), 500.0, 1.0, Vector2(500.0, 400.0))
+	_sim(0.6)
+	eq(RunState.blocked_cards().size(), 1,
+		"une seule carte en main : elle est petrifiee quand meme")
+	not_ok(RunState.play_card(RunState.hand[0]), "et elle ne se lance pas")
+	# La 6e carte : la main se remplit, la carte qui la complete reste libre.
+	for i in GameConfig.MAX_HAND_SIZE - 1:
+		var c := SpellCard.new()
+		c.id = StringName("pioche_%d" % i)
+		RunState.hand.append(c)
+	_bf.spawn_enemy(_gorgone(3), 300.0, 1.0, Vector2(300.0, 400.0))
+	_bf.spawn_enemy(_gorgone(3), 700.0, 1.0, Vector2(700.0, 400.0))
+	_sim(0.6)
+	eq(RunState.blocked_cards().size(), RunState.hand.size() - 1,
+		"main pleine sous sept regards : tout sauf UNE carte")
 
 
 ## La carte petrifiee ne change pas a chaque image. Sans stabilite, le joueur

@@ -109,6 +109,7 @@ func start_level(def: LevelDef, level_mode: GameEnums.Mode) -> void:
 	# point de passage unique des sorts (EffectRegistry.cast).
 	_connect_once(RunState.upgrade_ready, _on_upgrade_ready)
 	_connect_once(RunState.purge_requested, _on_purge_requested)
+	_connect_once(RunState.hand_level_requested, _on_hand_level_requested)  # VAGUE 10 A1
 	# CHANTIER W8 : echange de passif en pause, vague qui traine.
 	_connect_once(RunState.passive_swap_needed, _on_passive_swap_needed)
 	_connect_once(spawner.wave_overtime, _on_wave_overtime)
@@ -716,7 +717,8 @@ func game_frozen_by_choice() -> bool:
 		or RunState.pending_upgrade_card != null \
 		or RunState.pending_purge > 0 \
 		or RunState.pending_passive != null \
-		or RunState.burned_card != null
+		or RunState.burned_card != null \
+		or RunState.pending_hand_level > 0  # VAGUE 10 A1 : sort de la main a faire murir
 
 
 ## Le panneau d echange de passif, cree a la premiere occasion (meme raison que
@@ -781,3 +783,48 @@ func _on_passive_swap_refused() -> void:
 ## (il ecoute le signal du spawner, comme le bandeau de monde).
 func _on_wave_overtime(index: int) -> void:
 	_on_wave_cleared(index)
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — « monte d un niveau une carte de ta main »
+#
+# Meme partage que l Epuration et l amelioration : en headless, personne ne
+# peut toucher l ecran et AutoPick tranche tout de suite ; sinon un panneau se
+# pose sur le HUD, la partie figee (game_frozen_by_choice) jusqu au choix.
+# =====================================================================
+
+var _hand_level_panel: HandLevelPanel = null
+
+
+func _on_hand_level_requested(_count: int) -> void:
+	if RunState.pending_hand_level <= 0:
+		return
+	if headless_mode:
+		RunState.resolve_hand_level(AutoPick.hand_level_choice(RunState.hand_level_candidates()))
+		return
+	var panel: HandLevelPanel = _ensure_hand_level_panel()
+	panel.show_choices(RunState.hand_level_candidates())
+
+
+func _ensure_hand_level_panel() -> HandLevelPanel:
+	if _hand_level_panel != null and is_instance_valid(_hand_level_panel):
+		return _hand_level_panel
+	_hand_level_panel = HandLevelPanel.new()
+	_hand_level_panel.name = "HandLevelPanel"
+	_hand_level_panel.card_chosen.connect(_on_hand_level_chosen)
+	# Dans le CanvasLayer du HUD, comme les autres panneaux de choix.
+	var hud: Node = get_node_or_null("HUD")
+	if hud != null:
+		hud.add_child(_hand_level_panel)
+	else:
+		add_child(_hand_level_panel)
+	return _hand_level_panel
+
+
+## Cache AVANT de trancher : le choix ouvre aussitot la maturation de la carte
+## choisie, et l ecran de maturation doit passer devant (meme raison que
+## _on_upgrade_path_chosen).
+func _on_hand_level_chosen(card: SpellCard) -> void:
+	if _hand_level_panel != null and is_instance_valid(_hand_level_panel):
+		_hand_level_panel.visible = false
+	RunState.resolve_hand_level(card)

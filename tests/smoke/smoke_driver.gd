@@ -303,6 +303,8 @@ func _run_all() -> void:
 	await TouchScrollCheck.run(self)
 	# OUTILS DU TESTEUR (vague 8) : l atelier, ses fiches et le document.
 	await TesterSmoke.run(self)
+	# VAGUE 10 A1 : vent, pluie, marque, sable, jet, ecran de majeure, main qui murit.
+	await W10SortsSmoke.run(self)
 
 	# 4) La defaite doit aussi fonctionner.
 	_check_defeat_path()
@@ -1380,19 +1382,19 @@ func _check_cartes_petrifiees() -> void:
 			RunState.hand.append(card)
 	RunState.hand_changed.emit()
 
-	# LE PLAFOND : il doit toujours rester une carte jouable, quoi qu il arrive.
+	# LE PLAFOND (vague 10) : la 6e carte d une main pleine reste jouable, et elle
+	# seule ; une main plus petite peut etre gelee en entier.
 	RunState.set_card_block_count(99)
 	var restantes: int = 0
 	for i in RunState.hand.size():
 		if not RunState.is_slot_blocked(i):
 			restantes += 1
-	if restantes < RunState.MIN_PLAYABLE_CARDS:
-		_fail("cartes petrifiees : %d carte(s) jouable(s), le plafond ne tient pas"
-			% restantes)
+	if restantes != RunState.hand.size() - RunState.max_held_cards():
+		_fail("cartes petrifiees : %d carte(s) jouable(s) sur une main de %d, le plafond ne tient pas"
+			% [restantes, RunState.hand.size()])
 	# Deux regards : la Matrone en gele deux. EXEMPLAIRES, pas cartes.
 	RunState.set_card_block_count(2)
-	var attendu_gel: int = mini(2, maxi(0,
-		RunState.hand.size() - RunState.MIN_PLAYABLE_CARDS))
+	var attendu_gel: int = mini(2, RunState.max_held_cards())
 	if RunState.blocked_count() != attendu_gel:
 		_fail("cartes petrifiees : %d gelees au lieu de %d (main de %d)"
 			% [RunState.blocked_count(), attendu_gel, RunState.hand.size()])

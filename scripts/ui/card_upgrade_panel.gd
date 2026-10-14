@@ -165,6 +165,11 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	var entete: String = "Une voie parmi %d, pour cette partie seulement." % pool
 	if paliers > 1:
 		entete = "Maturation %d sur %d  -  %s" % [rang, paliers, entete.to_lower()]
+	# VAGUE 10 A1 : la majeure s annonce des l entete, avant meme les boutons.
+	for p in paths:
+		if p is Dictionary and bool((p as Dictionary).get("major", false)):
+			entete += " Une AMELIORATION MAJEURE est proposee."
+			break
 	_box.add_child(UiTheme.label(entete, UiTheme.FONT_SMALL, UiTheme.TEXT_DIM,
 		HORIZONTAL_ALIGNMENT_CENTER, true))
 	# LE CUMUL. A partir de la seconde maturation, la nouvelle voie s AJOUTE aux
@@ -224,6 +229,11 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 ## Si un appelant ne fournit que `text`, on retombe sur le decoupage au
 ## deux-points, pour ne jamais afficher un bouton vide.
 func _path_button(path: Dictionary, index: int) -> Control:
+	# VAGUE 10 A1 : une MAJEURE a son propre bouton (cadre, mot, prix sur
+	# plusieurs lignes). Meme nom de noeud et meme signal : l ecran se tranche
+	# de la meme facon, quelle que soit la voie touchee.
+	if bool(path.get("major", false)):
+		return _major_button(path, index)
 	var titre: String = String(path.get("title", ""))
 	var gain: String = String(path.get("gain_text", ""))
 	var prix: String = String(path.get("cost_text", ""))
@@ -344,3 +354,92 @@ func _fond(couleur: Color, bord: Color) -> StyleBoxFlat:
 	sb.border_color = bord
 	sb.set_content_margin_all(18.0)
 	return sb
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — l AMELIORATION MAJEURE a l ecran
+#
+#   +------------------------------------------+
+#   |  SECONDE VOLEE                  MAJEURE  |  <- cadre MAGENTA epais
+#   |  + Une seconde ligne de fleches...       |  <- le gain, VERT
+#   |  - -50 % degats                          |  <- chaque prix, ROUGE,
+#   |  - -15 % vitesse de lancement            |     une ligne chacun
+#   +------------------------------------------+
+#
+# Pourquoi un bouton a part : une majeure change la STRUCTURE du sort et coute
+# souvent lourd. Le joueur doit la reconnaitre AVANT de lire (couleur de cadre
+# qu aucune voie n a, mot MAJEURE en toutes lettres pour qui ne distingue pas
+# les couleurs), et lire TOUS ses prix : joints sur une ligne, le second prix
+# passait sous le pouce. Plus haut qu une voie (MAJOR_PATH_HEIGHT) : trois voies
+# dont une majeure tiennent encore dans 1920 px.
+# =====================================================================
+
+const MAJOR_PATH_HEIGHT: float = 260.0
+## Le cadre d une majeure : ni l or (voie forte) ni le bleu-vert (legere).
+const COULEUR_MAJEURE := Color(0.95, 0.35, 0.85)
+const MAJOR_BORDER: int = 7
+
+
+func _major_button(path: Dictionary, index: int) -> Control:
+	var b := Button.new()
+	b.name = "Voie%d" % index
+	b.custom_minimum_size = Vector2(0, MAJOR_PATH_HEIGHT)
+	b.size_flags_vertical = Control.SIZE_FILL
+	b.text = ""
+	for etat: StringName in [&"normal", &"hover", &"pressed", &"disabled"]:
+		var fond: Color = FOND_VOIE
+		if etat == &"hover":
+			fond = FOND_VOIE.lightened(0.08)
+		elif etat == &"pressed":
+			fond = FOND_VOIE.darkened(0.25)
+		var sb: StyleBoxFlat = _fond(fond, COULEUR_MAJEURE)
+		sb.set_border_width_all(MAJOR_BORDER)
+		b.add_theme_stylebox_override(etat, sb)
+	b.pressed.connect(func() -> void:
+		AudioBus.play_sfx(&"card_pick")
+		path_chosen.emit(index))
+
+	var inner := VBoxContainer.new()
+	inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	inner.offset_left = 34.0
+	inner.offset_right = -34.0
+	inner.offset_top = 14.0
+	inner.offset_bottom = -14.0
+	inner.alignment = BoxContainer.ALIGNMENT_CENTER
+	inner.add_theme_constant_override(&"separation", 2)
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(inner)
+
+	var tete := HBoxContainer.new()
+	tete.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(tete)
+	var l_titre: Label = UiTheme.label(String(path.get("title", "")).to_upper(),
+		UiTheme.FONT_BUTTON, COULEUR_MAJEURE.lightened(0.35), HORIZONTAL_ALIGNMENT_LEFT, false)
+	l_titre.name = "Titre"
+	l_titre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l_titre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tete.add_child(l_titre)
+	var l_forme: Label = UiTheme.label("MAJEURE", UiTheme.FONT_SMALL, COULEUR_MAJEURE,
+		HORIZONTAL_ALIGNMENT_RIGHT, false)
+	l_forme.name = "Forme"
+	l_forme.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tete.add_child(l_forme)
+
+	var l_gain: Label = UiTheme.label(String(path.get("gain_text", "")), UiTheme.FONT_BODY,
+		COULEUR_GAIN, HORIZONTAL_ALIGNMENT_LEFT, true)
+	l_gain.name = "Gain"
+	l_gain.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inner.add_child(l_gain)
+
+	var lignes: Array = path.get("cost_lines", []) as Array
+	if lignes.is_empty() and String(path.get("cost_text", "")) != "":
+		lignes = [String(path.get("cost_text", ""))]
+	# Le PREMIER prix porte le nom « Prix » (contrat de l ecran, lu par les
+	# tests) ; les suivants, « Prix2 », « Prix3 »...
+	for k in lignes.size():
+		var l_prix: Label = UiTheme.label(String(lignes[k]), UiTheme.FONT_BODY, COULEUR_PRIX,
+			HORIZONTAL_ALIGNMENT_LEFT, true)
+		l_prix.name = "Prix" if k == 0 else "Prix%d" % (k + 1)
+		l_prix.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		inner.add_child(l_prix)
+	return b

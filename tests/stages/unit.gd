@@ -77,6 +77,10 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_tester_field_commit.gd",
 	# Vague 9 : compte a rebours de la vague qui traine dans le HUD.
 	"res://tests/unit/test_overtime_countdown.gd",
+	# Vague 10 A1 : vent, marque electrique, pluie, sable, jet en I, main qui murit.
+	"res://tests/unit/test_w10_sorts.gd",
+	# Vague 10 A1 : ameliorations MAJEURES (format, offre, structure, bot, ecran).
+	"res://tests/unit/test_major_upgrades.gd",
 ]
 
 var _total_checks: int = 0

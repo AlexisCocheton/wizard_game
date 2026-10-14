@@ -53,6 +53,14 @@ func register_defaults() -> void:
 		EffectHandlers.GainSpeed.new(),
 		# Et Concentration : de l XP de carte a toute la main (grant_card_xp).
 		EffectHandlers.HandCardXp.new(),
+		# VAGUE 10 A1 : vent du sud, marque electrique, pluie abondante, sable
+		# mouvant, jet en I, et la carte de la main qui murit au choix.
+		EffectHandlers.GlobalWind.new(),
+		EffectHandlers.ElectricMark.new(),
+		EffectHandlers.GlobalRain.new(),
+		EffectHandlers.Quicksand.new(),
+		EffectHandlers.WaterJet.new(),
+		EffectHandlers.HandCardLevel.new(),
 	]:
 		register(h)
 
@@ -86,7 +94,19 @@ func dispatch(spec: EffectSpec, ctx: CastContext) -> bool:
 		# push_error part sur stderr : la gate du harnais transforme ca en build rouge.
 		push_error("Aucun handler pour la cle d'effet '%s'" % spec.key)
 		return false
-	handler.apply(spec, ctx)
+	# VAGUE 10 A1 : une majeure peut DECALER le point vise d un effet (aim_offset)
+	# et lui faire laisser un RESIDU sur tout ce qu il touche (residue_dps). Les
+	# deux se lisent sur la spec, autour du handler : aucun handler n a a savoir
+	# qu une majeure existe.
+	var c: CastContext = _w10_ctx_for(spec, ctx)
+	var bf: Object = c.battlefield if c != null else null
+	var residu: bool = bf != null and bf.has_method("w10_begin_residue") \
+		and float(spec.get_param(&"residue_dps", 0.0)) > 0.0
+	if residu:
+		bf.w10_begin_residue(spec, c)
+	handler.apply(spec, c)
+	if residu:
+		bf.w10_end_residue()
 	return true
 
 
@@ -137,9 +157,63 @@ func cast(card: SpellCard, ctx: CastContext) -> void:
 		for spec2 in specs:
 			dispatch(spec2, ctx)
 		_resolving = false
+	# VAGUE 10 A1 : majeure « vague supplementaire » — la resolution est rejouee
+	# plus tard, au nom du MEME lancer (attribution, objectifs). Programmee AVANT
+	# de refermer la source : Battlefield la retient pour le rejeu.
+	_w10_schedule_repeats(card, ctx, specs)
 	# OBJECTIFS : le lancer est fini, ses coups directs aussi.
 	RunState.swap_damage_source(obj_source_avant)
 
 
 ## Vrai pendant la seconde resolution de "Debordement" : voir cast().
 var _resolving: bool = false
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — decalage de visee et vague supplementaire (majeures)
+# =====================================================================
+
+## Le contexte qu un effet voit : celui du lancer, sauf si sa spec porte un
+## `aim_offset` (Vector2), auquel cas une COPIE vise le point decale. Une copie
+## et non le contexte lui-meme : les autres effets du lancer visent toujours le
+## point que le joueur a choisi.
+func _w10_ctx_for(spec: EffectSpec, ctx: CastContext) -> CastContext:
+	if ctx == null or spec == null:
+		return ctx
+	var dec: Variant = spec.get_param(&"aim_offset", null)
+	if not (dec is Vector2) or (dec as Vector2) == Vector2.ZERO:
+		return ctx
+	var c := CastContext.make(ctx.battlefield, ctx.card)
+	c.caster = ctx.caster
+	c.direction = ctx.direction
+	c.target_enemy = ctx.target_enemy
+	c.damage_mult = ctx.damage_mult
+	c.cast_id = ctx.cast_id
+	var p: Vector2 = ctx.target_position + (dec as Vector2)
+	# Dans le terrain : un effet decale hors cadre serait un sort perdu en silence.
+	c.target_position = Vector2(
+		clampf(p.x, 40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0),
+		clampf(p.y, GameConfig.SPAWN_LINE_Y, GameConfig.MAGE_LINE_Y - 20.0))
+	return c
+
+
+## Programme les REJEUX d une majeure « repeat » (RunState.major_repeats). Les
+## effets rejoues sont des COPIES de ceux du lancer, ameliorations comprises,
+## magnitudes multipliees par le `factor` de la majeure. Pas pendant la seconde
+## resolution de Debordement : une vague de plus, pas deux.
+func _w10_schedule_repeats(card: SpellCard, ctx: CastContext, specs: Array[EffectSpec]) -> void:
+	if card == null or ctx == null or ctx.battlefield == null or _resolving:
+		return
+	if not ctx.battlefield.has_method("w10_schedule_recast"):
+		return
+	for r: Dictionary in RunState.major_repeats(card):
+		var f: float = float(r.get("factor", 1.0))
+		var copies: Array[EffectSpec] = []
+		for s in specs:
+			if s == null:
+				continue
+			var c: EffectSpec = s.duplicate() as EffectSpec
+			c.params = s.params.duplicate(true)
+			c.magnitude *= f
+			copies.append(c)
+		ctx.battlefield.w10_schedule_recast(card, copies, ctx, float(r.get("delay", 1.0)))

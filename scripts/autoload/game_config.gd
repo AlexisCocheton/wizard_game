@@ -465,3 +465,52 @@ const RIVER_MIN_ROWS_ABOVE_MAGE: int = 4
 
 func xp_required(level: int) -> int:
 	return int(round(XP_PER_LEVEL_BASE * pow(XP_PER_LEVEL_GROWTH, maxi(0, level - 1))))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — nouveaux verbes de sort et ameliorations MAJEURES.
+# Section a part : la phase B retouche l incantation plus haut, et deux
+# chantiers qui ajoutent chacun leurs constantes au meme endroit se marchent
+# dessus a la fusion.
+# =====================================================================
+
+## VENT GLOBAL (cle global_wind) : la vitesse « normale » a laquelle le vent
+## ramene les monstres plus rapides, en px/s de BASE (avant ENEMY_SPEED_SCALE).
+## 60, c est la vitesse par defaut d un EnemyDef : un monstre ecrit sans vitesse
+## particuliere marche exactement a cette allure, le vent ne le touche donc pas.
+## Une carte peut en ecrire une autre (param normal_speed).
+const WIND_NORMAL_SPEED: float = 60.0
+
+## PLUIE GLOBALE (cle global_rain) : intervalle par defaut entre deux gouttes
+## qui mordent, en secondes de MONDE. « 1 degat toutes les 2 s » (co-auteur).
+const RAIN_INTERVAL: float = 2.0
+
+## MARQUE ELECTRIQUE (cle electric_mark) : portee par defaut du saut, en px, et
+## delai entre la mort du porteur et le saut, en secondes de MONDE. Le delai
+## n est pas un equilibrage : sans lui toute la chaine partirait dans la meme
+## image et le joueur ne verrait pas la marque SAUTER de monstre en monstre.
+const MARK_JUMP_RANGE: float = 320.0
+const MARK_JUMP_DELAY: float = 0.15
+
+## JET EN I (cle water_jet) : les degats s ecrivent « N par tranche de
+## JET_DAMAGE_STEP_PX px de recul ». 100 px, l ordre de grandeur d un pas de
+## monstre a l ecran : la carte dit « 4 degats par 100 px », un chiffre qui se
+## lit, plutot que « 0,04 par pixel ».
+const JET_DAMAGE_STEP_PX: float = 100.0
+
+## AMELIORATIONS MAJEURES. La PREMIERE maturation d un sort n en propose jamais :
+## le joueur decouvre d abord les voies ordinaires du sort, et une majeure des
+## le huitieme lancer ecraserait tout le reste de l ecran. A partir de la
+## maturation MAJOR_UPGRADE_FROM_TIER, UNE majeure au plus prend une des
+## LEVEL_UP_CHOICES places, tant que le sort n en a pas deja pris
+## MAJOR_UPGRADES_PER_CARD dans la partie.
+const MAJOR_UPGRADE_FROM_TIER: int = 2
+## Une seule par sort et par partie : deux majeures changent chacune la
+## STRUCTURE du sort, et leurs prix lourds (-50 % degats) s additionneraient
+## jusqu a un sort qui ne fait plus rien.
+const MAJOR_UPGRADES_PER_CARD: int = 1
+## Plancher d un axe CUMULE (voies + majeure), en facteur : un -50 % de majeure
+## plus trois -15 % de voies fortes ne doivent jamais rendre des degats nuls ou
+## negatifs (une Boule de feu qui soignerait). Sans majeure, le cumul le plus bas
+## du jeu est 0,40 : ce plancher ne change rien au contenu d avant la vague 10.
+const UPGRADE_FACTOR_FLOOR: float = 0.1

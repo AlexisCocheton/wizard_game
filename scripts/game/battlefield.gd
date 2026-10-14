@@ -87,6 +87,7 @@ func simulate(delta: float) -> void:
 	_simulate_shockwaves(wd)
 	_simulate_support(wd)
 	_w8_auras_simulate(wd)  # CHANTIER W8 : coupure d aura et pat d aura
+	_w10_simulate(wd)  # VAGUE 10 A1 : vent, pluie, sauts de marque, residus, rejeux
 
 	var buff: float = _buff_multiplier()
 	# Copie : la liste est modifiee pendant l iteration (morts, arrivees).
@@ -198,6 +199,7 @@ func _simulate_zones(wd: float) -> void:
 	for i in range(zones.size() - 1, -1, -1):
 		var z: Dictionary = zones[i]
 		z["time"] -= wd
+		_w10_zone_tick(z)  # VAGUE 10 A1 : zone qui grandit puis decroit
 		# OBJECTIFS : la zone frappe au nom du lancer qui l a posee.
 		var obj_src_avant: Dictionary = RunState.swap_damage_source(z.get("src", {}))
 		for e in enemies.duplicate():
@@ -209,8 +211,10 @@ func _simulate_zones(wd: float) -> void:
 				_hit(e, z["dps"] * wd, z["tags"], true)
 			if z["slow_pct"] > 0.0:
 				e.apply_slow(1.0 - z["slow_pct"] * 0.01, 0.4, z["tags"])
+			_w10_zone_touch(z, e)  # VAGUE 10 A1 : residu apres la sortie
 		RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 		if z["time"] <= 0.0:
+			_w10_zone_end(z)  # VAGUE 10 A1 : le sable mouvant avale ceux qui restent
 			var vn: Node = z.get("node")
 			if vn != null and is_instance_valid(vn):
 				vn.queue_free()
@@ -568,6 +572,7 @@ func _on_enemy_died(e: Enemy) -> void:
 				if child != null:
 					child.position.x = clampf(child.position.x, 40.0, GameConfig.BATTLEFIELD_WIDTH - 40.0)
 	_v3_on_death(e, def, where, diff)
+	_w10_on_death(e, where)  # VAGUE 10 A1 : la marque electrique saute
 	e.queue_free()
 
 
@@ -717,6 +722,7 @@ func clear_all() -> void:
 		if node != null and is_instance_valid(node):
 			node.queue_free()
 	shots.clear()
+	_w10_clear()  # VAGUE 10 A1
 	_v3_clear()
 	_reverse_time = 0.0
 	if nav != null:
@@ -895,7 +901,10 @@ func damage_enemy(target: Object, amount: float, card: SpellCard) -> bool:
 	if target == null or not is_instance_valid(target):
 		return false
 	var tags: Array = card.combat_tags() if card != null else []
-	return _hit(target as Enemy, amount, tags)
+	var mordu: bool = _hit(target as Enemy, amount, tags)
+	if mordu:
+		_w10_after_direct_hit(target as Enemy)  # VAGUE 10 A1 : residu d une majeure
+	return mordu
 
 
 func enemies_in_line(origin: Vector2, dir: Vector2, width: float, max_targets: int) -> Array:
@@ -2069,6 +2078,8 @@ func breaker_can_break(a: Node) -> bool:
 		return false
 	if not a.is_in_group(TerrainProp.GROUP) or not a.has_method("destroy"):
 		return false
+	if a.has_meta(&"w10_unbreakable"):
+		return false  # VAGUE 10 A1 : objet incassable d une majeure
 	return not (int(a.get("kind")) in BREAKER_SPARED_KINDS)
 
 
@@ -2199,3 +2210,556 @@ func _w8_someone_advances() -> bool:
 ## Pour les tests : depuis combien de temps de monde dure le pat d aura en cours.
 func aura_stalemate_time() -> float:
 	return _aura_stalemate_time
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER A1 — ce que les nouveaux verbes demandent au terrain
+#
+# Vent du sud, marque electrique, pluie abondante, sable mouvant, jet en I, et
+# ce que les ameliorations MAJEURES posent sur des effets existants (residu,
+# zone qui respire, mur que les volants ne passent plus, objet incassable,
+# vague supplementaire). Une section a elle : battlefield.gd est partage par
+# plusieurs chantiers, ses accroches ailleurs sont des lignes isolees et
+# commentees « VAGUE 10 A1 ».
+#
+# Toutes les durees suivent le temps du MONDE (`wd`), comme les zones et les
+# poisons : a x4 la pluie tombe quatre fois plus vite, et c est le prix de la
+# mecanique signature. Tous les degats passent par `_hit` (DEC-010), au nom du
+# lancer qui les a poses (RunState.damage_source, objectifs).
+# =====================================================================
+
+func _w10_simulate(wd: float) -> void:
+	if _w10_wind_time > 0.0:
+		_w10_wind_time -= wd
+		if _w10_wind_time <= 0.0:
+			_w10_wind_time = 0.0
+			_w10_free(_w10_wind_node)
+			_w10_wind_node = null
+	_w10_tick_rains(wd)
+	_w10_tick_jumps(wd)
+	_w10_tick_dots(wd)
+	_w10_tick_recasts(wd)
+	# Une marque dont le porteur a quitte le terrain SANS mourir (gobe, fin de
+	# vague) ne doit plus compter : elle ne sautera jamais.
+	for i in range(w10_marks.size() - 1, -1, -1):
+		var porteur: Variant = w10_marks[i]["enemy"]
+		if porteur == null or not is_instance_valid(porteur) or (porteur as Enemy).is_dead():
+			w10_marks.remove_at(i)
+
+
+func _w10_clear() -> void:
+	_w10_wind_time = 0.0
+	_w10_free(_w10_wind_node)
+	_w10_wind_node = null
+	for r in _w10_rains:
+		_w10_free(r.get("node"))
+	_w10_rains.clear()
+	w10_marks.clear()
+	_w10_jumps.clear()
+	w10_dots.clear()
+	_w10_recasts.clear()
+	_w10_residue = {}
+
+
+static func _w10_free(n: Variant) -> void:
+	if n != null and n is Node and is_instance_valid(n):
+		(n as Node).queue_free()
+
+
+## Un monstre vient de mourir : ses marques sautent (apres MARK_JUMP_DELAY, pour
+## qu on VOIE le saut), ses residus s eteignent avec lui.
+func _w10_on_death(e: Enemy, where: Vector2) -> void:
+	for i in range(w10_marks.size() - 1, -1, -1):
+		var m: Dictionary = w10_marks[i]
+		if m["enemy"] != e:
+			continue
+		w10_marks.remove_at(i)
+		var reste: float = float(m["value"]) - float(m["decay"])
+		if reste <= 0.001:
+			continue
+		var saut: Dictionary = m.duplicate()
+		saut["value"] = reste
+		saut["from"] = where
+		saut["time"] = GameConfig.MARK_JUMP_DELAY
+		saut.erase("enemy")
+		_w10_jumps.append(saut)
+	for i in range(w10_dots.size() - 1, -1, -1):
+		if w10_dots[i]["enemy"] == e:
+			w10_dots.remove_at(i)
+
+
+# --- VENT DU SUD ------------------------------------------------------------
+
+var _w10_wind_time: float = 0.0
+var _w10_wind_normal: float = GameConfig.WIND_NORMAL_SPEED
+var _w10_wind_tags: Array = []
+var _w10_wind_node: Node = null
+
+
+## Le vent se leve. Un second vent PROLONGE le premier (la plus longue duree) et
+## prend sa vitesse normale : deux vents ne s empilent pas, l air ne souffle pas
+## deux fois plus fort.
+func w10_apply_wind(duration: float, normal_speed: float, tags: Array,
+		sheet: String = "") -> void:
+	_w10_wind_time = maxf(_w10_wind_time, duration)
+	_w10_wind_normal = maxf(normal_speed, 0.0)
+	_w10_wind_tags = tags.duplicate()
+	_w10_free(_w10_wind_node)
+	_w10_wind_node = Fx.w10_weather(self, Fx.W10_WEATHER_WIND, sheet, Fx.color_for(tags))
+
+
+func w10_wind_active() -> bool:
+	return _w10_wind_time > 0.0
+
+
+func w10_wind_time_left() -> float:
+	return maxf(_w10_wind_time, 0.0)
+
+
+## Part du vent que subit CE monstre : 0 sans vent ou s il est immunise a
+## l element de la carte, 1 s il le subit en plein. Lue par Enemy a chaque pas.
+func w10_wind_factor_for(e: Enemy) -> float:
+	if _w10_wind_time <= 0.0 or e == null:
+		return 0.0
+	return e.control_factor(_w10_wind_tags)
+
+
+## La vitesse « normale » du vent, en px/s du MONDE (ENEMY_SPEED_SCALE compris :
+## c est l echelle dans laquelle Enemy calcule sa vitesse).
+func w10_wind_cap() -> float:
+	return _w10_wind_normal * GameConfig.ENEMY_SPEED_SCALE
+
+
+# --- MARQUE ELECTRIQUE ----------------------------------------------------
+
+## Marques en cours : {enemy, value, range, per_death, decay, tags, src, card}.
+## Une entree par marque : un monstre peut en porter plusieurs.
+var w10_marks: Array[Dictionary] = []
+## Sauts en attente : la marque d un mort, en route vers son voisin.
+var _w10_jumps: Array[Dictionary] = []
+## Sauts reussis depuis la creation du terrain (tests, banc).
+var w10_mark_jumps_done: int = 0
+const W10_MARK_META: StringName = &"w10_mark_marker"
+
+
+## Pose une marque de `value` sur `target`, qui encaisse aussitot `value`
+## degats. Refuse (false) une cible morte, en train d apparaitre ou IMMUNISEE a
+## l element : comme le poison, une marque qui ne mordra jamais ne s affiche pas.
+func w10_mark_enemy(target: Object, value: float, card: SpellCard, jump_range: float,
+		per_death: int, decay: float) -> bool:
+	if target == null or not is_instance_valid(target) or not (target is Enemy):
+		return false
+	var e: Enemy = target as Enemy
+	if not _targetable(e) or value <= 0.0:
+		return false
+	var tags: Array = (card.combat_tags() if card != null else [GameEnums.DamageTag.LIGHTNING]) as Array
+	if e.immune_to_damage(tags):
+		Fx.impact(self, e.position, POISON_IMMUNE_COLOR, maxf(e.radius() * 0.8, 40.0))
+		return false
+	# La marque AVANT le coup : si le coup tue, c est cette mort qui fait sauter
+	# la marque — le sort doit enchainer meme sur un monstre qu il acheve.
+	_w10_add_mark(e, {"value": value, "range": maxf(jump_range, 0.0),
+		"per_death": maxi(per_death, 1), "decay": maxf(decay, 0.001), "tags": tags,
+		"src": RunState.damage_source, "card": card})
+	damage_enemy(e, value, card)
+	return true
+
+
+func _w10_add_mark(e: Enemy, m: Dictionary) -> void:
+	var entree: Dictionary = m.duplicate()
+	entree["enemy"] = e
+	w10_marks.append(entree)
+	_w10_refresh_mark_marker(e)
+
+
+## Les valeurs des marques que porte ce monstre (tests, interface).
+func w10_marks_on(e: Enemy) -> Array[float]:
+	var out: Array[float] = []
+	for m in w10_marks:
+		if m["enemy"] == e:
+			out.append(float(m["value"]))
+	return out
+
+
+func w10_pending_jumps() -> int:
+	return _w10_jumps.size()
+
+
+## Le marqueur au-dessus du monstre : la feuille de la carte et le chiffre de la
+## plus forte marque (« x2 » s il en porte plusieurs). Le chiffre est ce qui rend
+## la regle lisible : le joueur voit qu il DECROIT de saut en saut.
+func _w10_refresh_mark_marker(e: Enemy) -> void:
+	if e == null or not is_instance_valid(e):
+		return
+	var valeurs: Array[float] = w10_marks_on(e)
+	var marque: Variant = e.get_meta(W10_MARK_META) if e.has_meta(W10_MARK_META) else null
+	if valeurs.is_empty():
+		_w10_free(marque)
+		if e.has_meta(W10_MARK_META):
+			e.remove_meta(W10_MARK_META)
+		return
+	var plus_forte: float = 0.0
+	for v in valeurs:
+		plus_forte = maxf(plus_forte, v)
+	var texte: String = "%d" % int(round(plus_forte))
+	if valeurs.size() > 1:
+		texte += " x%d" % valeurs.size()
+	if marque == null or not is_instance_valid(marque):
+		var carte: SpellCard = null
+		for m in w10_marks:
+			if m["enemy"] == e:
+				carte = m.get("card")
+		marque = Fx.w10_mark_marker(e, Fx.card_sheet(carte), e.radius())
+		if marque != null:
+			e.set_meta(W10_MARK_META, marque)
+	Fx.w10_mark_marker_set(marque, texte)
+
+
+func _w10_tick_jumps(wd: float) -> void:
+	for i in range(_w10_jumps.size() - 1, -1, -1):
+		var j: Dictionary = _w10_jumps[i]
+		j["time"] = float(j["time"]) - wd
+		if float(j["time"]) > 0.0:
+			continue
+		_w10_jumps.remove_at(i)
+		_w10_do_jump(j)
+
+
+## Le saut : vers les `per_death` monstres vivants les plus PROCHES du mort, a
+## portee, chacun recevant une marque et son coup. Personne a portee : la
+## marque s eteint (un eclat au sol le dit).
+func _w10_do_jump(j: Dictionary) -> void:
+	var depart: Vector2 = j["from"]
+	var portee: float = float(j["range"])
+	var cands: Array[Enemy] = []
+	for o in enemies:
+		if _targetable(o) and o.position.distance_to(depart) <= portee:
+			cands.append(o)
+	# Le plus proche d abord ; a egalite, l ordre d apparition (stable, donc le
+	# meme saut d une partie rejouee a l autre).
+	cands.sort_custom(func(a: Enemy, b: Enemy) -> bool:
+		return a.position.distance_squared_to(depart) < b.position.distance_squared_to(depart))
+	if cands.is_empty():
+		Fx.impact(self, depart, Fx.COL_LIGHTNING, 40.0)
+		return
+	var obj_src_avant: Dictionary = RunState.swap_damage_source(j.get("src", {}))
+	var tags: Array = j.get("tags", []) as Array
+	for k in mini(int(j["per_death"]), cands.size()):
+		var o: Enemy = cands[k]
+		# Le coup du voisin precedent a pu tuer celui-ci (sa propre marque sautera).
+		if not _targetable(o):
+			continue
+		if o.immune_to_damage(tags):
+			Fx.impact(self, o.position, POISON_IMMUNE_COLOR, maxf(o.radius() * 0.8, 40.0))
+			continue
+		# Le TRAIT est l information : de quel mort vers quel vivant (DEC-015).
+		Fx.laser(self, depart, o.position, Fx.COL_LIGHTNING)
+		_w10_add_mark(o, j)
+		w10_mark_jumps_done += 1
+		_hit(o, float(j["value"]), tags)
+	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
+
+
+# --- PLUIE ABONDANTE ------------------------------------------------------
+
+## Pluies en cours : {life, elapsed, next, interval, amount, tags, src, node}.
+var _w10_rains: Array[Dictionary] = []
+## Morsures de pluie depuis la creation du terrain (tests).
+var w10_rain_bites: int = 0
+
+
+func w10_start_rain(duration: float, amount: float, interval: float, card: SpellCard) -> void:
+	var tags: Array = (card.combat_tags() if card != null else [GameEnums.DamageTag.WATER]) as Array
+	_w10_rains.append({
+		"life": duration, "elapsed": 0.0, "next": interval, "interval": interval,
+		"amount": amount, "tags": tags, "src": RunState.damage_source,
+		"node": Fx.w10_weather(self, Fx.W10_WEATHER_RAIN, Fx.card_sheet(card),
+			Fx.color_for(tags)),
+	})
+
+
+func w10_rain_count() -> int:
+	return _w10_rains.size()
+
+
+## Les gouttes mordent a des INSTANTS fixes (interval, 2 x interval...) jusqu a
+## la duree comprise : le compte ne depend pas des images par seconde.
+func _w10_tick_rains(wd: float) -> void:
+	for i in range(_w10_rains.size() - 1, -1, -1):
+		var r: Dictionary = _w10_rains[i]
+		r["elapsed"] = float(r["elapsed"]) + wd
+		while float(r["next"]) <= float(r["elapsed"]) + 0.000001 \
+				and float(r["next"]) <= float(r["life"]) + 0.000001:
+			_w10_rain_bite(r)
+			r["next"] = float(r["next"]) + float(r["interval"])
+		if float(r["elapsed"]) >= float(r["life"]) - 0.000001:
+			_w10_free(r.get("node"))
+			_w10_rains.remove_at(i)
+
+
+## Une goutte sur TOUS les monstres frappables. Degat CONTINU (DEC-054) : il ne
+## use pas les compteurs de coups et ne fait pas riposter.
+func _w10_rain_bite(r: Dictionary) -> void:
+	w10_rain_bites += 1
+	var obj_src_avant: Dictionary = RunState.swap_damage_source(r.get("src", {}))
+	for e in enemies.duplicate():
+		if _targetable(e):
+			_hit(e, float(r["amount"]), r["tags"] as Array, true)
+	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
+
+
+# --- ZONES DES MAJEURES : respiration, residu, degats de fin -----------------
+
+## Fins de zone qui ont frappe (sable mouvant), pour les tests.
+var w10_zone_ends: int = 0
+
+
+## Zone qui GRANDIT puis DECROIT : rayon = base x (start -> peak a mi-vie ->
+## start), triangle sur sa vie. Le visuel suit a l echelle EXACTE (DEC-014) :
+## l anneau est trace au rayon de base, on l etire du meme facteur.
+func _w10_zone_tick(z: Dictionary) -> void:
+	if not z.has("w10_grow_peak"):
+		return
+	var base: float = float(z["w10_base_r"])
+	var p: float = clampf(1.0 - float(z["time"]) / float(z["w10_life"]), 0.0, 1.0)
+	var tri: float = 1.0 - absf(2.0 * p - 1.0)
+	var f: float = float(z["w10_grow_start"]) \
+		+ (float(z["w10_grow_peak"]) - float(z["w10_grow_start"])) * tri
+	z["radius"] = maxf(base * f, 10.0)
+	var vn: Variant = z.get("node")
+	if vn != null and vn is Node2D and is_instance_valid(vn):
+		(vn as Node2D).scale = Vector2.ONE * (float(z["radius"]) / maxf(base, 1.0))
+
+
+## Un monstre est DANS une zone a residu : son degat continu est (re)pose pour
+## la duree du residu, qui ne commence vraiment a mordre qu a sa sortie.
+func _w10_zone_touch(z: Dictionary, e: Enemy) -> void:
+	if not z.has("w10_residue_dps"):
+		return
+	_w10_add_dot(e, float(z["w10_residue_dps"]), float(z["w10_residue_time"]),
+		z.get("tags", []) as Array, z.get("src", {}), z)
+
+
+## La zone expire : le SABLE MOUVANT avale ceux qui y sont encore (un coup).
+func _w10_zone_end(z: Dictionary) -> void:
+	var degats: float = float(z.get("w10_end_damage", 0.0))
+	if degats <= 0.0:
+		return
+	w10_zone_ends += 1
+	var tags: Array = z.get("tags", []) as Array
+	Fx.impact(self, z["pos"], Fx.color_for(tags), float(z["radius"]))
+	var obj_src_avant: Dictionary = RunState.swap_damage_source(z.get("src", {}))
+	for e in enemies_in_radius(z["pos"], float(z["radius"])):
+		_hit(e as Enemy, degats, tags)
+	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
+
+
+# --- RESIDU : un degat continu qui reste apres le contact -------------------
+
+## {enemy, dps, time, tags, src, zone} : `zone` non vide = residu de zone, qui
+## ne mord pas tant que le monstre est encore dedans (la zone mord deja).
+var w10_dots: Array[Dictionary] = []
+## Le residu du lancer en cours de resolution (pose par EffectRegistry.dispatch
+## autour d un effet qui porte residue_dps) ; vide hors de cette fenetre.
+var _w10_residue: Dictionary = {}
+
+
+func w10_begin_residue(spec: EffectSpec, ctx: CastContext) -> void:
+	var card: SpellCard = ctx.card if ctx != null else null
+	_w10_residue = {
+		"dps": float(spec.get_param(&"residue_dps", 0.0)) * (ctx.damage_mult if ctx != null else 1.0),
+		"time": maxf(float(spec.get_param(&"residue_duration", 2.0)), 0.1),
+		"tags": (card.combat_tags() if card != null else []) as Array,
+		"src": RunState.damage_source,
+	}
+
+
+func w10_end_residue() -> void:
+	_w10_residue = {}
+
+
+## Accroche de damage_enemy : un coup DIRECT qui a mordu pendant un lancer a
+## residu laisse son degat continu sur le monstre.
+func _w10_after_direct_hit(e: Enemy) -> void:
+	if _w10_residue.is_empty() or e == null or not is_instance_valid(e) or e.is_dead():
+		return
+	_w10_add_dot(e, float(_w10_residue["dps"]), float(_w10_residue["time"]),
+		_w10_residue["tags"] as Array, _w10_residue["src"], {})
+
+
+## Pose ou RAFRAICHIT un residu : le meme lancer (ou la meme zone) sur le meme
+## monstre ne s empile pas, il repart pour sa duree.
+func _w10_add_dot(e: Enemy, dps: float, duration: float, tags: Array, src: Dictionary,
+		zone: Dictionary) -> void:
+	if e == null or dps <= 0.0:
+		return
+	for d in w10_dots:
+		var meme_zone: bool = is_same(d["zone"], zone) \
+			or ((d["zone"] as Dictionary).is_empty() and zone.is_empty())
+		if d["enemy"] == e and meme_zone and d["src"] == src:
+			d["time"] = maxf(float(d["time"]), duration)
+			return
+	w10_dots.append({"enemy": e, "dps": dps, "time": duration, "tags": tags.duplicate(),
+		"src": src, "zone": zone})
+
+
+func w10_dot_count(e: Enemy) -> int:
+	var n: int = 0
+	for d in w10_dots:
+		if d["enemy"] == e:
+			n += 1
+	return n
+
+
+func _w10_tick_dots(wd: float) -> void:
+	for i in range(w10_dots.size() - 1, -1, -1):
+		var d: Dictionary = w10_dots[i]
+		var e: Variant = d["enemy"]
+		if e == null or not is_instance_valid(e) or (e as Enemy).is_dead():
+			w10_dots.remove_at(i)
+			continue
+		d["time"] = float(d["time"]) - wd
+		var z: Dictionary = d["zone"]
+		var dedans: bool = not z.is_empty() and float(z.get("time", 0.0)) > 0.0 \
+			and (e as Enemy).position.distance_to(z["pos"]) <= float(z["radius"])
+		if not dedans:
+			var obj_src_avant: Dictionary = RunState.swap_damage_source(d["src"])
+			_hit(e as Enemy, float(d["dps"]) * wd, d["tags"] as Array, true)
+			RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
+		if float(d["time"]) <= 0.0:
+			w10_dots.remove_at(i)
+
+
+# --- JET D EAU EN I -------------------------------------------------------
+
+## Le dernier jet : {instance_id -> px parcourus}, pour les tests et le banc.
+var w10_last_jet: Dictionary = {}
+
+
+## La bande : |dx| <= demi-largeur et |dy| <= longueur / 2 autour du point vise,
+## a la moitie du rayon du monstre pres (un gros monstre dont le corps deborde
+## sur la bande est dedans). Recul vers le HAUT (loin du mage), attenue par la
+## resistance a l element ; degats proportionnels au recul REEL — le haut du
+## terrain arrete le recul, donc les degats.
+func w10_water_jet(center: Vector2, half_width: float, length: float, push: float,
+		per_step: float, card: SpellCard) -> int:
+	var tags: Array = (card.combat_tags() if card != null else [GameEnums.DamageTag.WATER]) as Array
+	Fx.w10_jet_column(self, center, half_width, length, Fx.card_sheet(card), Fx.color_for(tags))
+	w10_last_jet = {}
+	var n: int = 0
+	for e in enemies.duplicate():
+		if not _targetable(e):
+			continue
+		var marge: float = e.radius() * 0.5
+		if absf(e.position.x - center.x) > half_width + marge \
+				or absf(e.position.y - center.y) > length * 0.5 + marge:
+			continue
+		n += 1
+		var tenue: float = e.control_factor(tags)
+		var avant: float = e.position.y
+		if tenue > 0.0 and push > 0.0:
+			e.position.y = maxf(avant - push * tenue, GameConfig.SPAWN_LINE_Y)
+			e.repath()
+		var parcouru: float = maxf(avant - e.position.y, 0.0)
+		w10_last_jet[e.get_instance_id()] = parcouru
+		if parcouru > 0.0 and per_step > 0.0:
+			_hit(e, per_step * parcouru / GameConfig.JET_DAMAGE_STEP_PX, tags)
+	return n
+
+
+# --- MUR GEANT QUI ARRETE AUSSI LES VOLANTS, MUR INCASSABLE ----------------
+
+## Le mur que la pose vient d ajouter (s il y en a un) recoit les drapeaux de
+## sa spec. `avant` : le nombre de murs avant la pose.
+func w10_flag_new_wall(avant: int, spec: EffectSpec) -> void:
+	if spec == null or walls.size() <= avant:
+		return
+	var w: Dictionary = walls[walls.size() - 1]
+	if bool(spec.get_param(&"blocks_flyers", false)):
+		w["w10_blocks_flyers"] = true
+	if bool(spec.get_param(&"unbreakable", false)):
+		# Plus de PV : les monstres enfermes ne le cassent plus, seule sa duree le
+		# fait tomber. Et le Briseur l epargne (breaker_can_break).
+		w.erase("hp")
+		var a: Variant = w.get("anchor")
+		if a != null and a is Node and is_instance_valid(a):
+			(a as Node).set_meta(&"w10_unbreakable", true)
+
+
+## Un VOLANT va-t-il entrer dans un mur qui l arrete ? Il reste alors en l air au
+## ras du mur (et frappe un mur qui a des PV, comme un monstre au sol enferme).
+## Sans mur de ce genre, aucune boucle : le cas courant ne coute rien.
+func w10_flyer_blocked(e: Enemy, step: float, wd: float) -> bool:
+	if e == null or walls.is_empty():
+		return false
+	var devant: Vector2 = e.position + Vector2(0.0, maxf(step, 0.0) + e.radius() * 0.5)
+	for w in walls:
+		if not bool(w.get("w10_blocks_flyers", false)):
+			continue
+		var centre: Vector2 = w.get("center", Vector2.INF)
+		if centre == Vector2.INF:
+			continue
+		if absf(devant.x - centre.x) <= float(w.get("half_width", 0.0)) \
+				and absf(devant.y - centre.y) <= float(w.get("thickness", 60.0)) * 0.5:
+			if float(w.get("hp", 0.0)) > 0.0:
+				damage_wall_at(devant, float(e.contact_damage()) * 4.0 * wd, e)
+			return true
+	return false
+
+
+# --- VAGUE SUPPLEMENTAIRE (majeure « repeat ») -------------------------------
+
+## Rejeux en attente : {time, card, specs, pos, dir, enemy, caster, cast_id, src}.
+var _w10_recasts: Array[Dictionary] = []
+var w10_recasts_done: int = 0
+
+
+func w10_schedule_recast(card: SpellCard, specs: Array[EffectSpec], ctx: CastContext,
+		delay: float) -> void:
+	_w10_recasts.append({
+		"time": maxf(delay, 0.0), "card": card, "specs": specs,
+		"pos": ctx.target_position, "dir": ctx.direction, "enemy": ctx.target_enemy,
+		"caster": ctx.caster, "cast_id": ctx.cast_id, "src": RunState.damage_source,
+	})
+
+
+func w10_pending_recasts() -> int:
+	return _w10_recasts.size()
+
+
+func _w10_tick_recasts(wd: float) -> void:
+	for i in range(_w10_recasts.size() - 1, -1, -1):
+		var r: Dictionary = _w10_recasts[i]
+		r["time"] = float(r["time"]) - wd
+		if float(r["time"]) > 0.0:
+			continue
+		_w10_recasts.remove_at(i)
+		_w10_recast(r)
+
+
+## Le rejeu : memes effets, meme point vise, au nom du MEME lancer. Ce n est pas
+## un lancer de plus (ni XP de carte, ni compteur d objectif « N sorts ») : c est
+## la seconde vague du meme sort. La Focalisation a ete consommee par la
+## premiere resolution (multiplicateur 1). Une cible morte entre-temps est
+## remplacee par le monstre le plus proche du point vise.
+func _w10_recast(r: Dictionary) -> void:
+	var card: SpellCard = r.get("card")
+	var ctx := CastContext.make(self, card)
+	var lanceur: Variant = r.get("caster")
+	if lanceur != null and lanceur is Node and is_instance_valid(lanceur):
+		ctx.caster = lanceur as Node
+	ctx.target_position = r["pos"]
+	ctx.direction = r["dir"]
+	ctx.cast_id = int(r["cast_id"])
+	var cible: Variant = r.get("enemy")
+	if cible == null or not is_instance_valid(cible) or (cible as Enemy).is_dead():
+		cible = enemy_nearest_to(ctx.target_position) if card != null \
+			and card.targeting == GameEnums.Targeting.TARGET else null
+	ctx.target_enemy = cible as Object
+	var obj_src_avant: Dictionary = RunState.swap_damage_source(r.get("src", {}))
+	if card != null and card.sfx_key != &"":
+		AudioBus.play_sfx(card.sfx_key)
+	for s: EffectSpec in r["specs"]:
+		EffectRegistry.dispatch(s, ctx)
+	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
+	w10_recasts_done += 1
