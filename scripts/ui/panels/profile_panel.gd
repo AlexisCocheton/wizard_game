@@ -494,17 +494,17 @@ static func ratio_text(counts: Array) -> String:
 ## Ce que le joueur a vraiment fait, en lignes courtes. Rien d invente : chaque
 ## chiffre vient de SaveData ou de ContentDB.
 func _build_stats() -> void:
-	var cleared: int = 0
-	for level: LevelDef in ContentDB.levels.values():
-		if SaveData.is_level_cleared(level.id):
-			cleared += 1
+	# Vague 10 : le compte de la CAMPAGNE (SaveData.campaign_progress), sans les
+	# quetes annexes, comme le verrou du Massacre.
+	var progres: Array = SaveData.campaign_progress()
+	var cleared: int = int(progres[0])
 
 	_box.add_child(UiTheme.label("PROGRESSION", UiTheme.FONT_BUTTON, UiTheme.GOLD))
 	for ligne: Array in collection_rows():
 		_row(String(ligne[0]), String(ligne[1]),
 			UiTheme.rarity_ink(GameEnums.Rarity.LEGENDARY) if ligne[0] == ROW_LEGENDARIES
 			else UiTheme.TEXT_DARK)
-	_row("Niveaux termines", "%d / %d" % [cleared, ContentDB.levels.size()],
+	_row("Niveaux termines", "%d / %d" % [cleared, int(progres[1])],
 		UiTheme.GREEN.darkened(0.4))
 
 	_box.add_child(UiTheme.label("PAR NIVEAU", UiTheme.FONT_BUTTON, UiTheme.GOLD))

@@ -177,12 +177,13 @@ func _test_rien_ne_se_joue_en_headless() -> void:
 		"aucune outro en headless")
 
 
-## Le Massacre est, diegetiquement, ce qui vient APRES la derniere scene.
+## Le Massacre est, diegetiquement, ce qui vient APRES la derniere scene. Le
+## LIBRE (vague 10) rejoue un niveau que la campagne a deja raconte.
 func _test_le_massacre_na_pas_dhistoire() -> void:
 	SaveData.reset_profile()
 	var avant: bool = SceneRouter.stories_enabled
 	SceneRouter.stories_enabled = true
-	for m in [GameEnums.Mode.INFINITE, GameEnums.Mode.MASSACRE]:
+	for m in [GameEnums.Mode.FREE, GameEnums.Mode.MASSACRE]:
 		eq(SceneRouter.stories_before_level(&"lvl_01", m).size(), 0,
 			"le mode %s ne joue aucune intro" % GameEnums.mode_name(m))
 		eq(SceneRouter.story_outro_for(&"lvl_01", m), &"",

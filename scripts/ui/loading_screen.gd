@@ -52,10 +52,11 @@ func _build() -> void:
 
 	if _mode == GameEnums.Mode.MASSACRE:
 		_subtitle.text = "Massacre  -  tous les mondes a la fois, ton deck"
-	elif _mode == GameEnums.Mode.INFINITE:
-		_subtitle.text = "Infini  -  vagues sans fin a travers les mondes, ton deck"
+	elif _mode == GameEnums.Mode.FREE:
+		_subtitle.text = "Libre  -  %d vagues, ton deck : seuls les objectifs comptent" \
+			% _level.waves.size()
 	else:
-		_subtitle.text = "Exploration  -  %d vagues, deck du niveau" % _level.waves.size()
+		_subtitle.text = "Campagne  -  %d vagues, deck du niveau" % _level.waves.size()
 	_subtitle.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
 
 	_build_threats()
@@ -261,15 +262,13 @@ func _build_deck() -> void:
 
 ## Rend des SpellCard. Attention : SaveData.massacre_deck() stocke des IDENTIFIANTS
 ## texte, pas des cartes — les melanger faisait planter la boucle typee.
+## Vague 10 : la MEME fonction que la partie (GameController.run_deck), pour ne
+## jamais annoncer un deck que la partie ne distribue pas (deck de campagne qui
+## evolue avec les objectifs, deck du joueur en Libre et en Massacre).
 func _deck_list() -> Array:
-	if not GameEnums.is_endless(_mode):
-		return _level.exploration_deck if _level != null else []
-	var out: Array = []
-	for id in SaveData.massacre_deck():
-		var card: SpellCard = ContentDB.cards.get(StringName(id))
-		if card != null:
-			out.append(card)
-	return out
+	if _level == null:
+		return []
+	return GameController.run_deck(_level, _mode)
 
 
 func _on_start() -> void:

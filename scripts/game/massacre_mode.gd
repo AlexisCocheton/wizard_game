@@ -2,9 +2,9 @@ class_name MassacreMode
 extends RefCounted
 ## Le MASSACRE : un niveau infini A PART, ouvert depuis son propre onglet du menu.
 ##
-## A ne pas confondre avec l INFINI (GameEnums.Mode.INFINITE), qui prolonge UN
-## niveau de campagne : ses monstres, et une descente a travers les cinq mondes
-## qui changent toutes les WaveBudget.WORLD_EVERY vagues.
+## Depuis la vague 10 (14/10), c est le SEUL mode sans fin : l Infini par niveau
+## (qui prolongeait UN niveau a travers les cinq mondes) est remplace par le mode
+## LIBRE (GameEnums.Mode.FREE), qui joue les vagues ecrites du niveau.
 ##
 ## Le Massacre, lui, n appartient a aucun niveau :
 ##   - monstres : ceux de TOUS les niveaux, melanges, sans monde qui pese ;
