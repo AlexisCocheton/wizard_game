@@ -107,6 +107,94 @@ func challenges_list() -> Array[ChallengeDef]:
 	return out
 
 
+# =====================================================================
+# CHANTIER A3 (vague 10) — campagne, actes, quetes annexes, passifs.
+# Lectures PURES du contenu : aucune ne lit le profil.
+# =====================================================================
+
+## Les niveaux du fil de la CAMPAGNE (un acte, pas une annexe), tries par id.
+## Tri sur String : le tri de StringName n est pas fiable en 4.4 (gotchas).
+func campaign_levels() -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for lv: LevelDef in levels.values():
+		if lv != null and lv.is_campaign_level():
+			out.append(lv)
+	out.sort_custom(func(a: LevelDef, b: LevelDef) -> bool: return String(a.id) < String(b.id))
+	return out
+
+
+## Les QUETES ANNEXES, triees par acte de rattachement puis par id : c est
+## l ordre de la page « Quetes annexes » de la carte.
+func side_quests() -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for lv: LevelDef in levels.values():
+		if lv != null and lv.side_quest:
+			out.append(lv)
+	out.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
+		if a.act != b.act:
+			return a.act < b.act
+		return String(a.id) < String(b.id))
+	return out
+
+
+## LES COMMUNES DE L ACTE : « toutes les communes de l acte sont disponibles des
+## le niveau 1 » (co-auteur, 14/10). Union, sans doublon et triee par id, des
+## base_commons des niveaux de CAMPAGNE de cet acte (les annexes n en
+## fournissent pas : leur acte est un rattachement).
+##
+## REPLI tant que le contenu de la vague 10 n existe pas (aucun niveau de l acte
+## n a de deck de base) : les COMMUNES que portent les decks d exploration et les
+## cartes nouvelles des niveaux de campagne de l acte. Meme intention — les
+## communes que l acte fait jouer — lue dans le seul contenu qui existe.
+func act_commons(act: int) -> Array[SpellCard]:
+	var vues: Dictionary = {}
+	var nouveau: bool = false
+	for lv: LevelDef in campaign_levels():
+		if lv.act == act and lv.has_base_commons():
+			nouveau = true
+	for lv2: LevelDef in campaign_levels():
+		if lv2.act != act:
+			continue
+		var sources: Array = []
+		if nouveau:
+			sources.append(lv2.base_commons)
+		else:
+			sources.append(lv2.exploration_deck)
+			sources.append(lv2.levelup_cards)
+		for liste: Array in sources:
+			for c in liste:
+				var carte: SpellCard = c as SpellCard
+				if carte != null and not carte.is_passive \
+						and carte.rarity == GameEnums.Rarity.COMMON:
+					vues[String(carte.id)] = carte
+	var ids: Array = vues.keys()
+	ids.sort_custom(func(a: Variant, b: Variant) -> bool: return String(a) < String(b))
+	var out: Array[SpellCard] = []
+	for id in ids:
+		out.append(vues[id])
+	return out
+
+
+## Le contenu ecrit-il deja les PASSIFS DEBLOQUABLES (LevelDef.passive_unlocks) ?
+## Faux = contenu d avant la vague 10 : tous les passifs restent proposables des
+## l acte 2, comme avant (voir RunState.levelup_pool et SaveData.passive_unlocked).
+func passive_unlocks_authored() -> bool:
+	for lv: LevelDef in levels.values():
+		if lv != null and not lv.passive_unlocks.is_empty():
+			return true
+	return false
+
+
+## Les passifs de base (GameConfig.BASE_PASSIVES) qui existent au catalogue.
+func base_passives() -> Array[SpellCard]:
+	var out: Array[SpellCard] = []
+	for id: StringName in GameConfig.BASE_PASSIVES:
+		var c: SpellCard = cards.get(id)
+		if c != null and c.is_passive:
+			out.append(c)
+	return out
+
+
 ## Recompenses triees par niveau : c est l ordre ou le joueur les obtiendra.
 func rewards_list() -> Array[AccountRewardDef]:
 	var out: Array[AccountRewardDef] = []

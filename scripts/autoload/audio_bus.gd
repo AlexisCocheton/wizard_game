@@ -387,11 +387,6 @@ func play_card(card: SpellCard) -> void:
 const ACT_MUSIC: Dictionary = {
 	1: &"battle", 2: &"battle_act2", 3: &"battle_act3", 4: &"battle_act4", 5: &"battle_act5",
 }
-## Mode Infini : on suit le LIEU traverse (WaveBudget.WORLDS), pas un acte.
-const BACKDROP_MUSIC: Dictionary = {
-	"act1_sky": &"battle", "act2_graveyard": &"battle_act3", "act3_demon": &"battle_act4",
-	"act4_origin": &"battle_act2", "act5_divine": &"battle_act5",
-}
 ## Les boss qui ont leur propre musique : la fin du voyage ne se joue pas sur le
 ## theme de n importe quel boss.
 const FINAL_BOSSES: Array[StringName] = [&"child_god"]
@@ -405,10 +400,6 @@ static func battle_music_for(level: LevelDef, mode: int) -> StringName:
 	return ACT_MUSIC.get(level.act, &"battle")
 
 
-static func world_music(backdrop_key: String) -> StringName:
-	return BACKDROP_MUSIC.get(backdrop_key, &"battle")
-
-
 static func boss_music_for(wave: WaveDef) -> StringName:
 	if wave != null:
 		for d in wave.enemy_defs():
@@ -417,13 +408,8 @@ static func boss_music_for(wave: WaveDef) -> StringName:
 	return &"boss"
 
 
-## Mode Infini : le spawner annonce un nouveau monde (GameController s y branche).
-func on_world_changed(_world_index: int, backdrop_key: String, _world_name: String) -> void:
-	play_music(world_music(backdrop_key))
-
-
-## Duree du fondu entre deux musiques : un changement sec de theme, au passage
-## d un monde ou a l entree d un boss, sonnait comme une coupure.
+## Duree du fondu entre deux musiques : un changement sec de theme, a l entree
+## d un boss, sonnait comme une coupure.
 const MUSIC_FADE: float = 0.45
 
 

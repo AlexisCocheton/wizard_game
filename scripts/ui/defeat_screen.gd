@@ -18,14 +18,12 @@ func _ready() -> void:
 	var level_id: StringName = SceneRouter.payload.get("level_id", &"lvl_01")
 	# MODES (chantier M) : le record est range selon le MODE. L ancienne ligne
 	# ecrivait dans level_record(level_id) quel que soit le mode, ce qui creait
-	# une fiche de niveau "massacre" fantome et melangeait les vagues de
-	# l Infini a celles de l Exploration.
+	# une fiche de niveau "massacre" fantome. Vague 10 : le LIBRE n ecrit aucun
+	# record (SaveData.record_run_waves), l Infini par niveau n existe plus.
 	SaveData.record_run_waves(level_id, RunState.mode, waves)
 	var resume: String = "%d vagues survecues" % waves
 	if RunState.mode == GameEnums.Mode.MASSACRE:
 		resume += "   -   record %d" % SaveData.massacre_best_wave()
-	elif RunState.mode == GameEnums.Mode.INFINITE:
-		resume += "   -   record %d" % SaveData.infinite_best_wave(level_id)
 	# Le record sur la MEME ligne debordait du papier (vu sur la capture
 	# defaite_massacre) : en mode sans fin, le niveau du joueur passe dessous.
 	var sep: String = "

@@ -95,12 +95,15 @@ func _build() -> void:
 	_title.add_theme_font_size_override(&"font_size", UiTheme.FONT_TITLE)
 	_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+	# Le nom du mode vient de GameEnums.mode_name (Campagne, Libre, Massacre).
+	var nom_mode: String = GameEnums.mode_name(_mode)
 	if _mode == GameEnums.Mode.MASSACRE:
-		_subtitle.text = "Massacre  -  tous les mondes a la fois, ton deck"
-	elif _mode == GameEnums.Mode.INFINITE:
-		_subtitle.text = "Infini  -  vagues sans fin a travers les mondes, ton deck"
+		_subtitle.text = "%s  -  tous les mondes a la fois, ton deck" % nom_mode
+	elif _mode == GameEnums.Mode.FREE:
+		_subtitle.text = "%s  -  %d vagues, ton deck : seuls les objectifs comptent" \
+			% [nom_mode, _level.waves.size()]
 	else:
-		_subtitle.text = "Campagne  -  %d vagues, deck du niveau" % _level.waves.size()
+		_subtitle.text = "%s  -  %d vagues, deck de campagne" % [nom_mode, _level.waves.size()]
 	_subtitle.add_theme_color_override(&"font_color", UiTheme.TEXT_DARK)
 	_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
@@ -556,17 +559,14 @@ func _build_deck() -> void:
 
 ## Rend des SpellCard. Attention : SaveData.massacre_deck() stocke des IDENTIFIANTS
 ## texte, pas des cartes — les melanger faisait planter la boucle typee.
-## C est le SEUL endroit qui dit quel deck le briefing montre : le chantier
-## progression (deck de campagne qui evolue avec les objectifs) s y branche.
+## C est le SEUL endroit qui dit quel deck le briefing montre. Vague 10 (A3) :
+## la MEME fonction que la partie (GameController.run_deck), pour ne jamais
+## annoncer un deck que la partie ne distribue pas (deck de campagne qui evolue
+## avec les objectifs, deck du joueur en Libre et en Massacre).
 func _deck_list() -> Array:
-	if not GameEnums.is_endless(_mode):
-		return _level.exploration_deck if _level != null else []
-	var out: Array = []
-	for id in SaveData.massacre_deck():
-		var card: SpellCard = ContentDB.cards.get(StringName(id))
-		if card != null:
-			out.append(card)
-	return out
+	if _level == null:
+		return []
+	return GameController.run_deck(_level, _mode)
 
 
 func _on_start() -> void:

@@ -355,14 +355,15 @@ func _on_upgrade_taken(_card: SpellCard, path: Dictionary) -> void:
 ## carte a proposer. Mesure : 13,4 vagues dans le premier cas, 7,7 dans le second,
 ## au meme code. Ne comparer que deux Massacres mesures de la meme facon.
 func _run_massacre_many(runs: int, plafond_vagues: int = 30) -> void:
-	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
-	if level == null:
-		return
+	# Vague 10 : l Infini par niveau (lvl_01) est retire ; le mode sans fin
+	# mesure est le VRAI Massacre (MassacreMode). Ne pas comparer aux chiffres
+	# d avant le 14/10, mesures sur l Infini de lvl_01.
+	var level: LevelDef = MassacreMode.level_def()
 	var vagues: Array[int] = []
 	for i in runs:
 		var g: GameController = _make_game()
 		RunState.set_seed(2000 + (_graine + i) * 53)
-		g.start_level(level, GameEnums.Mode.INFINITE)
+		g.start_level(level, GameEnums.Mode.MASSACRE)
 		var st: Dictionary = _play(g, plafond_vagues)
 		vagues.append(st["vague"])
 		_drop_game(g)
@@ -421,11 +422,9 @@ func _run_level(level_id: StringName) -> void:
 
 func _run_massacre(waves: int) -> void:
 	print("\n-- Massacre (mode infini) --")
-	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
-	if level == null:
-		return
+	var level: LevelDef = MassacreMode.level_def()
 	var g: GameController = _make_game()
-	g.start_level(level, GameEnums.Mode.INFINITE)
+	g.start_level(level, GameEnums.Mode.MASSACRE)
 	var stats: Dictionary = _play(g, waves)
 	_print_stats("Massacre", stats)
 	_drop_game(g)

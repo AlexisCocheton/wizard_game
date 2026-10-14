@@ -241,7 +241,7 @@ static func resolve(deck_ids: Array) -> Array[SpellCard]:
 
 
 ## Deck de depart propose quand le joueur n en a jamais compose (ecran de deck),
-## et deck de repli du Massacre et de l Infini (GameController._build_deck).
+## et deck de repli du Massacre et du Libre (GameController.run_deck).
 ## Toujours un deck VALIDE (is_valid) de cartes OBTENUES (SaveData.is_discovered).
 ##
 ## C est le deck de campagne du PREMIER niveau. Il est valide par construction
@@ -261,7 +261,9 @@ static func default_deck_ids() -> Array:
 	if premier != null:
 		var ids: Array = []
 		var tout_obtenu: bool = true
-		for c: SpellCard in premier.exploration_deck:
+		# Le deck de BASE du premier niveau (vague 10 : communes de base, ou
+		# exploration_deck en repli), sans recompense d objectif.
+		for c: SpellCard in premier.campaign_base_cards():
 			if c == null:
 				continue
 			ids.append(String(c.id))

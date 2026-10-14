@@ -136,9 +136,13 @@ func _test_victoire_debloque_le_niveau_suivant() -> void:
 	ok(SaveData.is_level_unlocked(&"lvl_02"), "la victoire debloque le niveau 2")
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "meilleure vague enregistree")
 
-	SaveData.record_victory(lvl1, GameEnums.Mode.INFINITE, {}, 3)
+	# Une victoire en LIBRE (vague 10) est notee a part, et ne touche ni a la
+	# meilleure vague ni a l etat « fini » de la campagne.
+	SaveData.record_victory(lvl1, GameEnums.Mode.FREE, {}, 3)
 	eq(int(SaveData.level_record(&"lvl_01").get("best_wave", 0)), 6, "la meilleure vague ne regresse pas")
-	ok(bool(SaveData.level_record(&"lvl_01").get("cleared_massacre", false)), "massacre marque aussi")
+	ok(bool(SaveData.level_record(&"lvl_01").get("cleared_free", false)), "la victoire libre est notee")
+	not_ok(bool(SaveData.level_record(&"lvl_01").get("cleared_massacre", false)),
+		"et ne se fait pas passer pour une autre")
 
 
 ## Les objectifs s accumulent d un run a l autre : 2 puis 1 = les 3.

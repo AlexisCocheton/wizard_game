@@ -107,34 +107,48 @@ enum EnemyKind {
 ## Forme dessinee du monstre tant qu il n a pas de sprite.
 enum Shape { SQUARE, CIRCLE, TRIANGLE, DIAMOND, HEXAGON, CAPSULE, STAR }
 
-## Les trois facons de jouer.
-##   EXPLORATION : le niveau de campagne, ses vagues ecrites, son deck impose.
-##   INFINITE    : "INFINI" a l ecran. UN niveau de campagne prolonge sans fin
-##                 (ses monstres, la descente a travers les cinq mondes), avec le
-##                 deck du joueur. S ouvre des que le niveau est debloque.
-##   MASSACRE    : l onglet MASSACRE du menu. Un niveau infini A PART, hors
+## Les trois facons de jouer (vague 10, regles du co-auteur du 14/10).
+##   EXPLORATION : "CAMPAGNE" a l ecran. Le niveau de campagne : ses vagues
+##                 ecrites, son deck IMPOSE (LevelDef.campaign_deck, qui evolue
+##                 avec les objectifs reussis). La victoire ouvre la suite.
+##   FREE        : "LIBRE" a l ecran. Le MEME niveau (memes vagues, memes
+##                 objectifs), joue avec le deck construit par le joueur.
+##                 Gagner ne sert qu aux objectifs : aucun niveau ne s ouvre,
+##                 le niveau n est pas compte comme fini. Ouvert des que le
+##                 niveau l est.
+##   MASSACRE    : l onglet MASSACRE du menu. LE mode sans fin, a part, hors
 ##                 campagne : les monstres de tous les niveaux melanges, les boss
 ##                 de tout le jeu aux paliers (voir MassacreMode).
 ##
-## INFINITE garde la valeur 1 de l ancien MASSACRE, qui designait deja le mode
-## infini par niveau : une valeur entiere retenue quelque part (charge utile de
-## scene, profil ancien) garde son sens. Le nouveau mode s ajoute EN FIN, pour la
-## meme raison que DamageTag et RewardKind.
-enum Mode { EXPLORATION, INFINITE, MASSACRE }
+## FREE REMPLACE L INFINI PAR NIVEAU (decision d Alexis, 14/10) et garde sa
+## valeur 1, qui etait deja celle de l ancien « Massacre par niveau ». Aucune
+## sauvegarde ne stocke un Mode (verifie le 14/10 : seule la charge utile du
+## routeur, en memoire, le porte) ; garder la valeur ne coute rien et protege une
+## donnee qu un autre chantier aurait retenue. Le nom change EXPRES : un appelant
+## reste sur INFINITE casse a la compilation au lieu de lancer un mode qui n est
+## plus sans fin (voir le piege « renommer expres » de la memoire du projet).
+enum Mode { EXPLORATION, FREE, MASSACRE }
 
 
-## Vrai pour les deux modes sans fin : pas de vague finale, pas d objectifs,
-## pas d histoire, un record de vague. Un seul test plutot que deux comparaisons
-## recopiees partout, qui finiraient par oublier l un des deux modes.
+## Vrai pour le mode SANS FIN, le seul depuis la vague 10 : le Massacre. Pas de
+## vague finale, pas d objectifs, pas d histoire, un record de vague. Un mode qui
+## n est pas sans fin joue un NIVEAU : ses vagues ecrites et ses objectifs.
 static func is_endless(mode: int) -> bool:
-	return mode == Mode.INFINITE or mode == Mode.MASSACRE
+	return mode == Mode.MASSACRE
+
+
+## Vrai si une victoire dans ce mode fait AVANCER la campagne (niveau fini,
+## niveaux suivants ouverts, passifs du niveau debloques). Le LIBRE joue les
+## memes vagues, mais sa victoire ne compte que pour les objectifs.
+static func advances_campaign(mode: int) -> bool:
+	return mode == Mode.EXPLORATION
 
 
 ## Nom du mode tel qu il s ecrit a l ecran.
 static func mode_name(mode: int) -> String:
 	match mode:
-		Mode.EXPLORATION: return "Exploration"
-		Mode.INFINITE: return "Infini"
+		Mode.EXPLORATION: return "Campagne"
+		Mode.FREE: return "Libre"
 		Mode.MASSACRE: return "Massacre"
 	return "?"
 

@@ -4,8 +4,13 @@ Revue du 14/10 : ce qui est resté en deçà des parties les plus avancées du j
 (sprites, animations, sons, monstres, textes d'histoire). Ce document est l'entrée
 des chantiers de contenu de la phase B : **B2** (mécaniques de monstres) et **B4**
 (écriture). Les citations `fichier:ligne` renvoient à l'état de `main` au
-3 octobre au soir (commit `a7cdcdc`). Les répliques proposées sont **sans
-accents**, comme toute donnée affichée par le jeu (la police n'en a pas).
+3 octobre au soir (commit `a7cdcdc`). Pendant la revue, les chantiers écrans
+(`97066f6`) et progression (`ca1308e` : modes Campagne / Libre, Infini retiré,
+déblocages refaits) ont été fusionnés : les numéros de ligne de
+`save_data.gd`, `campaign_panel.gd`, `loading_screen.gd` et `game_controller.gd`
+ont pu bouger, et les constats de déblocage (§2.2 n° 2 et 6) sont à revérifier
+sur le nouveau code. Les répliques proposées sont **sans accents**, comme toute
+donnée affichée par le jeu (la police n'en a pas).
 
 ---
 
@@ -318,18 +323,20 @@ Ordre de jeu : 01, 02, 08, 09 | 17, 18, 03, 04 | 19, 20, fourche 05 ou 06, 21 |
    creanciers » (« Ils se disputent la signature du roi »), une scène courte par
    branche : `"Sous la cour des rois, l escalier ne mene pas a une crypte. Il mene a une forge, et la forge n est pas a Tombol."` /
    `"Ce n est pas un cimetiere qui fabrique ca. Ca remonte d en dessous."`
-6. **La fin annonce un mode qui n'est pas celui qui s'ouvre** : `lvl_16_outro`
-   « MODE INFINI DEBLOQUE. » (`make_story.gd:702`) alors que l'Infini s'ouvre
-   niveau par niveau (`save_data.gd:707-711`) et que le Massacre exige les 21
-   niveaux, les deux branches de la fourche comprises (`save_data.gd:683-724`).
+6. **La fin annonce un mode qui n'existe plus** : `lvl_16_outro`
+   « MODE INFINI DEBLOQUE. » (`make_story.gd:702`). Au 3/10, l'Infini s'ouvrait
+   déjà niveau par niveau (`save_data.gd:707-711`) ; depuis la fusion du chantier
+   progression (`ca1308e`), **le mode Infini est retiré** (modes Campagne, Libre,
+   Massacre). Le Massacre exigeait les 21 niveaux, fourche comprise
+   (`save_data.gd:683-724`, à revérifier après `ca1308e`).
    *Proposition* : ouvrir le Massacre à la victoire du lvl_16, ou
    `"Le Massacre t attend : finis chaque niveau de la campagne pour l ouvrir."`
-7. **Le mode Infini affiche les mondes de l'ANCIENNE histoire en 4 actes** :
-   `wave_budget.gd:48-54` (« Le Monde volant », « Le Grand Cimetiere », « Le Monde
-   demoniaque », « Le Monde d origine »), affichés par `hud.gd:1121-1142` sur les
-   monstres de Nuri, des Sky Lands, de Tombol, des démons. *Proposition* : les noms
-   de `CampaignMap.ACT_NAMES`. (Note A4 : la musique de l'Infini suit le FOND,
-   `AudioBus.BACKDROP_MUSIC` ; à revoir si les mondes sont renommés.)
+7. **Les mondes de `WaveBudget.WORLDS` portent les noms de l'ANCIENNE histoire en
+   4 actes** (`wave_budget.gd:48-54` : « Le Monde volant », « Le Grand Cimetiere »,
+   « Le Monde demoniaque », « Le Monde d origine »). Ils s'affichaient en Infini
+   (`hud.gd:1121-1142`) ; le mode est retiré depuis `ca1308e` mais la descente
+   reste dans `WaveSpawner` et le bandeau dans le HUD. *Proposition* : les noms de
+   `CampaignMap.ACT_NAMES` si la descente revient, sinon retirer ces données.
 
 **Moyenne**
 

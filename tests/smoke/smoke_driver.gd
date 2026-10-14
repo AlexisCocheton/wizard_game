@@ -298,7 +298,7 @@ func _run_all() -> void:
 	if _visual:
 		await WardrobeShowcase.new().run(self)
 	if _visual: await MonsterFeedbackShowcase.new().run(self)  # A4 W10 : morts, coups, tours
-	await _check_massacre_deck()
+	await _check_free_run()
 	# Le DEFILEMENT AU DOIGT sur chaque ecran qui deborde (retour du co-auteur :
 	# les reglages ne defilaient pas sur son telephone).
 	await TouchScrollCheck.run(self)
@@ -813,12 +813,12 @@ func _check_premier_lancement() -> void:
 	if not SaveData.is_level_unlocked(&"lvl_01"):
 		_fail("premier lancement : le niveau 1 n est pas ouvert")
 
-	# Le Massacre (onglet) s ouvre au premier niveau GAGNE : sur un profil
-	# vierge il est ferme. L Infini du niveau 1, lui, est ouvert d office.
+	# Le Massacre (onglet) s ouvre a la fin de la campagne : sur un profil
+	# vierge il est ferme. Le LIBRE du niveau 1, lui, est ouvert d office.
 	if SaveData.massacre_unlocked():
 		_fail("premier lancement : le Massacre est deja ouvert")
-	if not SaveData.infinite_unlocked(&"lvl_01"):
-		_fail("premier lancement : l Infini du niveau 1 est ferme")
+	if not SaveData.free_unlocked(&"lvl_01"):
+		_fail("premier lancement : le Libre du niveau 1 est ferme")
 
 	# Le deck de depart doit etre JOUABLE sans rien toucher : un joueur neuf qui
 	# tombe sur "Ajoute 7 cartes" avant sa premiere partie ne comprend pas.
@@ -927,14 +927,14 @@ func _check_menu_screens() -> void:
 		campagne.open_level(SaveData.current_level())
 		await _shot("campagne_detail")
 		await _vitrine_recompenses_campagne(campagne)
-		# La meme fiche en INFINI : le second bouton du segment, sa ligne de
-		# record et son aide. Le mot MASSACRE ne doit plus y figurer.
-		campagne.select_mode(GameEnums.Mode.INFINITE)
-		if campagne.current_mode() != GameEnums.Mode.INFINITE:
-			_fail("la fiche de niveau refuse le mode INFINI")
-		if campagne.mode_labels().has("MASSACRE"):
-			_fail("la fiche de niveau affiche encore MASSACRE")
-		await _shot("campagne_detail_infini")
+		# La meme fiche en LIBRE (vague 10) : le second bouton du segment, sa
+		# ligne de regle et son aide. Ni MASSACRE ni INFINI ne doivent y figurer.
+		campagne.select_mode(GameEnums.Mode.FREE)
+		if campagne.current_mode() != GameEnums.Mode.FREE:
+			_fail("la fiche de niveau refuse le mode LIBRE")
+		if campagne.mode_labels().has("MASSACRE") or campagne.mode_labels().has("INFINI"):
+			_fail("la fiche de niveau affiche encore MASSACRE ou INFINI")
+		await _shot("campagne_detail_libre")
 		campagne.select_mode(GameEnums.Mode.EXPLORATION)
 		campagne.back_to_map()
 
@@ -1909,7 +1909,7 @@ func _check_briefing() -> void:
 	if packed == null:
 		_fail("LoadingScreen.tscn introuvable")
 		return
-	for mode in [GameEnums.Mode.EXPLORATION, GameEnums.Mode.INFINITE, GameEnums.Mode.MASSACRE]:
+	for mode in [GameEnums.Mode.EXPLORATION, GameEnums.Mode.FREE, GameEnums.Mode.MASSACRE]:
 		var niveau: StringName = &"lvl_01"
 		if mode == GameEnums.Mode.MASSACRE:
 			niveau = MassacreMode.LEVEL_ID
@@ -2038,46 +2038,52 @@ func _check_end_screens() -> void:
 	print("[SMOKE] ecrans de fin construits")
 
 
-## Une partie INFINIE (un niveau prolonge) doit demarrer avec le deck du joueur.
-## Ancien "Massacre par niveau", renomme au chantier M.
-func _check_massacre_deck() -> void:
+## Une partie LIBRE (vague 10, remplace l Infini par niveau) : le niveau de
+## campagne, ses vagues ECRITES, le deck du JOUEUR, des choix a la montee de
+## niveau, et une FIN. Puis le Massacre, le seul mode sans fin.
+func _check_free_run() -> void:
 	SaveData.set_massacre_deck(DeckRules.default_deck_ids())
 	var level: LevelDef = ContentDB.levels.get(&"lvl_01")
 	var packed: PackedScene = load("res://scenes/game/Game.tscn")
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
 	add_child(g)
-	g.start_level(level, GameEnums.Mode.INFINITE)
+	g.start_level(level, GameEnums.Mode.FREE)
 	g.running = false
-	# Le bandeau du monde s annonce a la premiere vague : on laisse le fondu se
-	# faire en temps reel (la partie, elle, est arretee) pour la capture.
-	var hud: Node = g.get_node_or_null("HUD")
-	if hud != null and String(hud.call("world_banner_text")) != WaveBudget.world_name_for(1):
-		_fail("mode infini : le bandeau n annonce pas le premier monde")
+	if g.spawner.procedural:
+		_fail("mode libre : les vagues sont generees au lieu d etre celles du niveau")
+	if g.spawner.waves.size() != level.waves.size():
+		_fail("mode libre : %d vagues au lieu des %d du niveau"
+			% [g.spawner.waves.size(), level.waves.size()])
+	if RunState.total_cards() != SaveData.massacre_deck().size():
+		_fail("mode libre : %d cartes en partie, le deck du joueur en a %d"
+			% [RunState.total_cards(), SaveData.massacre_deck().size()])
+	if RunState.hand.is_empty():
+		_fail("aucune carte en main au depart en Libre")
 	if _visual:
 		await _laisser_jouer(0.5)
-		await _shot("bataille_infini_monde")
-	if RunState.total_cards() < DeckRules.MIN_CARDS:
-		_fail("deck Massacre trop petit en partie : %d" % RunState.total_cards())
-	if RunState.hand.is_empty():
-		_fail("aucune carte en main au depart en Massacre")
-	# Mode infini : on joue 6 vagues, un choix de sort doit survenir toutes les 2.
+		await _shot("bataille_libre")
 	var offers: Array[int] = [0]
 	g.cards_offered.connect(func(_c: Array[SpellCard]) -> void: offers[0] += 1)
+	var gagne: Array[bool] = [false]
+	g.level_won.connect(func() -> void: gagne[0] = true)
+	var perdu: Array[bool] = [false]
+	g.level_lost.connect(func() -> void: perdu[0] = true)
 	var steps: int = 0
-	while RunState.wave_index < 6 and steps < 60 * 60 * 6 and not _lost:
+	while not gagne[0] and not perdu[0] and steps < 60 * 60 * 8:
 		_autoplay_for(g)
 		g.simulate(FIXED_DELTA)
 		steps += 1
-	if RunState.wave_index < 6:
-		_fail("mode infini : seulement %d vagues en %d pas" % [RunState.wave_index, steps])
-	if offers[0] < 3:
-		_fail("mode infini : %d choix de sorts au lieu de 3 en 6 vagues" % offers[0])
-	if g.spawner.is_finished():
-		_fail("le mode infini ne doit jamais se terminer")
+		if steps % 30 == 0:
+			g.flush_freed()
+	if not gagne[0] and not perdu[0]:
+		_fail("mode libre : la partie ne se termine pas en %d pas" % steps)
+	if RunState.level > 1 and offers[0] == 0:
+		_fail("mode libre : %d montees de niveau sans aucun choix de carte" % (RunState.level - 1))
 	g.queue_free()
-	print("[SMOKE] mode infini : %d vagues, %d choix de sorts, deck de %d cartes"
-		% [RunState.wave_index, offers[0], RunState.total_cards()])
+	print("[SMOKE] mode libre : %s en %d vagues, %d choix de sorts, deck de %d cartes"
+		% ["victoire" if gagne[0] else "defaite", RunState.wave_index, offers[0],
+			RunState.total_cards()])
 	await _check_massacre_run()
 
 

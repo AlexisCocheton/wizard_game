@@ -145,8 +145,6 @@ func _test_musique_par_acte() -> void:
 	var massacre: StringName = AudioBus.battle_music_for(null, GameEnums.Mode.MASSACRE)
 	ok(not musiques.has(massacre), "le Massacre a sa propre musique")
 	musiques[massacre] = -1
-	for w in WaveBudget.WORLDS:
-		musiques[AudioBus.world_music(String(w["backdrop"]))] = -2
 	# Le boss final n a pas le theme de n importe quel boss.
 	var vague_finale: WaveDef = null
 	var autre_boss: WaveDef = null
