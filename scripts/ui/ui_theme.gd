@@ -154,6 +154,26 @@ const RETIRED_INKS: Array[Color] = [
 	Color(0.48, 0.22, 0.72),  # violet epique, 3,36:1 en main
 ]
 
+## ENCRES DE SENS SUR LE PAPIER CREME (vague 10 : briefing, bilan de fin).
+##
+## Les ecrans de lancement et de fin ecrivaient sur le papier avec des couleurs
+## faites pour le FOND SOMBRE du menu : TEAL (1,7:1), RED (3,4:1), l or assombri
+## du compte (2,1:1) et le vert « Reussi » (4,4:1). Toutes sous le plancher. Ces
+## encres-ci tiennent CONTRAST_MIN sur `PAPER_CREAM`, le papier mesure au centre
+## de `paper9.png` (verifie par test_screens_w10, qui lit la texture).
+const PAPER_CREAM := Color(0.933, 0.882, 0.776)
+## Danger : boss, vitesse perdue. 6,1:1.
+const INK_DANGER := Color(0.62, 0.12, 0.14)
+## Acquis, a gagner : la bonne nouvelle. 5,4:1.
+const INK_SUCCESS := Color(0.12, 0.40, 0.18)
+## Conseil, renvoi vers un objectif : la voix du jeu. 6,0:1.
+const INK_HINT := Color(0.06, 0.36, 0.34)
+## Titres de section (MONSTRES, OBJECTIFS...) : un ambre lisible, la ou l or du
+## menu s effacait sur le creme. 5,9:1.
+const INK_HEADING := Color(0.50, 0.27, 0.03)
+## Texte secondaire (mecanique d un monstre, intro du niveau). 8,3:1.
+const INK_SOFT := Color(0.30, 0.23, 0.15)
+
 
 ## Couleur de rarete lisible SUR LE PAPIER (plus sombre que rarity_color).
 static func rarity_ink(rarity: int) -> Color:

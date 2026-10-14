@@ -256,6 +256,33 @@ static func resist_line(def: EnemyDef, px: int) -> String:
 	return resist_bbcode(items, px)
 
 
+## VAGUE 10 (briefing) : les resistances d un monstre en LOGOS, chacun suivi de
+## son chiffre : « [feu] -50 %   [eau] +58 %   [poison] immunise ». Sans le nom
+## de l element : le briefing aligne jusqu a quinze monstres, et c est l IMAGE
+## qu on rapproche de celle de la carte en main. Ordre de resist_line (le plus
+## dangereux d abord). "" si le monstre n a aucun ecart.
+## `colored` : le chiffre prend l encre de ce qu il veut dire POUR LE JOUEUR —
+## une faiblesse est une bonne nouvelle (INK_SUCCESS), une resistance ou une
+## immunite une mauvaise (INK_DANGER). Le signe reste : la couleur confirme.
+static func resist_compact(def: EnemyDef, px: int, colored: bool = false) -> String:
+	var parts: PackedStringArray = []
+	for g in BestiaryLore.resistance_groups(def):
+		for it in g["items"]:
+			var logo: String = inline(int(it["tag"]), px)
+			if logo == "":
+				continue
+			var mult: float = float(it["mult"])
+			var pct: String = percent_text(mult)
+			# Meme gluon que resist_bbcode : la ligne ne se coupe pas apres le signe.
+			var mot: String = "immunise" if pct == "" \
+				else pct.substr(0, 1) + "⁠" + pct.substr(1).replace(" ", " ")
+			if colored:
+				var encre: Color = UiTheme.INK_SUCCESS if mult > 1.0 else UiTheme.INK_DANGER
+				mot = "[color=#%s]%s[/color]" % [encre.to_html(false), mot]
+			parts.append(logo + " " + mot)
+	return INLINE_GAP.join(parts)
+
+
 ## Les mots d ELEMENT ecrits en majuscules dans un texte de carte (« degats de
 ## FEU ») recoivent leur logo devant eux. Seules les MAJUSCULES sont visees :
 ## c est la convention des descriptions pour nommer un element, et un « feu »

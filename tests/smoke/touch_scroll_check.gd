@@ -662,3 +662,19 @@ static func _carte_non_decouverte() -> StringName:
 		if not SaveData.is_discovered(id):
 			return id
 	return &""
+
+
+## VAGUE 10 : verifie au doigt un ecran construit AILLEURS (briefing, bilan de
+## fin), au format telephone allonge, emulation tactile comprise. Rend le nombre
+## de zones qui debordaient et ont suivi le doigt (0 = rien n a ete verifie).
+static func check_screen(driver: Node, racine: Control, nom: String) -> int:
+	_driver = driver
+	var taille_init: Vector2i = driver.get_window().size
+	var emulation: bool = Input.emulate_touch_from_mouse
+	Input.emulate_touch_from_mouse = true
+	await _taille(TAILLE_TELEPHONE)
+	var bilan: Dictionary = {}
+	await _ecran(racine, nom, bilan)
+	await _taille(taille_init)
+	Input.emulate_touch_from_mouse = emulation
+	return int(bilan.get(nom, 0))
