@@ -7657,10 +7657,11 @@ func _progression_de(level_id: StringName) -> Dictionary:
 # generation. (Une surcharge de l Atelier du testeur, DEC-043, ne touche que
 # l effet d origine : elle ne suit pas dans les copies.)
 #
-# BANC (15/10, 21 niveaux x 60, sans reglage) : 1152 -> 1156 victoires sur
-# 1260. Le bot prend 73 majeures sur 106 ; en campagne, 533 prises (0,42 par
-# partie), 13 majeures distinctes seulement : la deuxieme maturation (24 XP)
-# n est atteinte que par les sorts les plus joues (Boule de feu, Trait, Fleche,
+# BANC (15/10, 21 niveaux x 60, sans reglage, base B1a : incantation x1,75) :
+# 1159 -> 1169 victoires sur 1260 (x1,9 avant B1a : 1152 -> 1156). Le bot
+# prend 83 majeures sur 116 ; en campagne, 534 prises (0,42 par partie),
+# 15 majeures distinctes seulement : la deuxieme maturation (24 XP) n est
+# atteinte que par les sorts les plus joues (Boule de feu, Trait, Fleche,
 # Meteore...). Le reste se jouera en Libre et en Massacre.
 # =====================================================================
 
@@ -8528,7 +8529,7 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 				_mj("orage_en_chaine", "Orage en chaine",
 					"A chaque mort, la marque saute sur DEUX monstres au lieu d un",
 					[_mj_pose("electric_mark", "marks_per_death", 2)],
-					[_mj_prix("cast", -0.4)]),
+					[_mj_prix("cast", -0.3), _mj_prix("discard", -1.0)]),
 				_mj("foudre_tenace", "Foudre tenace",
 					"La marque ne faiblit plus de saut en saut, mais saute moins loin",
 					[_mj_pose("electric_mark", "decay", 0.0),

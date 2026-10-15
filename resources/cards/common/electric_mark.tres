@@ -28,7 +28,11 @@ modifiers = Array[Dictionary]([{
 prices = Array[Dictionary]([{
 "axis": &"cast",
 "op": "axis",
-"pct": -0.4
+"pct": -0.3
+}, {
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
 }])
 
 [sub_resource type="Resource" id="Resource_mxaq0"]
