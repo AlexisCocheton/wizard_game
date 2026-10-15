@@ -75,7 +75,7 @@ script = ExtResource("19_q062o")
 id = &"side_a4_champion_1"
 duration = 26.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_jgv4k"), SubResource("Resource_qqtnp"), SubResource("Resource_de2p3")])
-difficulty = 1.5
+difficulty = 1.85
 is_miniboss = false
 is_boss = false
 
@@ -105,7 +105,7 @@ script = ExtResource("19_q062o")
 id = &"side_a4_champion_2"
 duration = 28.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_kv1ih"), SubResource("Resource_4cngg"), SubResource("Resource_ith2g")])
-difficulty = 1.55
+difficulty = 1.9
 is_miniboss = false
 is_boss = false
 
@@ -142,7 +142,7 @@ script = ExtResource("19_q062o")
 id = &"side_a4_champion_3"
 duration = 30.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_lqjit"), SubResource("Resource_jdxt6"), SubResource("Resource_hevrx"), SubResource("Resource_peoxy")])
-difficulty = 1.6
+difficulty = 1.95
 is_miniboss = false
 is_boss = false
 
@@ -273,7 +273,7 @@ script = ExtResource("19_q062o")
 id = &"side_a4_champion_boss"
 duration = 46.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_a4wt4"), SubResource("Resource_vi2cq"), SubResource("Resource_3fc2u")])
-difficulty = 1.3
+difficulty = 2.0
 is_miniboss = false
 is_boss = true
 

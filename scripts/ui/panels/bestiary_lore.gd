@@ -515,10 +515,12 @@ static func gilded_lines(def: EnemyDef) -> Array[String]:
 		return out
 	var base: EnemyDef = ContentDB.enemies.get(def.gilded_from)
 	var nom: String = base.display_name if base != null else String(def.gilded_from)
+	# « Monstre de base : X » plutot que « la version renforcee du X » : la
+	# Gorgone est feminine, et l article se trompait sur la moitie du bestiaire.
 	if base == null:
-		out.append("Boss dore : la version renforcee du %s" % nom)
+		out.append("Boss dore, renforce a l or. Monstre de base : %s" % nom)
 		return out
-	out.append("Boss dore : la version renforcee du %s, %d PV au lieu de %d (x%s)"
+	out.append("Boss dore, renforce a l or. Monstre de base : %s, %d PV au lieu de %d (x%s)"
 		% [nom, int(round(def.max_hp)), int(round(base.max_hp)),
 			_num(def.max_hp / maxf(base.max_hp, 1.0))])
 	var gains: Array[String] = gilded_gains(def, base)

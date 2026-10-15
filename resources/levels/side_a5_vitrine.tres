@@ -86,39 +86,39 @@ script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_1"
 duration = 27.0
 entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_ab3ci"), SubResource("Resource_7k1pn"), SubResource("Resource_l3miw"), SubResource("Resource_47e16")])
-difficulty = 1.75
+difficulty = 1.65
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_shjwg"]
+[sub_resource type="Resource" id="Resource_jccj4"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("10_l7apq")
 count = 2
 spawn_delay = 4.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_uxl4k"]
+[sub_resource type="Resource" id="Resource_shjwg"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("11_4ap2n")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_gcwic"]
+[sub_resource type="Resource" id="Resource_uxl4k"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("12_71dax")
 count = 2
 spawn_delay = 3.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_s7why"]
+[sub_resource type="Resource" id="Resource_gcwic"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("13_37nfl")
 count = 1
 spawn_delay = 1.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_3m3pk"]
+[sub_resource type="Resource" id="Resource_s7why"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("17_0lldv")
 count = 2
@@ -129,47 +129,47 @@ start_offset = 22.0
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_2"
 duration = 29.0
-entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_shjwg"), SubResource("Resource_uxl4k"), SubResource("Resource_gcwic"), SubResource("Resource_s7why"), SubResource("Resource_3m3pk")])
-difficulty = 1.85
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_jccj4"), SubResource("Resource_shjwg"), SubResource("Resource_uxl4k"), SubResource("Resource_gcwic"), SubResource("Resource_s7why")])
+difficulty = 1.75
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_vq3kl"]
+[sub_resource type="Resource" id="Resource_y0wg8"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("14_gn2ux")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_rmv53"]
+[sub_resource type="Resource" id="Resource_vq3kl"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("15_pimcn")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_pcu7x"]
+[sub_resource type="Resource" id="Resource_rmv53"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("11_4ap2n")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_tnpgh"]
+[sub_resource type="Resource" id="Resource_pcu7x"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("16_mmlv5")
 count = 2
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_6uhuh"]
+[sub_resource type="Resource" id="Resource_tnpgh"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("17_0lldv")
 count = 2
 spawn_delay = 3.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_6lxbx"]
+[sub_resource type="Resource" id="Resource_6uhuh"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("10_l7apq")
 count = 1
@@ -180,12 +180,12 @@ start_offset = 24.0
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_3"
 duration = 30.0
-entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_vq3kl"), SubResource("Resource_rmv53"), SubResource("Resource_pcu7x"), SubResource("Resource_tnpgh"), SubResource("Resource_6uhuh"), SubResource("Resource_6lxbx")])
-difficulty = 1.9
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_y0wg8"), SubResource("Resource_vq3kl"), SubResource("Resource_rmv53"), SubResource("Resource_pcu7x"), SubResource("Resource_tnpgh"), SubResource("Resource_6uhuh")])
+difficulty = 1.6
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_cvcur"]
+[sub_resource type="Resource" id="Resource_yerrp"]
 script = ExtResource("5_bdjac")
 id = &"gorgon_gazer_gold"
 display_name = "Gorgone doree"
@@ -286,42 +286,42 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"gorgon_gazer"
 
-[sub_resource type="Resource" id="Resource_sfyks"]
+[sub_resource type="Resource" id="Resource_cvcur"]
 script = ExtResource("24_c4ksi")
-enemy = SubResource("Resource_cvcur")
+enemy = SubResource("Resource_yerrp")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_7ckxt"]
+[sub_resource type="Resource" id="Resource_sfyks"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("6_biy17")
 count = 5
 spawn_delay = 1.8
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_70ic0"]
+[sub_resource type="Resource" id="Resource_7ckxt"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("9_l4cnk")
 count = 3
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_tkfdn"]
+[sub_resource type="Resource" id="Resource_70ic0"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("8_lgul1")
 count = 1
 spawn_delay = 1.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_doenj"]
+[sub_resource type="Resource" id="Resource_tkfdn"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("10_l7apq")
 count = 1
 spawn_delay = 1.0
 start_offset = 28.0
 
-[sub_resource type="Resource" id="Resource_so3r4"]
+[sub_resource type="Resource" id="Resource_doenj"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("7_hwtkc")
 count = 4
@@ -332,8 +332,8 @@ start_offset = 32.0
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
-entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn"), SubResource("Resource_doenj"), SubResource("Resource_so3r4")])
-difficulty = 1.5
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn"), SubResource("Resource_doenj")])
+difficulty = 1.2
 is_miniboss = false
 is_boss = true
 

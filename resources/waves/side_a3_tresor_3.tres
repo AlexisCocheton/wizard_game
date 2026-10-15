@@ -8,35 +8,35 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6gafs"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="6_thmvi"]
 
-[sub_resource type="Resource" id="Resource_ir7u0"]
+[sub_resource type="Resource" id="Resource_thmvi"]
 script = ExtResource("1_wegqn")
 enemy = ExtResource("2_thmvi")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ym0ub"]
+[sub_resource type="Resource" id="Resource_ir7u0"]
 script = ExtResource("1_wegqn")
 enemy = ExtResource("3_ir7u0")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_482rf"]
+[sub_resource type="Resource" id="Resource_ym0ub"]
 script = ExtResource("1_wegqn")
 enemy = ExtResource("4_ym0ub")
 count = 3
 spawn_delay = 3.0
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_6gafs"]
+[sub_resource type="Resource" id="Resource_482rf"]
 script = ExtResource("1_wegqn")
 enemy = ExtResource("5_482rf")
 count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_k8ct3"]
+[sub_resource type="Resource" id="Resource_6gafs"]
 script = ExtResource("1_wegqn")
 enemy = ExtResource("6_thmvi")
 count = 2
@@ -47,7 +47,7 @@ start_offset = 22.0
 script = ExtResource("6_6gafs")
 id = &"side_a3_tresor_3"
 duration = 29.0
-entries = Array[ExtResource("1_wegqn")]([SubResource("Resource_ir7u0"), SubResource("Resource_ym0ub"), SubResource("Resource_482rf"), SubResource("Resource_6gafs"), SubResource("Resource_k8ct3")])
-difficulty = 1.9
+entries = Array[ExtResource("1_wegqn")]([SubResource("Resource_thmvi"), SubResource("Resource_ir7u0"), SubResource("Resource_ym0ub"), SubResource("Resource_482rf"), SubResource("Resource_6gafs")])
+difficulty = 2.2
 is_miniboss = false
 is_boss = false

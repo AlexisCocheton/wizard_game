@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_r37rl"]
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="2_n8ig5"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="3_841bn"]
 [ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="4_i14pe"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_n5b6f"]
-
-[sub_resource type="Resource" id="Resource_r37rl"]
-script = ExtResource("1_r37rl")
-enemy = ExtResource("2_n8ig5")
-count = 3
-spawn_delay = 2.0
-start_offset = 0.0
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_n8ig5"]
 
 [sub_resource type="Resource" id="Resource_n8ig5"]
 script = ExtResource("1_r37rl")
+enemy = ExtResource("2_n8ig5")
+count = 4
+spawn_delay = 1.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_841bn"]
+script = ExtResource("1_r37rl")
 enemy = ExtResource("3_841bn")
-count = 2
+count = 3
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_841bn"]
+[sub_resource type="Resource" id="Resource_i14pe"]
 script = ExtResource("1_r37rl")
 enemy = ExtResource("4_i14pe")
 count = 2
 spawn_delay = 3.0
 start_offset = 12.0
 
+[sub_resource type="Resource" id="Resource_n5b6f"]
+script = ExtResource("1_r37rl")
+enemy = ExtResource("5_n8ig5")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
 [resource]
 script = ExtResource("5_n5b6f")
 id = &"side_fairy_1"
 duration = 26.0
-entries = Array[ExtResource("1_r37rl")]([SubResource("Resource_r37rl"), SubResource("Resource_n8ig5"), SubResource("Resource_841bn")])
-difficulty = 1.8
+entries = Array[ExtResource("1_r37rl")]([SubResource("Resource_n8ig5"), SubResource("Resource_841bn"), SubResource("Resource_i14pe"), SubResource("Resource_n5b6f")])
+difficulty = 2.5
 is_miniboss = false
 is_boss = false

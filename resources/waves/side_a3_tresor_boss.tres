@@ -8,7 +8,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_pwude"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_8nvv7"]
 
-[sub_resource type="Resource" id="Resource_ybwsv"]
+[sub_resource type="Resource" id="Resource_gqg6f"]
 script = ExtResource("2_gqg6f")
 id = &"parry_skeleton_gold"
 display_name = "Squelette pareur dore"
@@ -111,35 +111,35 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"parry_skeleton"
 
-[sub_resource type="Resource" id="Resource_23knj"]
+[sub_resource type="Resource" id="Resource_ybwsv"]
 script = ExtResource("1_olk47")
-enemy = SubResource("Resource_ybwsv")
+enemy = SubResource("Resource_gqg6f")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_pwude"]
+[sub_resource type="Resource" id="Resource_23knj"]
 script = ExtResource("1_olk47")
 enemy = ExtResource("3_ybwsv")
 count = 3
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_8nvv7"]
+[sub_resource type="Resource" id="Resource_pwude"]
 script = ExtResource("1_olk47")
 enemy = ExtResource("4_23knj")
 count = 2
 spawn_delay = 3.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_5loco"]
+[sub_resource type="Resource" id="Resource_8nvv7"]
 script = ExtResource("1_olk47")
 enemy = ExtResource("5_gqg6f")
 count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_2vj08"]
+[sub_resource type="Resource" id="Resource_5loco"]
 script = ExtResource("1_olk47")
 enemy = ExtResource("5_pwude")
 count = 3
@@ -150,7 +150,7 @@ start_offset = 24.0
 script = ExtResource("6_8nvv7")
 id = &"side_a3_tresor_boss"
 duration = 46.0
-entries = Array[ExtResource("1_olk47")]([SubResource("Resource_23knj"), SubResource("Resource_pwude"), SubResource("Resource_8nvv7"), SubResource("Resource_5loco"), SubResource("Resource_2vj08")])
-difficulty = 1.5
+entries = Array[ExtResource("1_olk47")]([SubResource("Resource_ybwsv"), SubResource("Resource_23knj"), SubResource("Resource_pwude"), SubResource("Resource_8nvv7"), SubResource("Resource_5loco")])
+difficulty = 2.1
 is_miniboss = false
 is_boss = true

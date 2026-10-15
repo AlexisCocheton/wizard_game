@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_a82op"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="2_8yqck"]
@@ -6,40 +6,48 @@
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_gd7hl"]
 [ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="5_25d3v"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6l12q"]
-
-[sub_resource type="Resource" id="Resource_a82op"]
-script = ExtResource("1_a82op")
-enemy = ExtResource("2_8yqck")
-count = 1
-spawn_delay = 1.0
-start_offset = 0.0
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="6_8yqck"]
 
 [sub_resource type="Resource" id="Resource_8yqck"]
 script = ExtResource("1_a82op")
-enemy = ExtResource("3_ek7pb")
-count = 3
-spawn_delay = 3.0
-start_offset = 6.0
+enemy = ExtResource("2_8yqck")
+count = 2
+spawn_delay = 4.0
+start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_ek7pb"]
 script = ExtResource("1_a82op")
-enemy = ExtResource("4_gd7hl")
+enemy = ExtResource("3_ek7pb")
 count = 3
-spawn_delay = 2.0
-start_offset = 12.0
+spawn_delay = 2.5
+start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_gd7hl"]
 script = ExtResource("1_a82op")
+enemy = ExtResource("4_gd7hl")
+count = 4
+spawn_delay = 1.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_25d3v"]
+script = ExtResource("1_a82op")
 enemy = ExtResource("5_25d3v")
-count = 2
+count = 3
 spawn_delay = 2.0
 start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_6l12q"]
+script = ExtResource("1_a82op")
+enemy = ExtResource("6_8yqck")
+count = 2
+spawn_delay = 2.0
+start_offset = 22.0
 
 [resource]
 script = ExtResource("6_6l12q")
 id = &"side_fairy_3"
 duration = 28.0
-entries = Array[ExtResource("1_a82op")]([SubResource("Resource_a82op"), SubResource("Resource_8yqck"), SubResource("Resource_ek7pb"), SubResource("Resource_gd7hl")])
-difficulty = 2.0
+entries = Array[ExtResource("1_a82op")]([SubResource("Resource_8yqck"), SubResource("Resource_ek7pb"), SubResource("Resource_gd7hl"), SubResource("Resource_25d3v"), SubResource("Resource_6l12q")])
+difficulty = 2.7
 is_miniboss = false
 is_boss = false

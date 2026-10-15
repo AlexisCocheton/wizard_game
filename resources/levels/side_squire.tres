@@ -18,7 +18,16 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="16_uj0qo"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="17_tjd1y"]
 
-[sub_resource type="Resource" id="Resource_pjjr2"]
+[sub_resource type="Resource" id="Resource_tns6i"]
+script = ExtResource("14_seoji")
+id = &"obj_win_under_time_150"
+description = "Gagner en moins de 2 min 30"
+check_key = &"win_under_time"
+params = {
+"seconds": 150
+}
+
+[sub_resource type="Resource" id="Resource_luiq1"]
 script = ExtResource("14_seoji")
 id = &"obj_kill_type_one_cast_2_nacelle_raider"
 description = "Pillard de Haute-Nacelle : en tuer 2 d un seul sort"
@@ -28,22 +37,14 @@ params = {
 "enemy": "nacelle_raider"
 }
 
-[sub_resource type="Resource" id="Resource_6lwi4"]
+[sub_resource type="Resource" id="Resource_pjjr2"]
 script = ExtResource("14_seoji")
-id = &"obj_no_hit_from_imp_archer"
-description = "Lutin archer : gagner sans en etre touche"
-check_key = &"no_hit_from"
+id = &"obj_multi_kill_3_1"
+description = "Tuer 3 monstres en moins de 1 s"
+check_key = &"multi_kill"
 params = {
-"enemy": "imp_archer"
-}
-
-[sub_resource type="Resource" id="Resource_tns6i"]
-script = ExtResource("14_seoji")
-id = &"obj_win_under_time_150"
-description = "Gagner en moins de 2 min 30"
-check_key = &"win_under_time"
-params = {
-"seconds": 150
+"count": 3,
+"window": 1
 }
 
 [sub_resource type="Resource" id="Resource_wy42f"]
@@ -269,7 +270,7 @@ script = ExtResource("16_uj0qo")
 id = &"side_squire_boss"
 duration = 46.0
 entries = Array[ExtResource("17_tjd1y")]([SubResource("Resource_44eef"), SubResource("Resource_4keg7"), SubResource("Resource_aoydc"), SubResource("Resource_jsasl")])
-difficulty = 0.9
+difficulty = 1.05
 is_miniboss = false
 is_boss = true
 
@@ -288,7 +289,7 @@ backdrop = "act1_sky"
 waves = Array[ExtResource("16_uj0qo")]([SubResource("Resource_2gdrc"), SubResource("Resource_2jsra"), SubResource("Resource_bjmua"), SubResource("Resource_1lmvd")])
 enemy_pool = Array[ExtResource("5_bjmua")]([ExtResource("6_1lmvd"), ExtResource("7_t7i6r"), ExtResource("8_ufxre"), ExtResource("9_astaf"), ExtResource("10_xv2oe")])
 exploration_deck = Array[ExtResource("1_luiq1")]([ExtResource("2_pjjr2"), ExtResource("2_pjjr2"), ExtResource("2_pjjr2"), ExtResource("2_pjjr2"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc")])
-objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_pjjr2"), SubResource("Resource_6lwi4"), SubResource("Resource_tns6i")])
+objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_tns6i"), SubResource("Resource_luiq1"), SubResource("Resource_pjjr2")])
 levelup_cards = Array[ExtResource("1_luiq1")]([])
 objective_rewards = Array[ExtResource("1_luiq1")]([ExtResource("11_yrqik"), ExtResource("12_tls6j"), ExtResource("13_mg102")])
 next_levels = Array[StringName]([])
