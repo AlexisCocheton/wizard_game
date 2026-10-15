@@ -40,6 +40,6 @@ script = ExtResource("6_bw7i0")
 id = &"side_a1_mesure_1"
 duration = 26.0
 entries = Array[ExtResource("1_owt57")]([SubResource("Resource_owt57"), SubResource("Resource_whiqa"), SubResource("Resource_s6box"), SubResource("Resource_nxw7l")])
-difficulty = 1.15
+difficulty = 1.3
 is_miniboss = false
 is_boss = false

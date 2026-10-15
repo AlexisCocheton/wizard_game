@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_o5vus"]
 [ext_resource type="Resource" path="res://resources/enemies/blood_clot.tres" id="2_y0wg8"]
@@ -7,47 +7,55 @@
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="5_pcu7x"]
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="6_tnpgh"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_6uhuh"]
+[ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="7_y0wg8"]
 
-[sub_resource type="Resource" id="Resource_o5vus"]
+[sub_resource type="Resource" id="Resource_vq3kl"]
 script = ExtResource("1_o5vus")
 enemy = ExtResource("2_y0wg8")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_y0wg8"]
+[sub_resource type="Resource" id="Resource_rmv53"]
 script = ExtResource("1_o5vus")
 enemy = ExtResource("3_vq3kl")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_vq3kl"]
+[sub_resource type="Resource" id="Resource_pcu7x"]
 script = ExtResource("1_o5vus")
 enemy = ExtResource("4_rmv53")
 count = 1
 spawn_delay = 1.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_rmv53"]
+[sub_resource type="Resource" id="Resource_tnpgh"]
 script = ExtResource("1_o5vus")
 enemy = ExtResource("5_pcu7x")
 count = 2
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_pcu7x"]
+[sub_resource type="Resource" id="Resource_6uhuh"]
 script = ExtResource("1_o5vus")
 enemy = ExtResource("6_tnpgh")
 count = 2
 spawn_delay = 3.0
 start_offset = 20.0
 
+[sub_resource type="Resource" id="Resource_6lxbx"]
+script = ExtResource("1_o5vus")
+enemy = ExtResource("7_y0wg8")
+count = 1
+spawn_delay = 1.0
+start_offset = 24.0
+
 [resource]
 script = ExtResource("7_6uhuh")
 id = &"side_a5_vitrine_3"
 duration = 30.0
-entries = Array[ExtResource("1_o5vus")]([SubResource("Resource_o5vus"), SubResource("Resource_y0wg8"), SubResource("Resource_vq3kl"), SubResource("Resource_rmv53"), SubResource("Resource_pcu7x")])
-difficulty = 1.5
+entries = Array[ExtResource("1_o5vus")]([SubResource("Resource_vq3kl"), SubResource("Resource_rmv53"), SubResource("Resource_pcu7x"), SubResource("Resource_tnpgh"), SubResource("Resource_6uhuh"), SubResource("Resource_6lxbx")])
+difficulty = 1.9
 is_miniboss = false
 is_boss = false

@@ -589,6 +589,25 @@ func _test_annexe_d_apprenti_fermee() -> void:
 		ok(SaveData.character_unlocked(lv.side_quest_character), "%s gagne" % perso.display_name)
 		ok(SaveData.is_level_unlocked(lv.id), "%s : ouverte une fois l apprenti gagne" % lv.id)
 	eq(vus, APPRENTIS.size(), "les trois annexes d apprenti ont ete verifiees")
+	# LA TUILE DE LA CARTE ne montre que la PREMIERE condition qui manque : vue
+	# en capture, la phrase entiere (niveau ET apprenti) debordait d une tuile
+	# d un quart d ecran. La suivante apparait quand la premiere est remplie.
+	for lv: LevelDef in _annexes():
+		if lv.side_quest_character == "":
+			continue
+		SaveData.reset_profile()
+		var avant: LevelDef = ContentDB.levels.get(lv.side_quest_after)
+		var nom_avant: String = avant.display_name if avant != null else "?"
+		ok(SaveData.side_quest_lock_reason(lv).contains(" ; "),
+			"%s : profil neuf, deux conditions manquent" % lv.id)
+		var tuile: String = CampaignMap.side_tile_reason(lv)
+		ok(tuile.contains(nom_avant) and not tuile.contains(";"),
+			"%s : la tuile dit d abord le niveau a finir (%s)" % [lv.id, tuile])
+		if avant != null:
+			SaveData.record_victory(avant, GameEnums.Mode.EXPLORATION, {}, avant.waves.size())
+		var tuile2: String = CampaignMap.side_tile_reason(lv)
+		ok(tuile2 != "" and not tuile2.contains(nom_avant),
+			"%s : niveau fini, la tuile passe a l apprenti (%s)" % [lv.id, tuile2])
 	SaveData.reset_profile()
 
 

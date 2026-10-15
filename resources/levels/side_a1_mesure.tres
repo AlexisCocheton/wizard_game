@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=47 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_yg1hs"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_gx6s8"]
@@ -83,44 +83,51 @@ script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_1"
 duration = 26.0
 entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_owt57"), SubResource("Resource_whiqa"), SubResource("Resource_s6box"), SubResource("Resource_nxw7l")])
-difficulty = 1.15
+difficulty = 1.3
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_5mgpf"]
+[sub_resource type="Resource" id="Resource_24x51"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("6_aw656")
 count = 5
 spawn_delay = 1.2
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ccdum"]
+[sub_resource type="Resource" id="Resource_i2xax"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("10_a1b3j")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_24x51"]
+[sub_resource type="Resource" id="Resource_882x8"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("11_1ht0d")
 count = 2
 spawn_delay = 3.0
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_i2xax"]
+[sub_resource type="Resource" id="Resource_0fdtl"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("12_14y5r")
 count = 1
 spawn_delay = 1.0
 start_offset = 18.0
 
+[sub_resource type="Resource" id="Resource_rq1rr"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("8_xdkut")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
 [sub_resource type="Resource" id="Resource_5iwsr"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_2"
 duration = 28.0
-entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_5mgpf"), SubResource("Resource_ccdum"), SubResource("Resource_24x51"), SubResource("Resource_i2xax")])
-difficulty = 1.25
+entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_24x51"), SubResource("Resource_i2xax"), SubResource("Resource_882x8"), SubResource("Resource_0fdtl"), SubResource("Resource_rq1rr")])
+difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
@@ -141,8 +148,8 @@ start_offset = 4.0
 [sub_resource type="Resource" id="Resource_ua62r"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("6_aw656")
-count = 4
-spawn_delay = 1.4
+count = 5
+spawn_delay = 1.2
 start_offset = 8.0
 
 [sub_resource type="Resource" id="Resource_mruyt"]
@@ -164,11 +171,11 @@ script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_3"
 duration = 28.0
 entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_cn0bi"), SubResource("Resource_g33lq"), SubResource("Resource_ua62r"), SubResource("Resource_mruyt"), SubResource("Resource_x2px4")])
-difficulty = 1.35
+difficulty = 1.6
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_lksg6"]
+[sub_resource type="Resource" id="Resource_75qwm"]
 script = ExtResource("5_mg0vl")
 id = &"hornblower_gold"
 display_name = "Corniste dore"
@@ -269,28 +276,35 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"hornblower"
 
-[sub_resource type="Resource" id="Resource_1jb1f"]
+[sub_resource type="Resource" id="Resource_vly7k"]
 script = ExtResource("21_0rsac")
-enemy = SubResource("Resource_lksg6")
+enemy = SubResource("Resource_75qwm")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_75qwm"]
+[sub_resource type="Resource" id="Resource_ji1wk"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("6_aw656")
-count = 4
-spawn_delay = 2.5
+count = 5
+spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_vly7k"]
+[sub_resource type="Resource" id="Resource_1lcuv"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("9_j0r4m")
 count = 3
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_ji1wk"]
+[sub_resource type="Resource" id="Resource_ax87j"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("11_1ht0d")
+count = 2
+spawn_delay = 3.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_mg5qg"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("7_1a71a")
 count = 4
@@ -301,8 +315,8 @@ start_offset = 26.0
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_boss"
 duration = 45.0
-entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_1jb1f"), SubResource("Resource_75qwm"), SubResource("Resource_vly7k"), SubResource("Resource_ji1wk")])
-difficulty = 1.0
+entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_vly7k"), SubResource("Resource_ji1wk"), SubResource("Resource_1lcuv"), SubResource("Resource_ax87j"), SubResource("Resource_mg5qg")])
+difficulty = 1.4
 is_miniboss = false
 is_boss = true
 

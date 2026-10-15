@@ -17,29 +17,29 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_ujt63"]
 script = ExtResource("1_h402f")
 enemy = ExtResource("3_w6r6y")
-count = 3
-spawn_delay = 1.6
+count = 2
+spawn_delay = 2.0
 start_offset = 4.0
 
 [sub_resource type="Resource" id="Resource_w6r6y"]
 script = ExtResource("1_h402f")
 enemy = ExtResource("4_2idtu")
 count = 2
-spawn_delay = 3.0
+spawn_delay = 4.0
 start_offset = 10.0
 
 [sub_resource type="Resource" id="Resource_2idtu"]
 script = ExtResource("1_h402f")
 enemy = ExtResource("5_hbwcg")
-count = 2
-spawn_delay = 2.0
-start_offset = 16.0
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
 
 [resource]
 script = ExtResource("6_ffw5q")
 id = &"side_squire_2"
 duration = 27.0
 entries = Array[ExtResource("1_h402f")]([SubResource("Resource_h402f"), SubResource("Resource_ujt63"), SubResource("Resource_w6r6y"), SubResource("Resource_2idtu")])
-difficulty = 1.4
+difficulty = 1.2
 is_miniboss = false
 is_boss = false

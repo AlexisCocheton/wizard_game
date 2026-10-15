@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=40 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=39 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_lpjea"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_qw7b3"]
@@ -57,7 +57,7 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_8vwt5"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 4.0
 
@@ -73,22 +73,22 @@ script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_1"
 duration = 26.0
 entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_c7qt2"), SubResource("Resource_8vwt5"), SubResource("Resource_07bnc")])
-difficulty = 1.35
+difficulty = 1.2
 is_miniboss = false
 is_boss = false
 
 [sub_resource type="Resource" id="Resource_kklj2"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("9_ef13c")
-count = 2
-spawn_delay = 3.0
+count = 1
+spawn_delay = 1.0
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_ciics"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 2
-spawn_delay = 3.0
+spawn_delay = 4.0
 start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_rw5nu"]
@@ -103,7 +103,7 @@ script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_2"
 duration = 28.0
 entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_kklj2"), SubResource("Resource_ciics"), SubResource("Resource_rw5nu")])
-difficulty = 1.4
+difficulty = 1.25
 is_miniboss = false
 is_boss = false
 
@@ -117,15 +117,15 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_3714c"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
-count = 2
-spawn_delay = 3.0
+count = 1
+spawn_delay = 1.0
 start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_1g3ba"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("9_ef13c")
-count = 2
-spawn_delay = 3.0
+count = 1
+spawn_delay = 1.0
 start_offset = 12.0
 
 [sub_resource type="Resource" id="Resource_rr0cg"]
@@ -140,11 +140,11 @@ script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_3"
 duration = 30.0
 entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_467wk"), SubResource("Resource_3714c"), SubResource("Resource_1g3ba"), SubResource("Resource_rr0cg")])
-difficulty = 1.45
+difficulty = 1.3
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_cl5y2"]
+[sub_resource type="Resource" id="Resource_x73fh"]
 script = ExtResource("5_w1hhi")
 id = &"void_knight_gold"
 display_name = "Chevalier du vide dore"
@@ -246,39 +246,32 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"void_knight"
 
-[sub_resource type="Resource" id="Resource_vyj46"]
+[sub_resource type="Resource" id="Resource_cl5y2"]
 script = ExtResource("17_jh2ph")
-enemy = SubResource("Resource_cl5y2")
+enemy = SubResource("Resource_x73fh")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_66cv4"]
+[sub_resource type="Resource" id="Resource_vyj46"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
-count = 3
+count = 2
 spawn_delay = 2.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_lex23"]
+[sub_resource type="Resource" id="Resource_66cv4"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 1
 spawn_delay = 1.0
-start_offset = 18.0
-
-[sub_resource type="Resource" id="Resource_da48d"]
-script = ExtResource("17_jh2ph")
-enemy = ExtResource("9_ef13c")
-count = 1
-spawn_delay = 1.0
-start_offset = 26.0
+start_offset = 20.0
 
 [sub_resource type="Resource" id="Resource_6e42g"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_boss"
 duration = 46.0
-entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_vyj46"), SubResource("Resource_66cv4"), SubResource("Resource_lex23"), SubResource("Resource_da48d")])
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_cl5y2"), SubResource("Resource_vyj46"), SubResource("Resource_66cv4")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true

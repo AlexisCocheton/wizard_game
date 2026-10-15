@@ -8,15 +8,15 @@
 [sub_resource type="Resource" id="Resource_wy42f"]
 script = ExtResource("1_wy42f")
 enemy = ExtResource("2_15i7b")
-count = 4
-spawn_delay = 1.6
+count = 3
+spawn_delay = 2.0
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_15i7b"]
 script = ExtResource("1_wy42f")
 enemy = ExtResource("3_mn8n0")
-count = 2
-spawn_delay = 3.0
+count = 1
+spawn_delay = 1.0
 start_offset = 8.0
 
 [resource]
@@ -24,6 +24,6 @@ script = ExtResource("4_lna5b")
 id = &"side_squire_1"
 duration = 25.0
 entries = Array[ExtResource("1_wy42f")]([SubResource("Resource_wy42f"), SubResource("Resource_15i7b")])
-difficulty = 1.35
+difficulty = 1.15
 is_miniboss = false
 is_boss = false

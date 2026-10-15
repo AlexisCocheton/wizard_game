@@ -279,7 +279,7 @@ script = ExtResource("18_hodee")
 id = &"side_a2_atelier_boss"
 duration = 46.0
 entries = Array[ExtResource("19_yrow5")]([SubResource("Resource_dgypt"), SubResource("Resource_4257s"), SubResource("Resource_1hime"), SubResource("Resource_efmve")])
-difficulty = 1.0
+difficulty = 1.15
 is_miniboss = false
 is_boss = true
 

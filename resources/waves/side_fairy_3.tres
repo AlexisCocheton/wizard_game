@@ -17,14 +17,14 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_8yqck"]
 script = ExtResource("1_a82op")
 enemy = ExtResource("3_ek7pb")
-count = 2
+count = 3
 spawn_delay = 3.0
 start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_ek7pb"]
 script = ExtResource("1_a82op")
 enemy = ExtResource("4_gd7hl")
-count = 2
+count = 3
 spawn_delay = 2.0
 start_offset = 12.0
 
@@ -40,6 +40,6 @@ script = ExtResource("6_6l12q")
 id = &"side_fairy_3"
 duration = 28.0
 entries = Array[ExtResource("1_a82op")]([SubResource("Resource_a82op"), SubResource("Resource_8yqck"), SubResource("Resource_ek7pb"), SubResource("Resource_gd7hl")])
-difficulty = 1.5
+difficulty = 2.0
 is_miniboss = false
 is_boss = false
