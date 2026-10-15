@@ -30,7 +30,7 @@ lines = Array[Dictionary]([{
 "portrait": &"child_god",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Tu m as porte pendant cinq actes, mage. Merci. C etait tres long a pied."
+"text": "Tu m as porte jusqu ici, mage. Merci. C etait tres long a pied."
 }, {
 "portrait": &"mage_grave",
 "side": "left",
@@ -41,6 +41,11 @@ lines = Array[Dictionary]([{
 "side": "right",
 "speaker": "L Enfant",
 "text": "J etais la depuis la date. C est moi qui l ai posee. Nuri le sixieme jour, Nox la septieme nuit. C etait propre."
+}, {
+"portrait": &"child_god",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Les statues du village, c etait moi. Les gorgones n ont fait que signer en dessous."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
@@ -66,4 +71,14 @@ lines = Array[Dictionary]([{
 "side": "right",
 "speaker": "L Enfant",
 "text": "Je t ai laisse venir jusqu ici parce que je voulais voir la fin. Fais-la belle."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Il s assoit sur le siege, et ce qui s en releve n a plus rien d un enfant : une bete de cadrans, toute en or."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "La forme de Chronos. Ton huissier portait ta forme depuis le premier matin."
 }])

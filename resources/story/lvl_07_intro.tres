@@ -5,19 +5,19 @@
 [resource]
 script = ExtResource("1_1fmuv")
 id = &"lvl_07_intro"
-scene_background = "talk_greattree"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
 "text": "Une forge sans forgeron. Les marteaux tombent tout seuls, en cadence, sur des choses qui ne sont pas du metal."
 }, {
-"portrait": &"rat",
-"side": "right",
-"speaker": "Le Rat pilote",
-"text": "Je connais cette cadence. C est la meme que le corniste, dans ta foret."
-}, {
 "portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Cette cadence. C est celle du corniste, au village."
+}, {
+"portrait": &"mage_grave",
 "side": "left",
 "speaker": "Le Mage",
 "text": "Le Gardien avait une plaque dans la poitrine. Elle a ete faite ici."

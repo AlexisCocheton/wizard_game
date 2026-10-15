@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_6xtks")
 id = &"lvl_10_outro"
-scene_background = "talk_path"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Sesh creve comme une outre, et tout ce qu il avait avale ressort intact. Rien n etait digere : tout attendait."
+"text": "Sesh creve comme une outre trop pleine, au milieu des fosses qu il a videes."
 }, {
 "portrait": &"mage",
 "side": "left",

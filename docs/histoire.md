@@ -1,20 +1,43 @@
 # Wizard Story — Battle of the Time
 
-Document de reference narratif, version 2. Il remplace l histoire en 4 actes (Marches
-du Temps / Grand Cimetiere / Forges / Metier du Monde), qui ne correspondait plus au
-plan de campagne demande.
+Document de reference narratif, version 3 (vague 10, chantier B4, 14/10). Il
+decrit l histoire TELLE QU ELLE SE JOUE : les 21 niveaux de la campagne, leurs
+noms, leurs tetes et les 43 scenes qui les encadrent. La version 2 decrivait un
+plan dont les identifiants ne correspondaient plus au jeu (revue A4, §2.5).
 
-Ecrit pour quelqu un qui doit **implementer** : chaque niveau dit son lieu, son
-ambiance, ses monstres (pris dans les 21 qui existent, voir `catalog_enemies.md`) et
-les **dialogues** des scenes de visual novel qui l encadrent.
+**La source de verite du texte est `tools/make_story.gd`** (scenes) et, pour les
+niveaux, `tools/make_content.gd` (`display_name`, `subtitle`, `intro_text`). Ce
+document donne le lieu, ce que chaque scene doit faire et les repliques qui
+portent l intrigue ; il ne recopie pas chaque replique, pour ne plus diverger.
 
 Conventions :
 - Les scenes portent un id (`prologue`, `lvl_01_intro`, `lvl_01_outro`...) qui est le
   nom du `.tres` dans `resources/story/`, genere par `tools/make_story.gd`.
-- Les textes sont **sans accents** : la police du jeu (`planes_valmore.ttf`) n en a pas.
-  Ce document, lui, en porte — c est de la documentation, pas de la donnee.
-- Une scene ne se joue qu **une fois par profil** (`SaveData.stories_seen`). Rejouer un
-  niveau pour ses objectifs ne reimpose pas la lecture.
+- Une scene n existe que si un niveau la cite (`intro_story` / `outro_story`) : une
+  scene orpheline ne se joue jamais, et `test_story` la refuse. Le prologue est la
+  seule exception (`SceneRouter` le joue avant le premier niveau).
+- Les textes de jeu sont **sans accents ni tiret long** : la police du jeu
+  (`planes_valmore.ttf`) n en a pas. Ce document, lui, en porte — c est de la
+  documentation, pas de la donnee.
+- Une scene ne se joue qu **une fois par profil** (`SaveData.stories_seen`), et
+  seulement en mode CAMPAGNE : le LIBRE et le MASSACRE n ont pas d histoire.
+
+### Regles d ecriture (pour qui ajoute une scene, quetes annexes comprises)
+
+- Une replique tient en **moins de 180 caracteres** (la boite fait ~54 x 7) ; la
+  plus longue du jeu en fait 145.
+- **Le mage parle a gauche**, tous les autres a droite. Le narrateur n a ni nom ni
+  portrait.
+- **Le narrateur decrit ce qui se passe a l ecran.** S il nomme un monstre, ce
+  monstre est dans les vagues du niveau (`test_story` le verifie). Les personnages,
+  eux, ont le droit de se souvenir.
+- **Une scene ne suppose jamais un ordre que le joueur peut ne pas avoir suivi** :
+  la fourche de l acte 3 se joue en une branche ou deux, l acte 4 dans n importe
+  quel ordre.
+- Un locuteur porte son NOM (« Sesh », « Kaltek ») des que le mage le connait ;
+  « Un mort » reste anonyme parce que c est un choeur.
+- Chaque niveau de la campagne a son intro et son outro (`test_story`). Une quete
+  annexe peut s en passer.
 
 ---
 
@@ -24,10 +47,20 @@ Conventions :
 |---|---|---|
 | **Le Mage** | Le dernier survivant. Chauve : ses cheveux sont partis avec ses pouvoirs quand il a force le temps a reculer | Il ne lui reste presque rien. Le multiplicateur de vitesse est tout ce qu il sait encore faire |
 | **L Enfant** | Un gamin de la foret de Nuri, sauve au niveau 1. Suit le mage toute la campagne. Pose les questions que le joueur se pose | **C est une divinite.** Le boss final. Le mage l a sauve avant de comprendre qu il transportait sa propre fin |
-| **Le Rat pilote** | Un rat parlant, mecanicien du dirigeable ecrase. Rejoint le groupe a l acte 2 | Il a deja vu le monde finir. Il ne le dit pas : il repare, c est sa facon de refuser |
-| **Le Roi squelette** | Souverain du cimetiere de Tombol. Fuit devant le mage pendant tout l acte 3 | Il ne fuyait pas le mage : il fuyait les demons qui le tenaient par contrat |
-| **Le Maire** | Maire du village de l enfant, acte 1 | Il sait depuis des mois que l attaque vient d une autre ile, et il s est tu pour ne pas affoler |
-| **Le Gardien de la foret** | L esprit protecteur de Nuri. Un colosse de bois et de pierre | Il n est pas devenu fou : il a ete **retourne**. Premiere preuve que quelqu un commande aux monstres |
+| **Le Rat pilote** | Un rat parlant, mecanicien du dirigeable ecrase. Rejoint le groupe a la fin de l acte 1 (`lvl_09`) ; reste avec la nacelle pendant la poursuite de Tombol et revient pour la descente (`lvl_21_outro`) | Il a deja vu le monde finir. Il ne le dit pas : il repare, c est sa facon de refuser |
+| **Le Roi squelette** | Souverain du cimetiere de Tombol. Fuit devant le mage pendant tout l acte 3, puis descend avec lui (`lvl_21_outro`) et l accompagne jusqu a la fin | Il ne fuyait pas le mage : il fuyait les demons qui le tenaient par contrat |
+| **Le Maire** | Maire du village de l enfant, acte 1. Le seul du village qui ne soit pas en pierre : il se cachait dans la grange depuis trois jours | Il sait depuis des mois que l attaque vient d une autre ile, et il s est tu pour ne pas affoler |
+| **Le Gardien de la foret** | L esprit protecteur de Nuri, « celui de l arbre ». Un chevalier en armure noire ; dedans, du bois | Il n est pas devenu fou : il a ete **retourne** (une plaque de metal noir dans la poitrine). Premiere preuve que quelqu un commande aux monstres |
+
+Les adversaires qui ont un nom :
+
+| Nom | Ou | Ce qu il est dans l histoire |
+|---|---|---|
+| **Chronos** | boss de `lvl_01`, Echos aux `lvl_15` et `lvl_16` | « l huissier des delais » ; le mage le reconnait (il etait la, la premiere fois). Le boss final porte SA silhouette, en or : l huissier avait la forme de son maitre |
+| **Les gorgones** (Gorgone, Matrone, Reine) | `lvl_02` ; la Reine revient en mini-boss de `lvl_13` | Leur regard fige des sorts dans la main du mage tant qu elles vivent. Elles sont passees au village, mais ce ne sont pas elles qui l ont petrifie |
+| **Vharn, Sesh, Kaltek, Ymoa** | `lvl_07`, `lvl_10`, `lvl_11`, `lvl_12` | Les quatre grands demons. Chacun se croit le patron ; chacun a signe sans lire |
+| **Malyk** | boss de `lvl_13` | Celui qui porte les ordres aux seigneurs, et mange ce qu il appelle. Un coursier de plus |
+| **L Enfant** | boss de `lvl_16` | Le compagnon du mage depuis la premiere clairiere, et l auteur de la date |
 
 ### Les visages
 
@@ -57,23 +90,28 @@ en disant "je n ai pas su les arreter". `mage_grave` partage la case de `mage`.
 
 ### Les lieux des scenes
 
-Les dialogues ne se jouent plus devant le fond de COMBAT de l acte assombri de
-moitie — neuf scenes devant la meme pelouse. Chaque scene a son decor peint, pris
-dans le pack **Wood Elves**, copie par `tools/story/build_backdrops.py` :
+Les dialogues ne se jouent pas devant le fond de COMBAT de l acte (`test_story`
+refuse un fond `act*`). Il n existe que cinq decors peints, pris dans le pack
+**Wood Elves** et copies par `tools/story/build_backdrops.py`, tous forestiers. Ils
+sont choisis par ce que l IMAGE montre (relu au chantier B4) :
 
-| Scene | Decor | Le lieu |
+| Decor | Ce qu il montre | Scenes |
 |---|---|---|
-| `prologue` | `talk_shrine` | Un sanctuaire en ruine sous la lune : ce que le mage a deja perdu |
-| `lvl_01_*` | `talk_glade` | La clairiere au petit matin, la lumiere entre les racines |
-| `lvl_02_*` | `talk_village` | Le village de l enfant, ses maisons de bois eclairees |
-| `lvl_03_*` | `talk_path` | Le sentier et la maison isolee : la grange du maire |
-| `lvl_04_*` | `talk_greattree` | L arbre que le Gardien protege, et sous lequel il tombe |
+| `talk_glade` | la clairiere au petit matin, la lumiere entre les racines | `lvl_01_*`, et `lvl_16_outro` (la boucle se referme sur le premier matin) |
+| `talk_village` | des maisons de bois sous de grands arbres | `lvl_02_*` |
+| `talk_path` | un sentier et une cabane de bois | `lvl_08_*` (la grange du maire), `lvl_18_*` (les entrepots du port) |
+| `talk_greattree` | un grand arbre blanc sur une colline, des nuages | `lvl_09_*` (l arbre du Gardien), `lvl_17_*` (le ciel des courants) |
+| `talk_shrine` | un sanctuaire de pierre sous la lune, des statues, de l eau | le `prologue`, et tout ce qui est funeraire, souterrain ou hors du monde : `lvl_03`, `lvl_04`, tout l acte 3, tout l acte 4, l acte 5 sauf la fin |
+
+**Limite connue** : les actes 3 a 5 (forge, arene, fosses, temple, registre) se
+jouent tous devant `talk_shrine`, le moins faux des cinq. Des decors dedies sont a
+fabriquer (asset-pipeline).
 
 ---
 
 ## 2. PROLOGUE — Ce que le mage a deja perdu
 
-**Scene `prologue`. Fond : `act1_sky`. Aucun niveau : se joue avant l intro de `lvl_01`.**
+**Scene `prologue`. Decor : `talk_shrine`. Aucun niveau : se joue avant l intro de `lvl_01`.**
 
 Les monstres sont arrives de nulle part. Pas une invasion : une **apparition**. En
 quelques semaines ils ont assiege la foret de Nuri, puis marche sur la ville de Nox,
@@ -91,260 +129,232 @@ a faire : **trouver d ou vient le mal**, cette fois avant qu il ne frappe.
 > *narrateur* — Ils ne sont pas venus d un pays. Ils ne sont pas venus d une mer.
 > Un matin, ils etaient la.
 >
-> *narrateur* — Nuri a brule en six jours. Nox, promise aux siecles, a tenu une nuit.
+> *narrateur* — La foret de Nuri a brule en six jours. La ville de Nox, promise aux
+> siecles, a tenu une nuit.
 >
 > **Le Mage** — Je n ai pas su les arreter. Alors j ai arrete le temps.
 >
-> *narrateur* — Il a tout donne. Sa magie, ses annees, jusqu au dernier cheveu.
+> *narrateur* — Il a tout donne d un coup. Sa magie, ses annees, et jusqu au dernier
+> de ses cheveux.
 >
-> **Le Mage** — Je suis revenu avant. Avant la foret. Avant la ville. Avant eux.
+> **Le Mage** — Me voila revenu avant. Avant la foret. Avant la ville. Avant eux.
 >
-> **Le Mage** — Cette fois je ne vais pas defendre. Je vais **remonter le courant**.
+> **Le Mage** — Il ne me reste qu une chose : aller vite. Plus vite que ce qui arrive.
+>
+> **Le Mage** — Cette fois je ne vais pas defendre. Je vais remonter le courant jusqu a
+> l origine du mal.
 
 ---
 
 ## 3. ACTE 1 — La foret de Nuri
 
-**Monstres : terrestres, animaux, vermine.** `gnome`, `sprite`, `hopper`, `rat_swarm`,
-`jelly` et ses enfants, `hive`, `hornblower`, `sleepy_fox` (le renard qui endort la
-magie, devant le dirigeable), puis `warden` (le Gardien).
-**Fond : `act1_sky`. Terrain `grass`.** Niveaux `lvl_01` a `lvl_04`.
+**Niveaux, dans l ordre de jeu : `lvl_01`, `lvl_02`, `lvl_08`, `lvl_09`.** Fond de
+combat `act1_sky`. Vermine de foret (`gnome`, `sprite`, `hopper`, `rat_swarm`,
+gelees, `hive`, `hornblower`, `sleepy_fox`), la lignee des gorgones au village,
+le Gardien a la fin.
 
 C est l acte ou le joueur apprend le jeu et ou le mage apprend qu il n a rien compris :
 les betes de la foret ne se comportent pas comme des betes.
 
-### `lvl_01` — Lisiere de Nuri (tutoriel)
+### `lvl_01` — « La lisiere de Nuri » (tutoriel)
 
-Ambiance : une clairiere au petit matin, tres calme, presque jolie. Vagues espacees,
-monstres lents. Uniquement `gnome`, `sprite`, quelques `hopper`.
+Mini-boss : le Gardien (a remplacer, voir plus bas). Boss : **Chronos**.
 
-Le mage voit un **enfant** accule contre un arbre par trois gnomes. Il le sauve. C est
-le geste qui condamne tout — mais il faudra cinq actes pour le savoir.
+Le mage revient au premier matin, vide, et entend un cri : un **enfant**. Il le
+sauve. C est le geste qui condamne tout — mais il faudra cinq actes pour le savoir.
 
-**Scene `lvl_01_intro`**
+**Scene `lvl_01_intro`** (`talk_glade`) : le lieu, le jour (six jours avant la fin
+de Nuri), la faiblesse du mage (« De quoi lancer quelques sorts et courir vite »),
+le cri.
 
-> *narrateur* — La foret de Nuri, six jours avant sa fin. Elle ne le sait pas encore.
+**Scene `lvl_01_outro`** (`talk_glade`) : l enfant entre dans l histoire. Le mage
+**reconnait Chronos** a son cadran — « L huissier des delais. Il etait deja la, la
+premiere fois, quand Nox est tombee » — puis l enfant l emmene a son village.
+
+> **L Enfant** — Tu les as tous fait tomber ! Meme le grand ! Comment on fait ca ?
 >
-> **Le Mage** — Meme odeur. Meme lumiere. Je suis au bon endroit, au bon matin.
+> *narrateur* — Le plus grand d entre eux porte un cadran a la place du coeur. Les
+> aiguilles tournent encore.
 >
-> **Le Mage** — Il me reste de quoi lancer trois sorts et courir vite. Ca ira.
->
-> *narrateur* — Puis un cri, entre les arbres. Une voix d enfant.
-
-**Scene `lvl_01_outro`**
-
-> **L Enfant** — Tu les as fait tomber ! Tous les trois ! Comment on fait ca ?
->
-> **Le Mage** — On va vite. Plus vite qu eux. C est tout ce que je sais encore faire.
->
-> **L Enfant** — Alors va vite jusqu a mon village. Il y en a plein la-bas. Plein.
+> **Le Mage** — Chronos. L huissier des delais. Il etait deja la, la premiere fois,
+> quand Nox est tombee.
 >
 > **Le Mage** — ... Des gnomes qui attaquent un village. Les gnomes ne font pas ca.
->
-> **L Enfant** — Tu viens ?
->
-> **Le Mage** — Je viens. Reste derriere moi et ne me lache pas.
 
-### `lvl_02` — Le village de l enfant
+Le mini-boss du tutoriel est le Gardien, que l enfant presente en allie au
+`lvl_09` puis qui y meurt : aucune scene du `lvl_01` ne le cite, et le
+remplacer est demande a B2 (`docs/revue_vague10.md` §2.7).
 
-Ambiance : maisons de bois, feu, cris. Le combat se joue **dans** le village.
-Monstres : `gnome`, `sprite`, `rat_swarm`, `hopper`, et surtout un `hornblower` qui
-reste sur le cote et presse les autres. Premiere preuve visible d une **cadence**.
+### `lvl_02` — « Le village petrifie »
 
-**Scene `lvl_02_intro`**
+Mini-boss : la **Matrone gorgone** (fige 2 cartes). Dans les vagues : deux
+Gorgones (1 carte chacune), un Corniste qui presse les autres. Boss : le Coagule,
+puis la **Reine gorgone** (3 cartes) a la fin de la vague de boss.
 
-> **L Enfant** — C est la ! La maison bleue, c est chez moi !
->
-> **Le Mage** — Ne regarde pas la maison. Regarde la ligne.
->
-> **L Enfant** — Quelle ligne ?
->
-> **Le Mage** — Ils avancent en rang. Des nuisibles pillent au hasard. Ceux-la
-> **marchent**. Quelqu un leur bat la mesure.
+Demande du co-auteur (vague 10) : quand on retrouve les gorgones, le dialogue dit
+qu on retrouve **le village petrifie**. La scene fait trois choses :
+1. montrer le village en pierre ;
+2. apprendre la mecanique AVANT la Matrone : un regard de gorgone fige des sorts
+   dans la main tant qu elle vit, la reponse est de l abattre d abord ;
+3. garder l indice de la **cadence** (ils marchent au pas), qui revient chez Vharn.
 
-**Scene `lvl_02_outro`**
+**Scene `lvl_02_intro`** (`talk_village`)
 
-> *narrateur* — Le corniste tombe en dernier. Sa corne roule dans la boue et continue
-> a sonner deux secondes de trop.
+> **L Enfant** — C est la ! La maison sous le grand arbre, c est chez moi !
 >
-> **L Enfant** — Il jouait pour les autres.
+> *narrateur* — Le village est debout. Ses gens aussi : en pierre, figes au milieu
+> d un geste.
 >
-> **Le Mage** — Il jouait pour **quelqu un d autre**. Il recevait un tempo, il le
-> repetait. Ou est ton maire, petit ?
+> **L Enfant** — Ils ne repondent pas. Pourquoi ils ne repondent pas ?
+>
+> **Le Mage** — Des gorgones sont passees. Il en reste. Si l une d elles regarde mes
+> sorts, ils se figeront dans ma main.
+>
+> **Le Mage** — Alors on les abat en premier. Et regarde les autres : ils marchent au
+> pas. Quelqu un leur bat la mesure.
+
+**Scene `lvl_02_outro`** (`talk_village`) — le PREMIER GRAIN du retournement final :
+
+> *narrateur* — La Reine gorgone s effondre au milieu de la place. Les sorts du mage
+> se degelent d un coup. Les gens du village, eux, restent en pierre.
+>
+> **Le Mage** — Ce qu une gorgone fige, sa mort le libere. Pas eux. Quelqu un les a
+> figes avant elle.
+>
+> **L Enfant** — Ils sont bien comme ca. Ils n ont plus peur.
+>
+> **Le Mage** — ... Ou est ton maire, petit ?
 >
 > **L Enfant** — Dans la grange. Il s y cache depuis trois jours.
 >
-> **Le Mage** — Trois jours. Avant meme l attaque, donc. Interessant.
+> **Le Mage** — Trois jours. Avant meme l attaque. Et lui n est pas en pierre.
 
-### `lvl_03` — La route du maire
+Echos : « Mon village est en pierre derriere moi » (`lvl_08_intro`) ; la Reine
+« recollee » garde le pentacle (`lvl_13_intro`) ; « Les statues du village, c etait
+moi. Les gorgones n ont fait que signer en dessous » (`lvl_16_intro`).
 
-Ambiance : le sentier entre le village et la clairiere du dirigeable, sous les arbres.
-Monstres : `jelly` (et ses divisions), `hive` qui explose en lutins, `rat_swarm`. La
-pression est le **nombre** : premiere vraie lecon de zone.
+### `lvl_08` — « La route du maire »
 
-Le maire avoue : ce n est pas Nuri qui est attaquee, c est **toute l ile**, et ca vient
-d une **autre ile**, par le ciel. Il le sait depuis des mois et s est tu.
+Mini-boss : le Totem ancien. Gelees qui se divisent, ruches qui eclatent : la
+pression est le **nombre**, premiere vraie lecon de zone.
 
-**Scene `lvl_03_intro`**
+**Scene `lvl_08_intro`** (`talk_path`) : le maire, seul du village a ne pas etre en
+pierre, avoue : ce n est pas Nuri qui est attaquee, c est **toute l ile**, et ca vient
+d en haut — les **Sky Lands**. Un dirigeable s est ecrase au bout de la route.
+L enfant insiste pour venir : « Mon village est en pierre derriere moi. Il n y a plus
+rien a garder. Je viens. »
 
-> **Le Maire** — Je n ai rien cache. J ai... attendu.
->
-> **Le Mage** — Vous avez attendu quoi, exactement ?
->
-> **Le Maire** — Que ca s arrete tout seul. Ca arrivait par le ciel, mage. Tous les
-> mois, un peu plus bas. Des betes qui tombaient d en haut et qui ne remontaient pas.
->
-> **Le Mage** — D en haut. Donc il y a une ile au-dessus de la notre.
->
-> **Le Maire** — Il y a les Sky Lands. Et il y a un dirigeable ecrase au bout de cette
-> route. Si vous voulez monter, c est la seule facon.
->
-> **L Enfant** — Je viens.
->
-> **Le Mage** — Non.
->
-> **L Enfant** — Mon village est derriere moi et il n y a plus rien dedans. Je viens.
+**Scene `lvl_08_outro`** (`talk_path`) : la carcasse du dirigeable, « quelqu un tape
+dedans avec un outil » ; au loin, quelque chose de tres grand se met debout.
 
-**Scene `lvl_03_outro`**
+### `lvl_09` — « Proteger le dirigeable » (fin de l acte 1)
 
-> *narrateur* — Au bout de la route, une carcasse de dirigeable, coincee dans les
-> arbres comme une baleine echouee. Elle fume encore.
->
-> **L Enfant** — Il y a quelqu un dedans. Ca tape.
->
-> **Le Mage** — Ca tape avec un outil. Ce n est pas un monstre, c est un mecanicien.
->
-> *narrateur* — Loin derriere eux, dans la foret, quelque chose de tres grand se met
-> debout.
+Mini-boss : le Seigneur de braise. Boss : **le Gardien de la foret**. Le rat repare
+pendant le combat.
 
-### `lvl_04` — Proteger le dirigeable
+C est la premiere preuve dure : on ne **devient** pas fou en six jours. On est
+**retourne** par quelqu un.
 
-Ambiance : la clairiere, le dirigeable au centre, le rat pilote qui repare pendant le
-combat. Le joueur **tient une position** pendant un compte a rebours narratif.
-Monstres : la vague de fond de l acte 1, puis le **Gardien de la foret** (`warden`,
-mini-boss) — l esprit protecteur de Nuri, retourne contre elle.
+**Scene `lvl_09_intro`** (`talk_greattree`) : le rat pilote se presente (« Il manque
+une valve, deux ailerons et ma patience »), les arbres s ecartent.
 
-C est le premier boss et la premiere preuve dure : on ne **devient** pas fou en six
-jours. On est **retourne** par quelqu un.
-
-**Scene `lvl_04_intro`**
-
-> **Le Rat pilote** — Bougez pas, touchez a rien, et surtout ne montez pas. Il manque
-> une valve, deux ailerons et ma patience.
->
-> **Le Mage** — Combien de temps ?
->
-> **Le Rat pilote** — Le temps qu il faut. Vous, dehors. Moi, dessous.
->
-> *narrateur* — Les arbres, au fond de la clairiere, s ecartent d eux-memes.
->
-> **L Enfant** — C est le Gardien. C est lui qui protege la foret. Il va nous aider !
+> **L Enfant** — C est le Gardien ! Le vrai, celui de l arbre. C est lui qui protege
+> la foret, il va nous aider !
 >
 > **Le Mage** — Petit... il marche sur les arbres, pas entre.
 
-**Scene `lvl_04_outro`**
+**Scene `lvl_09_outro`** (`talk_greattree`)
 
-> *narrateur* — Le Gardien s effondre en un tas de bois mort. Dans sa poitrine ouverte,
-> plantee la comme une echarde, une plaque de metal noir que personne n a taillee ici.
+> *narrateur* — Le Gardien s effondre. Son armure s ouvre comme une ecorce : dedans,
+> du bois mort, et plantee comme une echarde, une plaque de metal noir.
 >
-> **Le Mage** — Il n est pas devenu fou. On lui a **mis** quelque chose dedans.
+> **Le Gardien** — ... pas... voulu...
+>
+> **Le Mage** — Il n est pas devenu fou. On lui a mis quelque chose dedans.
 >
 > **Le Rat pilote** — Vu la soudure, c est du travail d en haut. Sky Lands. Je connais
 > le style, j en viens.
->
-> **L Enfant** — Alors on monte ?
->
-> **Le Rat pilote** — On monte. Accrochez-vous a ce qui est vise.
 
 ---
 
 ## 4. ACTE 2 — Les Sky Lands
 
-**Monstres : volants, puis humanoides, puis zombies.** `wisp`, `imp_archer`,
-`sand_serpent` (dans les courants d air), `shade`, `void_knight`, `berserker`,
-`ghoul_priest`, `glutton`. **Fond : `act1_sky` puis `act2_graveyard`.**
-4 niveaux. Les **premiers passifs** se debloquent ici.
+**Niveaux, dans l ordre de jeu : `lvl_17`, `lvl_18`, `lvl_03`, `lvl_04`.** Fond de
+combat `act1_sky` pour les deux etapes de vol, `act2_graveyard` pour les deux
+dernieres : on monte, puis on touche le cimetiere. Les **premiers passifs** se
+debloquent ici.
 
 Le groupe monte. Les Sky Lands ne sont pas une ile sauvage : c est un archipel habite,
-en train d etre vide par le haut. Et au bout, un cimetiere ou les morts se levent et
-**parlent** — ce sont eux qui lachent le premier vrai nom.
+un **atelier**, en train d etre vide par le haut. Et au bout, un cimetiere ou les morts
+se levent et **parlent** — ce sont eux qui lachent le premier vrai nom.
 
-Les identifiants de la colonne « Niveau » sont ceux du PLAN, pas ceux du jeu : la
-campagne n a jamais ete renumerotee, pour ne pas casser les sauvegardes. La
-derniere colonne donne l identifiant REEL, celui de `resources/levels/`.
+| Niveau | Nom affiche | Tetes | Ce que disent les scenes |
+|---|---|---|---|
+| `lvl_17` | Les courants | mini-boss **Grand Oeil des courants** | le rat et ses regles (« la regle deux c est qu il n y a pas de regle deux ») ; le Grand Oeil tombe dans les cordages : « derriere l oeil, la meme soudure noire que dans la poitrine de votre Gardien ». Les Sky Lands sont un atelier, le rat y a travaille |
+| `lvl_18` | Port de Haute-Nacelle | mini-boss **Mage noir de Haute-Nacelle** | un port vide « par le haut » ; le Mage noir porte la meme soudure ; **premier grain du retournement** : l enfant sait que « la gauche est fermee » |
+| `lvl_03` | L ossuaire de bordure | mini-boss Slime enorme ; boss **le Reliquaire** | des tombes rangees en quantites ; le Reliquaire livre les registres : « Les trois dernieres annees, on n a plus compte des morts. On les a COMMANDES. » |
+| `lvl_04` | Le Grand Appel | mini-boss Briseur de tertres ; boss **l Ensevelisseur** | le rituel des Pretres goules reussit ; ce qui sort du cercle s appelle l Ensevelisseur ; quand il tombe, les morts s arretent et **parlent** |
 
-| Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
-|---|---|---|---|---|
-| `lvl_05` | Les courants | tout en vol, plates-formes etroites | `current_eye`, `wisp`, `imp_archer`, `sand_serpent` | **`lvl_17`** |
-| `lvl_06` | Port de Haute-Nacelle | un port pille, quais de bois | `nacelle_raider`, `void_knight`, `berserker`, `shade` | **`lvl_18`** |
-| `lvl_07` | Les serres d en haut | jardins suspendus pourris | `glutton`, `jelly`, `hive`, `slime_mid`, mini-boss `slime_huge` | `lvl_03` (Ossuaire des Marees) |
-| `lvl_08` | Cimetiere de bordure | premiers morts-vivants, brume | `ghoul_priest`, `shade`, `void_knight` | `lvl_04` (Le Grand Appel) |
-
-Ordre de jeu reel : `lvl_09` (fin acte 1) -> `lvl_17` -> `lvl_18` -> `lvl_03` ->
-`lvl_04` -> acte 3. Les deux etapes de vol gardent le fond `act1_sky`, les deux
-dernieres prennent `act2_graveyard` : c est la montee que le document decrit.
-
-Les deux dernieres etapes ne sont pas des serres suspendues mais un ossuaire et
-un rituel — c est du contenu anterieur, deja mesure au banc, qu on n a pas
-reecrit pour un decor. Ce qu elles doivent porter, elles le portent : ce sont les
-premiers morts-vivants, et c est la que le nom de Tombol tombe.
-
-### Dialogues cles de l acte 2
-
-**`lvl_05_intro` — le rat prend l equipage**
-
-> **Le Rat pilote** — Regle une : si je crie "a bas", vous vous mettez a bas.
-> **Le Mage** — Il y a une regle deux ?
-> **Le Rat pilote** — La regle deux c est qu il n y a pas de regle deux, on va s ecraser.
-
-**`lvl_06_outro` — l enfant montre quelque chose qu il ne devrait pas savoir**
+**`lvl_18_outro` — l enfant montre quelque chose qu il ne devrait pas savoir**
 
 > **L Enfant** — Il faut passer par la droite. La gauche est fermee.
 > **Le Mage** — Tu es deja venu ici ?
 > **L Enfant** — Non. Mais c est ferme. Je le sais, c est tout.
 > **Le Mage** — ... D accord. Par la droite.
 
-C est le premier **grain** du plot twist : l enfant sait des choses. Le mage le note et
-n y revient pas — le joueur non plus, jusqu a l acte 5.
+Le mage le note et n y revient pas — le joueur non plus, jusqu a l acte 5.
 
-**`lvl_08_outro` — l origine est lachee**
+**`lvl_03_outro` — le stock**
 
-> *narrateur* — Les morts du cimetiere de bordure ne chargent pas. Ils s arretent,
-> tous, en meme temps, et se tournent vers le mage.
+> **Le Mage** — Ils ne vont pas nous effacer par haine. Ils vont nous effacer pour
+> faire du STOCK.
 >
-> **Un mort** — Ce n est pas nous. Nous, on nous a **reveilles**.
+> **Le Mage** — On ne range pas des morts en colonnes si on ne compte pas s en servir
+> tous ensemble.
+
+Le mage parle au FUTUR : dans cette boucle-ci, l extinction n a pas encore eu lieu.
+
+**`lvl_04_outro` — l origine est lachee**
+
+> *narrateur* — Ce qui est sorti du cercle s appelle l Ensevelisseur. Quand il tombe,
+> les morts cessent de charger.
 >
-> **Le Mage** — Par qui ?
+> **Un mort** — Ce n est pas nous. Nous, on nous a reveilles.
 >
 > **Un mort** — Par l ordre de Tombol. Le Roi squelette a signe. Il a signe pour nous
 > tous et il n avait pas le droit.
 >
 > **Le Rat pilote** — Tombol, c est trois iles plus loin. Le grand cimetiere.
->
-> **Le Mage** — Alors on a enfin un nom. On y va.
 
 ---
 
 ## 5. ACTE 3 — Le cimetiere de Tombol
 
-**Monstres : morts-vivants et gardiens.** `ghoul_priest`, `shade`, `void_knight`,
-`golem`, `totem_guardian`, `hive`, `behemoth`. **Fond : `act2_graveyard`.**
-5 niveaux.
+**Niveaux, dans l ordre de jeu : `lvl_19`, `lvl_20`, la fourche `lvl_05` /
+`lvl_06` (une branche ou les deux, dans l ordre voulu), puis `lvl_21`.** Fond de
+combat `act2_graveyard`, sauf la fourche en `act3_demon` (voir plus bas).
 
 Le Roi squelette **fuit**. Tout l acte est une poursuite : a chaque niveau on arrive
 juste apres lui, on brise ce qu il a laisse derriere pour retarder. Puis on comprend
-pourquoi il court.
+pourquoi il court. Le rat reste avec la nacelle (`lvl_19_intro`) ; le mage et
+l enfant avancent seuls jusqu au pentacle.
 
-Meme convention qu a l acte 2 : la colonne « Niveau » est celle du PLAN, la
-derniere donne l identifiant reel.
+| Niveau | Nom affiche | Tetes | Ce que disent les scenes |
+|---|---|---|---|
+| `lvl_19` | Les fosses basses | mini-boss Sorciere des fosses ; boss : **le trio des mages** (braise, givre, arcanes) | on entre dans Tombol par le bas, l eau est encore trouble : le roi vient de passer. Les trois mages ne cherchaient pas a tuer le mage, mais a le RETARDER |
+| `lvl_20` | La cour des rois morts | mini-boss Epeiste d ombre | des statues de rois, des gardes laisses a mourir pour gagner une heure : « on fait ca quand on fuit un creancier ». Au fond, **deux escaliers** : l un descend vers une lueur rouge, l autre remonte vers la salle du trone |
+| `lvl_05` | Les forges sous Tombol | mini-boss Miroir de Forge ; boss Colosse des Forges | l escalier qui descend mene a une forge : Tombol ne coule pas d armures, quelqu un l a installee sous ses pieds. Poincon sur chaque piece : **un cercle a cinq branches**. « Tombol paie l atelier. Avec ses morts. » |
+| `lvl_06` | La cour brisee | mini-boss le Bourreau ; boss Seigneur Spectre | l escalier qui remonte mene a la salle du trone vide : la cour du roi s entretue pour le trone. Le dernier seigneur tombe sur le **sceau royal, casse** : « ce qu il a signe est deja parti. En bas. » |
+| `lvl_21` | Le pentacle | mini-boss le Fossoyeur ; boss **Sceau de Tombol** | le roi accule ; le retournement (ci-dessous) ; le rat revient avec la nacelle, et tout le monde descend |
 
-| Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
-|---|---|---|---|---|
-| `lvl_09` | Les fosses basses | tombes ouvertes, on avance dans l eau | `pit_ghoul`, `ghoul_priest`, `shade`, `slime_ghost`, `slime_skeleton`, `slime_ghost_big` ; boss : le trio `trio_ember` + `trio_frost` + `trio_arcane` | **`lvl_19`** |
-| `lvl_10` | L ossuaire | murs d os, couloirs — terrain de murs | `void_knight`, `golem` | `lvl_05` (Forges du Mauvais Temps) |
-| `lvl_11` | La cour des rois morts | statues, arrieres-gardes laissees par le roi | `totem_guardian`, `hive`, `parry_skeleton` | **`lvl_20`** |
-| `lvl_12` | Le puits de contrat | descente, lumiere rouge par en bas | `behemoth`, `berserker` | `lvl_06` (La Cour brisee) |
-| `lvl_13` | Le pentacle | salle du portail, le roi accule | mixte + mini-boss `gravedigger` + `tombol_seal` | **`lvl_21`** |
+**La fourche.** `lvl_05` et `lvl_06` etaient une fourche equilibree au banc
+(blindes d un cote, monstres a effets de l autre), conservee au milieu de l acte.
+Elles n avaient ni scene ni texte de l histoire actuelle jusqu au chantier B4.
+Leurs scenes se lisent chacune SEULE (on peut n en jouer qu une) et ne se citent
+pas l une l autre. Leur fond de combat rouge (`act3_demon`) est devenu un INDICE :
+« rouge de ce qui remonte d en dessous ». On y voit que quelque chose remonte sous
+Tombol, jamais QUI : c est le roi qui le montre, au `lvl_21` (« Voila mes
+creanciers »).
 
 **Le trio des fosses basses** (chantier W2). Trois gardiens de la pierre du
 pentacle — la famille du Sceau de Tombol — que le roi laisse derriere lui au
@@ -355,53 +365,44 @@ des rois morts (« statues ») ; le banc a tranche : `lvl_20` se gagnait 13 fois
 30 avant tout ajout, `lvl_19` 30 fois sur 30. Ils reviennent en ADEPTES (vermine)
 dans l acte 5.
 
-Ordre de jeu reel : `lvl_04` (fin acte 2) -> `lvl_19` -> `lvl_20` -> fourche
-`lvl_05` / `lvl_06` au choix -> `lvl_21` -> acte 4.
-
-Deux ecarts assumes avec le plan. La FOURCHE : `lvl_05` et `lvl_06` etaient deja
-une fourche equilibree au banc (blindes d un cote, monstres a effets de l autre)
-et elle est conservee telle quelle au milieu de l acte, la ou le plan voulait
-deux etapes imposees. Et elles gardent leur theme de forge et de cour
-demoniaques, avec le fond `act3_demon` : les rehabiller en ossuaire de Tombol
-aurait voulu dire reecrire deux niveaux mesures pour un decor.
-
 `lvl_21` EST LE PORTAIL DE L ACTE 4, et le seul : c est lui qui ouvre les quatre
-grands demons d un coup, comme la section 6 l exige.
+grands demons d un coup.
 
-### `lvl_13` — le retournement de l acte 3
+### `lvl_21` — le retournement de l acte 3
 
-**Scene `lvl_13_intro`**
+**Scene `lvl_21_intro`** (`talk_shrine`)
 
-> **Le Roi squelette** — Encore toi. Tu cours vite pour un homme qui n a plus rien.
+> **Le Roi squelette** — Te voila enfin. Tu cours vite pour un homme qui n a plus rien.
 >
-> **Le Mage** — Tu as signe l extinction de mon royaume.
+> **Le Mage** — Tu as signe la fin de Nuri et de Nox.
 >
-> **Le Roi squelette** — J ai signe pour **sauver** le mien ! Ils sont venus avec un
-> contrat deja ecrit, mage. On ne negocie pas avec ce qui monte de ce puits.
+> **Le Roi squelette** — J ai signe pour SAUVER Tombol. Ils sont venus avec un contrat
+> deja ecrit, mage. On ne negocie pas avec ce qui monte de ce puits.
 >
 > **Le Mage** — Qui monte de ce puits ?
 >
 > **Le Roi squelette** — Regarde derriere moi et arrete de poser la question.
 
-**Scene `lvl_13_outro`**
+**Scene `lvl_21_outro`** (`talk_shrine`)
 
-> *narrateur* — Le pentacle tourne au fond de la salle. Ce qui passe au travers n a
-> pas d yeux et sait exactement ou tout le monde se tient.
+> *narrateur* — Le sceau se fend. Ce qui passe au travers n a pas d yeux et sait
+> exactement ou tout le monde se tient.
 >
 > **Le Roi squelette** — Voila mes creanciers. Ils m ont pris mes morts, mes terres et
 > ma signature. Ils te prendront ta boucle.
 >
-> **Le Mage** — Ma quoi ?
->
 > **Le Roi squelette** — Ils savent que tu as recule le temps, mage. Tout le monde en
-> bas le sait. C est pour **ca** qu ils avancent si vite maintenant.
+> bas le sait. C est pour CA qu ils avancent si vite maintenant.
 >
 > **Le Mage** — ... Alors c est moi qui ai accelere la fin.
 >
 > **Le Roi squelette** — Tu as change la date, pas la fin. Fais-moi une place, je
-> descends avec toi. Je n ai plus de royaume a perdre.
+> descends avec toi. Je n ai plus rien a perdre.
 >
-> **L Enfant** — On descend ? Vraiment ?
+> *narrateur* — Au bord du puits, la nacelle attend, moteur deja chaud.
+>
+> **Le Rat pilote** — J ai dit que je restais avec la nacelle. Elle descend, alors je
+> descends.
 >
 > **Le Mage** — On descend.
 
@@ -409,74 +410,71 @@ grands demons d un coup, comme la section 6 l exige.
 
 ## 6. ACTE 4 — Le monde demoniaque
 
-**Monstres : demons, blindes, gros.** `void_knight`, `golem`, `behemoth`, `berserker`,
-`glutton`, `totem_guardian`, `hive`. **Fond : `act3_demon`.** 5 niveaux.
+**Niveaux : `lvl_07`, `lvl_10`, `lvl_11`, `lvl_12` dans l ordre libre, puis
+`lvl_13`.** Fond de combat `act3_demon`. Groupe : le mage, l enfant, le rat, le roi.
 
 Structure particuliere, demandee : les **4 premiers niveaux sont ouverts d emblee**,
-un par grand demon. Le joueur choisit son ordre et son style. Le cinquieme ne s ouvre
-qu apres les quatre.
+un par grand demon. Le joueur choisit son ordre et son style. Le cinquieme doit
+s ouvrir apres les quatre.
 
-Meme convention qu a l acte 2 : la colonne « Niveau » est celle du PLAN, la
-derniere donne l identifiant REEL de `resources/levels/`.
+| Niveau | Le demon | Tetes | Ce que disent les scenes |
+|---|---|---|---|
+| `lvl_07` | **Vharn, l Enclume** (« La forge de Vharn ») | mini-boss Golem a noyau | une forge sans forgeron, la cadence du corniste ; Vharn ne parle pas. Dans l Enclume, un contrat : la signature du roi, et au-dessus une ecriture « petite et soignee ». L enfant a compte : « Le pentacle a cinq branches. Quatre portent un nom. » |
+| `lvl_10` | **Sesh, la Faim** (« Les fosses de Sesh ») | — | Sesh a suivi l odeur d un monde qui finit ; il a signe sans lire, « il etait deja a table ». Quelqu un a prevenu les charognards avant le mort |
+| `lvl_11` | **Kaltek, la Chaine** (« L arene de Kaltek ») | mini-boss Ecumeur du ciel | « Personne ne me tient ! » ; ses chaines partaient de lui, vers le haut : un contremaitre |
+| `lvl_12` | **Ymoa, le Cercle** (« Le temple d Ymoa ») | mini-boss Jumeaux du Cercle | « Je ne me bats jamais. Je PROTEGE. » Il protegeait l ordre sans savoir ce qu il contenait. « Bienvenue en enfer, mage. C est une administration. » |
+| `lvl_13` | le pentacle brise | mini-boss **Reine gorgone** ; boss **Malyk** | la Reine, brisee au village, « recollee », garde la porte ; Malyk porte les ordres aux seigneurs et mange ce qu il appelle : un coursier de plus. Le pentacle se fend en cinq ; « ta main est froide comme le puits » ; la chute ne va pas vers le bas |
 
-| Niveau (plan) | Le demon | Ambiance | Monstres | Id reel |
-|---|---|---|---|---|
-| `lvl_14` | **Vharn, l Enclume** | forge, tout est blinde | `demon_anvil`, `golem`, `behemoth`, mini-boss `mecha_golem` | **`lvl_07`** |
-| `lvl_15` | **Sesh, la Faim** | fosses, tout se mange | `demon_maw`, `glutton`, `jelly`, `hive`, `cacodaemon` | **`lvl_10`** |
-| `lvl_16` | **Kaltek, la Chaine** | arene, rage et esclaves | `demon_chain`, `berserker`, `void_knight` | **`lvl_11`** |
-| `lvl_17` | **Ymoa, le Cercle** | temple, auras et protections | `demon_circle`, `totem_guardian`, `ghoul_priest`, mini-boss `circle_twins` | **`lvl_12`** |
-| `lvl_18` | le pentacle brise | apres les 4, le sol se derobe | melange des quatre, mini-boss `gorgon_queen`, boss `demon_lord` | **`lvl_13`** |
+**L ecriture est commutative.** Aucune scene des quatre demons ne suppose ce que
+le joueur a deja vu, ni ne compte ce qui reste (« il y en a trois autres »,
+« quatre seigneurs » sont retires). Chaque outro apporte le meme fait — celui-la
+non plus ne savait pas ce qu il signait — par un chemin different.
 
-**Malyk, le Seigneur demon** (`demon_lord`, chantier W2) ferme le pentacle brise.
-La scene `lvl_18_intro` lui faisait deja sa place sans le nommer : « Aucun des
-quatre n a meme lu l ordre. Ils l ont RECU. » Malyk est celui qui l a porte. Il
-appelle des Cacodemons et les mange pour se soigner. La Reine gorgone, qui tenait
-ce boss faute de tete, mene desormais le palier du meme niveau.
+**La logique des contrats**, une fois pour toutes : chaque seigneur tient un
+contrat signe par le Roi squelette, et AU-DESSUS de sa signature une ecriture
+petite et soignee que personne n a jamais vue. Malyk porte les ordres ; l ecriture
+est celle du registre (« meme encre, meme main », `lvl_15`), donc de l enfant.
 
-`lvl_07` existait avant ce chantier sous le nom « Le Metier du Monde », devant le
-fond des divinites : il etait le dernier niveau du jeu quand la campagne en
-comptait sept. Il devient la forge de Vharn, dans `act3_demon`. Son identifiant et
-ses vagues, mesurees au banc, ne bougent pas.
+**Le deblocage, limite connue.** Chaque demon porte `next_levels = [lvl_13]` ;
+`SaveData.record_victory` ouvre tout `next_levels` des la PREMIERE victoire, donc le
+pentacle s ouvre apres UN seul demon. Le corriger est du code (renvoye,
+`docs/revue_vague10.md` §2.7) ; en attendant, les scenes de `lvl_13` parlent « des
+seigneurs », jamais « des quatre », et tiennent dans les deux cas.
 
-**La structure en eventail, en pratique.** `lvl_21` (le pentacle de Tombol, fin de
-l acte 3) porte `next_levels = [lvl_07, lvl_10, lvl_11, lvl_12]` : les quatre
-demons s ouvrent d un coup. Chacun des quatre porte `next_levels = [lvl_13]`, et
-AUCUN ne cite un autre demon — c est ce qui rend l ordre libre. Le pentacle brise
-n est pas ouvert par Tombol : il se merite apres les quatre.
-
-**Les quatre grands demons sont des monstres neufs**, ce que la section 10
-interdit en principe. La note y visait la vermine ; une tete d affiche nommee par
-le document ne peut pas etre un monstre commun agrandi, et `test_bosses` refuse
-qu un adversaire mene deux niveaux. Ils partagent en revanche la SILHOUETTE de la
-famille qu ils commandent (golem, glouton, berserker, totem) : le seigneur porte
-l apparence de ses sujets, ce qui dit sans un mot qui commandait ces monstres.
+**Les quatre grands demons** partagent la SILHOUETTE de la famille qu ils commandent
+(golem, glouton, berserker, totem) : le seigneur porte l apparence de ses sujets.
+Ils parlent avec un portrait commun (le pack n a qu un visage de demon), mais sous
+leur NOM.
 
 Les quatre grands demons ne se coordonnent pas : chacun croit etre le commanditaire.
 C est le comique noir de l acte — le mage descend en enfer pour trouver un chef et
-trouve **quatre directeurs qui se detestent**.
+trouve **quatre directeurs** dont aucun n a lu ce qu il signait.
 
-### `lvl_18` — le pentacle brise
+### `lvl_13` — le pentacle brise
 
-**Scene `lvl_18_intro`**
+**Scene `lvl_13_intro`** (`talk_shrine`)
 
-> **Le Roi squelette** — Quatre. Quatre seigneurs, quatre contrats, et pas une seule
-> signature en commun.
+> *narrateur* — Au centre du monde demoniaque, le pentacle. Devant sa porte, une
+> silhouette que le mage connait.
 >
-> **Le Mage** — Donc aucun des quatre n a donne l ordre.
+> **Le Mage** — La Reine gorgone. Je l ai brisee dans le village de l enfant.
 >
-> **Le Roi squelette** — Aucun des quatre n a meme lu l ordre. Ils l ont **recu**.
+> **Le Roi squelette** — Ici, on recolle les statues. Elle garde la porte. Derriere,
+> Malyk ramasse ce qui a deja servi.
+>
+> **Le Roi squelette** — Celui qui porte les ordres aux seigneurs. Il mange ce qu il
+> appelle. Les seigneurs n ont jamais lu l ordre : ils l ont RECU de lui.
 >
 > **Le Rat pilote** — J ai deja vu ca. Un atelier ou personne n est le patron : ca
 > veut dire que le patron n habite pas l atelier.
 
-**Scene `lvl_18_outro`**
+**Scene `lvl_13_outro`** — LA DERNIERE REPLIQUE DU MAGE EST LE SEUL INDICE HONNETE
+du plot twist, posee sans commentaire comme « la gauche est fermee » a l acte 2 :
 
-> *narrateur* — Le pentacle qui tient le monde demoniaque se fend en cinq morceaux, et
-> le monde avec lui.
+> *narrateur* — Malyk tombe, et le pentacle qui tient le monde demoniaque se fend en
+> cinq morceaux. Le monde avec lui.
 >
-> **Le Mage** — Ce n est pas nous qui l avons casse.
->
-> **Le Roi squelette** — Non. On nous **retire**. Comme on retire une piece du plateau.
+> **Le Roi squelette** — Non. On nous RETIRE. Comme on retire une piece du plateau.
 >
 > **L Enfant** — Ne lachez pas ma main.
 >
@@ -488,10 +486,9 @@ trouve **quatre directeurs qui se detestent**.
 
 ## 7. ACTE 5 — L espace divin
 
-**Monstres : tout, melange. Les anciens boss redeviennent des monstres ordinaires.**
-`warden` et `chronos` apparaissent en vagues normales : ce qui etait un evenement
-devient de la vermine, et c est exactement le propos. **Fond : `act4_origin`.**
-3 niveaux.
+**Niveaux : `lvl_14`, `lvl_15`, `lvl_16`.** Fond de combat `act5_divine`. Les
+anciens boss redeviennent des monstres ordinaires : les Echos du Gardien et de
+Chronos descendent en vagues sans nom, et c est exactement le propos.
 
 Il n y a pas de sol. Il y a des **registres** : des dieux qui tiennent des comptes.
 
@@ -506,20 +503,18 @@ qui recule sur le plateau, c est la premiere chose distrayante depuis des eons. 
 laisse courir pour voir jusqu ou il irait. Toute la campagne est un **spectacle** qu on
 leur a offert.
 
-| Niveau (plan) | Lieu | Ambiance | Monstres | Id reel |
-|---|---|---|---|---|
-| `lvl_19` | La galerie des saisons | ce qui a deja ete efface, expose | melange acte 1 + 2, `warden` en vague normale, `sleepy_fox`, `blood_clot` ; mini-boss `season_chameleon`, boss `slime_colossal` | **`lvl_14`** |
-| `lvl_20` | Le registre | colonnes de noms, dont le sien | melange acte 3 + 4, `chronos` en vague normale, adeptes du trio, `mirror_shard` ; mini-boss `spell_clerk`, boss `clockmaker` | **`lvl_15`** |
-| `lvl_21` | Le siege vide | rien. Puis l enfant | adeptes du trio, `child_god`, boss final | **`lvl_16`** |
+| Niveau | Nom affiche | Tetes | Ce que disent les scenes |
+|---|---|---|---|
+| `lvl_14` | La galerie des saisons | mini-boss Cameleon des saisons ; boss Slime colossal | un musee de tout ce qui a deja ete efface, range par saison : « C est un Gardien. Il y en a deux autres derriere. » Les gardiens de la galerie tombent « sans bruit, comme des pieces qu on range ». L enfant ne parle plus depuis le pentacle |
+| `lvl_15` | Le registre | mini-boss le Greffier ; boss **l Horloger** | des colonnes de DATES : Nuri, Nox, Tombol, « meme encre, meme main ». Le rat savait. L Horloger tombe et le registre s ouvre sur la ligne du mage : la date raturee, et dans la marge, d une ecriture petite et soignee, « inattendu », souligne deux fois |
+| `lvl_16` | Le siege vide | boss **L Enfant** | le plot twist (ci-dessous), puis la fin du jeu |
 
-**Le propos de l acte est une regle mecanique**, pas une ambiance. Le Gardien de
-la foret descend par deux puis par trois dans des vagues SANS nom, Chronos deux
-fois, et la premiere vague du siege vide envoie deux Gardiens puis Chronos sans
-fanfare. Les anciens boss promus en vermine sont des `.tres` DERIVES (plus legers,
-mecanique simplifiee) : `blood_clot` (le Coagule), `mirror_shard` (le Miroir de
-Forge), `adept_frost` / `adept_ember` / `adept_arcane` (le trio des fosses). Le
-Gardien et Chronos, eux, descendent encore avec leur `.tres` de boss (anterieur au
-chantier W2).
+**Le propos de l acte est une regle mecanique**, pas une ambiance. Les Echos du
+Gardien descendent par deux puis par trois dans des vagues SANS nom, ceux de
+Chronos aussi, et la premiere vague du siege vide les envoie sans fanfare. Les
+anciens boss promus en vermine sont des `.tres` DERIVES (plus legers, mecanique
+simplifiee) : `warden_echo`, `chronos_echo`, `blood_clot` (le Coagule),
+`mirror_shard` (le Miroir de Forge), les adeptes du trio des fosses.
 
 **Les tetes de l acte 5** (chantier W2). La galerie et le registre n avaient ni
 mini-boss ni (pour le registre) boss, faute de catalogue. Ils en ont, et ce sont
@@ -529,69 +524,63 @@ en une), le Greffier (le commis qui rature une carte de la main) et l Horloger
 (celui qui remonte le temps, comme le mage l a fait). Le siege vide garde son
 tete-a-tete : aucune tete intermediaire.
 
-`lvl_16` ferme la campagne (`next_levels` vide). La finir ouvre le Massacre :
-`SaveData.campaign_cleared()` compte sur le total de `ContentDB.levels`, donc
-passer de 9 a 21 niveaux n a rien casse — la recompense demande la campagne
-entiere, ce qui est son sens, et ce que l ENDING raconte.
+`lvl_16` ferme la campagne (`next_levels` vide). Le Massacre s ouvre quand CHAQUE
+niveau de la campagne est fini (`SaveData.massacre_unlocked()` =
+`campaign_cleared()`, les deux branches de la fourche comprises, les quetes
+annexes non) : la recompense demande la campagne entiere, ce qui est son sens, et
+ce que la fin raconte.
 
-**La scene `ending` se joue en OUTRO de `lvl_16`**, et non comme une scene a part :
-`SceneRouter` ne connait que `intro_story` et `outro_story`, donc une scene
-`ending` autonome ne serait jamais appelee. Son decor est `talk_glade`, la
-clairiere du premier matin — la boucle se referme a l image en meme temps que
-dans le texte.
+### `lvl_16` — le plot twist
 
-### `lvl_21` — le plot twist
+**Scene `lvl_16_intro`** (`talk_shrine`). LE PORTRAIT BASCULE au milieu de la
+scene : l enfant parle avec le visage du gamin (`child`), puis le narrateur dit
+qu il arrete de faire semblant, et toutes ses repliques suivantes portent le
+masque d or (`child_god`).
 
-**Scene `lvl_21_intro`**
-
-> *narrateur* — Au bout du registre, un siege. Il est vide depuis toujours.
->
-> **Le Mage** — Ou est celui qui a signe ?
->
-> **L Enfant** — Il est la.
->
 > *narrateur* — L enfant lache la main du mage. Il ne grandit pas, il ne change pas de
 > forme. Il arrete simplement de faire semblant d avoir peur.
 >
-> **L Enfant** — Tu m as porte pendant cinq actes, mage. Merci. C etait tres long a
-> pied.
+> **L Enfant** — Tu m as porte jusqu ici, mage. Merci. C etait tres long a pied.
 >
 > **Le Mage** — ... Tu etais la depuis la premiere clairiere.
 >
 > **L Enfant** — J etais la depuis la date. C est moi qui l ai posee. Nuri le sixieme
 > jour, Nox la septieme nuit. C etait propre.
 >
-> **Le Roi squelette** — Le gamin. C est le gamin. J ai signe un contrat pour **un
-> gamin**.
+> **L Enfant** — Les statues du village, c etait moi. Les gorgones n ont fait que
+> signer en dessous.
 >
-> **L Enfant** — Et puis tu as recule, et pour la premiere fois depuis tres longtemps
-> je n ai pas su ce qui allait arriver. Tu ne peux pas savoir a quel point c etait bon.
+> **Le Roi squelette** — Le gamin. C est le gamin. J ai signe un contrat pour UN GAMIN.
 >
-> **Le Mage** — Tu m as laisse venir jusqu ici pour t amuser.
->
-> **L Enfant** — Je t ai laisse venir jusqu ici parce que **je voulais voir la fin**.
+> **L Enfant** — Je t ai laisse venir jusqu ici parce que je voulais voir la fin.
 > Fais-la belle.
+>
+> *narrateur* — Il s assoit sur le siege, et ce qui s en releve n a plus rien d un
+> enfant : une bete de cadrans, toute en or.
+>
+> **Le Mage** — La forme de Chronos. Ton huissier portait ta forme depuis le premier
+> matin.
+
+Le boss final a la silhouette de Chronos (`juggernaut`), teinte d or : la scene le
+dit, sinon le joueur croit affronter un Chronos de plus. « Il ne change pas de
+forme » reste vrai au moment ou le masque tombe ; c est en se relevant du siege,
+pour le combat, qu il la prend.
 
 ---
 
-## 8. ENDING — La boucle
+## 8. LA FIN — La boucle
 
-**Scene `ending`. Fond : `act4_origin`.**
+**Elle se joue en OUTRO de `lvl_16`** (`talk_glade`), et non comme une scene a
+part : `SceneRouter` ne connait que `intro_story` et `outro_story`. Son decor est la
+clairiere du premier matin — la boucle se referme a l image en meme temps que dans
+le texte.
 
 Le mage gagne. Ce n est pas prevu, et ca ne change rien — un dieu vaincu ne meurt pas,
-il **arbitre**. Avant de s eteindre, l enfant rend son verdict : puisque le mage aime
-tant reculer dans le temps, il y restera.
+il **arbitre** : puisque le mage aime tant reculer dans le temps, il y restera. Le rat
+et le roi restent avec lui. C est le **Massacre** — diegetiquement, le jeu apres le
+jeu.
 
-Le mage est scelle dans une boucle temporelle : la meme bataille, toujours, sans date
-de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le jeu.
-
-### Dialogue (scene `ending`)
-
-> **L Enfant** — Bien joue. Vraiment.
->
-> **Le Mage** — Rends-moi Nuri. Rends-moi Nox.
->
-> **L Enfant** — Je ne rends rien, je **place**. Et toi, je te place ici.
+> **L Enfant** — Je ne rends rien, je PLACE. Et toi, je te place ici.
 >
 > *narrateur* — Le registre se referme sur une seule page, qui recommence.
 >
@@ -601,7 +590,19 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
 >
 > **L Enfant** — C est cense etre un cadeau. Tu verras a la millieme vague.
 >
-> *narrateur* — MODE INFINI DEBLOQUE.
+> **Le Rat pilote** — Moi je repare. Meme une boucle, ca se repare.
+>
+> **Le Roi squelette** — Je reste. Plus de royaume, autant avoir une boucle.
+>
+> *narrateur* — Une clairiere, au petit matin. La meme odeur de mousse, la meme
+> lumiere entre les branches.
+>
+> *narrateur* — LE MASSACRE, la boucle sans fin, s ouvre quand chaque niveau de la
+> campagne est fini.
+
+(L ancienne derniere ligne, « MODE INFINI DEBLOQUE », annoncait un mode retire a
+la vague 10 : le mode par niveau s appelle LIBRE et il a une fin ; le seul sans fin
+est le Massacre.)
 
 ---
 
@@ -610,22 +611,23 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
 | Acte | Sensation visee | Traduction mecanique |
 |---|---|---|
 | Prologue | on a deja perdu une fois | aucun combat, texte seul |
-| 1 — Nuri | apprendre, puis douter | vagues lentes, puis le corniste qui donne la cadence |
+| 1 — Nuri | apprendre, puis douter | vagues lentes ; le village petrifie et les gorgones qui figent la main ; le corniste qui donne la cadence |
 | 2 — Sky Lands | on monte, l air est mince | volants, plates-formes, premiers passifs |
-| 3 — Tombol | poursuivre quelqu un | arrieres-gardes, murs d os, on arrive toujours apres |
+| 3 — Tombol | poursuivre quelqu un | arrieres-gardes, une fourche, on arrive toujours apres |
 | 4 — Demons | choisir son epreuve | 4 niveaux ouverts, 4 styles opposes |
 | 5 — Divin | tout revient, plus rien n impressionne | anciens boss en vagues normales |
-| Ending | ca ne finit pas | deblocage du Massacre |
+| Fin | ca ne finit pas | le Massacre |
 
 ---
 
 ## 10. Notes d implementation
 
-- **Aucun nouveau type de monstre.** Les 21 existants portent les 5 actes : la
-  narration re-contextualise (le Gardien devient un conscrit retourne, Chronos devient
-  de la vermine a l acte 5).
-- **Etat actuel du code** : **les 21 niveaux existent**, et les cinq actes sont
-  livres. La campagne va du prologue au siege vide, et la finir ouvre le Massacre.
+- **Les monstres** : le catalogue compte 86 `EnemyDef` (voir la memoire
+  `catalog_enemies.md`). La narration re-contextualise les anciens (le Gardien devient
+  un conscrit retourne, Chronos devient de la vermine a l acte 5).
+- **Etat actuel du code** : **les 21 niveaux existent**, les cinq actes sont livres
+  et chacun de leurs niveaux est encadre de scenes. La campagne va du prologue au
+  siege vide, et la finir en entier ouvre le Massacre.
 
 - **LES IDENTIFIANTS NE SUIVENT PAS L ORDRE DE JEU, ET C EST VOULU.** Le chantier N a
   choisi de ne PAS renumeroter la campagne : les identifiants `lvl_01`..`lvl_07` sont
@@ -688,16 +690,24 @@ de fin. C est le **mode infini** (Massacre) — diegetiquement, le jeu apres le 
   l Horloger (laiton) contre le Colosse des Forges. `tests/unit/test_bestiaire_w2.gd`
   verrouille le placement, la chaine de PV des boss qui se divisent et le trio.
 
-- Les scenes generees couvrent le prologue et l acte 1 entier. Attention : la route du
-  maire et le dirigeable sont les scenes `lvl_08_*` et `lvl_09_*`, pas `lvl_03_*` /
-  `lvl_04_*` — ces dernieres ont ete supprimees, elles faisaient parler le maire du
-  dirigeable devant l ossuaire de l acte 2.
+- **Les scenes generees couvrent le prologue et les 21 niveaux** (43 scenes). Les
+  scenes `lvl_03_*` / `lvl_04_*` racontent l ossuaire et le Grand Appel (acte 2) ;
+  la route du maire et le dirigeable sont `lvl_08_*` et `lvl_09_*`.
 - Les scenes de visual novel sont des `DialogueDef` dans `resources/story/`, generees
-  par `tools/make_story.gd`. Un niveau les nomme par `intro_story` / `outro_story`.
+  par `tools/make_story.gd` (`Godot --headless --path . tools/make_story.tscn`). Un
+  niveau les nomme par `intro_story` / `outro_story`, dans `tools/make_content.gd`.
 - `SceneRouter` seul sait qu une scene s intercale : ni le menu, ni `GameController`,
   ni l ecran de victoire n en savent rien.
 - Les scenes sont **coupees en headless** (`SceneRouter.stories_enabled`) : le smoke et
   le banc d equilibrage appellent `start_level()` en boucle et n ont pas de doigt pour
   faire defiler un dialogue.
-- Seule l **Exploration** raconte l histoire. Le Massacre est, diegetiquement, ce qui
-  vient apres la derniere scene : il n a pas de dialogue.
+- Seule la **Campagne** raconte l histoire. Le LIBRE rejoue un niveau deja raconte ;
+  le Massacre est, diegetiquement, ce qui vient apres la derniere scene.
+- Ce que le joueur lit d un niveau en dehors des scenes : le nom (`display_name`) et le
+  sous-titre (`subtitle`) sur la carte, et `intro_text` au briefing. `outro_text`
+  n est affiche NULLE PART (et raconte souvent l ancienne histoire : renvoye a B2,
+  `docs/revue_vague10.md` §2.7).
+- `tests/unit/test_story.gd` garde : scene citee -> scene sur le disque ; scene sur le
+  disque -> citee par un niveau ; chaque niveau de campagne encadre ; le narrateur ne
+  nomme que des monstres des vagues du niveau ; pas d accent dans les scenes ni dans
+  les textes du niveau ; chaque personnage a un visage.

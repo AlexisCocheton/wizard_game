@@ -10,7 +10,7 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Le Gardien s effondre en un tas de bois mort. Dans sa poitrine ouverte, plantee la comme une echarde, une plaque de metal noir que personne n a taillee ici."
+"text": "Le Gardien s effondre. Son armure s ouvre comme une ecorce : dedans, du bois mort, et plantee comme une echarde, une plaque de metal noir."
 }, {
 "portrait": &"guardian",
 "side": "right",
