@@ -100,6 +100,7 @@ terrain_break_interval = 0.0
 terrain_break_reach = 520.0
 terrain_break_windup = 1.5
 demoted_from = &""
+gilded_from = &""
 
 [resource]
 script = ExtResource("1_4dt0t")
@@ -201,3 +202,4 @@ terrain_break_interval = 0.0
 terrain_break_reach = 520.0
 terrain_break_windup = 1.5
 demoted_from = &""
+gilded_from = &""

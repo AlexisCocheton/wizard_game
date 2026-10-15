@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_33csu"]
+[ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="2_jccj4"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="3_shjwg"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="4_uxl4k"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="5_gcwic"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_s7why"]
+
+[sub_resource type="Resource" id="Resource_3m3pk"]
+script = ExtResource("1_33csu")
+enemy = ExtResource("2_jccj4")
+count = 2
+spawn_delay = 4.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_couag"]
+script = ExtResource("1_33csu")
+enemy = ExtResource("3_shjwg")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_hjubv"]
+script = ExtResource("1_33csu")
+enemy = ExtResource("4_uxl4k")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_sln2c"]
+script = ExtResource("1_33csu")
+enemy = ExtResource("5_gcwic")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[resource]
+script = ExtResource("6_s7why")
+id = &"side_a5_vitrine_2"
+duration = 29.0
+entries = Array[ExtResource("1_33csu")]([SubResource("Resource_3m3pk"), SubResource("Resource_couag"), SubResource("Resource_hjubv"), SubResource("Resource_sln2c")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_aqtui"]
+
+[resource]
+script = ExtResource("1_aqtui")
+id = &"side_squire_intro"
+scene_background = "talk_path"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Une fleche se plante dans le quai, a un pas du mage. Elle vient d en haut, du toit d un entrepot."
+}, {
+"portrait": &"",
+"side": "right",
+"speaker": "L ecuyer",
+"text": "Restez ou vous etes ! Ce qui descend du ciel, je le descends."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Je ne descends pas du ciel. Pas aujourd hui."
+}, {
+"portrait": &"",
+"side": "right",
+"speaker": "L ecuyer",
+"text": "Alors baissez-vous. Celui d en face ne fait pas la difference. Et lui, il est en or."
+}, {
+"portrait": &"rat",
+"side": "right",
+"speaker": "Le Rat pilote",
+"text": "Un garde du port. Je croyais qu ils etaient tous partis par le haut."
+}])

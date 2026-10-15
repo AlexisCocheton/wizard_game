@@ -103,3 +103,4 @@ terrain_break_interval = 7.0
 terrain_break_reach = 560.0
 terrain_break_windup = 1.8
 demoted_from = &""
+gilded_from = &""

@@ -723,3 +723,28 @@ func contact_hit() -> int:
 	if kind == GameEnums.EnemyKind.MINIBOSS:
 		return GameConfig.CONTACT_DAMAGE_MINIBOSS
 	return int(GameConfig.CONTACT_DAMAGE_BY_POWER.get(power, 5))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B3 — LES BOSS DORES DES QUETES ANNEXES.
+# Section a part : le chantier des monstres (B2) ajoute ses champs plus haut.
+# =====================================================================
+
+@export_group("Boss dores")
+## BOSS DORE — l id du monstre de BASE dont ce boss est la version RENFORCEE :
+## plus de PV, une mecanique existante en plus ou plus forte, une teinte doree.
+## Chaque quete annexe en ferme un (tools/make_side_quests.gd). Vide = monstre
+## d origine.
+##
+## POURQUOI UN CHAMP et pas une convention d id (`<base>_gold`) : la meme raison
+## que `demoted_from` (DEC-025), dont c est le pendant exact. La teinte
+## (AnimCatalog.modulate_for), la fiche du bestiaire (BestiaryLore.gilded_lines)
+## et test_side_quests (plus fort que sa base, jamais sur une feuille interdite
+## de teinte) LISENT la filiation ; une convention se casserait au premier
+## renommage sans que rien ne rougisse.
+@export var gilded_from: StringName = &""
+
+
+## Ce monstre est-il un boss dore (version renforcee d un monstre de base) ?
+func is_gilded() -> bool:
+	return gilded_from != &""

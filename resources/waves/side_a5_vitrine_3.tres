@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_o5vus"]
+[ext_resource type="Resource" path="res://resources/enemies/blood_clot.tres" id="2_y0wg8"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_vq3kl"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="4_rmv53"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="5_pcu7x"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="6_tnpgh"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_6uhuh"]
+
+[sub_resource type="Resource" id="Resource_6lxbx"]
+script = ExtResource("1_o5vus")
+enemy = ExtResource("2_y0wg8")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ybivd"]
+script = ExtResource("1_o5vus")
+enemy = ExtResource("3_vq3kl")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_i27h7"]
+script = ExtResource("1_o5vus")
+enemy = ExtResource("4_rmv53")
+count = 1
+spawn_delay = 1.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_4qevr"]
+script = ExtResource("1_o5vus")
+enemy = ExtResource("5_pcu7x")
+count = 2
+spawn_delay = 1.5
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_gbk8y"]
+script = ExtResource("1_o5vus")
+enemy = ExtResource("6_tnpgh")
+count = 2
+spawn_delay = 3.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("7_6uhuh")
+id = &"side_a5_vitrine_3"
+duration = 30.0
+entries = Array[ExtResource("1_o5vus")]([SubResource("Resource_6lxbx"), SubResource("Resource_ybivd"), SubResource("Resource_i27h7"), SubResource("Resource_4qevr"), SubResource("Resource_gbk8y")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

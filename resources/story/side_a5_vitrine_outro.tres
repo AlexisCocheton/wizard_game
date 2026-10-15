@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_bboxx"]
+
+[resource]
+script = ExtResource("1_bboxx")
+id = &"side_a5_vitrine_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "La Gorgone doree se brise sur son socle. Dessous, une plaque gravee : NURI, SIXIEME JOUR. STATUES DU VILLAGE : FAITES."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Faites. Pas a faire. On a coche la case avant que ca arrive."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Les gens du village n ont pas ete figes par des gorgones de passage. C etait prevu, comme le reste."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L enfant regarde la plaque un long moment. Il ne dit rien, et il reprend la marche le premier."
+}])

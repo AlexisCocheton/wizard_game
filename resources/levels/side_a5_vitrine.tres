@@ -1,0 +1,342 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=51 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_58j05"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_iusff"]
+[ext_resource type="Resource" path="res://resources/cards/common/chain_break.tres" id="3_4vbkp"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="4_5mnaa"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_bdjac"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="6_biy17"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="7_hwtkc"]
+[ext_resource type="Resource" path="res://resources/enemies/sleepy_fox.tres" id="8_lgul1"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="9_l4cnk"]
+[ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="10_l7apq"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="11_4ap2n"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="12_71dax"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="13_37nfl"]
+[ext_resource type="Resource" path="res://resources/enemies/blood_clot.tres" id="14_gn2ux"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="15_pimcn"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="16_mmlv5"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="17_0lldv"]
+[ext_resource type="Resource" path="res://resources/cards/rare/terrain_brambles.tres" id="18_lo02g"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="19_atgng"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="20_gfgtj"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_di15f"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_5oo3t"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_fuixh"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_c4ksi"]
+
+[sub_resource type="Resource" id="Resource_60ohm"]
+script = ExtResource("21_di15f")
+id = &"obj_kill_type_one_cast_3_gnome"
+description = "Gnome : en tuer 3 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 3,
+"enemy": "gnome"
+}
+
+[sub_resource type="Resource" id="Resource_bgwfu"]
+script = ExtResource("21_di15f")
+id = &"obj_no_hit_from_gorgon_gazer_gold"
+description = "Gorgone doree : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "gorgon_gazer_gold"
+}
+
+[sub_resource type="Resource" id="Resource_vo2kc"]
+script = ExtResource("21_di15f")
+id = &"obj_win_above_speed_300"
+description = "Gagner avec plus de 300 % de vitesse"
+check_key = &"win_above_speed"
+params = {
+"pct": 300
+}
+
+[sub_resource type="Resource" id="Resource_lvayu"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("6_biy17")
+count = 5
+spawn_delay = 1.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_om6ek"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("7_hwtkc")
+count = 4
+spawn_delay = 1.4
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_c75vf"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("8_lgul1")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_33mv1"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("9_l4cnk")
+count = 2
+spawn_delay = 1.5
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_p3cva"]
+script = ExtResource("23_fuixh")
+id = &"side_a5_vitrine_1"
+duration = 27.0
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_lvayu"), SubResource("Resource_om6ek"), SubResource("Resource_c75vf"), SubResource("Resource_33mv1")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_3m3pk"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("10_l7apq")
+count = 2
+spawn_delay = 4.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_couag"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("11_4ap2n")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_hjubv"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("12_71dax")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_sln2c"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("13_37nfl")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_wrhvf"]
+script = ExtResource("23_fuixh")
+id = &"side_a5_vitrine_2"
+duration = 29.0
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_3m3pk"), SubResource("Resource_couag"), SubResource("Resource_hjubv"), SubResource("Resource_sln2c")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_6lxbx"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("14_gn2ux")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ybivd"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("15_pimcn")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_i27h7"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("11_4ap2n")
+count = 1
+spawn_delay = 1.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_4qevr"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("16_mmlv5")
+count = 2
+spawn_delay = 1.5
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_gbk8y"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("17_0lldv")
+count = 2
+spawn_delay = 3.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_ngqxh"]
+script = ExtResource("23_fuixh")
+id = &"side_a5_vitrine_3"
+duration = 30.0
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_6lxbx"), SubResource("Resource_ybivd"), SubResource("Resource_i27h7"), SubResource("Resource_4qevr"), SubResource("Resource_gbk8y")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_doenj"]
+script = ExtResource("5_bdjac")
+id = &"gorgon_gazer_gold"
+display_name = "Gorgone doree"
+kind = 8
+power = 10
+max_hp = 169.0
+base_speed = 32.0
+base_xp = 30
+contact_damage = 0
+anim_key = &"gorgon"
+sprite_scale = 1.0
+shape = 3
+color = Color(0.95, 0.78, 0.25, 1)
+base_radius = 63.0
+resistances = {
+2: 1.5,
+3: 0.75,
+6: 0.75,
+9: 1.25,
+10: 1.75
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+blocks_cards = 2
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+extra_lives = 0
+extra_life_hp_pct = 100.0
+extra_life_speed_pct = 35.0
+rebirth_count = 0
+rebirth_delay = 3.0
+reanimate_radius = 0.0
+reanimate_interval = 4.0
+reanimate_max = 0
+laser_damage = 0
+laser_cooldown = 1.5
+sleep_interval = 0.0
+sleep_duration = 2.0
+move_pattern = 0
+pattern_lateral_speed = 0.0
+pattern_width = 240.0
+pattern_interval = 1.5
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 3
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0
+rewind_interval = 0.0
+rewind_seconds = 3.0
+rewind_max = 0
+twin_group = &""
+twin_revive_delay = 4.0
+twin_revive_hp_pct = 60.0
+twin_max_returns = 2
+chameleon_interval = 0.0
+chameleon_elements = Array[int]([])
+chameleon_weak_mult = 1.5
+chameleon_resist_mult = 0.5
+steal_interval = 0.0
+steal_cast_delay = 4.0
+steal_damage_per_cast_second = 6.0
+devour_heal_pct = 0.0
+devour_delay = 3.0
+mirror_speed_ref = 0
+mirror_speed_min = 0.5
+mirror_speed_max = 2.0
+terrain_break_interval = 0.0
+terrain_break_reach = 520.0
+terrain_break_windup = 1.5
+demoted_from = &""
+gilded_from = &"gorgon_gazer"
+
+[sub_resource type="Resource" id="Resource_so3r4"]
+script = ExtResource("24_c4ksi")
+enemy = SubResource("Resource_doenj")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_oga8d"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("6_biy17")
+count = 4
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_r7uhj"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("9_l4cnk")
+count = 3
+spawn_delay = 2.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_jofvr"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("8_lgul1")
+count = 1
+spawn_delay = 1.0
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_s5w1y"]
+script = ExtResource("24_c4ksi")
+enemy = ExtResource("7_hwtkc")
+count = 4
+spawn_delay = 1.5
+start_offset = 30.0
+
+[sub_resource type="Resource" id="Resource_cf2kb"]
+script = ExtResource("23_fuixh")
+id = &"side_a5_vitrine_boss"
+duration = 48.0
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_so3r4"), SubResource("Resource_oga8d"), SubResource("Resource_r7uhj"), SubResource("Resource_jofvr"), SubResource("Resource_s5w1y")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("22_5oo3t")
+id = &"side_a5_vitrine"
+display_name = "La vitrine de Nuri"
+act = 5
+subtitle = "Une aile de la galerie porte le nom de ton ile"
+intro_text = "Dans la galerie des saisons, une aile entiere porte le nom de Nuri. Au centre, sous verre, une gorgone d or se reveille quand on approche : son regard fige deux de tes sorts tant qu elle vit, et la pierre encaisse ses premiers coups."
+outro_text = ""
+intro_story = &"side_a5_vitrine_intro"
+outro_story = &"side_a5_vitrine_outro"
+terrain = "grass"
+backdrop = "act5_divine"
+waves = Array[ExtResource("23_fuixh")]([SubResource("Resource_p3cva"), SubResource("Resource_wrhvf"), SubResource("Resource_ngqxh"), SubResource("Resource_cf2kb")])
+enemy_pool = Array[ExtResource("5_bdjac")]([ExtResource("6_biy17"), ExtResource("7_hwtkc"), ExtResource("8_lgul1"), ExtResource("9_l4cnk"), ExtResource("10_l7apq"), ExtResource("11_4ap2n"), ExtResource("12_71dax"), ExtResource("13_37nfl"), ExtResource("14_gn2ux"), ExtResource("15_pimcn"), ExtResource("16_mmlv5"), ExtResource("17_0lldv")])
+exploration_deck = Array[ExtResource("1_58j05")]([])
+objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_60ohm"), SubResource("Resource_bgwfu"), SubResource("Resource_vo2kc")])
+levelup_cards = Array[ExtResource("1_58j05")]([])
+objective_rewards = Array[ExtResource("1_58j05")]([ExtResource("18_lo02g"), ExtResource("19_atgng"), ExtResource("20_gfgtj")])
+next_levels = Array[StringName]([])
+base_commons = Array[ExtResource("1_58j05")]([ExtResource("2_iusff"), ExtResource("3_4vbkp"), ExtResource("4_5mnaa")])
+passive_unlocks = Array[ExtResource("1_58j05")]([])
+side_quest = true
+side_quest_after = &"lvl_14"
+side_quest_character = ""

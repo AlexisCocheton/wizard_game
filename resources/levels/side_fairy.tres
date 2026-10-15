@@ -1,0 +1,318 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=43 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_bq3hy"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="2_irc0y"]
+[ext_resource type="Resource" path="res://resources/cards/common/ember_pool.tres" id="3_ycyp6"]
+[ext_resource type="Resource" path="res://resources/cards/common/meteor.tres" id="4_t3ncq"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_f6dxf"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="6_h7dmw"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="7_k5idq"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="8_5ux3c"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="9_eku1o"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="10_bd7r7"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="11_50kjp"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="12_4ugdg"]
+[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="13_vy50h"]
+[ext_resource type="Resource" path="res://resources/cards/epic/arcane_insight.tres" id="14_jsci0"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="15_twp52"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="16_3d2xi"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_hydls"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_7cq12"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_luq6e"]
+
+[sub_resource type="Resource" id="Resource_ixsp1"]
+script = ExtResource("16_3d2xi")
+id = &"obj_kill_type_one_cast_2_pit_ghoul"
+description = "Goule des fosses : en tuer 2 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 2,
+"enemy": "pit_ghoul"
+}
+
+[sub_resource type="Resource" id="Resource_qycmg"]
+script = ExtResource("16_3d2xi")
+id = &"obj_kill_type_one_cast_2_mushroom"
+description = "Champignon cuirasse : en tuer 2 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 2,
+"enemy": "mushroom"
+}
+
+[sub_resource type="Resource" id="Resource_di712"]
+script = ExtResource("16_3d2xi")
+id = &"obj_no_hit_from_mushroom_gold"
+description = "Champignon dore : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "mushroom_gold"
+}
+
+[sub_resource type="Resource" id="Resource_ghdww"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 2
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_071hu"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("7_k5idq")
+count = 2
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_t62nw"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 1
+spawn_delay = 1.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_c4eug"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_1"
+duration = 26.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_ghdww"), SubResource("Resource_071hu"), SubResource("Resource_t62nw")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_4g5ww"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_d4oa0"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("9_eku1o")
+count = 1
+spawn_delay = 1.0
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_lu5j1"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("10_bd7r7")
+count = 2
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_77ci5"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_y2qui"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_2"
+duration = 27.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_4g5ww"), SubResource("Resource_d4oa0"), SubResource("Resource_lu5j1"), SubResource("Resource_77ci5")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_0feda"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("11_50kjp")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_sjhbl"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 2
+spawn_delay = 3.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_avqke"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 2
+spawn_delay = 2.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_in586"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("12_4ugdg")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_wp6rd"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_3"
+duration = 28.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_0feda"), SubResource("Resource_sjhbl"), SubResource("Resource_avqke"), SubResource("Resource_in586")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_vnxbu"]
+script = ExtResource("5_f6dxf")
+id = &"mushroom_gold"
+display_name = "Champignon dore"
+kind = 8
+power = 10
+max_hp = 170.0
+base_speed = 30.0
+base_xp = 30
+contact_damage = 0
+anim_key = &"mushroom"
+sprite_scale = 1.0
+shape = 1
+color = Color(0.95, 0.78, 0.25, 1)
+base_radius = 56.0
+resistances = {
+1: 2.0,
+6: 0.75,
+8: 0.5,
+9: 0.75,
+10: 0.5
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_into = ExtResource("8_5ux3c")
+split_count = 2
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+blocks_cards = 0
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+extra_lives = 0
+extra_life_hp_pct = 100.0
+extra_life_speed_pct = 35.0
+rebirth_count = 0
+rebirth_delay = 3.0
+reanimate_radius = 0.0
+reanimate_interval = 4.0
+reanimate_max = 0
+laser_damage = 0
+laser_cooldown = 1.5
+sleep_interval = 0.0
+sleep_duration = 2.0
+move_pattern = 0
+pattern_lateral_speed = 0.0
+pattern_width = 240.0
+pattern_interval = 1.5
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0
+rewind_interval = 0.0
+rewind_seconds = 3.0
+rewind_max = 0
+twin_group = &""
+twin_revive_delay = 4.0
+twin_revive_hp_pct = 60.0
+twin_max_returns = 2
+chameleon_interval = 0.0
+chameleon_elements = Array[int]([])
+chameleon_weak_mult = 1.5
+chameleon_resist_mult = 0.5
+steal_interval = 0.0
+steal_cast_delay = 4.0
+steal_damage_per_cast_second = 6.0
+devour_heal_pct = 0.0
+devour_delay = 3.0
+mirror_speed_ref = 0
+mirror_speed_min = 0.5
+mirror_speed_max = 2.0
+terrain_break_interval = 0.0
+terrain_break_reach = 520.0
+terrain_break_windup = 1.5
+demoted_from = &""
+gilded_from = &"mushroom"
+
+[sub_resource type="Resource" id="Resource_mu7hn"]
+script = ExtResource("19_luq6e")
+enemy = SubResource("Resource_vnxbu")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ivmxr"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 2
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_w4luy"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("7_k5idq")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_twu40"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 1
+spawn_delay = 1.0
+start_offset = 28.0
+
+[sub_resource type="Resource" id="Resource_vju06"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_boss"
+duration = 46.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_mu7hn"), SubResource("Resource_ivmxr"), SubResource("Resource_w4luy"), SubResource("Resource_twu40")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("17_hydls")
+id = &"side_fairy"
+display_name = "La fee des fosses"
+act = 3
+subtitle = "Elle ne se pose jamais"
+intro_text = "Au-dessus de l eau trouble des fosses basses, une fee voltige sans jamais se poser. Sous elle, un champignon d or pousse sur les tombes noyees, et il se fend en deux quand on l abat. Le feu le ronge mieux que tout."
+outro_text = ""
+intro_story = &"side_fairy_intro"
+outro_story = &"side_fairy_outro"
+terrain = "grass"
+backdrop = "act2_graveyard"
+waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_c4eug"), SubResource("Resource_y2qui"), SubResource("Resource_wp6rd"), SubResource("Resource_vju06")])
+enemy_pool = Array[ExtResource("5_f6dxf")]([ExtResource("6_h7dmw"), ExtResource("7_k5idq"), ExtResource("8_5ux3c"), ExtResource("9_eku1o"), ExtResource("10_bd7r7"), ExtResource("11_50kjp"), ExtResource("12_4ugdg")])
+exploration_deck = Array[ExtResource("1_bq3hy")]([])
+objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_ixsp1"), SubResource("Resource_qycmg"), SubResource("Resource_di712")])
+levelup_cards = Array[ExtResource("1_bq3hy")]([])
+objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("13_vy50h"), ExtResource("14_jsci0"), ExtResource("15_twp52")])
+next_levels = Array[StringName]([])
+base_commons = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("3_ycyp6"), ExtResource("4_t3ncq")])
+passive_unlocks = Array[ExtResource("1_bq3hy")]([])
+side_quest = true
+side_quest_after = &"lvl_19"
+side_quest_character = "fairy"

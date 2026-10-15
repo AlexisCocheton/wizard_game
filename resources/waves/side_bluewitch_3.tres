@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_467wk"]
+[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="2_3714c"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="3_1g3ba"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="4_rr0cg"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_x3osq"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_kq0j8"]
+
+[sub_resource type="Resource" id="Resource_gk4fl"]
+script = ExtResource("1_467wk")
+enemy = ExtResource("2_3714c")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_qau4u"]
+script = ExtResource("1_467wk")
+enemy = ExtResource("3_1g3ba")
+count = 2
+spawn_delay = 3.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_4h5al"]
+script = ExtResource("1_467wk")
+enemy = ExtResource("4_rr0cg")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_bj5bc"]
+script = ExtResource("1_467wk")
+enemy = ExtResource("5_x3osq")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[resource]
+script = ExtResource("6_kq0j8")
+id = &"side_bluewitch_3"
+duration = 30.0
+entries = Array[ExtResource("1_467wk")]([SubResource("Resource_gk4fl"), SubResource("Resource_qau4u"), SubResource("Resource_4h5al"), SubResource("Resource_bj5bc")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false

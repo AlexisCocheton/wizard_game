@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5mgpf"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_ccdum"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="3_24x51"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_i2xax"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="5_882x8"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_0fdtl"]
+
+[sub_resource type="Resource" id="Resource_rq1rr"]
+script = ExtResource("1_5mgpf")
+enemy = ExtResource("2_ccdum")
+count = 5
+spawn_delay = 1.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8ctmf"]
+script = ExtResource("1_5mgpf")
+enemy = ExtResource("3_24x51")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_fuk7t"]
+script = ExtResource("1_5mgpf")
+enemy = ExtResource("4_i2xax")
+count = 2
+spawn_delay = 3.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_yu7jh"]
+script = ExtResource("1_5mgpf")
+enemy = ExtResource("5_882x8")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[resource]
+script = ExtResource("6_0fdtl")
+id = &"side_a1_mesure_2"
+duration = 28.0
+entries = Array[ExtResource("1_5mgpf")]([SubResource("Resource_rq1rr"), SubResource("Resource_8ctmf"), SubResource("Resource_fuk7t"), SubResource("Resource_yu7jh")])
+difficulty = 1.25
+is_miniboss = false
+is_boss = false

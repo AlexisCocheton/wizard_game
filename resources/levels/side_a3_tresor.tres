@@ -1,0 +1,316 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=43 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_anhro"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="2_lhfsq"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="3_33vns"]
+[ext_resource type="Resource" path="res://resources/cards/common/meteor.tres" id="4_0fbur"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_5px1n"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="6_5isd3"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="7_0s1a0"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="8_im5b0"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="9_81hr5"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="10_vsf5t"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="11_x6i4y"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="12_x4xa4"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="13_x0j4e"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deep_freeze.tres" id="14_7ooiq"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/forge_dial.tres" id="15_oxi2r"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="16_7b8w6"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_daq0t"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_ww2vv"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_no8sg"]
+
+[sub_resource type="Resource" id="Resource_ixsp1"]
+script = ExtResource("16_7b8w6")
+id = &"obj_kill_type_one_cast_2_pit_ghoul"
+description = "Goule des fosses : en tuer 2 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 2,
+"enemy": "pit_ghoul"
+}
+
+[sub_resource type="Resource" id="Resource_4hx7v"]
+script = ExtResource("16_7b8w6")
+id = &"obj_never_hit_reflect"
+description = "Ne jamais frapper un monstre en garde de renvoi"
+check_key = &"never_hit_reflect"
+params = {}
+
+[sub_resource type="Resource" id="Resource_adc0b"]
+script = ExtResource("16_7b8w6")
+id = &"obj_no_hit_from_parry_skeleton_gold"
+description = "Squelette pareur dore : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "parry_skeleton_gold"
+}
+
+[sub_resource type="Resource" id="Resource_4rd3y"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("6_5isd3")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_3gj7d"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("7_0s1a0")
+count = 2
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_id34q"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("8_im5b0")
+count = 2
+spawn_delay = 2.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_g6x2h"]
+script = ExtResource("18_ww2vv")
+id = &"side_a3_tresor_1"
+duration = 26.0
+entries = Array[ExtResource("19_no8sg")]([SubResource("Resource_4rd3y"), SubResource("Resource_3gj7d"), SubResource("Resource_id34q")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_b30fl"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("9_81hr5")
+count = 2
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_3d6qv"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("10_vsf5t")
+count = 1
+spawn_delay = 1.0
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_d6cud"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("7_0s1a0")
+count = 2
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_33xip"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("6_5isd3")
+count = 2
+spawn_delay = 3.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_eimfk"]
+script = ExtResource("18_ww2vv")
+id = &"side_a3_tresor_2"
+duration = 28.0
+entries = Array[ExtResource("19_no8sg")]([SubResource("Resource_b30fl"), SubResource("Resource_3d6qv"), SubResource("Resource_d6cud"), SubResource("Resource_33xip")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_k8ct3"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("11_x6i4y")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_vtcjg"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("12_x4xa4")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_tpom7"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("6_5isd3")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_ix3g4"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("7_0s1a0")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_ijgdn"]
+script = ExtResource("18_ww2vv")
+id = &"side_a3_tresor_3"
+duration = 29.0
+entries = Array[ExtResource("19_no8sg")]([SubResource("Resource_k8ct3"), SubResource("Resource_vtcjg"), SubResource("Resource_tpom7"), SubResource("Resource_ix3g4")])
+difficulty = 1.55
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_5loco"]
+script = ExtResource("5_5px1n")
+id = &"parry_skeleton_gold"
+display_name = "Squelette pareur dore"
+kind = 8
+power = 10
+max_hp = 171.0
+base_speed = 40.0
+base_xp = 30
+contact_damage = 0
+anim_key = &"skeleton2"
+sprite_scale = 1.0
+shape = 0
+color = Color(0.95, 0.78, 0.25, 1)
+base_radius = 59.0
+resistances = {
+1: 1.75,
+2: 0.5,
+3: 1.5,
+6: 0.5,
+8: 0.5,
+9: 1.25,
+10: 1.5
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = true
+heal_per_second = 0.0
+shoot_interval = 0.0
+shot_damage = 2
+blocks_cards = 0
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+extra_lives = 0
+extra_life_hp_pct = 100.0
+extra_life_speed_pct = 35.0
+rebirth_count = 0
+rebirth_delay = 3.0
+reanimate_radius = 0.0
+reanimate_interval = 4.0
+reanimate_max = 0
+laser_damage = 0
+laser_cooldown = 1.5
+sleep_interval = 0.0
+sleep_duration = 2.0
+move_pattern = 0
+pattern_lateral_speed = 0.0
+pattern_width = 240.0
+pattern_interval = 1.5
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 0.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 6.0
+reflect_window = 1.6
+reflect_pct = 50.0
+rewind_interval = 0.0
+rewind_seconds = 3.0
+rewind_max = 0
+twin_group = &""
+twin_revive_delay = 4.0
+twin_revive_hp_pct = 60.0
+twin_max_returns = 2
+chameleon_interval = 0.0
+chameleon_elements = Array[int]([])
+chameleon_weak_mult = 1.5
+chameleon_resist_mult = 0.5
+steal_interval = 0.0
+steal_cast_delay = 4.0
+steal_damage_per_cast_second = 6.0
+devour_heal_pct = 0.0
+devour_delay = 3.0
+mirror_speed_ref = 0
+mirror_speed_min = 0.5
+mirror_speed_max = 2.0
+terrain_break_interval = 0.0
+terrain_break_reach = 520.0
+terrain_break_windup = 1.5
+demoted_from = &""
+gilded_from = &"parry_skeleton"
+
+[sub_resource type="Resource" id="Resource_2vj08"]
+script = ExtResource("19_no8sg")
+enemy = SubResource("Resource_5loco")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_k5fyl"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("7_0s1a0")
+count = 2
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_1ycd4"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("6_5isd3")
+count = 2
+spawn_delay = 3.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_ujpk8"]
+script = ExtResource("19_no8sg")
+enemy = ExtResource("8_im5b0")
+count = 3
+spawn_delay = 2.0
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_x4q41"]
+script = ExtResource("18_ww2vv")
+id = &"side_a3_tresor_boss"
+duration = 46.0
+entries = Array[ExtResource("19_no8sg")]([SubResource("Resource_2vj08"), SubResource("Resource_k5fyl"), SubResource("Resource_1ycd4"), SubResource("Resource_ujpk8")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("17_daq0t")
+id = &"side_a3_tresor"
+display_name = "Le tresor de Tombol"
+act = 3
+subtitle = "Une salle vide et sa garde"
+intro_text = "Un roi qui fuit ses creanciers vide ses coffres d abord. Sous la cour des rois morts, la salle du tresor de Tombol n a plus que sa garde : un squelette en armure d or qui renvoie les coups. Frappe entre ses gardes."
+outro_text = ""
+intro_story = &"side_a3_tresor_intro"
+outro_story = &"side_a3_tresor_outro"
+terrain = "grass"
+backdrop = "act2_graveyard"
+waves = Array[ExtResource("18_ww2vv")]([SubResource("Resource_g6x2h"), SubResource("Resource_eimfk"), SubResource("Resource_ijgdn"), SubResource("Resource_x4q41")])
+enemy_pool = Array[ExtResource("5_5px1n")]([ExtResource("6_5isd3"), ExtResource("7_0s1a0"), ExtResource("8_im5b0"), ExtResource("9_81hr5"), ExtResource("10_vsf5t"), ExtResource("11_x6i4y"), ExtResource("12_x4xa4")])
+exploration_deck = Array[ExtResource("1_anhro")]([])
+objectives = Array[ExtResource("16_7b8w6")]([SubResource("Resource_ixsp1"), SubResource("Resource_4hx7v"), SubResource("Resource_adc0b")])
+levelup_cards = Array[ExtResource("1_anhro")]([])
+objective_rewards = Array[ExtResource("1_anhro")]([ExtResource("13_x0j4e"), ExtResource("14_7ooiq"), ExtResource("15_oxi2r")])
+next_levels = Array[StringName]([])
+base_commons = Array[ExtResource("1_anhro")]([ExtResource("2_lhfsq"), ExtResource("3_33vns"), ExtResource("4_0fbur")])
+passive_unlocks = Array[ExtResource("1_anhro")]([])
+side_quest = true
+side_quest_after = &"lvl_20"
+side_quest_character = ""

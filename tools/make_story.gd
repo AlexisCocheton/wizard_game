@@ -97,6 +97,7 @@ func _ready() -> void:
 	# dont le plot twist et la fin de la campagne.
 	_acte4()
 	_acte5()
+	_quetes_annexes()  # VAGUE 10, CHANTIER B3 : section en fin de fichier
 	print("STORY_OK")
 	get_tree().quit(0)
 
@@ -895,4 +896,203 @@ func _lvl_16() -> void:
 		_say("Le Roi squelette", SKELETON_KING, "Je reste. Plus de royaume, autant avoir une boucle.", R),
 		_narr("Une clairiere, au petit matin. La meme odeur de mousse, la meme lumiere entre les branches."),
 		_narr("LE MASSACRE, la boucle sans fin, s ouvre quand chaque niveau de la campagne est fini."),
+	])
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B3 — LES QUETES ANNEXES (tools/make_side_quests.gd).
+# Section a part : les scenes de la campagne ne sont pas touchees.
+# =====================================================================
+##
+## HUIT QUETES, chacune encadree d une intro et d une outro de 4 a 6 repliques :
+## une par ACTE, ouverte apres un niveau de campagne de cet acte, et une par
+## APPRENTI (l ecuyer, la fee, l apprentie d azur), qui le met en scene.
+##
+## UNE ANNEXE EST ANCREE A SON NIVEAU D OUVERTURE (`side_quest_after`) : ses
+## scenes savent ce que le mage sait a ce moment-la, et rien de plus. Elles ne
+## supposent jamais une AUTRE annexe (le joueur les fait dans l ordre qu il
+## veut, ou pas du tout) ni une branche de fourche : aucune ne dit « encore un
+## boss dore ». Qui est la, d apres docs/histoire.md :
+##   - acte 1 (apres lvl_02) : le mage et l enfant, le village en pierre ;
+##   - acte 2 (apres lvl_17, lvl_18) : le rat a rejoint le groupe ;
+##   - acte 3 (apres lvl_19, lvl_20) : le rat est reste avec la nacelle ;
+##   - acte 4 (apres lvl_11, lvl_12) : le roi squelette est descendu avec eux ;
+##   - acte 5 (apres lvl_14) : l enfant ne parle plus depuis le pentacle.
+##
+## L OR EST LE FIL. Chaque boss dore porte la couleur du boss final (« une bete
+## de cadrans, toute en or », lvl_16) : sans le dire, les scenes posent qu un
+## « client » aime l or et que l enfant aime ce qui brille et ce qu on lui donne
+## en spectacle. Rien n est devoile : comme « la gauche est fermee » a l acte 2,
+## personne ne releve.
+##
+## LES APPRENTIS PARLENT SANS VISAGE. Le casting de StoryScene (CAST) n a pas
+## leur portrait et le fabriquer releve de l asset-pipeline : leur nom s affiche,
+## la boite du portrait se cache, comme pour « Un mort » (lvl_04). Leurs
+## repliques disent ce que leur fiche de compte promet : ils combattent A LA
+## PLACE du mage.
+##
+## LE NARRATEUR ne nomme que ce qui descend dans les vagues de la quete
+## (test_story) : son boss dore, jamais Kaltek ou Ymoa, deja tombes.
+
+func _quetes_annexes() -> void:
+	_side_mesure()
+	_side_atelier()
+	_side_tresor()
+	_side_champion()
+	_side_vitrine()
+	_side_ecuyer()
+	_side_fee()
+	_side_apprentie()
+
+
+## ACTE 1, apres le village petrifie : celui qui « bat la mesure » (lvl_02). Le
+## mage en deduit un CHEF, sans le trouver : la cadence revient chez Vharn.
+func _side_mesure() -> void:
+	_scene("side_a1_mesure_intro", "talk_glade", [
+		_narr("Au sortir du village, un son de cor traverse la foret de Nuri. Toujours la meme note, toujours le meme pas."),
+		_say("L Enfant", CHILD, "C est le cor des bergers. Mais les bergers sont en pierre, comme les autres.", R),
+		_say("Le Mage", MAGE, "Alors quelqu un d autre en joue. Et tout ce qui marche dans cette foret marche a son rythme."),
+		_say("Le Mage", MAGE_GRAVE, "Une armee qui suit une mesure, petit, c est une armee qui a un chef."),
+		_say("L Enfant", CHILD, "On va le chercher ?", R),
+		_say("Le Mage", MAGE, "On va le faire taire. Reste derriere moi."),
+	])
+	_scene("side_a1_mesure_outro", "talk_glade", [
+		_narr("Le Corniste dore s effondre sur son instrument. Le cor est en or massif, et il sonne une derniere fois en touchant le sol."),
+		_say("L Enfant", CHILD, "Il est beau, son cor. Je peux le garder ?", R),
+		_say("Le Mage", MAGE, "Non. Personne ne paie un cor en or a un corniste de foret."),
+		_say("Le Mage", MAGE_GRAVE, "Il ne battait pas la mesure pour lui. Il la recopiait. Quelqu un, plus loin, donne le tempo."),
+		_narr("L enfant regarde le cor un long moment, puis le laisse dans l herbe sans rien dire."),
+	])
+
+
+## ACTE 2, apres les courants (lvl_17), ou le rat avoue avoir travaille dans
+## l atelier des Sky Lands. Le totem retourne fait echo au Gardien de la foret.
+func _side_atelier() -> void:
+	_scene("side_a2_atelier_intro", "talk_greattree", [
+		_say("Le Rat pilote", RAT, "Mon ancien atelier est sur l ile d a cote. Vingt ans d etabli. Je veux voir ce qu ils en ont fait.", R),
+		_say("Le Mage", MAGE, "On n a pas le temps des souvenirs."),
+		_say("Le Rat pilote", RAT, "Ce n est pas un souvenir, mage. Si on fabriquait des soudures noires quelque part la-haut, c etait chez nous.", R),
+		_narr("Devant la porte de l atelier, une tour de bois peinte en or. Tout ce qui s en approche brille d un halo."),
+		_say("L Enfant", CHILD, "Elle protege les autres. Comme une maman.", R),
+		_say("Le Mage", MAGE, "Alors on eteint d abord la lumiere, et ensuite la tour."),
+	])
+	_scene("side_a2_atelier_outro", "talk_greattree", [
+		_narr("Le Gardien-totem dore se fend. Sous la dorure, le bois brut d un totem de port, taille a la main, avec une marque d atelier."),
+		_say("Le Rat pilote", RAT, "C est un des miens. Je l ai taille pour proteger les quais. Quelqu un l a repeint en or et l a retourne.", R),
+		_say("Le Mage", MAGE, "Retourne. Comme le Gardien de la foret."),
+		_say("Le Rat pilote", RAT, "On ne dore pas une piece pour qu elle tienne mieux. On la dore pour que le client la reconnaisse.", R),
+		_say("Le Mage", MAGE_GRAVE, "Alors il y a un client. Et il aime l or."),
+	])
+
+
+## ACTE 3, apres la cour des rois morts (lvl_20) : la poursuite continue, le
+## rat est reste avec la nacelle. Ne cite ni la forge ni la cour brisee (la
+## fourche peut ne pas etre jouee).
+func _side_tresor() -> void:
+	_scene("side_a3_tresor_intro", "talk_shrine", [
+		_narr("Sous la cour des rois morts, une porte basse. Derriere, la salle du tresor de Tombol."),
+		_say("L Enfant", CHILD, "Elle est vide. Il n y a plus rien du tout.", R),
+		_say("Le Mage", MAGE, "Un roi qui fuit ses creanciers vide ses coffres d abord. Il ne reste que la garde."),
+		_narr("Au fond de la salle, un squelette en armure d or leve son bouclier. Il a l air d attendre un coup."),
+		_say("Le Mage", MAGE_GRAVE, "Il pare et il rend. Je frapperai entre deux gardes, pas avant."),
+	])
+	_scene("side_a3_tresor_outro", "talk_shrine", [
+		_narr("Le Squelette pareur dore tombe en pieces sur les dalles. Son armure sonne creux : de l or sur du vieux fer."),
+		_say("Le Mage", MAGE, "Tout l or de Tombol est parti payer quelqu un. On en a laisse juste assez pour dorer un garde."),
+		_say("L Enfant", CHILD, "C est triste, un garde qui garde rien.", R),
+		_say("Le Mage", MAGE_GRAVE, "Non, petit. C est une quittance. Le creancier est passe avant nous, et il veut qu on le sache."),
+	])
+
+
+## ACTE 4, apres l arene (lvl_11) : Kaltek est mort, son champion reste. Le
+## spectacle est le theme ; l enfant le regarde en spectateur.
+func _side_champion() -> void:
+	_scene("side_a4_champion_intro", "talk_shrine", [
+		_narr("L arene de sable noir est vide. Au centre, une chaine plus grosse que les autres retient un guerrier en armure d or."),
+		_say("Le Roi squelette", SKELETON_KING, "Le champion de Kaltek. Il le gardait pour les jours ou il fallait gagner devant du monde.", R),
+		_say("Le Mage", MAGE, "Il n y a plus personne pour regarder."),
+		_say("Le Rat pilote", RAT, "Il y a toujours quelqu un pour regarder. Ici, c est meme a ca qu on reconnait le patron.", R),
+		_narr("La chaine cede d elle-meme, comme si on avait attendu que le mage arrive."),
+	])
+	_scene("side_a4_champion_outro", "talk_shrine", [
+		_narr("Le Berserker dore tombe a genoux pour la seconde fois, et ne se releve plus. Sa chaine part toujours vers le haut."),
+		_say("Le Roi squelette", SKELETON_KING, "Meme le champion etait en laisse. Et la laisse ne finissait pas chez Kaltek.", R),
+		_say("L Enfant", CHILD, "Il s est bien battu. C etait joli a regarder.", R),
+		_say("Le Mage", MAGE_GRAVE, "... Joli. Tu dis ca comme quelqu un qui avait une place au premier rang."),
+	])
+
+
+## ACTE 5, apres la galerie des saisons (lvl_14) : l aile de Nuri. La plaque
+## confirme ce que le mage deduisait au village (lvl_02_outro : « quelqu un les
+## a figes avant elle ») sans dire QUI : c est lvl_16 qui le dit.
+func _side_vitrine() -> void:
+	_scene("side_a5_vitrine_intro", "talk_shrine", [
+		_narr("Une aile de la galerie porte un seul mot : NURI. Des arbres sous verre, un cor de berger, une grange. Au centre, une gorgone d or sur un socle."),
+		_say("Le Rat pilote", RAT, "C est ton ile, mage. Rangee avant d etre finie.", R),
+		_say("Le Mage", MAGE_GRAVE, "Ils ont deja l etiquette. Il ne manque que la date."),
+		_narr("La gorgone tourne la tete vers le mage, et le verre de la vitrine se fend."),
+		_say("Le Roi squelette", SKELETON_KING, "Ne la regarde pas trop longtemps. Les pieces de musee n aiment pas qu on les touche.", R),
+	])
+	_scene("side_a5_vitrine_outro", "talk_shrine", [
+		_narr("La Gorgone doree se brise sur son socle. Dessous, une plaque gravee : NURI, SIXIEME JOUR. STATUES DU VILLAGE : FAITES."),
+		_say("Le Roi squelette", SKELETON_KING, "Faites. Pas a faire. On a coche la case avant que ca arrive.", R),
+		_say("Le Mage", MAGE_GRAVE, "Les gens du village n ont pas ete figes par des gorgones de passage. C etait prevu, comme le reste."),
+		_narr("L enfant regarde la plaque un long moment. Il ne dit rien, et il reprend la marche le premier."),
+	])
+
+
+## L ECUYER, apres le port vide (lvl_18) : le dernier garde de Haute-Nacelle,
+## qui a pose l epee pour l arc (sa fiche de compte).
+func _side_ecuyer() -> void:
+	_scene("side_squire_intro", "talk_path", [
+		_narr("Une fleche se plante dans le quai, a un pas du mage. Elle vient d en haut, du toit d un entrepot."),
+		_say("L ecuyer", &"", "Restez ou vous etes ! Ce qui descend du ciel, je le descends.", R),
+		_say("Le Mage", MAGE, "Je ne descends pas du ciel. Pas aujourd hui."),
+		_say("L ecuyer", &"", "Alors baissez-vous. Celui d en face ne fait pas la difference. Et lui, il est en or.", R),
+		_say("Le Rat pilote", RAT, "Un garde du port. Je croyais qu ils etaient tous partis par le haut.", R),
+	])
+	_scene("side_squire_outro", "talk_path", [
+		_narr("Le Lutin archer dore tombe du toit d en face, son arc d or brise en deux."),
+		_say("L ecuyer", &"", "J etais garde du port. Une epee ne sert a rien contre ce qui tire d en haut, alors j ai appris l arc.", R),
+		_say("Le Mage", MAGE, "Et maintenant que le port est vide ?"),
+		_say("L ecuyer", &"", "Maintenant je n ai plus de port. Si tu veux, je tire a ta place, et toi tu gardes ta magie pour ce qui compte.", R),
+		_say("Le Mage", MAGE, "Ce qui compte arrive vite. Tire juste."),
+	])
+
+
+## LA FEE, apres les fosses basses (lvl_19), ou l eau monte aux mollets : elle
+## « ne pose jamais pied a terre » (sa fiche de compte), parce qu ici le sol
+## mange.
+func _side_fee() -> void:
+	_scene("side_fairy_intro", "talk_shrine", [
+		_narr("Au-dessus de l eau trouble des fosses, une lueur danse. Une fee, pas plus grande qu une main, qui ne se pose nulle part."),
+		_say("La fee", &"", "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine.", R),
+		_say("L Enfant", CHILD, "Toi, tu ne touches jamais le sol ?", R),
+		_say("La fee", &"", "Jamais. Ici, le sol mange.", R),
+		_say("Le Mage", MAGE, "Alors on va lui couper l appetit."),
+	])
+	_scene("side_fairy_outro", "talk_shrine", [
+		_narr("Le Champignon dore s affaisse dans l eau. Ses spores d or flottent un instant, puis s eteignent une a une."),
+		_say("La fee", &"", "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite.", R),
+		_say("Le Mage", MAGE_GRAVE, "On ne dore pas un champignon pour le plaisir. Quelqu un voulait qu on le remarque."),
+		_say("La fee", &"", "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule.", R),
+	])
+
+
+## L APPRENTIE D AZUR, apres le temple d Ymoa (lvl_12) : « la premiere
+## apprentie du mage » (sa fiche de compte), morte a Nox dans la PREMIERE
+## boucle. Dans celle-ci elle ne le connait pas : il se souvient, pas elle.
+func _side_apprentie() -> void:
+	_scene("side_bluewitch_intro", "talk_shrine", [
+		_narr("Le temple de cristal tient encore. Au fond, sous un cristal bleu, une jeune femme en robe d azur dort debout."),
+		_say("Le Mage", MAGE_GRAVE, "Je la connais. Elle etait mon apprentie, la premiere fois. Elle est morte a Nox, la derniere nuit."),
+		_say("Le Roi squelette", SKELETON_KING, "Ici, on ne garde que ce qui servira plus tard. Si elle est sous verre, quelqu un compte sur elle.", R),
+		_narr("Devant le cristal, un chevalier en armure d or se redresse. Le premier sort qui le touche disparait dans son armure."),
+	])
+	_scene("side_bluewitch_outro", "talk_shrine", [
+		_narr("Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme ouvre les yeux."),
+		_say("L apprentie d azur", &"", "Qui etes-vous ? Vous me regardez comme si on se connaissait.", R),
+		_say("Le Mage", MAGE, "Dans une autre vie, je t ai appris a tenir un sort. Dans celle-ci, tu ne me dois rien."),
+		_say("L apprentie d azur", &"", "Alors je choisis. Je combats a votre place, maitre. Et vous me direz comment ca a fini, la premiere fois.", R),
+		_say("Le Mage", MAGE_GRAVE, "... Mal. C est pour ca qu on recommence."),
 	])

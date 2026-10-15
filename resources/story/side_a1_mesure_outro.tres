@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_luwjk"]
+
+[resource]
+script = ExtResource("1_luwjk")
+id = &"side_a1_mesure_outro"
+scene_background = "talk_glade"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le Corniste dore s effondre sur son instrument. Le cor est en or massif, et il sonne une derniere fois en touchant le sol."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il est beau, son cor. Je peux le garder ?"
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Non. Personne ne paie un cor en or a un corniste de foret."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il ne battait pas la mesure pour lui. Il la recopiait. Quelqu un, plus loin, donne le tempo."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L enfant regarde le cor un long moment, puis le laisse dans l herbe sans rien dire."
+}])

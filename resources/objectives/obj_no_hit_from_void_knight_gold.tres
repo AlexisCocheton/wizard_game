@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_hndwq"]
+
+[resource]
+script = ExtResource("1_hndwq")
+id = &"obj_no_hit_from_void_knight_gold"
+description = "Chevalier du vide dore : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "void_knight_gold"
+}

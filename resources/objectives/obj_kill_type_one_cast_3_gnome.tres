@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_gtrn5"]
+
+[resource]
+script = ExtResource("1_gtrn5")
+id = &"obj_kill_type_one_cast_3_gnome"
+description = "Gnome : en tuer 3 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 3,
+"enemy": "gnome"
+}

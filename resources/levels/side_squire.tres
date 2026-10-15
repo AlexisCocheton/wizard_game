@@ -1,0 +1,299 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=39 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_luiq1"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="2_pjjr2"]
+[ext_resource type="Resource" path="res://resources/cards/common/stone_wall.tres" id="3_2gdrc"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="4_2jsra"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_bjmua"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="6_1lmvd"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="7_t7i6r"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="8_ufxre"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="9_astaf"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="10_xv2oe"]
+[ext_resource type="Resource" path="res://resources/cards/rare/heartwood_totem.tres" id="11_yrqik"]
+[ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="12_tls6j"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/terrain_river.tres" id="13_mg102"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="14_seoji"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="15_b1vnr"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="16_uj0qo"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="17_tjd1y"]
+
+[sub_resource type="Resource" id="Resource_w7ook"]
+script = ExtResource("14_seoji")
+id = &"obj_kill_type_one_cast_2_nacelle_raider"
+description = "Pillard de Haute-Nacelle : en tuer 2 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 2,
+"enemy": "nacelle_raider"
+}
+
+[sub_resource type="Resource" id="Resource_6lwi4"]
+script = ExtResource("14_seoji")
+id = &"obj_no_hit_from_imp_archer"
+description = "Lutin archer : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "imp_archer"
+}
+
+[sub_resource type="Resource" id="Resource_x3vud"]
+script = ExtResource("14_seoji")
+id = &"obj_no_hit_from_imp_archer_gold"
+description = "Lutin archer dore : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "imp_archer_gold"
+}
+
+[sub_resource type="Resource" id="Resource_xctqb"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("6_1lmvd")
+count = 4
+spawn_delay = 1.6
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_pgv0x"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("7_t7i6r")
+count = 2
+spawn_delay = 3.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_s6a1b"]
+script = ExtResource("16_uj0qo")
+id = &"side_squire_1"
+duration = 25.0
+entries = Array[ExtResource("17_tjd1y")]([SubResource("Resource_xctqb"), SubResource("Resource_pgv0x")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_eicil"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("8_ufxre")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_w186g"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("6_1lmvd")
+count = 3
+spawn_delay = 1.6
+start_offset = 4.0
+
+[sub_resource type="Resource" id="Resource_lcfxn"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("7_t7i6r")
+count = 2
+spawn_delay = 3.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_2nlpt"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("9_astaf")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_ouxa1"]
+script = ExtResource("16_uj0qo")
+id = &"side_squire_2"
+duration = 27.0
+entries = Array[ExtResource("17_tjd1y")]([SubResource("Resource_eicil"), SubResource("Resource_w186g"), SubResource("Resource_lcfxn"), SubResource("Resource_2nlpt")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_qhs1o"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("10_xv2oe")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_xacra"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("7_t7i6r")
+count = 3
+spawn_delay = 2.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_3irvb"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("6_1lmvd")
+count = 3
+spawn_delay = 1.6
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_0n2wx"]
+script = ExtResource("16_uj0qo")
+id = &"side_squire_3"
+duration = 28.0
+entries = Array[ExtResource("17_tjd1y")]([SubResource("Resource_qhs1o"), SubResource("Resource_xacra"), SubResource("Resource_3irvb")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_kfsbl"]
+script = ExtResource("5_bjmua")
+id = &"imp_archer_gold"
+display_name = "Lutin archer dore"
+kind = 8
+power = 10
+max_hp = 140.0
+base_speed = 42.0
+base_xp = 30
+contact_damage = 0
+anim_key = &"archer_red"
+sprite_scale = 1.0
+shape = 3
+color = Color(0.95, 0.78, 0.25, 1)
+base_radius = 56.0
+resistances = {
+1: 0.75,
+2: 1.5,
+8: 1.5,
+10: 1.25
+}
+immune_tags = Array[int]([])
+dodge_chance = 0.0
+swarm_count = 1
+entry_side = false
+flying = false
+projectile = false
+phase_interval = 0.0
+buff_speed_pct = 0.0
+devours = false
+enrage_speed_pct = 0.0
+enrage_cap = 1.5
+aura_shield_radius = 0.0
+burst_move = false
+burst_dash_time = 0.6
+burst_pause_time = 0.7
+wave_amplitude = 0.0
+wave_frequency = 0.5
+split_count = 0
+first_hit_shield = false
+heal_per_second = 0.0
+shoot_interval = 2.2
+shot_damage = 3
+blocks_cards = 0
+shockwave_interval = 0.0
+shockwave_radius = 0.0
+shockwave_damage = 0
+extra_lives = 0
+extra_life_hp_pct = 100.0
+extra_life_speed_pct = 35.0
+rebirth_count = 0
+rebirth_delay = 3.0
+reanimate_radius = 0.0
+reanimate_interval = 4.0
+reanimate_max = 0
+laser_damage = 0
+laser_cooldown = 1.5
+sleep_interval = 0.0
+sleep_duration = 2.0
+move_pattern = 0
+pattern_lateral_speed = 0.0
+pattern_width = 240.0
+pattern_interval = 1.5
+parts_count = 0
+part_hp = 0.0
+part_slow_pct = 0.0
+keeps_distance_at = 620.0
+summon_interval = 0.0
+summon_count = 1
+summon_max_alive = 6
+revive_hp_pct = 0.0
+hits_immune = 0
+reflect_interval = 0.0
+reflect_window = 0.0
+reflect_pct = 0.0
+rewind_interval = 0.0
+rewind_seconds = 3.0
+rewind_max = 0
+twin_group = &""
+twin_revive_delay = 4.0
+twin_revive_hp_pct = 60.0
+twin_max_returns = 2
+chameleon_interval = 0.0
+chameleon_elements = Array[int]([])
+chameleon_weak_mult = 1.5
+chameleon_resist_mult = 0.5
+steal_interval = 0.0
+steal_cast_delay = 4.0
+steal_damage_per_cast_second = 6.0
+devour_heal_pct = 0.0
+devour_delay = 3.0
+mirror_speed_ref = 0
+mirror_speed_min = 0.5
+mirror_speed_max = 2.0
+terrain_break_interval = 0.0
+terrain_break_reach = 520.0
+terrain_break_windup = 1.5
+demoted_from = &""
+gilded_from = &"imp_archer"
+
+[sub_resource type="Resource" id="Resource_g3f3w"]
+script = ExtResource("17_tjd1y")
+enemy = SubResource("Resource_kfsbl")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ng63o"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("6_1lmvd")
+count = 3
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_2aqtm"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("7_t7i6r")
+count = 2
+spawn_delay = 3.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_o6cr4"]
+script = ExtResource("17_tjd1y")
+enemy = ExtResource("9_astaf")
+count = 2
+spawn_delay = 2.0
+start_offset = 24.0
+
+[sub_resource type="Resource" id="Resource_bv48t"]
+script = ExtResource("16_uj0qo")
+id = &"side_squire_boss"
+duration = 46.0
+entries = Array[ExtResource("17_tjd1y")]([SubResource("Resource_g3f3w"), SubResource("Resource_ng63o"), SubResource("Resource_2aqtm"), SubResource("Resource_o6cr4")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("15_b1vnr")
+id = &"side_squire"
+display_name = "L ecuyer de Haute-Nacelle"
+act = 2
+subtitle = "Le dernier garde du port vide"
+intro_text = "Dans le port vide de Haute-Nacelle, quelqu un tire encore depuis les toits : le dernier garde du port, qui a pose l epee pour l arc. En face de lui, un archer d or tire plus vite et ne s approche jamais. Un mur arrete ses fleches."
+outro_text = ""
+intro_story = &"side_squire_intro"
+outro_story = &"side_squire_outro"
+terrain = "grass"
+backdrop = "act1_sky"
+waves = Array[ExtResource("16_uj0qo")]([SubResource("Resource_s6a1b"), SubResource("Resource_ouxa1"), SubResource("Resource_0n2wx"), SubResource("Resource_bv48t")])
+enemy_pool = Array[ExtResource("5_bjmua")]([ExtResource("6_1lmvd"), ExtResource("7_t7i6r"), ExtResource("8_ufxre"), ExtResource("9_astaf"), ExtResource("10_xv2oe")])
+exploration_deck = Array[ExtResource("1_luiq1")]([])
+objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_w7ook"), SubResource("Resource_6lwi4"), SubResource("Resource_x3vud")])
+levelup_cards = Array[ExtResource("1_luiq1")]([])
+objective_rewards = Array[ExtResource("1_luiq1")]([ExtResource("11_yrqik"), ExtResource("12_tls6j"), ExtResource("13_mg102")])
+next_levels = Array[StringName]([])
+base_commons = Array[ExtResource("1_luiq1")]([ExtResource("2_pjjr2"), ExtResource("3_2gdrc"), ExtResource("4_2jsra")])
+passive_unlocks = Array[ExtResource("1_luiq1")]([])
+side_quest = true
+side_quest_after = &"lvl_18"
+side_quest_character = "soldier"
