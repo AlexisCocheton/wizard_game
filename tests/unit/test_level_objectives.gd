@@ -138,6 +138,10 @@ func _test_variete_sur_la_campagne() -> void:
 	var niveaux_par_cle: Dictionary = {}
 	var trios: Dictionary = {}
 	for lv in _niveaux():
+		# La variete se juge sur la CAMPAGNE (« un tiers des 21 niveaux ») ; les
+		# quetes annexes ont la leur (test_side_quests).
+		if not lv.is_campaign_level():
+			continue
 		var ids: Array[String] = []
 		for o: ObjectiveDef in lv.objectives:
 			if o == null:

@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="4_a61yv"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_0df27"]
 
-[sub_resource type="Resource" id="Resource_qhs1o"]
+[sub_resource type="Resource" id="Resource_rnfln"]
 script = ExtResource("1_rnfln")
 enemy = ExtResource("2_qdnhb")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_xacra"]
+[sub_resource type="Resource" id="Resource_qdnhb"]
 script = ExtResource("1_rnfln")
 enemy = ExtResource("3_v4ei0")
 count = 3
 spawn_delay = 2.5
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_3irvb"]
+[sub_resource type="Resource" id="Resource_v4ei0"]
 script = ExtResource("1_rnfln")
 enemy = ExtResource("4_a61yv")
 count = 3
@@ -31,7 +31,7 @@ start_offset = 14.0
 script = ExtResource("5_0df27")
 id = &"side_squire_3"
 duration = 28.0
-entries = Array[ExtResource("1_rnfln")]([SubResource("Resource_qhs1o"), SubResource("Resource_xacra"), SubResource("Resource_3irvb")])
+entries = Array[ExtResource("1_rnfln")]([SubResource("Resource_rnfln"), SubResource("Resource_qdnhb"), SubResource("Resource_v4ei0")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

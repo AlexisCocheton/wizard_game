@@ -8,35 +8,35 @@
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="6_8w0xd"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_rxwx4"]
 
-[sub_resource type="Resource" id="Resource_hsp71"]
+[sub_resource type="Resource" id="Resource_cn0bi"]
 script = ExtResource("1_cn0bi")
 enemy = ExtResource("2_g33lq")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_7vv1m"]
+[sub_resource type="Resource" id="Resource_g33lq"]
 script = ExtResource("1_cn0bi")
 enemy = ExtResource("3_ua62r")
 count = 1
 spawn_delay = 1.0
 start_offset = 4.0
 
-[sub_resource type="Resource" id="Resource_luusw"]
+[sub_resource type="Resource" id="Resource_ua62r"]
 script = ExtResource("1_cn0bi")
 enemy = ExtResource("4_mruyt")
 count = 4
 spawn_delay = 1.4
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_0cca3"]
+[sub_resource type="Resource" id="Resource_mruyt"]
 script = ExtResource("1_cn0bi")
 enemy = ExtResource("5_x2px4")
 count = 1
 spawn_delay = 1.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_x13j3"]
+[sub_resource type="Resource" id="Resource_x2px4"]
 script = ExtResource("1_cn0bi")
 enemy = ExtResource("6_8w0xd")
 count = 4
@@ -47,7 +47,7 @@ start_offset = 20.0
 script = ExtResource("7_rxwx4")
 id = &"side_a1_mesure_3"
 duration = 28.0
-entries = Array[ExtResource("1_cn0bi")]([SubResource("Resource_hsp71"), SubResource("Resource_7vv1m"), SubResource("Resource_luusw"), SubResource("Resource_0cca3"), SubResource("Resource_x13j3")])
+entries = Array[ExtResource("1_cn0bi")]([SubResource("Resource_cn0bi"), SubResource("Resource_g33lq"), SubResource("Resource_ua62r"), SubResource("Resource_mruyt"), SubResource("Resource_x2px4")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false

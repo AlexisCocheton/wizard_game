@@ -479,7 +479,8 @@ func _test_la_campagne_se_finit_au_dernier_niveau() -> void:
 	ok(int(p[1]) >= 7, "la campagne compte au moins 7 niveaux (%d)" % int(p[1]))
 
 	# On finit TOUS les niveaux sauf un : le verrou doit tenir jusqu au dernier.
-	var niveaux: Array = ContentDB.levels.values()
+	# Les niveaux de CAMPAGNE (vague 10) : une quete annexe ne la finit pas.
+	var niveaux: Array = ContentDB.campaign_levels()
 	for i in niveaux.size():
 		var lv: LevelDef = niveaux[i]
 		if i == niveaux.size() - 1:

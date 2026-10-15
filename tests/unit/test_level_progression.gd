@@ -125,10 +125,13 @@ func run() -> void:
 
 # --- Outils ------------------------------------------------------------------
 
+## Les niveaux de CAMPAGNE. Vague 10 (B3) : les quetes annexes suivent leurs
+## propres regles (pas de cartes nouvelles, recompenses tirees du surplus de la
+## campagne, MESURES a part) : tests/unit/test_side_quests.gd.
 func _niveaux() -> Array[LevelDef]:
 	var out: Array[LevelDef] = []
 	for lv: LevelDef in ContentDB.levels.values():
-		if lv != null:
+		if lv != null and lv.is_campaign_level():
 			out.append(lv)
 	return out
 
@@ -219,7 +222,9 @@ static func defauts_cartes(lv: LevelDef) -> Array[String]:
 static func _campagne(niveaux: Dictionary) -> Dictionary:
 	var out: Dictionary = {}
 	for lv in niveaux.values():
-		if lv != null and (lv as LevelDef).act > 0:
+		# Vague 10 (B3) : une quete annexe a un acte (de rattachement) mais n est
+		# pas un niveau de campagne.
+		if lv != null and (lv as LevelDef).is_campaign_level():
 			out[(lv as LevelDef).id] = lv
 	return out
 

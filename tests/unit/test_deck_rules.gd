@@ -516,7 +516,9 @@ func _ordre_de_jeu() -> Array[StringName]:
 			pointes[StringName(s)] = true
 	var departs: Array[StringName] = []
 	for k in ContentDB.levels:
-		if not pointes.has(StringName(k)):
+		# Vague 10 (B3) : une quete annexe n est pas une etape du voyage, et son
+		# deck ne prend que des communes deja donnees (rien a faire decouvrir).
+		if not pointes.has(StringName(k)) and (ContentDB.levels[k] as LevelDef).is_campaign_level():
 			departs.append(StringName(k))
 	departs.sort_custom(func(a: StringName, b: StringName) -> bool:
 		return String(a) < String(b))
@@ -536,7 +538,7 @@ func _ordre_de_jeu() -> Array[StringName]:
 				file.append(StringName(s))
 	var reste: Array[StringName] = []
 	for k in ContentDB.levels:
-		if not vus.has(StringName(k)):
+		if not vus.has(StringName(k)) and (ContentDB.levels[k] as LevelDef).is_campaign_level():
 			reste.append(StringName(k))
 	reste.sort_custom(func(a: StringName, b: StringName) -> bool:
 		return String(a) < String(b))
@@ -561,7 +563,7 @@ func _test_chaque_niveau_fait_decouvrir_une_carte() -> void:
 		if c != null and not c.is_passive:
 			catalogue[c.id] = true
 	var ordre: Array[StringName] = _ordre_de_jeu()
-	eq(ordre.size(), ContentDB.levels.size(), "l ordre de jeu couvre tous les niveaux")
+	eq(ordre.size(), ContentDB.campaign_levels().size(), "l ordre de jeu couvre tous les niveaux")
 	var vues: Dictionary = {}
 	for i in ordre.size():
 		var lvl: LevelDef = ContentDB.levels[ordre[i]]

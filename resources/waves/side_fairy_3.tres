@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="5_25d3v"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6l12q"]
 
-[sub_resource type="Resource" id="Resource_0feda"]
+[sub_resource type="Resource" id="Resource_a82op"]
 script = ExtResource("1_a82op")
 enemy = ExtResource("2_8yqck")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_sjhbl"]
+[sub_resource type="Resource" id="Resource_8yqck"]
 script = ExtResource("1_a82op")
 enemy = ExtResource("3_ek7pb")
 count = 2
 spawn_delay = 3.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_avqke"]
+[sub_resource type="Resource" id="Resource_ek7pb"]
 script = ExtResource("1_a82op")
 enemy = ExtResource("4_gd7hl")
 count = 2
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_in586"]
+[sub_resource type="Resource" id="Resource_gd7hl"]
 script = ExtResource("1_a82op")
 enemy = ExtResource("5_25d3v")
 count = 2
@@ -39,7 +39,7 @@ start_offset = 18.0
 script = ExtResource("6_6l12q")
 id = &"side_fairy_3"
 duration = 28.0
-entries = Array[ExtResource("1_a82op")]([SubResource("Resource_0feda"), SubResource("Resource_sjhbl"), SubResource("Resource_avqke"), SubResource("Resource_in586")])
+entries = Array[ExtResource("1_a82op")]([SubResource("Resource_a82op"), SubResource("Resource_8yqck"), SubResource("Resource_ek7pb"), SubResource("Resource_gd7hl")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false

@@ -18,7 +18,17 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="16_lj4dl"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="17_jh2ph"]
 
-[sub_resource type="Resource" id="Resource_xavuq"]
+[sub_resource type="Resource" id="Resource_lpjea"]
+script = ExtResource("14_5slq4")
+id = &"obj_multi_kill_3_1"
+description = "Tuer 3 monstres en moins de 1 s"
+check_key = &"multi_kill"
+params = {
+"count": 3,
+"window": 1
+}
+
+[sub_resource type="Resource" id="Resource_qw7b3"]
 script = ExtResource("14_5slq4")
 id = &"obj_kill_type_one_cast_2_shade"
 description = "Ombre : en tuer 2 d un seul sort"
@@ -28,16 +38,7 @@ params = {
 "enemy": "shade"
 }
 
-[sub_resource type="Resource" id="Resource_7psx0"]
-script = ExtResource("14_5slq4")
-id = &"obj_no_hit_from_void_knight"
-description = "Chevalier du vide : gagner sans en etre touche"
-check_key = &"no_hit_from"
-params = {
-"enemy": "void_knight"
-}
-
-[sub_resource type="Resource" id="Resource_ixmpb"]
+[sub_resource type="Resource" id="Resource_sxe2h"]
 script = ExtResource("14_5slq4")
 id = &"obj_no_hit_from_void_knight_gold"
 description = "Chevalier du vide dore : gagner sans en etre touche"
@@ -46,104 +47,104 @@ params = {
 "enemy": "void_knight_gold"
 }
 
-[sub_resource type="Resource" id="Resource_xo15r"]
+[sub_resource type="Resource" id="Resource_c7qt2"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ktkht"]
+[sub_resource type="Resource" id="Resource_8vwt5"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
 count = 3
 spawn_delay = 2.0
 start_offset = 4.0
 
-[sub_resource type="Resource" id="Resource_jryij"]
+[sub_resource type="Resource" id="Resource_07bnc"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("8_1llrh")
 count = 3
 spawn_delay = 1.6
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_l3fhm"]
+[sub_resource type="Resource" id="Resource_y0ulm"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_1"
 duration = 26.0
-entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_xo15r"), SubResource("Resource_ktkht"), SubResource("Resource_jryij")])
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_c7qt2"), SubResource("Resource_8vwt5"), SubResource("Resource_07bnc")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_ukcx3"]
+[sub_resource type="Resource" id="Resource_kklj2"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("9_ef13c")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_6oyte"]
+[sub_resource type="Resource" id="Resource_ciics"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 2
 spawn_delay = 3.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_v18vy"]
+[sub_resource type="Resource" id="Resource_rw5nu"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
 count = 2
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_k11ef"]
+[sub_resource type="Resource" id="Resource_w1hhi"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_2"
 duration = 28.0
-entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_ukcx3"), SubResource("Resource_6oyte"), SubResource("Resource_v18vy")])
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_kklj2"), SubResource("Resource_ciics"), SubResource("Resource_rw5nu")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_gk4fl"]
+[sub_resource type="Resource" id="Resource_467wk"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("10_lpcdw")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_qau4u"]
+[sub_resource type="Resource" id="Resource_3714c"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 2
 spawn_delay = 3.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_4h5al"]
+[sub_resource type="Resource" id="Resource_1g3ba"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("9_ef13c")
 count = 2
 spawn_delay = 3.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_bj5bc"]
+[sub_resource type="Resource" id="Resource_rr0cg"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
 count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_8ek2h"]
+[sub_resource type="Resource" id="Resource_nfwl8"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_3"
 duration = 30.0
-entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_gk4fl"), SubResource("Resource_qau4u"), SubResource("Resource_4h5al"), SubResource("Resource_bj5bc")])
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_467wk"), SubResource("Resource_3714c"), SubResource("Resource_1g3ba"), SubResource("Resource_rr0cg")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_u6cl0"]
+[sub_resource type="Resource" id="Resource_cl5y2"]
 script = ExtResource("5_w1hhi")
 id = &"void_knight_gold"
 display_name = "Chevalier du vide dore"
@@ -245,39 +246,39 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"void_knight"
 
-[sub_resource type="Resource" id="Resource_6ppfo"]
+[sub_resource type="Resource" id="Resource_vyj46"]
 script = ExtResource("17_jh2ph")
-enemy = SubResource("Resource_u6cl0")
+enemy = SubResource("Resource_cl5y2")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_lrec1"]
+[sub_resource type="Resource" id="Resource_66cv4"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
 count = 3
 spawn_delay = 2.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_ok4lh"]
+[sub_resource type="Resource" id="Resource_lex23"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 1
 spawn_delay = 1.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_t4rgp"]
+[sub_resource type="Resource" id="Resource_da48d"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("9_ef13c")
 count = 1
 spawn_delay = 1.0
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_c0yxx"]
+[sub_resource type="Resource" id="Resource_6e42g"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_boss"
 duration = 46.0
-entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_6ppfo"), SubResource("Resource_lrec1"), SubResource("Resource_ok4lh"), SubResource("Resource_t4rgp")])
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_vyj46"), SubResource("Resource_66cv4"), SubResource("Resource_lex23"), SubResource("Resource_da48d")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true
@@ -294,10 +295,10 @@ intro_story = &"side_bluewitch_intro"
 outro_story = &"side_bluewitch_outro"
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("16_lj4dl")]([SubResource("Resource_l3fhm"), SubResource("Resource_k11ef"), SubResource("Resource_8ek2h"), SubResource("Resource_c0yxx")])
+waves = Array[ExtResource("16_lj4dl")]([SubResource("Resource_y0ulm"), SubResource("Resource_w1hhi"), SubResource("Resource_nfwl8"), SubResource("Resource_6e42g")])
 enemy_pool = Array[ExtResource("5_w1hhi")]([ExtResource("6_nfwl8"), ExtResource("7_6e42g"), ExtResource("8_1llrh"), ExtResource("9_ef13c"), ExtResource("10_lpcdw")])
-exploration_deck = Array[ExtResource("1_lpjea")]([])
-objectives = Array[ExtResource("14_5slq4")]([SubResource("Resource_xavuq"), SubResource("Resource_7psx0"), SubResource("Resource_ixmpb")])
+exploration_deck = Array[ExtResource("1_lpjea")]([ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("3_sxe2h"), ExtResource("3_sxe2h"), ExtResource("3_sxe2h"), ExtResource("3_sxe2h"), ExtResource("4_y0ulm"), ExtResource("4_y0ulm"), ExtResource("4_y0ulm"), ExtResource("4_y0ulm")])
+objectives = Array[ExtResource("14_5slq4")]([SubResource("Resource_lpjea"), SubResource("Resource_qw7b3"), SubResource("Resource_sxe2h")])
 levelup_cards = Array[ExtResource("1_lpjea")]([])
 objective_rewards = Array[ExtResource("1_lpjea")]([ExtResource("11_otis2"), ExtResource("12_haxj5"), ExtResource("13_r0fw4")])
 next_levels = Array[StringName]([])

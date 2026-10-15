@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="4_02l8t"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_gcinr"]
 
-[sub_resource type="Resource" id="Resource_4ehx2"]
+[sub_resource type="Resource" id="Resource_kv1ih"]
 script = ExtResource("1_kv1ih")
 enemy = ExtResource("2_4cngg")
 count = 2
 spawn_delay = 3.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_rvyoq"]
+[sub_resource type="Resource" id="Resource_4cngg"]
 script = ExtResource("1_kv1ih")
 enemy = ExtResource("3_ith2g")
 count = 2
 spawn_delay = 3.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_8a3kw"]
+[sub_resource type="Resource" id="Resource_ith2g"]
 script = ExtResource("1_kv1ih")
 enemy = ExtResource("4_02l8t")
 count = 2
@@ -31,7 +31,7 @@ start_offset = 16.0
 script = ExtResource("5_gcinr")
 id = &"side_a4_champion_2"
 duration = 28.0
-entries = Array[ExtResource("1_kv1ih")]([SubResource("Resource_4ehx2"), SubResource("Resource_rvyoq"), SubResource("Resource_8a3kw")])
+entries = Array[ExtResource("1_kv1ih")]([SubResource("Resource_kv1ih"), SubResource("Resource_4cngg"), SubResource("Resource_ith2g")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

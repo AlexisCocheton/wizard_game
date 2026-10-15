@@ -56,7 +56,7 @@ static func _levels() -> Array[String]:
 			pointes[StringName(s)] = true
 	var departs: Array[StringName] = []
 	for k in niveaux:
-		if not pointes.has(StringName(k)):
+		if not pointes.has(StringName(k)) and not (niveaux[k] as LevelDef).side_quest:
 			departs.append(StringName(k))
 	departs.sort_custom(func(a: StringName, b: StringName) -> bool:
 		return String(a) < String(b))
@@ -77,11 +77,34 @@ static func _levels() -> Array[String]:
 	# Les orphelins : un niveau non mesure doit apparaitre, pas disparaitre.
 	var reste: Array[String] = []
 	for k in niveaux:
-		if not vus.has(StringName(k)):
+		if not vus.has(StringName(k)) and not (niveaux[k] as LevelDef).side_quest:
 			reste.append(String(k))
 	reste.sort()
 	out.append_array(reste)
+	_inserer_annexes(out, niveaux)
 	return out
+
+
+## VAGUE 10, CHANTIER B3 — LES QUETES ANNEXES DANS L ORDRE DE JEU. Une annexe
+## n est ouverte par aucun `next_levels` : sans cette regle elle passait pour un
+## DEPART de la campagne, rangee juste apres lvl_01, et open_levels_up_to()
+## mesurait la quete de l acte 4 avec le profil d un joueur du tutoriel (son
+## livre, ses communes d acte, ses passifs). Chacune est donc placee JUSTE
+## APRES son niveau d ouverture (`side_quest_after`), ou en fin de liste si elle
+## n en a pas : le banc la joue avec le profil d un joueur qui vient de l ouvrir.
+static func _inserer_annexes(out: Array[String], niveaux: Dictionary) -> void:
+	var annexes: Array[LevelDef] = []
+	for k in niveaux:
+		if (niveaux[k] as LevelDef).side_quest:
+			annexes.append(niveaux[k])
+	annexes.sort_custom(func(a: LevelDef, b: LevelDef) -> bool:
+		return String(a.id) > String(b.id))
+	for sq: LevelDef in annexes:
+		var i: int = out.find(String(sq.side_quest_after))
+		if i < 0:
+			out.append(String(sq.id))
+		else:
+			out.insert(i + 1, String(sq.id))
 
 var _total_damage: float = 0.0
 var _cast_time: float = 0.0

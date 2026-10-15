@@ -76,9 +76,16 @@ func run() -> void:
 	_test_la_campagne_se_termine_sur_lacte_5()
 
 
+## Les niveaux du FIL de la campagne. Vague 10 (B3) : une quete annexe a un acte
+## de RATTACHEMENT, aucun next_levels et ne compte pas dans campaign_progress ;
+## elle n est ni une etape d un acte ni un cul-de-sac (test_side_quests).
+func _campagne() -> Array[LevelDef]:
+	return ContentDB.campaign_levels()
+
+
 func _par_acte() -> Dictionary:
 	var out: Dictionary = {}
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in _campagne():
 		out[lv.act] = int(out.get(lv.act, 0)) + 1
 	return out
 
@@ -139,9 +146,9 @@ func _test_chaque_niveau_est_atteignable_depuis_le_premier() -> void:
 			if not atteints.has(suivant):
 				atteints[suivant] = true
 				file.append(suivant)
-	for id: StringName in ContentDB.levels:
-		ok(atteints.has(id),
-			"%s est atteignable depuis lvl_01 (sinon il reste grise a vie)" % id)
+	for lv: LevelDef in _campagne():
+		ok(atteints.has(lv.id),
+			"%s est atteignable depuis lvl_01 (sinon il reste grise a vie)" % lv.id)
 
 
 ## Trois objectifs par niveau, et chaque cle doit etre EVALUABLE. Une cle
@@ -219,7 +226,7 @@ func _test_lacte_1_suit_le_document() -> void:
 ## le defaut exact qu un ajout de niveaux au milieu d un chainage fabrique.
 func _test_la_campagne_ne_se_termine_pas_en_impasse() -> void:
 	var feuilles: Array[StringName] = []
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in _campagne():
 		if lv.next_levels.is_empty():
 			feuilles.append(lv.id)
 	feuilles.sort()
@@ -246,7 +253,7 @@ func _test_la_campagne_ne_se_termine_pas_en_impasse() -> void:
 ## des trois autres.
 func _test_lacte_4_est_ouvert_en_eventail() -> void:
 	var acte4: Array[StringName] = []
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in _campagne():
 		if lv.act == 4:
 			acte4.append(lv.id)
 	acte4.sort()
@@ -345,7 +352,7 @@ func _test_lacte_4_se_ferme_sur_le_pentacle() -> void:
 	# « une fois les 4 realises vous brisez le pentacle » dans un systeme qui
 	# deverrouille par `next_levels`.
 	var demons: int = 0
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in _campagne():
 		if lv.act != 4 or lv.id == pentacle:
 			continue
 		demons += 1
@@ -450,7 +457,7 @@ func _test_lacte_5_renvoie_les_anciens_boss_en_vague_normale() -> void:
 ## sur TOUS les niveaux, celui-ci fermant la boucle par l autre bout.
 func _test_la_campagne_se_termine_sur_lacte_5() -> void:
 	var feuilles: Array[StringName] = []
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in _campagne():
 		if lv.next_levels.is_empty():
 			feuilles.append(lv.id)
 	for id: StringName in feuilles:
@@ -582,7 +589,7 @@ func _test_lacte_2_monte_avant_de_descendre() -> void:
 ## c est elle qui fait tenir ensemble le document et le contenu deja mesure.
 func _test_lacte_3_est_une_poursuite_avec_sa_fourche() -> void:
 	var acte3: Array[StringName] = []
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in _campagne():
 		if lv.act == 3:
 			acte3.append(lv.id)
 	acte3.sort()

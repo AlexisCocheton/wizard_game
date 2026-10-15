@@ -7,7 +7,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="5_o1fj0"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_7mxpv"]
 
-[sub_resource type="Resource" id="Resource_vnxbu"]
+[sub_resource type="Resource" id="Resource_rs44m"]
 script = ExtResource("2_38xc2")
 id = &"mushroom_gold"
 display_name = "Champignon dore"
@@ -109,28 +109,28 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"mushroom"
 
-[sub_resource type="Resource" id="Resource_mu7hn"]
+[sub_resource type="Resource" id="Resource_38xc2"]
 script = ExtResource("1_rs44m")
-enemy = SubResource("Resource_vnxbu")
+enemy = SubResource("Resource_rs44m")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ivmxr"]
+[sub_resource type="Resource" id="Resource_e8bcq"]
 script = ExtResource("1_rs44m")
 enemy = ExtResource("4_u02bu")
 count = 2
 spawn_delay = 2.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_w4luy"]
+[sub_resource type="Resource" id="Resource_u02bu"]
 script = ExtResource("1_rs44m")
 enemy = ExtResource("5_o1fj0")
 count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_twu40"]
+[sub_resource type="Resource" id="Resource_o1fj0"]
 script = ExtResource("1_rs44m")
 enemy = ExtResource("3_e8bcq")
 count = 1
@@ -141,7 +141,7 @@ start_offset = 28.0
 script = ExtResource("6_7mxpv")
 id = &"side_fairy_boss"
 duration = 46.0
-entries = Array[ExtResource("1_rs44m")]([SubResource("Resource_mu7hn"), SubResource("Resource_ivmxr"), SubResource("Resource_w4luy"), SubResource("Resource_twu40")])
+entries = Array[ExtResource("1_rs44m")]([SubResource("Resource_38xc2"), SubResource("Resource_e8bcq"), SubResource("Resource_u02bu"), SubResource("Resource_o1fj0")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true

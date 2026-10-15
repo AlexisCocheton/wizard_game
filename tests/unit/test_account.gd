@@ -373,7 +373,8 @@ func _test_chaque_cosmetique_a_un_apercu() -> void:
 ## Le test compare au CONTENU, jamais a un nombre : ecrire "21" ici referait le
 ## meme piege un cran plus loin.
 func _test_les_succes_de_campagne_suivent_le_contenu() -> void:
-	var total: int = ContentDB.levels.size()
+	# Vague 10 (B3) : les niveaux de CAMPAGNE, sans les quetes annexes.
+	var total: int = ContentDB.campaign_levels().size()
 	ok(total >= 7, "la campagne a des niveaux (%d)" % total)
 
 	var vus: Dictionary = {}
@@ -396,8 +397,8 @@ func _test_les_succes_de_campagne_suivent_le_contenu() -> void:
 
 	# Celui de l acte 1 doit demander les niveaux DE L ACTE 1.
 	var acte1: int = 0
-	for lv: LevelDef in ContentDB.levels.values():
-		if lv != null and lv.act == 1:
+	for lv: LevelDef in ContentDB.campaign_levels():
+		if lv.act == 1:
 			acte1 += 1
 	if vus.has(&"ch_act_one"):
 		eq(int(vus[&"ch_act_one"]), acte1,

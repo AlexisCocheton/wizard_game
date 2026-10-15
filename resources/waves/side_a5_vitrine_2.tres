@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="5_gcwic"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_s7why"]
 
-[sub_resource type="Resource" id="Resource_3m3pk"]
+[sub_resource type="Resource" id="Resource_33csu"]
 script = ExtResource("1_33csu")
 enemy = ExtResource("2_jccj4")
 count = 2
 spawn_delay = 4.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_couag"]
+[sub_resource type="Resource" id="Resource_jccj4"]
 script = ExtResource("1_33csu")
 enemy = ExtResource("3_shjwg")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_hjubv"]
+[sub_resource type="Resource" id="Resource_shjwg"]
 script = ExtResource("1_33csu")
 enemy = ExtResource("4_uxl4k")
 count = 2
 spawn_delay = 3.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_sln2c"]
+[sub_resource type="Resource" id="Resource_uxl4k"]
 script = ExtResource("1_33csu")
 enemy = ExtResource("5_gcwic")
 count = 1
@@ -39,7 +39,7 @@ start_offset = 18.0
 script = ExtResource("6_s7why")
 id = &"side_a5_vitrine_2"
 duration = 29.0
-entries = Array[ExtResource("1_33csu")]([SubResource("Resource_3m3pk"), SubResource("Resource_couag"), SubResource("Resource_hjubv"), SubResource("Resource_sln2c")])
+entries = Array[ExtResource("1_33csu")]([SubResource("Resource_33csu"), SubResource("Resource_jccj4"), SubResource("Resource_shjwg"), SubResource("Resource_uxl4k")])
 difficulty = 1.5
 is_miniboss = false
 is_boss = false

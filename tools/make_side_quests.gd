@@ -298,8 +298,8 @@ static func quetes() -> Array[Dictionary]:
 		],
 		"objectifs": [
 			[&"kill_flying", {"count": 8}],
-			[&"kill_type_one_cast", {"enemy": "nacelle_raider", "count": 2}],
 			[&"win_under_time", {"seconds": 150}],
+			[&"no_damage_taken", {}],
 		],
 	})
 	# --- ACTE 3 : LE TRESOR DE TOMBOL ------------------------------------------
@@ -328,7 +328,7 @@ static func quetes() -> Array[Dictionary]:
 				["shade", 3, 2.0, 24.0]]],
 		],
 		"objectifs": [
-			[&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 2}],
+			[&"multi_kill", {"count": 4, "window": 1}],
 			[&"never_hit_reflect", {}],
 			[&"no_hit_from", {"enemy": "parry_skeleton_gold"}],
 		],
@@ -388,8 +388,8 @@ static func quetes() -> Array[Dictionary]:
 				["sprite", 4, 1.5, 30.0]]],
 		],
 		"objectifs": [
-			[&"kill_type_one_cast", {"enemy": "gnome", "count": 3}],
-			[&"no_hit_from", {"enemy": "gorgon_gazer_gold"}],
+			[&"hit_from", {"enemy": "sleepy_fox"}],
+			[&"multi_kill", {"count": 5, "window": 1}],
 			[&"win_above_speed", {"pct": 300}],
 		],
 	})
@@ -421,7 +421,7 @@ static func quetes() -> Array[Dictionary]:
 		"objectifs": [
 			[&"kill_type_one_cast", {"enemy": "nacelle_raider", "count": 2}],
 			[&"no_hit_from", {"enemy": "imp_archer"}],
-			[&"no_hit_from", {"enemy": "imp_archer_gold"}],
+			[&"win_under_time", {"seconds": 150}],
 		],
 	})
 	# --- LA FEE : LES FOSSES NOYEES --------------------------------------------
@@ -451,9 +451,9 @@ static func quetes() -> Array[Dictionary]:
 				["mushroom", 1, 1.0, 28.0]]],
 		],
 		"objectifs": [
-			[&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 2}],
+			[&"element_casts", {"element": "FIRE", "count": 40}],
 			[&"kill_type_one_cast", {"enemy": "mushroom", "count": 2}],
-			[&"no_hit_from", {"enemy": "mushroom_gold"}],
+			[&"no_damage_taken", {}],
 		],
 	})
 	# --- L APPRENTIE D AZUR : LE CRISTAL D YMOA --------------------------------
@@ -484,8 +484,8 @@ static func quetes() -> Array[Dictionary]:
 				["ghoul_priest", 1, 1.0, 26.0]]],
 		],
 		"objectifs": [
+			[&"multi_kill", {"count": 3, "window": 1}],
 			[&"kill_type_one_cast", {"enemy": "shade", "count": 2}],
-			[&"no_hit_from", {"enemy": "void_knight"}],
 			[&"no_hit_from", {"enemy": "void_knight_gold"}],
 		],
 	})
@@ -550,6 +550,10 @@ func _niveau(q: Dictionary, dores: Dictionary) -> LevelDef:
 	# Le deck de base : trois communes possedees a l ouverture de la quete.
 	var dore: EnemyDef = dores.get(StringName(q["dore"]))
 	lv.base_commons = _communes_de(q, dore, _a_une_aura(vagues))
+	# Le REPLI d avant la vague 10 (exploration_deck) porte le meme deck de
+	# depart : un ecran ou un outil qui lirait encore ce champ montre ce que la
+	# partie distribue (LevelDef.campaign_deck, aucun objectif reussi).
+	lv.exploration_deck = lv.campaign_deck([])
 	return lv
 
 
@@ -784,6 +788,9 @@ func _distribuer(niveaux: Array[LevelDef]) -> void:
 		var rarete: int = LevelDef.REWARD_RARITY_BY_RANK[rang]
 		var cle: String = ["rares", "epiques", "legendaires"][rang]
 		var catalogue_r: Array[SpellCard] = catalogue(String(DOSSIERS[rarete]))
+		var par_id: Dictionary = {}
+		for c: SpellCard in catalogue_r:
+			par_id[String(c.id)] = c
 		var surplus: Array[String] = []
 		for c: SpellCard in catalogue_r:
 			if not donnes.has(String(c.id)) and not c.is_passive:
@@ -793,7 +800,7 @@ func _distribuer(niveaux: Array[LevelDef]) -> void:
 		# 1. Le surplus, par preference.
 		for i in niveaux.size():
 			for id: String in tables[i][cle]:
-				if id in surplus and not pris.has(id):
+				if id in surplus and not pris.has(id) and _admise(niveaux[i], par_id.get(id)):
 					choix[i] = id
 					pris[id] = true
 					break
@@ -802,7 +809,7 @@ func _distribuer(niveaux: Array[LevelDef]) -> void:
 			if pris.has(id):
 				continue
 			for i in niveaux.size():
-				if not choix.has(i):
+				if not choix.has(i) and _admise(niveaux[i], par_id.get(id)):
 					choix[i] = id
 					pris[id] = true
 					break
@@ -816,7 +823,7 @@ func _distribuer(niveaux: Array[LevelDef]) -> void:
 		for i in niveaux.size():
 			if choix.has(i):
 				continue
-			var reprise: String = _reprise(tables[i], cle, catalogue_r,
+			var reprise: String = _reprise(niveaux[i], tables[i], cle, catalogue_r,
 				StringName(tables[i]["apres"]), pris)
 			if reprise != "":
 				choix[i] = reprise
@@ -841,13 +848,16 @@ func _distribuer(niveaux: Array[LevelDef]) -> void:
 ## Une reprise pour la case `cle` d une quete : d abord ses preferences, puis le
 ## catalogue trie. Rend "" si la campagne n a rien propose de cette rarete
 ## avant l ouverture.
-func _reprise(q: Dictionary, cle: String, catalogue_r: Array[SpellCard],
+func _reprise(quete: LevelDef, q: Dictionary, cle: String, catalogue_r: Array[SpellCard],
 		apres: StringName, pris: Dictionary) -> String:
 	var possedees: Dictionary = _possedees_a(apres)
 	var avant: Dictionary = {}
 	for lv: LevelDef in _jusqu_a(apres):
 		for c: SpellCard in sorts_donnes_par(lv):
 			avant[String(c.id)] = true
+	var par_id: Dictionary = {}
+	for c: SpellCard in catalogue_r:
+		par_id[String(c.id)] = c
 	var ordre: Array[String] = []
 	for id: String in q[cle]:
 		ordre.append(id)
@@ -856,7 +866,7 @@ func _reprise(q: Dictionary, cle: String, catalogue_r: Array[SpellCard],
 			ordre.append(String(c.id))
 	for passe in 2:
 		for id: String in ordre:
-			if not avant.has(id) or possedees.has(id):
+			if not avant.has(id) or possedees.has(id) or not _admise(quete, par_id.get(id)):
 				continue
 			# Premiere passe : une carte qu aucune autre quete n a prise.
 			if passe == 0 and pris.has(id):
@@ -916,6 +926,38 @@ func _distribuer_passifs(niveaux: Array[LevelDef], tables: Array[Dictionary]) ->
 		niveaux[i].passive_unlocks = liste
 		_rapport.append("  %s : passifs %s" % [niveaux[i].id, par_quete[i]])
 	_rapport.append("  passifs : surplus %s" % [surplus])
+
+
+## Une recompense est-elle admise dans cette quete ? Pas un objet PERMANENT qui
+## tue dans une quete qui demande « N monstres d un seul sort » : un tel objet
+## est UN lancer pour toute la partie (ObjectiveChecker, section LANCER), ses
+## morts s additionnent et l objectif deviendrait gratuit des que la carte entre
+## au deck (meme regle que test_level_progression pour la campagne).
+static func _admise(quete: LevelDef, c: SpellCard) -> bool:
+	if c == null:
+		return false
+	for o: ObjectiveDef in quete.objectives:
+		if o != null and o.check_key == &"kill_type_one_cast" and pose_un_tueur_permanent(c):
+			return false
+	return true
+
+
+## La carte pose-t-elle un objet PERMANENT qui tue (ronces, arbre empoisonne,
+## autel qui fait naitre des allies) ? La definition de test_level_progression.
+static func pose_un_tueur_permanent(c: SpellCard) -> bool:
+	if c == null:
+		return false
+	for spec: EffectSpec in c.effects:
+		if spec == null or spec.duration > 0.0:
+			continue
+		if not spec.key in [&"place_terrain", &"taunt_prop"]:
+			continue
+		if spec.magnitude > 0.0:
+			return true
+		if float(spec.get_param(&"summon_every", 0.0)) > 0.0 \
+				and float(spec.get_param(&"ally_damage", 0.0)) > 0.0:
+			return true
+	return false
 
 
 func _carte(id: String) -> SpellCard:

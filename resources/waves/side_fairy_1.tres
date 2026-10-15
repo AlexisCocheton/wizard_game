@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="4_i14pe"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_n5b6f"]
 
-[sub_resource type="Resource" id="Resource_ghdww"]
+[sub_resource type="Resource" id="Resource_r37rl"]
 script = ExtResource("1_r37rl")
 enemy = ExtResource("2_n8ig5")
 count = 2
 spawn_delay = 2.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_071hu"]
+[sub_resource type="Resource" id="Resource_n8ig5"]
 script = ExtResource("1_r37rl")
 enemy = ExtResource("3_841bn")
 count = 2
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_t62nw"]
+[sub_resource type="Resource" id="Resource_841bn"]
 script = ExtResource("1_r37rl")
 enemy = ExtResource("4_i14pe")
 count = 1
@@ -31,7 +31,7 @@ start_offset = 12.0
 script = ExtResource("5_n5b6f")
 id = &"side_fairy_1"
 duration = 26.0
-entries = Array[ExtResource("1_r37rl")]([SubResource("Resource_ghdww"), SubResource("Resource_071hu"), SubResource("Resource_t62nw")])
+entries = Array[ExtResource("1_r37rl")]([SubResource("Resource_r37rl"), SubResource("Resource_n8ig5"), SubResource("Resource_841bn")])
 difficulty = 1.4
 is_miniboss = false
 is_boss = false

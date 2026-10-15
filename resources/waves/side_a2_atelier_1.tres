@@ -6,21 +6,21 @@
 [ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="4_6g6vf"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_vqbsh"]
 
-[sub_resource type="Resource" id="Resource_71rmf"]
+[sub_resource type="Resource" id="Resource_eltm5"]
 script = ExtResource("1_eltm5")
 enemy = ExtResource("2_sr80r")
 count = 3
 spawn_delay = 1.6
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_f0r03"]
+[sub_resource type="Resource" id="Resource_sr80r"]
 script = ExtResource("1_eltm5")
 enemy = ExtResource("3_f374l")
 count = 2
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_yp76g"]
+[sub_resource type="Resource" id="Resource_f374l"]
 script = ExtResource("1_eltm5")
 enemy = ExtResource("4_6g6vf")
 count = 2
@@ -31,7 +31,7 @@ start_offset = 12.0
 script = ExtResource("5_vqbsh")
 id = &"side_a2_atelier_1"
 duration = 26.0
-entries = Array[ExtResource("1_eltm5")]([SubResource("Resource_71rmf"), SubResource("Resource_f0r03"), SubResource("Resource_yp76g")])
+entries = Array[ExtResource("1_eltm5")]([SubResource("Resource_eltm5"), SubResource("Resource_sr80r"), SubResource("Resource_f374l")])
 difficulty = 1.3
 is_miniboss = false
 is_boss = false

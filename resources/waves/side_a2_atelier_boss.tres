@@ -7,7 +7,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="5_efmve"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_rvrxy"]
 
-[sub_resource type="Resource" id="Resource_ibutd"]
+[sub_resource type="Resource" id="Resource_lbdw3"]
 script = ExtResource("2_dgypt")
 id = &"totem_guardian_gold"
 display_name = "Gardien-totem dore"
@@ -111,28 +111,28 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"totem_guardian"
 
-[sub_resource type="Resource" id="Resource_fc2n2"]
+[sub_resource type="Resource" id="Resource_dgypt"]
 script = ExtResource("1_lbdw3")
-enemy = SubResource("Resource_ibutd")
+enemy = SubResource("Resource_lbdw3")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_6rc2k"]
+[sub_resource type="Resource" id="Resource_4257s"]
 script = ExtResource("1_lbdw3")
 enemy = ExtResource("3_4257s")
 count = 3
 spawn_delay = 2.0
 start_offset = 4.0
 
-[sub_resource type="Resource" id="Resource_trmtg"]
+[sub_resource type="Resource" id="Resource_1hime"]
 script = ExtResource("1_lbdw3")
 enemy = ExtResource("4_1hime")
 count = 3
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_re0fi"]
+[sub_resource type="Resource" id="Resource_efmve"]
 script = ExtResource("1_lbdw3")
 enemy = ExtResource("5_efmve")
 count = 2
@@ -143,7 +143,7 @@ start_offset = 22.0
 script = ExtResource("6_rvrxy")
 id = &"side_a2_atelier_boss"
 duration = 46.0
-entries = Array[ExtResource("1_lbdw3")]([SubResource("Resource_fc2n2"), SubResource("Resource_6rc2k"), SubResource("Resource_trmtg"), SubResource("Resource_re0fi")])
+entries = Array[ExtResource("1_lbdw3")]([SubResource("Resource_dgypt"), SubResource("Resource_4257s"), SubResource("Resource_1hime"), SubResource("Resource_efmve")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true

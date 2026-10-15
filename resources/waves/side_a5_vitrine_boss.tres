@@ -8,7 +8,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="6_70ic0"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_tkfdn"]
 
-[sub_resource type="Resource" id="Resource_doenj"]
+[sub_resource type="Resource" id="Resource_ql5q7"]
 script = ExtResource("2_yerrp")
 id = &"gorgon_gazer_gold"
 display_name = "Gorgone doree"
@@ -109,35 +109,35 @@ terrain_break_windup = 1.5
 demoted_from = &""
 gilded_from = &"gorgon_gazer"
 
-[sub_resource type="Resource" id="Resource_so3r4"]
+[sub_resource type="Resource" id="Resource_yerrp"]
 script = ExtResource("1_ql5q7")
-enemy = SubResource("Resource_doenj")
+enemy = SubResource("Resource_ql5q7")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_oga8d"]
+[sub_resource type="Resource" id="Resource_cvcur"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("3_cvcur")
 count = 4
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_r7uhj"]
+[sub_resource type="Resource" id="Resource_sfyks"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("4_sfyks")
 count = 3
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_jofvr"]
+[sub_resource type="Resource" id="Resource_7ckxt"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("5_7ckxt")
 count = 1
 spawn_delay = 1.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_s5w1y"]
+[sub_resource type="Resource" id="Resource_70ic0"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("6_70ic0")
 count = 4
@@ -148,7 +148,7 @@ start_offset = 30.0
 script = ExtResource("7_tkfdn")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
-entries = Array[ExtResource("1_ql5q7")]([SubResource("Resource_so3r4"), SubResource("Resource_oga8d"), SubResource("Resource_r7uhj"), SubResource("Resource_jofvr"), SubResource("Resource_s5w1y")])
+entries = Array[ExtResource("1_ql5q7")]([SubResource("Resource_yerrp"), SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true

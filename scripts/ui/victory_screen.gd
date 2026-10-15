@@ -38,11 +38,16 @@ func _ready() -> void:
 			done[obj.id] = ObjectiveChecker.evaluate(obj)
 
 	# Defis de compte : un niveau fini, et la performance s il n a rien encaisse.
+	# Vague 10 (B3) : les niveaux de CAMPAGNE seulement. Les succes « finir
+	# l acte », « finir la campagne » comptent ses niveaux ; une quete annexe
+	# finie ne doit pas en tenir lieu (21 victoires dont 8 annexes n est pas une
+	# campagne finie).
 	var cleared: int = 0
-	for lv: LevelDef in ContentDB.levels.values():
+	for lv: LevelDef in ContentDB.campaign_levels():
 		if SaveData.is_level_cleared(lv.id):
 			cleared += 1
-	ChallengeTracker.record_best(&"levels_cleared", cleared + 1)
+	ChallengeTracker.record_best(&"levels_cleared",
+		cleared + (1 if level.is_campaign_level() else 0))
 	if not RunState.took_any_damage:
 		ChallengeTracker.bump(&"flawless_clears")
 	# Succes de COLLECTION : ils comptent ce que le grimoire compte (retouche du

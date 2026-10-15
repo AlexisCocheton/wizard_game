@@ -130,7 +130,9 @@ func _test_le_boss_du_tutoriel_reste_sous_la_mediane() -> void:
 	var tuto: float = _boss_hp(l1)
 	ok(tuto > 0.0, "le tutoriel a un boss")
 	var autres: Array[float] = []
-	for lv: LevelDef in ContentDB.levels.values():
+	# La CAMPAGNE (vague 10) : les boss dores des quetes annexes n entrent pas
+	# dans sa mediane.
+	for lv: LevelDef in ContentDB.campaign_levels():
 		if lv == l1:
 			continue
 		var pv: float = _boss_hp(lv)

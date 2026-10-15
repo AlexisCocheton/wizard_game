@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_x3osq"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_kq0j8"]
 
-[sub_resource type="Resource" id="Resource_gk4fl"]
+[sub_resource type="Resource" id="Resource_467wk"]
 script = ExtResource("1_467wk")
 enemy = ExtResource("2_3714c")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_qau4u"]
+[sub_resource type="Resource" id="Resource_3714c"]
 script = ExtResource("1_467wk")
 enemy = ExtResource("3_1g3ba")
 count = 2
 spawn_delay = 3.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_4h5al"]
+[sub_resource type="Resource" id="Resource_1g3ba"]
 script = ExtResource("1_467wk")
 enemy = ExtResource("4_rr0cg")
 count = 2
 spawn_delay = 3.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_bj5bc"]
+[sub_resource type="Resource" id="Resource_rr0cg"]
 script = ExtResource("1_467wk")
 enemy = ExtResource("5_x3osq")
 count = 2
@@ -39,7 +39,7 @@ start_offset = 18.0
 script = ExtResource("6_kq0j8")
 id = &"side_bluewitch_3"
 duration = 30.0
-entries = Array[ExtResource("1_467wk")]([SubResource("Resource_gk4fl"), SubResource("Resource_qau4u"), SubResource("Resource_4h5al"), SubResource("Resource_bj5bc")])
+entries = Array[ExtResource("1_467wk")]([SubResource("Resource_467wk"), SubResource("Resource_3714c"), SubResource("Resource_1g3ba"), SubResource("Resource_rr0cg")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

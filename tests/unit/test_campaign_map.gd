@@ -71,7 +71,10 @@ func _test_un_ecran_par_acte() -> void:
 		"chaque niveau du catalogue est pose sur l ecran de son acte")
 	for id in ContentDB.levels.keys():
 		var lv: LevelDef = ContentDB.levels[id]
-		ok(m.levels_in_act(lv.act).has(id), "%s est sur l ecran de l acte %d" % [id, lv.act])
+		# Vague 10 : une QUETE ANNEXE est sur la page des annexes, pas sur celle
+		# de son acte de rattachement (test_campaign_progression).
+		var page: int = CampaignMap.SIDE_PAGE if lv.side_quest else lv.act
+		ok(m.levels_in_act(page).has(id), "%s est sur l ecran de l acte %d" % [id, page])
 	# Le nom affiche est bien celui du niveau, pas son identifiant technique.
 	var l1: LevelDef = ContentDB.levels.get(&"lvl_01")
 	eq(m.label_for(&"lvl_01"), l1.display_name, "le point porte le nom du niveau")
@@ -97,7 +100,14 @@ func _test_les_fleches_changent_d_acte() -> void:
 	# Les 4 actes qui ont du contenu PLUS l acte 5, ecrit mais encore vide. Le
 	# nombre est ecrit en dur exprès : ecrire `>= 4` laissait passer la
 	# disparition de l acte 5, c est-a-dire exactement le defaut a empecher.
-	eq(actes.size(), 5, "les 5 actes de l histoire sont sur la carte")
+	# Vague 10 : la page des QUETES ANNEXES s y ajoute, en dernier, quand le
+	# contenu en porte ; elle n est pas un acte de l histoire.
+	var histoire: Array[int] = []
+	for a in actes:
+		if a != CampaignMap.SIDE_PAGE:
+			histoire.append(a)
+	eq(histoire.size(), 5, "les 5 actes de l histoire sont sur la carte")
+	eq(actes.size(), 6 if m.has_side_page() else 5, "et la page des annexes s il y en a")
 	for a in [1, 2, 3, 4, 5]:
 		ok(actes.has(a), "l acte %d est atteignable avec les fleches" % a)
 	m.show_act(actes[0])
@@ -164,8 +174,10 @@ func _test_le_fond_est_celui_de_l_acte() -> void:
 		var lv: LevelDef = ContentDB.levels[ids[0]]
 		if lv.backdrop == "":
 			continue
-		eq(m.backdrop_for_act(a), lv.backdrop,
-			"l acte %d affiche le fond de ses niveaux" % a)
+		# La page des annexes a SON fond (CampaignMap.SIDE_BACKDROP) : ses
+		# quetes viennent de tous les actes.
+		eq(m.backdrop_for_act(a), CampaignMap.SIDE_BACKDROP if a == CampaignMap.SIDE_PAGE
+			else lv.backdrop, "l acte %d affiche le fond de ses niveaux" % a)
 		ok(FileAccess.file_exists("res://assets/backdrops/%s.png" % m.backdrop_for_act(a)),
 			"le fond de l acte %d existe sur le disque" % a)
 	# Un acte sans niveau a quand meme un fond : sinon l ecran serait noir.
