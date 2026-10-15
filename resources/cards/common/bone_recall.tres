@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_m2isn"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_xoccl"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_q3smx"]
+
+[sub_resource type="Resource" id="Resource_m2isn"]
+script = ExtResource("1_m2isn")
+key = &"retain_next"
+magnitude = 1.0
+duration = 0.0
+radius = 0.0
+params = {}
+
+[resource]
+script = ExtResource("3_q3smx")
+id = &"bone_recall"
+display_name = "Rappel d ossements"
+description = "Le prochain sort lance revient en main au lieu d etre defausse."
+rarity = 0
+base_cast_time = 0.9
+targeting = 0
+element = 6
+tags = Array[int]([])
+effects = Array[ExtResource("1_m2isn")]([SubResource("Resource_m2isn")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"dark_soul"
+sfx_key = &"bone_rattle"
+major_upgrades = Array[ExtResource("2_xoccl")]([])

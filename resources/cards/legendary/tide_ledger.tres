@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7goh8"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_mhwtv"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_q8jgj"]
 
-[sub_resource type="Resource" id="Resource_7goh8"]
+[sub_resource type="Resource" id="Resource_q8jgj"]
 script = ExtResource("1_7goh8")
 key = &"draw_cards"
 magnitude = 0.0
@@ -13,7 +14,7 @@ params = {
 &"count": 3
 }
 
-[sub_resource type="Resource" id="Resource_q8jgj"]
+[sub_resource type="Resource" id="Resource_mhwtv"]
 script = ExtResource("1_7goh8")
 key = &"double_cast"
 magnitude = 0.0
@@ -31,10 +32,11 @@ base_cast_time = 3.2
 targeting = 0
 element = 8
 tags = Array[int]([])
-effects = Array[ExtResource("1_7goh8")]([SubResource("Resource_7goh8"), SubResource("Resource_q8jgj")])
+effects = Array[ExtResource("1_7goh8")]([SubResource("Resource_q8jgj"), SubResource("Resource_mhwtv")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"tide_waves"
-sfx_key = &"spell_deep"
+sfx_key = &"water_drop"
+major_upgrades = Array[ExtResource("2_mhwtv")]([])

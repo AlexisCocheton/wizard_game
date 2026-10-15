@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1qs4i"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_2fckd"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_kvu5c"]
 
-[sub_resource type="Resource" id="Resource_1qs4i"]
+[sub_resource type="Resource" id="Resource_kvu5c"]
 script = ExtResource("1_1qs4i")
 key = &"ground_zone"
 magnitude = 10.0
@@ -23,10 +24,11 @@ base_cast_time = 2.8
 targeting = 1
 element = 6
 tags = Array[int]([4])
-effects = Array[ExtResource("1_1qs4i")]([SubResource("Resource_1qs4i")])
+effects = Array[ExtResource("1_1qs4i")]([SubResource("Resource_kvu5c")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"dark_swirl"
-sfx_key = &"spell_crackle"
+sfx_key = &"poison_bubble"
+major_upgrades = Array[ExtResource("2_2fckd")]([])

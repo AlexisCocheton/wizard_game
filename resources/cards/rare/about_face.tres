@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_ab1no"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1at6u"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_ums6l"]
 
-[sub_resource type="Resource" id="Resource_ab1no"]
+[sub_resource type="Resource" id="Resource_1at6u"]
 script = ExtResource("1_ab1no")
 key = &"reverse_enemies"
 magnitude = 0.0
@@ -21,10 +22,11 @@ base_cast_time = 1.0
 targeting = 0
 element = 10
 tags = Array[int]([])
-effects = Array[ExtResource("1_ab1no")]([SubResource("Resource_ab1no")])
+effects = Array[ExtResource("1_ab1no")]([SubResource("Resource_1at6u")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"pinwheel_turn"
 sfx_key = &"whoosh_deep"
+major_upgrades = Array[ExtResource("2_ums6l")]([])

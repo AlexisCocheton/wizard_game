@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_pbmkh"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_3k240"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_m1l0j"]
 
-[sub_resource type="Resource" id="Resource_pbmkh"]
+[sub_resource type="Resource" id="Resource_m1l0j"]
 script = ExtResource("1_pbmkh")
 key = &"ground_zone"
 magnitude = 0.0
@@ -23,10 +24,11 @@ base_cast_time = 1.3
 targeting = 1
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_pbmkh")]([SubResource("Resource_pbmkh")])
+effects = Array[ExtResource("1_pbmkh")]([SubResource("Resource_m1l0j")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"diamond_mark"
-sfx_key = &"charge_magic"
+sfx_key = &"curse_mark"
+major_upgrades = Array[ExtResource("2_3k240")]([])

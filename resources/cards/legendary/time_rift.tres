@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7ag10"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_f6g4t"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_vnek4"]
 
-[sub_resource type="Resource" id="Resource_7ag10"]
+[sub_resource type="Resource" id="Resource_vnek4"]
 script = ExtResource("1_7ag10")
 key = &"cost_reduction"
 magnitude = 1.5
@@ -11,7 +12,7 @@ duration = 10.0
 radius = 0.0
 params = {}
 
-[sub_resource type="Resource" id="Resource_vnek4"]
+[sub_resource type="Resource" id="Resource_f6g4t"]
 script = ExtResource("1_7ag10")
 key = &"pierce_line"
 magnitude = 40.0
@@ -31,10 +32,11 @@ base_cast_time = 2.0
 targeting = 2
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_7ag10")]([SubResource("Resource_7ag10"), SubResource("Resource_vnek4")])
+effects = Array[ExtResource("1_7ag10")]([SubResource("Resource_vnek4"), SubResource("Resource_f6g4t")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"orbit_cross"
-sfx_key = &"spell_grand"
+sfx_key = &"time_rift"
+major_upgrades = Array[ExtResource("2_f6g4t")]([])

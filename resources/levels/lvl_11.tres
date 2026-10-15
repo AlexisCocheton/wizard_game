@@ -19,10 +19,10 @@
 [ext_resource type="Resource" path="res://resources/cards/epic/reckless_bargain.tres" id="17_fw4au"]
 [ext_resource type="Resource" path="res://resources/cards/epic/deep_freeze.tres" id="18_ifueo"]
 [ext_resource type="Resource" path="res://resources/cards/epic/terrain_pit.tres" id="18_pucof"]
-[ext_resource type="Resource" path="res://resources/cards/rare/quickening.tres" id="20_6bhln"]
-[ext_resource type="Resource" path="res://resources/cards/epic/terrain_altar.tres" id="21_xahqv"]
+[ext_resource type="Resource" path="res://resources/cards/rare/ice_wall.tres" id="20_6bhln"]
+[ext_resource type="Resource" path="res://resources/cards/epic/terrain_altar.tres" id="21_fw4au"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="22_3efo2"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/venom_mire.tres" id="22_6bhln"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/venom_mire.tres" id="22_pucof"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="23_2j2mj"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_eswmg"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="25_ihudj"]
@@ -215,5 +215,10 @@ enemy_pool = Array[ExtResource("1_q8cbb")]([ExtResource("2_6bhln"), ExtResource(
 exploration_deck = Array[ExtResource("10_3pn3o")]([ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("13_jemhw"), ExtResource("11_88php"), ExtResource("11_88php"), ExtResource("11_88php"), ExtResource("12_paeys"), ExtResource("12_paeys"), ExtResource("14_v6qrd"), ExtResource("15_k2nie"), ExtResource("18_ifueo"), ExtResource("18_ifueo")])
 objectives = Array[ExtResource("22_3efo2")]([SubResource("Resource_6bhln"), SubResource("Resource_fw4au"), SubResource("Resource_pucof")])
 levelup_cards = Array[ExtResource("10_3pn3o")]([ExtResource("17_fw4au"), ExtResource("18_pucof"), ExtResource("17_6bhln")])
-objective_rewards = Array[ExtResource("10_3pn3o")]([ExtResource("20_6bhln"), ExtResource("21_xahqv"), ExtResource("22_6bhln")])
+objective_rewards = Array[ExtResource("10_3pn3o")]([ExtResource("20_6bhln"), ExtResource("21_fw4au"), ExtResource("22_pucof")])
 next_levels = Array[StringName]([&"lvl_13"])
+base_commons = Array[ExtResource("10_3pn3o")]([])
+passive_unlocks = Array[ExtResource("10_3pn3o")]([])
+side_quest = false
+side_quest_after = &""
+side_quest_character = ""

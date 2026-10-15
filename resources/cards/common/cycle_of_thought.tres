@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_s5sf5"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_djt85"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_m1007"]
+
+[sub_resource type="Resource" id="Resource_s5sf5"]
+script = ExtResource("1_s5sf5")
+key = &"discard_draw"
+magnitude = 0.0
+duration = 0.0
+radius = 0.0
+params = {
+&"count": 2
+}
+
+[resource]
+script = ExtResource("3_m1007")
+id = &"cycle_of_thought"
+display_name = "Cycle de pensee"
+description = "Defausse 2 cartes, en pioche 2."
+rarity = 0
+base_cast_time = 0.6
+targeting = 0
+element = 8
+tags = Array[int]([])
+effects = Array[ExtResource("1_s5sf5")]([SubResource("Resource_s5sf5")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"cycle_swirl"
+sfx_key = &"water_drop"
+major_upgrades = Array[ExtResource("2_djt85")]([])

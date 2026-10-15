@@ -602,6 +602,113 @@ static func accentuate(r: float) -> float:
 	return 1.0
 
 
+## PALIERS LISIBLES (vague 10, regle du co-auteur du 14/10) — la DERNIERE etape
+## de la table jouee, apres accentuate() (tools/make_content.gd, `_resist`).
+##
+## « Arrondis les resistances et les faiblesses pour qu on n ait que des
+## chiffres clairs et alignes : les resistances/faiblesses proches d un meme
+## monstre a une seule valeur (ex. 15, 20 et 30 -> les trois a 25) ; si elles
+## sont trop proches de 0, mets-les a 0. »
+##
+## Avant elle, l accentuation laissait VINGT valeurs differentes dans le
+## bestiaire (-84, -80, -70, -65, -59... +13, +27, +42, +58, +93) : la fiche
+## d un monstre ne se lisait pas d un coup d oeil, et deux elements voisins
+## d un meme monstre (-46 et -53) se distinguaient pour rien.
+##
+## LA REGLE, en points d ECART (multiplicateur 0,75 = -25 ; 1,5 = +50) :
+##   1. NEUTRE : un ecart de moins de PALIER_NEUTRE (15 points) devient 0, et
+##      la ligne disparait de la table (la fiche n affiche que les ecarts).
+##   2. GROUPES : d un meme COTE (les resistances entre elles, les faiblesses
+##      entre elles), les ecarts d un monstre, classes du plus petit au plus
+##      grand, forment un groupe tant qu ils restent a PALIER_GROUPE points ou
+##      moins du premier du groupe. L exemple du co-auteur (15, 20, 30 : 15
+##      points d un bout a l autre) en est exactement un.
+##   3. PALIER : tout le groupe prend le multiple de PALIER_PAS (25 points) le
+##      plus proche de sa MOYENNE. Une resistance reste entre -25 et -75 : une
+##      immunite est une DECISION de design, jamais l effet d un arrondi. Une
+##      faiblesse reste entre +25 et +100 (WEAK_CAP).
+##   4. L immunite (0) est gardee telle quelle. Une ligne qui n est pas un
+##      ELEMENT (SLOW : un effet) est arrondie seule, sans groupe.
+## Il ne reste que huit valeurs : immunise, -75, -50, -25, +25, +50, +75, +100,
+## toutes rondes a l ecran (ElementIcons.percent_text). test_resist_tiers.gd
+## verrouille la regle et l applique a tout le bestiaire livre.
+const PALIER_PAS: float = 0.25
+const PALIER_NEUTRE: float = 0.15
+const PALIER_GROUPE: float = 0.15
+
+
+## La table `tag -> multiplicateur` (deja accentuee) mise aux paliers. Les
+## lignes neutres disparaissent ; l ordre de lecture des cles ne change rien
+## (les groupes se forment sur les ecarts tries, a egalite par tag).
+static func tiered_table(table: Dictionary) -> Dictionary:
+	var out: Dictionary = {}
+	# [resistances, faiblesses] : chaque entree est [ecart positif, tag].
+	var cotes: Array = [[], []]
+	for tag in table.keys():
+		var r: float = float(table[tag])
+		if r <= 0.0:
+			out[tag] = 0.0
+			continue
+		if not (int(tag) in GameEnums.ELEMENTS):
+			var seule: float = tiered_value(r)
+			if not is_equal_approx(seule, 1.0):
+				out[tag] = seule
+			continue
+		var ecart: float = r - 1.0
+		if _neutre(ecart):
+			continue
+		(cotes[1 if ecart > 0.0 else 0] as Array).append([absf(ecart), int(tag)])
+	for cote in 2:
+		var liste: Array = cotes[cote]
+		liste.sort_custom(func(a: Array, b: Array) -> bool:
+			return float(a[0]) < float(b[0]) \
+				or (is_equal_approx(float(a[0]), float(b[0])) and int(a[1]) < int(b[1])))
+		var i: int = 0
+		while i < liste.size():
+			var j: int = i
+			var somme: float = 0.0
+			# 0,0001 : un ecart de 15 points tout rond (0,42 - 0,27) ne doit pas
+			# sortir du groupe pour une erreur d arrondi des flottants.
+			while j < liste.size() \
+					and float(liste[j][0]) - float(liste[i][0]) <= PALIER_GROUPE + 0.0001:
+				somme += float(liste[j][0])
+				j += 1
+			var palier: float = _palier_ecart(somme / float(j - i), cote == 1)
+			for k in range(i, j):
+				out[liste[k][1]] = 1.0 + palier if cote == 1 else 1.0 - palier
+			i = j
+	return out
+
+
+## UNE valeur mise au palier, sans groupe : ligne SLOW, multiplicateurs du
+## Cameleon, bornes que les tests lisent. 1,0 si elle est neutre.
+static func tiered_value(r: float) -> float:
+	if r <= 0.0:
+		return 0.0
+	var ecart: float = r - 1.0
+	if _neutre(ecart):
+		return 1.0
+	if ecart > 0.0:
+		return 1.0 + _palier_ecart(ecart, true)
+	return 1.0 - _palier_ecart(-ecart, false)
+
+
+## Trop proche de zero ? 15 points TOUT RONDS ne le sont pas (l exemple du
+## co-auteur garde son 15) : 1,15 - 1,0 vaut 0,1499999... en flottant, d ou la
+## marge.
+static func _neutre(ecart: float) -> bool:
+	return absf(ecart) < PALIER_NEUTRE - 0.0001
+
+
+## Un ecart positif au multiple de PALIER_PAS le plus proche, borne selon son
+## cote (voir la regle, point 3).
+static func _palier_ecart(ecart: float, faiblesse: bool) -> float:
+	var p: float = roundf(ecart / PALIER_PAS) * PALIER_PAS
+	if faiblesse:
+		return clampf(p, PALIER_PAS, WEAK_CAP - 1.0)
+	return clampf(p, PALIER_PAS, 1.0 - PALIER_PAS)
+
+
 func is_boss() -> bool:
 	return kind == GameEnums.EnemyKind.BOSS or kind == GameEnums.EnemyKind.MINIBOSS
 

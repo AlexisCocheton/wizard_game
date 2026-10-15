@@ -131,7 +131,11 @@ const DRAW_INTERVAL: float = 6.5
 ## POUR LE CHANGER : ce seul chiffre, puis le banc complet sur les 21 niveaux
 ## (README_equilibrage : plusieurs processus en parallele, --parties=60), en
 ## surveillant d abord lvl_11, lvl_18, lvl_20 et lvl_13, les premiers a tomber.
-const CAST_TIME_SCALE: float = 1.9
+##
+## 1,9 -> 1,75 (vague 10, co-auteur : « incantation legerement reduite ») :
+## -8 %, une incantation de base de 1 s passe de 1,9 a 1,75 s a x1. MESURE A
+## COMPLETER (banc du chantier B1a).
+const CAST_TIME_SCALE: float = 1.75
 
 const DRAW_COUNT: int = 2
 ## 6 et non 8 : a 8 cartes chacune tombait sous 130 px de large et le nom se

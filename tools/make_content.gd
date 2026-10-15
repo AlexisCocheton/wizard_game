@@ -115,6 +115,39 @@ const NATURE_FLYER_MAX: float = 0.65
 const WATER_FROM_FIRE_MIN: float = 0.65
 const WATER_FROM_FIRE_MAX: float = 1.35
 
+## REEQUILIBRAGE DE LA VAGUE 10 (co-auteur, 14/10 : « rends-les un peu plus
+## equilibrees : trop de monstres immunises au poison »). Mesure sur les 86
+## tables jouees avant ce chantier : 32 immunises au POISON et 37 resistants,
+## pour 5 faibles ; 56 resistants a la NATURE pour 23 faibles. Deux regles de
+## passage, et non 86 retouches : l INTENTION de chaque table (qui resiste a
+## quoi, et plus ou moins fort) reste celle qui a ete ecrite.
+##
+## LE POISON n est plus un element de niche : le Dard venimeux est une commune
+## depuis la vague 8. L immunite n est gardee QUE pour ce qui n a ni chair ni
+## sang a ronger — la boule de poison (elle EST du venin), la pierre (Golem), la
+## machine (Golem mecanique), le verre (Miroir de verre, Eclat de miroir), le
+## sceau (Sceau de Tombol). Ailleurs, une immunite ecrite compte comme une
+## resistance de moitie (0,5 : « le venin les ronge mal », les morts-vivants),
+## et TOUTE resistance au poison ecrite garde la moitie de son ecart
+## (POISON_ECART) : 0,8 -> 0,9, 0,5 -> 0,75. Une faiblesse au poison est
+## gardee telle quelle. test_resist_tiers lit cette liste : une immunite au
+## poison hors liste rougit.
+const IMMUNISES_AU_POISON: Array[String] = ["poison_ball", "golem", "mecha_golem",
+	"glass_mirror", "mirror_shard", "tombol_seal"]
+const POISON_IMMUNITE_HORS_LISTE: float = 0.5
+const POISON_ECART: float = 0.5
+## LA NATURE ne nait plus de TOUTE la durete : la moitie de son ecart
+## (NATURE_ECART). La regle de la vague 8 (nature = vent = l ancien « phys »)
+## donnait a la nature, element des murs, des arbres et du sable, la meme
+## distribution que la fleche : 56 monstres sur 86 la resistaient, et chaque
+## objet de nature (Totem, Bastion, Mur de pierre) etait frappe plus fort par
+## les deux tiers du bestiaire. La durete GARDE son sens (le golem resiste aux
+## deux, le squelette fragile craint les deux), en plus doux pour la nature. Le
+## VENT, lui, garde tout l ecart : il porte la Fleche percante du deck de
+## depart, le deplacer aurait deplace les huit niveaux mesures qui la portent.
+## Les volants gardent leur regle (nature <= NATURE_FLYER_MAX).
+const NATURE_ECART: float = 0.5
+
 
 func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
 	var T := GameEnums.DamageTag
@@ -127,7 +160,7 @@ func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
 			printerr("element inconnu dans une table de resistances : ", nom)
 	var dur: float = float(ecrit.get("phys", 1.0))
 	var vent: float = float(ecrit.get("vent", dur))
-	var nature: float = float(ecrit.get("nature", dur))
+	var nature: float = float(ecrit.get("nature", 1.0 + (dur - 1.0) * NATURE_ECART))
 	if e.flying and not ecrit.has("vent"):
 		vent = maxf(vent, WIND_FLYER_MIN)
 	if e.flying and not ecrit.has("nature"):
@@ -135,6 +168,11 @@ func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
 	var feu: float = float(ecrit.get("feu", 1.0))
 	var eau: float = float(ecrit.get("eau",
 		clampf(2.0 - feu, WATER_FROM_FIRE_MIN, WATER_FROM_FIRE_MAX)))
+	var poison: float = float(ecrit.get("poison", 1.0))
+	if poison <= 0.0 and not String(e.id) in IMMUNISES_AU_POISON:
+		poison = POISON_IMMUNITE_HORS_LISTE
+	if poison > 0.0 and poison < 1.0:
+		poison = 1.0 - (1.0 - poison) * POISON_ECART
 	var joue: Dictionary = {
 		T.FIRE: feu,
 		T.WATER: eau,
@@ -143,19 +181,22 @@ func _resist(e: EnemyDef, table: Dictionary) -> EnemyDef:
 		T.LIGHTNING: float(ecrit.get("foudre", 1.0)),
 		T.ICE: float(ecrit.get("glace", ecrit.get("givre", 1.0))),
 		T.ARCANE: float(ecrit.get("arcane", 1.0)),
-		T.POISON: float(ecrit.get("poison", 1.0)),
+		T.POISON: poison,
 		T.SLOW: float(ecrit.get("lent", 1.0)),
 	}
-	var out: Dictionary = {}
+	var accentue: Dictionary = {}
 	for tag in joue.keys():
-		var v: float = EnemyDef.accentuate(float(joue[tag]))
-		if not is_equal_approx(v, 1.0):
-			out[tag] = v
+		accentue[tag] = EnemyDef.accentuate(float(joue[tag]))
 	# Le CAMELEON ne declare pas les elements de son cycle (EnemyDef : les deux
 	# tables se multiplieraient). La regle ci-dessus pourrait en deriver un (le
-	# vent et la nature naissent de « phys ») : on les retire.
+	# vent et la nature naissent de « phys ») : on les retire AVANT les paliers,
+	# pour qu ils ne pesent pas sur les groupes des autres elements.
 	for t in e.chameleon_elements:
-		out.erase(int(t))
+		accentue.erase(int(t))
+	# Vague 10 : la table jouee est mise aux PALIERS (EnemyDef.tiered_table) —
+	# huit valeurs rondes, les ecarts voisins d un meme monstre alignes, les
+	# ecarts trop proches de zero effaces.
+	var out: Dictionary = EnemyDef.tiered_table(accentue)
 	e.resistances = out
 	# L ancien champ est vide desormais : la table est la seule source de verite.
 	# Le laisser rempli ferait exister DEUX endroits ou lire une immunite, et
@@ -1853,9 +1894,10 @@ func _enemies_v3(E: String) -> void:
 	chameleon.chameleon_elements = [T.FIRE, T.WIND, T.ICE, T.NATURE]
 	# Ses deux multiplicateurs tournants passent par la MEME accentuation que les
 	# tables : sinon le Cameleon, dont la faiblesse EST la mecanique, deviendrait
-	# le monstre aux ecarts les plus timides du bestiaire.
-	chameleon.chameleon_weak_mult = EnemyDef.accentuate(1.5)
-	chameleon.chameleon_resist_mult = EnemyDef.accentuate(0.5)
+	# le monstre aux ecarts les plus timides du bestiaire. Et par les memes
+	# PALIERS (vague 10) : +100 % et -75 %, deux chiffres ronds a la fiche.
+	chameleon.chameleon_weak_mult = EnemyDef.tiered_value(EnemyDef.accentuate(1.5))
+	chameleon.chameleon_resist_mult = EnemyDef.tiered_value(EnemyDef.accentuate(0.5))
 	_resist(chameleon, {&"phys": 0.9, &"arcane": 1.1})
 	_save(chameleon, E + "season_chameleon.tres")
 
@@ -2175,6 +2217,12 @@ const ELEMENT_DES_SORTS: Dictionary = {
 	"venom_dart": [GameEnums.DamageTag.POISON, "un dard venimeux (vague 8, demande du co-auteur)"],
 	# Et une carte de temps de plus, comme la Precipitation :
 	"time_surge": [GameEnums.DamageTag.ARCANE, "l elan du temps : la vitesse du mage (vague 8, demande du co-auteur)"],
+	# --- Vague 10 (chantier B1a), les cinq sorts demandes par le co-auteur ---
+	"south_wind": [GameEnums.DamageTag.WIND, "le vent du sud, qui souffle sur tout le terrain"],
+	"electric_mark": [GameEnums.DamageTag.LIGHTNING, "une marque d eclair qui saute de mort en mort"],
+	"heavy_rain": [GameEnums.DamageTag.WATER, "une pluie sur tout le terrain"],
+	"quicksand": [GameEnums.DamageTag.NATURE, "le sable qui avale : la terre"],
+	"water_jet": [GameEnums.DamageTag.WATER, "un jet d eau ; l eau, deja la commune de la pluie, garde le jet que le co-auteur lui donnait (le recul du vent a deja ses deux sorts, Rupture de chaine et Onde de repulsion)"],
 }
 
 
@@ -2211,6 +2259,41 @@ func _card(id: String, dname: String, desc: String, rarity: GameEnums.Rarity,
 ## par tools/assets/extract_fxpack.py, deja teintees a l element du sort. Avant,
 ## l effet etait choisi par ELEMENT : tous les sorts de feu se ressemblaient, et
 ## l icone (derivee de la feuille) aussi.
+##
+## SONS (vague 10, dette de la phase A) : le chantier audio A4 avait donne a 28
+## sorts un son de la famille de leur ELEMENT dans AudioBus.CARD_SFX, faute de
+## pouvoir ecrire ici. Ces sons sont recopies dans les `sfx_key` ci-dessous et
+## la table d AudioBus est videe : le son d un sort ne vit plus qu a un endroit.
+## test_audio_w10 tient la regle (un son par element, deux sorts au plus).
+##
+## RARETES (vague 10, co-auteur : « il y a trop de rares » ; la campagne refaite
+## demande environ une commune NOUVELLE par niveau, 21 niveaux). Huit communes
+## avant ce chantier, cinq sorts neufs et la Lumiere purifiante demandes en
+## commune : il en manquait sept. Passent en COMMUNE les rares les plus SIMPLES
+## — un seul effet qui se lit sur la carte, ni objet permanent ni mecanique a
+## apprendre — choisies pour que les communes couvrent les HUIT elements et les
+## roles de base :
+##   Mur de pierre (nature)      mur et bloque-projectiles, 20 s ;
+##   Meteore (feu)               le gros coup lent, anti-blindage ;
+##   Rupture de chaine (vent)    degats de zone et recul ; sa jumelle plus large
+##                               et plus vive, l Onde de repulsion, reste rare ;
+##   Spirale de sel (vent)       controle : rassemble (le Maelstrom epique fait
+##                               la meme chose en plus grand) ;
+##   Cycle de pensee (eau)       pioche ;
+##   Precipitation (arcane)      rapidite d incantation ;
+##   Rappel d ossements (poison) la main : le seul sort de poison simple apres le
+##                               Dard (l Echo de la main, legendaire, garde deux
+##                               sorts : la rarete se lit toujours dans le chiffre).
+## Aucun chiffre n est reechelonne : chacun de ces sorts fait UNE chose, deja
+## moins que sa version superieure (Onde de repulsion, Maelstrom, Echo de la
+## main, Bastion), et une commune peut le porter. Le Meteore est le plus fort
+## d entre eux, et c est aussi le plus LONG a lancer du jeu apres les
+## legendaires (2,8 s de base) : il se paie en temps. Restent RARES les sorts a
+## objet permanent (Mur de glace, Totem, Ronces), ceux qui changent la regle du
+## temps ou de la main (Entrave temporelle, Elan du temps, Flux de mana,
+## Focalisation, Volte-face), la Nappe montante (decision de la vague 8) et le
+## Brasier, qui doublait le feu des communes : ils vont aux recompenses
+## d objectif et aux quetes annexes.
 func _cards() -> void:
 	# --- Communes (deck de depart) ---
 	var bolt := _card("arcane_bolt", "Trait arcanique",
@@ -2227,7 +2310,7 @@ func _cards() -> void:
 		[],
 		[_spec("pierce_line", 10.0, 0.0, 120.0, {&"max_targets": 5})], 3)
 	pierce.fx_key = &"pin_thrust"
-	pierce.sfx_key = &"arrow_laser"
+	pierce.sfx_key = &"wind_arrow"
 	_save(pierce, "res://resources/cards/common/piercing_arrow.tres")
 
 	var frost := _card("frost_field", "Champ de givre",
@@ -2250,7 +2333,7 @@ func _cards() -> void:
 		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 8.0, 4.0, 160.0)], 2)
 	ember.fx_key = &"ember_flames"
-	ember.sfx_key = &"fire_ignite"
+	ember.sfx_key = &"fire_swoosh"
 	_save(ember, "res://resources/cards/common/ember_pool.tres")
 
 	# LA DESCRIPTION DISAIT UN TOTAL, LE CODE LIT UN DEBIT.
@@ -2279,14 +2362,15 @@ func _cards() -> void:
 	fireball.sfx_key = &"blast_short"
 	_save(fireball, "res://resources/cards/common/fireball.tres")
 
-	# --- Rares ---
+	# --- Rares (Precipitation, Cycle de pensee, Mur de pierre : communes depuis
+	# la vague 10, voir l en-tete) ---
 	var haste := _card("quickening", "Precipitation",
-		"Accelere l incantation de 60 pourcent pendant 6 s.", GameEnums.Rarity.RARE, 0.8,
+		"Accelere l incantation de 60 pourcent pendant 6 s.", GameEnums.Rarity.COMMON, 0.8,
 		GameEnums.Targeting.NONE, [],
 		[_spec("self_haste", 60.0, 6.0)])
 	haste.fx_key = &"ray_wheel"
 	haste.sfx_key = &"spell_rise"
-	_save(haste, "res://resources/cards/rare/quickening.tres")
+	_save(haste, "res://resources/cards/common/quickening.tres")
 
 	var drag := _card("temporal_drag", "Entrave temporelle",
 		"Ralentit tous les ennemis de 40 pourcent pendant 5 s.", GameEnums.Rarity.RARE, 1.4,
@@ -2306,16 +2390,16 @@ func _cards() -> void:
 	# le Metier du monde ralentissent aussi, mais melangent hate et double lancer :
 	# l horloge y dirait la moitie du sort. Ici elle le dit en entier.
 	drag.fx_key = &"timemagic"
-	drag.sfx_key = &"zap_long"
+	drag.sfx_key = &"time_slow"
 	_save(drag, "res://resources/cards/rare/temporal_drag.tres")
 
 	var cycle := _card("cycle_of_thought", "Cycle de pensee",
-		"Defausse 2 cartes, en pioche 2.", GameEnums.Rarity.RARE, 0.6,
+		"Defausse 2 cartes, en pioche 2.", GameEnums.Rarity.COMMON, 0.6,
 		GameEnums.Targeting.NONE, [],
 		[_spec("discard_draw", 0.0, 0.0, 0.0, {&"count": 2})])
 	cycle.fx_key = &"cycle_swirl"
-	cycle.sfx_key = &"spell_deep"
-	_save(cycle, "res://resources/cards/rare/cycle_of_thought.tres")
+	cycle.sfx_key = &"water_drop"
+	_save(cycle, "res://resources/cards/common/cycle_of_thought.tres")
 
 	# Le cahier des charges promet une pioche "ameliorable" : voici la carte qui le fait.
 	var flow := _card("mana_flow", "Flux de mana",
@@ -2328,11 +2412,11 @@ func _cards() -> void:
 
 	var wall := _card("stone_wall", "Mur de pierre",
 		"Mur de 20 s : les monstres le contournent et il arrete leurs projectiles.",
-		GameEnums.Rarity.RARE, 1.5, GameEnums.Targeting.POSITION, [],
+		GameEnums.Rarity.COMMON, 1.5, GameEnums.Targeting.POSITION, [],
 		[_spec("build_wall", 0.0, 20.0, 200.0, {&"thickness": 60.0})])
 	wall.fx_key = &"stone_peak"
 	wall.sfx_key = &"stone_shove"
-	_save(wall, "res://resources/cards/rare/stone_wall.tres")
+	_save(wall, "res://resources/cards/common/stone_wall.tres")
 
 	# MUR DE GLACE (chantier W9) — l exemple du co-auteur sur les elements : « un mur
 	# de GLACE subit moins de degats d un monstre faible a la glace ». La regle
@@ -2357,7 +2441,7 @@ func _cards() -> void:
 		[_spec("build_wall", 0.0, 0.0, 180.0,
 			{&"thickness": 60.0, &"permanent": true, &"wall_hp": 70.0})])
 	ice_wall.fx_key = &"freezing"
-	ice_wall.sfx_key = &"zap_short"
+	ice_wall.sfx_key = &"ice_wall"
 	_save(ice_wall, "res://resources/cards/rare/ice_wall.tres")
 
 	# --- Epiques ---
@@ -2408,7 +2492,7 @@ func _cards() -> void:
 	# montrait une sphere qui se brise — une casse, donc un contresens pour une carte
 	# qui efface.
 	purge.fx_key = &"dark_vanish"
-	purge.sfx_key = &"ward_light"
+	purge.sfx_key = &"card_tear"
 	_save(purge, "res://resources/cards/epic/deck_purge.tres")
 
 	# --- Legendaire ---
@@ -2421,7 +2505,7 @@ func _cards() -> void:
 			_spec("pierce_line", 40.0, 0.0, 200.0, {&"max_targets": 99}),
 		])
 	rift.fx_key = &"orbit_cross"
-	rift.sfx_key = &"spell_grand"
+	rift.sfx_key = &"time_rift"
 	_save(rift, "res://resources/cards/legendary/time_rift.tres")
 
 	# --- Variete : cast court/long, petite/grande zone, court/long effet ---
@@ -2435,7 +2519,7 @@ func _cards() -> void:
 		GameEnums.Targeting.TARGET, [],
 		[_spec("damage_single", 15.0)], 2)
 	spark.fx_key = &"spark_burst"
-	spark.sfx_key = &"spell_arcane"
+	spark.sfx_key = &"zap_spark"
 	_save(spark, "res://resources/cards/common/spark.tres")
 
 	var frost_rain := _card("frost_rain", "Pluie de givre",
@@ -2444,7 +2528,7 @@ func _cards() -> void:
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 2.0, 8.0, 260.0, {&"slow_pct": 30.0})])
 	frost_rain.fx_key = &"crystal_field"
-	frost_rain.sfx_key = &"drip_frost"
+	frost_rain.sfx_key = &"ice_chime"
 	_save(frost_rain, "res://resources/cards/common/frost_rain.tres")
 
 	var brazier := _card("brazier", "Brasier",
@@ -2455,13 +2539,14 @@ func _cards() -> void:
 	brazier.sfx_key = &"fire_ignite"
 	_save(brazier, "res://resources/cards/rare/brazier.tres")
 
+	# COMMUNE depuis la vague 10 (voir l en-tete) : le gros coup lent.
 	var meteor := _card("meteor", "Meteore",
-		"Long a invoquer : 60 degats de FEU dans une petite zone.", GameEnums.Rarity.RARE, 2.8,
+		"Long a invoquer : 60 degats de FEU dans une petite zone.", GameEnums.Rarity.COMMON, 2.8,
 		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 200.0, 0.3, 120.0)])
 	meteor.fx_key = &"meteor_streak"
 	meteor.sfx_key = &"blast_pop"
-	_save(meteor, "res://resources/cards/rare/meteor.tres")
+	_save(meteor, "res://resources/cards/common/meteor.tres")
 
 	var about_face := _card("about_face", "Volte-face",
 		"Tous les monstres font demi-tour pendant 3 s.", GameEnums.Rarity.RARE, 1.0,
@@ -2485,7 +2570,7 @@ func _cards() -> void:
 		GameEnums.Targeting.POSITION, [GameEnums.DamageTag.SLOW],
 		[_spec("ground_zone", 4.0, 4.0, 170.0, {&"slow_pct": 85.0})])
 	deep_freeze.fx_key = &"frost_spikes"
-	deep_freeze.sfx_key = &"zap_short"
+	deep_freeze.sfx_key = &"ice_crack"
 	_save(deep_freeze, "res://resources/cards/epic/deep_freeze.tres")
 
 	# 8 s et non plus 6 (co-auteur, vague 8 : « duree un peu plus longue ») :
@@ -2496,7 +2581,7 @@ func _cards() -> void:
 		GameEnums.Targeting.POSITION, [],
 		[_spec("ground_zone", 0.0, 8.0, 200.0, {&"vuln_mult": 2.0})])
 	weakness.fx_key = &"diamond_mark"
-	weakness.sfx_key = &"charge_magic"
+	weakness.sfx_key = &"curse_mark"
 	_save(weakness, "res://resources/cards/epic/weakness_mark.tres")
 
 	var resonance := _card("resonance", "Resonance",
@@ -2515,24 +2600,26 @@ func _cards() -> void:
 	# Acte II / lvl_03 — enseignee par la Gelee liberee de l Ossuaire.
 	# L Ossuaire envoie des nuees DISPERSEES : une zone seule y frappe un monstre a
 	# la fois. Le vortex ne fait aucun degat, il rassemble pour qu un autre sort paie.
+	# COMMUNE depuis la vague 10 (voir l en-tete).
 	var salt := _card("salt_spiral", "Spirale de sel",
 		"Aspire les monstres vers son centre pendant 3 s. Ne fait aucun degat : "
 		+ "elle prepare le sort suivant.",
-		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.POSITION,
+		GameEnums.Rarity.COMMON, 1.2, GameEnums.Targeting.POSITION,
 		[],
 		[_spec("vortex_pull", 150.0, 3.0, 220.0)])
 	salt.fx_key = &"spiral_salt"
-	salt.sfx_key = &"wind_gust"
-	_save(salt, "res://resources/cards/rare/salt_spiral.tres")
+	salt.sfx_key = &"wind_swirl"
+	_save(salt, "res://resources/cards/common/salt_spiral.tres")
 
 	# Acte II / lvl_04 — enseignee par le Pretre goule repenti.
 	# Le Grand Appel est le niveau le plus LONG : la penurie de cartes y tue plus que
 	# les monstres. Garder ses deux prochains sorts, c est doubler sa main utile.
 	# UN sort et non plus deux (co-auteur, vague 8) : a deux, la rare faisait le
 	# travail de l Echo de la main, la legendaire du meme verbe.
+	# COMMUNE depuis la vague 10 (voir l en-tete).
 	var recall := _card("bone_recall", "Rappel d ossements",
 		"Le prochain sort lance revient en main au lieu d etre defausse.",
-		GameEnums.Rarity.RARE, 0.9, GameEnums.Targeting.NONE, [],
+		GameEnums.Rarity.COMMON, 0.9, GameEnums.Targeting.NONE, [],
 		[_spec("retain_next", 1.0)])
 	# L AME QUI S ENVOLE. La feuille montre un crane violet qui file en laissant une
 	# trainee : une ame qu on rappelle. C est le verbe meme de la carte, qui fait
@@ -2540,21 +2627,23 @@ func _cards() -> void:
 	# Premiere des trois feuilles d OMBRE du jeu, et la carte vient de l Ossuaire :
 	# l element colle au lieu autant qu a l effet.
 	recall.fx_key = &"dark_soul"
-	recall.sfx_key = &"ward_deep"
-	_save(recall, "res://resources/cards/rare/bone_recall.tres")
+	recall.sfx_key = &"bone_rattle"
+	_save(recall, "res://resources/cards/common/bone_recall.tres")
 
 	# Acte III / lvl_05 — enseignee par le Berserker libere.
 	# Les Forges envoient du blindage lent. On ne le tue pas vite : on le REPOUSSE,
 	# et le temps gagne vaut plus que les degats. D ou une magnitude modeste et un
 	# recul important.
+	# COMMUNE depuis la vague 10 (voir l en-tete) : plus petite et plus lente que
+	# l Onde de repulsion (190 px et 1,4 s contre 220 px et 1,2 s), qui reste rare.
 	var chain := _card("chain_break", "Rupture de chaine",
 		"18 degats de VENT en zone, puis repousse violemment tout ce qui reste debout.",
-		GameEnums.Rarity.RARE, 1.4, GameEnums.Targeting.POSITION,
+		GameEnums.Rarity.COMMON, 1.4, GameEnums.Targeting.POSITION,
 		[],
 		[_spec("knockback", 18.0, 0.0, 190.0, {&"push": 260.0})])
 	chain.fx_key = &"shatter_burst"
 	chain.sfx_key = &"impact_heavy"
-	_save(chain, "res://resources/cards/rare/chain_break.tres")
+	_save(chain, "res://resources/cards/common/chain_break.tres")
 
 	# Acte III / lvl_06 — enseignee par le Chevalier du vide qui se rend.
 	# La Cour brisee empile les monstres A EFFETS : rage du Berserker, bouclier de
@@ -2568,7 +2657,7 @@ func _cards() -> void:
 		[],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
 	void_grip.fx_key = &"void_mandala"
-	void_grip.sfx_key = &"ward_light"
+	void_grip.sfx_key = &"void_pull"
 	_save(void_grip, "res://resources/cards/epic/void_grip.tres")
 
 	# --- Legendaires de campagne (une par niveau, voir docs/histoire.md) ---
@@ -2586,7 +2675,7 @@ func _cards() -> void:
 			_spec("double_cast", 0.0, 8.0),
 		])
 	ledger.fx_key = &"tide_waves"
-	ledger.sfx_key = &"spell_deep"
+	ledger.sfx_key = &"water_drop"
 	_save(ledger, "res://resources/cards/legendary/tide_ledger.tres")
 
 	# lvl_04 : la clef prise sur la porte du Grand Appel. Elle invoque a son tour.
@@ -2610,7 +2699,7 @@ func _cards() -> void:
 		[],
 		[_spec("meteor_storm", 30.0, 6.0, 110.0, {&"impacts": 14})])
 	dial.fx_key = &"fire_bloom"
-	dial.sfx_key = &"blast_long"
+	dial.sfx_key = &"fire_forge"
 	_save(dial, "res://resources/cards/legendary/forge_dial.tres")
 
 	# lvl_07 : la machine elle-meme. Elle fait tout un peu, parce qu elle fait tout.
@@ -2654,7 +2743,7 @@ func _cards() -> void:
 		[],
 		[_spec("knockback", 18.0, 0.0, 220.0, {&"push": 260.0})])
 	repulsion.fx_key = &"ring_expand"
-	repulsion.sfx_key = &"impact_heavy"
+	repulsion.sfx_key = &"air_burst"
 	_save(repulsion, "res://resources/cards/rare/repulsion_wave.tres")
 
 	# Le vortex ne fait AUCUN degat : c est une carte de mise en place. Elle vaut
@@ -2671,9 +2760,14 @@ func _cards() -> void:
 
 	# Zone volontairement PETITE : une dissipation large annulerait aussi les
 	# ralentissements poses par le joueur et se retournerait contre lui.
+	# VAGUE 10 (co-auteur) : COMMUNE, et 1,3 s d incantation de base au lieu de
+	# 1,0. La dissipation devient une reponse de base, presente des le premier
+	# acte contre les auras et les boucliers ; plus longue a lancer, elle se
+	# prepare au lieu de partir en reflexe. Le Vide d emprise (epique) garde la
+	# version vive (1,1 s), qui efface aussi rage et auras.
 	var purify := _card("purifying_light", "Lumiere purifiante",
 		"Petite zone : les monstres perdent rage, boucliers et effets en cours.",
-		GameEnums.Rarity.RARE, 1.0, GameEnums.Targeting.POSITION,
+		GameEnums.Rarity.COMMON, 1.3, GameEnums.Targeting.POSITION,
 		[],
 		[_spec("dispel_zone", 0.0, 0.0, 150.0)])
 	# LA COLONNE DE LUMIERE, sur la carte qui s appelle Lumiere purifiante.
@@ -2682,7 +2776,7 @@ func _cards() -> void:
 	# anneau de 64 px, invisible au milieu du cercle de portee.
 	purify.fx_key = &"lightpillar"
 	purify.sfx_key = &"ward_light"
-	_save(purify, "res://resources/cards/rare/purifying_light.tres")
+	_save(purify, "res://resources/cards/common/purifying_light.tres")
 
 	# Piocher SANS defausser : Cycle de pensee echange, celle-ci ajoute. Cast tres
 	# court, car son interet est de sortir d une main vide au pire moment.
@@ -2707,7 +2801,7 @@ func _cards() -> void:
 		[_spec("build_wall", 0.0, 0.0, 200.0,
 			{&"thickness": 60.0, &"permanent": true, &"wall_hp": 120.0})])
 	bastion.fx_key = &"dome_bastion"
-	bastion.sfx_key = &"stone_shove"
+	bastion.sfx_key = &"stone_heavy"
 	_save(bastion, "res://resources/cards/epic/bastion.tres")
 
 	# --- Legendaires ---
@@ -2769,7 +2863,7 @@ func _cards() -> void:
 	# la mare est un poison de mort-vivant : la teinte du pack sert le sort sans
 	# qu on ait a la forcer.
 	venom.fx_key = &"dark_swirl"
-	venom.sfx_key = &"spell_crackle"
+	venom.sfx_key = &"poison_bubble"
 	_save(venom, "res://resources/cards/legendary/venom_mire.tres")
 
 
@@ -2818,7 +2912,7 @@ func _cards() -> void:
 		[_spec("taunt_prop", 0.0, 0.0, 460.0,
 			{&"prop_hp": 800.0, &"kind": "tree"})])
 	totem.fx_key = &"spirit_gold"
-	totem.sfx_key = &"stone_shove"
+	totem.sfx_key = &"wood_knock"
 	_save(totem, "res://resources/cards/rare/heartwood_totem.tres")
 
 	# L ARBRE A ZONE DE POISON. Meme verbe, deux parametres de plus : il porte une
@@ -2854,11 +2948,10 @@ func _cards() -> void:
 		[_spec("place_terrain", 9.0, 0.0, 300.0,
 			{&"prop_hp": 120.0, &"kind": "tree"})])
 	sapling.fx_key = &"spirit_violet"
-	# `whoosh_deep` et non `spell_crackle` : ce dernier portait deja trois cartes,
-	# et le projet tient a ce qu un son soit partage entre deux ou trois au plus —
-	# c est ce qui evite que tous les sorts s entendent pareil. Un souffle grave
-	# convient de toute facon mieux a un arbre qui perce le sol qu un crepitement.
-	sapling.sfx_key = &"whoosh_deep"
+	# Un bois qui craque (sons de la vague 10, famille de la NATURE) : un arbre
+	# qui perce le sol. Un son reste partage par deux sorts au plus — c est ce
+	# qui evite que tous les sorts s entendent pareil.
+	sapling.sfx_key = &"wood_creak"
 	_save(sapling, "res://resources/cards/epic/blight_sapling.tres")
 
 	# LE STUN. Immobiliser est la chose la plus forte qu on puisse faire dans un jeu
@@ -2915,7 +3008,7 @@ func _cards() -> void:
 		[GameEnums.DamageTag.SLOW],
 		[_spec("water_flood", 45.0, 7.0, 300.0)])
 	tide.fx_key = &"orb_cyan"
-	tide.sfx_key = &"drip_frost"
+	tide.sfx_key = &"water_splash"
 	_save(tide, "res://resources/cards/rare/tidal_pool.tres")
 
 	# --- SORTS DEMANDES PAR LE CO-AUTEUR (vague 8) ---
@@ -2934,9 +3027,8 @@ func _cards() -> void:
 		GameEnums.Rarity.COMMON, 0.7, GameEnums.Targeting.TARGET, [],
 		[_spec("poison_dot", 2.0)])
 	dart.fx_key = &"skull_burst"
-	# Un trait qui part, comme la Fleche percante : `spell_crackle` porte deja
-	# trois cartes.
-	dart.sfx_key = &"arrow_laser"
+	# Un dard qui siffle (sons de la vague 10, famille du POISON).
+	dart.sfx_key = &"poison_dart"
 	_save(dart, "res://resources/cards/common/venom_dart.tres")
 
 	# L ELAN DU TEMPS : « une carte qui augmente la vitesse du jeu ». La vitesse
@@ -2953,7 +3045,7 @@ func _cards() -> void:
 		GameEnums.Rarity.RARE, 1.2, GameEnums.Targeting.NONE, [],
 		[_spec("gain_speed", 30.0)])
 	surge.fx_key = &"orb_gold"
-	surge.sfx_key = &"spell_rise"
+	surge.sfx_key = &"time_haste"
 	_save(surge, "res://resources/cards/rare/time_surge.tres")
 
 	# --- SORTS DE TERRAIN PERMANENTS ---
@@ -2985,7 +3077,7 @@ func _cards() -> void:
 		[],
 		[_spec("terrain_river", 0.0, 0.0, 0.0)])
 	river.fx_key = &"portal_blue"
-	river.sfx_key = &"wind_gust"
+	river.sfx_key = &"water_flow"
 	_save(river, "res://resources/cards/legendary/terrain_river.tres")
 
 	# LE GENERATEUR. Un autel qui fait naitre un allie toutes les 6 s, a cote de
@@ -3006,7 +3098,7 @@ func _cards() -> void:
 			{&"kind": "altar", &"prop_hp": 140.0, &"taunt_radius": 220.0,
 				&"summon_every": 6.0, &"ally_damage": 8.0, &"ally_duration": 5.0})])
 	altar.fx_key = &"portal_violet"
-	altar.sfx_key = &"whoosh_summon"
+	altar.sfx_key = &"altar_hum"
 	_save(altar, "res://resources/cards/epic/terrain_altar.tres")
 
 	# LES RONCES. Un ralentissement qui ne s en va pas, et un peu de degats
@@ -3022,7 +3114,7 @@ func _cards() -> void:
 		[_spec("place_terrain", 2.0, 0.0, 170.0,
 			{&"kind": "bramble", &"slow_pct": 35.0})])
 	brambles.fx_key = &"slash_arc"
-	brambles.sfx_key = &"impact_heavy"
+	brambles.sfx_key = &"bramble_rustle"
 	_save(brambles, "res://resources/cards/rare/terrain_brambles.tres")
 
 	# LA FOSSE. Une Marque de faiblesse qui ne s efface pas, en plus petit et en
@@ -3037,8 +3129,107 @@ func _cards() -> void:
 		[_spec("place_terrain", 0.0, 0.0, 150.0,
 			{&"kind": "pit", &"vuln_mult": 1.3})])
 	pit.fx_key = &"orb_magenta"
-	pit.sfx_key = &"blast_pop"
+	pit.sfx_key = &"earth_dig"
 	_save(pit, "res://resources/cards/epic/terrain_pit.tres")
+
+	_cartes_vague_10()
+
+
+## LES CINQ SORTS DEMANDES PAR LE CO-AUTEUR (vague 10, chantier B1a), tous
+## COMMUNS : la campagne refaite donne une commune nouvelle par niveau. Ils
+## composent les cles posees par le chantier A1 (handlers.gd, section VAGUE 10)
+## et rien d autre. Les incantations ecrites sont les temps du co-auteur, en
+## BASE : elles passent par GameConfig.CAST_TIME_SCALE comme toutes les autres.
+## Les chiffres sont penses a x4, la ou un sort tourne le plus vite (une
+## incantation de 3 s y part en 1,3 s).
+func _cartes_vague_10() -> void:
+	var T := GameEnums.Targeting
+
+	# LE VENT DU SUD : « agit sur tout le terrain 6 s ; force les monstres rapides
+	# a une vitesse normale, les deplacements etranges en ligne droite,
+	# IMMOBILISE les volants ; incantation 3 s ». Aucun degat : c est le sort qui
+	# REND LISIBLE une vague trop vive ou trop erratique (lutins fileurs, oiseaux
+	# mirage, serpents, sauterelles, oeils en spirale) et qui cloue les volants
+	# le temps d une zone. Chaque monstre le subit selon sa resistance au VENT
+	# (une enclume immunisee n est pas touchee). Deux vents ne s empilent pas, le
+	# second prolonge le premier (Battlefield.w10_apply_wind) : a x4, 6 s de
+	# monde ne couvrent que 1,5 s reelle pour 1,3 s d incantation, il ne fige
+	# donc jamais une partie entiere.
+	var wind := _card("south_wind", "Vent du sud",
+		"Pendant 6 s, sur tout le terrain : les monstres rapides reviennent a une "
+		+ "vitesse normale, les trajets etranges filent droit et les volants restent "
+		+ "sur place. Aucun degat.",
+		GameEnums.Rarity.COMMON, 3.0, T.NONE, [],
+		[_spec("global_wind", 0.0, 6.0)])
+	wind.fx_key = &"gust_streak"
+	wind.sfx_key = &"wind_gust"
+	_save(wind, "res://resources/cards/common/south_wind.tres")
+
+	# LA MARQUE ELECTRIQUE : « marque un monstre cible, 8 degats ; s il meurt, la
+	# marque saute sur le plus proche avec 1 degat de moins, et ainsi de suite
+	# jusqu a 0 ; incantation 2,3 s ». 8 + 7 + ... + 1 = 36 degats au plus, si
+	# chaque marque tue : c est le sort des NUEES fragiles (oiseaux mirage,
+	# gelees, lutins), presque rien contre un blinde qui ne meurt pas du premier
+	# coup. La marque attend la mort, de quoi que ce soit : une zone qui acheve
+	# un marque relance la chaine. Portee du saut : GameConfig.MARK_JUMP_RANGE.
+	var mark := _card("electric_mark", "Marque electrique",
+		"Marque une cible : 8 degats de FOUDRE. Quand elle meurt, la marque saute "
+		+ "sur le monstre le plus proche avec 1 degat de moins, et ainsi de suite "
+		+ "jusqu a 0.",
+		GameEnums.Rarity.COMMON, 2.3, T.TARGET, [],
+		[_spec("electric_mark", 8.0, 0.0, 0.0, {&"decay": 1.0})])
+	mark.fx_key = &"bolt_cross"
+	mark.sfx_key = &"zap_long"
+	_save(mark, "res://resources/cards/common/electric_mark.tres")
+
+	# LA PLUIE ABONDANTE : « pluie sur tout le terrain 10 s, 1 degat d eau toutes
+	# les 2 s ; incantation 2,5 s ». Cinq gouttes de 1 a TOUS les monstres du
+	# terrain, presents ou a venir pendant la pluie : peu sur un seul, beaucoup
+	# sur une vague nombreuse, et le double sur ce qui craint l eau (vers et
+	# seigneurs de feu, colosses). Degat CONTINU (DEC-054) : il ne fait ni
+	# riposter ni compter un coup. Deux pluies s additionnent.
+	var rain := _card("heavy_rain", "Pluie abondante",
+		"Une pluie tombe sur tout le terrain pendant 10 s : 1 degat d EAU a chaque "
+		+ "monstre toutes les 2 s.",
+		GameEnums.Rarity.COMMON, 2.5, T.NONE, [],
+		[_spec("global_rain", 1.0, 10.0, 0.0, {&"interval": 2.0})])
+	rain.fx_key = &"rain_streaks"
+	rain.sfx_key = &"drip_frost"
+	_save(rain, "res://resources/cards/common/heavy_rain.tres")
+
+	# LE SABLE MOUVANT : « -10 % de vitesse dans la zone ; les monstres encore
+	# dedans a la fin subissent des degats ; duree assez longue, zone moyenne,
+	# incantation moyenne ». 8 s, 180 px de rayon (la zone moyenne du jeu, entre
+	# le Champ de givre et la Boule de feu), 1,6 s de base (la moyenne des
+	# communes). 30 degats de NATURE a la fin : un gnome au pas traverse les
+	# 360 px de la zone en un peu plus de 8 s, donc ce qui est entre dans la
+	# seconde moitie de la vie du sable y est encore et paie ; ce qui a eu le
+	# temps de passer s en tire. Ralentir de 10 % seulement, c est garder ce
+	# choix : la zone retient un peu, elle n emprisonne pas.
+	var sand := _card("quicksand", "Sable mouvant",
+		"Zone de sable pendant 8 s : les monstres y avancent 10 pourcent moins vite, "
+		+ "et ceux qui y sont encore a la fin encaissent 30 degats de NATURE.",
+		GameEnums.Rarity.COMMON, 1.6, T.POSITION, [GameEnums.DamageTag.SLOW],
+		[_spec("quicksand", 30.0, 8.0, 180.0, {&"slow_pct": 10.0})])
+	sand.fx_key = &"sand_ring"
+	sand.sfx_key = &"earth_dig"
+	_save(sand, "res://resources/cards/common/quicksand.tres")
+
+	# LE JET D EAU : « bande fine et haute (forme de I) qui repousse, degats selon
+	# la distance parcourue ». 50 px de demi-largeur, 900 px de haut : une colonne,
+	# qui demande de viser un COULOIR et non un point. Recul de 260 px (celui de la
+	# Rupture de chaine), 4 degats par 100 px reellement parcourus : ~10 degats a
+	# qui recule en plein, presque rien a qui est deja colle au haut du terrain ou
+	# resiste a l eau. Element EAU : le recul du vent a deja ses deux sorts, et la
+	# commune d eau de la Pluie ne frappe pas un point precis — le jet si.
+	var jet := _card("water_jet", "Jet d eau",
+		"Une colonne d eau fine et haute repousse les monstres de 260 px vers le "
+		+ "haut : 4 degats d EAU par 100 px parcourus.",
+		GameEnums.Rarity.COMMON, 1.5, T.POSITION, [],
+		[_spec("water_jet", 4.0, 0.0, 50.0, {&"length": 900.0, &"push": 260.0})])
+	jet.fx_key = &"water_geyser"
+	jet.sfx_key = &"water_splash"
+	_save(jet, "res://resources/cards/common/water_jet.tres")
 
 
 ## Deck pre-etabli EXPLICITE : [[chemin, exemplaires], ...] -> une entree par exemplaire.
@@ -3173,7 +3364,7 @@ func _waves_and_level() -> void:
 		[C + "common/frost_field.tres", 1],
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/fireball.tres", 2],
-		[C + "rare/stone_wall.tres", 1],
+		[C + "common/stone_wall.tres", 1],
 	])
 	# Le niveau 1 ne debloque qu UN niveau : la campagne doit rester lineaire au
 	# demarrage. La premiere fourche est en lvl_04 (voir docs/histoire.md section 8).
@@ -3430,7 +3621,7 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/piercing_arrow.tres", 3],
 		[C + "common/arcane_bolt.tres", 1],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "rare/tidal_pool.tres", 1],
 	])
 	_poser_progression(lvl2)
@@ -3656,7 +3847,7 @@ func _acte_2(C: String, E: String) -> void:
 		[C + "common/frost_rain.tres", 4],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "rare/salt_spiral.tres", 1],
+		[C + "common/salt_spiral.tres", 1],
 		[C + "epic/resonance.tres", 1],
 		[C + "epic/blight_sapling.tres", 1],
 	])
@@ -3823,10 +4014,10 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	lvl4.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/ember_pool.tres", 2],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "rare/heartwood_totem.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "rare/bone_recall.tres", 1],
+		[C + "common/bone_recall.tres", 1],
 	])
 	_poser_progression(lvl4)
 	# PREMIERE FOURCHE de la campagne : la porte s ouvre sur deux entrees du monde
@@ -4033,12 +4224,12 @@ func _acte_3(C: String, E: String) -> void:
 	# le Meteore est le paquet de degats que la combo du niveau veut.
 	# Paragraphe ci-dessus : « la Pluie reste pour ses degats » ne vaut plus.
 	lvl5.exploration_deck = _deck([
-		[C + "rare/purifying_light.tres", 1],
+		[C + "common/purifying_light.tres", 1],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/weakness_mark.tres", 2],
-		[C + "rare/chain_break.tres", 1],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/chain_break.tres", 1],
+		[C + "common/meteor.tres", 2],
 	])
 	_poser_progression(lvl5)
 	# CHANTIER N2 — la fourche retombe dans `lvl_21`, LE PENTACLE, qui ferme
@@ -4438,9 +4629,9 @@ func _acte_final(C: String, E: String) -> void:
 	# Rappel, la Fleche et le Mur.
 	lvl7.exploration_deck = _deck([
 		[C + "common/fireball.tres", 4],
-		[C + "rare/meteor.tres", 2],
-		[C + "rare/salt_spiral.tres", 1],
-		[C + "rare/chain_break.tres", 1],
+		[C + "common/meteor.tres", 2],
+		[C + "common/salt_spiral.tres", 1],
+		[C + "common/chain_break.tres", 1],
 		[C + "epic/void_grip.tres", 2],
 		[C + "epic/mirror_apprentice.tres", 2],
 	])
@@ -4594,7 +4785,7 @@ func _acte_1_suite(C: String, E: String) -> void:
 		[C + "common/ember_pool.tres", 2],
 		[C + "common/frost_field.tres", 1],
 		[C + "common/frost_rain.tres", 2],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "epic/maelstrom.tres", 1],
 	])
 	_poser_progression(lvl8)
@@ -4734,7 +4925,7 @@ derriere, dans la foret, quelque chose de tres grand se met debout."
 		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "epic/deep_focus.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
@@ -5011,7 +5202,7 @@ atelier."
 	# Rupture de chaine (carte d histoire des Forges, qui doit s y decouvrir) ;
 	# le Trait et la Boule de feu prennent leur place.
 	lvl18.exploration_deck = _deck([
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/fireball.tres", 3],
 		[C + "rare/focus.tres", 1],
@@ -5195,11 +5386,11 @@ func _acte_3_suite(C: String, E: String) -> void:
 	# Decouverte : Lumiere purifiante. Sortent le Registre des marees (la
 	# legendaire se gagne, elle n est plus offerte ici), la Fleche et le Mur.
 	lvl19.exploration_deck = _deck([
-		[C + "rare/meteor.tres", 3],
+		[C + "common/meteor.tres", 3],
 		[C + "common/arcane_bolt.tres", 2],
 		[C + "common/fireball.tres", 3],
 		[C + "rare/focus.tres", 1],
-		[C + "rare/purifying_light.tres", 1],
+		[C + "common/purifying_light.tres", 1],
 		[C + "epic/weakness_mark.tres", 2],
 	])
 	_poser_progression(lvl19)
@@ -5316,7 +5507,7 @@ laisse une GARDE, et une garde ne protege pas un fuyard, elle retarde un poursui
 		[C + "common/piercing_arrow.tres", 3],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 2],
-		[C + "rare/meteor.tres", 1],
+		[C + "common/meteor.tres", 1],
 		[C + "epic/weakness_mark.tres", 1],
 		[C + "epic/void_grip.tres", 1],
 	])
@@ -5483,8 +5674,8 @@ On ne fuit pas comme ca devant un poursuivant. On fuit comme ca devant un creanc
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/frost_rain.tres", 3],
-		[C + "rare/meteor.tres", 1],
-		[C + "rare/purifying_light.tres", 1],
+		[C + "common/meteor.tres", 1],
+		[C + "common/purifying_light.tres", 1],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	_poser_progression(lvl21)
@@ -5961,7 +6152,7 @@ seigneur de la rage qui obeit, ca n a plus de nom."
 	lvl12.exploration_deck = _deck([
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/piercing_arrow.tres", 1],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "rare/focus.tres", 3],
 		[C + "epic/void_grip.tres", 1],
 		[C + "epic/arcane_insight.tres", 1],
@@ -6197,7 +6388,7 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 		[C + "common/arcane_bolt.tres", 4],
 		[C + "common/fireball.tres", 2],
 		[C + "common/spark.tres", 3],
-		[C + "rare/meteor.tres", 1],
+		[C + "common/meteor.tres", 1],
 		[C + "epic/void_grip.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
@@ -6448,7 +6639,7 @@ func _acte_5(C: String, E: String) -> void:
 		[C + "common/arcane_bolt.tres", 3],
 		[C + "common/piercing_arrow.tres", 2],
 		[C + "common/fireball.tres", 3],
-		[C + "rare/meteor.tres", 2],
+		[C + "common/meteor.tres", 2],
 		[C + "rare/mana_flow.tres", 1],
 		[C + "legendary/hourglass_shard.tres", 1],
 	])
@@ -6648,10 +6839,10 @@ depuis le pentacle, et il marche devant."
 	# (decks de lvl_06, lvl_07, lvl_20) : seul le deck le met dans le pool.
 	lvl15.exploration_deck = _deck([
 		[C + "common/fireball.tres", 4],
-		[C + "rare/meteor.tres", 3],
+		[C + "common/meteor.tres", 3],
 		[C + "rare/focus.tres", 2],
 		[C + "epic/void_grip.tres", 1],
-		[C + "rare/quickening.tres", 1],
+		[C + "common/quickening.tres", 1],
 		[C + "legendary/meteor_storm.tres", 1],
 	])
 	_poser_progression(lvl15)
@@ -7043,6 +7234,27 @@ func _longueurs(n: float) -> float:
 
 
 ## LA TABLE, dans l ordre de jeu de la campagne.
+##
+## RETOUCHES PROVISOIRES DE LA VAGUE 10 (chantier B1a ; le chantier B2 refait les
+## 21 niveaux). Le chantier des cartes a passe sept rares et la Lumiere
+## purifiante en COMMUNE et ajoute cinq communes neuves : la table devait rester
+## juste (test_level_progression) sans que ses objectifs bougent.
+##   - Les cinq communes neuves prennent la place d une carte nouvelle qui etait
+##     une REPRISE : Vent du sud (lvl_17, les volants et les serpents), Marque
+##     electrique (lvl_03, les nuees de l ossuaire), Sable mouvant (lvl_04),
+##     Jet d eau (lvl_05, les colosses craignent l eau), Pluie abondante
+##     (lvl_21, les vers de feu craignent l eau).
+##   - lvl_02 : sa recompense de rang 1 etait la PREMIERE sortie du Rappel
+##     d ossements, devenu commun. Le Flux de mana (rare) la prend, et le
+##     Rappel prend la place du Flux en carte nouvelle de lvl_09 : chaque sort
+##     garde une premiere sortie, les reprises ne bougent pas. L Elan du temps
+##     reste une carte nouvelle de lvl_02 : une rare, que le pool des communes
+##     de l acte ne montre pas deja (test_card_progression).
+##   - Une recompense de rang 1 doit etre RARE : celles qui sont devenues
+##     communes (Cycle de pensee, Rappel, Rupture, Spirale, Precipitation,
+##     Lumiere) sont remplacees par une rare deja proposee avant, ni possedee ni
+##     proposee au niveau voisin. Il n en reste que deux en fin de campagne
+##     (Elan du temps, Mur de glace) : elles se repetent, B2 redistribue.
 func _progression_de(level_id: StringName) -> Dictionary:
 	match level_id:
 		&"lvl_01":
@@ -7089,7 +7301,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# elle remplace la Lumiere : meme nombre de reprises, aucune carte deux
 			# niveaux de suite.
 			return {"nouvelles": ["time_surge", "quickening", "purifying_light"], "objectifs": [
-				[_objectif(&"win_above_speed", {"pct": 300}), "bone_recall"],
+				[_objectif(&"win_above_speed", {"pct": 300}), "mana_flow"],
 				[_objectif(&"boss_quick_after_revive", {"seconds": 8}), "deep_focus"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "hopper", "count": 4}), "hourglass_shard"],
 			]}
@@ -7120,7 +7332,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# foudre et de grimoire a cote de la Concentration du deck. Recompenses :
 			# Entrave temporelle, Marque de faiblesse (au deck du port) et la Mare de
 			# venin (elle revient en lvl_11 contre Kaltek, qui craint le poison).
-			return {"nouvelles": ["spark", "cycle_of_thought", "mana_flow"], "objectifs": [
+			return {"nouvelles": ["spark", "cycle_of_thought", "bone_recall"], "objectifs": [
 				[_objectif(&"no_legendary_used"), "temporal_drag"],
 				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "weakness_mark"],
 				[_objectif(&"win_below_speed", {"pct": 200}), "venom_mire"],
@@ -7145,8 +7357,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Semis de fletrissure (recompense), au deck de l ossuaire, n a pas d autre
 			# place : un terrain permanent n entre pas en acte 1, et le port ouvre l
 			# ossuaire.
-			return {"nouvelles": ["about_face", "chain_break", "heartwood_totem"], "objectifs": [
-				[_objectif(&"card_casts", {"card": "resonance", "count": 7}), "salt_spiral"],
+			return {"nouvelles": ["about_face", "south_wind", "heartwood_totem"], "objectifs": [
+				[_objectif(&"card_casts", {"card": "resonance", "count": 7}), "time_surge"],
 				[_objectif(&"kill_flying", {"count": 21}), "blight_sapling"],
 				[_objectif(&"enemy_travel", {"enemy": "sand_serpent", "distance": _longueurs(10.0)}), "twin_channeling"],
 			]}
@@ -7159,7 +7371,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# craignent le feu). Legendaire : la Riviere, qui force les
 			# pillards a un pont.
 			return {"nouvelles": ["mirror_apprentice", "arcane_insight", "brazier"], "objectifs": [
-				[_objectif(&"kill_type_with_card", {"enemy": "nacelle_raider", "card": "fireball", "count": 5}), "bone_recall"],
+				[_objectif(&"kill_type_with_card", {"enemy": "nacelle_raider", "card": "fireball", "count": 5}), "temporal_drag"],
 				[_objectif(&"win_below_speed", {"pct": 190}), "terrain_pit"],
 				[_objectif(&"card_casts", {"card": "weakness_mark", "count": 11}), "terrain_river"],
 			]}
@@ -7173,8 +7385,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Rangs re-mesures apres la vague 8 : achever 15 Oiseaux a la Pluie (41 / 60)
 			# est plus facile que de la lancer 26 fois (31). Et de nouveau echanges
 			# apres le chantier moteur de la vague 9 : 26 lancers 46, 15 Oiseaux 39.
-			return {"nouvelles": ["spark", "reckless_bargain", "thunder_root"], "objectifs": [
-				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "purifying_light"],
+			return {"nouvelles": ["electric_mark", "reckless_bargain", "thunder_root"], "objectifs": [
+				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "about_face"],
 				[_objectif(&"card_casts", {"card": "frost_rain", "count": 26}), "deck_purge"],
 				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "world_loom"],
 			]}
@@ -7188,7 +7400,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Vide d emprise, Flux de mana et Precipitation (deja proposees en
 			# acte 1 : le catalogue s epuise, voir l en-tete). Legendaire : la Clef de l
 			# Appel, a sa place dans le Grand Appel.
-			return {"nouvelles": ["void_grip", "mana_flow", "quickening"], "objectifs": [
+			return {"nouvelles": ["void_grip", "quicksand", "quickening"], "objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "risen_ghoul", "card": "ember_pool", "count": 2}), "temporal_drag"],
 				[_objectif(&"win_under_time", {"seconds": 130}), "deep_freeze"],
 				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "summoners_key"],
@@ -7208,7 +7420,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# face, Brasier, toutes deja proposees. Recompenses : Rupture de chaine,
 			# Bastion, Echo de la main.
 			return {"nouvelles": ["thunder_root", "about_face", "brazier"], "objectifs": [
-				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "chain_break"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 60}), "time_surge"],
 				[_objectif(&"no_hit_from", {"enemy": "pit_ghoul"}), "bastion"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "pit_ghoul", "count": 4}), "echo_of_the_hand"],
 			]}
@@ -7245,8 +7457,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# craint la glace (x2) : enferme derriere le mur, il le frappe moins fort
 			# — l exemple du co-auteur — et le mur ne porte pas de lenteur, que tout
 			# le niveau ignore.
-			return {"nouvelles": ["spark", "deck_purge", "ice_wall"], "objectifs": [
-				[_objectif(&"element_casts", {"element": "ARCANE", "count": 48}), "cycle_of_thought"],
+			return {"nouvelles": ["water_jet", "deck_purge", "ice_wall"], "objectifs": [
+				[_objectif(&"element_casts", {"element": "ARCANE", "count": 48}), "time_surge"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "golem", "count": 2}), "mirror_apprentice"],
 				[_objectif(&"win_above_speed", {"pct": 310}), "tide_ledger"],
 			]}
@@ -7277,8 +7489,8 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# feu » passe au rang 1 et les Vers au rang 2, a cinq au lieu de trois :
 			# un ecart d une partie ne classe rien.
 			# Nouvelles : Etincelle, Epuration, Flux de mana.
-			return {"nouvelles": ["spark", "deck_purge", "mana_flow"], "objectifs": [
-				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "cycle_of_thought"],
+			return {"nouvelles": ["heavy_rain", "deck_purge", "mana_flow"], "objectifs": [
+				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "ice_wall"],
 				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 5}), "bastion"],
 				[_objectif(&"win_under_time", {"seconds": 90}), "twin_channeling"],
 			]}
@@ -7312,7 +7524,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Bastion (un mur permanent allonge le chemin), Metier du monde,
 			# Flux de mana. Legendaire : la Riviere, qui fait marcher.
 			return {"nouvelles": ["bastion", "world_loom", "mana_flow"], "objectifs": [
-				[_objectif(&"kill_flying", {"count": 1}), "cycle_of_thought"],
+				[_objectif(&"kill_flying", {"count": 1}), "time_surge"],
 				[_objectif(&"no_damage_taken"), "deck_purge"],
 				[_objectif(&"enemy_travel", {"enemy": "cacodaemon", "distance": _longueurs(1.5)}), "terrain_river"],
 			]}
@@ -7326,7 +7538,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Pacte imprudent, Fosse, Ronces (le deck est au givre et a la
 			# lenteur). Legendaire : la Mare de venin (Kaltek craint le poison).
 			return {"nouvelles": ["reckless_bargain", "terrain_pit", "terrain_brambles"], "objectifs": [
-				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "quickening"],
+				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "ice_wall"],
 				[_objectif(&"kill_flying", {"count": 4}), "terrain_altar"],
 				[_objectif(&"win_below_speed", {"pct": 120}), "venom_mire"],
 			]}
@@ -7340,7 +7552,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Nouvelles : Epuration, Echo de la main, Flux de mana, pour un deck tourne
 			# vers la main.
 			return {"nouvelles": ["deck_purge", "echo_of_the_hand", "mana_flow"], "objectifs": [
-				[_objectif(&"kill_type_with_card", {"enemy": "shade", "card": "arcane_bolt", "count": 7}), "cycle_of_thought"],
+				[_objectif(&"kill_type_with_card", {"enemy": "shade", "card": "arcane_bolt", "count": 7}), "time_surge"],
 				[_objectif(&"card_casts", {"card": "focus", "count": 28}), "bastion"],
 				[_objectif(&"same_card_casts", {"count": 38}), "summoners_key"],
 			]}
@@ -7361,7 +7573,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Rangs re-mesures apres la vague 8 : le coup du Renard (54 / 60) passe
 			# devant les trois Oiseaux d un sort (43).
 			return {"nouvelles": ["bastion", "terrain_river", "tide_ledger"], "objectifs": [
-				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "cycle_of_thought"],
+				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "ice_wall"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 3}), "deck_purge"],
 				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "world_loom"],
 			]}
@@ -7390,7 +7602,7 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# plus souvent : 58 sorts d arcane passent sous l Enfant en 9 s. Rangs
 			# echanges, ids gardes. Mesure finale (moteur de la vague 9) : 55, 21, 17.
 			return {"nouvelles": ["bastion", "echo_of_the_hand", "summoners_key"], "objectifs": [
-				[_objectif(&"no_hit_from", {"enemy": "demon_chain_echo"}), "cycle_of_thought"],
+				[_objectif(&"no_hit_from", {"enemy": "demon_chain_echo"}), "ice_wall"],
 				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "deck_purge"],
 				[_objectif(&"element_casts", {"element": "ARCANE", "count": 58}), "venom_mire"],
 			]}

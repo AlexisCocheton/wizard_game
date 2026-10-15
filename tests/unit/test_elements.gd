@@ -292,10 +292,14 @@ func _test_les_ecarts_de_design_demandes() -> void:
 		ok(jelly.resistance_to(GameEnums.DamageTag.POISON) < 1.0,
 			"la gelee, faite de poison, s en moque")
 
+	# Vague 10 (co-auteur : « trop de monstres immunises au poison ») : le
+	# mort-vivant n est plus IMMUNISE, le venin « le ronge mal ». Il le resiste,
+	# et l immunite est reservee a ce qui n a pas de chair (make_content,
+	# IMMUNISES_AU_POISON, verifie par test_resist_tiers).
 	var priest: EnemyDef = ContentDB.enemies.get(&"ghoul_priest")
 	if priest != null:
-		ok(priest.resistance_to(GameEnums.DamageTag.POISON) <= 0.0,
-			"un mort-vivant ignore totalement le poison")
+		var r: float = priest.resistance_to(GameEnums.DamageTag.POISON)
+		ok(r > 0.0 and r < 1.0, "un mort-vivant resiste au poison sans y etre immunise (%s)" % r)
 
 
 ## Le joueur doit pouvoir LIRE tout cela : une resistance invisible est une
@@ -695,10 +699,16 @@ func _test_chaque_sort_a_exactement_un_element() -> void:
 		"le champ l emporte, et l element des tags ne s ajoute pas")
 
 
+## Une valeur ECRITE telle que le joueur la subit : accentuee, puis au palier.
+static func _jouee(ecrite: float) -> float:
+	return EnemyDef.tiered_value(EnemyDef.accentuate(ecrite))
+
+
 ## LA REGLE DE PASSAGE DES RESISTANCES (vague 8), verifiee sur le contenu livre
 ## et contre les constantes de make_content.gd : pas 86 valeurs a relire, une
-## regle. Le vent et la nature naissent de l ancienne durete (« phys ») — donc
-## egaux pour un monstre au sol ; un volant craint le vent et resiste a la
+## regle. Le vent et la nature naissent de l ancienne durete (« phys ») — la
+## nature n en garde que la moitie depuis la vague 10, donc du meme cote que le
+## vent et jamais plus marquee pour un monstre au sol ; un volant craint le vent et resiste a la
 ## nature ; l eau est le miroir borne du feu. Une seule exception, nommee dans
 ## make_content (ANCRES_AU_SOL, chantier W9) : les enclumes, immunisees au vent.
 func _test_la_regle_de_passage_des_resistances() -> void:
@@ -721,19 +731,25 @@ func _test_la_regle_de_passage_des_resistances() -> void:
 			ok(nature > 0.0, "%s : la nature, elle, l entame encore" % id)
 			continue
 		ok(vent > 0.0, "%s : seules les ancres au sol sont immunisees au vent" % id)
+		# Vague 10 : les bornes se lisent APRES la regle des paliers
+		# (EnemyDef.tiered_value), la derniere etape de la table jouee.
 		if d.flying:
 			vus_volants += 1
-			ok(vent >= EnemyDef.accentuate(MC.WIND_FLYER_MIN) - 0.001,
+			ok(vent >= _jouee(MC.WIND_FLYER_MIN) - 0.001,
 				"%s vole : il craint le vent" % id)
-			ok(nature <= EnemyDef.accentuate(MC.NATURE_FLYER_MAX) + 0.001,
+			ok(nature <= _jouee(MC.NATURE_FLYER_MAX) + 0.001,
 				"%s vole : la nature ne l atteint pas" % id)
 		else:
-			feq(vent, nature, "%s : vent et nature heritent de la meme durete" % id, 0.001)
+			# Vague 10 : la nature ne garde que la MOITIE de l ecart de durete
+			# (MC.NATURE_ECART) : meme cote que le vent, jamais plus marquee.
+			ok(absf(nature - 1.0) <= absf(vent - 1.0) + 0.001
+				and (is_equal_approx(nature, 1.0) or signf(nature - 1.0) == signf(vent - 1.0)),
+				"%s : la nature herite de la durete, en plus doux que le vent" % id)
 		# L eau, miroir du feu, sans jamais sortir de ses bornes.
 		var feu: float = d.resistance_to(T.FIRE)
 		var eau: float = d.resistance_to(T.WATER)
-		ok(eau >= EnemyDef.accentuate(MC.WATER_FROM_FIRE_MIN) - 0.001
-			and eau <= EnemyDef.accentuate(MC.WATER_FROM_FIRE_MAX) + 0.001,
+		ok(eau >= _jouee(MC.WATER_FROM_FIRE_MIN) - 0.001
+			and eau <= _jouee(MC.WATER_FROM_FIRE_MAX) + 0.001,
 			"%s : l eau reste dans ses bornes" % id)
 		if feu < 1.0:
 			ok(eau > 1.0, "%s resiste au feu : il craint l eau" % id)

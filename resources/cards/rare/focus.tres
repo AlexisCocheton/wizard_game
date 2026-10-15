@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_aaeue"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ia2ks"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_xod7q"]
 
-[sub_resource type="Resource" id="Resource_aaeue"]
+[sub_resource type="Resource" id="Resource_ia2ks"]
 script = ExtResource("1_aaeue")
 key = &"empower_next"
 magnitude = 2.0
@@ -21,10 +22,11 @@ base_cast_time = 0.7
 targeting = 0
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_aaeue")]([SubResource("Resource_aaeue")])
+effects = Array[ExtResource("1_aaeue")]([SubResource("Resource_ia2ks")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"star_focus"
 sfx_key = &"spell_arcane"
+major_upgrades = Array[ExtResource("2_xod7q")]([])

@@ -9,27 +9,27 @@
 [ext_resource type="Resource" path="res://resources/enemies/pit_witch.tres" id="7_e4vxr"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="8_3hnwq"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="8_rffqt"]
-[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="9_doijp"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="9_vsqve"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="10_8ejf3"]
-[ext_resource type="Resource" path="res://resources/cards/rare/purifying_light.tres" id="10_epw7l"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_frost.tres" id="11_e4vxr"]
-[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="11_pvtfm"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_ember.tres" id="12_rffqt"]
-[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="12_yfv8l"]
-[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="13_ah3ht"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_arcane.tres" id="13_doijp"]
-[ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="15_wokui"]
+[ext_resource type="Resource" path="res://resources/cards/common/meteor.tres" id="15_doijp"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="16_epw7l"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="17_pvtfm"]
+[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="18_yfv8l"]
+[ext_resource type="Resource" path="res://resources/cards/common/purifying_light.tres" id="19_ah3ht"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="19_ckdo4"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="20_5pmol"]
+[ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="20_iwy8x"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="21_6yfmp"]
-[ext_resource type="Resource" path="res://resources/cards/epic/thunder_root.tres" id="21_doijp"]
+[ext_resource type="Resource" path="res://resources/cards/epic/thunder_root.tres" id="21_wokui"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="22_71u04"]
-[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="22_epw7l"]
-[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="23_pvtfm"]
-[ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="24_yfv8l"]
-[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="25_ah3ht"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="26_iwy8x"]
+[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="22_cmlmk"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="23_waf88"]
+[ext_resource type="Resource" path="res://resources/cards/rare/time_surge.tres" id="24_elph3"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="25_ckdo4"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="26_5pmol"]
 
 [sub_resource type="Resource" id="Resource_doijp"]
 script = ExtResource("19_ckdo4")
@@ -245,8 +245,13 @@ terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("21_6yfmp")]([SubResource("Resource_yfv8l"), SubResource("Resource_ah3ht"), SubResource("Resource_iwy8x"), SubResource("Resource_wokui"), SubResource("Resource_cmlmk")])
 enemy_pool = Array[ExtResource("1_21pon")]([ExtResource("2_cvq5j"), ExtResource("3_2c7cs"), ExtResource("4_3hnwq"), ExtResource("5_vsqve"), ExtResource("6_8ejf3"), ExtResource("7_e4vxr"), ExtResource("8_3hnwq"), ExtResource("9_vsqve"), ExtResource("10_8ejf3"), ExtResource("11_e4vxr"), ExtResource("12_rffqt"), ExtResource("13_doijp")])
-exploration_deck = Array[ExtResource("8_rffqt")]([ExtResource("9_doijp"), ExtResource("9_doijp"), ExtResource("9_doijp"), ExtResource("13_ah3ht"), ExtResource("13_ah3ht"), ExtResource("12_yfv8l"), ExtResource("12_yfv8l"), ExtResource("12_yfv8l"), ExtResource("11_pvtfm"), ExtResource("10_epw7l"), ExtResource("15_wokui"), ExtResource("15_wokui")])
+exploration_deck = Array[ExtResource("8_rffqt")]([ExtResource("15_doijp"), ExtResource("15_doijp"), ExtResource("15_doijp"), ExtResource("16_epw7l"), ExtResource("16_epw7l"), ExtResource("17_pvtfm"), ExtResource("17_pvtfm"), ExtResource("17_pvtfm"), ExtResource("18_yfv8l"), ExtResource("19_ah3ht"), ExtResource("20_iwy8x"), ExtResource("20_iwy8x")])
 objectives = Array[ExtResource("19_ckdo4")]([SubResource("Resource_doijp"), SubResource("Resource_epw7l"), SubResource("Resource_pvtfm")])
-levelup_cards = Array[ExtResource("8_rffqt")]([ExtResource("21_doijp"), ExtResource("22_epw7l"), ExtResource("23_pvtfm")])
-objective_rewards = Array[ExtResource("8_rffqt")]([ExtResource("24_yfv8l"), ExtResource("25_ah3ht"), ExtResource("26_iwy8x")])
+levelup_cards = Array[ExtResource("8_rffqt")]([ExtResource("21_wokui"), ExtResource("22_cmlmk"), ExtResource("23_waf88")])
+objective_rewards = Array[ExtResource("8_rffqt")]([ExtResource("24_elph3"), ExtResource("25_ckdo4"), ExtResource("26_5pmol")])
 next_levels = Array[StringName]([&"lvl_20"])
+base_commons = Array[ExtResource("8_rffqt")]([])
+passive_unlocks = Array[ExtResource("8_rffqt")]([])
+side_quest = false
+side_quest_after = &""
+side_quest_character = ""
