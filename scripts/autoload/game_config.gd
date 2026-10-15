@@ -133,8 +133,16 @@ const DRAW_INTERVAL: float = 6.5
 ## surveillant d abord lvl_11, lvl_18, lvl_20 et lvl_13, les premiers a tomber.
 ##
 ## 1,9 -> 1,75 (vague 10, co-auteur : « incantation legerement reduite ») :
-## -8 %, une incantation de base de 1 s passe de 1,9 a 1,75 s a x1. MESURE A
-## COMPLETER (banc du chantier B1a).
+## -8 %, une incantation de base de 1 s passe de 1,9 a 1,75 s a x1. Le chiffre
+## du co-auteur (« environ 1,75 ») est garde tel quel : il ne casse rien.
+## Banc du chantier B1a (21 niveaux x 60, deterministe, victoires sur 1260) :
+##   x1,9,  contenu d avant B1a                    : 1157  lvl_16 38, lvl_18 39, lvl_11 40
+##   x1,9,  contenu B1a (cartes, paliers)          : 1157  lvl_11 35, lvl_18 41, lvl_16 43
+##   x1,75, contenu B1a                            : 1170  lvl_11 39, lvl_18 42, lvl_13 44
+## Le contenu B1a est neutre au total (1157 / 1157) mais deplace lvl_11 sous le
+## repere a x1,9 ; x1,75 l y remet (39) et rend des parties aux niveaux les plus
+## durs (lvl_16 43 -> 48, lvl_20 49 -> 53). Aucun niveau sous le repere de
+## 36 / 60. Temps passe a incanter : 70 a 92 % sur 19 niveaux (76 a 95 % avant).
 const CAST_TIME_SCALE: float = 1.75
 
 const DRAW_COUNT: int = 2

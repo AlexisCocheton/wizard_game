@@ -38,7 +38,7 @@
 [ext_resource type="Resource" path="res://resources/cards/epic/terrain_pit.tres" id="32_m3ew4"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="33_opf7y"]
 
-[sub_resource type="Resource" id="Resource_pj7ba"]
+[sub_resource type="Resource" id="Resource_e2mpa"]
 script = ExtResource("28_gi347")
 id = &"obj_no_legendary"
 description = "Gagner sans utiliser de carte legendaire"
@@ -55,7 +55,7 @@ params = {
 "count": 25
 }
 
-[sub_resource type="Resource" id="Resource_17akq"]
+[sub_resource type="Resource" id="Resource_vo2kc"]
 script = ExtResource("28_gi347")
 id = &"obj_win_above_speed_300"
 description = "Gagner avec plus de 300 % de vitesse"
@@ -271,7 +271,7 @@ backdrop = "act3_demon"
 waves = Array[ExtResource("30_kgkvb")]([SubResource("Resource_q51cj"), SubResource("Resource_tmgem"), SubResource("Resource_oa0p5"), SubResource("Resource_an03n"), SubResource("Resource_bemd2")])
 enemy_pool = Array[ExtResource("1_cshed")]([ExtResource("2_lhb6e"), ExtResource("3_rwjjn"), ExtResource("4_cgn7k"), ExtResource("5_5hm2b"), ExtResource("6_0t8fe"), ExtResource("7_m7vev"), ExtResource("8_q51cj"), ExtResource("9_tmgem"), ExtResource("10_oa0p5"), ExtResource("11_an03n"), ExtResource("12_bemd2"), ExtResource("13_cshed"), ExtResource("14_m3ew4"), ExtResource("15_lhb6e"), ExtResource("16_rwjjn"), ExtResource("17_lhb6e"), ExtResource("18_rwjjn"), ExtResource("19_cgn7k"), ExtResource("20_5hm2b")])
 exploration_deck = Array[ExtResource("15_opf7y")]([ExtResource("17_w82a7"), ExtResource("17_w82a7"), ExtResource("17_w82a7"), ExtResource("17_w82a7"), ExtResource("23_m7vev"), ExtResource("23_m7vev"), ExtResource("22_cysi5"), ExtResource("22_cysi5"), ExtResource("22_cysi5"), ExtResource("25_m7vev"), ExtResource("26_q51cj"), ExtResource("27_tmgem")])
-objectives = Array[ExtResource("28_gi347")]([SubResource("Resource_pj7ba"), SubResource("Resource_m7vev"), SubResource("Resource_17akq")])
+objectives = Array[ExtResource("28_gi347")]([SubResource("Resource_e2mpa"), SubResource("Resource_m7vev"), SubResource("Resource_vo2kc")])
 levelup_cards = Array[ExtResource("15_opf7y")]([ExtResource("28_oa0p5"), ExtResource("29_an03n"), ExtResource("30_bemd2")])
 objective_rewards = Array[ExtResource("15_opf7y")]([ExtResource("31_ggghy"), ExtResource("32_m3ew4"), ExtResource("33_opf7y")])
 next_levels = Array[StringName]([&"lvl_14"])
