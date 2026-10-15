@@ -3331,7 +3331,7 @@ func _waves_and_level() -> void:
 	# --- Niveau ---
 	var lvl := LevelDef.new()
 	lvl.id = &"lvl_01"
-	lvl.display_name = "Les Marches du Temps"
+	lvl.display_name = "La lisiere de Nuri"
 	lvl.terrain = "grass"
 	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
 	# acte 1). Generees par tools/make_story.gd.
@@ -3371,9 +3371,9 @@ func _waves_and_level() -> void:
 	lvl.next_levels = [&"lvl_02"]
 	lvl.act = 1
 	lvl.subtitle = "Le matin de la premiere attaque"
-	lvl.intro_text = "Le royaume est tombe. Tu as remonte le temps jusqu ici, le \
-premier matin, pour trouver qui a donne l ordre. Ce ne sont que des gnomes et des \
-lutins — mais ils marchent en colonne, et la vermine ne marche pas en colonne."
+	lvl.intro_text = "La foret de Nuri, six jours avant sa fin. Tu as remonte le \
+temps jusqu a ce matin-la pour trouver d ou vient le mal. Ce n est que de la vermine \
+de foret, mais elle marche en colonne, et la vermine ne marche pas en colonne."
 	lvl.outro_text = "Le Gardien a ri en mourant. Il n a jamais voulu de cette \
 guerre : sa tribu a recu un ordre venu de sous la terre, et refuser coutait plus cher \
 qu obeir. Chronos n etait qu un huissier venu verifier les delais."
@@ -3572,7 +3572,7 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 
 	var lvl2 := LevelDef.new()
 	lvl2.id = &"lvl_02"
-	lvl2.display_name = "La Tour des Sables"
+	lvl2.display_name = "Le village petrifie"
 	lvl2.terrain = "sand"
 	# Scenes de visual novel qui encadrent le niveau (docs/histoire.md,
 	# acte 1). Generees par tools/make_story.gd.
@@ -3633,9 +3633,9 @@ qu obeir. Chronos n etait qu un huissier venu verifier les delais."
 	lvl2.next_levels = [&"lvl_08"]
 	lvl2.act = 1
 	lvl2.subtitle = "L ile qui a commence a tomber"
-	lvl2.intro_text = "La Tour des Sables se decroche : le temps y coule de travers, \
-et des creatures qui n ont rien a faire sur une ile volante s y entassent. Ombres, \
-Chevaliers du vide, Pretres goules. Ils ne t attaquent pas. Ils FUIENT."
+	lvl2.intro_text = "Le village de l enfant est debout, et ses gens aussi : en \
+pierre, figes au milieu d un geste. Des gorgones rodent encore. Tant qu une gorgone \
+vit, son regard fige des sorts dans ta main : abats-la avant tout le reste."
 	lvl2.outro_text = "Ils fuyaient le puits. Sous la tour s ouvre une descente vers \
 le Grand Cimetiere — et c est de la-bas qu est venu l ordre."
 	_save(lvl2, "res://resources/levels/lvl_02.tres")
@@ -3798,7 +3798,7 @@ func _acte_2(C: String, E: String) -> void:
 
 	var lvl3 := LevelDef.new()
 	lvl3.id = &"lvl_03"
-	lvl3.display_name = "Ossuaire des Marees"
+	lvl3.display_name = "L ossuaire de bordure"
 	lvl3.terrain = "sand"
 	# CHANTIER N2 — LES SCENES REVIENNENT, et ce sont enfin les bonnes.
 	#
@@ -3855,9 +3855,9 @@ func _acte_2(C: String, E: String) -> void:
 	lvl3.next_levels = [&"lvl_04"]
 	lvl3.act = 2
 	lvl3.subtitle = "Une administration, pas un cimetiere"
-	lvl3.intro_text = "Ici les morts sont tries, comptes, reaffectes. Les Pretres \
-goules tiennent les registres et leur ile se vide : les ames partent ailleurs. Ils \
-n ont pas efface ton royaume par haine. Ils l ont fait pour le STOCK."
+	lvl3.intro_text = "Passe le port, les iles ne portent plus que des tombes, \
+rangees et numerotees. Ici les morts sont tries et comptes, et les Pretres goules \
+tiennent les registres. On ne pleure pas les morts de l ossuaire : on les compte."
 	lvl3.outro_text = "Une Gelee prisonniere d un cercle de sel t a regarde la \
 liberer, puis t a montre comment un corps se separe et se rassemble. Les registres, \
 eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
@@ -4030,8 +4030,8 @@ eux, sont clairs : l extinction humaine devait alimenter une Grande Invocation."
 	lvl4.act = 2
 	lvl4.subtitle = "Le rituel reussit"
 	lvl4.intro_text = "Tu arrives trop tard : le cercle est deja trace et les \
-Pretres chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux seulement \
-etre la quand la porte s ouvrira, pour voir ce qui en sortira."
+Pretres goules chantent. Tu ne peux plus empecher la Grande Invocation. Tu peux \
+seulement etre la quand le cercle s ouvrira, pour voir ce qui en sortira."
 	lvl4.outro_text = "Les goules croyaient invoquer un allie. Elles ont invoque un \
 PROPRIETAIRE. Le Grand Cimetiere a ete annexe en une nuit. Le Pretre qui dirigeait le \
 rituel, ecrase par ce qu il a fait venir, t a appris a rappeler ce qui est deja parti \
@@ -4180,8 +4180,11 @@ func _acte_3(C: String, E: String) -> void:
 
 	var lvl5 := LevelDef.new()
 	lvl5.id = &"lvl_05"
-	lvl5.display_name = "Forges du Mauvais Temps"
+	lvl5.display_name = "Les forges sous Tombol"
 	lvl5.terrain = "sand"
+	# Scenes de la fourche (chantier B4, tools/make_story.gd).
+	lvl5.intro_story = &"lvl_05_intro"
+	lvl5.outro_story = &"lvl_05_outro"
 	lvl5.backdrop = "act3_demon"
 	lvl5.waves = [c1, c2, c3, c4, c5, c6]
 	lvl5.enemy_pool = [
@@ -4239,9 +4242,9 @@ func _acte_3(C: String, E: String) -> void:
 	lvl5.next_levels = [&"lvl_21"]
 	lvl5.act = 3
 	lvl5.subtitle = "Ils ne conquierent pas, ils fabriquent"
-	lvl5.intro_text = "De l autre cote de la porte : pas de chateau, pas de trone. \
-Des ateliers. Les demons fabriquent du temps, et ces creatures blindees ne sont pas \
-nees — elles ont ete coulees."
+	lvl5.intro_text = "Sous la cour des rois, l escalier ne mene pas a une crypte : \
+il mene a une forge qui tourne a plein, rouge de ce qui remonte d en dessous. Tombol \
+enterre ses morts, elle ne coule pas d armures. Ici, rien n est ne : tout a ete coule."
 	lvl5.outro_text = "Un Berserker a brise sa chaine devant toi au lieu de charger. \
 Les demons ne choisissent rien : une horloge bat au centre de leur monde et les \
 reveille. Elle n est pas a eux. Chaque extinction est une COMMANDE qui arrive par le \
@@ -4366,8 +4369,11 @@ cadran, et ils ignorent qui la passe."
 
 	var lvl6 := LevelDef.new()
 	lvl6.id = &"lvl_06"
-	lvl6.display_name = "La Cour brisee"
+	lvl6.display_name = "La cour brisee"
 	lvl6.terrain = "sand"
+	# Scenes de la fourche (chantier B4, tools/make_story.gd).
+	lvl6.intro_story = &"lvl_06_intro"
+	lvl6.outro_story = &"lvl_06_outro"
 	lvl6.backdrop = "act3_demon"
 	lvl6.waves = [d1, d2, d3, d4, d5, d6]
 	lvl6.enemy_pool = [
@@ -4414,9 +4420,9 @@ cadran, et ils ignorent qui la passe."
 	lvl6.next_levels = [&"lvl_21"]
 	lvl6.act = 3
 	lvl6.subtitle = "Une guerre civile ou tu n es qu un passant"
-	lvl6.intro_text = "Les seigneurs demoniaques s entretuent pour savoir qui \
-portera la faute du Grand Appel rate. Personne ne t attend. Tout le monde te tuera \
-quand meme, en passant."
+	lvl6.intro_text = "La salle du trone de Tombol, deja rougie par ce qui remonte \
+du puits. Le roi a fui sans dire a qui revenait le trone, et sa cour s entretue pour \
+l avoir. Personne ne t attend. Tout le monde te tuera quand meme, en passant."
 	lvl6.outro_text = "Le Chevalier du vide qui gardait le cadran s est rendu. Il t a \
 enseigne le geste des gardiens : effacer ce qui a ete inscrit sur une creature. Sur \
 le cadran, tu as lu une adresse."
@@ -4592,6 +4598,11 @@ func _acte_final(C: String, E: String) -> void:
 	# identifiant qui ne bouge pas.
 	lvl7.display_name = "La forge de Vharn"
 	lvl7.terrain = "grass"
+	# Ses scenes existaient (chantier N3) et ne se jouaient JAMAIS : le niveau ne
+	# les citait pas (revue A4, n° 1). test_story refuse desormais une scene
+	# qu aucun niveau ne cite.
+	lvl7.intro_story = &"lvl_07_intro"
+	lvl7.outro_story = &"lvl_07_outro"
 	# LE MONDE DEMONIAQUE, comme les quatre autres niveaux de l acte. Il montrait
 	# `act4_origin`, le fond des divinites, qui appartient desormais a l acte 5 —
 	# un joueur qui descend en enfer et voit le ciel du registre ne comprend plus
@@ -6005,7 +6016,7 @@ Gardien. Il n a jamais donne d ordre a personne : il en a recu un."
 	lvl11.subtitle = "Plus tu frappes, plus vite il vient"
 	lvl11.intro_text = "Une arene de sable noir, et des chaines partout : Kaltek ne \
 tient pas ses esclaves, il les FABRIQUE. Chaque coup que tu lui rends le rend plus \
-rapide. Ici, aller vite est une erreur — c est le seul niveau qui te le dira."
+rapide. Ici, aller vite est une erreur : c est le seul niveau qui te le dira."
 	lvl11.outro_text = "Kaltek tombe au milieu de ses propres chaines, et elles ne \
 tenaient rien : elles PARTAIENT de lui, vers le haut. Lui aussi etait tenu. Un \
 seigneur de la rage qui obeit, ca n a plus de nom."
@@ -6398,9 +6409,9 @@ l ordre de quelqu un d autre, et il ne savait pas de qui."
 	lvl13.next_levels = [&"lvl_14"]
 	lvl13.act = 4
 	lvl13.subtitle = "Quatre contrats, pas une signature en commun"
-	lvl13.intro_text = "Quatre seigneurs tombes, quatre contrats, et aucun des quatre \
-n avait lu l ordre : ils l ont RECU. Le pentacle qui tient ce monde est au centre de \
-la salle, et il n a jamais ete a eux."
+	lvl13.intro_text = "Au centre du monde demoniaque, le pentacle. La Reine gorgone, \
+recollee, en garde la porte ; derriere, Malyk porte les ordres que les seigneurs ont \
+recus sans les lire. Le pentacle tient ce monde, et il n a jamais ete a eux."
 	lvl13.outro_text = "Le pentacle se fend en cinq morceaux et le monde avec lui. Ce \
 n est pas toi qui l as casse : on te RETIRE, comme une piece qu on ote du plateau. \
 L enfant te tient la main, et sa main est froide comme le puits. La chute ne va pas \
@@ -6649,7 +6660,7 @@ func _acte_5(C: String, E: String) -> void:
 	lvl14.subtitle = "Ce qui a deja ete efface, expose"
 	lvl14.intro_text = "Il n y a pas de sol. Il y a une galerie, et dans la galerie \
 tout ce que tu as deja tue, range par saison. Le Gardien de la foret est dans une \
-vitrine, et il y en a deux."
+vitrine, et il n est pas seul : il y en a un par saison."
 	lvl14.outro_text = "Personne n est venu defendre la galerie. On te laisse passer \
 d une salle a l autre comme on laisse passer un visiteur. L enfant ne dit plus rien \
 depuis le pentacle, et il marche devant."

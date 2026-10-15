@@ -10,7 +10,12 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Tombol ne se voit pas d en haut : c est une ile qui descend. On y entre par les fosses basses, ou l eau monte aux mollets et ou les tombes se sont ouvertes vers le bas."
+"text": "Tombol ne se voit pas d en haut : c est une ile qui descend."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "On y entre par les fosses basses, ou l eau monte aux mollets et ou les tombes se sont ouvertes vers le bas."
 }, {
 "portrait": &"rat",
 "side": "right",
@@ -20,7 +25,7 @@ lines = Array[Dictionary]([{
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Combien de temps avant qu il sache que nous sommes la ?"
+"text": "Combien de temps avant que le Roi squelette sache que nous sommes la ?"
 }, {
 "portrait": &"rat",
 "side": "right",

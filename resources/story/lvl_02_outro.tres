@@ -10,22 +10,22 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Le corniste tombe en dernier. Sa corne roule dans la boue et continue a sonner deux secondes de trop."
+"text": "La Reine gorgone s effondre au milieu de la place. Les sorts du mage se degelent d un coup. Les gens du village, eux, restent en pierre."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ce qu une gorgone fige, sa mort le libere. Pas eux. Quelqu un les a figes avant elle."
 }, {
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Il jouait pour les autres."
+"text": "Ils sont bien comme ca. Ils n ont plus peur."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Il jouait pour quelqu un d autre. Il recevait un tempo, il le repetait."
-}, {
-"portrait": &"mage",
-"side": "left",
-"speaker": "Le Mage",
-"text": "Ou est ton maire, petit ?"
+"text": "... Ou est ton maire, petit ?"
 }, {
 "portrait": &"child",
 "side": "right",
@@ -35,5 +35,5 @@ lines = Array[Dictionary]([{
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Trois jours. Avant meme l attaque, donc. Interessant."
+"text": "Trois jours. Avant meme l attaque. Et lui n est pas en pierre."
 }])

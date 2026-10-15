@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_oawjp")
 id = &"lvl_20_intro"
-scene_background = "talk_greattree"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Une cour bordee de statues, chacune un roi de Tombol, chacune plus haute que la precedente. Au pied de la derniere, des gardes en rang qui ne regardent meme pas l entree."
+"text": "Une cour bordee de statues : chaque roi de Tombol, chacun plus haut que le precedent. Au pied du dernier, des gardes en rang."
 }, {
 "portrait": &"mage",
 "side": "left",
@@ -25,5 +25,5 @@ lines = Array[Dictionary]([{
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Reste pres de moi. Et ne touche a rien qui soit grave."
+"text": "Reste pres de moi. Et ne touche a aucune inscription."
 }])

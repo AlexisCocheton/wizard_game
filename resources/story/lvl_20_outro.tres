@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_fv6nh")
 id = &"lvl_20_outro"
-scene_background = "talk_greattree"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
@@ -30,5 +30,5 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Au fond de la cour, un escalier descend, et une lumiere rouge remonte."
+"text": "Au fond de la cour, deux escaliers. L un descend vers une lueur rouge. L autre remonte vers la salle du trone, d ou viennent des cris."
 }])

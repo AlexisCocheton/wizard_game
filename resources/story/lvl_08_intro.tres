@@ -8,32 +8,32 @@ id = &"lvl_08_intro"
 scene_background = "talk_path"
 lines = Array[Dictionary]([{
 "portrait": &"mayor",
-"side": "left",
+"side": "right",
 "speaker": "Le Maire",
 "text": "Je n ai rien cache. J ai... attendu."
 }, {
 "portrait": &"mage",
-"side": "right",
+"side": "left",
 "speaker": "Le Mage",
 "text": "Vous avez attendu quoi, exactement ?"
 }, {
 "portrait": &"mayor",
-"side": "left",
+"side": "right",
 "speaker": "Le Maire",
 "text": "Que ca s arrete tout seul. Ca arrivait par le ciel, mage. Tous les mois, un peu plus bas."
 }, {
 "portrait": &"mayor",
-"side": "left",
+"side": "right",
 "speaker": "Le Maire",
 "text": "Des betes qui tombaient d en haut et qui ne remontaient pas."
 }, {
 "portrait": &"mage",
-"side": "right",
+"side": "left",
 "speaker": "Le Mage",
 "text": "D en haut. Donc il y a une ile au-dessus de la notre."
 }, {
 "portrait": &"mayor",
-"side": "left",
+"side": "right",
 "speaker": "Le Maire",
 "text": "Il y a les Sky Lands. Et il y a un dirigeable ecrase au bout de cette route. Si vous voulez monter, c est la seule facon."
 }, {
@@ -43,12 +43,12 @@ lines = Array[Dictionary]([{
 "text": "Je viens."
 }, {
 "portrait": &"mage",
-"side": "right",
+"side": "left",
 "speaker": "Le Mage",
 "text": "Non."
 }, {
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Mon village est derriere moi et il n y a plus rien dedans. Je viens."
+"text": "Mon village est en pierre derriere moi. Il n y a plus rien a garder. Je viens."
 }])

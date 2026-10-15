@@ -10,12 +10,22 @@ lines = Array[Dictionary]([{
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Tu les as fait tomber ! Tous les trois ! Comment on fait ca ?"
+"text": "Tu les as tous fait tomber ! Meme le grand ! Comment on fait ca ?"
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
 "text": "On va vite. Plus vite qu eux. C est tout ce que je sais encore faire."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le plus grand d entre eux porte un cadran a la place du coeur. Les aiguilles tournent encore."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Chronos. L huissier des delais. Il etait deja la, la premiere fois, quand Nox est tombee."
 }, {
 "portrait": &"child",
 "side": "right",

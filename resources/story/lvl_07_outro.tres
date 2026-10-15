@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_3i55y")
 id = &"lvl_07_outro"
-scene_background = "talk_greattree"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
@@ -15,7 +15,7 @@ lines = Array[Dictionary]([{
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "C est ma signature. Et au-dessus, une autre, que je n ai jamais vue."
+"text": "C est ma signature. Et au-dessus, une autre, que je n ai jamais vue. Petite et soignee."
 }, {
 "portrait": &"mage",
 "side": "left",
@@ -25,20 +25,20 @@ lines = Array[Dictionary]([{
 "portrait": &"rat",
 "side": "right",
 "speaker": "Le Rat pilote",
-"text": "Un atelier ou le patron fabrique ce qu on lui commande. J ai travaille la-dedans vingt ans."
+"text": "J ai travaille vingt ans dans un atelier comme ca, la-haut. Le patron fabrique ce qu on lui commande."
 }, {
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Il y en a trois autres. On peut commencer par n importe lequel."
+"text": "Le pentacle a cinq branches. Quatre portent un nom. J ai compte."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "... Comment tu sais qu ils sont trois ?"
+"text": "... Quand est-ce que tu as compte ?"
 }, {
-"portrait": &"child",
-"side": "right",
-"speaker": "L Enfant",
-"text": "Il y a quatre branches au pentacle. J ai compte."
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "L enfant ne repond pas. Il regarde deja ailleurs."
 }])

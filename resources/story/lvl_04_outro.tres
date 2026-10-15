@@ -5,12 +5,17 @@
 [resource]
 script = ExtResource("1_b0wf5")
 id = &"lvl_04_outro"
-scene_background = "talk_greattree"
+scene_background = "talk_shrine"
 lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Les morts du cimetiere de bordure ne chargent pas. Ils s arretent, tous, en meme temps, et se tournent vers le mage."
+"text": "Ce qui est sorti du cercle s appelle l Ensevelisseur. Quand il tombe, les morts cessent de charger."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Ils s arretent, tous, en meme temps, et se tournent vers le mage."
 }, {
 "portrait": &"",
 "side": "left",

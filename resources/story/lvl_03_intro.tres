@@ -10,7 +10,7 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Passe le port, l archipel change. Les iles suivantes ne portent plus de maisons : elles portent des tombes, rangees, numerotees, et de la brume jusqu aux genoux."
+"text": "Passe le port, les iles ne portent plus de maisons. Elles portent des tombes, rangees, numerotees, et de la brume jusqu aux genoux."
 }, {
 "portrait": &"rat",
 "side": "right",

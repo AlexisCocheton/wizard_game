@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_sjxxh"]
+
+[resource]
+script = ExtResource("1_sjxxh")
+id = &"lvl_05_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le dernier colosse de la forge s effondre dans sa propre coulee. Sur chaque piece, le meme poincon : un cercle a cinq branches."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Ce n est pas Tombol qui fabrique ca. Ca remonte d en dessous, et Tombol paie l atelier."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il paie avec quoi ?"
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Avec ses morts, petit. Tu as vu les registres."
+}])

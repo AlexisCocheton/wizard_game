@@ -14,13 +14,13 @@ lines = Array[Dictionary]([{
 }, {
 "portrait": &"demon",
 "side": "right",
-"speaker": "Un demon",
+"speaker": "Ymoa",
 "text": "... je n ai pas lu... personne ne lit..."
 }, {
 "portrait": &"mage_grave",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Quatre seigneurs. Quatre contrats. Et pas un seul qui sache ce qu il signait."
+"text": "Un seigneur qui protege sans savoir quoi, et qui signe sans lire."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
@@ -30,5 +30,5 @@ lines = Array[Dictionary]([{
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Alors le pentacle. Tout de suite."
+"text": "Alors on va jusqu au bout du couloir. Jusqu au pentacle."
 }])

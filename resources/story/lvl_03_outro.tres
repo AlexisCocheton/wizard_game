@@ -10,12 +10,17 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Les registres de l ossuaire sont intacts. Une colonne par ile, une ligne par annee, et pour les trois dernieres annees les chiffres ne sont plus des chiffres : ce sont des commandes."
+"text": "Le Reliquaire s ouvre en tombant. Dedans, les registres de l ossuaire, intacts : une colonne par ile, une ligne par annee."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Les trois dernieres annees, on n a plus compte des morts. On les a COMMANDES."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Ils ne nous ont pas effaces par haine. Ils nous ont effaces pour le STOCK."
+"text": "Ils ne vont pas nous effacer par haine. Ils vont nous effacer pour faire du STOCK."
 }, {
 "portrait": &"rat",
 "side": "right",
@@ -25,7 +30,7 @@ lines = Array[Dictionary]([{
 "portrait": &"mage_grave",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Pour une invocation. On ne compte pas des morts a la ligne si on n a pas l intention de s en servir tous en meme temps."
+"text": "On ne range pas des morts en colonnes si on ne compte pas s en servir tous ensemble."
 }, {
 "portrait": &"child",
 "side": "right",
