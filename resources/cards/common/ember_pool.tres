@@ -1,15 +1,80 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1yp48"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_48hcr"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_xlw54"]
 
-[sub_resource type="Resource" id="Resource_1yp48"]
+[sub_resource type="Resource" id="Resource_xlw54"]
 script = ExtResource("1_1yp48")
 key = &"ground_zone"
 magnitude = 8.0
 duration = 4.0
 radius = 160.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_48hcr"]
+script = ExtResource("2_48hcr")
+id = &"braises_collantes"
+title = "Braises collantes"
+description = "Qui sort des braises continue de bruler : 4 degats par seconde pendant 4 s"
+modifiers = Array[Dictionary]([{
+"key": &"ground_zone",
+"op": "set",
+"param": &"residue_dps",
+"value": 4.0
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"residue_duration",
+"value": 4.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_t5jx2"]
+script = ExtResource("1_1yp48")
+key = &"ground_zone"
+magnitude = 8.0
+duration = 4.0
+radius = 160.0
+params = {
+&"aim_offset": Vector2(-150, -130)
+}
+
+[sub_resource type="Resource" id="Resource_7eceg"]
+script = ExtResource("1_1yp48")
+key = &"ground_zone"
+magnitude = 8.0
+duration = 4.0
+radius = 160.0
+params = {
+&"aim_offset": Vector2(150, -130)
+}
+
+[sub_resource type="Resource" id="Resource_xrqbc"]
+script = ExtResource("2_48hcr")
+id = &"semis_de_braises"
+title = "Semis de braises"
+description = "Trois foyers en triangle couvrent tout un carrefour"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_t5jx2")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_7eceg")
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.35
+}, {
+"axis": &"area",
+"op": "axis",
+"pct": -0.3
+}])
 
 [resource]
 script = ExtResource("2_xlw54")
@@ -21,10 +86,11 @@ base_cast_time = 1.7
 targeting = 1
 element = 1
 tags = Array[int]([])
-effects = Array[ExtResource("1_1yp48")]([SubResource("Resource_1yp48")])
+effects = Array[ExtResource("1_1yp48")]([SubResource("Resource_xlw54")])
 copies_in_starter = 2
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"ember_flames"
 sfx_key = &"fire_ignite"
+major_upgrades = Array[ExtResource("2_48hcr")]([SubResource("Resource_48hcr"), SubResource("Resource_xrqbc")])

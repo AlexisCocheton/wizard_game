@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_kk3he"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_hi6my"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_hs2vv"]
 
-[sub_resource type="Resource" id="Resource_kk3he"]
+[sub_resource type="Resource" id="Resource_hs2vv"]
 script = ExtResource("1_kk3he")
 key = &"knockback"
 magnitude = 18.0
@@ -12,6 +13,45 @@ radius = 220.0
 params = {
 &"push": 260.0
 }
+
+[sub_resource type="Resource" id="Resource_hi6my"]
+script = ExtResource("2_hi6my")
+id = &"souffle_continu"
+title = "Souffle continu"
+description = "Le souffle s attarde 4 s : un courant fait reculer qui y entre (effet d eau)"
+modifiers = Array[Dictionary]([{
+"duration": 4.0,
+"key": &"water_flood",
+"magnitude": 60.0,
+"op": "add_effect",
+"params": {},
+"radius": 220.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"force",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_8dut4"]
+script = ExtResource("2_hi6my")
+id = &"double_onde"
+title = "Double onde"
+description = "Une seconde onde part 1,5 s plus tard, au meme endroit"
+modifiers = Array[Dictionary]([{
+"delay": 1.5,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.35
+}, {
+"axis": &"area",
+"op": "axis",
+"pct": -0.2
+}])
 
 [resource]
 script = ExtResource("2_hs2vv")
@@ -23,10 +63,11 @@ base_cast_time = 1.2
 targeting = 1
 element = 10
 tags = Array[int]([])
-effects = Array[ExtResource("1_kk3he")]([SubResource("Resource_kk3he")])
+effects = Array[ExtResource("1_kk3he")]([SubResource("Resource_hs2vv")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"ring_expand"
 sfx_key = &"impact_heavy"
+major_upgrades = Array[ExtResource("2_hi6my")]([SubResource("Resource_hi6my"), SubResource("Resource_8dut4")])

@@ -1,15 +1,8 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_23bqu"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_mev5s"]
-
-[sub_resource type="Resource" id="Resource_23bqu"]
-script = ExtResource("1_23bqu")
-key = &"summon_ally"
-magnitude = 14.0
-duration = 10.0
-radius = 0.0
-params = {}
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_nmpeq"]
 
 [sub_resource type="Resource" id="Resource_mev5s"]
 script = ExtResource("1_23bqu")
@@ -18,6 +11,45 @@ magnitude = 14.0
 duration = 10.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_nmpeq"]
+script = ExtResource("1_23bqu")
+key = &"summon_ally"
+magnitude = 14.0
+duration = 10.0
+radius = 0.0
+params = {}
+
+[sub_resource type="Resource" id="Resource_kh4rp"]
+script = ExtResource("2_nmpeq")
+id = &"legion"
+title = "Legion"
+description = "Quatre allies au lieu de deux, chacun plus faible"
+modifiers = Array[Dictionary]([{
+"key": &"summon_ally",
+"op": "duplicate",
+"params": {}
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.45
+}])
+
+[sub_resource type="Resource" id="Resource_v7eap"]
+script = ExtResource("2_nmpeq")
+id = &"appel_eclair"
+title = "Appel eclair"
+description = "Les allies repondent presque aussitot"
+modifiers = Array[Dictionary]([{
+"factor": 0.25,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_mev5s")
@@ -29,10 +61,11 @@ base_cast_time = 2.2
 targeting = 0
 element = 9
 tags = Array[int]([5])
-effects = Array[ExtResource("1_23bqu")]([SubResource("Resource_23bqu"), SubResource("Resource_mev5s")])
+effects = Array[ExtResource("1_23bqu")]([SubResource("Resource_mev5s"), SubResource("Resource_nmpeq")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"hex_summon"
 sfx_key = &"whoosh_summon"
+major_upgrades = Array[ExtResource("2_nmpeq")]([SubResource("Resource_kh4rp"), SubResource("Resource_v7eap")])

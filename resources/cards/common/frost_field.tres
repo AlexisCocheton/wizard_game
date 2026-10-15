@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_t6wfx"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_i1x5g"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_vum32"]
 
-[sub_resource type="Resource" id="Resource_t6wfx"]
+[sub_resource type="Resource" id="Resource_i1x5g"]
 script = ExtResource("1_t6wfx")
 key = &"ground_zone"
 magnitude = 1.0
@@ -12,6 +13,77 @@ radius = 180.0
 params = {
 &"slow_pct": 50.0
 }
+
+[sub_resource type="Resource" id="Resource_vum32"]
+script = ExtResource("1_t6wfx")
+key = &"ground_zone"
+magnitude = 1.0
+duration = 5.0
+radius = 180.0
+params = {
+&"aim_offset": Vector2(-180, 0),
+&"slow_pct": 50.0
+}
+
+[sub_resource type="Resource" id="Resource_lrxhx"]
+script = ExtResource("1_t6wfx")
+key = &"ground_zone"
+magnitude = 1.0
+duration = 5.0
+radius = 180.0
+params = {
+&"aim_offset": Vector2(180, 0),
+&"slow_pct": 50.0
+}
+
+[sub_resource type="Resource" id="Resource_q7nvf"]
+script = ExtResource("2_vum32")
+id = &"barriere_de_givre"
+title = "Barriere de givre"
+description = "Trois champs cote a cote : une barriere de givre sur toute une rangee"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_vum32")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_lrxhx")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.5
+}, {
+"axis": &"duration",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_pqeca"]
+script = ExtResource("2_vum32")
+id = &"engelures"
+title = "Engelures"
+description = "Le givre mord : degats subis x1,4 dedans, et 3 par seconde 4 s apres la sortie"
+modifiers = Array[Dictionary]([{
+"key": &"ground_zone",
+"op": "set",
+"param": &"vuln_mult",
+"value": 1.4
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"residue_dps",
+"value": 3.0
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"residue_duration",
+"value": 4.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"slow",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_i1x5g")
@@ -23,10 +95,11 @@ base_cast_time = 0.6
 targeting = 1
 element = 2
 tags = Array[int]([4])
-effects = Array[ExtResource("1_t6wfx")]([SubResource("Resource_t6wfx")])
+effects = Array[ExtResource("1_t6wfx")]([SubResource("Resource_i1x5g")])
 copies_in_starter = 3
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"rune_square"
 sfx_key = &"drip_frost"
+major_upgrades = Array[ExtResource("2_vum32")]([SubResource("Resource_q7nvf"), SubResource("Resource_pqeca")])

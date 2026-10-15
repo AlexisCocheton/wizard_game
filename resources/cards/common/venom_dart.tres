@@ -1,15 +1,60 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_fbclp"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_os4ia"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_p73tl"]
 
-[sub_resource type="Resource" id="Resource_fbclp"]
+[sub_resource type="Resource" id="Resource_os4ia"]
 script = ExtResource("1_fbclp")
 key = &"poison_dot"
 magnitude = 2.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_p73tl"]
+script = ExtResource("2_p73tl")
+id = &"contagion"
+title = "Contagion"
+description = "A la mort de la cible, le venin saute au voisin (4 degats, -1 par saut)"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"electric_mark",
+"magnitude": 4.0,
+"op": "add_effect",
+"params": {
+&"decay": 1.0,
+&"jump_range": 260.0
+},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_v6yx7"]
+script = ExtResource("2_p73tl")
+id = &"nuee_de_dards"
+title = "Nuee de dards"
+description = "Les voisins de la cible sont empoisonnes aussi : 2 PV par seconde pendant 6 s"
+modifiers = Array[Dictionary]([{
+"duration": 0.3,
+"key": &"ground_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"residue_dps": 2.0,
+&"residue_duration": 6.0
+},
+"radius": 150.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_os4ia")
@@ -21,10 +66,11 @@ base_cast_time = 0.7
 targeting = 3
 element = 6
 tags = Array[int]([])
-effects = Array[ExtResource("1_fbclp")]([SubResource("Resource_fbclp")])
+effects = Array[ExtResource("1_fbclp")]([SubResource("Resource_os4ia")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"skull_burst"
 sfx_key = &"arrow_laser"
+major_upgrades = Array[ExtResource("2_p73tl")]([SubResource("Resource_p73tl"), SubResource("Resource_v6yx7")])

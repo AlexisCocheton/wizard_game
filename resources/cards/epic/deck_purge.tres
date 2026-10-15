@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_lehn2"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_e44m8"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ttq73"]
 
-[sub_resource type="Resource" id="Resource_lehn2"]
+[sub_resource type="Resource" id="Resource_ttq73"]
 script = ExtResource("1_lehn2")
 key = &"remove_cards"
 magnitude = 0.0
@@ -12,6 +13,46 @@ radius = 0.0
 params = {
 &"count": 2
 }
+
+[sub_resource type="Resource" id="Resource_e44m8"]
+script = ExtResource("2_e44m8")
+id = &"purge_vivifiante"
+title = "Purge vivifiante"
+description = "La purge rend aussi 20 points de vitesse au mage"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"gain_speed",
+"magnitude": 20.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_8o1xv"]
+script = ExtResource("2_e44m8")
+id = &"purge_toxique"
+title = "Purge toxique"
+description = "Le poison rejete se repand : 3 degats a tous les monstres toutes les 2 s, 8 s"
+modifiers = Array[Dictionary]([{
+"duration": 8.0,
+"key": &"global_rain",
+"magnitude": 3.0,
+"op": "add_effect",
+"params": {
+&"interval": 2.0
+},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
 
 [resource]
 script = ExtResource("2_ttq73")
@@ -23,10 +64,11 @@ base_cast_time = 1.0
 targeting = 0
 element = 6
 tags = Array[int]([])
-effects = Array[ExtResource("1_lehn2")]([SubResource("Resource_lehn2")])
+effects = Array[ExtResource("1_lehn2")]([SubResource("Resource_ttq73")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"dark_vanish"
 sfx_key = &"ward_light"
+major_upgrades = Array[ExtResource("2_e44m8")]([SubResource("Resource_e44m8"), SubResource("Resource_8o1xv")])

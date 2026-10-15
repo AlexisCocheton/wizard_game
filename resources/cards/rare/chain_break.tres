@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_kki6v"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_bbtto"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_io0mp"]
 
-[sub_resource type="Resource" id="Resource_kki6v"]
+[sub_resource type="Resource" id="Resource_bbtto"]
 script = ExtResource("1_kki6v")
 key = &"knockback"
 magnitude = 18.0
@@ -12,6 +13,49 @@ radius = 190.0
 params = {
 &"push": 260.0
 }
+
+[sub_resource type="Resource" id="Resource_io0mp"]
+script = ExtResource("2_io0mp")
+id = &"eclats"
+title = "Eclats"
+description = "Les eclats restent plantes : 4 degats de VENT par seconde pendant 4 s"
+modifiers = Array[Dictionary]([{
+"key": &"knockback",
+"op": "set",
+"param": &"residue_dps",
+"value": 4.0
+}, {
+"key": &"knockback",
+"op": "set",
+"param": &"residue_duration",
+"value": 4.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"force",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_obxma"]
+script = ExtResource("2_io0mp")
+id = &"chaines_pesantes"
+title = "Chaines pesantes"
+description = "Les chaines restent au sol : ralentit de 50 % pendant 3 s (effet de glace)"
+modifiers = Array[Dictionary]([{
+"duration": 3.0,
+"key": &"ground_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"slow_pct": 50.0
+},
+"radius": 190.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"force",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_bbtto")
@@ -23,10 +67,11 @@ base_cast_time = 1.4
 targeting = 1
 element = 10
 tags = Array[int]([])
-effects = Array[ExtResource("1_kki6v")]([SubResource("Resource_kki6v")])
+effects = Array[ExtResource("1_kki6v")]([SubResource("Resource_bbtto")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"shatter_burst"
 sfx_key = &"impact_heavy"
+major_upgrades = Array[ExtResource("2_io0mp")]([SubResource("Resource_io0mp"), SubResource("Resource_obxma")])

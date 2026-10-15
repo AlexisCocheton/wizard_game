@@ -1,15 +1,77 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_8tvke"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_c0yu3"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_kpg6g"]
 
-[sub_resource type="Resource" id="Resource_8tvke"]
+[sub_resource type="Resource" id="Resource_kpg6g"]
 script = ExtResource("1_8tvke")
 key = &"ground_zone"
 magnitude = 14.0
 duration = 6.0
 radius = 140.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_c0yu3"]
+script = ExtResource("1_8tvke")
+key = &"ground_zone"
+magnitude = 14.0
+duration = 6.0
+radius = 140.0
+params = {
+&"aim_offset": Vector2(0, -210)
+}
+
+[sub_resource type="Resource" id="Resource_jl33n"]
+script = ExtResource("1_8tvke")
+key = &"ground_zone"
+magnitude = 14.0
+duration = 6.0
+radius = 140.0
+params = {
+&"aim_offset": Vector2(0, -420)
+}
+
+[sub_resource type="Resource" id="Resource_3hg3t"]
+script = ExtResource("2_c0yu3")
+id = &"colonne_de_feu"
+title = "Colonne de feu"
+description = "Trois brasiers en colonne : un couloir de feu vers les monstres"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_c0yu3")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_jl33n")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.4
+}, {
+"axis": &"damage",
+"op": "axis",
+"pct": -0.25
+}])
+
+[sub_resource type="Resource" id="Resource_st25u"]
+script = ExtResource("2_c0yu3")
+id = &"appel_d_air"
+title = "Appel d air"
+description = "Le brasier aspire l air et attire les monstres vers son coeur (effet de vent)"
+modifiers = Array[Dictionary]([{
+"duration": 6.0,
+"key": &"vortex_pull",
+"magnitude": 90.0,
+"op": "add_effect",
+"params": {},
+"radius": 280.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_kpg6g")
@@ -21,10 +83,11 @@ base_cast_time = 2.1
 targeting = 1
 element = 1
 tags = Array[int]([])
-effects = Array[ExtResource("1_8tvke")]([SubResource("Resource_8tvke")])
+effects = Array[ExtResource("1_8tvke")]([SubResource("Resource_kpg6g")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"flame_pillar"
 sfx_key = &"fire_ignite"
+major_upgrades = Array[ExtResource("2_c0yu3")]([SubResource("Resource_3hg3t"), SubResource("Resource_st25u")])

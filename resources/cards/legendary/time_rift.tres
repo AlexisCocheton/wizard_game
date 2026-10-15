@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7ag10"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_f6g4t"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_vnek4"]
 
-[sub_resource type="Resource" id="Resource_7ag10"]
+[sub_resource type="Resource" id="Resource_vnek4"]
 script = ExtResource("1_7ag10")
 key = &"cost_reduction"
 magnitude = 1.5
@@ -11,7 +12,7 @@ duration = 10.0
 radius = 0.0
 params = {}
 
-[sub_resource type="Resource" id="Resource_vnek4"]
+[sub_resource type="Resource" id="Resource_f6g4t"]
 script = ExtResource("1_7ag10")
 key = &"pierce_line"
 magnitude = 40.0
@@ -20,6 +21,69 @@ radius = 200.0
 params = {
 &"max_targets": 99
 }
+
+[sub_resource type="Resource" id="Resource_s3ip7"]
+script = ExtResource("1_7ag10")
+key = &"pierce_line"
+magnitude = 40.0
+duration = 0.0
+radius = 200.0
+params = {
+&"angle_deg": 90.0,
+&"max_targets": 99
+}
+
+[sub_resource type="Resource" id="Resource_rqs4a"]
+script = ExtResource("1_7ag10")
+key = &"pierce_line"
+magnitude = 40.0
+duration = 0.0
+radius = 200.0
+params = {
+&"angle_deg": -90.0,
+&"max_targets": 99
+}
+
+[sub_resource type="Resource" id="Resource_7hb4f"]
+script = ExtResource("2_f6g4t")
+id = &"faille_en_croix"
+title = "Faille en croix"
+description = "La faille s ouvre en croix : deux lignes de plus, a angle droit"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_s3ip7")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_rqs4a")
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.2
+}])
+
+[sub_resource type="Resource" id="Resource_kkyw1"]
+script = ExtResource("2_f6g4t")
+id = &"faille_figee"
+title = "Faille figee"
+description = "Le temps se fige autour d eux : tous les monstres -30 % pendant 5 s"
+modifiers = Array[Dictionary]([{
+"duration": 5.0,
+"key": &"slow_enemy_gauge",
+"magnitude": 30.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"tempo",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_vnek4")
@@ -31,10 +95,11 @@ base_cast_time = 2.0
 targeting = 2
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_7ag10")]([SubResource("Resource_7ag10"), SubResource("Resource_vnek4")])
+effects = Array[ExtResource("1_7ag10")]([SubResource("Resource_vnek4"), SubResource("Resource_f6g4t")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"orbit_cross"
 sfx_key = &"spell_grand"
+major_upgrades = Array[ExtResource("2_f6g4t")]([SubResource("Resource_7hb4f"), SubResource("Resource_kkyw1")])

@@ -1,15 +1,77 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_pse75"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_e4nsd"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_lpd4f"]
 
-[sub_resource type="Resource" id="Resource_pse75"]
+[sub_resource type="Resource" id="Resource_lpd4f"]
 script = ExtResource("1_pse75")
 key = &"vortex_pull"
 magnitude = 150.0
 duration = 3.0
 radius = 220.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_e4nsd"]
+script = ExtResource("2_e4nsd")
+id = &"sel_brulant"
+title = "Sel brulant"
+description = "Le sel ronge le coeur de la spirale : 6 degats de VENT par seconde"
+modifiers = Array[Dictionary]([{
+"duration": 3.0,
+"key": &"ground_zone",
+"magnitude": 6.0,
+"op": "add_effect",
+"params": {},
+"radius": 110.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_t5wi3"]
+script = ExtResource("1_pse75")
+key = &"vortex_pull"
+magnitude = 150.0
+duration = 3.0
+radius = 220.0
+params = {
+&"aim_offset": Vector2(-260, 0)
+}
+
+[sub_resource type="Resource" id="Resource_aj0q6"]
+script = ExtResource("1_pse75")
+key = &"vortex_pull"
+magnitude = 150.0
+duration = 3.0
+radius = 220.0
+params = {
+&"aim_offset": Vector2(260, 0)
+}
+
+[sub_resource type="Resource" id="Resource_ma1ic"]
+script = ExtResource("2_e4nsd")
+id = &"rideau_de_spirales"
+title = "Rideau de spirales"
+description = "Trois spirales cote a cote aspirent toute une rangee"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_t5wi3")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_aj0q6")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.5
+}, {
+"axis": &"force",
+"op": "axis",
+"pct": -0.35
+}])
 
 [resource]
 script = ExtResource("2_lpd4f")
@@ -21,10 +83,11 @@ base_cast_time = 1.2
 targeting = 1
 element = 10
 tags = Array[int]([])
-effects = Array[ExtResource("1_pse75")]([SubResource("Resource_pse75")])
+effects = Array[ExtResource("1_pse75")]([SubResource("Resource_lpd4f")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"spiral_salt"
 sfx_key = &"wind_gust"
+major_upgrades = Array[ExtResource("2_e4nsd")]([SubResource("Resource_e4nsd"), SubResource("Resource_ma1ic")])

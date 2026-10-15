@@ -1,15 +1,59 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_oaysl"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5o7pc"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_8i54b"]
 
-[sub_resource type="Resource" id="Resource_oaysl"]
+[sub_resource type="Resource" id="Resource_5o7pc"]
 script = ExtResource("1_oaysl")
 key = &"terrain_river"
 magnitude = 0.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_8i54b"]
+script = ExtResource("2_8i54b")
+id = &"torrent"
+title = "Torrent"
+description = "A la pose, un jet d eau repousse tout ce qui est sous le point vise"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"water_jet",
+"magnitude": 3.0,
+"op": "add_effect",
+"params": {
+&"length": 900.0,
+&"push": 300.0
+},
+"radius": 70.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_c5iud"]
+script = ExtResource("2_8i54b")
+id = &"crue"
+title = "Crue"
+description = "La riviere deborde : 4 degats d EAU a chaque monstre toutes les 2 s, 10 s"
+modifiers = Array[Dictionary]([{
+"duration": 10.0,
+"key": &"global_rain",
+"magnitude": 4.0,
+"op": "add_effect",
+"params": {
+&"interval": 2.0
+},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_5o7pc")
@@ -21,10 +65,11 @@ base_cast_time = 2.6
 targeting = 1
 element = 8
 tags = Array[int]([])
-effects = Array[ExtResource("1_oaysl")]([SubResource("Resource_oaysl")])
+effects = Array[ExtResource("1_oaysl")]([SubResource("Resource_5o7pc")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"portal_blue"
 sfx_key = &"wind_gust"
+major_upgrades = Array[ExtResource("2_8i54b")]([SubResource("Resource_8i54b"), SubResource("Resource_c5iud")])

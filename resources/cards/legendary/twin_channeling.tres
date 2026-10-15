@@ -1,15 +1,50 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_kq7f8"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_58dx3"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_tqjxi"]
 
-[sub_resource type="Resource" id="Resource_kq7f8"]
+[sub_resource type="Resource" id="Resource_58dx3"]
 script = ExtResource("1_kq7f8")
 key = &"double_cast"
 magnitude = 0.0
 duration = 10.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_tqjxi"]
+script = ExtResource("2_tqjxi")
+id = &"canaux_brulants"
+title = "Canaux brulants"
+description = "Et tu incantes 40 % plus vite tant que les deux canaux sont ouverts"
+modifiers = Array[Dictionary]([{
+"duration": 10.0,
+"key": &"self_haste",
+"magnitude": 40.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_6wfin"]
+script = ExtResource("2_tqjxi")
+id = &"canal_fulgurant"
+title = "Canal fulgurant"
+description = "Les deux canaux s ouvrent presque aussitot"
+modifiers = Array[Dictionary]([{
+"factor": 0.15,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_58dx3")
@@ -21,10 +56,11 @@ base_cast_time = 2.0
 targeting = 0
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_kq7f8")]([SubResource("Resource_kq7f8")])
+effects = Array[ExtResource("1_kq7f8")]([SubResource("Resource_58dx3")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"twin_flames"
 sfx_key = &"charge_magic"
+major_upgrades = Array[ExtResource("2_tqjxi")]([SubResource("Resource_tqjxi"), SubResource("Resource_6wfin")])

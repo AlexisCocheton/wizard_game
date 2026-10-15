@@ -1,15 +1,80 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_b3g8l"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_2tal8"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ul6wn"]
 
-[sub_resource type="Resource" id="Resource_b3g8l"]
+[sub_resource type="Resource" id="Resource_ul6wn"]
 script = ExtResource("1_b3g8l")
 key = &"ground_zone"
 magnitude = 26.0
 duration = 0.6
 radius = 170.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_2tal8"]
+script = ExtResource("1_b3g8l")
+key = &"ground_zone"
+magnitude = 26.0
+duration = 0.6
+radius = 170.0
+params = {
+&"aim_offset": Vector2(-230, 0)
+}
+
+[sub_resource type="Resource" id="Resource_vvk27"]
+script = ExtResource("1_b3g8l")
+key = &"ground_zone"
+magnitude = 26.0
+duration = 0.6
+radius = 170.0
+params = {
+&"aim_offset": Vector2(230, 0)
+}
+
+[sub_resource type="Resource" id="Resource_n4sq0"]
+script = ExtResource("2_2tal8")
+id = &"barrage"
+title = "Barrage"
+description = "Trois boules de feu explosent en ligne, sur toute la largeur visee"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_2tal8")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_vvk27")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.45
+}, {
+"axis": &"damage",
+"op": "axis",
+"pct": -0.2
+}])
+
+[sub_resource type="Resource" id="Resource_k3qtl"]
+script = ExtResource("2_2tal8")
+id = &"napalm"
+title = "Napalm"
+description = "L explosion devient une nappe de feu : 8 degats par seconde pendant 4 s"
+modifiers = Array[Dictionary]([{
+"field": "magnitude",
+"key": &"ground_zone",
+"op": "set",
+"value": 8.0
+}, {
+"field": "duration",
+"key": &"ground_zone",
+"op": "set",
+"value": 4.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_ul6wn")
@@ -21,10 +86,11 @@ base_cast_time = 1.4
 targeting = 1
 element = 1
 tags = Array[int]([])
-effects = Array[ExtResource("1_b3g8l")]([SubResource("Resource_b3g8l")])
+effects = Array[ExtResource("1_b3g8l")]([SubResource("Resource_ul6wn")])
 copies_in_starter = 2
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"fireball_hit"
 sfx_key = &"blast_short"
+major_upgrades = Array[ExtResource("2_2tal8")]([SubResource("Resource_n4sq0"), SubResource("Resource_k3qtl")])

@@ -1,15 +1,51 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_ab1no"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1at6u"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_ums6l"]
 
-[sub_resource type="Resource" id="Resource_ab1no"]
+[sub_resource type="Resource" id="Resource_1at6u"]
 script = ExtResource("1_ab1no")
 key = &"reverse_enemies"
 magnitude = 0.0
 duration = 3.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_ums6l"]
+script = ExtResource("2_ums6l")
+id = &"contre_vent"
+title = "Contre-vent"
+description = "Le vent du sud souffle aussi : volants cloues sur place, trajets redresses"
+modifiers = Array[Dictionary]([{
+"duration": 3.0,
+"key": &"global_wind",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_7xop0"]
+script = ExtResource("2_ums6l")
+id = &"ressac"
+title = "Ressac"
+description = "Les monstres font demi-tour une seconde fois, 4,5 s plus tard"
+modifiers = Array[Dictionary]([{
+"delay": 4.5,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_1at6u")
@@ -21,10 +57,11 @@ base_cast_time = 1.0
 targeting = 0
 element = 10
 tags = Array[int]([])
-effects = Array[ExtResource("1_ab1no")]([SubResource("Resource_ab1no")])
+effects = Array[ExtResource("1_ab1no")]([SubResource("Resource_1at6u")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"pinwheel_turn"
 sfx_key = &"whoosh_deep"
+major_upgrades = Array[ExtResource("2_ums6l")]([SubResource("Resource_ums6l"), SubResource("Resource_7xop0")])

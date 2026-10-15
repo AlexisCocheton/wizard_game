@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_pbmkh"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_3k240"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_m1l0j"]
 
-[sub_resource type="Resource" id="Resource_pbmkh"]
+[sub_resource type="Resource" id="Resource_m1l0j"]
 script = ExtResource("1_pbmkh")
 key = &"ground_zone"
 magnitude = 0.0
@@ -12,6 +13,51 @@ radius = 200.0
 params = {
 &"vuln_mult": 2.0
 }
+
+[sub_resource type="Resource" id="Resource_3k240"]
+script = ExtResource("2_3k240")
+id = &"sentence"
+title = "Sentence"
+description = "A la fin, qui est encore dans la marque encaisse 30 degats, doubles par elle"
+modifiers = Array[Dictionary]([{
+"duration": 8.0,
+"key": &"quicksand",
+"magnitude": 30.0,
+"op": "add_effect",
+"params": {},
+"radius": 200.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_yqwei"]
+script = ExtResource("2_3k240")
+id = &"marque_devorante"
+title = "Marque devorante"
+description = "La marque s etend jusqu a x1,8 a mi-vie, puis se resserre"
+modifiers = Array[Dictionary]([{
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_start",
+"value": 0.4
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_peak",
+"value": 1.8
+}])
+prices = Array[Dictionary]([{
+"axis": &"amplify",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.2
+}])
 
 [resource]
 script = ExtResource("2_m1l0j")
@@ -23,10 +69,11 @@ base_cast_time = 1.3
 targeting = 1
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_pbmkh")]([SubResource("Resource_pbmkh")])
+effects = Array[ExtResource("1_pbmkh")]([SubResource("Resource_m1l0j")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"diamond_mark"
 sfx_key = &"charge_magic"
+major_upgrades = Array[ExtResource("2_3k240")]([SubResource("Resource_3k240"), SubResource("Resource_yqwei")])

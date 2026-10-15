@@ -1,15 +1,51 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_gbrst"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_4ir2d"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_w4pkt"]
 
-[sub_resource type="Resource" id="Resource_gbrst"]
+[sub_resource type="Resource" id="Resource_4ir2d"]
 script = ExtResource("1_gbrst")
 key = &"gain_speed"
 magnitude = 30.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_w4pkt"]
+script = ExtResource("2_w4pkt")
+id = &"second_elan"
+title = "Second elan"
+description = "Un second elan suit 5 s plus tard, moitie moins fort"
+modifiers = Array[Dictionary]([{
+"delay": 5.0,
+"factor": 0.5,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_n3iqa"]
+script = ExtResource("2_w4pkt")
+id = &"elan_foudroyant"
+title = "Elan foudroyant"
+description = "Et ton incantation s emballe : +50 % pendant 4 s"
+modifiers = Array[Dictionary]([{
+"duration": 4.0,
+"key": &"self_haste",
+"magnitude": 50.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_4ir2d")
@@ -21,10 +57,11 @@ base_cast_time = 1.2
 targeting = 0
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_gbrst")]([SubResource("Resource_gbrst")])
+effects = Array[ExtResource("1_gbrst")]([SubResource("Resource_4ir2d")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"orb_gold"
 sfx_key = &"spell_rise"
+major_upgrades = Array[ExtResource("2_w4pkt")]([SubResource("Resource_w4pkt"), SubResource("Resource_n3iqa")])

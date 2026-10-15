@@ -1,15 +1,56 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_8vchi"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_orx4b"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_puvxb"]
 
-[sub_resource type="Resource" id="Resource_8vchi"]
+[sub_resource type="Resource" id="Resource_orx4b"]
 script = ExtResource("1_8vchi")
 key = &"dispel_zone"
 magnitude = 0.0
 duration = 0.0
 radius = 150.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_puvxb"]
+script = ExtResource("2_puvxb")
+id = &"eclat_purifiant"
+title = "Eclat purifiant"
+description = "La lumiere tombe presque aussitot"
+modifiers = Array[Dictionary]([{
+"factor": 0.3,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_rrilp"]
+script = ExtResource("2_puvxb")
+id = &"aube_eblouissante"
+title = "Aube eblouissante"
+description = "La lumiere eblouit : sa zone ralentit de 40 % pendant 4 s"
+modifiers = Array[Dictionary]([{
+"duration": 4.0,
+"key": &"ground_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"slow_pct": 40.0
+},
+"radius": 150.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_orx4b")
@@ -21,10 +62,11 @@ base_cast_time = 1.0
 targeting = 1
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_8vchi")]([SubResource("Resource_8vchi")])
+effects = Array[ExtResource("1_8vchi")]([SubResource("Resource_orx4b")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"lightpillar"
 sfx_key = &"ward_light"
+major_upgrades = Array[ExtResource("2_puvxb")]([SubResource("Resource_puvxb"), SubResource("Resource_rrilp")])
