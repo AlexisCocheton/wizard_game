@@ -451,15 +451,16 @@ func _enemies() -> void:
 	# --- Boss (hors budget) ---
 	# VAGUE 10 B2 — LE GARDIEN DEVIENT UN VRAI BOSS, celui qui ferme l acte 1
 	# (`lvl_09`, le seul niveau ou il descend depuis que le tutoriel a son propre
-	# mini-boss). 190 PV au lieu de 140 : il porte l acte, et son Echo (56 PV)
-	# reste sous la moitie. Son armure lourde existait dans les textes, pas dans
-	# le jeu : L ARMURE QUI SE REFERME. Le premier coup glisse ; cinq secondes
-	# sans etre touche et elle se referme. La reponse : enchainer les coups
+	# mini-boss). 165 PV au lieu de 140 : il porte l acte, et son Echo (56 PV)
+	# reste sous la moitie (190 PV : abattu 5 fois sur 50 au banc, le premier
+	# jet). Son armure lourde existait dans les textes, pas dans le jeu : L ARMURE
+	# QUI SE REFERME. Le premier coup glisse ; six secondes sans etre touche et
+	# elle se referme. La reponse : enchainer les coups
 	# (l Etincelle du deck), poser une zone, ou dissiper (Vide d emprise).
-	var warden := _enemy("warden", "Gardien", K.BOSS, 10, 190.0, 40.0, 30, S.HEXAGON, Color(0.90, 0.40, 0.25), 62.0)
+	var warden := _enemy("warden", "Gardien", K.BOSS, 10, 165.0, 40.0, 30, S.HEXAGON, Color(0.90, 0.40, 0.25), 62.0)
 	warden.anim_key = &"chaosknight"
 	warden.first_hit_shield = true
-	warden.shield_regen = 5.0
+	warden.shield_regen = 6.0
 	# Armure lourde et bouclier. Un boss doit avoir une REPONSE, pas une armure
 	# uniforme : la sienne est la magie savante.
 	_resist(warden, {&"phys": 0.8, &"feu": 0.85, &"givre": 0.95, &"arcane": 1.2, &"foudre": 1.15})
@@ -1099,10 +1100,10 @@ func _enemies() -> void:
 	# son escorte descend — c est la meme question que le Bourreau pose a
 	# l envers : lui, il faut le rattraper.
 	# VAGUE 10 B2 — LE MAGE NOIR DEVIENT LE BOSS DE `lvl_18` (le port n en avait
-	# aucun ; la scene de fin le fait s effondrer). 180 PV au lieu de 110, ses
+	# aucun ; la scene de fin le fait s effondrer). 160 PV au lieu de 110, ses
 	# tirs, sa distance et ses pillards ; le Capitaine pillard prend le palier.
 	var dark_mage := _enemy("dark_mage", "Mage noir de Haute-Nacelle", K.BOSS, 10,
-		180.0, 42.0, 30, S.STAR, Color(0.45, 0.35, 0.75), 54.0)
+		160.0, 42.0, 30, S.STAR, Color(0.45, 0.35, 0.75), 54.0)
 	dark_mage.anim_key = &"evilwizard"
 	# 110 PV, sous la Matrone gorgone (120) : il est le plus fragile des
 	# mini-boss du jeu, et c est le prix de sa distance. Un campeur blinde
@@ -3813,7 +3814,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 				"intro": _intro_existante(&"lvl_09"),
 				"scene_avant": "lvl_09_intro", "scene_apres": "lvl_09_outro", "fond": "act1_sky",
 				"suite": ["lvl_17"],
-				"communes": ["spark", "arcane_bolt", "electric_mark"],
+				"communes": ["spark", "arcane_bolt", "fireball"],
 				"vagues": [
 					["w9_1", 25.0, 1.25, "", [["gnome", 5, 1.8, 0.0], ["hopper", 3, 2.0, 11.0], ["sleepy_fox", 1, 1.0, 18.0],
 						["slime_mid", 2, 1.5, 21.0]]],
@@ -3821,9 +3822,9 @@ func _niveau_w10(id: StringName) -> Dictionary:
 						["jelly", 1, 2.5, 18.0], ["void_knight", 1, 1.0, 22.0]]],
 					["w9_3_miniboss", 30.0, 1.15, "MINI", [["emberlord", 1, 1.0, 0.0], ["hopper", 3, 2.0, 9.0],
 						["gnome", 4, 1.6, 18.0], ["gorgon_gazer", 1, 1.0, 24.0]]],
-					["w9_4", 28.0, 1.45, "", [["hive", 2, 3.0, 0.0], ["wisp", 2, 2.0, 8.0], ["sleepy_fox", 2, 2.4, 14.0],
+					["w9_4", 28.0, 1.35, "", [["hive", 2, 3.0, 0.0], ["wisp", 2, 2.0, 8.0], ["sleepy_fox", 2, 2.4, 14.0],
 						["void_knight", 1, 1.0, 20.0], ["rat_swarm", 1, 1.0, 24.0]]],
-					["w9_5_boss", 42.0, 1.1, "BOSS", [["warden", 1, 1.0, 0.0], ["gnome", 5, 1.8, 7.0],
+					["w9_5_boss", 42.0, 1.0, "BOSS", [["warden", 1, 1.0, 0.0], ["gnome", 5, 1.8, 7.0],
 						["sprite", 5, 1.5, 20.0], ["gorgon_gazer", 1, 1.0, 30.0]]],
 				]}
 		# ================================ ACTE 2 ================================
@@ -3873,7 +3874,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 						["ecumeur", 1, 1.0, 16.0], ["sand_serpent", 2, 2.0, 22.0]]],
 					["w18_4", 28.0, 1.45, "", [["berserker", 2, 2.5, 0.0], ["nacelle_raider", 3, 1.6, 8.0], ["shade", 2, 2.0, 15.0],
 						["void_knight", 1, 2.5, 21.0], ["ecumeur", 1, 1.0, 25.0]]],
-					["w18_5_boss", 44.0, 1.05, "BOSS", [["dark_mage", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.8, 8.0],
+					["w18_5_boss", 44.0, 1.0, "BOSS", [["dark_mage", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.8, 8.0],
 						["void_knight", 1, 1.0, 18.0], ["imp_archer", 1, 1.0, 26.0], ["current_eye", 2, 2.0, 32.0]]],
 				]}
 		&"lvl_03":
@@ -4124,15 +4125,15 @@ func _niveau_w10(id: StringName) -> Dictionary:
 				"intro": _intro_existante(&"lvl_11"),
 				"scene_avant": "lvl_11_intro", "scene_apres": "lvl_11_outro", "fond": "act3_demon",
 				"suite": ["lvl_13"],
-				"communes": ["frost_field", "piercing_arrow", "frost_rain"],
+				"communes": ["frost_field", "arcane_bolt", "frost_rain"],
 				"vagues": [
 					["w11_1", 26.0, 1.3, "", [["berserker", 2, 2.5, 0.0], ["mushroom", 2, 2.0, 10.0], ["carnivore_plant", 2, 1.8, 18.0]]],
 					["w11_2", 28.0, 1.35, "", [["void_knight", 2, 2.5, 0.0], ["pit_novice", 1, 1.0, 10.0],
 						["berserker", 2, 2.5, 16.0], ["demon_slime", 1, 1.0, 24.0]]],
 					["w11_3_miniboss", 32.0, 1.05, "MINI", [["great_eye_echo", 1, 1.0, 0.0], ["berserker", 2, 2.5, 10.0],
-						["mushroom", 2, 2.0, 16.0], ["grave_mourner", 1, 1.0, 20.0], ["carnivore_plant", 2, 1.8, 24.0]]],
-					["w11_4", 30.0, 1.45, "", [["grave_mourner", 1, 1.0, 0.0], ["berserker", 3, 2.2, 6.0], ["pit_novice", 1, 1.0, 14.0],
-						["mushroom", 2, 2.0, 20.0], ["demon_slime", 1, 1.0, 26.0]]],
+						["grave_mourner", 1, 1.0, 20.0], ["carnivore_plant", 2, 1.8, 24.0]]],
+					["w11_4", 30.0, 1.35, "", [["grave_mourner", 1, 1.0, 0.0], ["berserker", 3, 2.2, 6.0], ["pit_novice", 1, 1.0, 14.0],
+						["mushroom", 2, 2.0, 20.0]]],
 					["w11_5_boss", 44.0, 1.05, "BOSS", [["demon_chain", 1, 1.0, 0.0], ["void_knight", 2, 2.5, 12.0],
 						["pit_novice", 1, 1.0, 22.0], ["hopper", 3, 1.6, 28.0]]],
 				]}

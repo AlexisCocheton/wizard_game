@@ -8,6 +8,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="5_e17r0"]
 [ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="7_plo7r"]
 [ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="9_oiogm"]
+[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="13_2io2s"]
 [ext_resource type="Resource" path="res://resources/cards/epic/arcane_insight.tres" id="14_y58yy"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/tide_ledger.tres" id="15_c0gve"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_e17r0"]
@@ -17,12 +18,11 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_17akq"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="21_me4lm"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="25_uyova"]
-[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="31_vo2kc"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="33_8pshf"]
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_matron.tres" id="38_vo2kc"]
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="41_17akq"]
 
-[sub_resource type="Resource" id="Resource_2io2s"]
+[sub_resource type="Resource" id="Resource_y58yy"]
 script = ExtResource("18_e17r0")
 id = &"obj_card_casts_cycle_of_thought_6"
 description = "Lancer 6 fois Cycle de pensee"
@@ -32,7 +32,7 @@ params = {
 "count": 6
 }
 
-[sub_resource type="Resource" id="Resource_y58yy"]
+[sub_resource type="Resource" id="Resource_c0gve"]
 script = ExtResource("18_e17r0")
 id = &"obj_kill_type_with_card_arcane_bolt_3_gorgon_gazer"
 description = "Gorgone : en tuer 3 avec Trait arcanique"
@@ -43,7 +43,7 @@ params = {
 "enemy": "gorgon_gazer"
 }
 
-[sub_resource type="Resource" id="Resource_c0gve"]
+[sub_resource type="Resource" id="Resource_5i0p2"]
 script = ExtResource("18_e17r0")
 id = &"obj_win_above_speed_300"
 description = "Gagner avec plus de 300 % de vitesse"
@@ -73,7 +73,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_5i0p2"]
+[sub_resource type="Resource" id="Resource_710or"]
 script = ExtResource("20_vo2kc")
 id = &"w2_1"
 duration = 26.0
@@ -110,7 +110,7 @@ count = 3
 spawn_delay = 1.6
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_710or"]
+[sub_resource type="Resource" id="Resource_60b13"]
 script = ExtResource("20_vo2kc")
 id = &"w2_2"
 duration = 26.0
@@ -147,7 +147,7 @@ count = 3
 spawn_delay = 1.6
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_60b13"]
+[sub_resource type="Resource" id="Resource_f5biq"]
 script = ExtResource("20_vo2kc")
 id = &"w2_3_miniboss"
 duration = 32.0
@@ -184,7 +184,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_f5biq"]
+[sub_resource type="Resource" id="Resource_hu6pk"]
 script = ExtResource("20_vo2kc")
 id = &"w2_4"
 duration = 28.0
@@ -221,7 +221,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_hu6pk"]
+[sub_resource type="Resource" id="Resource_plo7r"]
 script = ExtResource("20_vo2kc")
 id = &"w2_5"
 duration = 30.0
@@ -258,7 +258,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_plo7r"]
+[sub_resource type="Resource" id="Resource_fowiy"]
 script = ExtResource("20_vo2kc")
 id = &"w2_6_boss"
 duration = 45.0
@@ -279,12 +279,12 @@ intro_story = &"lvl_02_intro"
 outro_story = &"lvl_02_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_5i0p2"), SubResource("Resource_710or"), SubResource("Resource_60b13"), SubResource("Resource_f5biq"), SubResource("Resource_hu6pk"), SubResource("Resource_plo7r")])
+waves = Array[ExtResource("20_vo2kc")]([SubResource("Resource_710or"), SubResource("Resource_60b13"), SubResource("Resource_f5biq"), SubResource("Resource_hu6pk"), SubResource("Resource_plo7r"), SubResource("Resource_fowiy")])
 enemy_pool = Array[ExtResource("1_ktaj7")]([ExtResource("2_5i0p2"), ExtResource("3_710or"), ExtResource("20_dnda2"), ExtResource("4_o0ilu"), ExtResource("5_e17r0"), ExtResource("7_plo7r"), ExtResource("9_oiogm")])
 exploration_deck = Array[ExtResource("20_krw0l")]([ExtResource("2_2io2s"), ExtResource("2_2io2s"), ExtResource("2_2io2s"), ExtResource("2_2io2s"), ExtResource("21_me4lm"), ExtResource("21_me4lm"), ExtResource("21_me4lm"), ExtResource("21_me4lm"), ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("25_uyova"), ExtResource("25_uyova")])
-objectives = Array[ExtResource("18_e17r0")]([SubResource("Resource_2io2s"), SubResource("Resource_y58yy"), SubResource("Resource_c0gve")])
+objectives = Array[ExtResource("18_e17r0")]([SubResource("Resource_y58yy"), SubResource("Resource_c0gve"), SubResource("Resource_5i0p2")])
 levelup_cards = Array[ExtResource("20_krw0l")]([])
-objective_rewards = Array[ExtResource("20_krw0l")]([ExtResource("31_vo2kc"), ExtResource("14_y58yy"), ExtResource("15_c0gve")])
+objective_rewards = Array[ExtResource("20_krw0l")]([ExtResource("13_2io2s"), ExtResource("14_y58yy"), ExtResource("15_c0gve")])
 next_levels = Array[StringName]([&"lvl_08"])
 requires_all_previous = false
 base_commons = Array[ExtResource("20_krw0l")]([ExtResource("2_2io2s"), ExtResource("21_me4lm"), ExtResource("25_uyova")])

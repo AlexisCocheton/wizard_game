@@ -48,6 +48,6 @@ script = ExtResource("7_thhkh")
 id = &"w18_5_boss"
 duration = 44.0
 entries = Array[ExtResource("1_4nuan")]([SubResource("Resource_4nuan"), SubResource("Resource_xfejc"), SubResource("Resource_s2yqa"), SubResource("Resource_hdp3l"), SubResource("Resource_p810d")])
-difficulty = 1.05
+difficulty = 1.0
 is_miniboss = false
 is_boss = true
