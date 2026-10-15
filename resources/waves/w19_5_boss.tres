@@ -7,7 +7,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_1c2yi"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6yf6x"]
 [ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="6_bpgse"]
-[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="7_jg3n8"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="7_bpgse"]
 
 [sub_resource type="Resource" id="Resource_bpgse"]
 script = ExtResource("1_ipb8u")
@@ -46,7 +46,7 @@ start_offset = 28.0
 
 [sub_resource type="Resource" id="Resource_gsgvq"]
 script = ExtResource("1_ipb8u")
-enemy = ExtResource("7_jg3n8")
+enemy = ExtResource("7_bpgse")
 count = 1
 spawn_delay = 1.0
 start_offset = 34.0

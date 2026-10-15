@@ -16,8 +16,8 @@
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="14_itjfv"]
 [ext_resource type="Resource" path="res://resources/enemies/executioner.tres" id="14_qoior"]
 [ext_resource type="Resource" path="res://resources/enemies/tomb_breaker.tres" id="15_o6g41"]
-[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="17_eptgm"]
 [ext_resource type="Resource" path="res://resources/cards/epic/thunder_root.tres" id="17_hygvp"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="17_rmbub"]
 [ext_resource type="Resource" path="res://resources/cards/rare/tidal_pool.tres" id="18_rtf0f"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="18_v36rt"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/meteor_storm.tres" id="20_2b56q"]
@@ -191,8 +191,8 @@ start_offset = 14.0
 
 [sub_resource type="Resource" id="Resource_osax4"]
 script = ExtResource("28_m7eiq")
-enemy = ExtResource("17_eptgm")
-count = 1
+enemy = ExtResource("17_rmbub")
+count = 2
 spawn_delay = 1.0
 start_offset = 22.0
 
@@ -299,7 +299,7 @@ outro_story = &"lvl_06_outro"
 terrain = "grass"
 backdrop = "act3_demon"
 waves = Array[ExtResource("27_ytel0")]([SubResource("Resource_hygvp"), SubResource("Resource_7juvv"), SubResource("Resource_qoior"), SubResource("Resource_ydw5w"), SubResource("Resource_itjfv"), SubResource("Resource_o6g41")])
-enemy_pool = Array[ExtResource("1_hygvp")]([ExtResource("10_rfvss"), ExtResource("7_w6e1i"), ExtResource("8_hygvp"), ExtResource("9_7juvv"), ExtResource("4_ydw5w"), ExtResource("5_itjfv"), ExtResource("12_qoior"), ExtResource("13_ydw5w"), ExtResource("14_itjfv"), ExtResource("15_o6g41"), ExtResource("13_h5pqb"), ExtResource("17_eptgm")])
+enemy_pool = Array[ExtResource("1_hygvp")]([ExtResource("10_rfvss"), ExtResource("7_w6e1i"), ExtResource("8_hygvp"), ExtResource("9_7juvv"), ExtResource("4_ydw5w"), ExtResource("5_itjfv"), ExtResource("12_qoior"), ExtResource("13_ydw5w"), ExtResource("14_itjfv"), ExtResource("15_o6g41"), ExtResource("13_h5pqb"), ExtResource("17_rmbub")])
 exploration_deck = Array[ExtResource("14_5hav6")]([ExtResource("2_rmbub"), ExtResource("2_rmbub"), ExtResource("2_rmbub"), ExtResource("2_rmbub"), ExtResource("3_ru0jk"), ExtResource("3_ru0jk"), ExtResource("3_ru0jk"), ExtResource("3_ru0jk"), ExtResource("18_v36rt"), ExtResource("18_v36rt"), ExtResource("18_v36rt"), ExtResource("18_v36rt")])
 objectives = Array[ExtResource("25_o1m5h")]([SubResource("Resource_rmbub"), SubResource("Resource_ru0jk"), SubResource("Resource_w6e1i")])
 levelup_cards = Array[ExtResource("14_5hav6")]([])

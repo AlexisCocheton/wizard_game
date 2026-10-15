@@ -3803,7 +3803,8 @@ func _niveau_w10(id: StringName) -> Dictionary:
 			# PROTEGER LE DIRIGEABLE, la fin de l acte. Deux ordinaires neufs : le
 			# Renard dormeur (il coupe la magie pendant son sommeil) et le Chevalier
 			# du vide (il avale le premier coup), qui revient au port (lvl_18).
-			# COMMUNE NOUVELLE : l Etincelle, le sort le plus rapide du jeu
+			# Le Slime moyen, vu au lvl_08 (le Slime enorme s y divise), y descend
+			# seul : ce n est pas une espece neuve. COMMUNE NOUVELLE : l Etincelle, le sort le plus rapide du jeu
 			# (renard -> sort rapide), et les petits coups qui ouvrent une armure.
 			# MINI-BOSS : le Seigneur de braise, qui RIPOSTE a chaque coup. BOSS :
 			# le Gardien de la foret (la scene le nomme), devenu un vrai boss : son
@@ -3814,7 +3815,8 @@ func _niveau_w10(id: StringName) -> Dictionary:
 				"suite": ["lvl_17"],
 				"communes": ["spark", "arcane_bolt", "electric_mark"],
 				"vagues": [
-					["w9_1", 25.0, 1.25, "", [["gnome", 5, 1.8, 0.0], ["hopper", 3, 2.0, 11.0], ["sleepy_fox", 1, 1.0, 18.0]]],
+					["w9_1", 25.0, 1.25, "", [["gnome", 5, 1.8, 0.0], ["hopper", 3, 2.0, 11.0], ["sleepy_fox", 1, 1.0, 18.0],
+						["slime_mid", 2, 1.5, 21.0]]],
 					["w9_2", 27.0, 1.35, "", [["rat_swarm", 2, 2.2, 0.0], ["sprite", 4, 1.5, 7.0], ["hornblower", 1, 1.0, 14.0],
 						["jelly", 1, 2.5, 18.0], ["void_knight", 1, 1.0, 22.0]]],
 					["w9_3_miniboss", 30.0, 1.15, "MINI", [["emberlord", 1, 1.0, 0.0], ["hopper", 3, 2.0, 9.0],
@@ -3932,9 +3934,9 @@ func _niveau_w10(id: StringName) -> Dictionary:
 		# ================================ ACTE 3 ================================
 		&"lvl_19":
 			# LES FOSSES BASSES, l ouverture de Tombol. Cinq ordinaires neufs : la
-			# Goule des fosses (par trois), le Squelette pareur, le Slime fantome et
-			# le Gros slime fantome (ils renaissent), la Garde d ossements (le
-			# mini-boss du lvl_03 en ordinaire). Les Pretres goules reviennent (la
+			# Goule des fosses (par trois), le Squelette pareur, le Slime fantome (il
+			# renait en Slime squelette, qui descend aussi seul), la Garde
+			# d ossements (le mini-boss du lvl_03 en ordinaire). Les Pretres goules reviennent (la
 			# scene les nomme). COMMUNE NOUVELLE : les Braises, une zone qui dure,
 			# posee sur la marque de renaissance. MINI-BOSS : la Sorciere des fosses
 			# (elle soigne et invoque). BOSS : le trio des mages des fosses.
@@ -3948,12 +3950,12 @@ func _niveau_w10(id: StringName) -> Dictionary:
 					["w19_2", 27.0, 1.45, "", [["bone_guard", 2, 2.5, 0.0], ["pit_ghoul", 2, 2.2, 9.0],
 						["parry_skeleton", 1, 1.0, 18.0], ["slime_ghost", 1, 1.0, 22.0]]],
 					["w19_3", 28.0, 1.5, "", [["pit_ghoul", 2, 2.2, 0.0], ["parry_skeleton", 2, 2.2, 8.0],
-						["ghoul_priest", 1, 2.0, 16.0], ["slime_ghost_big", 1, 2.0, 22.0]]],
+						["ghoul_priest", 1, 2.0, 16.0], ["slime_skeleton", 2, 2.0, 22.0]]],
 					["w19_4_miniboss", 34.0, 1.1, "MINI", [["pit_witch", 1, 1.0, 0.0], ["pit_ghoul", 2, 2.2, 8.0],
 						["bone_guard", 1, 1.0, 16.0], ["slime_ghost", 2, 2.0, 22.0]]],
 					["w19_5_boss", 45.0, 1.0, "BOSS", [["trio_ember", 1, 1.0, 0.0], ["trio_frost", 1, 1.0, 0.6],
 						["trio_arcane", 1, 1.0, 1.2], ["pit_ghoul", 2, 3.0, 20.0], ["parry_skeleton", 1, 1.0, 28.0],
-						["slime_ghost_big", 1, 1.0, 34.0]]],
+						["slime_skeleton", 1, 1.0, 34.0]]],
 				]}
 		&"lvl_20":
 			# LA COUR DES ROIS MORTS : « sous chaque statue un Gardien-totem ». Deux
@@ -3974,7 +3976,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 					["w20_2", 28.0, 1.5, "", [["tomb_breaker", 1, 1.0, 0.0], ["hive", 2, 3.0, 4.0], ["void_knight", 1, 2.5, 12.0],
 						["bone_guard", 1, 1.0, 18.0], ["shade", 2, 2.0, 22.0]]],
 					["w20_3_miniboss", 33.0, 1.1, "MINI", [["totem_elder", 1, 1.0, 0.0], ["shade", 2, 2.0, 9.0],
-						["parry_skeleton", 2, 2.2, 18.0], ["slime_ghost_big", 1, 1.0, 26.0]]],
+						["parry_skeleton", 2, 2.2, 18.0], ["slime_skeleton", 1, 1.0, 26.0]]],
 					["w20_4", 29.0, 1.55, "", [["totem_guardian", 1, 1.0, 0.0], ["tomb_breaker", 1, 1.0, 6.0], ["pit_ghoul", 2, 2.2, 11.0],
 						["parry_skeleton", 2, 2.0, 17.0], ["bone_guard", 1, 1.0, 23.0]]],
 					["w20_5_boss", 44.0, 1.05, "BOSS", [["shadow_bladesman", 1, 1.0, 0.0], ["parry_skeleton", 2, 2.2, 10.0],
@@ -4000,7 +4002,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 					["w5_3_miniboss", 34.0, 1.1, "MINI", [["glass_mirror", 1, 1.0, 0.0], ["golem", 2, 3.0, 10.0],
 						["slime_ghost", 2, 1.8, 22.0]]],
 					["w5_4", 30.0, 1.3, "", [["behemoth", 1, 1.0, 0.0], ["totem_guardian", 1, 1.0, 8.0], ["golem", 1, 1.0, 14.0],
-						["pit_ghoul", 2, 2.2, 20.0], ["slime_ghost_big", 1, 1.0, 26.0]]],
+						["pit_ghoul", 2, 2.2, 20.0], ["slime_skeleton", 1, 1.0, 26.0]]],
 					["w5_5", 32.0, 1.3, "", [["behemoth", 1, 1.0, 0.0], ["golem", 2, 2.5, 9.0], ["berserker", 1, 1.0, 18.0],
 						["bone_guard", 1, 1.0, 22.0], ["tomb_breaker", 1, 1.0, 26.0]]],
 					["w5_6_boss", 48.0, 1.05, "BOSS", [["forge_colossus", 1, 1.0, 0.0], ["golem", 2, 3.0, 14.0],
@@ -4027,16 +4029,17 @@ func _niveau_w10(id: StringName) -> Dictionary:
 					["w6_3_miniboss", 34.0, 1.1, "MINI", [["executioner", 1, 1.0, 0.0], ["raider_deserter", 2, 1.8, 7.0],
 						["slime_ghost", 2, 2.0, 14.0], ["tomb_breaker", 1, 1.0, 24.0]]],
 					["w6_4", 30.0, 1.3, "", [["planogo_ash", 2, 2.5, 0.0], ["totem_guardian", 1, 1.0, 8.0],
-						["pit_ghoul", 2, 2.2, 14.0], ["slime_ghost_big", 1, 1.0, 22.0]]],
+						["pit_ghoul", 2, 2.2, 14.0], ["slime_skeleton", 2, 1.0, 22.0]]],
 					["w6_5", 32.0, 1.3, "", [["raider_deserter", 3, 1.6, 0.0], ["void_knight", 1, 1.0, 8.0], ["parry_skeleton", 1, 1.0, 14.0],
 						["shade", 2, 2.0, 20.0], ["tomb_breaker", 1, 1.0, 26.0]]],
 					["w6_6_boss", 48.0, 1.05, "BOSS", [["wraith_lord", 1, 1.0, 0.0], ["void_knight", 2, 2.5, 12.0],
 						["planogo_ash", 1, 1.0, 22.0], ["bone_guard", 1, 1.0, 30.0]]],
 				]}
 		&"lvl_21":
-			# LE PENTACLE, la fin de l acte. Un ordinaire neuf : le Ver de feu,
-			# IMMUNISE au feu ; tout l acte 3 y descend (les deux branches de la
-			# fourche), l Oeil des courants et le Berserker reviennent. COMMUNE
+			# LE PENTACLE, la fin de l acte. Deux ordinaires neufs : le Ver de feu,
+			# IMMUNISE au feu, et le Gros slime fantome (deux renaissances) ; tout
+			# l acte 3 y descend (les deux branches de la fourche), l Oeil des
+			# courants et le Berserker reviennent. COMMUNE
 			# NOUVELLE : la Pluie abondante, l eau sur tout le terrain (les vers
 			# craignent l eau). Les Braises restent au deck : gagner sans feu est un
 			# objectif, il faut donc un sort de feu a laisser. MINI-BOSS : le
@@ -4048,7 +4051,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 				"communes": ["heavy_rain", "ember_pool", "arcane_bolt"],
 				"vagues": [
 					["w21_1", 27.0, 1.5, "", [["pit_ghoul", 2, 2.2, 0.0], ["current_eye", 2, 2.0, 9.0],
-						["berserker", 1, 1.0, 16.0], ["golem", 1, 1.0, 21.0]]],
+						["berserker", 1, 1.0, 16.0], ["golem", 1, 1.0, 21.0], ["slime_skeleton", 1, 1.0, 24.0]]],
 					["w21_2_miniboss", 30.0, 1.1, "MINI", [["gravedigger", 1, 1.0, 0.0], ["fire_worm", 1, 2.2, 4.0],
 						["parry_skeleton", 2, 2.0, 10.0], ["raider_deserter", 2, 1.8, 18.0]]],
 					["w21_3", 34.0, 1.6, "", [["fire_worm", 2, 2.2, 0.0], ["totem_guardian", 1, 2.0, 8.0], ["slime_ghost", 2, 2.0, 14.0],
@@ -4127,7 +4130,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 					["w11_2", 28.0, 1.35, "", [["void_knight", 2, 2.5, 0.0], ["pit_novice", 1, 1.0, 10.0],
 						["berserker", 2, 2.5, 16.0], ["demon_slime", 1, 1.0, 24.0]]],
 					["w11_3_miniboss", 32.0, 1.05, "MINI", [["great_eye_echo", 1, 1.0, 0.0], ["berserker", 2, 2.5, 10.0],
-						["grave_mourner", 1, 1.0, 20.0], ["carnivore_plant", 2, 1.8, 24.0]]],
+						["mushroom", 2, 2.0, 16.0], ["grave_mourner", 1, 1.0, 20.0], ["carnivore_plant", 2, 1.8, 24.0]]],
 					["w11_4", 30.0, 1.45, "", [["grave_mourner", 1, 1.0, 0.0], ["berserker", 3, 2.2, 6.0], ["pit_novice", 1, 1.0, 14.0],
 						["mushroom", 2, 2.0, 20.0], ["demon_slime", 1, 1.0, 26.0]]],
 					["w11_5_boss", 44.0, 1.05, "BOSS", [["demon_chain", 1, 1.0, 0.0], ["void_knight", 2, 2.5, 12.0],
@@ -4152,7 +4155,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 					["w12_2", 28.0, 1.35, "", [["ghoul_priest", 1, 1.0, 0.0], ["totem_cracked", 1, 1.0, 6.0],
 						["blood_clot", 2, 2.5, 12.0], ["shade", 2, 2.0, 20.0]]],
 					["w12_3_miniboss", 32.0, 1.1, "MINI", [["circle_twins", 1, 1.2, 0.0], ["totem_cracked", 1, 1.0, 6.0],
-						["mushroom", 2, 2.0, 14.0], ["shade", 2, 2.0, 22.0]]],
+						["shade", 2, 2.0, 22.0]]],
 					["w12_4", 32.0, 1.4, "", [["blood_clot", 2, 2.5, 0.0], ["demon_slime", 1, 1.0, 8.0], ["golem", 1, 1.0, 14.0],
 						["carnivore_plant", 2, 1.8, 20.0], ["totem_cracked", 1, 1.0, 26.0]]],
 					["w12_5_boss", 46.0, 1.05, "BOSS", [["demon_circle", 1, 1.0, 0.0], ["golem", 1, 1.0, 10.0],

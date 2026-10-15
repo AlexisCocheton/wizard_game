@@ -172,7 +172,7 @@ func _coups() -> void:
 func _totems() -> void:
 	var g: GameController = _partie()
 	var bf: Battlefield = g.battlefield
-	var ids: Array[StringName] = [&"demon_circle", &"demon_circle_echo", &"totem_elder",
+	var ids: Array[StringName] = [&"demon_circle", &"totem_cracked", &"totem_elder",
 		&"totem_guardian"]
 	var tours: Array[Enemy] = []
 	for k in ids.size():

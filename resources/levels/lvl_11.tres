@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=52 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=53 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_q8cbb"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="2_6bhln"]
@@ -119,28 +119,35 @@ difficulty = 1.35
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_vpxg0"]
+[sub_resource type="Resource" id="Resource_fgk6l"]
 script = ExtResource("25_ihudj")
 enemy = ExtResource("22_xahqv")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ofhlb"]
+[sub_resource type="Resource" id="Resource_0maxn"]
 script = ExtResource("25_ihudj")
 enemy = ExtResource("2_6bhln")
 count = 2
 spawn_delay = 2.5
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_ao20m"]
+[sub_resource type="Resource" id="Resource_rab8j"]
+script = ExtResource("25_ihudj")
+enemy = ExtResource("7_uoh1u")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_8qrhv"]
 script = ExtResource("25_ihudj")
 enemy = ExtResource("12_fw4au")
 count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_fgk6l"]
+[sub_resource type="Resource" id="Resource_dqv50"]
 script = ExtResource("25_ihudj")
 enemy = ExtResource("8_i6ce3")
 count = 2
@@ -151,7 +158,7 @@ start_offset = 24.0
 script = ExtResource("24_eswmg")
 id = &"w11_3_miniboss"
 duration = 32.0
-entries = Array[ExtResource("25_ihudj")]([SubResource("Resource_vpxg0"), SubResource("Resource_ofhlb"), SubResource("Resource_ao20m"), SubResource("Resource_fgk6l")])
+entries = Array[ExtResource("25_ihudj")]([SubResource("Resource_fgk6l"), SubResource("Resource_0maxn"), SubResource("Resource_rab8j"), SubResource("Resource_8qrhv"), SubResource("Resource_dqv50")])
 difficulty = 1.05
 is_miniboss = true
 is_boss = false

@@ -307,11 +307,12 @@ func _test_l_aura_revient_apres_la_coupure() -> void:
 	ok(_bf.is_shielded_by_aura(t[0]), "et protegent de nouveau")
 
 
-## Deux porteurs qui CAMPENT : des Echos d Ymoa poses SUR leur ligne de camp
+## Deux porteurs qui CAMPENT : deux Ymoa poses SUR leur ligne de camp
 ## (keeps_distance_at), donc immobiles — le cas qui figeait la partie pour de bon.
+## (Vague 10, chantier B2 : l Echo d Ymoa est retire, Ymoa porte le meme campeur.)
 func _deux_campeurs_proteges() -> Array[Enemy]:
 	_fresh()
-	var d: EnemyDef = ContentDB.enemies.get(&"demon_circle_echo")
+	var d: EnemyDef = ContentDB.enemies.get(&"demon_circle")
 	var y: float = GameConfig.MAGE_LINE_Y - d.keeps_distance_at
 	var ecart: float = d.aura_shield_radius * 0.5
 	var a: Enemy = _bf.spawn_enemy(d, 400.0, 1.0, Vector2(400.0, y))

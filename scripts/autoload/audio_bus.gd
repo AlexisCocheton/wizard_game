@@ -210,8 +210,11 @@ const ENEMY_FAMILY: Dictionary = {
 	"shade": "ghost",
 	# Les echos des anciens boss (acte 5) sont pales et translucides : des
 	# souvenirs, ils ne s ecroulent pas comme le boss qu ils imitent.
-	"chronos_echo": "ghost", "warden_echo": "ghost", "demon_anvil_echo": "ghost",
-	"demon_maw_echo": "ghost", "demon_chain_echo": "ghost", "demon_circle_echo": "ghost",
+	# Vague 10 (chantier B2) : les echos des quatre seigneurs sont retires ; les
+	# boss revenus en echo (mini-boss ou ordinaires) sont des spectres aussi.
+	"chronos_echo": "ghost", "warden_echo": "ghost", "reliquary_echo": "ghost",
+	"great_eye_echo": "ghost", "dark_mage_echo": "ghost", "tombol_echo": "ghost",
+	"gravecaller_echo": "ghost",
 }
 
 ## famille -> [coup, mort]. `flesh` est le repli : les sons historiques.

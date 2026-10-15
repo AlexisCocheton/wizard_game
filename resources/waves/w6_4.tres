@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/planogo_ash.tres" id="2_itv7d"]
 [ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="3_2uopk"]
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_igyol"]
-[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="5_osax4"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="5_itv7d"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_5v8um"]
 
 [sub_resource type="Resource" id="Resource_itv7d"]
@@ -30,8 +30,8 @@ start_offset = 14.0
 
 [sub_resource type="Resource" id="Resource_osax4"]
 script = ExtResource("1_itv7d")
-enemy = ExtResource("5_osax4")
-count = 1
+enemy = ExtResource("5_itv7d")
+count = 2
 spawn_delay = 1.0
 start_offset = 22.0
 

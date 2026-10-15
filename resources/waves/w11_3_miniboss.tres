@@ -1,34 +1,42 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_b1isi"]
 [ext_resource type="Resource" path="res://resources/enemies/great_eye_echo.tres" id="2_vpxg0"]
 [ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_ofhlb"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="4_ao20m"]
 [ext_resource type="Resource" path="res://resources/enemies/grave_mourner.tres" id="4_ofhlb"]
 [ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="5_ao20m"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_fgk6l"]
 
-[sub_resource type="Resource" id="Resource_vpxg0"]
+[sub_resource type="Resource" id="Resource_fgk6l"]
 script = ExtResource("1_b1isi")
 enemy = ExtResource("2_vpxg0")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_ofhlb"]
+[sub_resource type="Resource" id="Resource_0maxn"]
 script = ExtResource("1_b1isi")
 enemy = ExtResource("3_ofhlb")
 count = 2
 spawn_delay = 2.5
 start_offset = 10.0
 
-[sub_resource type="Resource" id="Resource_ao20m"]
+[sub_resource type="Resource" id="Resource_rab8j"]
+script = ExtResource("1_b1isi")
+enemy = ExtResource("4_ao20m")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_8qrhv"]
 script = ExtResource("1_b1isi")
 enemy = ExtResource("4_ofhlb")
 count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_fgk6l"]
+[sub_resource type="Resource" id="Resource_dqv50"]
 script = ExtResource("1_b1isi")
 enemy = ExtResource("5_ao20m")
 count = 2
@@ -39,7 +47,7 @@ start_offset = 24.0
 script = ExtResource("5_fgk6l")
 id = &"w11_3_miniboss"
 duration = 32.0
-entries = Array[ExtResource("1_b1isi")]([SubResource("Resource_vpxg0"), SubResource("Resource_ofhlb"), SubResource("Resource_ao20m"), SubResource("Resource_fgk6l")])
+entries = Array[ExtResource("1_b1isi")]([SubResource("Resource_fgk6l"), SubResource("Resource_0maxn"), SubResource("Resource_rab8j"), SubResource("Resource_8qrhv"), SubResource("Resource_dqv50")])
 difficulty = 1.05
 is_miniboss = true
 is_boss = false

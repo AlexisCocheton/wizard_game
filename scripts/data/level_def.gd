@@ -175,7 +175,11 @@ func missing_progression() -> Array[String]:
 	for c in levelup_cards:
 		if c != null:
 			nouvelles += 1
-	if nouvelles < LEVELUP_NEW_CARDS:
+	# VAGUE 10 (chantier B2) : un niveau qui a son deck de base n a plus de cartes
+	# nouvelles a lui. Son pool de montee de niveau est « cartes obtenues +
+	# communes de l acte » (RunState.levelup_pool), qui ne lit plus levelup_cards :
+	# en exiger trois serait reclamer une donnee morte.
+	if nouvelles < LEVELUP_NEW_CARDS and not has_base_commons():
 		out.append("%d carte(s) nouvelle(s) de montee de niveau sur %d"
 			% [nouvelles, LEVELUP_NEW_CARDS])
 	for i in objectives.size():

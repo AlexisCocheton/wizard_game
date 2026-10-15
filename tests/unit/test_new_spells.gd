@@ -793,20 +793,17 @@ func _test_les_quatre_cartes_sont_dans_le_pool() -> void:
 	for id in ids:
 		ok(ContentDB.cards.has(id), "la carte '%s' est dans le pool" % id)
 
-	# Et elles doivent etre ATTEIGNABLES : plusieurs dans les decks de campagne,
-	# sinon le joueur ne les rencontre jamais dans l ordre normal du jeu.
-	var dans_un_deck: Dictionary = {}
-	for key in ContentDB.levels:
-		var lvl: LevelDef = ContentDB.levels[key]
-		for c in lvl.exploration_deck:
+	# Et elles doivent etre ATTEIGNABLES dans l ordre normal du jeu. VAGUE 10
+	# (chantier B2) : un deck de campagne est fait de trois communes, et ces quatre
+	# sorts (rares et epiques) y ENTRENT par les objectifs (LevelDef.campaign_deck,
+	# table du co-auteur). Chacun est donc la recompense d un objectif de campagne.
+	var en_recompense: Dictionary = {}
+	for lvl: LevelDef in ContentDB.campaign_levels():
+		for c in lvl.objective_rewards:
 			if c != null:
-				dans_un_deck[(c as SpellCard).id] = true
-	var trouvees: int = 0
+				en_recompense[(c as SpellCard).id] = true
 	for id in ids:
-		if dans_un_deck.has(id):
-			trouvees += 1
-	ok(trouvees >= 2,
-		"au moins deux sorts de terrain sont joues en campagne (%d)" % trouvees)
+		ok(en_recompense.has(id), "%s entre au deck de campagne par un objectif" % id)
 
 
 ## « Beaucoup trop de sorts utilisent les memes animations » : quatre sorts de

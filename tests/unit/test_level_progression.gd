@@ -107,6 +107,13 @@ const A_MESURER: int = -1
 ## (les deux defis de la vague 8 sont mesures) : tout objectif livre a son taux.
 const OBJECTIFS_A_MESURER: Array[String] = []
 
+## VAGUE 10 (chantier B2) : les sorts que la campagne ne donne PAS et laisse aux
+## quetes annexes (chantier B3). La Concentration : aucun niveau n appelle la
+## reponse qu elle porte (+1 XP a chaque sort de la main). Toutes les rares et
+## les legendaires sont donnees par la campagne. Une liste ECRITE : un sort qui
+## quitte la campagne vient ici, nommement.
+const RESERVE_SORTS_ANNEXES: Array[StringName] = [&"deep_focus"]
+
 
 func run() -> void:
 	_test_trois_cartes_nouvelles_par_niveau()
@@ -174,13 +181,25 @@ static func pose_un_tueur_permanent(c: SpellCard) -> bool:
 
 ## Trois cartes nouvelles, differentes, absentes du deck ; une carte par
 ## objectif, absente du deck et des cartes nouvelles, de la rarete de son rang.
+##
+## VAGUE 10 (chantier B2) : un niveau qui a son DECK DE BASE (trois communes) n a
+## plus de cartes nouvelles a lui. Son pool de montee de niveau est « cartes
+## obtenues + communes de l acte » (RunState.levelup_pool), qui ne lit plus
+## levelup_cards : il doit etre VIDE (une liste ecrite et jamais lue mentirait).
+## Un niveau sans deck de base (repli, contenu d avant la vague 10) garde la
+## regle des trois cartes nouvelles.
 static func defauts_cartes(lv: LevelDef) -> Array[String]:
 	var out: Array[String] = []
 	out.append_array(lv.progression_errors())
 	out.append_array(lv.missing_progression())
 	var deck: Dictionary = _ids(lv.exploration_deck)
+	deck.merge(_ids(lv.base_commons))
 	var nouvelles: Dictionary = _ids(lv.levelup_cards)
-	if nouvelles.size() != LevelDef.LEVELUP_NEW_CARDS:
+	if lv.has_base_commons():
+		if not lv.levelup_cards.is_empty():
+			out.append("%d cartes nouvelles sur un niveau a deck de base : le pool ne les lit pas"
+				% lv.levelup_cards.size())
+	elif nouvelles.size() != LevelDef.LEVELUP_NEW_CARDS:
 		out.append("%d cartes nouvelles differentes, %d attendues"
 			% [nouvelles.size(), LevelDef.LEVELUP_NEW_CARDS])
 	if lv.objective_rewards.size() != lv.objectives.size():
@@ -351,10 +370,21 @@ static func bilan_nouveaute(niveaux: Dictionary) -> Dictionary:
 	if ordre.is_empty():
 		return b
 	var premieres: Dictionary = cartes_garanties_apres(niveaux, ordre[0])
+	# VAGUE 10 : quand la campagne a ses decks de base, une COMMUNE se decouvre par
+	# le deck d un niveau (sa commune nouvelle), jamais en recompense (les
+	# recompenses sont rare, epique, legendaire) ; et les sorts que la campagne
+	# laisse aux quetes annexes (RESERVE_SORTS_ANNEXES) ne sont pas a proposer.
+	var decks_de_base: bool = false
+	for lv0 in niveaux.values():
+		if lv0 != null and (lv0 as LevelDef).has_base_commons():
+			decks_de_base = true
 	var proposables: Dictionary = {}
 	for c: SpellCard in ContentDB.cards.values():
-		if c != null and not c.is_passive and not premieres.has(c.id):
-			proposables[c.id] = true
+		if c == null or c.is_passive or premieres.has(c.id):
+			continue
+		if decks_de_base and (c.rarity == GameEnums.Rarity.COMMON or RESERVE_SORTS_ANNEXES.has(c.id)):
+			continue
+		proposables[c.id] = true
 	b["proposables"] = proposables.size()
 	var vues: Dictionary = {}
 	var inedites: Dictionary = {}
@@ -482,10 +512,11 @@ static func defauts_un_seul_sort(lv: LevelDef) -> Array[String]:
 
 ## PROTECTEURS SANS REPONSE (chantier W9). Une aura d invulnerabilite
 ## (Gardien-totem, Echo d Ymoa, Sceau de Tombol...) ne cede qu a une dissipation
-## (dispel_zone) ou au pat (DEC-048). En campagne le deck est IMPOSE et le pool de
-## montee ne lit que le deck, les cartes nouvelles et les recompenses : un niveau
-## ou descend un porteur d aura doit offrir une dissipation dans l une de ces
-## trois listes, sinon le joueur n a que le pat pour reponse.
+## (dispel_zone) ou au pat (DEC-048). En campagne le deck est IMPOSE : un niveau
+## ou descend un porteur d aura doit offrir une dissipation au deck, en carte
+## nouvelle, en recompense, ou — depuis la vague 10 — parmi les COMMUNES DE SON
+## ACTE, que le pool de montee de niveau propose des le premier niveau de l acte
+## (RunState.levelup_pool) ; sinon le joueur n a que le pat pour reponse.
 static func defauts_protecteurs(lv: LevelDef) -> Array[String]:
 	var out: Array[String] = []
 	var porteurs: Array[String] = []
@@ -494,11 +525,14 @@ static func defauts_protecteurs(lv: LevelDef) -> Array[String]:
 			porteurs.append(String(d.id))
 	if porteurs.is_empty():
 		return out
-	for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards]:
+	var de_l_acte: Array[SpellCard] = []
+	if lv.is_campaign_level() and lv.has_base_commons():
+		de_l_acte = ContentDB.act_commons(lv.act)
+	for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards, de_l_acte]:
 		for c in liste:
 			if c != null and &"dispel_zone" in (c as SpellCard).effect_keys():
 				return out
-	out.append("%s protege(nt) par une aura, aucune dissipation au deck, en carte nouvelle ni en recompense"
+	out.append("%s protege(nt) par une aura, aucune dissipation au deck, en carte nouvelle, en recompense ni parmi les communes de l acte"
 		% [porteurs])
 	return out
 
@@ -563,40 +597,71 @@ func _test_recompenses_rare_epique_legendaire() -> void:
 ## nouvelle, aucune recompense ne porte ne peut JAMAIS etre obtenu (le pool hors
 ## campagne ne contient que l obtenu). Les "cartes de depart" n y echappent plus :
 ## copies_in_starter ne donne plus rien au livre de sorts (01/10).
+##
+## VAGUE 10 (chantier B2) : les decks de base (trois communes) comptent, et les
+## sorts que la campagne LAISSE aux quetes annexes sont nommes dans
+## RESERVE_SORTS_ANNEXES (la Concentration : aucun niveau n appelle sa reponse).
+## Un sort de la reserve que la campagne donne quand meme fait rougir : la
+## reserve doit rester exactement ce que B3 doit placer. Une quete annexe livree
+## est un niveau comme un autre : ce qu elle donne compte comme joignable.
 func _test_tout_le_catalogue_est_obtenable() -> void:
 	var joignables: Dictionary = {}
+	var en_campagne: Dictionary = {}
 	for lv in _niveaux():
-		for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards]:
+		for liste: Array in [lv.exploration_deck, lv.levelup_cards, lv.objective_rewards,
+				lv.base_commons]:
 			joignables.merge(_ids(liste))
+			if lv.is_campaign_level():
+				en_campagne.merge(_ids(liste))
 	var morts: Array[String] = []
 	var sorts: int = 0
 	for c: SpellCard in ContentDB.cards.values():
 		if c == null or c.is_passive:
 			continue
 		sorts += 1
-		if not joignables.has(c.id):
+		if not joignables.has(c.id) and not RESERVE_SORTS_ANNEXES.has(c.id):
 			morts.append(String(c.id))
 	ok(sorts > 0, "des sorts au catalogue")
 	ok(morts.is_empty(), "aucun sort jamais obtenable en campagne %s" % [morts])
+	for id: StringName in RESERVE_SORTS_ANNEXES:
+		ok(ContentDB.cards.has(id), "la reserve des annexes nomme un sort existant (%s)" % id)
+		not_ok(en_campagne.has(id), "%s, reserve aux quetes annexes, n est pas donne par la campagne" % id)
 
 
-## Les passifs n ont pas de ligne dans la table : le pool de montee de niveau
-## d un niveau d acte >= PASSIVES_FROM_ACT les contient TOUS (RunState.
-## levelup_pool). Il suffit donc qu un tel niveau existe et que son pool les
-## montre bien.
+## VAGUE 10 (chantier B2, regle du co-auteur) : a l acte 2, les six passifs de
+## BASE (GameConfig.BASE_PASSIVES) ; ensuite, chaque niveau de campagne en
+## debloque UN a sa victoire (LevelDef.passive_unlocks) ; le reste va aux quetes
+## annexes. Le pool de montee de niveau ne propose que les passifs DEBLOQUES.
+## Joue sur un profil : un niveau de l acte 2 ouvert propose les six de base et
+## aucun autre ; la campagne finie, il propose aussi tous ceux qu elle debloque.
 func _test_les_passifs_s_obtiennent_des_l_acte_2() -> void:
 	var niveau: LevelDef = null
-	for lv in _niveaux():
-		if lv.allows_passives():
+	for lv in ContentDB.campaign_levels():
+		if lv.allows_passives() and (niveau == null or String(lv.id) < String(niveau.id)):
 			niveau = lv
-			break
 	ok(niveau != null, "un niveau de campagne admet les passifs")
 	if niveau == null:
 		return
+	SaveData.reset_profile()
+	SaveData.unlock_level(niveau.id)
 	var pool: Dictionary = _ids(RunState.levelup_pool(niveau, GameEnums.Mode.EXPLORATION))
+	var debloques: Dictionary = {}
+	for lv2 in ContentDB.campaign_levels():
+		debloques.merge(_ids(lv2.passive_unlocks))
 	for c: SpellCard in ContentDB.cards.values():
-		if c != null and c.is_passive:
-			ok(pool.has(c.id), "le passif %s s obtient en campagne (%s)" % [c.id, niveau.id])
+		if c == null or not c.is_passive:
+			continue
+		if GameConfig.BASE_PASSIVES.has(c.id):
+			ok(pool.has(c.id), "le passif de base %s est propose des l acte 2 (%s)" % [c.id, niveau.id])
+		else:
+			not_ok(pool.has(c.id), "le passif %s n est pas propose avant d etre debloque" % c.id)
+	for lv3 in ContentDB.campaign_levels():
+		SaveData.unlock_level(lv3.id)
+		SaveData.record_victory(lv3, GameEnums.Mode.EXPLORATION, {}, 1)
+	var pool_fin: Dictionary = _ids(RunState.levelup_pool(niveau, GameEnums.Mode.EXPLORATION))
+	for id in debloques:
+		ok(pool_fin.has(id), "le passif %s, debloque par la campagne, est propose ensuite" % id)
+	SaveData.reset_profile()
 
 
 ## « Seulement trois nouvelles cartes par niveau, sinon c est complique pour un
@@ -755,16 +820,30 @@ func _test_les_detecteurs_mordent() -> void:
 	if modele == null:
 		return
 	ok(defauts_cartes(modele).is_empty(), "le modele est conforme avant sabotage")
-	# Une carte nouvelle deja au deck, puis deux fois la meme.
+	# Trois sorts hors du deck et des recompenses du modele, pour les sabotages.
+	var hors: Array[SpellCard] = []
+	for c0: SpellCard in ContentDB.cards_of_rarity(GameEnums.Rarity.RARE):
+		if c0 != null and not c0.is_passive and not modele.objective_rewards.has(c0) \
+				and not modele.exploration_deck.has(c0) and hors.size() < 3:
+			hors.append(c0)
+	ok(hors.size() == 3, "trois rares hors du modele pour les sabotages")
+	if hors.size() < 3:
+		return
+	# VAGUE 10 : un niveau a deck de base n a pas de cartes nouvelles.
 	var lv: LevelDef = modele.duplicate()
-	var dup: Array[SpellCard] = [modele.exploration_deck[0], modele.levelup_cards[1],
-		modele.levelup_cards[2]]
-	lv.levelup_cards = dup
-	not_ok(defauts_cartes(lv).is_empty(), "une carte nouvelle deja au deck est refusee")
-	var deux: Array[SpellCard] = [modele.levelup_cards[0], modele.levelup_cards[0],
-		modele.levelup_cards[1]]
-	lv.levelup_cards = deux
-	not_ok(defauts_cartes(lv).is_empty(), "deux fois la meme carte nouvelle est refusee")
+	lv.levelup_cards = hors.duplicate()
+	not_ok(defauts_cartes(lv).is_empty(), "des cartes nouvelles sur un niveau a deck de base sont refusees")
+	# REPLI (sans deck de base) : trois cartes nouvelles, ni au deck ni en double.
+	var repli: LevelDef = modele.duplicate()
+	repli.base_commons = [] as Array[SpellCard]
+	repli.levelup_cards = hors.duplicate()
+	ok(defauts_cartes(repli).is_empty(), "un niveau de repli avec trois cartes nouvelles passe")
+	var dup: Array[SpellCard] = [modele.exploration_deck[0], hors[1], hors[2]]
+	repli.levelup_cards = dup
+	not_ok(defauts_cartes(repli).is_empty(), "une carte nouvelle deja au deck est refusee")
+	var deux: Array[SpellCard] = [hors[0], hors[0], hors[1]]
+	repli.levelup_cards = deux
+	not_ok(defauts_cartes(repli).is_empty(), "deux fois la meme carte nouvelle est refusee")
 	# Recompenses dans le desordre de rarete.
 	var lv2: LevelDef = modele.duplicate()
 	var inv: Array[SpellCard] = [modele.objective_rewards[2], modele.objective_rewards[1],
@@ -789,7 +868,7 @@ func _test_les_detecteurs_mordent() -> void:
 	var hors_deck := ObjectiveDef.new()
 	hors_deck.id = &"t_c"
 	hors_deck.check_key = &"card_casts"
-	hors_deck.params = {"card": String(modele.levelup_cards[0].id), "count": 3}
+	hors_deck.params = {"card": String(hors[0].id), "count": 3}
 	var objs: Array[ObjectiveDef] = [vide_a, vide_b, hors_deck]
 	lv4.objectives = objs
 	not_ok(defauts_liens(lv4).is_empty(),

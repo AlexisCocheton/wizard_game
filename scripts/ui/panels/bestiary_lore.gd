@@ -498,6 +498,16 @@ static func boss_v3_lines(def: EnemyDef, rich: bool = false) -> Array[String]:
 		out.append(("Avale %s et se soigne de %d %% de leurs PV restants :"
 			+ " affaiblissez-les avant qu il les mange")
 			% [cible, int(round(def.devour_heal_pct))])
+	# VAGUE 10 B2 : le BOSS MORCELE n avait aucune ligne (relevé par
+	# test_campagne_w10, qui exige une mecanique LUE a chaque tete) : le joueur
+	# voyait sa barre de PV ne pas bouger sans savoir pourquoi.
+	if def.parts_count > 0 and def.part_hp > 0.0:
+		var frein: String = ""
+		if def.part_slow_pct > 0.0:
+			frein = " ; chaque piece tombee le ralentit de %d %%" % int(round(def.part_slow_pct))
+		out.append(("Protege par %d pieces d armure de %s PV : tant qu une piece tient,"
+			+ " son corps n encaisse rien, et un coup ne brise qu UNE piece%s")
+			% [def.parts_count, _num(def.part_hp), frein])
 	if def.mirror_speed_ref > 0:
 		out.append(("Miroir du mage : sa vitesse suit la votre (normale a %d %%, de x%s"
 			+ " a x%s). Plus vous allez vite, plus il va vite ; un coup recu le ralentit")

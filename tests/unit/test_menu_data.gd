@@ -41,7 +41,9 @@ func _test_persistance_coupee() -> void:
 func _test_cartes_de_depart_decouvertes() -> void:
 	ok(SaveData.is_discovered(&"arcane_bolt"), "une carte du deck du niveau 1 est dans le livre")
 	not_ok(SaveData.is_discovered(&"time_rift"), "la legendaire ne l est pas")
-	ok(SaveData.discovered_count() >= 4, "au moins 4 cartes dans le livre")
+	# Vague 10 (chantier B2) : le premier deck est fait de trois communes.
+	ok(SaveData.discovered_count() >= LevelDef.BASE_COMMONS_COUNT,
+		"au moins les trois communes du premier deck dans le livre")
 
 
 func _test_deck_massacre() -> void:
@@ -146,8 +148,11 @@ func _test_victoire_debloque_le_niveau_suivant() -> void:
 
 
 ## Les objectifs s accumulent d un run a l autre : 2 puis 1 = les 3.
-## Depuis le chantier P, les trois reussis ne DONNENT plus de legendaire : la
-## progression est dans le pool de montee de niveau (voir test_card_progression).
+## Depuis le chantier P, les trois reussis ne DONNENT plus de legendaire d office.
+## VAGUE 10 (chantier B2, table du co-auteur) : chaque objectif reussi fait
+## ENTRER sa carte au deck de campagne du niveau (rare x3, epique x2, legendaire
+## x1), et une carte du deck d un niveau ouvert est dans le livre. Les trois
+## reussis : les trois cartes sont au livre, par le deck, sans prise en combat.
 func _test_objectifs_cumulatifs_sans_legendaire() -> void:
 	SaveData.reset_profile()
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
@@ -163,19 +168,21 @@ func _test_objectifs_cumulatifs_sans_legendaire() -> void:
 	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION, {ids[2]: true}, 6)
 	eq(SaveData.objectives_done_count(lvl1), ids.size(),
 		"le 3e objectif, meme sur un autre run, complete la serie")
-	# La victoire OUVRE le niveau suivant, dont le deck entre au livre (regle du
-	# livre de sorts, 01/10) : le livre doit valoir les decks ouverts, sans
-	# aucune carte d objectif en plus.
+	# La victoire OUVRE le niveau suivant, dont le deck de base entre au livre
+	# (regle du livre de sorts, 01/10) ; les trois cartes d objectif y entrent par
+	# le deck de campagne du niveau 1, et rien d autre.
 	eq(SaveData.discovered_count(),
-		SaveData.cards_owned_by_decks(SaveData.unlocked_levels()).size(),
-		"trois objectifs ne DONNENT plus aucune carte : elles entrent au pool")
+		SaveData.cards_owned_by_decks(SaveData.unlocked_levels()).size() + ids.size(),
+		"trois objectifs : leurs trois cartes entrent au deck, donc au livre")
+	var deck: Array[SpellCard] = SaveData.campaign_deck(lvl1)
 	for i in lvl1.objectives.size():
 		var recompense: SpellCard = lvl1.objective_reward(i)
 		if recompense != null:
-			not_ok(SaveData.is_discovered(recompense.id),
-				"la carte de l objectif %d n est pas donnee (%s)" % [i + 1, recompense.id])
-	eq(SaveData.unlocked_legendaries().size(), 0,
-		"aucune legendaire obtenue sans l avoir prise en combat")
+			ok(deck.has(recompense), "la carte de l objectif %d est au deck de campagne (%s)"
+				% [i + 1, recompense.id])
+			ok(SaveData.is_discovered(recompense.id),
+				"et donc au livre (%s)" % recompense.id)
+	eq(deck.size(), DeckRules.DECK_SIZE, "le deck de campagne garde ses douze cartes")
 
 
 func _test_niveau_courant() -> void:
@@ -183,14 +190,16 @@ func _test_niveau_courant() -> void:
 	eq(SaveData.current_level(), &"lvl_02", "le niveau courant est memorise")
 
 
-## Regression : le mur avait copies_in_starter = 0 et n entrait jamais dans le deck.
+## Regression : le mur avait copies_in_starter = 0 et n entrait jamais dans le
+## deck. La regle qu elle protegeait : le deck d un niveau vient de la LISTE du
+## contenu, pas de copies_in_starter. Depuis la vague 10 (chantier B2) le premier
+## deck est ses trois communes de base (le Mur de pierre est la commune nouvelle
+## du lvl_04) : chacune y est, quatre fois, quel que soit son copies_in_starter.
 func _test_deck_exploration_contient_le_mur() -> void:
 	var lvl1: LevelDef = ContentDB.levels.get(&"lvl_01")
-	var murs: int = 0
-	for c in lvl1.exploration_deck:
-		if c != null and c.id == &"stone_wall":
-			murs += 1
-	ok(murs >= 1, "le Mur de pierre est bien dans le deck d exploration (%d ex.)" % murs)
+	for c0: SpellCard in lvl1.base_commons:
+		eq(lvl1.exploration_deck.count(c0), 4,
+			"%s (copies_in_starter %d) est au deck d exploration, quatre fois" % [c0.id, c0.copies_in_starter])
 	ok(lvl1.exploration_deck.size() >= DeckRules.MIN_CARDS,
 		"le deck pre-etabli est jouable (%d cartes)" % lvl1.exploration_deck.size())
 
@@ -201,11 +210,13 @@ func _test_deck_explicite_conserve_les_exemplaires() -> void:
 	RunState.build_deck_from_list(lvl1.exploration_deck)
 	eq(RunState.total_cards(), lvl1.exploration_deck.size(),
 		"une entree de la liste = un exemplaire dans le deck")
-	var murs_en_jeu: int = 0
-	for c in RunState.deck:
-		if c.id == &"stone_wall":
-			murs_en_jeu += 1
-	ok(murs_en_jeu >= 1, "le mur est piochable en partie")
+	# Chaque commune du premier deck est piochable, avec ses quatre exemplaires.
+	for c0: SpellCard in lvl1.base_commons:
+		var en_jeu: int = 0
+		for c in RunState.deck:
+			if c.id == c0.id:
+				en_jeu += 1
+		eq(en_jeu, 4, "%s est piochable en partie, quatre fois" % c0.id)
 
 
 ## Un niveau verrouille ne doit pas etre jouable : le niveau 2 etait accessible

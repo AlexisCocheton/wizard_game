@@ -10,7 +10,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="8_3hnwq"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="8_rffqt"]
 [ext_resource type="Resource" path="res://resources/enemies/bone_guard.tres" id="9_vsqve"]
-[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="10_8ejf3"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="11_cvq5j"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_frost.tres" id="11_e4vxr"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_ember.tres" id="12_rffqt"]
 [ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="13_8ejf3"]
@@ -142,8 +142,8 @@ start_offset = 16.0
 
 [sub_resource type="Resource" id="Resource_5ks84"]
 script = ExtResource("22_71u04")
-enemy = ExtResource("10_8ejf3")
-count = 1
+enemy = ExtResource("11_cvq5j")
+count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
@@ -230,7 +230,7 @@ start_offset = 28.0
 
 [sub_resource type="Resource" id="Resource_gsgvq"]
 script = ExtResource("22_71u04")
-enemy = ExtResource("10_8ejf3")
+enemy = ExtResource("11_cvq5j")
 count = 1
 spawn_delay = 1.0
 start_offset = 34.0
@@ -257,7 +257,7 @@ outro_story = &"lvl_19_outro"
 terrain = "grass"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("21_6yfmp")]([SubResource("Resource_vsqve"), SubResource("Resource_8ejf3"), SubResource("Resource_e4vxr"), SubResource("Resource_rffqt"), SubResource("Resource_doijp")])
-enemy_pool = Array[ExtResource("1_21pon")]([ExtResource("2_cvq5j"), ExtResource("3_2c7cs"), ExtResource("8_3hnwq"), ExtResource("9_vsqve"), ExtResource("5_vsqve"), ExtResource("10_8ejf3")])
+enemy_pool = Array[ExtResource("1_21pon")]([ExtResource("2_cvq5j"), ExtResource("3_2c7cs"), ExtResource("8_3hnwq"), ExtResource("9_vsqve"), ExtResource("5_vsqve"), ExtResource("11_cvq5j")])
 exploration_deck = Array[ExtResource("8_rffqt")]([ExtResource("2_2c7cs"), ExtResource("2_2c7cs"), ExtResource("2_2c7cs"), ExtResource("2_2c7cs"), ExtResource("3_3hnwq"), ExtResource("3_3hnwq"), ExtResource("3_3hnwq"), ExtResource("3_3hnwq"), ExtResource("16_epw7l"), ExtResource("16_epw7l"), ExtResource("16_epw7l"), ExtResource("16_epw7l")])
 objectives = Array[ExtResource("19_ckdo4")]([SubResource("Resource_cvq5j"), SubResource("Resource_2c7cs"), SubResource("Resource_3hnwq")])
 levelup_cards = Array[ExtResource("8_rffqt")]([])

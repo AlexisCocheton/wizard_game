@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=54 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=53 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_3j5bi"]
 [ext_resource type="Resource" path="res://resources/cards/common/bone_recall.tres" id="2_3j5bi"]
@@ -126,28 +126,21 @@ difficulty = 1.35
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_jrkk8"]
+[sub_resource type="Resource" id="Resource_ua7n8"]
 script = ExtResource("23_s2dmi")
 enemy = ExtResource("10_6lvqg")
 count = 1
 spawn_delay = 1.2
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_asowv"]
+[sub_resource type="Resource" id="Resource_jrkk8"]
 script = ExtResource("23_s2dmi")
 enemy = ExtResource("6_2ilfx")
 count = 1
 spawn_delay = 1.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_oqocq"]
-script = ExtResource("23_s2dmi")
-enemy = ExtResource("7_hjhg3")
-count = 2
-spawn_delay = 2.0
-start_offset = 14.0
-
-[sub_resource type="Resource" id="Resource_y7g72"]
+[sub_resource type="Resource" id="Resource_asowv"]
 script = ExtResource("23_s2dmi")
 enemy = ExtResource("6_plhp6")
 count = 2
@@ -158,7 +151,7 @@ start_offset = 22.0
 script = ExtResource("22_y85qu")
 id = &"w12_3_miniboss"
 duration = 32.0
-entries = Array[ExtResource("23_s2dmi")]([SubResource("Resource_jrkk8"), SubResource("Resource_asowv"), SubResource("Resource_oqocq"), SubResource("Resource_y7g72")])
+entries = Array[ExtResource("23_s2dmi")]([SubResource("Resource_ua7n8"), SubResource("Resource_jrkk8"), SubResource("Resource_asowv")])
 difficulty = 1.1
 is_miniboss = true
 is_boss = false

@@ -24,7 +24,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="27_xhh80"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="28_3bv1m"]
 
-[sub_resource type="Resource" id="Resource_afr64"]
+[sub_resource type="Resource" id="Resource_7s4ln"]
 script = ExtResource("25_7esuy")
 id = &"obj_hit_from_sleepy_fox"
 description = "Renard dormeur : gagner apres en avoir ete touche"
@@ -252,7 +252,7 @@ backdrop = "act5_divine"
 waves = Array[ExtResource("27_xhh80")]([SubResource("Resource_mfxal"), SubResource("Resource_fftrm"), SubResource("Resource_ju6cb"), SubResource("Resource_70dm8"), SubResource("Resource_fe3w6")])
 enemy_pool = Array[ExtResource("1_70dm8")]([ExtResource("12_70dm8"), ExtResource("7_kdq2i"), ExtResource("8_mfxal"), ExtResource("9_fftrm"), ExtResource("10_ju6cb"), ExtResource("5_0t5bb"), ExtResource("13_70dm8"), ExtResource("4_1s8yj")])
 exploration_deck = Array[ExtResource("17_70dm8")]([ExtResource("2_ndruv"), ExtResource("2_ndruv"), ExtResource("2_ndruv"), ExtResource("2_ndruv"), ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("18_fe3w6"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj"), ExtResource("20_1s8yj")])
-objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_afr64"), SubResource("Resource_ndruv"), SubResource("Resource_kdq2i")])
+objectives = Array[ExtResource("25_7esuy")]([SubResource("Resource_7s4ln"), SubResource("Resource_ndruv"), SubResource("Resource_kdq2i")])
 levelup_cards = Array[ExtResource("17_70dm8")]([])
 objective_rewards = Array[ExtResource("17_70dm8")]([ExtResource("14_70dm8"), ExtResource("15_fe3w6"), ExtResource("16_6yp3l")])
 next_levels = Array[StringName]([&"lvl_15"])
