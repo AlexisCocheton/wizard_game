@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_y3whh"]
+
+[resource]
+script = ExtResource("1_y3whh")
+id = &"obj_card_casts_cycle_of_thought_6"
+description = "Lancer 6 fois Cycle de pensee"
+check_key = &"card_casts"
+params = {
+"card": "cycle_of_thought",
+"count": 6
+}

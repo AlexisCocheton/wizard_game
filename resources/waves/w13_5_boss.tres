@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_mphq1"]
 [ext_resource type="Resource" path="res://resources/enemies/demon_lord.tres" id="2_mphq1"]
-[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="3_ljpno"]
-[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_v183x"]
-[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="5_hj424"]
+[ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="3_mphq1"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="4_0xyev"]
+[ext_resource type="Resource" path="res://resources/enemies/executioner_aide.tres" id="5_ljpno"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_wq7ht"]
 
 [sub_resource type="Resource" id="Resource_mphq1"]
@@ -16,24 +16,24 @@ start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_0xyev"]
 script = ExtResource("1_mphq1")
-enemy = ExtResource("3_ljpno")
-count = 2
-spawn_delay = 2.8
+enemy = ExtResource("3_mphq1")
+count = 1
+spawn_delay = 1.0
 start_offset = 12.0
 
 [sub_resource type="Resource" id="Resource_ljpno"]
 script = ExtResource("1_mphq1")
-enemy = ExtResource("4_v183x")
+enemy = ExtResource("4_0xyev")
 count = 2
-spawn_delay = 2.5
-start_offset = 26.0
+spawn_delay = 2.2
+start_offset = 24.0
 
 [sub_resource type="Resource" id="Resource_v183x"]
 script = ExtResource("1_mphq1")
-enemy = ExtResource("5_hj424")
+enemy = ExtResource("5_ljpno")
 count = 1
-spawn_delay = 2.5
-start_offset = 38.0
+spawn_delay = 1.0
+start_offset = 34.0
 
 [resource]
 script = ExtResource("6_wq7ht")

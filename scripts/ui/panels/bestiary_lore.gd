@@ -162,8 +162,35 @@ static func behaviours(def: EnemyDef, rich: bool = false) -> Array[String]:
 			out.append("Se divise en deux a sa mort (%s)" % child_name)
 		else:
 			out.append("Engendre %d %s a sa mort" % [def.split_count, child_name])
-	if def.first_hit_shield:
+	if def.first_hit_shield and def.shield_regen > 0.0:
+		# VAGUE 10 B2 : l armure qui se referme. La phrase donne le DELAI, sans
+		# lequel le joueur croit a un bouclier infini.
+		out.append(("Encaisse le premier coup sans aucun degat, et son armure se REFERME"
+			+ " apres %s s sans etre touche : enchainez les coups, posez une zone ou"
+			+ " dissipez-la") % _num(def.shield_regen))
+	elif def.first_hit_shield:
 		out.append("Encaisse le premier coup sans aucun degat")
+	# VAGUE 10 B2 : l echeance. La CAUSE (il se plante), la REPONSE (le frapper a
+	# ce moment) et le PRIX (la vitesse perdue ou sa hate), chiffres compris.
+	if def.has_deadline():
+		var prix: String = ""
+		if def.deadline_penalty > 0:
+			prix = "vous perdez %d points de vitesse" % def.deadline_penalty
+		if def.deadline_haste_pct > 0.0:
+			var hate: String = "il accelere de %d %% pendant %s s" % [
+				int(round(def.deadline_haste_pct)), _num(def.deadline_haste_time)]
+			prix = hate if prix == "" else prix + " et " + hate
+		out.append(("ECHEANCE : toutes les %s s il se plante %s s. Un coup pendant ce temps"
+			+ " et il reste etourdi %s s ; sinon %s. Une zone ou un poison ne comptent"
+			+ " pas : il faut un COUP")
+			% [_num(def.deadline_interval), _num(def.deadline_window),
+				_num(def.deadline_stun), prix])
+	# VAGUE 10 B2 : la garde levee (le cycle du renvoi, sans renvoi).
+	if def.guard_block_pct > 0.0 and def.reflect_pct <= 0.0 and def.reflect_window > 0.0:
+		out.append(("Leve sa garde toutes les %s s pendant %s s : les coups n y font que"
+			+ " %d %% de leurs degats. Les zones et les poisons passent en entier")
+			% [_num(def.reflect_interval), _num(def.reflect_window),
+				int(round(100.0 - def.guard_block_pct))])
 	out.append_array(v3_lines(def))
 	# LES TROIS MECANIQUES DU CHANTIER I, en TETE des lignes de comportement : ce
 	# sont les seules du jeu qui changent une REGLE (la condition de mort, la
@@ -290,8 +317,18 @@ static func behaviours(def: EnemyDef, rich: bool = false) -> Array[String]:
 	# il abordera la vague avec la prudence (et les cartes) d un combat de boss.
 	var ancien: String = former_boss_name(def)
 	if ancien != "":
-		out.append("Ancien boss (%s), revenu en simple monstre : moins de PV, moins de ruses"
-			% ancien)
+		# VAGUE 10 B2 : trois retours possibles (regle du co-auteur), trois phrases.
+		var source: EnemyDef = ContentDB.enemies.get(def.demoted_from)
+		var de_boss: bool = source == null or source.kind == GameEnums.EnemyKind.BOSS
+		if def.is_boss():
+			out.append("Ancien boss (%s), revenu en mini-boss : moins de PV, des ruses simplifiees"
+				% ancien)
+		elif de_boss:
+			out.append("Ancien boss (%s), revenu en simple monstre : moins de PV, moins de ruses"
+				% ancien)
+		else:
+			out.append("Ancien mini-boss (%s), revenu en simple monstre : moins de PV, moins de ruses"
+				% ancien)
 	# Les RESISTANCES ne sont plus des phrases (vague 5) : la fiche les pose en
 	# logos + pourcentages sous les competences (resistance_groups), le meme logo
 	# que celui de la carte qui les subit.

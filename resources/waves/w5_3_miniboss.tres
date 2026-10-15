@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_rwv1m"]
 [ext_resource type="Resource" path="res://resources/enemies/glass_mirror.tres" id="2_rwv1m"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="3_wbqdu"]
-[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_ewdnd"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="4_rwv1m"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_aaa2i"]
 
 [sub_resource type="Resource" id="Resource_rwv1m"]
@@ -22,8 +22,8 @@ start_offset = 10.0
 
 [sub_resource type="Resource" id="Resource_wbqdu"]
 script = ExtResource("1_rwv1m")
-enemy = ExtResource("4_ewdnd")
-count = 3
+enemy = ExtResource("4_rwv1m")
+count = 2
 spawn_delay = 1.8
 start_offset = 22.0
 

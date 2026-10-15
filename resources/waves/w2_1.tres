@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_wknuc"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="2_n2tdm"]
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_o2ywi"]
-[ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="4_n2tdm"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="4_n2tdm"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_smcgg"]
 
 [sub_resource type="Resource" id="Resource_n2tdm"]
@@ -23,8 +23,8 @@ start_offset = 8.0
 [sub_resource type="Resource" id="Resource_smcgg"]
 script = ExtResource("1_wknuc")
 enemy = ExtResource("4_n2tdm")
-count = 2
-spawn_delay = 2.0
+count = 1
+spawn_delay = 1.0
 start_offset = 16.0
 
 [resource]

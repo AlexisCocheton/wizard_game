@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_wnf6u"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_colossal.tres" id="2_sssau"]
+[ext_resource type="Resource" path="res://resources/enemies/twins_pale.tres" id="3_5t2je"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_frost.tres" id="4_kmaki"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="5_1ko5t"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_42kmj"]
+
+[sub_resource type="Resource" id="Resource_wnf6u"]
+script = ExtResource("1_wnf6u")
+enemy = ExtResource("2_sssau")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_sssau"]
+script = ExtResource("1_wnf6u")
+enemy = ExtResource("3_5t2je")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_5t2je"]
+script = ExtResource("1_wnf6u")
+enemy = ExtResource("4_kmaki")
+count = 1
+spawn_delay = 1.0
+start_offset = 28.0
+
+[sub_resource type="Resource" id="Resource_kmaki"]
+script = ExtResource("1_wnf6u")
+enemy = ExtResource("5_1ko5t")
+count = 2
+spawn_delay = 2.0
+start_offset = 34.0
+
+[resource]
+script = ExtResource("6_42kmj")
+id = &"w14_5_boss"
+duration = 48.0
+entries = Array[ExtResource("1_wnf6u")]([SubResource("Resource_wnf6u"), SubResource("Resource_sssau"), SubResource("Resource_5t2je"), SubResource("Resource_kmaki")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

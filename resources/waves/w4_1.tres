@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_2d5xm"]
-[ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="2_xwfu6"]
-[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="3_va7nd"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_swollen.tres" id="2_xwfu6"]
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_b74bs"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_elder.tres" id="4_va7nd"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="5_b74bs"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_tdnbq"]
 
-[sub_resource type="Resource" id="Resource_2d5xm"]
+[sub_resource type="Resource" id="Resource_xwfu6"]
 script = ExtResource("1_2d5xm")
 enemy = ExtResource("2_xwfu6")
 count = 2
 spawn_delay = 2.2
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_xwfu6"]
-script = ExtResource("1_2d5xm")
-enemy = ExtResource("3_va7nd")
-count = 1
-spawn_delay = 2.2
-start_offset = 8.0
-
 [sub_resource type="Resource" id="Resource_va7nd"]
 script = ExtResource("1_2d5xm")
 enemy = ExtResource("4_b74bs")
 count = 2
 spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_b74bs"]
+script = ExtResource("1_2d5xm")
+enemy = ExtResource("4_va7nd")
+count = 1
+spawn_delay = 1.0
 start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_tdnbq"]
+script = ExtResource("1_2d5xm")
+enemy = ExtResource("5_b74bs")
+count = 1
+spawn_delay = 1.0
+start_offset = 21.0
 
 [resource]
 script = ExtResource("5_tdnbq")
 id = &"w4_1"
 duration = 26.0
-entries = Array[ExtResource("1_2d5xm")]([SubResource("Resource_2d5xm"), SubResource("Resource_xwfu6"), SubResource("Resource_va7nd")])
+entries = Array[ExtResource("1_2d5xm")]([SubResource("Resource_xwfu6"), SubResource("Resource_va7nd"), SubResource("Resource_b74bs"), SubResource("Resource_tdnbq")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = false

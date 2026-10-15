@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_aakdk"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="2_ehvlg"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_jooub"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_7tofy"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="5_eyoy6"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_yh8sk"]
+
+[sub_resource type="Resource" id="Resource_aakdk"]
+script = ExtResource("1_aakdk")
+enemy = ExtResource("2_ehvlg")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ehvlg"]
+script = ExtResource("1_aakdk")
+enemy = ExtResource("3_jooub")
+count = 4
+spawn_delay = 1.6
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_jooub"]
+script = ExtResource("1_aakdk")
+enemy = ExtResource("4_7tofy")
+count = 2
+spawn_delay = 2.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_7tofy"]
+script = ExtResource("1_aakdk")
+enemy = ExtResource("5_eyoy6")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[resource]
+script = ExtResource("6_yh8sk")
+id = &"w2_4"
+duration = 28.0
+entries = Array[ExtResource("1_aakdk")]([SubResource("Resource_aakdk"), SubResource("Resource_ehvlg"), SubResource("Resource_jooub"), SubResource("Resource_7tofy")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false

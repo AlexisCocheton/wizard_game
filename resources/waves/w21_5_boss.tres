@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_pl3oc"]
+[ext_resource type="Resource" path="res://resources/enemies/tombol_seal.tres" id="2_ilyxa"]
+[ext_resource type="Resource" path="res://resources/enemies/fire_worm.tres" id="3_dflci"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_n8p2l"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_7ij05"]
+
+[sub_resource type="Resource" id="Resource_pl3oc"]
+script = ExtResource("1_pl3oc")
+enemy = ExtResource("2_ilyxa")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ilyxa"]
+script = ExtResource("1_pl3oc")
+enemy = ExtResource("3_dflci")
+count = 2
+spawn_delay = 2.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_dflci"]
+script = ExtResource("1_pl3oc")
+enemy = ExtResource("4_n8p2l")
+count = 2
+spawn_delay = 2.2
+start_offset = 28.0
+
+[resource]
+script = ExtResource("5_7ij05")
+id = &"w21_5_boss"
+duration = 45.0
+entries = Array[ExtResource("1_pl3oc")]([SubResource("Resource_pl3oc"), SubResource("Resource_ilyxa"), SubResource("Resource_dflci")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

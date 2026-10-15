@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ipb8u"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_frost.tres" id="2_lbxlf"]
@@ -6,40 +6,56 @@
 [ext_resource type="Resource" path="res://resources/enemies/trio_arcane.tres" id="4_jg3n8"]
 [ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_1c2yi"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_6yf6x"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="6_bpgse"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="7_jg3n8"]
 
-[sub_resource type="Resource" id="Resource_ipb8u"]
+[sub_resource type="Resource" id="Resource_bpgse"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("3_bpgse")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_lbxlf"]
+[sub_resource type="Resource" id="Resource_jg3n8"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("2_lbxlf")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.6
 
-[sub_resource type="Resource" id="Resource_bpgse"]
+[sub_resource type="Resource" id="Resource_1c2yi"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("4_jg3n8")
 count = 1
 spawn_delay = 1.0
 start_offset = 1.2
 
-[sub_resource type="Resource" id="Resource_jg3n8"]
+[sub_resource type="Resource" id="Resource_6yf6x"]
 script = ExtResource("1_ipb8u")
 enemy = ExtResource("5_1c2yi")
 count = 2
 spawn_delay = 3.0
 start_offset = 20.0
 
+[sub_resource type="Resource" id="Resource_7dea0"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("6_bpgse")
+count = 1
+spawn_delay = 1.0
+start_offset = 28.0
+
+[sub_resource type="Resource" id="Resource_gsgvq"]
+script = ExtResource("1_ipb8u")
+enemy = ExtResource("7_jg3n8")
+count = 1
+spawn_delay = 1.0
+start_offset = 34.0
+
 [resource]
 script = ExtResource("6_6yf6x")
 id = &"w19_5_boss"
 duration = 45.0
-entries = Array[ExtResource("1_ipb8u")]([SubResource("Resource_ipb8u"), SubResource("Resource_lbxlf"), SubResource("Resource_bpgse"), SubResource("Resource_jg3n8")])
+entries = Array[ExtResource("1_ipb8u")]([SubResource("Resource_bpgse"), SubResource("Resource_jg3n8"), SubResource("Resource_1c2yi"), SubResource("Resource_6yf6x"), SubResource("Resource_7dea0"), SubResource("Resource_gsgvq")])
 difficulty = 1.0
 is_miniboss = false
 is_boss = true

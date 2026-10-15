@@ -441,7 +441,65 @@ enum MovePattern { STRAIGHT, ZIGZAG, BOUNCE, HOP, SPIRAL }
 ## TESTE (test_campaign_acts). Une convention d id se casse au premier renommage
 ## sans que rien ne rougisse ; un champ se lit, et le garde-fou de test_bosses
 ## peut comparer la vermine a son boss d origine : moins de PV, jamais un boss.
+##
+## VAGUE 10 (B2, regle du co-auteur) : un mini-boss revient en monstre ORDINAIRE
+## a l acte suivant ; un boss revient en MINI-BOSS deux actes plus tard, ou en
+## ordinaire trois actes plus tard. Un promu peut donc etre une tete (un MINIBOSS
+## dont la source est un BOSS) ; test_campagne_w10 tient les delais et les PV.
 @export var demoted_from: StringName = &""
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B2 — les mecaniques des tetes qui n en avaient pas.
+# Section a part, comme celles des autres chantiers : chacune a sa garantie de
+# fin, son test (test_tetes_w10) et sa ligne chiffree au bestiaire.
+# =====================================================================
+@export_group("Tetes de la vague 10")
+
+## L ECHEANCE (Chronos, l huissier des delais) — toutes les `deadline_interval`
+## secondes de monde il se PLANTE `deadline_window` secondes : un sablier au-dessus
+## de lui dit « ECHEANCE ». Au moins un COUP pendant la fenetre (un degat continu
+## ne compte pas, DEC-054) : l echeance est honoree, il reste etourdi
+## `deadline_stun` s. Sinon elle est manquee : le mage perd `deadline_penalty`
+## points de vitesse, et le monstre s accelere de `deadline_haste_pct` % pendant
+## `deadline_haste_time` s. 0 = pas d echeance.
+##
+## Ce que la mecanique change : c est la seule du jeu ou NE PAS frapper coute.
+## L inverse exact du Miroir. La reponse : garder une carte rapide en main.
+## GARANTIE DE FIN : la fenetre se referme toujours au bout de sa duree, et un
+## monstre etourdi ne rouvre pas d echeance (le minuteur attend la fin du stun).
+@export var deadline_interval: float = 0.0
+@export var deadline_window: float = 2.0
+@export var deadline_stun: float = 1.0
+@export_range(0, 20) var deadline_penalty: int = 0
+@export var deadline_haste_pct: float = 0.0
+@export var deadline_haste_time: float = 3.0
+
+## L ARMURE QUI SE REFERME (le Gardien) — avec `first_hit_shield`, le bouclier
+## du premier coup REVIENT apres `shield_regen` secondes de monde sans un seul
+## degat (coup OU degat continu). 0 = il ne revient jamais (bouclier classique).
+## La reponse : enchainer, poser une zone, dissiper. GARANTIE DE FIN : un monstre
+## frappe sans arret ne recupere rien, et ses PV ne remontent jamais.
+@export var shield_regen: float = 0.0
+
+## LA GARDE LEVEE (le Gardien d ossements) — le cycle de garde du renvoi
+## (`reflect_interval`, `reflect_window`) avec `reflect_pct = 0` : pendant la
+## garde, les COUPS ne font que (100 - guard_block_pct) % de leurs degats. Le
+## degat continu passe en entier. 0 = pas de garde. GARANTIE DE FIN : la garde
+## retombe a chaque cycle (window < interval, verifie par test_bosses).
+@export_range(0.0, 95.0) var guard_block_pct: float = 0.0
+
+
+## Le monstre porte-t-il une echeance ?
+func has_deadline() -> bool:
+	return deadline_interval > 0.0 and deadline_window > 0.0 \
+		and (deadline_penalty > 0 or deadline_haste_pct > 0.0)
+
+
+## Le cycle de garde est-il actif (renvoi OU garde levee) ?
+func has_guard_cycle() -> bool:
+	return reflect_interval > 0.0 and reflect_window > 0.0 \
+		and (reflect_pct > 0.0 or guard_block_pct > 0.0)
 
 
 ## Multiplicateur de degats subis pour UN tag. 1.0 si rien n est declare.

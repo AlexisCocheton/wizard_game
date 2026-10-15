@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_kmsql"]
+
+[resource]
+script = ExtResource("1_kmsql")
+id = &"obj_card_casts_purifying_light_6"
+description = "Lancer 6 fois Lumiere purifiante"
+check_key = &"card_casts"
+params = {
+"card": "purifying_light",
+"count": 6
+}

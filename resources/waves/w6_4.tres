@@ -1,39 +1,39 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_itv7d"]
-[ext_resource type="Resource" path="res://resources/enemies/glutton.tres" id="2_2uopk"]
-[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="3_igyol"]
-[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="4_osax4"]
-[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="5_eodwd"]
+[ext_resource type="Resource" path="res://resources/enemies/planogo_ash.tres" id="2_itv7d"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="3_2uopk"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_igyol"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="5_osax4"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_5v8um"]
 
 [sub_resource type="Resource" id="Resource_itv7d"]
 script = ExtResource("1_itv7d")
-enemy = ExtResource("2_2uopk")
-count = 1
-spawn_delay = 1.0
+enemy = ExtResource("2_itv7d")
+count = 2
+spawn_delay = 2.5
 start_offset = 0.0
 
 [sub_resource type="Resource" id="Resource_2uopk"]
 script = ExtResource("1_itv7d")
-enemy = ExtResource("3_igyol")
+enemy = ExtResource("3_2uopk")
 count = 1
-spawn_delay = 2.0
+spawn_delay = 1.0
 start_offset = 8.0
 
 [sub_resource type="Resource" id="Resource_igyol"]
 script = ExtResource("1_itv7d")
-enemy = ExtResource("4_osax4")
+enemy = ExtResource("4_igyol")
 count = 2
 spawn_delay = 2.2
-start_offset = 16.0
+start_offset = 14.0
 
 [sub_resource type="Resource" id="Resource_osax4"]
 script = ExtResource("1_itv7d")
-enemy = ExtResource("5_eodwd")
-count = 2
-spawn_delay = 2.0
-start_offset = 24.0
+enemy = ExtResource("5_osax4")
+count = 1
+spawn_delay = 1.0
+start_offset = 22.0
 
 [resource]
 script = ExtResource("6_5v8um")

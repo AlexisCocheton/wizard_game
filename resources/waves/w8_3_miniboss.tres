@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_iunhg"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_huge.tres" id="2_dmpbo"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="3_64qn6"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="4_kuyxb"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_yh6gx"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_c1w48"]
+
+[sub_resource type="Resource" id="Resource_iunhg"]
+script = ExtResource("1_iunhg")
+enemy = ExtResource("2_dmpbo")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_dmpbo"]
+script = ExtResource("1_iunhg")
+enemy = ExtResource("3_64qn6")
+count = 1
+spawn_delay = 2.5
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_64qn6"]
+script = ExtResource("1_iunhg")
+enemy = ExtResource("4_kuyxb")
+count = 1
+spawn_delay = 1.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_kuyxb"]
+script = ExtResource("1_iunhg")
+enemy = ExtResource("5_yh6gx")
+count = 4
+spawn_delay = 1.6
+start_offset = 18.0
+
+[resource]
+script = ExtResource("6_c1w48")
+id = &"w8_3_miniboss"
+duration = 32.0
+entries = Array[ExtResource("1_iunhg")]([SubResource("Resource_iunhg"), SubResource("Resource_dmpbo"), SubResource("Resource_64qn6"), SubResource("Resource_kuyxb")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

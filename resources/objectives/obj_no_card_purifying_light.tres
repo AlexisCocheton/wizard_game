@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_kks6q"]
+
+[resource]
+script = ExtResource("1_kks6q")
+id = &"obj_no_card_purifying_light"
+description = "Gagner sans lancer Lumiere purifiante"
+check_key = &"no_card"
+params = {
+"card": "purifying_light"
+}

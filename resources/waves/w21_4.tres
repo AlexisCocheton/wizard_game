@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_0mhmr"]
+[ext_resource type="Resource" path="res://resources/enemies/fire_worm.tres" id="2_xr088"]
+[ext_resource type="Resource" path="res://resources/enemies/bone_guard.tres" id="3_wgxvm"]
+[ext_resource type="Resource" path="res://resources/enemies/tomb_breaker.tres" id="4_tefvj"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="5_eu4pp"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="6_i0ch7"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_l20yd"]
+
+[sub_resource type="Resource" id="Resource_0mhmr"]
+script = ExtResource("1_0mhmr")
+enemy = ExtResource("2_xr088")
+count = 2
+spawn_delay = 2.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_xr088"]
+script = ExtResource("1_0mhmr")
+enemy = ExtResource("3_wgxvm")
+count = 1
+spawn_delay = 1.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_wgxvm"]
+script = ExtResource("1_0mhmr")
+enemy = ExtResource("4_tefvj")
+count = 1
+spawn_delay = 1.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_tefvj"]
+script = ExtResource("1_0mhmr")
+enemy = ExtResource("5_eu4pp")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_eu4pp"]
+script = ExtResource("1_0mhmr")
+enemy = ExtResource("6_i0ch7")
+count = 2
+spawn_delay = 2.2
+start_offset = 24.0
+
+[resource]
+script = ExtResource("7_l20yd")
+id = &"w21_4"
+duration = 32.0
+entries = Array[ExtResource("1_0mhmr")]([SubResource("Resource_0mhmr"), SubResource("Resource_xr088"), SubResource("Resource_wgxvm"), SubResource("Resource_tefvj"), SubResource("Resource_eu4pp")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

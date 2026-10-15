@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_4nuan"]
+[ext_resource type="Resource" path="res://resources/enemies/dark_mage.tres" id="2_xfejc"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="3_s2yqa"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_hdp3l"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="5_p810d"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="6_r4f1n"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_thhkh"]
+
+[sub_resource type="Resource" id="Resource_4nuan"]
+script = ExtResource("1_4nuan")
+enemy = ExtResource("2_xfejc")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_xfejc"]
+script = ExtResource("1_4nuan")
+enemy = ExtResource("3_s2yqa")
+count = 3
+spawn_delay = 1.8
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_s2yqa"]
+script = ExtResource("1_4nuan")
+enemy = ExtResource("4_hdp3l")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_hdp3l"]
+script = ExtResource("1_4nuan")
+enemy = ExtResource("5_p810d")
+count = 1
+spawn_delay = 1.0
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_p810d"]
+script = ExtResource("1_4nuan")
+enemy = ExtResource("6_r4f1n")
+count = 2
+spawn_delay = 2.0
+start_offset = 32.0
+
+[resource]
+script = ExtResource("7_thhkh")
+id = &"w18_5_boss"
+duration = 44.0
+entries = Array[ExtResource("1_4nuan")]([SubResource("Resource_4nuan"), SubResource("Resource_xfejc"), SubResource("Resource_s2yqa"), SubResource("Resource_hdp3l"), SubResource("Resource_p810d")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

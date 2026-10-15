@@ -71,6 +71,14 @@ extends Resource
 ## Niveaux accessibles apres victoire.
 @export var next_levels: Array[StringName] = []
 
+## VAGUE 10 (chantier B2) : ce niveau ne s ouvre qu une fois TOUS les niveaux de
+## campagne qui le citent dans `next_levels` finis (lvl_13 apres les quatre
+## demons). Faux = il s ouvre a la premiere victoire d un de ses precedents :
+## c est la regle d une FOURCHE (lvl_21 s ouvre apres lvl_05 OU lvl_06), qu une
+## regle generale « tous les precedents » aurait verrouillee. Lu par
+## SaveData.record_victory.
+@export var requires_all_previous: bool = false
+
 ## --- STRUCTURE DE LA VAGUE 10 (chantier A3, regles du co-auteur du 14/10) ---
 ## Tous ces champs sont FACULTATIFS : vides, le niveau se joue comme avant la
 ## vague 10 (voir les replis documentes dans la section en fin de fichier).

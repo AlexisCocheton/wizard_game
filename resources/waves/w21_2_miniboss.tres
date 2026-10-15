@@ -4,7 +4,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/gravedigger.tres" id="2_4nacc"]
 [ext_resource type="Resource" path="res://resources/enemies/fire_worm.tres" id="3_2im1q"]
 [ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="4_k5j8j"]
-[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_q6jiw"]
+[ext_resource type="Resource" path="res://resources/enemies/raider_deserter.tres" id="5_0sm33"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_1splq"]
 
 [sub_resource type="Resource" id="Resource_0sm33"]
@@ -30,15 +30,15 @@ start_offset = 10.0
 
 [sub_resource type="Resource" id="Resource_k5j8j"]
 script = ExtResource("1_0sm33")
-enemy = ExtResource("5_q6jiw")
-count = 1
-spawn_delay = 2.0
-start_offset = 19.0
+enemy = ExtResource("5_0sm33")
+count = 2
+spawn_delay = 1.8
+start_offset = 18.0
 
 [resource]
 script = ExtResource("6_1splq")
 id = &"w21_2_miniboss"
-duration = 28.0
+duration = 30.0
 entries = Array[ExtResource("1_0sm33")]([SubResource("Resource_0sm33"), SubResource("Resource_4nacc"), SubResource("Resource_2im1q"), SubResource("Resource_k5j8j")])
 difficulty = 1.1
 is_miniboss = true

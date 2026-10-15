@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_h0hxa"]
+
+[resource]
+script = ExtResource("1_h0hxa")
+id = &"obj_kill_type_with_card_spark_10_gnome"
+description = "Gnome : en tuer 10 avec Etincelle"
+check_key = &"kill_type_with_card"
+params = {
+"card": "spark",
+"count": 10,
+"enemy": "gnome"
+}
