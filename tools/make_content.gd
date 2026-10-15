@@ -7444,6 +7444,12 @@ func _progression_de(level_id: StringName) -> Dictionary:
 # l effet du .tres tout juste ecrit : elles suivent ses chiffres a chaque
 # generation. (Une surcharge de l Atelier du testeur, DEC-043, ne touche que
 # l effet d origine : elle ne suit pas dans les copies.)
+#
+# BANC (15/10, 21 niveaux x 60, sans reglage) : 1152 -> 1156 victoires sur
+# 1260. Le bot prend 73 majeures sur 106 ; en campagne, 533 prises (0,42 par
+# partie), 13 majeures distinctes seulement : la deuxieme maturation (24 XP)
+# n est atteinte que par les sorts les plus joues (Boule de feu, Trait, Fleche,
+# Meteore...). Le reste se jouera en Libre et en Massacre.
 # =====================================================================
 
 ## Les sorts qui recoivent leurs majeures, dans l ordre du catalogue.
