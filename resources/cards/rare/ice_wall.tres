@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_xx3gq"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_0577e"]
@@ -15,6 +15,46 @@ params = {
 &"thickness": 60.0,
 &"wall_hp": 70.0
 }
+
+[sub_resource type="Resource" id="Resource_0577e"]
+script = ExtResource("2_0577e")
+id = &"mur_de_givre"
+title = "Mur de givre"
+description = "Le froid du mur ralentit de 50 % tout ce qui l approche pendant 8 s"
+modifiers = Array[Dictionary]([{
+"duration": 8.0,
+"key": &"ground_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"slow_pct": 50.0
+},
+"radius": 230.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"hp",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_m76hc"]
+script = ExtResource("2_0577e")
+id = &"glaciation"
+title = "Glaciation"
+description = "Le mur de glace se dresse presque aussitot"
+modifiers = Array[Dictionary]([{
+"factor": 0.2,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"hp",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
 
 [resource]
 script = ExtResource("2_yowyj")
@@ -33,4 +73,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"freezing"
 sfx_key = &"ice_wall"
-major_upgrades = Array[ExtResource("2_0577e")]([])
+major_upgrades = Array[ExtResource("2_0577e")]([SubResource("Resource_0577e"), SubResource("Resource_m76hc")])

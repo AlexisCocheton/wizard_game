@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_oxs7y"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_g8iuj"]
@@ -14,6 +14,55 @@ params = {
 &"kind": "pit",
 &"vuln_mult": 1.3
 }
+
+[sub_resource type="Resource" id="Resource_g8iuj"]
+script = ExtResource("2_g8iuj")
+id = &"gouffre"
+title = "Gouffre"
+description = "Incassable et plus profond (x2 degats, -40 % vitesse), mais comble en 12 s"
+modifiers = Array[Dictionary]([{
+"key": &"place_terrain",
+"op": "set",
+"param": &"unbreakable",
+"value": true
+}, {
+"field": "duration",
+"key": &"place_terrain",
+"op": "set",
+"value": 12.0
+}, {
+"key": &"place_terrain",
+"op": "set",
+"param": &"vuln_mult",
+"value": 2.0
+}, {
+"key": &"place_terrain",
+"op": "set",
+"param": &"slow_pct",
+"value": 40.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.2
+}])
+
+[sub_resource type="Resource" id="Resource_ac8p0"]
+script = ExtResource("2_g8iuj")
+id = &"fosse_aux_pieux"
+title = "Fosse aux pieux"
+description = "Des pieux au fond : 6 degats de NATURE par seconde a qui y tombe"
+modifiers = Array[Dictionary]([{
+"field": "magnitude",
+"key": &"place_terrain",
+"op": "set",
+"value": 6.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"amplify",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_w6rc1")
@@ -32,4 +81,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"orb_magenta"
 sfx_key = &"earth_dig"
-major_upgrades = Array[ExtResource("2_g8iuj")]([])
+major_upgrades = Array[ExtResource("2_g8iuj")]([SubResource("Resource_g8iuj"), SubResource("Resource_ac8p0")])

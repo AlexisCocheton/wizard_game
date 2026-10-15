@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_m2isn"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_xoccl"]
@@ -11,6 +11,44 @@ magnitude = 1.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_xoccl"]
+script = ExtResource("2_xoccl")
+id = &"moelle"
+title = "Moelle"
+description = "Le sort rappele inflige aussi 50 % de degats en plus"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"empower_next",
+"magnitude": 1.5,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_q3smx"]
+script = ExtResource("2_xoccl")
+id = &"ossuaire"
+title = "Ossuaire"
+description = "Un squelette se releve a tes cotes et frappe pour 10 pendant 6 s"
+modifiers = Array[Dictionary]([{
+"duration": 6.0,
+"key": &"summon_ally",
+"magnitude": 10.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
 
 [resource]
 script = ExtResource("3_q3smx")
@@ -29,4 +67,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"dark_soul"
 sfx_key = &"bone_rattle"
-major_upgrades = Array[ExtResource("2_xoccl")]([])
+major_upgrades = Array[ExtResource("2_xoccl")]([SubResource("Resource_xoccl"), SubResource("Resource_q3smx")])

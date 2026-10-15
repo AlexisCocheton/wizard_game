@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_013tf"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_0tbp0"]
@@ -11,6 +11,51 @@ magnitude = 15.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_hpl8g"]
+script = ExtResource("2_hpl8g")
+id = &"arc_electrique"
+title = "Arc electrique"
+description = "La cible porte une marque de 6 : a sa mort elle saute au voisin, -1 par saut"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"electric_mark",
+"magnitude": 6.0,
+"op": "add_effect",
+"params": {
+&"decay": 1.0,
+&"jump_range": 300.0
+},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_diwr1"]
+script = ExtResource("2_hpl8g")
+id = &"choc"
+title = "Choc"
+description = "L etincelle etourdit 0,6 s la cible et ses voisins proches"
+modifiers = Array[Dictionary]([{
+"duration": 0.6,
+"key": &"stun_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {},
+"radius": 110.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.45
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.25
+}])
 
 [resource]
 script = ExtResource("2_0tbp0")
@@ -29,4 +74,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"spark_burst"
 sfx_key = &"zap_spark"
-major_upgrades = Array[ExtResource("2_hpl8g")]([])
+major_upgrades = Array[ExtResource("2_hpl8g")]([SubResource("Resource_hpl8g"), SubResource("Resource_diwr1")])

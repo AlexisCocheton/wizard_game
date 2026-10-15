@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_38gph"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_a06sc"]
@@ -20,6 +20,52 @@ duration = 6.0
 radius = 0.0
 params = {}
 
+[sub_resource type="Resource" id="Resource_a013v"]
+script = ExtResource("2_q3kry")
+id = &"sablier_brise"
+title = "Sablier brise"
+description = "Le temps s arrete presque : monstres -90 %, incantation +200 %, 2 s"
+modifiers = Array[Dictionary]([{
+"field": "magnitude",
+"key": &"slow_enemy_gauge",
+"op": "set",
+"value": 90.0
+}, {
+"field": "magnitude",
+"key": &"self_haste",
+"op": "set",
+"value": 200.0
+}, {
+"field": "duration",
+"key": &"",
+"op": "set",
+"value": 2.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_cpbbg"]
+script = ExtResource("2_q3kry")
+id = &"sablier_retourne"
+title = "Sablier retourne"
+description = "Le sable remonte : tous les monstres font demi-tour 2 s (effet de vent)"
+modifiers = Array[Dictionary]([{
+"duration": 2.0,
+"key": &"reverse_enemies",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"tempo",
+"op": "axis",
+"pct": -0.5
+}])
+
 [resource]
 script = ExtResource("2_a06sc")
 id = &"hourglass_shard"
@@ -37,4 +83,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"glass_shards"
 sfx_key = &"spell_grand"
-major_upgrades = Array[ExtResource("2_q3kry")]([])
+major_upgrades = Array[ExtResource("2_q3kry")]([SubResource("Resource_a013v"), SubResource("Resource_cpbbg")])

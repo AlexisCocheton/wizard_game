@@ -6,6 +6,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_enemies()
 	_cards()
+	_majeures()  # VAGUE 10 B1b : deux ameliorations majeures par sort (fin du fichier)
 	_waves_and_level()
 	print("CONTENT_OK")
 	get_tree().quit(0)
@@ -7619,3 +7620,959 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			]}
 	printerr("Niveau %s absent de la table de progression" % level_id)
 	return {}
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B1b — DEUX AMELIORATIONS MAJEURES PAR SORT
+#
+# Demande du co-auteur (14/10) : « des options de montee de niveau enormes,
+# deux par carte, qui modifient carrement la structure du sort mais en echange
+# de grosses diminutions ». Le moteur (MajorUpgradeDef, RunState section
+# MAJEURES, chantier A1) sait les appliquer ; ici, le CONTENU.
+#
+# REGLES TENUES PAR LA TABLE (verrouillees par test_majeures_contenu) :
+#   - deux majeures par sort, d ids et de structures differentes ; un passif ne
+#     murit pas, il n en a pas ;
+#   - chaque majeure change la STRUCTURE (op add_effect, set, duplicate, repeat
+#     ou cast_time) : jamais un simple « +X % », que les voies font deja ;
+#   - chaque PRIX est une op « axis » negative qui MORD sur ce sort (un axe que
+#     le sort n a pas serait un prix affiche et jamais paye) : le texte rouge
+#     s ecrit seul et le bot du banc le lit (AutoPick.major_acceptable) ;
+#   - un effet ajoute porte l ELEMENT de la carte (combat_tags) ; quand il
+#     emprunte le verbe d un autre element (un ralentissement de glace sur une
+#     nappe d eau), la description le dit ;
+#   - texte lisible en portrait sur l ecran de maturation : titre court, une
+#     description de deux lignes au plus, sans accents comme le reste des cartes.
+#
+# POURQUOI APRES _cards() ET EN RECHARGEANT LE .tres : _cards() ecrit chaque
+# carte au fil de l eau, et un autre chantier (B1a) y ajoute et deplace des
+# cartes. Cette passe retrouve chaque sort PAR SON ID, quel que soit son dossier
+# de rarete, et ne touche rien d autre que major_upgrades. Le rechargement
+# IGNORE le cache : ContentDB (autoload) a deja charge l ANCIENNE version de
+# chaque carte au demarrage, et load() rendrait cette version perimee — on
+# re-sauverait alors la carte d avant la generation.
+#
+# Les copies d un effet (« trois foyers en ligne ») sont faites ICI, depuis
+# l effet du .tres tout juste ecrit : elles suivent ses chiffres a chaque
+# generation. (Une surcharge de l Atelier du testeur, DEC-043, ne touche que
+# l effet d origine : elle ne suit pas dans les copies.)
+#
+# BANC (15/10, 21 niveaux x 60, sans reglage, base B1a : incantation x1,75) :
+# 1159 -> 1169 victoires sur 1260 (x1,9 avant B1a : 1152 -> 1156). Le bot
+# prend 83 majeures sur 116 ; en campagne, 534 prises (0,42 par partie),
+# 15 majeures distinctes seulement : la deuxieme maturation (24 XP) n est
+# atteinte que par les sorts les plus joues (Boule de feu, Trait, Fleche,
+# Meteore...). Le reste se jouera en Libre et en Massacre.
+# =====================================================================
+
+## Les sorts qui recoivent leurs majeures, dans l ordre du catalogue.
+const MAJEURES_SORTS: Array[String] = [
+	# communes
+	"arcane_bolt", "piercing_arrow", "frost_field", "ember_pool", "fireball",
+	"frost_rain", "spark", "venom_dart",
+	# rares
+	"quickening", "temporal_drag", "cycle_of_thought", "mana_flow", "stone_wall",
+	"ice_wall", "brazier", "meteor", "about_face", "focus", "salt_spiral",
+	"bone_recall", "chain_break", "purifying_light", "repulsion_wave",
+	"heartwood_totem", "tidal_pool", "time_surge", "terrain_brambles",
+	# epiques
+	"mirror_apprentice", "deep_focus", "reckless_bargain", "deck_purge",
+	"deep_freeze", "weakness_mark", "resonance", "void_grip", "arcane_insight",
+	"bastion", "maelstrom", "blight_sapling", "thunder_root", "terrain_altar",
+	"terrain_pit",
+	# legendaires
+	"time_rift", "tide_ledger", "summoners_key", "forge_dial", "world_loom",
+	"hourglass_shard", "echo_of_the_hand", "twin_channeling", "meteor_storm",
+	"venom_mire", "terrain_river",
+	# vague 10, cartes du chantier B1a
+	"south_wind", "electric_mark", "heavy_rain", "quicksand", "water_jet",
+]
+## Cartes du chantier B1a, absentes tant qu il n est pas fusionne : leur absence
+## est ignoree proprement (une ligne au journal). test_majeures_contenu exige
+## leur presence des que B1A_FUSIONNE y passe a vrai.
+const MAJEURES_ATTENDUES_B1A: Array[String] = [
+	"south_wind", "electric_mark", "heavy_rain", "quicksand", "water_jet",
+]
+
+
+func _majeures() -> void:
+	var poses: int = 0
+	for id in MAJEURES_SORTS:
+		var chemins: Array[String] = []
+		for dossier in ["common", "rare", "epic", "legendary"]:
+			var p: String = "res://resources/cards/%s/%s.tres" % [dossier, id]
+			if FileAccess.file_exists(p):
+				chemins.append(p)
+		if chemins.is_empty():
+			if MAJEURES_ATTENDUES_B1A.has(id):
+				print("  majeures : %s absent (carte attendue du chantier B1a), ignore" % id)
+			else:
+				printerr("Majeures : sort introuvable %s" % id)
+			continue
+		for p in chemins:
+			var c: SpellCard = ResourceLoader.load(p, "", ResourceLoader.CACHE_MODE_IGNORE) as SpellCard
+			if c == null:
+				printerr("Majeures : lecture impossible %s" % p)
+				continue
+			var typees: Array[MajorUpgradeDef] = []
+			for m in _majeures_de(id, c):
+				if m is MajorUpgradeDef:
+					typees.append(m)
+			if typees.size() != 2:
+				printerr("Majeures : %s en a %d au lieu de 2" % [id, typees.size()])
+			c.major_upgrades = typees
+			_save(c, p)
+			poses += 1
+	print("  majeures posees sur %d sorts" % poses)
+
+
+# --- Le langage, en court (format exact : MajorUpgradeDef) -------------------
+
+func _mj(id: String, titre: String, texte: String, gains: Array, prix: Array) -> MajorUpgradeDef:
+	return MajorUpgradeDef.make(StringName(id), titre, texte, gains, prix)
+
+
+## Un PRIX : un axe, en part negative (-0.4 = « -40 % »). discard se compte en
+## cartes (-1 = « -1 carte defaussee au lancement »).
+func _mj_prix(axe: String, pct: float) -> Dictionary:
+	return {"op": "axis", "axis": StringName(axe), "pct": pct}
+
+
+## Le sort se resout de nouveau `delai` s plus tard (vague supplementaire).
+func _mj_rejeu(delai: float, facteur: float = 1.0) -> Dictionary:
+	return {"op": "repeat", "delay": delai, "factor": facteur}
+
+
+## Temps d incantation multiplie (0.25 = quatre fois plus court).
+func _mj_incant(facteur: float) -> Dictionary:
+	return {"op": "cast_time", "factor": facteur}
+
+
+## Remplace un PARAM des effets `cle` (cle vide = tous les effets).
+func _mj_pose(cle: String, param: String, valeur: Variant) -> Dictionary:
+	return {"op": "set", "key": StringName(cle), "param": StringName(param), "value": valeur}
+
+
+## Remplace un CHAMP (magnitude, duration, radius) des effets `cle`.
+func _mj_champ(cle: String, champ: String, valeur: float) -> Dictionary:
+	return {"op": "set", "key": StringName(cle), "field": champ, "value": valeur}
+
+
+func _mj_echelle(cle: String, champ: String, facteur: float) -> Dictionary:
+	return {"op": "scale", "key": StringName(cle), "field": champ, "factor": facteur}
+
+
+## Double CHAQUE effet `cle` ; la copie recoit `params` par-dessus les siens.
+## Une seule fois par majeure : une seconde op doublerait aussi la premiere copie
+## (deux copies identiques). Pour plusieurs copies distinctes : _mj_copie.
+func _mj_double(cle: String, params: Dictionary) -> Dictionary:
+	return {"op": "duplicate", "key": StringName(cle), "params": params}
+
+
+## Ajoute un effet ecrit en entier.
+func _mj_ajout(cle: String, magnitude: float, duree: float = 0.0, rayon: float = 0.0,
+		params: Dictionary = {}) -> Dictionary:
+	return {"op": "add_effect", "key": StringName(cle), "magnitude": magnitude,
+		"duration": duree, "radius": rayon, "params": params}
+
+
+## Ajoute une COPIE du premier effet `cle` de la carte, avec `params` en plus
+## (decalage de visee, angle). Copie faite depuis le .tres que _cards() vient
+## d ecrire : elle porte ses chiffres du moment.
+func _mj_copie(c: SpellCard, cle: String, params: Dictionary) -> Dictionary:
+	for s in c.effects:
+		if s != null and s.key == StringName(cle):
+			var copie: EffectSpec = s.duplicate() as EffectSpec
+			copie.params = s.params.duplicate(true)
+			for p in params:
+				copie.params[StringName(str(p))] = params[p]
+			return {"op": "add_effect", "spec": copie}
+	printerr("Majeures : %s n a pas d effet %s a copier" % [c.id, cle])
+	return {"op": "add_effect", "key": StringName(cle)}
+
+
+## Le premier effet `cle` de la carte (pour lire sa duree, son rayon).
+func _mj_effet(c: SpellCard, cle: String) -> EffectSpec:
+	for s in c.effects:
+		if s != null and s.key == StringName(cle):
+			return s
+	return null
+
+
+# --- LA TABLE ----------------------------------------------------------------
+#
+# Une entree = deux majeures. En commentaire, la STRUCTURE qu elles changent et
+# ce qu en fait le bot du banc (AutoPick.major_acceptable : il refuse de perdre
+# plus de 30 % sur l axe d identite du sort). Les chiffres sont des points de
+# depart : le co-auteur equilibre.
+
+func _majeures_de(id: String, c: SpellCard) -> Array:
+	match id:
+		# ================= COMMUNES =================
+		"arcane_bolt":
+			# Cible unique -> eclat de zone ; un trait -> une salve de trois.
+			return [
+				_mj("eclat_arcanique", "Eclat arcanique",
+					"Le trait eclate : 6 degats ARCANIQUES par monstre proche, a chacun d eux",
+					[_mj_ajout("damage_per_enemy", 6.0, 0.0, 150.0)],
+					[_mj_prix("cast", -0.4)]),
+				_mj("salve_arcanique", "Salve arcanique",
+					"Trois traits en 1 s ; si la cible tombe, le suivant vise le plus proche",
+					[_mj_rejeu(0.5), _mj_rejeu(1.0)],
+					[_mj_prix("damage", -0.55)]),
+			]
+		"piercing_arrow":
+			# Les deux exemples du co-auteur : une seconde ligne A COTE de la
+			# premiere (parallele, pas en eventail), ou une vague supplementaire.
+			return [
+				_mj("seconde_ligne", "Seconde ligne",
+					"Une seconde ligne de fleches part a cote de la premiere, en parallele",
+					[_mj_double("pierce_line", {&"offset_px": 130.0})],
+					[_mj_prix("damage", -0.3), _mj_prix("cast", -0.3)]),
+				_mj("vague_de_fleches", "Vague de fleches",
+					"La volee repart 0,8 s plus tard, dans la meme direction",
+					[_mj_rejeu(0.8)],
+					[_mj_prix("cast", -0.5)]),
+			]
+		"frost_field":
+			# Une zone -> une rangee de trois ; un controle -> un amplificateur.
+			return [
+				_mj("barriere_de_givre", "Barriere de givre",
+					"Trois champs cote a cote : une barriere de givre sur toute une rangee",
+					[_mj_copie(c, "ground_zone", {&"aim_offset": Vector2(-180.0, 0.0)}),
+					 _mj_copie(c, "ground_zone", {&"aim_offset": Vector2(180.0, 0.0)})],
+					[_mj_prix("area", -0.5), _mj_prix("duration", -0.3)]),
+				_mj("engelures", "Engelures",
+					"Le givre mord : degats subis x1,4 dedans, et 3 par seconde 4 s apres la sortie",
+					[_mj_pose("ground_zone", "vuln_mult", 1.4),
+					 _mj_pose("ground_zone", "residue_dps", 3.0),
+					 _mj_pose("ground_zone", "residue_duration", 4.0)],
+					[_mj_prix("slow", -0.5)]),
+			]
+		"ember_pool":
+			# Un degat qui reste (residu) ; un foyer -> trois en triangle.
+			return [
+				_mj("braises_collantes", "Braises collantes",
+					"Qui sort des braises continue de bruler : 4 degats par seconde pendant 4 s",
+					[_mj_pose("ground_zone", "residue_dps", 4.0),
+					 _mj_pose("ground_zone", "residue_duration", 4.0)],
+					[_mj_prix("area", -0.4)]),
+				_mj("semis_de_braises", "Semis de braises",
+					"Trois foyers en triangle couvrent tout un carrefour",
+					[_mj_copie(c, "ground_zone", {&"aim_offset": Vector2(-150.0, -130.0)}),
+					 _mj_copie(c, "ground_zone", {&"aim_offset": Vector2(150.0, -130.0)})],
+					[_mj_prix("damage", -0.35), _mj_prix("area", -0.3)]),
+			]
+		"fireball":
+			# Une explosion -> une ligne de trois ; un coup sec -> une nappe.
+			return [
+				_mj("barrage", "Barrage",
+					"Trois boules de feu explosent en ligne, sur toute la largeur visee",
+					[_mj_copie(c, "ground_zone", {&"aim_offset": Vector2(-230.0, 0.0)}),
+					 _mj_copie(c, "ground_zone", {&"aim_offset": Vector2(230.0, 0.0)})],
+					[_mj_prix("area", -0.45), _mj_prix("damage", -0.2)]),
+				_mj("napalm", "Napalm",
+					"L explosion devient une nappe de feu : 8 degats par seconde pendant 4 s",
+					[_mj_champ("ground_zone", "magnitude", 8.0),
+					 _mj_champ("ground_zone", "duration", 4.0)],
+					[_mj_prix("cast", -0.4)]),
+			]
+		"frost_rain":
+			# Une zone -> tout le terrain ; un controle -> des degats de grele.
+			return [
+				_mj("hiver", "Hiver",
+					"Le froid gagne tout le terrain : monstres -20 % de vitesse 6 s",
+					[_mj_ajout("slow_enemy_gauge", 20.0, 6.0)],
+					[_mj_prix("area", -0.5)]),
+				_mj("grelons", "Grelons",
+					"Des grelons s abattent sur tout le terrain : 8 impacts de 14 degats de GLACE",
+					[_mj_ajout("meteor_storm", 14.0, 4.0, 90.0, {&"impacts": 8})],
+					[_mj_prix("slow", -0.4), _mj_prix("duration", -0.25)]),
+			]
+		"spark":
+			# Une cible -> une marque qui saute ; un degat -> un etourdissement.
+			return [
+				_mj("arc_electrique", "Arc electrique",
+					"La cible porte une marque de 6 : a sa mort elle saute au voisin, -1 par saut",
+					[_mj_ajout("electric_mark", 6.0, 0.0, 0.0,
+						{&"jump_range": 300.0, &"decay": 1.0})],
+					[_mj_prix("damage", -0.3)]),
+				_mj("choc", "Choc",
+					"L etincelle etourdit 0,6 s la cible et ses voisins proches",
+					[_mj_ajout("stun_zone", 0.0, 0.6, 110.0)],
+					[_mj_prix("damage", -0.45), _mj_prix("cast", -0.25)]),
+			]
+		"venom_dart":
+			# Le poison CONTAGIEUX (une marque qui saute, au poison) ; un dard ->
+			# une nuee qui empoisonne tout le voisinage (residu d une zone breve).
+			return [
+				_mj("contagion", "Contagion",
+					"A la mort de la cible, le venin saute au voisin (4 degats, -1 par saut)",
+					[_mj_ajout("electric_mark", 4.0, 0.0, 0.0,
+						{&"jump_range": 260.0, &"decay": 1.0})],
+					[_mj_prix("cast", -0.5)]),
+				_mj("nuee_de_dards", "Nuee de dards",
+					"Les voisins de la cible sont empoisonnes aussi : 2 PV par seconde pendant 6 s",
+					[_mj_ajout("ground_zone", 0.0, 0.3, 150.0,
+						{&"residue_dps": 2.0, &"residue_duration": 6.0})],
+					[_mj_prix("damage", -0.5)]),
+			]
+		# ================= RARES =================
+		"quickening":
+			# Une hate longue -> une hate eclair ; une hate -> une hate et un soin.
+			return [
+				_mj("coup_de_fouet", "Coup de fouet",
+					"Hate enorme mais breve : +300 % d incantation pendant 1,5 s",
+					[_mj_champ("self_haste", "magnitude", 300.0),
+					 _mj_champ("self_haste", "duration", 1.5)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("second_souffle", "Second souffle",
+					"Rend aussi 20 points de vitesse au mage",
+					[_mj_ajout("gain_speed", 20.0)],
+					[_mj_prix("duration", -0.5)]),
+			]
+		"temporal_drag":
+			# Un ralentissement -> un arret quasi total ; un -> deux de suite.
+			return [
+				_mj("arret_du_temps", "Arret du temps",
+					"Les monstres sont quasi figes (-90 %), pendant 1,5 s seulement",
+					[_mj_champ("slow_enemy_gauge", "magnitude", 90.0),
+					 _mj_champ("slow_enemy_gauge", "duration", 1.5)],
+					[_mj_prix("cast", -0.3)]),
+				_mj("double_entrave", "Double entrave",
+					"L entrave revient 6 s plus tard : deux ralentissements de suite",
+					[_mj_rejeu(6.0)],
+					[_mj_prix("slow", -0.4)]),
+			]
+		"cycle_of_thought":
+			# Un echange de cartes -> un echange qui garde ; qui fait murir.
+			return [
+				_mj("maree_qui_rend", "Maree qui rend",
+					"Et le prochain sort que tu lances revient en main",
+					[_mj_ajout("retain_next", 1.0)],
+					[_mj_prix("cast", -0.4)]),
+				_mj("courant_de_pensee", "Courant de pensee",
+					"La main renouvelee gagne 1 XP par sort distinct : ils murissent plus tot",
+					[_mj_ajout("hand_card_xp", 1.0)],
+					[_mj_prix("discard", -1.0)]),
+			]
+		"mana_flow":
+			# Une pioche lente et longue -> une pioche immediate ; un flux qui repart.
+			return [
+				_mj("torrent_de_mana", "Torrent de mana",
+					"Pioche 2 cartes tout de suite ; le flux ne dure plus que 4 s",
+					[_mj_ajout("draw_cards", 0.0, 0.0, 0.0, {&"count": 2}),
+					 _mj_champ("draw_boost", "duration", 4.0)],
+					[_mj_prix("tempo", -0.25)]),
+				_mj("flux_continu", "Flux continu",
+					"Le flux repart des qu il s acheve : deux fois plus long",
+					[_mj_rejeu(12.0)],
+					[_mj_prix("cast", -0.5)]),
+			]
+		"stone_wall":
+			# Le mur du co-auteur : immense et qui arrete les volants. Ou un mur qui
+			# blesse ceux qui le longent.
+			return [
+				_mj("muraille_geante", "Muraille geante",
+					"Mur presque deux fois plus large, que les volants ne franchissent plus",
+					[_mj_echelle("build_wall", "radius", 1.8),
+					 _mj_pose("build_wall", "blocks_flyers", true)],
+					[_mj_prix("cast", -0.4), _mj_prix("duration", -0.25)]),
+				_mj("mur_de_ronces", "Mur de ronces",
+					"Des ronces le bordent : qui le longe est ralenti de 30 % et perd 5 PV par seconde",
+					[_mj_ajout("ground_zone", 5.0, 20.0, 230.0, {&"slow_pct": 30.0})],
+					[_mj_prix("duration", -0.5)]),
+			]
+		"ice_wall":
+			# Un mur -> un mur qui gele ses abords ; un mur lent -> un mur eclair.
+			return [
+				_mj("mur_de_givre", "Mur de givre",
+					"Le froid du mur ralentit de 50 % tout ce qui l approche pendant 8 s",
+					[_mj_ajout("ground_zone", 0.0, 8.0, 230.0, {&"slow_pct": 50.0})],
+					[_mj_prix("hp", -0.4)]),
+				_mj("glaciation", "Glaciation",
+					"Le mur de glace se dresse presque aussitot",
+					[_mj_incant(0.2)],
+					[_mj_prix("hp", -0.3), _mj_prix("discard", -1.0)]),
+			]
+		"brazier":
+			# Une zone -> une colonne de trois ; un feu qui aspire (verbe du vent).
+			return [
+				_mj("colonne_de_feu", "Colonne de feu",
+					"Trois brasiers en colonne : un couloir de feu vers les monstres",
+					[_mj_copie(c, "ground_zone", {&"aim_offset": Vector2(0.0, -210.0)}),
+					 _mj_copie(c, "ground_zone", {&"aim_offset": Vector2(0.0, -420.0)})],
+					[_mj_prix("area", -0.4), _mj_prix("damage", -0.25)]),
+				_mj("appel_d_air", "Appel d air",
+					"Le brasier aspire l air et attire les monstres vers son coeur (effet de vent)",
+					[_mj_ajout("vortex_pull", 90.0, 6.0, 280.0)],
+					[_mj_prix("damage", -0.4)]),
+			]
+		"meteor":
+			# Une carte longue -> quasi instantanee ; un impact -> un cratere.
+			return [
+				_mj("meteore_eclair", "Meteore eclair",
+					"Incantation quasi instantanee : il tombe quatre fois plus vite",
+					[_mj_incant(0.25)],
+					[_mj_prix("area", -0.55), _mj_prix("discard", -1.0)]),
+				_mj("cratere", "Cratere",
+					"Il laisse un cratere en fusion : 10 degats de FEU par seconde, 5 s",
+					[_mj_ajout("ground_zone", 10.0, 5.0, 140.0)],
+					[_mj_prix("cast", -0.4), _mj_prix("area", -0.2)]),
+			]
+		"about_face":
+			# Un demi-tour -> un demi-tour sous le vent du sud ; deux demi-tours.
+			return [
+				_mj("contre_vent", "Contre-vent",
+					"Le vent du sud souffle aussi : volants cloues sur place, trajets redresses",
+					[_mj_ajout("global_wind", 0.0, 3.0)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("ressac", "Ressac",
+					"Les monstres font demi-tour une seconde fois, 4,5 s plus tard",
+					[_mj_rejeu(4.5)],
+					[_mj_prix("duration", -0.4)]),
+			]
+		"focus":
+			# Un bonus -> un bonus et un double canal ; un bonus qui revient.
+			return [
+				_mj("canal_ouvert", "Canal ouvert",
+					"Et pendant 4 s, tu peux charger deux sorts a la fois",
+					[_mj_ajout("double_cast", 0.0, 4.0)],
+					[_mj_prix("amplify", -0.5)]),
+				_mj("lentille", "Lentille",
+					"Le sort renforce revient en main au lieu d etre defausse",
+					[_mj_ajout("retain_next", 1.0)],
+					[_mj_prix("cast", -0.5)]),
+			]
+		"salt_spiral":
+			# Une aspiration -> une aspiration qui ronge ; une -> trois en rangee.
+			return [
+				_mj("sel_brulant", "Sel brulant",
+					"Le sel ronge le coeur de la spirale : 6 degats de VENT par seconde",
+					[_mj_ajout("ground_zone", 6.0, 3.0, 110.0)],
+					[_mj_prix("duration", -0.3)]),
+				_mj("rideau_de_spirales", "Rideau de spirales",
+					"Trois spirales cote a cote aspirent toute une rangee",
+					[_mj_copie(c, "vortex_pull", {&"aim_offset": Vector2(-260.0, 0.0)}),
+					 _mj_copie(c, "vortex_pull", {&"aim_offset": Vector2(260.0, 0.0)})],
+					[_mj_prix("area", -0.5), _mj_prix("force", -0.35)]),
+			]
+		"bone_recall":
+			# Un rappel -> un rappel qui renforce ; un rappel qui releve un mort.
+			return [
+				_mj("moelle", "Moelle",
+					"Le sort rappele inflige aussi 50 % de degats en plus",
+					[_mj_ajout("empower_next", 1.5)],
+					[_mj_prix("cast", -0.5)]),
+				_mj("ossuaire", "Ossuaire",
+					"Un squelette se releve a tes cotes et frappe pour 10 pendant 6 s",
+					[_mj_ajout("summon_ally", 10.0, 6.0)],
+					[_mj_prix("discard", -1.0)]),
+			]
+		"chain_break":
+			# Un coup -> des eclats qui restent ; un souffle -> un souffle qui alourdit.
+			return [
+				_mj("eclats", "Eclats",
+					"Les eclats restent plantes : 4 degats de VENT par seconde pendant 4 s",
+					[_mj_pose("knockback", "residue_dps", 4.0),
+					 _mj_pose("knockback", "residue_duration", 4.0)],
+					[_mj_prix("force", -0.4)]),
+				_mj("chaines_pesantes", "Chaines pesantes",
+					"Les chaines restent au sol : ralentit de 50 % pendant 3 s (effet de glace)",
+					[_mj_ajout("ground_zone", 0.0, 3.0, 190.0, {&"slow_pct": 50.0})],
+					[_mj_prix("force", -0.5)]),
+			]
+		"purifying_light":
+			# Une dissipation lente -> eclair ; une dissipation qui eblouit.
+			return [
+				_mj("eclat_purifiant", "Eclat purifiant",
+					"La lumiere tombe presque aussitot",
+					[_mj_incant(0.3)],
+					[_mj_prix("area", -0.3), _mj_prix("discard", -1.0)]),
+				_mj("aube_eblouissante", "Aube eblouissante",
+					"La lumiere eblouit : sa zone ralentit de 40 % pendant 4 s",
+					[_mj_ajout("ground_zone", 0.0, 4.0, 150.0, {&"slow_pct": 40.0})],
+					[_mj_prix("cast", -0.4)]),
+			]
+		"repulsion_wave":
+			# Un souffle -> un courant qui dure (verbe de l eau) ; deux ondes.
+			return [
+				_mj("souffle_continu", "Souffle continu",
+					"Le souffle s attarde 4 s : un courant fait reculer qui y entre (effet d eau)",
+					[_mj_ajout("water_flood", 60.0, 4.0, 220.0)],
+					[_mj_prix("force", -0.4)]),
+				_mj("double_onde", "Double onde",
+					"Une seconde onde part 1,5 s plus tard, au meme endroit",
+					[_mj_rejeu(1.5)],
+					[_mj_prix("damage", -0.35), _mj_prix("area", -0.2)]),
+			]
+		"heartwood_totem":
+			# Un arbre qui tombe -> incassable mais bref ; un arbre qui mord.
+			return [
+				_mj("coeur_de_chene", "Coeur de chene",
+					"L arbre ne tombe plus : il retient la vague 6 s, puis disparait",
+					[_mj_pose("taunt_prop", "unbreakable", true),
+					 _mj_champ("taunt_prop", "duration", 6.0)],
+					[_mj_prix("area", -0.4)]),
+				_mj("racines_voraces", "Racines voraces",
+					"Ses racines mordent : 10 degats de NATURE par seconde autour de lui",
+					[_mj_champ("taunt_prop", "magnitude", 10.0),
+					 _mj_pose("taunt_prop", "zone_radius", 200.0)],
+					[_mj_prix("hp", -0.5)]),
+			]
+		"tidal_pool":
+			# Un courant -> une vague qui s abat d abord ; une eau qui gele.
+			return [
+				_mj("raz_de_maree", "Raz-de-maree",
+					"La nappe s abat d abord : 8 degats et un violent recul, puis le courant",
+					[_mj_ajout("knockback", 8.0, 0.0, 300.0, {&"push": 220.0})],
+					[_mj_prix("duration", -0.4)]),
+				_mj("bourbier", "Bourbier",
+					"L eau glacee ralentit aussi de 40 % (effet de glace)",
+					[_mj_ajout("ground_zone", 0.0, 7.0, 300.0, {&"slow_pct": 40.0})],
+					[_mj_prix("force", -0.4)]),
+			]
+		"time_surge":
+			# Un soin -> deux soins ; un soin -> un soin et une hate.
+			return [
+				_mj("second_elan", "Second elan",
+					"Un second elan suit 5 s plus tard, moitie moins fort",
+					[_mj_rejeu(5.0, 0.5)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("elan_foudroyant", "Elan foudroyant",
+					"Et ton incantation s emballe : +50 % pendant 4 s",
+					[_mj_ajout("self_haste", 50.0, 4.0)],
+					[_mj_prix("cast", -0.4)]),
+			]
+		"terrain_brambles":
+			# Le terrain du co-auteur : incassable mais limite dans le temps, avec
+			# un effet en plus. Ou une haie sur toute une rangee.
+			return [
+				_mj("ronces_de_fer", "Ronces de fer",
+					"Incassables, ralentissent de 70 % et mordent a 6 par seconde, mais fanent en 12 s",
+					[_mj_pose("place_terrain", "unbreakable", true),
+					 _mj_champ("place_terrain", "duration", 12.0),
+					 _mj_pose("place_terrain", "slow_pct", 70.0),
+					 _mj_champ("place_terrain", "magnitude", 6.0)],
+					[_mj_prix("area", -0.3)]),
+				_mj("haie_de_ronces", "Haie de ronces",
+					"Trois buissons cote a cote : une haie sur toute une rangee",
+					[_mj_copie(c, "place_terrain", {&"aim_offset": Vector2(-200.0, 0.0)}),
+					 _mj_copie(c, "place_terrain", {&"aim_offset": Vector2(200.0, 0.0)})],
+					[_mj_prix("area", -0.5), _mj_prix("slow", -0.3)]),
+			]
+		# ================= EPIQUES =================
+		"mirror_apprentice":
+			# Un reflet -> trois ; un reflet qui t aide a incanter.
+			return [
+				_mj("galerie_des_glaces", "Galerie des glaces",
+					"Trois reflets au lieu d un, chacun plus fragile",
+					[_mj_copie(c, "summon_ally", {}), _mj_copie(c, "summon_ally", {})],
+					[_mj_prix("damage", -0.55), _mj_prix("duration", -0.3)]),
+				_mj("reflet_complice", "Reflet complice",
+					"Le reflet incante avec toi : +40 % d incantation tant qu il vit",
+					[_mj_ajout("self_haste", 40.0, 8.0)],
+					[_mj_prix("damage", -0.3)]),
+			]
+		"deep_focus":
+			# La carte d XP du co-auteur : « fait monter une carte de ton choix de
+			# ta main d un niveau a la place ». A la place : son XP passe a zero.
+			return [
+				_mj("maitrise", "Maitrise",
+					"A la place : un sort de ta main, au choix, monte d un niveau",
+					[_mj_champ("hand_card_xp", "magnitude", 0.0),
+					 _mj_ajout("hand_card_level", 0.0, 0.0, 0.0, {&"count": 1})],
+					[_mj_prix("discard", -1.0), _mj_prix("cast", -0.2)]),
+				_mj("meditation", "Meditation",
+					"La main regagne 1 XP par sort 5 s plus tard",
+					[_mj_rejeu(5.0)],
+					[_mj_prix("cast", -0.5)]),
+			]
+		"reckless_bargain":
+			# Un pacte qui accelere -> un pacte INVERSE ; un pacte foudroyant.
+			return [
+				_mj("pacte_inverse", "Pacte inverse",
+					"Le pacte s inverse : les monstres RALENTISSENT de 30 %, mais 1 carte piochee",
+					[_mj_champ("haste_enemies_boon", "magnitude", -30.0),
+					 _mj_pose("haste_enemies_boon", "draw", 1)],
+					[_mj_prix("cast", -0.4)]),
+				_mj("pacte_foudroyant", "Pacte foudroyant",
+					"Pendant le pacte, la foudre frappe chaque monstre : 4 degats par seconde",
+					[_mj_ajout("global_rain", 4.0, 5.0, 0.0, {&"interval": 1.0})],
+					[_mj_prix("discard", -1.0)]),
+			]
+		"deck_purge":
+			# Une purge -> une purge qui soigne ; une purge qui empoisonne le terrain.
+			return [
+				_mj("purge_vivifiante", "Purge vivifiante",
+					"La purge rend aussi 20 points de vitesse au mage",
+					[_mj_ajout("gain_speed", 20.0)],
+					[_mj_prix("cast", -0.5)]),
+				_mj("purge_toxique", "Purge toxique",
+					"Le poison rejete se repand : 3 degats a tous les monstres toutes les 2 s, 8 s",
+					[_mj_ajout("global_rain", 3.0, 8.0, 0.0, {&"interval": 2.0})],
+					[_mj_prix("discard", -1.0)]),
+			]
+		"deep_freeze":
+			# Un ralentissement -> un etourdissement (le gel fige) ; une onde de froid.
+			return [
+				_mj("prison_de_glace", "Prison de glace",
+					"Le gel fige net : les monstres de la zone sont etourdis 1,5 s",
+					[_mj_ajout("stun_zone", 0.0, 1.5, 170.0)],
+					[_mj_prix("area", -0.4), _mj_prix("cast", -0.3)]),
+				_mj("onde_de_froid", "Onde de froid",
+					"Le froid se propage : la zone part a x0,3, s etend a x2 puis se replie",
+					[_mj_pose("ground_zone", "grow_start", 0.3),
+					 _mj_pose("ground_zone", "grow_peak", 2.0)],
+					[_mj_prix("slow", -0.4)]),
+			]
+		"weakness_mark":
+			# Une marque -> une sentence a la fin ; une marque qui s etend.
+			return [
+				_mj("sentence", "Sentence",
+					"A la fin, qui est encore dans la marque encaisse 30 degats, doubles par elle",
+					[_mj_ajout("quicksand", 30.0, 8.0, 200.0)],
+					[_mj_prix("duration", -0.5)]),
+				_mj("marque_devorante", "Marque devorante",
+					"La marque s etend jusqu a x1,8 a mi-vie, puis se resserre",
+					[_mj_pose("ground_zone", "grow_start", 0.4),
+					 _mj_pose("ground_zone", "grow_peak", 1.8)],
+					[_mj_prix("amplify", -0.3), _mj_prix("cast", -0.2)]),
+			]
+		"resonance":
+			# Une onde -> deux ; une onde -> une zone qui continue de vibrer.
+			return [
+				_mj("echo_resonant", "Echo resonant",
+					"Une seconde onde frappe 1 s plus tard, au meme endroit",
+					[_mj_rejeu(1.0)],
+					[_mj_prix("area", -0.35)]),
+				_mj("harmonique", "Harmonique",
+					"La zone vibre encore 3 s : les monstres y subissent x1,5 degats",
+					[_mj_ajout("ground_zone", 0.0, 3.0, 220.0, {&"vuln_mult": 1.5})],
+					[_mj_prix("damage", -0.4)]),
+			]
+		"void_grip":
+			# Une dissipation -> une faiblesse qui reste ; aspirer puis dissiper.
+			return [
+				_mj("vide_beant", "Vide beant",
+					"Les monstres depouilles restent vulnerables : x1,5 degats pendant 4 s",
+					[_mj_ajout("ground_zone", 0.0, 4.0, 150.0, {&"vuln_mult": 1.5})],
+					[_mj_prix("area", -0.3)]),
+				_mj("gouffre_du_vide", "Gouffre du vide",
+					"Aspire 1,5 s vers son centre (effet de vent), puis dissipe une seconde fois",
+					[_mj_ajout("vortex_pull", 180.0, 1.5, 320.0), _mj_rejeu(1.5)],
+					[_mj_prix("area", -0.4), _mj_prix("cast", -0.2)]),
+			]
+		"arcane_insight":
+			# Une pioche -> une pioche et un temps de pose reduit ; deux pioches.
+			return [
+				_mj("vision", "Vision",
+					"Et tes sorts coutent 0,5 s de moins pendant 5 s",
+					[_mj_ajout("cost_reduction", 0.5, 5.0)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("cascade", "Cascade",
+					"Tu pioches de nouveau, 4 s plus tard",
+					[_mj_rejeu(4.0)],
+					[_mj_prix("cast", -0.6)]),
+			]
+		"bastion":
+			# Le terrain du co-auteur : incassable, infranchissable meme en volant,
+			# mais limite dans le temps. Ou deux murs a briser.
+			return [
+				_mj("forteresse", "Forteresse",
+					"Incassable et infranchissable, meme en volant, mais il tombe en 15 s",
+					[_mj_pose("build_wall", "permanent", false),
+					 _mj_champ("build_wall", "duration", 15.0),
+					 _mj_pose("build_wall", "unbreakable", true),
+					 _mj_pose("build_wall", "blocks_flyers", true)],
+					[_mj_prix("cast", -0.3)]),
+				_mj("double_rempart", "Double rempart",
+					"Un second mur se dresse devant le premier : il faut briser les deux",
+					[_mj_copie(c, "build_wall", {&"aim_offset": Vector2(0.0, -150.0)})],
+					[_mj_prix("hp", -0.5)]),
+			]
+		"maelstrom":
+			# Une aspiration -> des lames au centre ; attirer avant d engloutir.
+			return [
+				_mj("oeil_du_cyclone", "Oeil du cyclone",
+					"Au coeur, les lames du vent : 10 degats par seconde",
+					[_mj_ajout("ground_zone", 10.0, 4.0, 110.0)],
+					[_mj_prix("area", -0.3)]),
+				_mj("siphon", "Siphon",
+					"Au bout de 4 s, ce qui est au centre est englouti : 40 degats",
+					[_mj_ajout("quicksand", 40.0, 4.0, 140.0)],
+					[_mj_prix("force", -0.35)]),
+			]
+		"blight_sapling":
+			# Incassable mais bref, deux fois plus toxique ; des spores qui
+			# s etendent et laissent un poison apres la sortie (idee du co-auteur).
+			return [
+				_mj("arbre_maudit", "Arbre maudit",
+					"Indestructible et deux fois plus toxique, mais il meurt en 15 s",
+					[_mj_pose("place_terrain", "unbreakable", true),
+					 _mj_champ("place_terrain", "duration", 15.0),
+					 _mj_echelle("place_terrain", "magnitude", 2.0)],
+					[_mj_prix("area", -0.3)]),
+				_mj("spores", "Spores",
+					"Des spores s etendent 10 s : qui les traverse perd 4 PV par seconde pendant 5 s",
+					[_mj_ajout("ground_zone", 0.0, 10.0, 300.0,
+						{&"grow_start": 0.3, &"grow_peak": 1.4,
+						 &"residue_dps": 4.0, &"residue_duration": 5.0})],
+					[_mj_prix("hp", -0.5)]),
+			]
+		"thunder_root":
+			# Un etourdissement -> deux enchaines ; une racine -> une colonne.
+			return [
+				_mj("tonnerre_roulant", "Tonnerre roulant",
+					"Le tonnerre gronde deux fois : nouvel etourdissement quand le premier cesse",
+					[_mj_rejeu(1.1)],
+					[_mj_prix("area", -0.4), _mj_prix("cast", -0.3)]),
+				_mj("foudre_en_colonne", "Foudre en colonne",
+					"Trois racines en colonne : le tonnerre frappe tout un couloir",
+					[_mj_copie(c, "stun_zone", {&"aim_offset": Vector2(0.0, -220.0)}),
+					 _mj_copie(c, "stun_zone", {&"aim_offset": Vector2(0.0, -440.0)})],
+					[_mj_prix("area", -0.5), _mj_prix("damage", -0.4)]),
+			]
+		"terrain_altar":
+			# Incassable mais bref et fervent ; un autel qui sert d appat.
+			return [
+				_mj("autel_sacre", "Autel sacre",
+					"Incassable, un allie toutes les 2,5 s, mais il s eteint en 20 s",
+					[_mj_pose("place_terrain", "unbreakable", true),
+					 _mj_champ("place_terrain", "duration", 20.0),
+					 _mj_pose("place_terrain", "summon_every", 2.5)],
+					[_mj_prix("damage", -0.3)]),
+				_mj("autel_appat", "Autel-appat",
+					"L autel attire les monstres de loin et tient plus longtemps (320 PV)",
+					[_mj_pose("place_terrain", "taunt_radius", 460.0),
+					 _mj_pose("place_terrain", "prop_hp", 320.0)],
+					[_mj_prix("damage", -0.4)]),
+			]
+		"terrain_pit":
+			# Incassable mais comble en 12 s, et bien plus profonde ; des pieux.
+			return [
+				_mj("gouffre", "Gouffre",
+					"Incassable et plus profond (x2 degats, -40 % vitesse), mais comble en 12 s",
+					[_mj_pose("place_terrain", "unbreakable", true),
+					 _mj_champ("place_terrain", "duration", 12.0),
+					 _mj_pose("place_terrain", "vuln_mult", 2.0),
+					 _mj_pose("place_terrain", "slow_pct", 40.0)],
+					[_mj_prix("area", -0.2)]),
+				_mj("fosse_aux_pieux", "Fosse aux pieux",
+					"Des pieux au fond : 6 degats de NATURE par seconde a qui y tombe",
+					[_mj_champ("place_terrain", "magnitude", 6.0)],
+					[_mj_prix("amplify", -0.5)]),
+			]
+		# ================= LEGENDAIRES =================
+		"time_rift":
+			# Une ligne -> une croix ; une baisse de cout -> un temps fige.
+			return [
+				_mj("faille_en_croix", "Faille en croix",
+					"La faille s ouvre en croix : deux lignes de plus, a angle droit",
+					[_mj_copie(c, "pierce_line", {&"angle_deg": 90.0}),
+					 _mj_copie(c, "pierce_line", {&"angle_deg": -90.0})],
+					[_mj_prix("damage", -0.3), _mj_prix("cast", -0.2)]),
+				_mj("faille_figee", "Faille figee",
+					"Le temps se fige autour d eux : tous les monstres -30 % pendant 5 s",
+					[_mj_ajout("slow_enemy_gauge", 30.0, 5.0)],
+					[_mj_prix("tempo", -0.4)]),
+			]
+		"tide_ledger":
+			# Une carte longue -> quasi instantanee ; un registre qui fait murir.
+			return [
+				_mj("registre_eclair", "Registre eclair",
+					"Le registre s ouvre presque aussitot",
+					[_mj_incant(0.2)],
+					[_mj_prix("duration", -0.5)]),
+				_mj("grand_registre", "Grand registre",
+					"Et chaque sort de ta main gagne 1 XP : ils murissent plus tot",
+					[_mj_ajout("hand_card_xp", 1.0)],
+					[_mj_prix("discard", -1.0), _mj_prix("duration", -0.3)]),
+			]
+		"summoners_key":
+			# Deux allies -> quatre ; un appel long -> un appel eclair.
+			return [
+				_mj("legion", "Legion",
+					"Quatre allies au lieu de deux, chacun plus faible",
+					[_mj_double("summon_ally", {})],
+					[_mj_prix("damage", -0.45)]),
+				_mj("appel_eclair", "Appel eclair",
+					"Les allies repondent presque aussitot",
+					[_mj_incant(0.25)],
+					[_mj_prix("duration", -0.5)]),
+			]
+		"forge_dial":
+			# Des meteorites -> des meteorites et des cendres ; un cadran qui fige.
+			return [
+				_mj("pluie_de_cendres", "Pluie de cendres",
+					"Des cendres tombent partout : 3 degats de FEU a chaque monstre par seconde",
+					[_mj_ajout("global_rain", 3.0, 6.0, 0.0, {&"interval": 1.0})],
+					[_mj_prix("damage", -0.3)]),
+				_mj("cadran_fige", "Cadran fige",
+					"Le cadran ralentit le temps : monstres -30 % pendant la pluie",
+					[_mj_ajout("slow_enemy_gauge", 30.0, 6.0)],
+					[_mj_prix("damage", -0.5)]),
+			]
+		"world_loom":
+			# Une carte longue -> quasi instantanee ; une trame -> deux.
+			return [
+				_mj("metier_eclair", "Metier eclair",
+					"Le metier se retisse presque aussitot",
+					[_mj_incant(0.2)],
+					[_mj_prix("duration", -0.5)]),
+				_mj("seconde_trame", "Seconde trame",
+					"Le temps se retisse une seconde fois, 10 s plus tard",
+					[_mj_rejeu(10.0)],
+					[_mj_prix("slow", -0.45), _mj_prix("tempo", -0.45)]),
+			]
+		"hourglass_shard":
+			# Un ralentissement -> un arret ; le sable qui remonte (verbe du vent).
+			return [
+				_mj("sablier_brise", "Sablier brise",
+					"Le temps s arrete presque : monstres -90 %, incantation +200 %, 2 s",
+					[_mj_champ("slow_enemy_gauge", "magnitude", 90.0),
+					 _mj_champ("self_haste", "magnitude", 200.0),
+					 _mj_champ("", "duration", 2.0)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("sablier_retourne", "Sablier retourne",
+					"Le sable remonte : tous les monstres font demi-tour 2 s (effet de vent)",
+					[_mj_ajout("reverse_enemies", 0.0, 2.0)],
+					[_mj_prix("tempo", -0.5)]),
+			]
+		"echo_of_the_hand":
+			# Un echo -> un echo qui accelere ; un echo qui revient.
+			return [
+				_mj("echo_du_temps", "Echo du temps",
+					"Et ton incantation s accelere de 50 % pendant 5 s",
+					[_mj_ajout("self_haste", 50.0, 5.0)],
+					[_mj_prix("cast", -0.4)]),
+				_mj("echo_perpetuel", "Echo perpetuel",
+					"L echo revient 8 s plus tard, pour de nouvelles cartes",
+					[_mj_rejeu(8.0)],
+					[_mj_prix("discard", -1.0)]),
+			]
+		"twin_channeling":
+			# Deux canaux -> deux canaux brulants ; une carte longue -> eclair.
+			return [
+				_mj("canaux_brulants", "Canaux brulants",
+					"Et tu incantes 40 % plus vite tant que les deux canaux sont ouverts",
+					[_mj_ajout("self_haste", 40.0, 10.0)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("canal_fulgurant", "Canal fulgurant",
+					"Les deux canaux s ouvrent presque aussitot",
+					[_mj_incant(0.15)],
+					[_mj_prix("duration", -0.5)]),
+			]
+		"meteor_storm":
+			# La plus longue incantation du jeu -> quasi instantanee ; deux averses.
+			return [
+				_mj("deluge_eclair", "Deluge eclair",
+					"La pluie tombe quatre fois plus vite a invoquer",
+					[_mj_incant(0.25)],
+					[_mj_prix("area", -0.5), _mj_prix("discard", -1.0)]),
+				_mj("seconde_averse", "Seconde averse",
+					"Une seconde averse suit la premiere, 5 s plus tard",
+					[_mj_rejeu(5.0)],
+					[_mj_prix("damage", -0.55)]),
+			]
+		"venom_mire":
+			# Les deux idees du co-auteur pour le poison : une mare plus grande qui
+			# reflue (le moteur ne sait que respirer en triangle : voir le rapport
+			# B1b, un param grow_end la rendrait monotone), et un poison qui reste
+			# 5 s apres le contact.
+			return [
+				_mj("mare_deferlante", "Mare deferlante",
+					"La mare deferle a x1,8 puis reflue a x0,6 a mi-vie, avant de remonter",
+					[_mj_pose("ground_zone", "grow_start", 1.8),
+					 _mj_pose("ground_zone", "grow_peak", 0.6)],
+					[_mj_prix("duration", -0.4)]),
+				_mj("venin_tenace", "Venin tenace",
+					"Qui sort de la mare garde le poison 5 s : 5 PV de POISON par seconde",
+					[_mj_pose("ground_zone", "residue_dps", 5.0),
+					 _mj_pose("ground_zone", "residue_duration", 5.0)],
+					[_mj_prix("area", -0.35), _mj_prix("damage", -0.25)]),
+			]
+		"terrain_river":
+			# Une riviere -> une riviere qui jaillit (jet en I, meme element) ; qui
+			# deborde (pluie abondante, meme element).
+			return [
+				_mj("torrent", "Torrent",
+					"A la pose, un jet d eau repousse tout ce qui est sous le point vise",
+					[_mj_ajout("water_jet", 3.0, 0.0, 70.0, {&"length": 900.0, &"push": 300.0})],
+					[_mj_prix("discard", -1.0)]),
+				_mj("crue", "Crue",
+					"La riviere deborde : 4 degats d EAU a chaque monstre toutes les 2 s, 10 s",
+					[_mj_ajout("global_rain", 4.0, 10.0, 0.0, {&"interval": 2.0})],
+					[_mj_prix("cast", -0.5)]),
+			]
+		# ================= VAGUE 10 : CARTES DE B1a =================
+		# Les six communes du co-auteur (_cartes_vague_10 ; la Lumiere purifiante
+		# est plus haut). Les majeures ne visent que leur cle principale ; les
+		# durees des effets ajoutes suivent celle du sort (lue dans le .tres).
+		"south_wind":
+			var vent: EffectSpec = _mj_effet(c, "global_wind")
+			var dv: float = vent.duration if vent != null else 6.0
+			return [
+				_mj("vent_arriere", "Vent arriere",
+					"Le vent te pousse : ton incantation +50 % tant qu il souffle",
+					[_mj_ajout("self_haste", 50.0, dv)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("vent_glacial", "Vent glacial",
+					"Le vent gele : tous les monstres -25 % de vitesse tant qu il souffle (glace)",
+					[_mj_ajout("slow_enemy_gauge", 25.0, dv)],
+					[_mj_prix("duration", -0.3), _mj_prix("cast", -0.2)]),
+			]
+		"electric_mark":
+			# L idee du co-auteur : « quand un ennemi meurt, transmet une marque
+			# supplementaire ». Et une marque qui ne faiblit plus.
+			return [
+				_mj("orage_en_chaine", "Orage en chaine",
+					"A chaque mort, la marque saute sur DEUX monstres au lieu d un",
+					[_mj_pose("electric_mark", "marks_per_death", 2)],
+					[_mj_prix("cast", -0.3), _mj_prix("discard", -1.0)]),
+				_mj("foudre_tenace", "Foudre tenace",
+					"La marque ne faiblit plus de saut en saut, mais saute moins loin",
+					[_mj_pose("electric_mark", "decay", 0.0),
+					 _mj_pose("electric_mark", "jump_range", 200.0)],
+					[_mj_prix("discard", -1.0), _mj_prix("cast", -0.2)]),
+			]
+		"heavy_rain":
+			return [
+				_mj("averse_soudaine", "Averse soudaine",
+					"La pluie tombe presque aussitot",
+					[_mj_incant(0.25)],
+					[_mj_prix("discard", -1.0)]),
+				_mj("pluie_battante", "Pluie battante",
+					"Le deluge plaque les monstres : ils font demi-tour 1,5 s (effet de vent)",
+					[_mj_ajout("reverse_enemies", 0.0, 1.5)],
+					[_mj_prix("cast", -0.4)]),
+			]
+		"quicksand":
+			var sable: EffectSpec = _mj_effet(c, "quicksand")
+			var r: float = sable.radius if sable != null else 160.0
+			var d: float = sable.duration if sable != null else 3.0
+			return [
+				_mj("sable_vorace", "Sable vorace",
+					"Le sable s etend jusqu a x1,8 a mi-vie, puis se resserre",
+					[_mj_pose("quicksand", "grow_start", 0.5),
+					 _mj_pose("quicksand", "grow_peak", 1.8)],
+					[_mj_prix("cast", -0.3), _mj_prix("duration", -0.25)]),
+				_mj("tourbillon_de_sable", "Tourbillon de sable",
+					"Le sable aspire vers son centre avant d engloutir (effet de vent)",
+					[_mj_ajout("vortex_pull", 120.0, d, r)],
+					[_mj_prix("discard", -1.0)]),
+			]
+		"water_jet":
+			return [
+				_mj("triple_jet", "Triple jet",
+					"Trois jets cote a cote balaient toute une rangee",
+					[_mj_copie(c, "water_jet", {&"aim_offset": Vector2(-170.0, 0.0)}),
+					 _mj_copie(c, "water_jet", {&"aim_offset": Vector2(170.0, 0.0)})],
+					[_mj_prix("force", -0.3), _mj_prix("cast", -0.3)]),
+				_mj("geyser", "Geyser",
+					"Le jet rejaillit 0,8 s plus tard, au meme endroit",
+					[_mj_rejeu(0.8)],
+					[_mj_prix("discard", -1.0)]),
+			]
+	printerr("Majeures : aucune entree pour %s" % id)
+	return []

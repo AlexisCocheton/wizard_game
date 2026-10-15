@@ -93,6 +93,8 @@ const SUITES: Array[String] = [
 	# reequilibres ; les six sorts demandes, les rares devenues communes.
 	"res://tests/unit/test_resist_tiers.gd",
 	"res://tests/unit/test_w10_cartes.gd",
+	# Vague 10 B1b : deux MAJEURES par sort du contenu (structure, prix, textes, terrain).
+	"res://tests/unit/test_majeures_contenu.gd",
 ]
 
 var _total_checks: int = 0

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7aqar"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_6tfyb"]
@@ -19,6 +19,55 @@ params = {
 &"taunt_radius": 220.0
 }
 
+[sub_resource type="Resource" id="Resource_wf7kb"]
+script = ExtResource("2_wf7kb")
+id = &"autel_sacre"
+title = "Autel sacre"
+description = "Incassable, un allie toutes les 2,5 s, mais il s eteint en 20 s"
+modifiers = Array[Dictionary]([{
+"key": &"place_terrain",
+"op": "set",
+"param": &"unbreakable",
+"value": true
+}, {
+"field": "duration",
+"key": &"place_terrain",
+"op": "set",
+"value": 20.0
+}, {
+"key": &"place_terrain",
+"op": "set",
+"param": &"summon_every",
+"value": 2.5
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_o1v7f"]
+script = ExtResource("2_wf7kb")
+id = &"autel_appat"
+title = "Autel-appat"
+description = "L autel attire les monstres de loin et tient plus longtemps (320 PV)"
+modifiers = Array[Dictionary]([{
+"key": &"place_terrain",
+"op": "set",
+"param": &"taunt_radius",
+"value": 460.0
+}, {
+"key": &"place_terrain",
+"op": "set",
+"param": &"prop_hp",
+"value": 320.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.4
+}])
+
 [resource]
 script = ExtResource("2_6tfyb")
 id = &"terrain_altar"
@@ -36,4 +85,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"portal_violet"
 sfx_key = &"altar_hum"
-major_upgrades = Array[ExtResource("2_wf7kb")]([])
+major_upgrades = Array[ExtResource("2_wf7kb")]([SubResource("Resource_wf7kb"), SubResource("Resource_o1v7f")])

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_u7pcu"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_qfnb0"]
@@ -11,6 +11,48 @@ magnitude = 200.0
 duration = 0.3
 radius = 120.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_qfnb0"]
+script = ExtResource("2_qfnb0")
+id = &"meteore_eclair"
+title = "Meteore eclair"
+description = "Incantation quasi instantanee : il tombe quatre fois plus vite"
+modifiers = Array[Dictionary]([{
+"factor": 0.25,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.55
+}, {
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_afjot"]
+script = ExtResource("2_qfnb0")
+id = &"cratere"
+title = "Cratere"
+description = "Il laisse un cratere en fusion : 10 degats de FEU par seconde, 5 s"
+modifiers = Array[Dictionary]([{
+"duration": 5.0,
+"key": &"ground_zone",
+"magnitude": 10.0,
+"op": "add_effect",
+"params": {},
+"radius": 140.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}, {
+"axis": &"area",
+"op": "axis",
+"pct": -0.2
+}])
 
 [resource]
 script = ExtResource("3_afjot")
@@ -29,4 +71,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"meteor_streak"
 sfx_key = &"blast_pop"
-major_upgrades = Array[ExtResource("2_qfnb0")]([])
+major_upgrades = Array[ExtResource("2_qfnb0")]([SubResource("Resource_qfnb0"), SubResource("Resource_afjot")])

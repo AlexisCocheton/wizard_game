@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_3hdef"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_185b7"]
@@ -14,6 +14,68 @@ params = {
 &"length": 900.0,
 &"push": 260.0
 }
+
+[sub_resource type="Resource" id="Resource_185b7"]
+script = ExtResource("1_3hdef")
+key = &"water_jet"
+magnitude = 4.0
+duration = 0.0
+radius = 50.0
+params = {
+&"aim_offset": Vector2(-170, 0),
+&"length": 900.0,
+&"push": 260.0
+}
+
+[sub_resource type="Resource" id="Resource_eaj0p"]
+script = ExtResource("1_3hdef")
+key = &"water_jet"
+magnitude = 4.0
+duration = 0.0
+radius = 50.0
+params = {
+&"aim_offset": Vector2(170, 0),
+&"length": 900.0,
+&"push": 260.0
+}
+
+[sub_resource type="Resource" id="Resource_3nyug"]
+script = ExtResource("2_185b7")
+id = &"triple_jet"
+title = "Triple jet"
+description = "Trois jets cote a cote balaient toute une rangee"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_185b7")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_eaj0p")
+}])
+prices = Array[Dictionary]([{
+"axis": &"force",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_akclk"]
+script = ExtResource("2_185b7")
+id = &"geyser"
+title = "Geyser"
+description = "Le jet rejaillit 0,8 s plus tard, au meme endroit"
+modifiers = Array[Dictionary]([{
+"delay": 0.8,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
 
 [resource]
 script = ExtResource("3_eaj0p")
@@ -32,4 +94,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"water_geyser"
 sfx_key = &"water_splash"
-major_upgrades = Array[ExtResource("2_185b7")]([])
+major_upgrades = Array[ExtResource("2_185b7")]([SubResource("Resource_3nyug"), SubResource("Resource_akclk")])

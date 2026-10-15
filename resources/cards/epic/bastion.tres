@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_h0hek"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_kr1a0"]
@@ -15,6 +15,66 @@ params = {
 &"thickness": 60.0,
 &"wall_hp": 120.0
 }
+
+[sub_resource type="Resource" id="Resource_sdp0f"]
+script = ExtResource("2_sdp0f")
+id = &"forteresse"
+title = "Forteresse"
+description = "Incassable et infranchissable, meme en volant, mais il tombe en 15 s"
+modifiers = Array[Dictionary]([{
+"key": &"build_wall",
+"op": "set",
+"param": &"permanent",
+"value": false
+}, {
+"field": "duration",
+"key": &"build_wall",
+"op": "set",
+"value": 15.0
+}, {
+"key": &"build_wall",
+"op": "set",
+"param": &"unbreakable",
+"value": true
+}, {
+"key": &"build_wall",
+"op": "set",
+"param": &"blocks_flyers",
+"value": true
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_1qyuh"]
+script = ExtResource("1_h0hek")
+key = &"build_wall"
+magnitude = 0.0
+duration = 0.0
+radius = 200.0
+params = {
+&"aim_offset": Vector2(0, -150),
+&"permanent": true,
+&"thickness": 60.0,
+&"wall_hp": 120.0
+}
+
+[sub_resource type="Resource" id="Resource_pksk3"]
+script = ExtResource("2_sdp0f")
+id = &"double_rempart"
+title = "Double rempart"
+description = "Un second mur se dresse devant le premier : il faut briser les deux"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_1qyuh")
+}])
+prices = Array[Dictionary]([{
+"axis": &"hp",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_kr1a0")
@@ -33,4 +93,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"dome_bastion"
 sfx_key = &"stone_heavy"
-major_upgrades = Array[ExtResource("2_sdp0f")]([])
+major_upgrades = Array[ExtResource("2_sdp0f")]([SubResource("Resource_sdp0f"), SubResource("Resource_pksk3")])
