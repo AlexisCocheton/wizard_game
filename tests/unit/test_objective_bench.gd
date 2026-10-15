@@ -163,6 +163,16 @@ func _famille(monde: String, prefixe: String) -> String:
 # --- 2. Deux parties completes ------------------------------------------------
 
 func _partie(graine: int, autre_processus: int, p: AutoPick.Politique) -> Dictionary:
+	# Le PROFIL est une entree de la partie, comme la graine : le banc des
+	# objectifs le remet a neuf avant chaque partie (_une_partie : profil neuf,
+	# niveaux ouverts jusqu au niveau joue). Sans cette remise, une carte PRISE
+	# en combat dans la premiere partie entre au livre et change le pool de
+	# montee de niveau de la seconde : les deux « processus » ne partaient pas du
+	# meme profil. Vu a la vague 10 (B1a), quand les communes de l acte 1 sont
+	# devenues plus nombreuses que le deck du tutoriel.
+	SaveData.reset_profile()
+	var sim: GDScript = load("res://tools/sim_balance.gd")
+	sim.open_levels_up_to(&"lvl_01")
 	seed(autre_processus * 104729 + 17)
 	if _g != null:
 		detach(_g)

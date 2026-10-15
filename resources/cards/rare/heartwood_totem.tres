@@ -75,5 +75,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"spirit_gold"
-sfx_key = &"stone_shove"
+sfx_key = &"wood_knock"
 major_upgrades = Array[ExtResource("2_ryls7")]([SubResource("Resource_ryls7"), SubResource("Resource_apqj6")])

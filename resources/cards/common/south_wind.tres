@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_oey5n"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_ucgfk"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_cbdxt"]
+
+[sub_resource type="Resource" id="Resource_oey5n"]
+script = ExtResource("1_oey5n")
+key = &"global_wind"
+magnitude = 0.0
+duration = 6.0
+radius = 0.0
+params = {}
+
+[sub_resource type="Resource" id="Resource_ucgfk"]
+script = ExtResource("2_ucgfk")
+id = &"vent_arriere"
+title = "Vent arriere"
+description = "Le vent te pousse : ton incantation +50 % tant qu il souffle"
+modifiers = Array[Dictionary]([{
+"duration": 6.0,
+"key": &"self_haste",
+"magnitude": 50.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_cbdxt"]
+script = ExtResource("2_ucgfk")
+id = &"vent_glacial"
+title = "Vent glacial"
+description = "Le vent gele : tous les monstres -25 % de vitesse tant qu il souffle (glace)"
+modifiers = Array[Dictionary]([{
+"duration": 6.0,
+"key": &"slow_enemy_gauge",
+"magnitude": 25.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.2
+}])
+
+[resource]
+script = ExtResource("3_cbdxt")
+id = &"south_wind"
+display_name = "Vent du sud"
+description = "Pendant 6 s, sur tout le terrain : les monstres rapides reviennent a une vitesse normale, les trajets etranges filent droit et les volants restent sur place. Aucun degat."
+rarity = 0
+base_cast_time = 3.0
+targeting = 0
+element = 10
+tags = Array[int]([])
+effects = Array[ExtResource("1_oey5n")]([SubResource("Resource_oey5n")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"gust_streak"
+sfx_key = &"wind_gust"
+major_upgrades = Array[ExtResource("2_ucgfk")]([SubResource("Resource_ucgfk"), SubResource("Resource_cbdxt")])

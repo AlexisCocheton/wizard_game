@@ -92,5 +92,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"dome_bastion"
-sfx_key = &"stone_shove"
+sfx_key = &"stone_heavy"
 major_upgrades = Array[ExtResource("2_sdp0f")]([SubResource("Resource_sdp0f"), SubResource("Resource_pksk3")])

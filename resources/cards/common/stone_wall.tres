@@ -1,11 +1,11 @@
 [gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1rujh"]
-[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1ifur"]
-[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_ggs2f"]
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0ga6q"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_5kaxl"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_swntd"]
 
-[sub_resource type="Resource" id="Resource_1ifur"]
-script = ExtResource("1_1rujh")
+[sub_resource type="Resource" id="Resource_0ga6q"]
+script = ExtResource("1_0ga6q")
 key = &"build_wall"
 magnitude = 0.0
 duration = 20.0
@@ -14,8 +14,8 @@ params = {
 &"thickness": 60.0
 }
 
-[sub_resource type="Resource" id="Resource_ggs2f"]
-script = ExtResource("2_ggs2f")
+[sub_resource type="Resource" id="Resource_5kaxl"]
+script = ExtResource("2_5kaxl")
 id = &"muraille_geante"
 title = "Muraille geante"
 description = "Mur presque deux fois plus large, que les volants ne franchissent plus"
@@ -40,8 +40,8 @@ prices = Array[Dictionary]([{
 "pct": -0.25
 }])
 
-[sub_resource type="Resource" id="Resource_1y4hb"]
-script = ExtResource("2_ggs2f")
+[sub_resource type="Resource" id="Resource_swntd"]
+script = ExtResource("2_5kaxl")
 id = &"mur_de_ronces"
 title = "Mur de ronces"
 description = "Des ronces le bordent : qui le longe est ralenti de 30 % et perd 5 PV par seconde"
@@ -62,20 +62,20 @@ prices = Array[Dictionary]([{
 }])
 
 [resource]
-script = ExtResource("2_1ifur")
+script = ExtResource("3_swntd")
 id = &"stone_wall"
 display_name = "Mur de pierre"
 description = "Mur de 20 s : les monstres le contournent et il arrete leurs projectiles."
-rarity = 1
+rarity = 0
 base_cast_time = 1.5
 targeting = 1
 element = 9
 tags = Array[int]([])
-effects = Array[ExtResource("1_1rujh")]([SubResource("Resource_1ifur")])
+effects = Array[ExtResource("1_0ga6q")]([SubResource("Resource_0ga6q")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"stone_peak"
 sfx_key = &"stone_shove"
-major_upgrades = Array[ExtResource("2_ggs2f")]([SubResource("Resource_ggs2f"), SubResource("Resource_1y4hb")])
+major_upgrades = Array[ExtResource("2_5kaxl")]([SubResource("Resource_5kaxl"), SubResource("Resource_swntd")])

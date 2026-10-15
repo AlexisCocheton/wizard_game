@@ -80,5 +80,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"orb_magenta"
-sfx_key = &"blast_pop"
+sfx_key = &"earth_dig"
 major_upgrades = Array[ExtResource("2_g8iuj")]([SubResource("Resource_g8iuj"), SubResource("Resource_ac8p0")])

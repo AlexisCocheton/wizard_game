@@ -82,5 +82,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"spirit_violet"
-sfx_key = &"whoosh_deep"
+sfx_key = &"wood_creak"
 major_upgrades = Array[ExtResource("2_5c0cw")]([SubResource("Resource_5c0cw"), SubResource("Resource_m5hqp")])

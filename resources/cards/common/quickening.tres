@@ -1,19 +1,19 @@
 [gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_u3o8y"]
-[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_044t3"]
-[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_v8doa"]
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_a0p7h"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_j7h6n"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_dwqct"]
 
-[sub_resource type="Resource" id="Resource_v8doa"]
-script = ExtResource("1_u3o8y")
+[sub_resource type="Resource" id="Resource_a0p7h"]
+script = ExtResource("1_a0p7h")
 key = &"self_haste"
 magnitude = 60.0
 duration = 6.0
 radius = 0.0
 params = {}
 
-[sub_resource type="Resource" id="Resource_044t3"]
-script = ExtResource("2_044t3")
+[sub_resource type="Resource" id="Resource_j7h6n"]
+script = ExtResource("2_j7h6n")
 id = &"coup_de_fouet"
 title = "Coup de fouet"
 description = "Hate enorme mais breve : +300 % d incantation pendant 1,5 s"
@@ -34,8 +34,8 @@ prices = Array[Dictionary]([{
 "pct": -1.0
 }])
 
-[sub_resource type="Resource" id="Resource_o2y0v"]
-script = ExtResource("2_044t3")
+[sub_resource type="Resource" id="Resource_dwqct"]
+script = ExtResource("2_j7h6n")
 id = &"second_souffle"
 title = "Second souffle"
 description = "Rend aussi 20 points de vitesse au mage"
@@ -54,20 +54,20 @@ prices = Array[Dictionary]([{
 }])
 
 [resource]
-script = ExtResource("2_v8doa")
+script = ExtResource("3_dwqct")
 id = &"quickening"
 display_name = "Precipitation"
 description = "Accelere l incantation de 60 pourcent pendant 6 s."
-rarity = 1
+rarity = 0
 base_cast_time = 0.8
 targeting = 0
 element = 3
 tags = Array[int]([])
-effects = Array[ExtResource("1_u3o8y")]([SubResource("Resource_v8doa")])
+effects = Array[ExtResource("1_a0p7h")]([SubResource("Resource_a0p7h")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"ray_wheel"
 sfx_key = &"spell_rise"
-major_upgrades = Array[ExtResource("2_044t3")]([SubResource("Resource_044t3"), SubResource("Resource_o2y0v")])
+major_upgrades = Array[ExtResource("2_j7h6n")]([SubResource("Resource_j7h6n"), SubResource("Resource_dwqct")])

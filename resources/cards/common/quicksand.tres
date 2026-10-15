@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_5mse6"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_kao8s"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_oweal"]
+
+[sub_resource type="Resource" id="Resource_5mse6"]
+script = ExtResource("1_5mse6")
+key = &"quicksand"
+magnitude = 30.0
+duration = 8.0
+radius = 180.0
+params = {
+&"slow_pct": 10.0
+}
+
+[sub_resource type="Resource" id="Resource_kao8s"]
+script = ExtResource("2_kao8s")
+id = &"sable_vorace"
+title = "Sable vorace"
+description = "Le sable s etend jusqu a x1,8 a mi-vie, puis se resserre"
+modifiers = Array[Dictionary]([{
+"key": &"quicksand",
+"op": "set",
+"param": &"grow_start",
+"value": 0.5
+}, {
+"key": &"quicksand",
+"op": "set",
+"param": &"grow_peak",
+"value": 1.8
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"duration",
+"op": "axis",
+"pct": -0.25
+}])
+
+[sub_resource type="Resource" id="Resource_oweal"]
+script = ExtResource("2_kao8s")
+id = &"tourbillon_de_sable"
+title = "Tourbillon de sable"
+description = "Le sable aspire vers son centre avant d engloutir (effet de vent)"
+modifiers = Array[Dictionary]([{
+"duration": 8.0,
+"key": &"vortex_pull",
+"magnitude": 120.0,
+"op": "add_effect",
+"params": {},
+"radius": 180.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[resource]
+script = ExtResource("3_oweal")
+id = &"quicksand"
+display_name = "Sable mouvant"
+description = "Zone de sable pendant 8 s : les monstres y avancent 10 pourcent moins vite, et ceux qui y sont encore a la fin encaissent 30 degats de NATURE."
+rarity = 0
+base_cast_time = 1.6
+targeting = 1
+element = 9
+tags = Array[int]([4])
+effects = Array[ExtResource("1_5mse6")]([SubResource("Resource_5mse6")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"sand_ring"
+sfx_key = &"earth_dig"
+major_upgrades = Array[ExtResource("2_kao8s")]([SubResource("Resource_kao8s"), SubResource("Resource_oweal")])

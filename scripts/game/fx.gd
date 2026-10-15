@@ -126,6 +126,15 @@ const STRIPS: Dictionary = {
 	"dark_soul": ["dark_soul", 40, 32, 14],
 	"dark_vanish": ["dark_vanish", 40, 32, 12],
 	"dark_swirl": ["dark_swirl", 48, 64, 16],
+	## --- Vague 10 (chantier B1a), tools/assets/extract_w10_sorts.py ---
+	## Les feuilles des cinq sorts neufs, tirees du pack Effect and FX a la teinte
+	## de leur element. Hors du bloc genere par extract_fxpack.py : le relancer ne
+	## les efface pas.
+	"gust_streak": ["gust_streak", 64, 64, 16],
+	"bolt_cross": ["bolt_cross", 64, 64, 16],
+	"rain_streaks": ["rain_streaks", 64, 64, 16],
+	"water_geyser": ["water_geyser", 64, 64, 16],
+	"sand_ring": ["sand_ring", 64, 64, 16],
 	## --- Golem de pierre (27/09), tools/assets/extract_bestiaire_2026_09_27.py ---
 	## Pas encore joues. ATTENTION a l origine : dans `mecha_laser` le rayon part
 	## de x=50 (sur 300) et file vers la DROITE ; dans `mecha_fist` le poing
@@ -204,6 +213,7 @@ static func end_trace() -> Array[String]:
 const OCC: Dictionary = {
 	"bluefire": 0.52,
 	"bone_shards": 1.00,
+	"bolt_cross": 0.98,
 	"boom_hd": 0.91,
 	"brightfire": 0.32,
 	"casting": 0.37,
@@ -230,6 +240,7 @@ const OCC: Dictionary = {
 	"freezing": 0.78,
 	"frost_spikes": 1.00,
 	"glass_shards": 1.00,
+	"gust_streak": 1.00,
 	"halo_ring": 1.00,
 	"heal_effect": 0.67,
 	"hex_sigil": 1.00,
@@ -260,9 +271,11 @@ const OCC: Dictionary = {
 	"portal_violet": 0.89,
 	"protectioncircle": 0.34,
 	"pulse_ring": 0.70,
+	"rain_streaks": 0.45,
 	"ray_wheel": 0.97,
 	"ring_expand": 0.50,
 	"rune_square": 0.91,
+	"sand_ring": 1.00,
 	"shatter_burst": 1.00,
 	"shield_hex": 0.84,
 	"skull_burst": 0.91,
@@ -284,6 +297,7 @@ const OCC: Dictionary = {
 	"void_mandala": 0.77,
 	"vortex": 0.76,
 	"vortex_hd": 0.99,
+	"water_geyser": 0.91,
 	"weaponhit": 0.37,
 	"weave_bloom": 0.95,
 	"wisp_rise": 0.52,

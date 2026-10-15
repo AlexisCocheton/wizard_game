@@ -634,7 +634,9 @@ lvl_05. Tout tient dans la boîte, le texte sombre se lit sur le papier.
   `SpellCard.sfx_key` : `tools/make_content.gd` était interdit en phase A. Le
   chantier qui reprendra `make_content.gd` doit recopier la table dans les
   `sfx_key` puis la vider ; `test_audio_w10` vérifie la règle sur la clé
-  EFFECTIVE et continuera de passer.
+  EFFECTIVE et continuera de passer. **Soldée par B1a** : table recopiée dans les
+  `sfx_key`, `CARD_SFX` vide, `test_w10_cartes` vérifie que chaque sort joue son
+  propre `sfx_key`.
 - Un monstre ajouté avec une feuille neuve fera rougir `test_audio_w10` tant que
   sa feuille n'est pas classée dans `AudioBus.SHEET_FAMILY` (voulu : sinon il
   mourrait du vieux son générique sans que personne le remarque).

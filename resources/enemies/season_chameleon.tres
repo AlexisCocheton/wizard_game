@@ -18,7 +18,7 @@ shape = 6
 color = Color(0.7, 0.85, 0.55, 1)
 base_radius = 54.0
 resistances = {
-3: 1.27
+3: 1.25
 }
 immune_tags = Array[int]([])
 dodge_chance = 0.0
@@ -84,7 +84,7 @@ twin_max_returns = 2
 chameleon_interval = 5.0
 chameleon_elements = Array[int]([1, 10, 2, 9])
 chameleon_weak_mult = 2.0
-chameleon_resist_mult = 0.3
+chameleon_resist_mult = 0.25
 steal_interval = 0.0
 steal_cast_delay = 4.0
 steal_damage_per_cast_second = 6.0

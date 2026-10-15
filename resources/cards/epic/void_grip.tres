@@ -76,5 +76,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"void_mandala"
-sfx_key = &"ward_light"
+sfx_key = &"void_pull"
 major_upgrades = Array[ExtResource("2_imev1")]([SubResource("Resource_imev1"), SubResource("Resource_7avqv")])

@@ -75,5 +75,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"diamond_mark"
-sfx_key = &"charge_magic"
+sfx_key = &"curse_mark"
 major_upgrades = Array[ExtResource("2_3k240")]([SubResource("Resource_3k240"), SubResource("Resource_yqwei")])

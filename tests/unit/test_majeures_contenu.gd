@@ -20,7 +20,7 @@ extends TestCase
 ## L orchestrateur previent B1b, qui finalise : tant que c est faux, les cinq
 ## cartes attendues de B1a peuvent manquer au catalogue ; vrai, elles sont
 ## EXIGEES, avec leurs deux majeures.
-const B1A_FUSIONNE: bool = false
+const B1A_FUSIONNE: bool = true
 const ATTENDUES_B1A: Array[StringName] = [&"south_wind", &"electric_mark", &"heavy_rain",
 	&"quicksand", &"water_jet"]
 

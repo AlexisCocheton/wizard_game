@@ -68,5 +68,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"pin_thrust"
-sfx_key = &"arrow_laser"
+sfx_key = &"wind_arrow"
 major_upgrades = Array[ExtResource("2_8qlv0")]([SubResource("Resource_8qlv0"), SubResource("Resource_rmcwe")])

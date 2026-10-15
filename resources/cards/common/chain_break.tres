@@ -1,11 +1,11 @@
 [gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_kki6v"]
-[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_bbtto"]
-[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_io0mp"]
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_6nj6w"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_25ebk"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_4g287"]
 
-[sub_resource type="Resource" id="Resource_bbtto"]
-script = ExtResource("1_kki6v")
+[sub_resource type="Resource" id="Resource_6nj6w"]
+script = ExtResource("1_6nj6w")
 key = &"knockback"
 magnitude = 18.0
 duration = 0.0
@@ -14,8 +14,8 @@ params = {
 &"push": 260.0
 }
 
-[sub_resource type="Resource" id="Resource_io0mp"]
-script = ExtResource("2_io0mp")
+[sub_resource type="Resource" id="Resource_25ebk"]
+script = ExtResource("2_25ebk")
 id = &"eclats"
 title = "Eclats"
 description = "Les eclats restent plantes : 4 degats de VENT par seconde pendant 4 s"
@@ -36,8 +36,8 @@ prices = Array[Dictionary]([{
 "pct": -0.4
 }])
 
-[sub_resource type="Resource" id="Resource_obxma"]
-script = ExtResource("2_io0mp")
+[sub_resource type="Resource" id="Resource_4g287"]
+script = ExtResource("2_25ebk")
 id = &"chaines_pesantes"
 title = "Chaines pesantes"
 description = "Les chaines restent au sol : ralentit de 50 % pendant 3 s (effet de glace)"
@@ -58,20 +58,20 @@ prices = Array[Dictionary]([{
 }])
 
 [resource]
-script = ExtResource("2_bbtto")
+script = ExtResource("3_4g287")
 id = &"chain_break"
 display_name = "Rupture de chaine"
 description = "18 degats de VENT en zone, puis repousse violemment tout ce qui reste debout."
-rarity = 1
+rarity = 0
 base_cast_time = 1.4
 targeting = 1
 element = 10
 tags = Array[int]([])
-effects = Array[ExtResource("1_kki6v")]([SubResource("Resource_bbtto")])
+effects = Array[ExtResource("1_6nj6w")]([SubResource("Resource_6nj6w")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"shatter_burst"
 sfx_key = &"impact_heavy"
-major_upgrades = Array[ExtResource("2_io0mp")]([SubResource("Resource_io0mp"), SubResource("Resource_obxma")])
+major_upgrades = Array[ExtResource("2_25ebk")]([SubResource("Resource_25ebk"), SubResource("Resource_4g287")])

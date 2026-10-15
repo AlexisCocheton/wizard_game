@@ -76,5 +76,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"tide_waves"
-sfx_key = &"spell_deep"
+sfx_key = &"water_drop"
 major_upgrades = Array[ExtResource("2_mhwtv")]([SubResource("Resource_1also"), SubResource("Resource_on7sj")])

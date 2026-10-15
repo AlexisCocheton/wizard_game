@@ -75,5 +75,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"frost_spikes"
-sfx_key = &"zap_short"
+sfx_key = &"ice_crack"
 major_upgrades = Array[ExtResource("2_5dgcp")]([SubResource("Resource_5dgcp"), SubResource("Resource_2nax2")])

@@ -78,5 +78,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"dark_swirl"
-sfx_key = &"spell_crackle"
+sfx_key = &"poison_bubble"
 major_upgrades = Array[ExtResource("2_2fckd")]([SubResource("Resource_2fckd"), SubResource("Resource_m83hp")])

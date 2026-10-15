@@ -84,5 +84,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"portal_violet"
-sfx_key = &"whoosh_summon"
+sfx_key = &"altar_hum"
 major_upgrades = Array[ExtResource("2_wf7kb")]([SubResource("Resource_wf7kb"), SubResource("Resource_o1v7f")])

@@ -66,5 +66,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"timemagic"
-sfx_key = &"zap_long"
+sfx_key = &"time_slow"
 major_upgrades = Array[ExtResource("2_dgi5v")]([SubResource("Resource_dgi5v"), SubResource("Resource_cbpsy")])

@@ -22,12 +22,12 @@
 [ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="21_vvwhi"]
 [ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="21_xnxle"]
 [ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="22_xnxle"]
-[ext_resource type="Resource" path="res://resources/cards/rare/cycle_of_thought.tres" id="23_13lwu"]
+[ext_resource type="Resource" path="res://resources/cards/rare/time_surge.tres" id="23_038uy"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="23_aa37k"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="24_g86xn"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="24_j06ms"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="24_xnxle"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="25_1r1p4"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/terrain_river.tres" id="25_vac0b"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/terrain_river.tres" id="25_cdd3h"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="26_pf002"]
 
 [sub_resource type="Resource" id="Resource_038uy"]
@@ -230,7 +230,7 @@ enemy_pool = Array[ExtResource("1_c4pak")]([ExtResource("2_3t80o"), ExtResource(
 exploration_deck = Array[ExtResource("12_6t36y")]([ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("13_nwen4"), ExtResource("13_nwen4"), ExtResource("21_vvwhi"), ExtResource("20_fnnop"), ExtResource("18_l5tjt")])
 objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_038uy"), SubResource("Resource_xnxle"), SubResource("Resource_cdd3h")])
 levelup_cards = Array[ExtResource("12_6t36y")]([ExtResource("21_xnxle"), ExtResource("21_038uy"), ExtResource("22_xnxle")])
-objective_rewards = Array[ExtResource("12_6t36y")]([ExtResource("23_13lwu"), ExtResource("24_j06ms"), ExtResource("25_vac0b")])
+objective_rewards = Array[ExtResource("12_6t36y")]([ExtResource("23_038uy"), ExtResource("24_xnxle"), ExtResource("25_cdd3h")])
 next_levels = Array[StringName]([&"lvl_13"])
 base_commons = Array[ExtResource("12_6t36y")]([])
 passive_unlocks = Array[ExtResource("12_6t36y")]([])

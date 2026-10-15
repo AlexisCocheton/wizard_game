@@ -1,19 +1,19 @@
 [gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_cqlib"]
-[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_j3mlm"]
-[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_ufl0x"]
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_u7pcu"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_qfnb0"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_afjot"]
 
-[sub_resource type="Resource" id="Resource_ufl0x"]
-script = ExtResource("1_cqlib")
+[sub_resource type="Resource" id="Resource_u7pcu"]
+script = ExtResource("1_u7pcu")
 key = &"ground_zone"
 magnitude = 200.0
 duration = 0.3
 radius = 120.0
 params = {}
 
-[sub_resource type="Resource" id="Resource_j3mlm"]
-script = ExtResource("2_j3mlm")
+[sub_resource type="Resource" id="Resource_qfnb0"]
+script = ExtResource("2_qfnb0")
 id = &"meteore_eclair"
 title = "Meteore eclair"
 description = "Incantation quasi instantanee : il tombe quatre fois plus vite"
@@ -31,8 +31,8 @@ prices = Array[Dictionary]([{
 "pct": -1.0
 }])
 
-[sub_resource type="Resource" id="Resource_cx6tp"]
-script = ExtResource("2_j3mlm")
+[sub_resource type="Resource" id="Resource_afjot"]
+script = ExtResource("2_qfnb0")
 id = &"cratere"
 title = "Cratere"
 description = "Il laisse un cratere en fusion : 10 degats de FEU par seconde, 5 s"
@@ -55,20 +55,20 @@ prices = Array[Dictionary]([{
 }])
 
 [resource]
-script = ExtResource("2_ufl0x")
+script = ExtResource("3_afjot")
 id = &"meteor"
 display_name = "Meteore"
 description = "Long a invoquer : 60 degats de FEU dans une petite zone."
-rarity = 1
+rarity = 0
 base_cast_time = 2.8
 targeting = 1
 element = 1
 tags = Array[int]([])
-effects = Array[ExtResource("1_cqlib")]([SubResource("Resource_ufl0x")])
+effects = Array[ExtResource("1_u7pcu")]([SubResource("Resource_u7pcu")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"meteor_streak"
 sfx_key = &"blast_pop"
-major_upgrades = Array[ExtResource("2_j3mlm")]([SubResource("Resource_j3mlm"), SubResource("Resource_cx6tp")])
+major_upgrades = Array[ExtResource("2_qfnb0")]([SubResource("Resource_qfnb0"), SubResource("Resource_afjot")])

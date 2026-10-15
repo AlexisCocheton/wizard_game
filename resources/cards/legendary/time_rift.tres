@@ -101,5 +101,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"orbit_cross"
-sfx_key = &"spell_grand"
+sfx_key = &"time_rift"
 major_upgrades = Array[ExtResource("2_f6g4t")]([SubResource("Resource_7hb4f"), SubResource("Resource_kkyw1")])

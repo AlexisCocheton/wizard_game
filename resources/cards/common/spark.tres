@@ -73,5 +73,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"spark_burst"
-sfx_key = &"spell_arcane"
+sfx_key = &"zap_spark"
 major_upgrades = Array[ExtResource("2_hpl8g")]([SubResource("Resource_hpl8g"), SubResource("Resource_diwr1")])

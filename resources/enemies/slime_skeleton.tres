@@ -20,9 +20,9 @@ base_radius = 22.0
 resistances = {
 1: 1.75,
 2: 0.75,
-3: 1.42,
-6: 0.0,
-8: 0.6
+3: 1.5,
+6: 0.75,
+8: 0.75
 }
 immune_tags = Array[int]([])
 dodge_chance = 0.0

@@ -72,5 +72,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"skull_burst"
-sfx_key = &"arrow_laser"
+sfx_key = &"poison_dart"
 major_upgrades = Array[ExtResource("2_p73tl")]([SubResource("Resource_p73tl"), SubResource("Resource_v6yx7")])

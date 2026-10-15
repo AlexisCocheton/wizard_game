@@ -69,5 +69,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"ring_expand"
-sfx_key = &"impact_heavy"
+sfx_key = &"air_burst"
 major_upgrades = Array[ExtResource("2_hi6my")]([SubResource("Resource_hi6my"), SubResource("Resource_8dut4")])

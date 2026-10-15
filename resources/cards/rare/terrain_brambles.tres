@@ -109,5 +109,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"slash_arc"
-sfx_key = &"impact_heavy"
+sfx_key = &"bramble_rustle"
 major_upgrades = Array[ExtResource("2_2hfot")]([SubResource("Resource_2hfot"), SubResource("Resource_knis3")])

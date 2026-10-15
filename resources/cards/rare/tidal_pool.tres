@@ -70,5 +70,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"orb_cyan"
-sfx_key = &"drip_frost"
+sfx_key = &"water_splash"
 major_upgrades = Array[ExtResource("2_2e1s0")]([SubResource("Resource_2e1s0"), SubResource("Resource_ko3jn")])

@@ -306,44 +306,17 @@ static func wall_sfx_key(tags: Array, broken: bool) -> StringName:
 
 # --- SORTS ----------------------------------------------------------------------
 ##
-## 21 sons pour 53 sorts, et des sorts de glace sur un gresillement electrique.
-## Cette table donne a chaque sort un son de la famille de son ELEMENT, partage
-## par deux sorts au plus. Elle PRIME sur `SpellCard.sfx_key`.
+## 21 sons pour 53 sorts, et des sorts de glace sur un gresillement electrique :
+## le chantier A4 (vague 10) a donne a chaque sort un son de la famille de son
+## ELEMENT, partage par deux sorts au plus.
 ##
-## DETTE ASSUMEE : la place de ces cles est `sfx_key` dans tools/make_content.gd,
-## interdit d ecriture pendant la phase A de la vague 10. Le chantier de contenu
-## qui reprendra make_content.gd y recopiera cette table puis la videra ; le test
-## test_audio_w10 continuera de verifier la regle sur la cle effective.
-const CARD_SFX: Dictionary = {
-	"forge_dial": &"fire_forge",
-	"ember_pool": &"fire_swoosh",
-	"frost_rain": &"ice_chime",
-	"deep_freeze": &"ice_crack",
-	"ice_wall": &"ice_wall",
-	"weakness_mark": &"curse_mark",
-	"time_rift": &"time_rift",
-	"time_surge": &"time_haste",
-	"temporal_drag": &"time_slow",
-	"void_grip": &"void_pull",
-	"venom_dart": &"poison_dart",
-	"venom_mire": &"poison_bubble",
-	"bone_recall": &"bone_rattle",
-	"deck_purge": &"card_tear",
-	"spark": &"zap_spark",
-	"tidal_pool": &"water_splash",
-	"cycle_of_thought": &"water_drop",
-	"tide_ledger": &"water_drop",
-	"terrain_river": &"water_flow",
-	"terrain_pit": &"earth_dig",
-	"terrain_brambles": &"bramble_rustle",
-	"bastion": &"stone_heavy",
-	"heartwood_totem": &"wood_knock",
-	"blight_sapling": &"wood_creak",
-	"terrain_altar": &"altar_hum",
-	"piercing_arrow": &"wind_arrow",
-	"repulsion_wave": &"air_burst",
-	"salt_spiral": &"wind_swirl",
-}
+## DETTE SOLDEE (chantier B1a) : la table d A4 vivait ici faute de pouvoir
+## ecrire tools/make_content.gd pendant la phase A. Elle a ete recopiee dans les
+## `sfx_key` des cartes, sa vraie place, puis VIDEE : le son d un sort ne vit
+## plus qu a un endroit. La constante reste comme porte de secours (une entree
+## y PRIMERAIT sur `SpellCard.sfx_key`) ; test_audio_w10 verifie toujours la
+## regle sur la cle effective, et qu une entree eventuelle nomme une carte.
+const CARD_SFX: Dictionary = {}
 
 ## Element(s) qu evoque chaque son de SORT. Une liste vide = son NEUTRE (un
 ## frottement, une dechirure) qui ne contredit aucun element. C est ce que

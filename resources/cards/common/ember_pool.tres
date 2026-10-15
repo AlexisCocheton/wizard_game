@@ -92,5 +92,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"ember_flames"
-sfx_key = &"fire_ignite"
+sfx_key = &"fire_swoosh"
 major_upgrades = Array[ExtResource("2_48hcr")]([SubResource("Resource_48hcr"), SubResource("Resource_xrqbc")])

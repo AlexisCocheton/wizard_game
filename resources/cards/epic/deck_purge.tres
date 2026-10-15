@@ -70,5 +70,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"dark_vanish"
-sfx_key = &"ward_light"
+sfx_key = &"card_tear"
 major_upgrades = Array[ExtResource("2_e44m8")]([SubResource("Resource_e44m8"), SubResource("Resource_8o1xv")])

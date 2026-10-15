@@ -70,5 +70,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"fire_bloom"
-sfx_key = &"blast_long"
+sfx_key = &"fire_forge"
 major_upgrades = Array[ExtResource("2_yblp0")]([SubResource("Resource_yblp0"), SubResource("Resource_8mgvb")])

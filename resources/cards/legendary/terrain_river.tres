@@ -71,5 +71,5 @@ exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"portal_blue"
-sfx_key = &"wind_gust"
+sfx_key = &"water_flow"
 major_upgrades = Array[ExtResource("2_8i54b")]([SubResource("Resource_8i54b"), SubResource("Resource_c5iud")])

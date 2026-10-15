@@ -17,20 +17,20 @@
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="13_p1ef3"]
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="15_ixu1k"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="17_of0y1"]
-[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="18_106ca"]
-[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="19_olpus"]
-[ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="21_0sax4"]
-[ext_resource type="Resource" path="res://resources/cards/epic/reckless_bargain.tres" id="21_4ljjb"]
-[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="21_keyfv"]
-[ext_resource type="Resource" path="res://resources/cards/epic/thunder_root.tres" id="22_keyfv"]
+[ext_resource type="Resource" path="res://resources/cards/common/salt_spiral.tres" id="18_4ljjb"]
+[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="19_keyfv"]
+[ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="20_eqdet"]
+[ext_resource type="Resource" path="res://resources/cards/common/electric_mark.tres" id="21_vtmka"]
+[ext_resource type="Resource" path="res://resources/cards/epic/reckless_bargain.tres" id="22_sct6h"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="22_wfffn"]
+[ext_resource type="Resource" path="res://resources/cards/epic/thunder_root.tres" id="23_i6hfk"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="23_ldkuw"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_8xb40"]
-[ext_resource type="Resource" path="res://resources/cards/rare/purifying_light.tres" id="24_eqdet"]
+[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="24_a7l5k"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="25_4wdce"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="25_sct6h"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="25_p1ef3"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="26_emjga"]
 [ext_resource type="Resource" path="res://resources/enemies/jelly_mid.tres" id="26_sfosm"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="26_vtmka"]
 [ext_resource type="Resource" path="res://resources/enemies/bonewarden.tres" id="29_0sax4"]
 [ext_resource type="Resource" path="res://resources/enemies/bone_reliquary.tres" id="30_0sax4"]
 
@@ -280,10 +280,10 @@ terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("24_8xb40")]([SubResource("Resource_vtmka"), SubResource("Resource_sct6h"), SubResource("Resource_i6hfk"), SubResource("Resource_a7l5k"), SubResource("Resource_p1ef3"), SubResource("Resource_emjga")])
 enemy_pool = Array[ExtResource("1_m52cv")]([ExtResource("2_7sh5u"), ExtResource("3_0sax4"), ExtResource("4_76r2s"), ExtResource("5_ufmgy"), ExtResource("6_4ljjb"), ExtResource("7_keyfv"), ExtResource("8_eqdet"), ExtResource("9_vtmka"), ExtResource("10_sct6h"), ExtResource("11_i6hfk"), ExtResource("12_m52cv"), ExtResource("13_7sh5u")])
-exploration_deck = Array[ExtResource("12_a7l5k")]([ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("17_of0y1"), ExtResource("17_of0y1"), ExtResource("13_p1ef3"), ExtResource("13_p1ef3"), ExtResource("13_p1ef3"), ExtResource("18_106ca"), ExtResource("19_olpus"), ExtResource("21_0sax4")])
+exploration_deck = Array[ExtResource("12_a7l5k")]([ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("15_ixu1k"), ExtResource("17_of0y1"), ExtResource("17_of0y1"), ExtResource("13_p1ef3"), ExtResource("13_p1ef3"), ExtResource("13_p1ef3"), ExtResource("18_4ljjb"), ExtResource("19_keyfv"), ExtResource("20_eqdet")])
 objectives = Array[ExtResource("22_wfffn")]([SubResource("Resource_4ljjb"), SubResource("Resource_keyfv"), SubResource("Resource_eqdet")])
-levelup_cards = Array[ExtResource("12_a7l5k")]([ExtResource("21_keyfv"), ExtResource("21_4ljjb"), ExtResource("22_keyfv")])
-objective_rewards = Array[ExtResource("12_a7l5k")]([ExtResource("24_eqdet"), ExtResource("25_sct6h"), ExtResource("26_vtmka")])
+levelup_cards = Array[ExtResource("12_a7l5k")]([ExtResource("21_vtmka"), ExtResource("22_sct6h"), ExtResource("23_i6hfk")])
+objective_rewards = Array[ExtResource("12_a7l5k")]([ExtResource("24_a7l5k"), ExtResource("25_p1ef3"), ExtResource("26_emjga")])
 next_levels = Array[StringName]([&"lvl_04"])
 base_commons = Array[ExtResource("12_a7l5k")]([])
 passive_unlocks = Array[ExtResource("12_a7l5k")]([])
