@@ -15,19 +15,19 @@
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="12_0n865"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="13_ngw11"]
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="14_jablq"]
-[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="16_bret4"]
-[ext_resource type="Resource" path="res://resources/cards/rare/purifying_light.tres" id="17_sw1il"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/meteor_storm.tres" id="19_cnvpr"]
-[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="19_sw1il"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="20_ia684"]
+[ext_resource type="Resource" path="res://resources/cards/common/meteor.tres" id="16_sw1il"]
+[ext_resource type="Resource" path="res://resources/cards/common/purifying_light.tres" id="17_ia684"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/meteor_storm.tres" id="18_jxcgh"]
+[ext_resource type="Resource" path="res://resources/cards/common/heavy_rain.tres" id="19_1k6lh"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="20_wosyd"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_6gits"]
-[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="21_jxcgh"]
-[ext_resource type="Resource" path="res://resources/cards/rare/cycle_of_thought.tres" id="22_1k6lh"]
+[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="21_y52nd"]
+[ext_resource type="Resource" path="res://resources/cards/rare/ice_wall.tres" id="22_h3ov4"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_s8hpk"]
+[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="23_0n865"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_belrn"]
-[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="23_wosyd"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="24_ngw11"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_rf6lm"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="24_y52nd"]
 
 [sub_resource type="Resource" id="Resource_sw1il"]
 script = ExtResource("21_6gits")
@@ -206,10 +206,10 @@ terrain = "sand"
 backdrop = "act2_graveyard"
 waves = Array[ExtResource("23_belrn")]([SubResource("Resource_1k6lh"), SubResource("Resource_wosyd"), SubResource("Resource_y52nd"), SubResource("Resource_h3ov4")])
 enemy_pool = Array[ExtResource("1_nrv4l")]([ExtResource("2_qoti4"), ExtResource("3_e42nv"), ExtResource("4_2bcqe"), ExtResource("5_sw1il"), ExtResource("6_ia684"), ExtResource("7_jxcgh"), ExtResource("8_1k6lh"), ExtResource("9_wosyd"), ExtResource("10_y52nd"), ExtResource("11_vpd72")])
-exploration_deck = Array[ExtResource("11_h3ov4")]([ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("16_bret4"), ExtResource("17_sw1il"), ExtResource("19_cnvpr")])
+exploration_deck = Array[ExtResource("11_h3ov4")]([ExtResource("12_0n865"), ExtResource("12_0n865"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("13_ngw11"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("14_jablq"), ExtResource("16_sw1il"), ExtResource("17_ia684"), ExtResource("18_jxcgh")])
 objectives = Array[ExtResource("21_6gits")]([SubResource("Resource_sw1il"), SubResource("Resource_ia684"), SubResource("Resource_jxcgh")])
-levelup_cards = Array[ExtResource("11_h3ov4")]([ExtResource("19_sw1il"), ExtResource("20_ia684"), ExtResource("21_jxcgh")])
-objective_rewards = Array[ExtResource("11_h3ov4")]([ExtResource("22_1k6lh"), ExtResource("23_wosyd"), ExtResource("24_y52nd")])
+levelup_cards = Array[ExtResource("11_h3ov4")]([ExtResource("19_1k6lh"), ExtResource("20_wosyd"), ExtResource("21_y52nd")])
+objective_rewards = Array[ExtResource("11_h3ov4")]([ExtResource("22_h3ov4"), ExtResource("23_0n865"), ExtResource("24_ngw11")])
 next_levels = Array[StringName]([&"lvl_07", &"lvl_10", &"lvl_11", &"lvl_12"])
 base_commons = Array[ExtResource("11_h3ov4")]([])
 passive_unlocks = Array[ExtResource("11_h3ov4")]([])

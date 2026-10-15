@@ -89,6 +89,10 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_w10_sorts.gd",
 	# Vague 10 A1 : ameliorations MAJEURES (format, offre, structure, bot, ecran).
 	"res://tests/unit/test_major_upgrades.gd",
+	# Vague 10 B1a : paliers de resistances (regle du co-auteur), poison et nature
+	# reequilibres ; les six sorts demandes, les rares devenues communes.
+	"res://tests/unit/test_resist_tiers.gd",
+	"res://tests/unit/test_w10_cartes.gd",
 ]
 
 var _total_checks: int = 0

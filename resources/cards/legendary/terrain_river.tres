@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_oaysl"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5o7pc"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_8i54b"]
 
-[sub_resource type="Resource" id="Resource_oaysl"]
+[sub_resource type="Resource" id="Resource_5o7pc"]
 script = ExtResource("1_oaysl")
 key = &"terrain_river"
 magnitude = 0.0
@@ -21,10 +22,11 @@ base_cast_time = 2.6
 targeting = 1
 element = 8
 tags = Array[int]([])
-effects = Array[ExtResource("1_oaysl")]([SubResource("Resource_oaysl")])
+effects = Array[ExtResource("1_oaysl")]([SubResource("Resource_5o7pc")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"portal_blue"
-sfx_key = &"wind_gust"
+sfx_key = &"water_flow"
+major_upgrades = Array[ExtResource("2_8i54b")]([])

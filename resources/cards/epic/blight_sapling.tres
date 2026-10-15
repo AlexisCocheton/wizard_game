@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0bp55"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_5c0cw"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_7dxnh"]
 
-[sub_resource type="Resource" id="Resource_0bp55"]
+[sub_resource type="Resource" id="Resource_7dxnh"]
 script = ExtResource("1_0bp55")
 key = &"place_terrain"
 magnitude = 9.0
@@ -24,10 +25,11 @@ base_cast_time = 1.9
 targeting = 1
 element = 9
 tags = Array[int]([])
-effects = Array[ExtResource("1_0bp55")]([SubResource("Resource_0bp55")])
+effects = Array[ExtResource("1_0bp55")]([SubResource("Resource_7dxnh")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"spirit_violet"
-sfx_key = &"whoosh_deep"
+sfx_key = &"wood_creak"
+major_upgrades = Array[ExtResource("2_5c0cw")]([])

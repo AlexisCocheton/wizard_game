@@ -20,9 +20,8 @@ color = Color(0.3, 0.5, 0.9, 1)
 base_radius = 50.0
 resistances = {
 2: 0.75,
-6: 0.41,
-7: 1.93,
-9: 0.75,
+6: 0.75,
+7: 2.0,
 10: 0.75
 }
 immune_tags = Array[int]([])

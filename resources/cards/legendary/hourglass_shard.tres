@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_38gph"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_a06sc"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_q3kry"]
 
-[sub_resource type="Resource" id="Resource_38gph"]
+[sub_resource type="Resource" id="Resource_a06sc"]
 script = ExtResource("1_38gph")
 key = &"slow_enemy_gauge"
 magnitude = 60.0
@@ -11,7 +12,7 @@ duration = 6.0
 radius = 0.0
 params = {}
 
-[sub_resource type="Resource" id="Resource_a06sc"]
+[sub_resource type="Resource" id="Resource_q3kry"]
 script = ExtResource("1_38gph")
 key = &"self_haste"
 magnitude = 100.0
@@ -29,10 +30,11 @@ base_cast_time = 2.1
 targeting = 0
 element = 3
 tags = Array[int]([4])
-effects = Array[ExtResource("1_38gph")]([SubResource("Resource_38gph"), SubResource("Resource_a06sc")])
+effects = Array[ExtResource("1_38gph")]([SubResource("Resource_a06sc"), SubResource("Resource_q3kry")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"glass_shards"
 sfx_key = &"spell_grand"
+major_upgrades = Array[ExtResource("2_q3kry")]([])

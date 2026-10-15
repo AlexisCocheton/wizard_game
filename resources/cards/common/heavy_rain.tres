@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_fruqw"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_okslb"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_yuxsn"]
+
+[sub_resource type="Resource" id="Resource_fruqw"]
+script = ExtResource("1_fruqw")
+key = &"global_rain"
+magnitude = 1.0
+duration = 10.0
+radius = 0.0
+params = {
+&"interval": 2.0
+}
+
+[resource]
+script = ExtResource("3_yuxsn")
+id = &"heavy_rain"
+display_name = "Pluie abondante"
+description = "Une pluie tombe sur tout le terrain pendant 10 s : 1 degat d EAU a chaque monstre toutes les 2 s."
+rarity = 0
+base_cast_time = 2.5
+targeting = 0
+element = 8
+tags = Array[int]([])
+effects = Array[ExtResource("1_fruqw")]([SubResource("Resource_fruqw")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"rain_streaks"
+sfx_key = &"drip_frost"
+major_upgrades = Array[ExtResource("2_okslb")]([])

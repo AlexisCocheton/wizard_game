@@ -14,17 +14,17 @@
 [ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="13_fving"]
 [ext_resource type="Resource" path="res://resources/cards/common/ember_pool.tres" id="14_mrf3w"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="15_dsw6l"]
+[ext_resource type="Resource" path="res://resources/cards/common/meteor.tres" id="16_lckoi"]
 [ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="16_mmbm6"]
-[ext_resource type="Resource" path="res://resources/cards/rare/meteor.tres" id="17_w0s6c"]
-[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="18_lckoi"]
-[ext_resource type="Resource" path="res://resources/cards/epic/maelstrom.tres" id="19_6nsta"]
-[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="19_wd4fe"]
-[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="20_lckoi"]
+[ext_resource type="Resource" path="res://resources/cards/epic/maelstrom.tres" id="17_wd4fe"]
+[ext_resource type="Resource" path="res://resources/cards/rare/brazier.tres" id="18_u5o4w"]
+[ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="19_wrnir"]
+[ext_resource type="Resource" path="res://resources/cards/common/salt_spiral.tres" id="20_mlu4c"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_6fehv"]
-[ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="21_wrnir"]
-[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="22_u5o4w"]
+[ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="21_rxygd"]
+[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="22_1ap0e"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_u7xm8"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/forge_dial.tres" id="23_rxygd"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/forge_dial.tres" id="23_7ouyn"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_uyy03"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_on7ce"]
 
@@ -193,10 +193,10 @@ terrain = "grass"
 backdrop = "act1_sky"
 waves = Array[ExtResource("23_uyy03")]([SubResource("Resource_wrnir"), SubResource("Resource_mlu4c"), SubResource("Resource_rxygd"), SubResource("Resource_1ap0e")])
 enemy_pool = Array[ExtResource("1_hw4m0")]([ExtResource("2_w76i7"), ExtResource("3_3ysf2"), ExtResource("4_lckoi"), ExtResource("5_wd4fe"), ExtResource("6_u5o4w"), ExtResource("7_wrnir"), ExtResource("8_mlu4c"), ExtResource("9_rxygd"), ExtResource("10_1ap0e")])
-exploration_deck = Array[ExtResource("11_7ouyn")]([ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("14_mrf3w"), ExtResource("14_mrf3w"), ExtResource("13_fving"), ExtResource("16_mmbm6"), ExtResource("16_mmbm6"), ExtResource("17_w0s6c"), ExtResource("17_w0s6c"), ExtResource("19_6nsta")])
+exploration_deck = Array[ExtResource("11_7ouyn")]([ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("15_dsw6l"), ExtResource("14_mrf3w"), ExtResource("14_mrf3w"), ExtResource("13_fving"), ExtResource("16_mmbm6"), ExtResource("16_mmbm6"), ExtResource("16_lckoi"), ExtResource("16_lckoi"), ExtResource("17_wd4fe")])
 objectives = Array[ExtResource("21_6fehv")]([SubResource("Resource_lckoi"), SubResource("Resource_wd4fe"), SubResource("Resource_u5o4w")])
-levelup_cards = Array[ExtResource("11_7ouyn")]([ExtResource("18_lckoi"), ExtResource("19_wd4fe"), ExtResource("20_lckoi")])
-objective_rewards = Array[ExtResource("11_7ouyn")]([ExtResource("21_wrnir"), ExtResource("22_u5o4w"), ExtResource("23_rxygd")])
+levelup_cards = Array[ExtResource("11_7ouyn")]([ExtResource("18_u5o4w"), ExtResource("19_wrnir"), ExtResource("20_mlu4c")])
+objective_rewards = Array[ExtResource("11_7ouyn")]([ExtResource("21_rxygd"), ExtResource("22_1ap0e"), ExtResource("23_7ouyn")])
 next_levels = Array[StringName]([&"lvl_09"])
 base_commons = Array[ExtResource("11_7ouyn")]([])
 passive_unlocks = Array[ExtResource("11_7ouyn")]([])

@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_3hdef"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_185b7"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_eaj0p"]
+
+[sub_resource type="Resource" id="Resource_3hdef"]
+script = ExtResource("1_3hdef")
+key = &"water_jet"
+magnitude = 4.0
+duration = 0.0
+radius = 50.0
+params = {
+&"length": 900.0,
+&"push": 260.0
+}
+
+[resource]
+script = ExtResource("3_eaj0p")
+id = &"water_jet"
+display_name = "Jet d eau"
+description = "Une colonne d eau fine et haute repousse les monstres de 260 px vers le haut : 4 degats d EAU par 100 px parcourus."
+rarity = 0
+base_cast_time = 1.5
+targeting = 1
+element = 8
+tags = Array[int]([])
+effects = Array[ExtResource("1_3hdef")]([SubResource("Resource_3hdef")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"water_geyser"
+sfx_key = &"water_splash"
+major_upgrades = Array[ExtResource("2_185b7")]([])

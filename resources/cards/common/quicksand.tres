@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_5mse6"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_kao8s"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_oweal"]
+
+[sub_resource type="Resource" id="Resource_5mse6"]
+script = ExtResource("1_5mse6")
+key = &"quicksand"
+magnitude = 30.0
+duration = 8.0
+radius = 180.0
+params = {
+&"slow_pct": 10.0
+}
+
+[resource]
+script = ExtResource("3_oweal")
+id = &"quicksand"
+display_name = "Sable mouvant"
+description = "Zone de sable pendant 8 s : les monstres y avancent 10 pourcent moins vite, et ceux qui y sont encore a la fin encaissent 30 degats de NATURE."
+rarity = 0
+base_cast_time = 1.6
+targeting = 1
+element = 9
+tags = Array[int]([4])
+effects = Array[ExtResource("1_5mse6")]([SubResource("Resource_5mse6")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"sand_ring"
+sfx_key = &"earth_dig"
+major_upgrades = Array[ExtResource("2_kao8s")]([])

@@ -1,9 +1,10 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_fbclp"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_os4ia"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_p73tl"]
 
-[sub_resource type="Resource" id="Resource_fbclp"]
+[sub_resource type="Resource" id="Resource_os4ia"]
 script = ExtResource("1_fbclp")
 key = &"poison_dot"
 magnitude = 2.0
@@ -21,10 +22,11 @@ base_cast_time = 0.7
 targeting = 3
 element = 6
 tags = Array[int]([])
-effects = Array[ExtResource("1_fbclp")]([SubResource("Resource_fbclp")])
+effects = Array[ExtResource("1_fbclp")]([SubResource("Resource_os4ia")])
 copies_in_starter = 0
 exile_after_cast = false
 is_passive = false
 speed_threshold = 100
 fx_key = &"skull_burst"
-sfx_key = &"arrow_laser"
+sfx_key = &"poison_dart"
+major_upgrades = Array[ExtResource("2_p73tl")]([])

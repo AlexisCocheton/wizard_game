@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_t3wkq"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_5k5rs"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_m4dh0"]
+
+[sub_resource type="Resource" id="Resource_t3wkq"]
+script = ExtResource("1_t3wkq")
+key = &"dispel_zone"
+magnitude = 0.0
+duration = 0.0
+radius = 150.0
+params = {}
+
+[resource]
+script = ExtResource("3_m4dh0")
+id = &"purifying_light"
+display_name = "Lumiere purifiante"
+description = "Petite zone : les monstres perdent rage, boucliers et effets en cours."
+rarity = 0
+base_cast_time = 1.3
+targeting = 1
+element = 3
+tags = Array[int]([])
+effects = Array[ExtResource("1_t3wkq")]([SubResource("Resource_t3wkq")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"lightpillar"
+sfx_key = &"ward_light"
+major_upgrades = Array[ExtResource("2_5k5rs")]([])

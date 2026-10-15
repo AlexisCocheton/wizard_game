@@ -14,15 +14,15 @@
 [ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="12_ak1y0"]
 [ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="14_odxng"]
 [ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="16_diyvq"]
-[ext_resource type="Resource" path="res://resources/cards/rare/chain_break.tres" id="16_hf8a2"]
+[ext_resource type="Resource" path="res://resources/cards/common/south_wind.tres" id="16_hf8a2"]
 [ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="17_hf8a2"]
 [ext_resource type="Resource" path="res://resources/cards/rare/heartwood_totem.tres" id="17_jg7in"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_0qchf"]
-[ext_resource type="Resource" path="res://resources/cards/rare/salt_spiral.tres" id="18_npl76"]
+[ext_resource type="Resource" path="res://resources/cards/rare/time_surge.tres" id="18_npl76"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_2lmll"]
 [ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="19_4neqa"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="20_1r60b"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_qqxj5"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="20_rxae5"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_bxr3v"]
 
 [sub_resource type="Resource" id="Resource_hf8a2"]
@@ -191,7 +191,7 @@ enemy_pool = Array[ExtResource("1_rl3tf")]([ExtResource("2_01pvm"), ExtResource(
 exploration_deck = Array[ExtResource("8_1r60b")]([ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("9_rxae5"), ExtResource("11_jqiqt"), ExtResource("11_jqiqt"), ExtResource("10_tfajv"), ExtResource("12_ak1y0"), ExtResource("16_diyvq"), ExtResource("16_diyvq"), ExtResource("14_odxng"), ExtResource("14_odxng")])
 objectives = Array[ExtResource("18_0qchf")]([SubResource("Resource_hf8a2"), SubResource("Resource_jg7in"), SubResource("Resource_npl76")])
 levelup_cards = Array[ExtResource("8_1r60b")]([ExtResource("17_hf8a2"), ExtResource("16_hf8a2"), ExtResource("17_jg7in")])
-objective_rewards = Array[ExtResource("8_1r60b")]([ExtResource("18_npl76"), ExtResource("19_4neqa"), ExtResource("20_rxae5")])
+objective_rewards = Array[ExtResource("8_1r60b")]([ExtResource("18_npl76"), ExtResource("19_4neqa"), ExtResource("20_1r60b")])
 next_levels = Array[StringName]([&"lvl_18"])
 base_commons = Array[ExtResource("8_1r60b")]([])
 passive_unlocks = Array[ExtResource("8_1r60b")]([])

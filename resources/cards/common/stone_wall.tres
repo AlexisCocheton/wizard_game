@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0ga6q"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_5kaxl"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_swntd"]
+
+[sub_resource type="Resource" id="Resource_0ga6q"]
+script = ExtResource("1_0ga6q")
+key = &"build_wall"
+magnitude = 0.0
+duration = 20.0
+radius = 200.0
+params = {
+&"thickness": 60.0
+}
+
+[resource]
+script = ExtResource("3_swntd")
+id = &"stone_wall"
+display_name = "Mur de pierre"
+description = "Mur de 20 s : les monstres le contournent et il arrete leurs projectiles."
+rarity = 0
+base_cast_time = 1.5
+targeting = 1
+element = 9
+tags = Array[int]([])
+effects = Array[ExtResource("1_0ga6q")]([SubResource("Resource_0ga6q")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"stone_peak"
+sfx_key = &"stone_shove"
+major_upgrades = Array[ExtResource("2_5kaxl")]([])

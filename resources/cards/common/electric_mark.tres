@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_xi7jg"]
+[ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_v00fo"]
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="3_mxaq0"]
+
+[sub_resource type="Resource" id="Resource_xi7jg"]
+script = ExtResource("1_xi7jg")
+key = &"electric_mark"
+magnitude = 8.0
+duration = 0.0
+radius = 0.0
+params = {
+&"decay": 1.0
+}
+
+[resource]
+script = ExtResource("3_mxaq0")
+id = &"electric_mark"
+display_name = "Marque electrique"
+description = "Marque une cible : 8 degats de FOUDRE. Quand elle meurt, la marque saute sur le monstre le plus proche avec 1 degat de moins, et ainsi de suite jusqu a 0."
+rarity = 0
+base_cast_time = 2.3
+targeting = 3
+element = 7
+tags = Array[int]([])
+effects = Array[ExtResource("1_xi7jg")]([SubResource("Resource_xi7jg")])
+copies_in_starter = 0
+exile_after_cast = false
+is_passive = false
+speed_threshold = 100
+fx_key = &"bolt_cross"
+sfx_key = &"zap_long"
+major_upgrades = Array[ExtResource("2_v00fo")]([])
