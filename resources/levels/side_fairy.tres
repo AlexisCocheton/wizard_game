@@ -20,8 +20,9 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_hydls"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_7cq12"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_luq6e"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom_gold.tres" id="21_ycyp6"]
 
-[sub_resource type="Resource" id="Resource_irc0y"]
+[sub_resource type="Resource" id="Resource_t3ncq"]
 script = ExtResource("16_3d2xi")
 id = &"obj_element_casts_30_fire"
 description = "Lancer 30 sorts de feu"
@@ -31,7 +32,7 @@ params = {
 "element": "FIRE"
 }
 
-[sub_resource type="Resource" id="Resource_ycyp6"]
+[sub_resource type="Resource" id="Resource_f6dxf"]
 script = ExtResource("16_3d2xi")
 id = &"obj_kill_type_one_cast_2_mushroom"
 description = "Champignon cuirasse : en tuer 2 d un seul sort"
@@ -41,7 +42,7 @@ params = {
 "enemy": "mushroom"
 }
 
-[sub_resource type="Resource" id="Resource_t3ncq"]
+[sub_resource type="Resource" id="Resource_h7dmw"]
 script = ExtResource("16_3d2xi")
 id = &"obj_win_above_speed_280"
 description = "Gagner avec plus de 280 % de vitesse"
@@ -78,7 +79,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_f6dxf"]
+[sub_resource type="Resource" id="Resource_k5idq"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_1"
 duration = 26.0
@@ -115,7 +116,7 @@ count = 3
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_h7dmw"]
+[sub_resource type="Resource" id="Resource_5ux3c"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_2"
 duration = 27.0
@@ -159,7 +160,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_k5idq"]
+[sub_resource type="Resource" id="Resource_eku1o"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_3"
 duration = 28.0
@@ -168,111 +169,9 @@ difficulty = 2.7
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_e8bcq"]
-script = ExtResource("5_f6dxf")
-id = &"mushroom_gold"
-display_name = "Champignon dore"
-kind = 8
-power = 10
-max_hp = 170.0
-base_speed = 30.0
-base_xp = 30
-contact_damage = 0
-anim_key = &"mushroom"
-sprite_scale = 1.0
-shape = 1
-color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 56.0
-resistances = {
-1: 2.0,
-6: 0.75,
-8: 0.5,
-9: 0.75,
-10: 0.5
-}
-immune_tags = Array[int]([])
-dodge_chance = 0.0
-swarm_count = 1
-entry_side = false
-flying = false
-projectile = false
-phase_interval = 0.0
-buff_speed_pct = 0.0
-devours = false
-enrage_speed_pct = 0.0
-enrage_cap = 1.5
-aura_shield_radius = 0.0
-burst_move = false
-burst_dash_time = 0.6
-burst_pause_time = 0.7
-wave_amplitude = 0.0
-wave_frequency = 0.5
-split_into = ExtResource("8_5ux3c")
-split_count = 2
-first_hit_shield = false
-heal_per_second = 0.0
-shoot_interval = 0.0
-shot_damage = 2
-blocks_cards = 0
-shockwave_interval = 0.0
-shockwave_radius = 0.0
-shockwave_damage = 0
-extra_lives = 0
-extra_life_hp_pct = 100.0
-extra_life_speed_pct = 35.0
-rebirth_count = 0
-rebirth_delay = 3.0
-reanimate_radius = 0.0
-reanimate_interval = 4.0
-reanimate_max = 0
-laser_damage = 0
-laser_cooldown = 1.5
-sleep_interval = 0.0
-sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
-pattern_interval = 1.5
-parts_count = 0
-part_hp = 0.0
-part_slow_pct = 0.0
-keeps_distance_at = 0.0
-summon_interval = 0.0
-summon_count = 1
-summon_max_alive = 6
-revive_hp_pct = 0.0
-hits_immune = 0
-reflect_interval = 0.0
-reflect_window = 0.0
-reflect_pct = 0.0
-rewind_interval = 0.0
-rewind_seconds = 3.0
-rewind_max = 0
-twin_group = &""
-twin_revive_delay = 4.0
-twin_revive_hp_pct = 60.0
-twin_max_returns = 2
-chameleon_interval = 0.0
-chameleon_elements = Array[int]([])
-chameleon_weak_mult = 1.5
-chameleon_resist_mult = 0.5
-steal_interval = 0.0
-steal_cast_delay = 4.0
-steal_damage_per_cast_second = 6.0
-devour_heal_pct = 0.0
-devour_delay = 3.0
-mirror_speed_ref = 0
-mirror_speed_min = 0.5
-mirror_speed_max = 2.0
-terrain_break_interval = 0.0
-terrain_break_reach = 520.0
-terrain_break_windup = 1.5
-demoted_from = &""
-gilded_from = &"mushroom"
-
 [sub_resource type="Resource" id="Resource_u02bu"]
 script = ExtResource("19_luq6e")
-enemy = SubResource("Resource_e8bcq")
+enemy = ExtResource("21_ycyp6")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -312,7 +211,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 32.0
 
-[sub_resource type="Resource" id="Resource_5ux3c"]
+[sub_resource type="Resource" id="Resource_bd7r7"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_boss"
 duration = 46.0
@@ -333,10 +232,10 @@ intro_story = &"side_fairy_intro"
 outro_story = &"side_fairy_outro"
 terrain = "grass"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_f6dxf"), SubResource("Resource_h7dmw"), SubResource("Resource_k5idq"), SubResource("Resource_5ux3c")])
+waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_k5idq"), SubResource("Resource_5ux3c"), SubResource("Resource_eku1o"), SubResource("Resource_bd7r7")])
 enemy_pool = Array[ExtResource("5_f6dxf")]([ExtResource("6_h7dmw"), ExtResource("7_k5idq"), ExtResource("8_5ux3c"), ExtResource("9_irc0y"), ExtResource("9_eku1o"), ExtResource("10_bd7r7"), ExtResource("11_50kjp"), ExtResource("12_4ugdg")])
 exploration_deck = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y")])
-objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_irc0y"), SubResource("Resource_ycyp6"), SubResource("Resource_t3ncq")])
+objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_t3ncq"), SubResource("Resource_f6dxf"), SubResource("Resource_h7dmw")])
 levelup_cards = Array[ExtResource("1_bq3hy")]([])
 objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("13_vy50h"), ExtResource("14_jsci0"), ExtResource("15_twp52")])
 next_levels = Array[StringName]([])

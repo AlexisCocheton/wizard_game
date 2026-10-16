@@ -19,8 +19,9 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_daq0t"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_ww2vv"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_no8sg"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton_gold.tres" id="20_lhfsq"]
 
-[sub_resource type="Resource" id="Resource_anhro"]
+[sub_resource type="Resource" id="Resource_33vns"]
 script = ExtResource("16_7b8w6")
 id = &"obj_multi_kill_5_1"
 description = "Tuer 5 monstres en moins de 1 s"
@@ -30,7 +31,7 @@ params = {
 "window": 1
 }
 
-[sub_resource type="Resource" id="Resource_lhfsq"]
+[sub_resource type="Resource" id="Resource_0fbur"]
 script = ExtResource("16_7b8w6")
 id = &"obj_win_under_time_140"
 description = "Gagner en moins de 2 min 20"
@@ -67,7 +68,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_33vns"]
+[sub_resource type="Resource" id="Resource_5px1n"]
 script = ExtResource("18_ww2vv")
 id = &"side_a3_tresor_1"
 duration = 26.0
@@ -104,7 +105,7 @@ count = 2
 spawn_delay = 3.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_0fbur"]
+[sub_resource type="Resource" id="Resource_5isd3"]
 script = ExtResource("18_ww2vv")
 id = &"side_a3_tresor_2"
 duration = 28.0
@@ -148,7 +149,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_5px1n"]
+[sub_resource type="Resource" id="Resource_0s1a0"]
 script = ExtResource("18_ww2vv")
 id = &"side_a3_tresor_3"
 duration = 29.0
@@ -157,112 +158,9 @@ difficulty = 2.2
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_gqg6f"]
-script = ExtResource("5_5px1n")
-id = &"parry_skeleton_gold"
-display_name = "Squelette pareur dore"
-kind = 8
-power = 10
-max_hp = 171.0
-base_speed = 40.0
-base_xp = 30
-contact_damage = 0
-anim_key = &"skeleton2"
-sprite_scale = 1.0
-shape = 0
-color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 59.0
-resistances = {
-1: 1.75,
-2: 0.5,
-3: 1.5,
-6: 0.5,
-8: 0.5,
-9: 1.25,
-10: 1.5
-}
-immune_tags = Array[int]([])
-dodge_chance = 0.0
-swarm_count = 1
-entry_side = false
-flying = false
-projectile = false
-phase_interval = 0.0
-buff_speed_pct = 0.0
-devours = false
-enrage_speed_pct = 0.0
-enrage_cap = 1.5
-aura_shield_radius = 0.0
-burst_move = false
-burst_dash_time = 0.6
-burst_pause_time = 0.7
-wave_amplitude = 0.0
-wave_frequency = 0.5
-split_count = 0
-first_hit_shield = true
-heal_per_second = 0.0
-shoot_interval = 0.0
-shot_damage = 2
-blocks_cards = 0
-shockwave_interval = 0.0
-shockwave_radius = 0.0
-shockwave_damage = 0
-extra_lives = 0
-extra_life_hp_pct = 100.0
-extra_life_speed_pct = 35.0
-rebirth_count = 0
-rebirth_delay = 3.0
-reanimate_radius = 0.0
-reanimate_interval = 4.0
-reanimate_max = 0
-laser_damage = 0
-laser_cooldown = 1.5
-sleep_interval = 0.0
-sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
-pattern_interval = 1.5
-parts_count = 0
-part_hp = 0.0
-part_slow_pct = 0.0
-keeps_distance_at = 0.0
-summon_interval = 0.0
-summon_count = 1
-summon_max_alive = 6
-revive_hp_pct = 0.0
-hits_immune = 0
-reflect_interval = 6.0
-reflect_window = 1.6
-reflect_pct = 50.0
-rewind_interval = 0.0
-rewind_seconds = 3.0
-rewind_max = 0
-twin_group = &""
-twin_revive_delay = 4.0
-twin_revive_hp_pct = 60.0
-twin_max_returns = 2
-chameleon_interval = 0.0
-chameleon_elements = Array[int]([])
-chameleon_weak_mult = 1.5
-chameleon_resist_mult = 0.5
-steal_interval = 0.0
-steal_cast_delay = 4.0
-steal_damage_per_cast_second = 6.0
-devour_heal_pct = 0.0
-devour_delay = 3.0
-mirror_speed_ref = 0
-mirror_speed_min = 0.5
-mirror_speed_max = 2.0
-terrain_break_interval = 0.0
-terrain_break_reach = 520.0
-terrain_break_windup = 1.5
-demoted_from = &""
-gilded_from = &"parry_skeleton"
-
 [sub_resource type="Resource" id="Resource_ybwsv"]
 script = ExtResource("19_no8sg")
-enemy = SubResource("Resource_gqg6f")
+enemy = ExtResource("20_lhfsq")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -295,7 +193,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_5isd3"]
+[sub_resource type="Resource" id="Resource_im5b0"]
 script = ExtResource("18_ww2vv")
 id = &"side_a3_tresor_boss"
 duration = 46.0
@@ -316,10 +214,10 @@ intro_story = &"side_a3_tresor_intro"
 outro_story = &"side_a3_tresor_outro"
 terrain = "grass"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("18_ww2vv")]([SubResource("Resource_33vns"), SubResource("Resource_0fbur"), SubResource("Resource_5px1n"), SubResource("Resource_5isd3")])
+waves = Array[ExtResource("18_ww2vv")]([SubResource("Resource_5px1n"), SubResource("Resource_5isd3"), SubResource("Resource_0s1a0"), SubResource("Resource_im5b0")])
 enemy_pool = Array[ExtResource("5_5px1n")]([ExtResource("6_5isd3"), ExtResource("7_0s1a0"), ExtResource("8_im5b0"), ExtResource("9_81hr5"), ExtResource("10_vsf5t"), ExtResource("11_x6i4y"), ExtResource("12_x4xa4")])
 exploration_deck = Array[ExtResource("1_anhro")]([ExtResource("2_lhfsq"), ExtResource("2_lhfsq"), ExtResource("2_lhfsq"), ExtResource("2_lhfsq"), ExtResource("3_33vns"), ExtResource("3_33vns"), ExtResource("3_33vns"), ExtResource("3_33vns"), ExtResource("4_0fbur"), ExtResource("4_0fbur"), ExtResource("4_0fbur"), ExtResource("4_0fbur")])
-objectives = Array[ExtResource("16_7b8w6")]([SubResource("Resource_anhro"), SubResource("Resource_lhfsq"), SubResource("Resource_4hx7v")])
+objectives = Array[ExtResource("16_7b8w6")]([SubResource("Resource_33vns"), SubResource("Resource_0fbur"), SubResource("Resource_4hx7v")])
 levelup_cards = Array[ExtResource("1_anhro")]([])
 objective_rewards = Array[ExtResource("1_anhro")]([ExtResource("13_x0j4e"), ExtResource("14_7ooiq"), ExtResource("15_oxi2r")])
 next_levels = Array[StringName]([])

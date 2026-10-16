@@ -20,6 +20,7 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="18_3cu0w"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="19_q062o"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="20_6a672"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker_gold.tres" id="21_eaiwi"]
 
 [sub_resource type="Resource" id="Resource_amgrg"]
 script = ExtResource("17_1po5x")
@@ -30,7 +31,7 @@ params = {
 "seconds": 130
 }
 
-[sub_resource type="Resource" id="Resource_caqxo"]
+[sub_resource type="Resource" id="Resource_k18p5"]
 script = ExtResource("17_1po5x")
 id = &"obj_kill_type_one_cast_2_berserker"
 description = "Berserker : en tuer 2 d un seul sort"
@@ -40,7 +41,7 @@ params = {
 "enemy": "berserker"
 }
 
-[sub_resource type="Resource" id="Resource_anhro"]
+[sub_resource type="Resource" id="Resource_33vns"]
 script = ExtResource("17_1po5x")
 id = &"obj_multi_kill_5_1"
 description = "Tuer 5 monstres en moins de 1 s"
@@ -71,7 +72,7 @@ count = 3
 spawn_delay = 1.4
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_eaiwi"]
+[sub_resource type="Resource" id="Resource_hven7"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_1"
 duration = 26.0
@@ -101,7 +102,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_k18p5"]
+[sub_resource type="Resource" id="Resource_jdacw"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_2"
 duration = 28.0
@@ -138,7 +139,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_hven7"]
+[sub_resource type="Resource" id="Resource_sl3oa"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_3"
 duration = 30.0
@@ -147,110 +148,9 @@ difficulty = 2.05
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_u704c"]
-script = ExtResource("5_jdacw")
-id = &"berserker_gold"
-display_name = "Berserker dore"
-kind = 8
-power = 10
-max_hp = 165.0
-base_speed = 44.0
-base_xp = 30
-contact_damage = 0
-anim_key = &"warrior_red"
-sprite_scale = 1.0
-shape = 0
-color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 63.0
-resistances = {
-1: 1.25,
-3: 1.25,
-6: 0.75,
-8: 0.75,
-10: 0.75
-}
-immune_tags = Array[int]([])
-dodge_chance = 0.0
-swarm_count = 1
-entry_side = false
-flying = false
-projectile = false
-phase_interval = 0.0
-buff_speed_pct = 0.0
-devours = false
-enrage_speed_pct = 16.0
-enrage_cap = 1.5
-aura_shield_radius = 0.0
-burst_move = false
-burst_dash_time = 0.6
-burst_pause_time = 0.7
-wave_amplitude = 0.0
-wave_frequency = 0.5
-split_count = 0
-first_hit_shield = false
-heal_per_second = 0.0
-shoot_interval = 0.0
-shot_damage = 2
-blocks_cards = 0
-shockwave_interval = 0.0
-shockwave_radius = 0.0
-shockwave_damage = 0
-extra_lives = 1
-extra_life_hp_pct = 50.0
-extra_life_speed_pct = 35.0
-rebirth_count = 0
-rebirth_delay = 3.0
-reanimate_radius = 0.0
-reanimate_interval = 4.0
-reanimate_max = 0
-laser_damage = 0
-laser_cooldown = 1.5
-sleep_interval = 0.0
-sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
-pattern_interval = 1.5
-parts_count = 0
-part_hp = 0.0
-part_slow_pct = 0.0
-keeps_distance_at = 0.0
-summon_interval = 0.0
-summon_count = 1
-summon_max_alive = 6
-revive_hp_pct = 0.0
-hits_immune = 0
-reflect_interval = 0.0
-reflect_window = 0.0
-reflect_pct = 0.0
-rewind_interval = 0.0
-rewind_seconds = 3.0
-rewind_max = 0
-twin_group = &""
-twin_revive_delay = 4.0
-twin_revive_hp_pct = 60.0
-twin_max_returns = 2
-chameleon_interval = 0.0
-chameleon_elements = Array[int]([])
-chameleon_weak_mult = 1.5
-chameleon_resist_mult = 0.5
-steal_interval = 0.0
-steal_cast_delay = 4.0
-steal_damage_per_cast_second = 6.0
-devour_heal_pct = 0.0
-devour_delay = 3.0
-mirror_speed_ref = 0
-mirror_speed_min = 0.5
-mirror_speed_max = 2.0
-terrain_break_interval = 0.0
-terrain_break_reach = 520.0
-terrain_break_windup = 1.5
-demoted_from = &""
-gilded_from = &"berserker"
-
 [sub_resource type="Resource" id="Resource_a4wt4"]
 script = ExtResource("20_6a672")
-enemy = SubResource("Resource_u704c")
+enemy = ExtResource("21_eaiwi")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -269,7 +169,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_jdacw"]
+[sub_resource type="Resource" id="Resource_g7gcv"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_boss"
 duration = 46.0
@@ -290,10 +190,10 @@ intro_story = &"side_a4_champion_intro"
 outro_story = &"side_a4_champion_outro"
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("19_q062o")]([SubResource("Resource_eaiwi"), SubResource("Resource_k18p5"), SubResource("Resource_hven7"), SubResource("Resource_jdacw")])
+waves = Array[ExtResource("19_q062o")]([SubResource("Resource_hven7"), SubResource("Resource_jdacw"), SubResource("Resource_sl3oa"), SubResource("Resource_g7gcv")])
 enemy_pool = Array[ExtResource("5_jdacw")]([ExtResource("6_sl3oa"), ExtResource("7_g7gcv"), ExtResource("8_x0hnh"), ExtResource("9_x2kee"), ExtResource("10_fydpe"), ExtResource("11_1vvd4"), ExtResource("12_o01rx"), ExtResource("13_t4igx")])
 exploration_deck = Array[ExtResource("1_caqxo")]([ExtResource("2_eaiwi"), ExtResource("2_eaiwi"), ExtResource("2_eaiwi"), ExtResource("2_eaiwi"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_hven7")])
-objectives = Array[ExtResource("17_1po5x")]([SubResource("Resource_amgrg"), SubResource("Resource_caqxo"), SubResource("Resource_anhro")])
+objectives = Array[ExtResource("17_1po5x")]([SubResource("Resource_amgrg"), SubResource("Resource_k18p5"), SubResource("Resource_33vns")])
 levelup_cards = Array[ExtResource("1_caqxo")]([])
 objective_rewards = Array[ExtResource("1_caqxo")]([ExtResource("14_gwtki"), ExtResource("15_kgwbh"), ExtResource("16_jy0x0")])
 next_levels = Array[StringName]([])

@@ -19,8 +19,9 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_b1aig"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_hodee"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_yrow5"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian_gold.tres" id="20_tns6i"]
 
-[sub_resource type="Resource" id="Resource_oarva"]
+[sub_resource type="Resource" id="Resource_i8mfq"]
 script = ExtResource("16_uhqdn")
 id = &"obj_kill_flying_8"
 description = "Abattre 8 monstres volants"
@@ -29,7 +30,7 @@ params = {
 "count": 8
 }
 
-[sub_resource type="Resource" id="Resource_tns6i"]
+[sub_resource type="Resource" id="Resource_3xvfs"]
 script = ExtResource("16_uhqdn")
 id = &"obj_win_under_time_150"
 description = "Gagner en moins de 2 min 30"
@@ -38,7 +39,7 @@ params = {
 "seconds": 150
 }
 
-[sub_resource type="Resource" id="Resource_i8mfq"]
+[sub_resource type="Resource" id="Resource_27kqk"]
 script = ExtResource("16_uhqdn")
 id = &"obj_win_above_speed_240"
 description = "Gagner avec plus de 240 % de vitesse"
@@ -68,7 +69,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_3xvfs"]
+[sub_resource type="Resource" id="Resource_motja"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_1"
 duration = 26.0
@@ -98,7 +99,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_27kqk"]
+[sub_resource type="Resource" id="Resource_rytoa"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_2"
 duration = 27.0
@@ -135,7 +136,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_motja"]
+[sub_resource type="Resource" id="Resource_qcgtp"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_3"
 duration = 28.0
@@ -144,113 +145,9 @@ difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_lbdw3"]
-script = ExtResource("5_27kqk")
-id = &"totem_guardian_gold"
-display_name = "Gardien-totem dore"
-kind = 8
-power = 10
-max_hp = 180.0
-base_speed = 26.0
-base_xp = 30
-contact_damage = 0
-anim_key = &"totem_tower"
-sprite_scale = 1.0
-shape = 6
-color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 72.0
-resistances = {
-1: 1.5,
-2: 0.75,
-3: 2.0,
-6: 0.5,
-7: 0.75,
-8: 0.75,
-9: 0.75,
-10: 0.5
-}
-immune_tags = Array[int]([])
-dodge_chance = 0.0
-swarm_count = 1
-entry_side = false
-flying = false
-projectile = false
-phase_interval = 0.0
-buff_speed_pct = 0.0
-devours = false
-enrage_speed_pct = 0.0
-enrage_cap = 1.5
-aura_shield_radius = 300.0
-burst_move = false
-burst_dash_time = 0.6
-burst_pause_time = 0.7
-wave_amplitude = 0.0
-wave_frequency = 0.5
-split_count = 0
-first_hit_shield = false
-heal_per_second = 2.0
-shoot_interval = 0.0
-shot_damage = 2
-blocks_cards = 0
-shockwave_interval = 0.0
-shockwave_radius = 0.0
-shockwave_damage = 0
-extra_lives = 0
-extra_life_hp_pct = 100.0
-extra_life_speed_pct = 35.0
-rebirth_count = 0
-rebirth_delay = 3.0
-reanimate_radius = 0.0
-reanimate_interval = 4.0
-reanimate_max = 0
-laser_damage = 0
-laser_cooldown = 1.5
-sleep_interval = 0.0
-sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
-pattern_interval = 1.5
-parts_count = 0
-part_hp = 0.0
-part_slow_pct = 0.0
-keeps_distance_at = 0.0
-summon_interval = 0.0
-summon_count = 1
-summon_max_alive = 6
-revive_hp_pct = 0.0
-hits_immune = 0
-reflect_interval = 0.0
-reflect_window = 0.0
-reflect_pct = 0.0
-rewind_interval = 0.0
-rewind_seconds = 3.0
-rewind_max = 0
-twin_group = &""
-twin_revive_delay = 4.0
-twin_revive_hp_pct = 60.0
-twin_max_returns = 2
-chameleon_interval = 0.0
-chameleon_elements = Array[int]([])
-chameleon_weak_mult = 1.5
-chameleon_resist_mult = 0.5
-steal_interval = 0.0
-steal_cast_delay = 4.0
-steal_damage_per_cast_second = 6.0
-devour_heal_pct = 0.0
-devour_delay = 3.0
-mirror_speed_ref = 0
-mirror_speed_min = 0.5
-mirror_speed_max = 2.0
-terrain_break_interval = 0.0
-terrain_break_reach = 520.0
-terrain_break_windup = 1.5
-demoted_from = &""
-gilded_from = &"totem_guardian"
-
 [sub_resource type="Resource" id="Resource_dgypt"]
 script = ExtResource("19_yrow5")
-enemy = SubResource("Resource_lbdw3")
+enemy = ExtResource("20_tns6i")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -276,7 +173,7 @@ count = 2
 spawn_delay = 2.5
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_rytoa"]
+[sub_resource type="Resource" id="Resource_3pu2l"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_boss"
 duration = 46.0
@@ -297,10 +194,10 @@ intro_story = &"side_a2_atelier_intro"
 outro_story = &"side_a2_atelier_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("18_hodee")]([SubResource("Resource_3xvfs"), SubResource("Resource_27kqk"), SubResource("Resource_motja"), SubResource("Resource_rytoa")])
+waves = Array[ExtResource("18_hodee")]([SubResource("Resource_motja"), SubResource("Resource_rytoa"), SubResource("Resource_qcgtp"), SubResource("Resource_3pu2l")])
 enemy_pool = Array[ExtResource("5_27kqk")]([ExtResource("6_motja"), ExtResource("7_rytoa"), ExtResource("8_qcgtp"), ExtResource("9_3pu2l"), ExtResource("10_kv1ix"), ExtResource("11_r2pir"), ExtResource("12_ftj62")])
 exploration_deck = Array[ExtResource("1_oarva")]([ExtResource("2_tns6i"), ExtResource("2_tns6i"), ExtResource("2_tns6i"), ExtResource("2_tns6i"), ExtResource("3_i8mfq"), ExtResource("3_i8mfq"), ExtResource("3_i8mfq"), ExtResource("3_i8mfq"), ExtResource("4_3xvfs"), ExtResource("4_3xvfs"), ExtResource("4_3xvfs"), ExtResource("4_3xvfs")])
-objectives = Array[ExtResource("16_uhqdn")]([SubResource("Resource_oarva"), SubResource("Resource_tns6i"), SubResource("Resource_i8mfq")])
+objectives = Array[ExtResource("16_uhqdn")]([SubResource("Resource_i8mfq"), SubResource("Resource_3xvfs"), SubResource("Resource_27kqk")])
 levelup_cards = Array[ExtResource("1_oarva")]([])
 objective_rewards = Array[ExtResource("1_oarva")]([ExtResource("13_a5nnm"), ExtResource("14_dsy28"), ExtResource("15_4wxp2")])
 next_levels = Array[StringName]([])

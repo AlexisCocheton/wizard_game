@@ -213,7 +213,14 @@ func _boss_dores() -> Dictionary:
 			if v is String and String(v).ends_with(".tres"):
 				v = load(ENNEMIS + String(v))
 			g.set(champ, v)
-		_proprio.call("_save", g, ENNEMIS + base_id + SUFFIXE_DORE + ".tres")
+		var chemin: String = ENNEMIS + base_id + SUFFIXE_DORE + ".tres"
+		_proprio.call("_save", g, chemin)
+		# Le boss dore PREND le chemin de son fichier : sans cela les vagues qui
+		# le citent l embarqueraient en COPIE (une ressource sans chemin est
+		# ecrite dans le .tres qui la reference), et le monstre qui descend ne
+		# serait plus celui du catalogue, du bestiaire et des tests. Vu au
+		# sabotage : un boss dore affaibli dans son .tres restait entier en jeu.
+		g.take_over_path(chemin)
 		# Les objectifs des annexes nomment leur boss dore : ObjectiveChecker le
 		# valide dans ContentDB, qui ne le connait pas encore a la premiere
 		# generation. On l y inscrit pour ce processus seulement.

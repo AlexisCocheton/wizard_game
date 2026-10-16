@@ -21,8 +21,9 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_702m4"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_sc2n5"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_0rsac"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower_gold.tres" id="22_gx6s8"]
 
-[sub_resource type="Resource" id="Resource_yg1hs"]
+[sub_resource type="Resource" id="Resource_cdabl"]
 script = ExtResource("18_vqqar")
 id = &"obj_no_hit_from_hornblower_gold"
 description = "Corniste dore : gagner sans en etre touche"
@@ -31,7 +32,7 @@ params = {
 "enemy": "hornblower_gold"
 }
 
-[sub_resource type="Resource" id="Resource_gx6s8"]
+[sub_resource type="Resource" id="Resource_5iwsr"]
 script = ExtResource("18_vqqar")
 id = &"obj_kill_type_one_cast_3_gnome"
 description = "Gnome : en tuer 3 d un seul sort"
@@ -41,7 +42,7 @@ params = {
 "enemy": "gnome"
 }
 
-[sub_resource type="Resource" id="Resource_cdabl"]
+[sub_resource type="Resource" id="Resource_mg0vl"]
 script = ExtResource("18_vqqar")
 id = &"obj_win_above_speed_180"
 description = "Gagner avec plus de 180 % de vitesse"
@@ -78,7 +79,7 @@ count = 3
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_5iwsr"]
+[sub_resource type="Resource" id="Resource_aw656"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_1"
 duration = 26.0
@@ -122,7 +123,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_mg0vl"]
+[sub_resource type="Resource" id="Resource_1a71a"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_2"
 duration = 28.0
@@ -166,7 +167,7 @@ count = 4
 spawn_delay = 1.4
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_aw656"]
+[sub_resource type="Resource" id="Resource_xdkut"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_3"
 duration = 28.0
@@ -175,110 +176,9 @@ difficulty = 1.4
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_1jb1f"]
-script = ExtResource("5_mg0vl")
-id = &"hornblower_gold"
-display_name = "Corniste dore"
-kind = 8
-power = 10
-max_hp = 144.0
-base_speed = 40.0
-base_xp = 30
-contact_damage = 0
-anim_key = &"monk_purple"
-sprite_scale = 1.0
-shape = 4
-color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 59.0
-resistances = {
-1: 1.25,
-3: 0.75,
-7: 1.5,
-8: 0.75
-}
-immune_tags = Array[int]([])
-dodge_chance = 0.0
-swarm_count = 1
-entry_side = true
-flying = false
-projectile = false
-phase_interval = 0.0
-buff_speed_pct = 40.0
-devours = false
-enrage_speed_pct = 0.0
-enrage_cap = 1.5
-aura_shield_radius = 0.0
-burst_move = false
-burst_dash_time = 0.6
-burst_pause_time = 0.7
-wave_amplitude = 0.0
-wave_frequency = 0.5
-split_count = 0
-first_hit_shield = false
-heal_per_second = 0.0
-shoot_interval = 0.0
-shot_damage = 2
-blocks_cards = 0
-shockwave_interval = 0.0
-shockwave_radius = 0.0
-shockwave_damage = 0
-extra_lives = 0
-extra_life_hp_pct = 100.0
-extra_life_speed_pct = 35.0
-rebirth_count = 0
-rebirth_delay = 3.0
-reanimate_radius = 0.0
-reanimate_interval = 4.0
-reanimate_max = 0
-laser_damage = 0
-laser_cooldown = 1.5
-sleep_interval = 0.0
-sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
-pattern_interval = 1.5
-parts_count = 0
-part_hp = 0.0
-part_slow_pct = 0.0
-keeps_distance_at = 0.0
-summon_interval = 7.0
-summon_def = ExtResource("6_aw656")
-summon_count = 2
-summon_max_alive = 6
-revive_hp_pct = 0.0
-hits_immune = 0
-reflect_interval = 0.0
-reflect_window = 0.0
-reflect_pct = 0.0
-rewind_interval = 0.0
-rewind_seconds = 3.0
-rewind_max = 0
-twin_group = &""
-twin_revive_delay = 4.0
-twin_revive_hp_pct = 60.0
-twin_max_returns = 2
-chameleon_interval = 0.0
-chameleon_elements = Array[int]([])
-chameleon_weak_mult = 1.5
-chameleon_resist_mult = 0.5
-steal_interval = 0.0
-steal_cast_delay = 4.0
-steal_damage_per_cast_second = 6.0
-devour_heal_pct = 0.0
-devour_delay = 3.0
-mirror_speed_ref = 0
-mirror_speed_min = 0.5
-mirror_speed_max = 2.0
-terrain_break_interval = 0.0
-terrain_break_reach = 520.0
-terrain_break_windup = 1.5
-demoted_from = &""
-gilded_from = &"hornblower"
-
 [sub_resource type="Resource" id="Resource_75qwm"]
 script = ExtResource("21_0rsac")
-enemy = SubResource("Resource_1jb1f")
+enemy = ExtResource("22_gx6s8")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -311,7 +211,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_1a71a"]
+[sub_resource type="Resource" id="Resource_j0r4m"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_boss"
 duration = 45.0
@@ -332,10 +232,10 @@ intro_story = &"side_a1_mesure_intro"
 outro_story = &"side_a1_mesure_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_sc2n5")]([SubResource("Resource_5iwsr"), SubResource("Resource_mg0vl"), SubResource("Resource_aw656"), SubResource("Resource_1a71a")])
+waves = Array[ExtResource("20_sc2n5")]([SubResource("Resource_aw656"), SubResource("Resource_1a71a"), SubResource("Resource_xdkut"), SubResource("Resource_j0r4m")])
 enemy_pool = Array[ExtResource("5_mg0vl")]([ExtResource("6_aw656"), ExtResource("7_1a71a"), ExtResource("8_xdkut"), ExtResource("9_j0r4m"), ExtResource("10_a1b3j"), ExtResource("11_1ht0d"), ExtResource("12_14y5r"), ExtResource("13_4nbob"), ExtResource("14_8ivba")])
 exploration_deck = Array[ExtResource("1_yg1hs")]([ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("4_5iwsr"), ExtResource("4_5iwsr"), ExtResource("4_5iwsr"), ExtResource("4_5iwsr")])
-objectives = Array[ExtResource("18_vqqar")]([SubResource("Resource_yg1hs"), SubResource("Resource_gx6s8"), SubResource("Resource_cdabl")])
+objectives = Array[ExtResource("18_vqqar")]([SubResource("Resource_cdabl"), SubResource("Resource_5iwsr"), SubResource("Resource_mg0vl")])
 levelup_cards = Array[ExtResource("1_yg1hs")]([])
 objective_rewards = Array[ExtResource("1_yg1hs")]([ExtResource("15_4n61c"), ExtResource("16_uu451"), ExtResource("17_rtffv")])
 next_levels = Array[StringName]([])

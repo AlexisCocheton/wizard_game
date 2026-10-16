@@ -24,6 +24,7 @@
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_5oo3t"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_fuixh"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_c4ksi"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer_gold.tres" id="25_iusff"]
 
 [sub_resource type="Resource" id="Resource_pj7ba"]
 script = ExtResource("21_di15f")
@@ -34,7 +35,7 @@ params = {
 "enemy": "sleepy_fox"
 }
 
-[sub_resource type="Resource" id="Resource_58j05"]
+[sub_resource type="Resource" id="Resource_4vbkp"]
 script = ExtResource("21_di15f")
 id = &"obj_multi_kill_6_1"
 description = "Tuer 6 monstres en moins de 1 s"
@@ -44,7 +45,7 @@ params = {
 "window": 1
 }
 
-[sub_resource type="Resource" id="Resource_i8mfq"]
+[sub_resource type="Resource" id="Resource_27kqk"]
 script = ExtResource("21_di15f")
 id = &"obj_win_above_speed_240"
 description = "Gagner avec plus de 240 % de vitesse"
@@ -81,7 +82,7 @@ count = 3
 spawn_delay = 1.5
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_iusff"]
+[sub_resource type="Resource" id="Resource_5mnaa"]
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_1"
 duration = 27.0
@@ -125,7 +126,7 @@ count = 2
 spawn_delay = 3.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_4vbkp"]
+[sub_resource type="Resource" id="Resource_bdjac"]
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_2"
 duration = 29.0
@@ -176,7 +177,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_5mnaa"]
+[sub_resource type="Resource" id="Resource_biy17"]
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_3"
 duration = 30.0
@@ -185,110 +186,9 @@ difficulty = 1.6
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_yerrp"]
-script = ExtResource("5_bdjac")
-id = &"gorgon_gazer_gold"
-display_name = "Gorgone doree"
-kind = 8
-power = 10
-max_hp = 169.0
-base_speed = 32.0
-base_xp = 30
-contact_damage = 0
-anim_key = &"gorgon"
-sprite_scale = 1.0
-shape = 3
-color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 63.0
-resistances = {
-2: 1.5,
-3: 0.75,
-6: 0.75,
-9: 1.25,
-10: 1.75
-}
-immune_tags = Array[int]([])
-dodge_chance = 0.0
-swarm_count = 1
-entry_side = false
-flying = false
-projectile = false
-phase_interval = 0.0
-buff_speed_pct = 0.0
-devours = false
-enrage_speed_pct = 0.0
-enrage_cap = 1.5
-aura_shield_radius = 0.0
-burst_move = false
-burst_dash_time = 0.6
-burst_pause_time = 0.7
-wave_amplitude = 0.0
-wave_frequency = 0.5
-split_count = 0
-first_hit_shield = false
-heal_per_second = 0.0
-shoot_interval = 0.0
-shot_damage = 2
-blocks_cards = 2
-shockwave_interval = 0.0
-shockwave_radius = 0.0
-shockwave_damage = 0
-extra_lives = 0
-extra_life_hp_pct = 100.0
-extra_life_speed_pct = 35.0
-rebirth_count = 0
-rebirth_delay = 3.0
-reanimate_radius = 0.0
-reanimate_interval = 4.0
-reanimate_max = 0
-laser_damage = 0
-laser_cooldown = 1.5
-sleep_interval = 0.0
-sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
-pattern_interval = 1.5
-parts_count = 0
-part_hp = 0.0
-part_slow_pct = 0.0
-keeps_distance_at = 0.0
-summon_interval = 0.0
-summon_count = 1
-summon_max_alive = 6
-revive_hp_pct = 0.0
-hits_immune = 3
-reflect_interval = 0.0
-reflect_window = 0.0
-reflect_pct = 0.0
-rewind_interval = 0.0
-rewind_seconds = 3.0
-rewind_max = 0
-twin_group = &""
-twin_revive_delay = 4.0
-twin_revive_hp_pct = 60.0
-twin_max_returns = 2
-chameleon_interval = 0.0
-chameleon_elements = Array[int]([])
-chameleon_weak_mult = 1.5
-chameleon_resist_mult = 0.5
-steal_interval = 0.0
-steal_cast_delay = 4.0
-steal_damage_per_cast_second = 6.0
-devour_heal_pct = 0.0
-devour_delay = 3.0
-mirror_speed_ref = 0
-mirror_speed_min = 0.5
-mirror_speed_max = 2.0
-terrain_break_interval = 0.0
-terrain_break_reach = 520.0
-terrain_break_windup = 1.5
-demoted_from = &""
-gilded_from = &"gorgon_gazer"
-
 [sub_resource type="Resource" id="Resource_cvcur"]
 script = ExtResource("24_c4ksi")
-enemy = SubResource("Resource_yerrp")
+enemy = ExtResource("25_iusff")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
@@ -328,7 +228,7 @@ count = 4
 spawn_delay = 1.5
 start_offset = 32.0
 
-[sub_resource type="Resource" id="Resource_bdjac"]
+[sub_resource type="Resource" id="Resource_hwtkc"]
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
@@ -349,10 +249,10 @@ intro_story = &"side_a5_vitrine_intro"
 outro_story = &"side_a5_vitrine_outro"
 terrain = "grass"
 backdrop = "act5_divine"
-waves = Array[ExtResource("23_fuixh")]([SubResource("Resource_iusff"), SubResource("Resource_4vbkp"), SubResource("Resource_5mnaa"), SubResource("Resource_bdjac")])
+waves = Array[ExtResource("23_fuixh")]([SubResource("Resource_5mnaa"), SubResource("Resource_bdjac"), SubResource("Resource_biy17"), SubResource("Resource_hwtkc")])
 enemy_pool = Array[ExtResource("5_bdjac")]([ExtResource("6_biy17"), ExtResource("7_hwtkc"), ExtResource("8_lgul1"), ExtResource("9_l4cnk"), ExtResource("10_l7apq"), ExtResource("11_4ap2n"), ExtResource("12_71dax"), ExtResource("13_37nfl"), ExtResource("17_0lldv"), ExtResource("14_gn2ux"), ExtResource("15_pimcn"), ExtResource("16_mmlv5")])
 exploration_deck = Array[ExtResource("1_58j05")]([ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa")])
-objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_pj7ba"), SubResource("Resource_58j05"), SubResource("Resource_i8mfq")])
+objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_pj7ba"), SubResource("Resource_4vbkp"), SubResource("Resource_27kqk")])
 levelup_cards = Array[ExtResource("1_58j05")]([])
 objective_rewards = Array[ExtResource("1_58j05")]([ExtResource("18_lo02g"), ExtResource("19_atgng"), ExtResource("20_gfgtj")])
 next_levels = Array[StringName]([])
