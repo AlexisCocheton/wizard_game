@@ -18,13 +18,13 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="16_uj0qo"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="17_tjd1y"]
 
-[sub_resource type="Resource" id="Resource_tns6i"]
+[sub_resource type="Resource" id="Resource_amgrg"]
 script = ExtResource("14_seoji")
-id = &"obj_win_under_time_150"
-description = "Gagner en moins de 2 min 30"
+id = &"obj_win_under_time_130"
+description = "Gagner en moins de 2 min 10"
 check_key = &"win_under_time"
 params = {
-"seconds": 150
+"seconds": 130
 }
 
 [sub_resource type="Resource" id="Resource_luiq1"]
@@ -289,7 +289,7 @@ backdrop = "act1_sky"
 waves = Array[ExtResource("16_uj0qo")]([SubResource("Resource_2gdrc"), SubResource("Resource_2jsra"), SubResource("Resource_bjmua"), SubResource("Resource_1lmvd")])
 enemy_pool = Array[ExtResource("5_bjmua")]([ExtResource("6_1lmvd"), ExtResource("7_t7i6r"), ExtResource("8_ufxre"), ExtResource("9_astaf"), ExtResource("10_xv2oe")])
 exploration_deck = Array[ExtResource("1_luiq1")]([ExtResource("2_pjjr2"), ExtResource("2_pjjr2"), ExtResource("2_pjjr2"), ExtResource("2_pjjr2"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc")])
-objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_tns6i"), SubResource("Resource_luiq1"), SubResource("Resource_pjjr2")])
+objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_amgrg"), SubResource("Resource_luiq1"), SubResource("Resource_pjjr2")])
 levelup_cards = Array[ExtResource("1_luiq1")]([])
 objective_rewards = Array[ExtResource("1_luiq1")]([ExtResource("11_yrqik"), ExtResource("12_tls6j"), ExtResource("13_mg102")])
 next_levels = Array[StringName]([])

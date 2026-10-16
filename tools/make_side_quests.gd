@@ -299,13 +299,13 @@ static func quetes() -> Array[Dictionary]:
 		"objectifs": [
 			[&"kill_flying", {"count": 8}],
 			[&"win_under_time", {"seconds": 150}],
-			[&"no_damage_taken", {}],
+			[&"win_above_speed", {"pct": 240}],
 		],
 	})
 	# --- ACTE 3 : LE TRESOR DE TOMBOL ------------------------------------------
 	# Apres la cour des rois morts (lvl_20) : un roi qui fuit ses creanciers vide
 	# ses coffres. Il ne reste que la garde, doree, qui RENVOIE les coups : frapper
-	# entre ses gardes est l objectif de rang 2.
+	# entre ses gardes est l objectif le plus dur (rang 3, mesure au banc).
 	out.append({
 		"id": "side_a3_tresor", "nom": "Le tresor de Tombol", "acte": 3, "apres": "lvl_20", "perso": "",
 		"sous_titre": "Une salle vide et sa garde",
@@ -328,9 +328,9 @@ static func quetes() -> Array[Dictionary]:
 				["ghoul_priest", 1, 1.0, 20.0], ["shade", 3, 2.0, 24.0]]],
 		],
 		"objectifs": [
-			[&"multi_kill", {"count": 4, "window": 1}],
+			[&"multi_kill", {"count": 5, "window": 1}],
+			[&"win_under_time", {"seconds": 140}],
 			[&"never_hit_reflect", {}],
-			[&"no_hit_from", {"enemy": "parry_skeleton_gold"}],
 		],
 	})
 	# --- ACTE 4 : LE CHAMPION DE KALTEK ----------------------------------------
@@ -347,19 +347,19 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["venom_mire", "meteor_storm", "forge_dial"],
 		"passifs": ["pass_ice_winter", "pass_frostbite", "pass_ice_bite", "pass_timelock"],
 		"vagues": [
-			["1", 26.0, 1.85, "", [["berserker", 2, 3.0, 0.0], ["hopper", 3, 1.5, 6.0],
+			["1", 26.0, 1.95, "", [["berserker", 2, 3.0, 0.0], ["hopper", 3, 1.5, 6.0],
 				["sprite", 3, 1.4, 14.0]]],
-			["2", 28.0, 1.9, "", [["void_knight", 2, 3.0, 0.0], ["berserker", 2, 3.0, 8.0],
+			["2", 28.0, 2.0, "", [["void_knight", 2, 3.0, 0.0], ["berserker", 2, 3.0, 8.0],
 				["carnivore_plant", 2, 2.0, 16.0]]],
-			["3", 30.0, 1.95, "", [["berserker", 3, 3.0, 0.0], ["mushroom", 2, 2.5, 8.0],
+			["3", 30.0, 2.05, "", [["berserker", 3, 3.0, 0.0], ["mushroom", 2, 2.5, 8.0],
 				["rat_swarm", 2, 1.5, 14.0], ["imp_archer", 1, 1.0, 20.0]]],
-			["boss", 46.0, 2.0, "boss", [["berserker_gold", 1, 1.0, 0.0],
+			["boss", 46.0, 2.25, "boss", [["berserker_gold", 1, 1.0, 0.0],
 				["berserker", 2, 3.0, 10.0], ["sprite", 4, 1.5, 20.0]]],
 		],
 		"objectifs": [
+			[&"win_under_time", {"seconds": 130}],
 			[&"kill_type_one_cast", {"enemy": "berserker", "count": 2}],
-			[&"no_hit_from", {"enemy": "berserker_gold"}],
-			[&"win_above_speed", {"pct": 280}],
+			[&"multi_kill", {"count": 5, "window": 1}],
 		],
 	})
 	# --- ACTE 5 : LA VITRINE DE NURI -------------------------------------------
@@ -389,8 +389,8 @@ static func quetes() -> Array[Dictionary]:
 		],
 		"objectifs": [
 			[&"hit_from", {"enemy": "sleepy_fox"}],
-			[&"multi_kill", {"count": 5, "window": 1}],
-			[&"win_above_speed", {"pct": 300}],
+			[&"multi_kill", {"count": 6, "window": 1}],
+			[&"win_above_speed", {"pct": 240}],
 		],
 	})
 	# --- L ECUYER : HAUTE-NACELLE ----------------------------------------------
@@ -419,7 +419,7 @@ static func quetes() -> Array[Dictionary]:
 				["shade", 2, 2.0, 26.0]]],
 		],
 		"objectifs": [
-			[&"win_under_time", {"seconds": 150}],
+			[&"win_under_time", {"seconds": 130}],
 			[&"kill_type_one_cast", {"enemy": "nacelle_raider", "count": 2}],
 			[&"multi_kill", {"count": 3, "window": 1}],
 		],
@@ -452,9 +452,9 @@ static func quetes() -> Array[Dictionary]:
 				["ghoul_priest", 2, 3.0, 20.0], ["mushroom", 2, 3.0, 26.0], ["shade", 3, 2.0, 32.0]]],
 		],
 		"objectifs": [
-			[&"element_casts", {"element": "FIRE", "count": 40}],
+			[&"element_casts", {"element": "FIRE", "count": 30}],
 			[&"kill_type_one_cast", {"enemy": "mushroom", "count": 2}],
-			[&"no_damage_taken", {}],
+			[&"win_above_speed", {"pct": 280}],
 		],
 	})
 	# --- L APPRENTIE D AZUR : LE CRISTAL D YMOA --------------------------------
@@ -474,19 +474,19 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["echo_of_the_hand", "twin_channeling", "world_loom"],
 		"passifs": ["pass_storm_reflex", "pass_storm_surge", "pass_echo", "pass_scholar"],
 		"vagues": [
-			["1", 26.0, 1.35, "", [["void_knight", 1, 1.0, 0.0], ["shade", 3, 2.0, 4.0],
+			["1", 26.0, 1.3, "", [["void_knight", 1, 1.0, 0.0], ["shade", 3, 2.0, 4.0],
 				["gnome", 3, 1.6, 12.0]]],
-			["2", 28.0, 1.4, "", [["ghoul_priest", 2, 3.0, 0.0], ["void_knight", 2, 3.0, 6.0],
+			["2", 28.0, 1.35, "", [["ghoul_priest", 2, 3.0, 0.0], ["void_knight", 2, 3.0, 6.0],
 				["shade", 2, 2.0, 14.0]]],
-			["3", 30.0, 1.45, "", [["golem", 1, 1.0, 0.0], ["void_knight", 2, 3.0, 6.0],
-				["ghoul_priest", 1, 1.0, 12.0], ["shade", 2, 2.0, 18.0]]],
+			["3", 30.0, 1.4, "", [["golem", 1, 1.0, 0.0], ["void_knight", 2, 3.0, 6.0],
+				["ghoul_priest", 2, 3.0, 12.0], ["shade", 2, 2.0, 18.0]]],
 			["boss", 46.0, 1.1, "boss", [["void_knight_gold", 1, 1.0, 0.0],
 				["shade", 3, 2.0, 8.0], ["void_knight", 1, 1.0, 18.0],
 				["ghoul_priest", 1, 1.0, 26.0]]],
 		],
 		"objectifs": [
-			[&"multi_kill", {"count": 3, "window": 1}],
 			[&"kill_type_one_cast", {"enemy": "shade", "count": 2}],
+			[&"multi_kill", {"count": 3, "window": 1}],
 			[&"no_hit_from", {"enemy": "void_knight_gold"}],
 		],
 	})

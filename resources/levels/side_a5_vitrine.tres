@@ -36,21 +36,21 @@ params = {
 
 [sub_resource type="Resource" id="Resource_58j05"]
 script = ExtResource("21_di15f")
-id = &"obj_multi_kill_5_1"
-description = "Tuer 5 monstres en moins de 1 s"
+id = &"obj_multi_kill_6_1"
+description = "Tuer 6 monstres en moins de 1 s"
 check_key = &"multi_kill"
 params = {
-"count": 5,
+"count": 6,
 "window": 1
 }
 
-[sub_resource type="Resource" id="Resource_vo2kc"]
+[sub_resource type="Resource" id="Resource_i8mfq"]
 script = ExtResource("21_di15f")
-id = &"obj_win_above_speed_300"
-description = "Gagner avec plus de 300 % de vitesse"
+id = &"obj_win_above_speed_240"
+description = "Gagner avec plus de 240 % de vitesse"
 check_key = &"win_above_speed"
 params = {
-"pct": 300
+"pct": 240
 }
 
 [sub_resource type="Resource" id="Resource_ab3ci"]
@@ -352,7 +352,7 @@ backdrop = "act5_divine"
 waves = Array[ExtResource("23_fuixh")]([SubResource("Resource_iusff"), SubResource("Resource_4vbkp"), SubResource("Resource_5mnaa"), SubResource("Resource_bdjac")])
 enemy_pool = Array[ExtResource("5_bdjac")]([ExtResource("6_biy17"), ExtResource("7_hwtkc"), ExtResource("8_lgul1"), ExtResource("9_l4cnk"), ExtResource("10_l7apq"), ExtResource("11_4ap2n"), ExtResource("12_71dax"), ExtResource("13_37nfl"), ExtResource("17_0lldv"), ExtResource("14_gn2ux"), ExtResource("15_pimcn"), ExtResource("16_mmlv5")])
 exploration_deck = Array[ExtResource("1_58j05")]([ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa")])
-objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_pj7ba"), SubResource("Resource_58j05"), SubResource("Resource_vo2kc")])
+objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_pj7ba"), SubResource("Resource_58j05"), SubResource("Resource_i8mfq")])
 levelup_cards = Array[ExtResource("1_58j05")]([])
 objective_rewards = Array[ExtResource("1_58j05")]([ExtResource("18_lo02g"), ExtResource("19_atgng"), ExtResource("20_gfgtj")])
 next_levels = Array[StringName]([])

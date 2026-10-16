@@ -67,7 +67,25 @@ const Progression = preload("res://tests/unit/test_level_progression.gd")
 ## reussi ET rate au moins une fois, taux strictement decroissant du rang 1 au
 ## rang 3. Un objectif retouche change d identifiant (DEC-023) : sa ligne est
 ## alors refusee jusqu a la re-mesure.
+##
+## Mesure du 17/10 (main 9e12fea : B1a et B1b fusionnes, B2 pas encore) : les
+## 24 objectifs re-joues, 60 parties chacun. Les seuils viennent d une sonde
+## qui joue les memes graines et compte, pour chaque seuil candidat, les
+## victoires qui le valident ; deux objectifs du premier jet ont ete retires
+## pour 0 / 60 (« sans degats » a l atelier et chez la fee, « pas touche par le
+## Champion dore » dans l arene). APRES LA FUSION DE B2 (decks de base de la
+## campagne, donc communes possedees a l ouverture) : re-mesurer
+## (`tools/objective_bench.tscn -- --niveaux=side_... --parties=60`) et coller
+## les lignes « MESURES » du rapport ici.
 const MESURES: Dictionary = {
+	"side_a1_mesure": [["obj_no_hit_from_hornblower_gold", 34], ["obj_kill_type_one_cast_3_gnome", 22], ["obj_win_above_speed_180", 3]],
+	"side_a2_atelier": [["obj_kill_flying_8", 42], ["obj_win_under_time_150", 33], ["obj_win_above_speed_240", 7]],
+	"side_a3_tresor": [["obj_multi_kill_5_1", 30], ["obj_win_under_time_140", 21], ["obj_never_hit_reflect", 5]],
+	"side_a4_champion": [["obj_win_under_time_130", 36], ["obj_kill_type_one_cast_2_berserker", 24], ["obj_multi_kill_5_1", 12]],
+	"side_a5_vitrine": [["obj_hit_from_sleepy_fox", 30], ["obj_multi_kill_6_1", 23], ["obj_win_above_speed_240", 8]],
+	"side_squire": [["obj_win_under_time_130", 39], ["obj_kill_type_one_cast_2_nacelle_raider", 32], ["obj_multi_kill_3_1", 17]],
+	"side_fairy": [["obj_element_casts_30_fire", 32], ["obj_kill_type_one_cast_2_mushroom", 13], ["obj_win_above_speed_280", 5]],
+	"side_bluewitch": [["obj_kill_type_one_cast_2_shade", 18], ["obj_multi_kill_3_1", 13], ["obj_no_hit_from_void_knight_gold", 3]],
 }
 
 

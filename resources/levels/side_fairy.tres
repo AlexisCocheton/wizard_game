@@ -23,11 +23,11 @@
 
 [sub_resource type="Resource" id="Resource_irc0y"]
 script = ExtResource("16_3d2xi")
-id = &"obj_element_casts_40_fire"
-description = "Lancer 40 sorts de feu"
+id = &"obj_element_casts_30_fire"
+description = "Lancer 30 sorts de feu"
 check_key = &"element_casts"
 params = {
-"count": 40,
+"count": 30,
 "element": "FIRE"
 }
 
@@ -41,12 +41,14 @@ params = {
 "enemy": "mushroom"
 }
 
-[sub_resource type="Resource" id="Resource_xnxle"]
+[sub_resource type="Resource" id="Resource_t3ncq"]
 script = ExtResource("16_3d2xi")
-id = &"obj_untouched"
-description = "Gagner sans subir de degats"
-check_key = &"no_damage_taken"
-params = {}
+id = &"obj_win_above_speed_280"
+description = "Gagner avec plus de 280 % de vitesse"
+check_key = &"win_above_speed"
+params = {
+"pct": 280
+}
 
 [sub_resource type="Resource" id="Resource_n8ig5"]
 script = ExtResource("19_luq6e")
@@ -76,7 +78,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_t3ncq"]
+[sub_resource type="Resource" id="Resource_f6dxf"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_1"
 duration = 26.0
@@ -113,7 +115,7 @@ count = 3
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_f6dxf"]
+[sub_resource type="Resource" id="Resource_h7dmw"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_2"
 duration = 27.0
@@ -157,7 +159,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_h7dmw"]
+[sub_resource type="Resource" id="Resource_k5idq"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_3"
 duration = 28.0
@@ -310,7 +312,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 32.0
 
-[sub_resource type="Resource" id="Resource_k5idq"]
+[sub_resource type="Resource" id="Resource_5ux3c"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_boss"
 duration = 46.0
@@ -331,10 +333,10 @@ intro_story = &"side_fairy_intro"
 outro_story = &"side_fairy_outro"
 terrain = "grass"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_t3ncq"), SubResource("Resource_f6dxf"), SubResource("Resource_h7dmw"), SubResource("Resource_k5idq")])
+waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_f6dxf"), SubResource("Resource_h7dmw"), SubResource("Resource_k5idq"), SubResource("Resource_5ux3c")])
 enemy_pool = Array[ExtResource("5_f6dxf")]([ExtResource("6_h7dmw"), ExtResource("7_k5idq"), ExtResource("8_5ux3c"), ExtResource("9_irc0y"), ExtResource("9_eku1o"), ExtResource("10_bd7r7"), ExtResource("11_50kjp"), ExtResource("12_4ugdg")])
 exploration_deck = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y")])
-objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_irc0y"), SubResource("Resource_ycyp6"), SubResource("Resource_xnxle")])
+objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_irc0y"), SubResource("Resource_ycyp6"), SubResource("Resource_t3ncq")])
 levelup_cards = Array[ExtResource("1_bq3hy")]([])
 objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("13_vy50h"), ExtResource("14_jsci0"), ExtResource("15_twp52")])
 next_levels = Array[StringName]([])

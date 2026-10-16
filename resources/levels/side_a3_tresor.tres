@@ -22,12 +22,21 @@
 
 [sub_resource type="Resource" id="Resource_anhro"]
 script = ExtResource("16_7b8w6")
-id = &"obj_multi_kill_4_1"
-description = "Tuer 4 monstres en moins de 1 s"
+id = &"obj_multi_kill_5_1"
+description = "Tuer 5 monstres en moins de 1 s"
 check_key = &"multi_kill"
 params = {
-"count": 4,
+"count": 5,
 "window": 1
+}
+
+[sub_resource type="Resource" id="Resource_lhfsq"]
+script = ExtResource("16_7b8w6")
+id = &"obj_win_under_time_140"
+description = "Gagner en moins de 2 min 20"
+check_key = &"win_under_time"
+params = {
+"seconds": 140
 }
 
 [sub_resource type="Resource" id="Resource_4hx7v"]
@@ -36,15 +45,6 @@ id = &"obj_never_hit_reflect"
 description = "Ne jamais frapper un monstre en garde de renvoi"
 check_key = &"never_hit_reflect"
 params = {}
-
-[sub_resource type="Resource" id="Resource_lhfsq"]
-script = ExtResource("16_7b8w6")
-id = &"obj_no_hit_from_parry_skeleton_gold"
-description = "Squelette pareur dore : gagner sans en etre touche"
-check_key = &"no_hit_from"
-params = {
-"enemy": "parry_skeleton_gold"
-}
 
 [sub_resource type="Resource" id="Resource_8iw4m"]
 script = ExtResource("19_no8sg")
@@ -319,7 +319,7 @@ backdrop = "act2_graveyard"
 waves = Array[ExtResource("18_ww2vv")]([SubResource("Resource_33vns"), SubResource("Resource_0fbur"), SubResource("Resource_5px1n"), SubResource("Resource_5isd3")])
 enemy_pool = Array[ExtResource("5_5px1n")]([ExtResource("6_5isd3"), ExtResource("7_0s1a0"), ExtResource("8_im5b0"), ExtResource("9_81hr5"), ExtResource("10_vsf5t"), ExtResource("11_x6i4y"), ExtResource("12_x4xa4")])
 exploration_deck = Array[ExtResource("1_anhro")]([ExtResource("2_lhfsq"), ExtResource("2_lhfsq"), ExtResource("2_lhfsq"), ExtResource("2_lhfsq"), ExtResource("3_33vns"), ExtResource("3_33vns"), ExtResource("3_33vns"), ExtResource("3_33vns"), ExtResource("4_0fbur"), ExtResource("4_0fbur"), ExtResource("4_0fbur"), ExtResource("4_0fbur")])
-objectives = Array[ExtResource("16_7b8w6")]([SubResource("Resource_anhro"), SubResource("Resource_4hx7v"), SubResource("Resource_lhfsq")])
+objectives = Array[ExtResource("16_7b8w6")]([SubResource("Resource_anhro"), SubResource("Resource_lhfsq"), SubResource("Resource_4hx7v")])
 levelup_cards = Array[ExtResource("1_anhro")]([])
 objective_rewards = Array[ExtResource("1_anhro")]([ExtResource("13_x0j4e"), ExtResource("14_7ooiq"), ExtResource("15_oxi2r")])
 next_levels = Array[StringName]([])

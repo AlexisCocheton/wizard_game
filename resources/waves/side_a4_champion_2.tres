@@ -32,6 +32,6 @@ script = ExtResource("5_gcinr")
 id = &"side_a4_champion_2"
 duration = 28.0
 entries = Array[ExtResource("1_kv1ih")]([SubResource("Resource_kv1ih"), SubResource("Resource_4cngg"), SubResource("Resource_ith2g")])
-difficulty = 1.9
+difficulty = 2.0
 is_miniboss = false
 is_boss = false
