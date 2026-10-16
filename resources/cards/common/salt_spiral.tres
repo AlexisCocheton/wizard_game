@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_p1xx1"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_7dv4r"]
@@ -11,6 +11,67 @@ magnitude = 150.0
 duration = 3.0
 radius = 220.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_7dv4r"]
+script = ExtResource("2_7dv4r")
+id = &"sel_brulant"
+title = "Sel brulant"
+description = "Le sel ronge le coeur de la spirale : 6 degats de VENT par seconde"
+modifiers = Array[Dictionary]([{
+"duration": 3.0,
+"key": &"ground_zone",
+"magnitude": 6.0,
+"op": "add_effect",
+"params": {},
+"radius": 110.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_c0yxe"]
+script = ExtResource("1_p1xx1")
+key = &"vortex_pull"
+magnitude = 150.0
+duration = 3.0
+radius = 220.0
+params = {
+&"aim_offset": Vector2(-260, 0)
+}
+
+[sub_resource type="Resource" id="Resource_vqc8e"]
+script = ExtResource("1_p1xx1")
+key = &"vortex_pull"
+magnitude = 150.0
+duration = 3.0
+radius = 220.0
+params = {
+&"aim_offset": Vector2(260, 0)
+}
+
+[sub_resource type="Resource" id="Resource_m8w0r"]
+script = ExtResource("2_7dv4r")
+id = &"rideau_de_spirales"
+title = "Rideau de spirales"
+description = "Trois spirales cote a cote aspirent toute une rangee"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_c0yxe")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_vqc8e")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.5
+}, {
+"axis": &"force",
+"op": "axis",
+"pct": -0.35
+}])
 
 [resource]
 script = ExtResource("3_c0yxe")
@@ -29,4 +90,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"spiral_salt"
 sfx_key = &"wind_swirl"
-major_upgrades = Array[ExtResource("2_7dv4r")]([])
+major_upgrades = Array[ExtResource("2_7dv4r")]([SubResource("Resource_7dv4r"), SubResource("Resource_m8w0r")])

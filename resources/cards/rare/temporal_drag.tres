@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_rnomm"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_dgi5v"]
@@ -11,6 +11,44 @@ magnitude = 40.0
 duration = 5.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_dgi5v"]
+script = ExtResource("2_dgi5v")
+id = &"arret_du_temps"
+title = "Arret du temps"
+description = "Les monstres sont quasi figes (-90 %), pendant 1,5 s seulement"
+modifiers = Array[Dictionary]([{
+"field": "magnitude",
+"key": &"slow_enemy_gauge",
+"op": "set",
+"value": 90.0
+}, {
+"field": "duration",
+"key": &"slow_enemy_gauge",
+"op": "set",
+"value": 1.5
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_cbpsy"]
+script = ExtResource("2_dgi5v")
+id = &"double_entrave"
+title = "Double entrave"
+description = "L entrave revient 6 s plus tard : deux ralentissements de suite"
+modifiers = Array[Dictionary]([{
+"delay": 6.0,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"slow",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_gr3u8")
@@ -29,4 +67,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"timemagic"
 sfx_key = &"time_slow"
-major_upgrades = Array[ExtResource("2_dgi5v")]([])
+major_upgrades = Array[ExtResource("2_dgi5v")]([SubResource("Resource_dgi5v"), SubResource("Resource_cbpsy")])

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_5iyag"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_6o2v1"]
@@ -28,6 +28,41 @@ duration = 8.0
 radius = 0.0
 params = {}
 
+[sub_resource type="Resource" id="Resource_g4ueu"]
+script = ExtResource("2_6o2v1")
+id = &"metier_eclair"
+title = "Metier eclair"
+description = "Le metier se retisse presque aussitot"
+modifiers = Array[Dictionary]([{
+"factor": 0.2,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_dq6y3"]
+script = ExtResource("2_6o2v1")
+id = &"seconde_trame"
+title = "Seconde trame"
+description = "Le temps se retisse une seconde fois, 10 s plus tard"
+modifiers = Array[Dictionary]([{
+"delay": 10.0,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"slow",
+"op": "axis",
+"pct": -0.45
+}, {
+"axis": &"tempo",
+"op": "axis",
+"pct": -0.45
+}])
+
 [resource]
 script = ExtResource("2_il7cw")
 id = &"world_loom"
@@ -45,4 +80,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"weave_bloom"
 sfx_key = &"spell_grand"
-major_upgrades = Array[ExtResource("2_6o2v1")]([])
+major_upgrades = Array[ExtResource("2_6o2v1")]([SubResource("Resource_g4ueu"), SubResource("Resource_dq6y3")])

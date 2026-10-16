@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_qc73s"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_2hfot"]
@@ -14,6 +14,84 @@ params = {
 &"kind": "bramble",
 &"slow_pct": 35.0
 }
+
+[sub_resource type="Resource" id="Resource_2hfot"]
+script = ExtResource("2_2hfot")
+id = &"ronces_de_fer"
+title = "Ronces de fer"
+description = "Incassables, ralentissent de 70 % et mordent a 6 par seconde, mais fanent en 12 s"
+modifiers = Array[Dictionary]([{
+"key": &"place_terrain",
+"op": "set",
+"param": &"unbreakable",
+"value": true
+}, {
+"field": "duration",
+"key": &"place_terrain",
+"op": "set",
+"value": 12.0
+}, {
+"key": &"place_terrain",
+"op": "set",
+"param": &"slow_pct",
+"value": 70.0
+}, {
+"field": "magnitude",
+"key": &"place_terrain",
+"op": "set",
+"value": 6.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_p2j1g"]
+script = ExtResource("1_qc73s")
+key = &"place_terrain"
+magnitude = 2.0
+duration = 0.0
+radius = 170.0
+params = {
+&"aim_offset": Vector2(-200, 0),
+&"kind": "bramble",
+&"slow_pct": 35.0
+}
+
+[sub_resource type="Resource" id="Resource_3i6pr"]
+script = ExtResource("1_qc73s")
+key = &"place_terrain"
+magnitude = 2.0
+duration = 0.0
+radius = 170.0
+params = {
+&"aim_offset": Vector2(200, 0),
+&"kind": "bramble",
+&"slow_pct": 35.0
+}
+
+[sub_resource type="Resource" id="Resource_knis3"]
+script = ExtResource("2_2hfot")
+id = &"haie_de_ronces"
+title = "Haie de ronces"
+description = "Trois buissons cote a cote : une haie sur toute une rangee"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_p2j1g")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_3i6pr")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.5
+}, {
+"axis": &"slow",
+"op": "axis",
+"pct": -0.3
+}])
 
 [resource]
 script = ExtResource("2_kcara")
@@ -32,4 +110,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"slash_arc"
 sfx_key = &"bramble_rustle"
-major_upgrades = Array[ExtResource("2_2hfot")]([])
+major_upgrades = Array[ExtResource("2_2hfot")]([SubResource("Resource_2hfot"), SubResource("Resource_knis3")])

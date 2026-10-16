@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_cbjeo"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1gy7k"]
@@ -11,6 +11,68 @@ magnitude = 14.0
 duration = 1.1
 radius = 200.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_vfl0d"]
+script = ExtResource("2_vfl0d")
+id = &"tonnerre_roulant"
+title = "Tonnerre roulant"
+description = "Le tonnerre gronde deux fois : nouvel etourdissement quand le premier cesse"
+modifiers = Array[Dictionary]([{
+"delay": 1.1,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.4
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_1yvt1"]
+script = ExtResource("1_cbjeo")
+key = &"stun_zone"
+magnitude = 14.0
+duration = 1.1
+radius = 200.0
+params = {
+&"aim_offset": Vector2(0, -220)
+}
+
+[sub_resource type="Resource" id="Resource_vff76"]
+script = ExtResource("1_cbjeo")
+key = &"stun_zone"
+magnitude = 14.0
+duration = 1.1
+radius = 200.0
+params = {
+&"aim_offset": Vector2(0, -440)
+}
+
+[sub_resource type="Resource" id="Resource_mb4y5"]
+script = ExtResource("2_vfl0d")
+id = &"foudre_en_colonne"
+title = "Foudre en colonne"
+description = "Trois racines en colonne : le tonnerre frappe tout un couloir"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_1yvt1")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_vff76")
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.5
+}, {
+"axis": &"damage",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_1gy7k")
@@ -29,4 +91,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"lightning_fork"
 sfx_key = &"zap_short"
-major_upgrades = Array[ExtResource("2_vfl0d")]([])
+major_upgrades = Array[ExtResource("2_vfl0d")]([SubResource("Resource_vfl0d"), SubResource("Resource_mb4y5")])

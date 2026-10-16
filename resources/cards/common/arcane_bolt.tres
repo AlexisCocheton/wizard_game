@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_gj7ww"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_7h5tv"]
@@ -11,6 +11,45 @@ magnitude = 26.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_ibk6b"]
+script = ExtResource("2_ibk6b")
+id = &"eclat_arcanique"
+title = "Eclat arcanique"
+description = "Le trait eclate : 6 degats ARCANIQUES par monstre proche, a chacun d eux"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"damage_per_enemy",
+"magnitude": 6.0,
+"op": "add_effect",
+"params": {},
+"radius": 150.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_0hycx"]
+script = ExtResource("2_ibk6b")
+id = &"salve_arcanique"
+title = "Salve arcanique"
+description = "Trois traits en 1 s ; si la cible tombe, le suivant vise le plus proche"
+modifiers = Array[Dictionary]([{
+"delay": 0.5,
+"factor": 1.0,
+"op": "repeat"
+}, {
+"delay": 1.0,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.55
+}])
 
 [resource]
 script = ExtResource("2_7h5tv")
@@ -29,4 +68,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"orb_burst"
 sfx_key = &"spell_arcane"
-major_upgrades = Array[ExtResource("2_ibk6b")]([])
+major_upgrades = Array[ExtResource("2_ibk6b")]([SubResource("Resource_ibk6b"), SubResource("Resource_0hycx")])

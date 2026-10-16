@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_e0lxf"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_1iesi"]
@@ -13,6 +13,51 @@ radius = 170.0
 params = {
 &"slow_pct": 85.0
 }
+
+[sub_resource type="Resource" id="Resource_5dgcp"]
+script = ExtResource("2_5dgcp")
+id = &"prison_de_glace"
+title = "Prison de glace"
+description = "Le gel fige net : les monstres de la zone sont etourdis 1,5 s"
+modifiers = Array[Dictionary]([{
+"duration": 1.5,
+"key": &"stun_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {},
+"radius": 170.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.4
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_2nax2"]
+script = ExtResource("2_5dgcp")
+id = &"onde_de_froid"
+title = "Onde de froid"
+description = "Le froid se propage : la zone part a x0,3, s etend a x2 puis se replie"
+modifiers = Array[Dictionary]([{
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_start",
+"value": 0.3
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_peak",
+"value": 2.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"slow",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_1iesi")
@@ -31,4 +76,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"frost_spikes"
 sfx_key = &"ice_crack"
-major_upgrades = Array[ExtResource("2_5dgcp")]([])
+major_upgrades = Array[ExtResource("2_5dgcp")]([SubResource("Resource_5dgcp"), SubResource("Resource_2nax2")])

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_rf5se"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_5ena3"]
@@ -11,6 +11,52 @@ magnitude = 1.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_xl4xp"]
+script = ExtResource("2_xl4xp")
+id = &"maitrise"
+title = "Maitrise"
+description = "A la place : un sort de ta main, au choix, monte d un niveau"
+modifiers = Array[Dictionary]([{
+"field": "magnitude",
+"key": &"hand_card_xp",
+"op": "set",
+"value": 0.0
+}, {
+"duration": 0.0,
+"key": &"hand_card_level",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"count": 1
+},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.2
+}])
+
+[sub_resource type="Resource" id="Resource_i23n7"]
+script = ExtResource("2_xl4xp")
+id = &"meditation"
+title = "Meditation"
+description = "La main regagne 1 XP par sort 5 s plus tard"
+modifiers = Array[Dictionary]([{
+"delay": 5.0,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_5ena3")
@@ -29,4 +75,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"hex_sigil"
 sfx_key = &"charge_magic"
-major_upgrades = Array[ExtResource("2_xl4xp")]([])
+major_upgrades = Array[ExtResource("2_xl4xp")]([SubResource("Resource_xl4xp"), SubResource("Resource_i23n7")])

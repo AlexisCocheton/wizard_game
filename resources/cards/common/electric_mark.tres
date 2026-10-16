@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_xi7jg"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_v00fo"]
@@ -13,6 +13,53 @@ radius = 0.0
 params = {
 &"decay": 1.0
 }
+
+[sub_resource type="Resource" id="Resource_v00fo"]
+script = ExtResource("2_v00fo")
+id = &"orage_en_chaine"
+title = "Orage en chaine"
+description = "A chaque mort, la marque saute sur DEUX monstres au lieu d un"
+modifiers = Array[Dictionary]([{
+"key": &"electric_mark",
+"op": "set",
+"param": &"marks_per_death",
+"value": 2
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.3
+}, {
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_mxaq0"]
+script = ExtResource("2_v00fo")
+id = &"foudre_tenace"
+title = "Foudre tenace"
+description = "La marque ne faiblit plus de saut en saut, mais saute moins loin"
+modifiers = Array[Dictionary]([{
+"key": &"electric_mark",
+"op": "set",
+"param": &"decay",
+"value": 0.0
+}, {
+"key": &"electric_mark",
+"op": "set",
+"param": &"jump_range",
+"value": 200.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}, {
+"axis": &"cast",
+"op": "axis",
+"pct": -0.2
+}])
 
 [resource]
 script = ExtResource("3_mxaq0")
@@ -31,4 +78,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"bolt_cross"
 sfx_key = &"zap_long"
-major_upgrades = Array[ExtResource("2_v00fo")]([])
+major_upgrades = Array[ExtResource("2_v00fo")]([SubResource("Resource_v00fo"), SubResource("Resource_mxaq0")])

@@ -96,6 +96,8 @@ const SUITES: Array[String] = [
 	# Vague 10 B3 : les huit quetes annexes, leurs boss dores, le surplus de
 	# recompenses de la campagne, les annexes d apprenti, leurs scenes.
 	"res://tests/unit/test_side_quests.gd",
+	# Vague 10 B1b : deux MAJEURES par sort du contenu (structure, prix, textes, terrain).
+	"res://tests/unit/test_majeures_contenu.gd",
 ]
 
 var _total_checks: int = 0

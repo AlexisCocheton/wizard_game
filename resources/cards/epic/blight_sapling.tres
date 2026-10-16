@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0bp55"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_5c0cw"]
@@ -14,6 +14,57 @@ params = {
 &"kind": "tree",
 &"prop_hp": 120.0
 }
+
+[sub_resource type="Resource" id="Resource_5c0cw"]
+script = ExtResource("2_5c0cw")
+id = &"arbre_maudit"
+title = "Arbre maudit"
+description = "Indestructible et deux fois plus toxique, mais il meurt en 15 s"
+modifiers = Array[Dictionary]([{
+"key": &"place_terrain",
+"op": "set",
+"param": &"unbreakable",
+"value": true
+}, {
+"field": "duration",
+"key": &"place_terrain",
+"op": "set",
+"value": 15.0
+}, {
+"factor": 2.0,
+"field": "magnitude",
+"key": &"place_terrain",
+"op": "scale"
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_m5hqp"]
+script = ExtResource("2_5c0cw")
+id = &"spores"
+title = "Spores"
+description = "Des spores s etendent 10 s : qui les traverse perd 4 PV par seconde pendant 5 s"
+modifiers = Array[Dictionary]([{
+"duration": 10.0,
+"key": &"ground_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"grow_peak": 1.4,
+&"grow_start": 0.3,
+&"residue_dps": 4.0,
+&"residue_duration": 5.0
+},
+"radius": 300.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"hp",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("2_7dxnh")
@@ -32,4 +83,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"spirit_violet"
 sfx_key = &"wood_creak"
-major_upgrades = Array[ExtResource("2_5c0cw")]([])
+major_upgrades = Array[ExtResource("2_5c0cw")]([SubResource("Resource_5c0cw"), SubResource("Resource_m5hqp")])

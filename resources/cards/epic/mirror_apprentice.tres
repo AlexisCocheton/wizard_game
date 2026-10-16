@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_u5spx"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_41nt7"]
@@ -11,6 +11,63 @@ magnitude = 12.0
 duration = 8.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_41nt7"]
+script = ExtResource("1_u5spx")
+key = &"summon_ally"
+magnitude = 12.0
+duration = 8.0
+radius = 0.0
+params = {}
+
+[sub_resource type="Resource" id="Resource_6kt58"]
+script = ExtResource("1_u5spx")
+key = &"summon_ally"
+magnitude = 12.0
+duration = 8.0
+radius = 0.0
+params = {}
+
+[sub_resource type="Resource" id="Resource_cu1cn"]
+script = ExtResource("2_41nt7")
+id = &"galerie_des_glaces"
+title = "Galerie des glaces"
+description = "Trois reflets au lieu d un, chacun plus fragile"
+modifiers = Array[Dictionary]([{
+"op": "add_effect",
+"spec": SubResource("Resource_41nt7")
+}, {
+"op": "add_effect",
+"spec": SubResource("Resource_6kt58")
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.55
+}, {
+"axis": &"duration",
+"op": "axis",
+"pct": -0.3
+}])
+
+[sub_resource type="Resource" id="Resource_0uy3t"]
+script = ExtResource("2_41nt7")
+id = &"reflet_complice"
+title = "Reflet complice"
+description = "Le reflet incante avec toi : +40 % d incantation tant qu il vit"
+modifiers = Array[Dictionary]([{
+"duration": 8.0,
+"key": &"self_haste",
+"magnitude": 40.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"damage",
+"op": "axis",
+"pct": -0.3
+}])
 
 [resource]
 script = ExtResource("2_u1h75")
@@ -29,4 +86,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"lotus_bloom"
 sfx_key = &"whoosh_summon"
-major_upgrades = Array[ExtResource("2_41nt7")]([])
+major_upgrades = Array[ExtResource("2_41nt7")]([SubResource("Resource_cu1cn"), SubResource("Resource_0uy3t")])
