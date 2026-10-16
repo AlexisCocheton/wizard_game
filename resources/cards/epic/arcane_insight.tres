@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_du8hq"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="2_itdah"]
@@ -13,6 +13,41 @@ radius = 0.0
 params = {
 &"count": 2
 }
+
+[sub_resource type="Resource" id="Resource_qdfbl"]
+script = ExtResource("2_qdfbl")
+id = &"vision"
+title = "Vision"
+description = "Et tes sorts coutent 0,5 s de moins pendant 5 s"
+modifiers = Array[Dictionary]([{
+"duration": 5.0,
+"key": &"cost_reduction",
+"magnitude": 0.5,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
+
+[sub_resource type="Resource" id="Resource_56y5p"]
+script = ExtResource("2_qdfbl")
+id = &"cascade"
+title = "Cascade"
+description = "Tu pioches de nouveau, 4 s plus tard"
+modifiers = Array[Dictionary]([{
+"delay": 4.0,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.6
+}])
 
 [resource]
 script = ExtResource("2_itdah")
@@ -31,4 +66,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"sun_burst"
 sfx_key = &"spell_deep"
-major_upgrades = Array[ExtResource("2_qdfbl")]([])
+major_upgrades = Array[ExtResource("2_qdfbl")]([SubResource("Resource_qdfbl"), SubResource("Resource_56y5p")])

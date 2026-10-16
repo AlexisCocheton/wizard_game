@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_7goh8"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_mhwtv"]
@@ -22,6 +22,44 @@ duration = 8.0
 radius = 0.0
 params = {}
 
+[sub_resource type="Resource" id="Resource_1also"]
+script = ExtResource("2_mhwtv")
+id = &"registre_eclair"
+title = "Registre eclair"
+description = "Le registre s ouvre presque aussitot"
+modifiers = Array[Dictionary]([{
+"factor": 0.2,
+"op": "cast_time"
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_on7sj"]
+script = ExtResource("2_mhwtv")
+id = &"grand_registre"
+title = "Grand registre"
+description = "Et chaque sort de ta main gagne 1 XP : ils murissent plus tot"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"hand_card_xp",
+"magnitude": 1.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}, {
+"axis": &"duration",
+"op": "axis",
+"pct": -0.3
+}])
+
 [resource]
 script = ExtResource("2_q8jgj")
 id = &"tide_ledger"
@@ -39,4 +77,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"tide_waves"
 sfx_key = &"water_drop"
-major_upgrades = Array[ExtResource("2_mhwtv")]([])
+major_upgrades = Array[ExtResource("2_mhwtv")]([SubResource("Resource_1also"), SubResource("Resource_on7sj")])

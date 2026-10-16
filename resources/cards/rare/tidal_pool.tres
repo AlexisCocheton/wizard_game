@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1agfk"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_2e1s0"]
@@ -11,6 +11,48 @@ magnitude = 45.0
 duration = 7.0
 radius = 300.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_2e1s0"]
+script = ExtResource("2_2e1s0")
+id = &"raz_de_maree"
+title = "Raz-de-maree"
+description = "La nappe s abat d abord : 8 degats et un violent recul, puis le courant"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"knockback",
+"magnitude": 8.0,
+"op": "add_effect",
+"params": {
+&"push": 220.0
+},
+"radius": 300.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_ko3jn"]
+script = ExtResource("2_2e1s0")
+id = &"bourbier"
+title = "Bourbier"
+description = "L eau glacee ralentit aussi de 40 % (effet de glace)"
+modifiers = Array[Dictionary]([{
+"duration": 7.0,
+"key": &"ground_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {
+&"slow_pct": 40.0
+},
+"radius": 300.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"force",
+"op": "axis",
+"pct": -0.4
+}])
 
 [resource]
 script = ExtResource("2_4q68q")
@@ -29,4 +71,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"orb_cyan"
 sfx_key = &"water_splash"
-major_upgrades = Array[ExtResource("2_2e1s0")]([])
+major_upgrades = Array[ExtResource("2_2e1s0")]([SubResource("Resource_2e1s0"), SubResource("Resource_ko3jn")])

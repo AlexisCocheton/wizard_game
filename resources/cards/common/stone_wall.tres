@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_0ga6q"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_5kaxl"]
@@ -13,6 +13,53 @@ radius = 200.0
 params = {
 &"thickness": 60.0
 }
+
+[sub_resource type="Resource" id="Resource_5kaxl"]
+script = ExtResource("2_5kaxl")
+id = &"muraille_geante"
+title = "Muraille geante"
+description = "Mur presque deux fois plus large, que les volants ne franchissent plus"
+modifiers = Array[Dictionary]([{
+"factor": 1.8,
+"field": "radius",
+"key": &"build_wall",
+"op": "scale"
+}, {
+"key": &"build_wall",
+"op": "set",
+"param": &"blocks_flyers",
+"value": true
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}, {
+"axis": &"duration",
+"op": "axis",
+"pct": -0.25
+}])
+
+[sub_resource type="Resource" id="Resource_swntd"]
+script = ExtResource("2_5kaxl")
+id = &"mur_de_ronces"
+title = "Mur de ronces"
+description = "Des ronces le bordent : qui le longe est ralenti de 30 % et perd 5 PV par seconde"
+modifiers = Array[Dictionary]([{
+"duration": 20.0,
+"key": &"ground_zone",
+"magnitude": 5.0,
+"op": "add_effect",
+"params": {
+&"slow_pct": 30.0
+},
+"radius": 230.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.5
+}])
 
 [resource]
 script = ExtResource("3_swntd")
@@ -31,4 +78,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"stone_peak"
 sfx_key = &"stone_shove"
-major_upgrades = Array[ExtResource("2_5kaxl")]([])
+major_upgrades = Array[ExtResource("2_5kaxl")]([SubResource("Resource_5kaxl"), SubResource("Resource_swntd")])

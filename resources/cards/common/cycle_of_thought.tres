@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_s5sf5"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_djt85"]
@@ -13,6 +13,44 @@ radius = 0.0
 params = {
 &"count": 2
 }
+
+[sub_resource type="Resource" id="Resource_djt85"]
+script = ExtResource("2_djt85")
+id = &"maree_qui_rend"
+title = "Maree qui rend"
+description = "Et le prochain sort que tu lances revient en main"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"retain_next",
+"magnitude": 1.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_m1007"]
+script = ExtResource("2_djt85")
+id = &"courant_de_pensee"
+title = "Courant de pensee"
+description = "La main renouvelee gagne 1 XP par sort distinct : ils murissent plus tot"
+modifiers = Array[Dictionary]([{
+"duration": 0.0,
+"key": &"hand_card_xp",
+"magnitude": 1.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
 
 [resource]
 script = ExtResource("3_m1007")
@@ -31,4 +69,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"cycle_swirl"
 sfx_key = &"water_drop"
-major_upgrades = Array[ExtResource("2_djt85")]([])
+major_upgrades = Array[ExtResource("2_djt85")]([SubResource("Resource_djt85"), SubResource("Resource_m1007")])

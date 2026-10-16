@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_ief0k"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_k4ts1"]
@@ -11,6 +11,41 @@ magnitude = 2.0
 duration = 0.0
 radius = 0.0
 params = {}
+
+[sub_resource type="Resource" id="Resource_k4ts1"]
+script = ExtResource("2_k4ts1")
+id = &"echo_du_temps"
+title = "Echo du temps"
+description = "Et ton incantation s accelere de 50 % pendant 5 s"
+modifiers = Array[Dictionary]([{
+"duration": 5.0,
+"key": &"self_haste",
+"magnitude": 50.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"cast",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_qqlt3"]
+script = ExtResource("2_k4ts1")
+id = &"echo_perpetuel"
+title = "Echo perpetuel"
+description = "L echo revient 8 s plus tard, pour de nouvelles cartes"
+modifiers = Array[Dictionary]([{
+"delay": 8.0,
+"factor": 1.0,
+"op": "repeat"
+}])
+prices = Array[Dictionary]([{
+"axis": &"discard",
+"op": "axis",
+"pct": -1.0
+}])
 
 [resource]
 script = ExtResource("2_qvc5f")
@@ -29,4 +64,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"echo_rings"
 sfx_key = &"ward_deep"
-major_upgrades = Array[ExtResource("2_k4ts1")]([])
+major_upgrades = Array[ExtResource("2_k4ts1")]([SubResource("Resource_k4ts1"), SubResource("Resource_qqlt3")])

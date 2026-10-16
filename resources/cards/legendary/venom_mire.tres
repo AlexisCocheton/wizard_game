@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_1qs4i"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_2fckd"]
@@ -13,6 +13,54 @@ radius = 340.0
 params = {
 &"slow_pct": 25.0
 }
+
+[sub_resource type="Resource" id="Resource_2fckd"]
+script = ExtResource("2_2fckd")
+id = &"mare_deferlante"
+title = "Mare deferlante"
+description = "La mare deferle a x1,8 puis reflue a x0,6 a mi-vie, avant de remonter"
+modifiers = Array[Dictionary]([{
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_start",
+"value": 1.8
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_peak",
+"value": 0.6
+}])
+prices = Array[Dictionary]([{
+"axis": &"duration",
+"op": "axis",
+"pct": -0.4
+}])
+
+[sub_resource type="Resource" id="Resource_m83hp"]
+script = ExtResource("2_2fckd")
+id = &"venin_tenace"
+title = "Venin tenace"
+description = "Qui sort de la mare garde le poison 5 s : 5 PV de POISON par seconde"
+modifiers = Array[Dictionary]([{
+"key": &"ground_zone",
+"op": "set",
+"param": &"residue_dps",
+"value": 5.0
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"residue_duration",
+"value": 5.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.35
+}, {
+"axis": &"damage",
+"op": "axis",
+"pct": -0.25
+}])
 
 [resource]
 script = ExtResource("2_kvu5c")
@@ -31,4 +79,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"dark_swirl"
 sfx_key = &"poison_bubble"
-major_upgrades = Array[ExtResource("2_2fckd")]([])
+major_upgrades = Array[ExtResource("2_2fckd")]([SubResource("Resource_2fckd"), SubResource("Resource_m83hp")])

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="SpellCard" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="SpellCard" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/effect_spec.gd" id="1_453lm"]
 [ext_resource type="Script" path="res://scripts/data/major_upgrade_def.gd" id="2_r2ltc"]
@@ -13,6 +13,50 @@ radius = 260.0
 params = {
 &"slow_pct": 30.0
 }
+
+[sub_resource type="Resource" id="Resource_r2ltc"]
+script = ExtResource("2_r2ltc")
+id = &"hiver"
+title = "Hiver"
+description = "Le froid gagne tout le terrain : monstres -20 % de vitesse 6 s"
+modifiers = Array[Dictionary]([{
+"duration": 6.0,
+"key": &"slow_enemy_gauge",
+"magnitude": 20.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"area",
+"op": "axis",
+"pct": -0.5
+}])
+
+[sub_resource type="Resource" id="Resource_u15ay"]
+script = ExtResource("2_r2ltc")
+id = &"grelons"
+title = "Grelons"
+description = "Des grelons s abattent sur tout le terrain : 8 impacts de 14 degats de GLACE"
+modifiers = Array[Dictionary]([{
+"duration": 4.0,
+"key": &"meteor_storm",
+"magnitude": 14.0,
+"op": "add_effect",
+"params": {
+&"impacts": 8
+},
+"radius": 90.0
+}])
+prices = Array[Dictionary]([{
+"axis": &"slow",
+"op": "axis",
+"pct": -0.4
+}, {
+"axis": &"duration",
+"op": "axis",
+"pct": -0.25
+}])
 
 [resource]
 script = ExtResource("2_wd8s3")
@@ -31,4 +75,4 @@ is_passive = false
 speed_threshold = 100
 fx_key = &"crystal_field"
 sfx_key = &"ice_chime"
-major_upgrades = Array[ExtResource("2_r2ltc")]([])
+major_upgrades = Array[ExtResource("2_r2ltc")]([SubResource("Resource_r2ltc"), SubResource("Resource_u15ay")])
