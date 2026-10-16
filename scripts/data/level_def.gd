@@ -7,14 +7,18 @@ extends Resource
 ## --- Narration (voir docs/histoire.md) ---
 ## Tout ce bloc est FACULTATIF : un niveau sans texte reste parfaitement jouable.
 ## C est volontaire, pour qu ajouter un niveau ne demande pas d ecrire un scenario.
-## Acte de la campagne : 1 Monde volant, 2 Grand Cimetiere, 3 Monde demoniaque,
-## 4 Monde d origine. 0 = hors campagne.
+## Acte de la campagne, de 1 a 5, dans l ordre du voyage (docs/histoire.md).
+## 0 = hors campagne.
 @export var act: int = 0
-## Sous-titre court affiche sous le nom du niveau sur la carte de campagne.
+## Sous-titre court affiche sous le nom du niveau sur la carte de campagne. Une
+## seule veine depuis la vague 10 (B2) : une ligne de RECIT, jamais un conseil de
+## jeu (le briefing dit deja les mecaniques).
 @export var subtitle: String = ""
 ## Texte lu au briefing, AVANT le combat : ou on est et pourquoi on y va.
 @export_multiline var intro_text: String = ""
-## Texte lu a la victoire : le rebondissement que le niveau vient de reveler.
+## Ancien texte de victoire. Il n est affiche NULLE PART : la scene de fin
+## (outro_story) le dit. Laisse vide par le contenu depuis la vague 10 (B2) : un
+## texte qu on ne lit pas finit faux (revue A4, §2.7 point 6).
 @export_multiline var outro_text: String = ""
 ## Scenes de visual novel (DialogueDef dans resources/story/), jouees par
 ## SceneRouter AVANT le briefing et APRES la victoire, une seule fois par

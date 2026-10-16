@@ -72,9 +72,16 @@ func _run() -> void:
 			os_.position = Vector2(250.0, 1100.0)
 		if gardien != null and is_instance_valid(gardien):
 			gardien.position = Vector2(830.0, 1100.0)
-	SpeedGauge.set_speed_percent(200)
 	if os_ != null and is_instance_valid(os_) and not os_.guard_up():
 		os_._open_reflect(2.5)
+	# Quelques images encore : les legendes (garde, echeance) se rafraichissent
+	# dans advance().
+	for _i in 4:
+		SpeedGauge.set_speed_percent(100)
+		bf.simulate(1.0 / 60.0)
+		if os_ != null and is_instance_valid(os_):
+			os_.position = Vector2(250.0, 1100.0)
+	SpeedGauge.set_speed_percent(200)
 	await _attendre(0.5)
 	print("[CAPTURE] echeance ouverte : ", chronos.deadline_open(), " garde : ", os_.guard_up(),
 		" bouclier du Gardien : ", gardien.has_shield())

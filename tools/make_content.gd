@@ -665,10 +665,11 @@ func _enemies() -> void:
 	# Les silhouettes sont des feuilles du catalogue qu AUCUN monstre n utilisait
 	# (`blood`, `lancer_red`, `monk_blue`) — rien n est dessine par le code.
 
-	# RESSUSCITE — lvl_02, La Tour des Sables. Le gardien de la tour n est pas une
-	# creature : c est du SABLE tenu en forme. On peut l abattre, il se remet
-	# debout, une fois. Le joueur voit la barre se vider, entend la mort, se
-	# retourne vers la vague — et il se releve derriere lui.
+	# RESSUSCITE — le Coagule, BOSS de `lvl_08` (la route du maire) depuis la vague
+	# 10 (il menait la vague de boss de lvl_02, que la Reine gorgone prend). Une
+	# masse de sang tenue en forme. On peut l abattre, il se remet debout, une
+	# fois. Le joueur voit la barre se vider, entend la mort, se retourne vers la
+	# vague — et il se releve derriere lui.
 	#
 	# PV volontairement BAS pour un boss (185 contre 320 a Chronos) : la mecanique
 	# ajoute deja 40 % de PV, et un boss a 320 PV qui ressuscite en pesserait 450,
@@ -1016,13 +1017,8 @@ func _enemies() -> void:
 		&"poison": 0.35, &"foudre": 0.75})
 	_save(flying_eye, E + "current_eye.tres")
 
-	# LE GRAND OEIL — MINI-BOSS de `lvl_17`, et un PALIER de l Oeil des courants.
-	#
-	# POURQUOI UN PALIER ET PAS L ECUMEUR DU CIEL. L Ecumeur etait le candidat
-	# evident — il vole, il a ete ecrit pour le Monde volant — mais le chantier
-	# des actes 4 et 5 lui a donne la tete du mini-boss de `lvl_11`, et
-	# `test_bosses` interdit nommement qu un mini-boss mene deux niveaux. Plutot
-	# que de se disputer une tete, on fabrique celle qui manquait.
+	# LE GRAND OEIL — l Oeil des courants en grand (ecrit comme mini-boss de
+	# `lvl_17`, il en devient le BOSS a la vague 10 : voir plus bas).
 	#
 	# ET C EST MIEUX AINSI, pour une raison de lecture : la lignee des gorgones a
 	# montre que les paliers enseignent mieux qu un monstre isole. Le joueur a vu
@@ -1586,9 +1582,9 @@ func _enemies_v3(E: String) -> void:
 		&"poison": 0.6, &"foudre": 1.3})
 	_save(slime_mid, E + "slime_mid.tres")
 
-	# SLIME ENORME — MINI-BOSS de `lvl_03` (l Ossuaire des Marees, bati sur des
-	# monstres qui se multiplient). Il remplace le Pretre goule en tete du palier :
-	# un P3 qui soigne n etait pas un palier, c etait une vague de plus.
+	# SLIME ENORME — MINI-BOSS de `lvl_08` depuis la vague 10 (la route du maire :
+	# « des gelees qui se coupent en deux ») ; il menait le palier de lvl_03, que le
+	# Gardien d ossements prend. Le Slime gonfle est son retour en ordinaire.
 	#
 	# 90 PV + trois Slimes moyens a 12 = 126 PV de chaine, dans la bande des
 	# mini-boss du jeu (96 a 175). Les PV sont BAS pour un mini-boss parce que sa
@@ -2125,15 +2121,12 @@ func _enemies_v3(E: String) -> void:
 	# marque le mur, l arbre ou l autel le plus proche (560 px, la moitie du
 	# terrain) et l abat 1,8 s plus tard d une frappe au sol. Il epargne l eau.
 	#
-	# POURQUOI `lvl_04` : c est le premier niveau dont le deck porte un objet de
-	# terrain qu on a INTERET a garder (le Totem de coeur-de-bois, deux exemplaires,
-	# qui detourne le flux de l Ensevelisseur). Place ailleurs, sa mecanique ne se
+	# POURQUOI `lvl_04` : c est le niveau dont le deck porte un objet de terrain
+	# qu on a INTERET a garder (vague 10 : le Mur de pierre, sa commune nouvelle, qui
+	# arrete les fleches des Lutins archers). Place ailleurs, sa mecanique ne se
 	# verrait jamais — il marcherait vers un mage qui n a rien pose. Ici il apprend,
 	# DEUX vagues avant le boss, que le decor tombe si on laisse vivre celui qui le
-	# brise : la lecon sert immediatement contre l Ensevelisseur.
-	#
-	# Il remplace le Gardien d ossements en tete du palier (qui descend toujours en
-	# `w3_5`, donc reste du monde 2) avec un poids voisin : 150 PV contre 165.
+	# brise. Le Casseur de tertres est son retour en ordinaire (acte 3).
 	#
 	# Pierre de tombe : le physique s y ebreche, le venin n a rien a ronger, l arcane
 	# defait ce qui l anime. Il ne resiste PAS au ralentissement : l etourdir pendant
