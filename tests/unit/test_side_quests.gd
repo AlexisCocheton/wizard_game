@@ -323,14 +323,12 @@ static func defauts_surplus(campagne: Array, annexes: Array, catalogue: Array) -
 	return out
 
 
-## LES COMMUNES QU UNE ANNEXE PEUT PRENDRE SANS LES DONNER EN AVANCE, ecrites EN
-## DUR : la Lumiere purifiante de l atelier du rat, qui y affronte un porteur
-## d AURA (DEC-057 : la dissipation garantie, meme avant que la campagne ne
-## l ait donnee). Toute autre commune d un deck d annexe doit etre DEJA donnee
-## par la campagne quand l annexe s ouvre.
-const COMMUNES_HORS_CAMPAGNE: Dictionary = {
-	&"side_a2_atelier": [&"purifying_light"],
-}
+## AUCUNE EXCEPTION (chantier C7c) : chaque commune d un deck d annexe est DEJA
+## donnee par la campagne quand l annexe s ouvre. L atelier du rat prenait la
+## Lumiere purifiante en avance pour son porteur d aura (DEC-057) ; elle entrait
+## alors au pool de montee de niveau de toute la suite de la campagne. Son boss
+## dore n a plus d aura, et une annexe a porteur d aura doit trouver sa
+## dissipation parmi les communes deja donnees.
 
 ## Les niveaux de CAMPAGNE ouverts a coup sur au moment ou une annexe ouverte
 ## apres `apres` s ouvre, AVANT la victoire qui l ouvre : la regle du jeu
@@ -393,10 +391,10 @@ static func _ouvert_si(lv: LevelDef, finis: Dictionary, precedents: Dictionary) 
 
 ## Le deck de base d une annexe : trois communes distinctes, dont une au moins
 ## TUE son boss dore ; une dissipation s il descend un porteur d aura (DEC-057) ;
-## chaque commune DEJA DONNEE par la campagne a l ouverture de l annexe (sauf
-## COMMUNES_HORS_CAMPAGNE) : ouvrir l annexe ne doit pas faire posseder en avance
-## la commune nouvelle d un niveau a venir (regle du livre : le deck d un niveau
-## ouvert est obtenu, et une annexe ouverte en est un).
+## chaque commune DEJA DONNEE par la campagne a l ouverture de l annexe, sans
+## exception : ouvrir l annexe ne doit pas faire posseder en avance la commune
+## nouvelle d un niveau a venir (regle du livre : le deck d un niveau ouvert est
+## obtenu, et une annexe ouverte en est un).
 static func defauts_deck(lv: LevelDef) -> Array[String]:
 	var out: Array[String] = []
 	if not lv.has_base_commons():
@@ -405,9 +403,8 @@ static func defauts_deck(lv: LevelDef) -> Array[String]:
 	if lv.side_quest_after != &"":
 		var donnees: Array[StringName] = SaveData.cards_owned_by_decks(
 			ouverts_a_l_ouverture(lv.side_quest_after))
-		var permises: Array = COMMUNES_HORS_CAMPAGNE.get(lv.id, [])
 		for c: SpellCard in lv.base_commons:
-			if not donnees.has(c.id) and not permises.has(c.id):
+			if not donnees.has(c.id):
 				out.append("la commune %s n est pas encore donnee par la campagne a l ouverture (apres %s)"
 					% [c.id, lv.side_quest_after])
 	else:
@@ -743,21 +740,6 @@ func _test_le_deck_d_une_annexe() -> void:
 	var apres_14: Array[StringName] = ouverts_a_l_ouverture(&"lvl_14")
 	ok(apres_14.has(&"lvl_13") and apres_14.has(&"lvl_07"), "apres lvl_14 : le pentacle et les demons")
 	not_ok(apres_14.has(&"lvl_15"), "apres lvl_14 : pas lvl_15")
-	# L exception est encore NECESSAIRE et justifiee : sinon, la retirer.
-	for id in COMMUNES_HORS_CAMPAGNE:
-		var a: LevelDef = ContentDB.levels.get(id)
-		ok(a != null, "(l annexe %s de l exception existe)" % id)
-		if a == null:
-			continue
-		var aura: bool = false
-		for d: EnemyDef in ObjectiveChecker.level_enemies(a):
-			aura = aura or d.aura_shield_radius > 0.0
-		ok(aura, "%s : un porteur d aura y descend (raison de l exception)" % id)
-		var donnees: Array[StringName] = SaveData.cards_owned_by_decks(
-			ouverts_a_l_ouverture(a.side_quest_after))
-		for c in COMMUNES_HORS_CAMPAGNE[id]:
-			ok(_ids_cartes(a.base_commons).has(String(c)), "%s porte bien %s" % [id, c])
-			not_ok(donnees.has(c), "%s : %s n est pas encore donnee (l exception sert)" % [id, c])
 	for lv: LevelDef in _annexes():
 		var d: Array[String] = defauts_deck(lv)
 		ok(d.is_empty(), "%s : deck de base jouable %s" % [lv.id, d])
@@ -854,8 +836,41 @@ func _test_le_bestiaire_dit_l_or() -> void:
 			"%s : la fiche nomme sa base (%s)" % [dore.id, texte])
 		ok(texte.contains(str(int(round(dore.max_hp)))), "%s : la fiche donne ses PV" % dore.id)
 		ok(texte.contains("Ce que l or lui ajoute"), "%s : la fiche dit ce que l or ajoute" % dore.id)
+		# C7c, apres C7a : un boss dore est une TETE comme les autres, chaque ligne
+		# de sa fiche est classee par les listes de test_campagne_w10, et il a au
+		# moins une mecanique de tete.
+		var d: Array[String] = lignes_non_classees(dore)
+		ok(d.is_empty(), "%s : chaque ligne de la fiche est classee %s" % [dore.id, d])
+		var meca: bool = false
+		for l: String in lignes:
+			meca = meca or _commence_par(l, Campagne.MECANIQUES_DE_TETE)
+		ok(meca, "%s : au moins une mecanique de tete %s" % [dore.id, lignes])
 	eq(BestiaryLore.gilded_lines(ContentDB.enemies.get(&"gnome")), [] as Array[String],
 		"un monstre qui n est pas dore n a pas de ligne d or")
+	# Sabotage : une phrase que ni l une ni l autre liste ne connait.
+	var inconnue: Array[String] = ["Fait une chose que personne n a classee"]
+	not_ok(_commence_par(inconnue[0], Campagne.MECANIQUES_DE_TETE)
+		or _commence_par(inconnue[0], Campagne.PAS_DES_MECANIQUES),
+		"sabotage : une phrase neuve n est classee nulle part")
+
+
+## Les lignes de la fiche d une tete qui ne sont pas classees UNE fois par les
+## deux listes de test_campagne_w10 (MECANIQUES_DE_TETE, PAS_DES_MECANIQUES).
+static func lignes_non_classees(d: EnemyDef) -> Array[String]:
+	var out: Array[String] = []
+	for l: String in BestiaryLore.behaviours(d):
+		var meca: bool = _commence_par(l, Campagne.MECANIQUES_DE_TETE)
+		var pas: bool = _commence_par(l, Campagne.PAS_DES_MECANIQUES)
+		if meca == pas:
+			out.append("« %s » (mecanique %s, non %s)" % [l, meca, pas])
+	return out
+
+
+static func _commence_par(ligne: String, motifs: Array[String]) -> bool:
+	for m: String in motifs:
+		if RegEx.create_from_string(m).search(ligne) != null:
+			return true
+	return false
 
 
 # --- Sabotages ------------------------------------------------------------------
@@ -1039,17 +1054,23 @@ func _test_les_detecteurs_mordent() -> void:
 		tot_lv.base_commons = en_avance
 		ok(_un_defaut_dit(defauts_deck(tot_lv), "pas encore donnee"),
 			"sabotage : une commune donnee EN AVANCE (%s) %s" % [pas_donnee.id, defauts_deck(tot_lv)])
-	# L exception ne vaut que pour SON annexe : la Lumiere purifiante ailleurs,
-	# avant que la campagne ne la donne, est refusee.
+	# LE DEFAUT CORRIGE PAR C7c : la Lumiere purifiante au deck de l atelier,
+	# ouvert apres lvl_17 quand la campagne ne la donne qu a lvl_20, est refusee
+	# (il n y a plus d exception).
 	var lumiere: SpellCard = ContentDB.cards.get(&"purifying_light")
-	ok(lumiere != null and not donnees.has(&"purifying_light"),
-		"(la Lumiere purifiante n est pas donnee a l ouverture de %s)" % lv.id)
-	if lumiere != null and lv.id != &"side_a2_atelier":
-		var ailleurs: LevelDef = lv.duplicate()
-		var avec_lumiere: Array[SpellCard] = [lv.base_commons[0], lumiere, lv.base_commons[2]]
+	var vrai_atelier: LevelDef = ContentDB.levels.get(&"side_a2_atelier")
+	ok(lumiere != null and vrai_atelier != null and vrai_atelier.has_base_commons(),
+		"(la Lumiere purifiante et l atelier du rat existent)")
+	if lumiere != null and vrai_atelier != null and vrai_atelier.has_base_commons():
+		ok(not SaveData.cards_owned_by_decks(ouverts_a_l_ouverture(
+			vrai_atelier.side_quest_after)).has(&"purifying_light"),
+			"(la Lumiere purifiante n est pas donnee a l ouverture de l atelier)")
+		var ailleurs: LevelDef = vrai_atelier.duplicate()
+		var avec_lumiere: Array[SpellCard] = [lumiere, vrai_atelier.base_commons[1],
+			vrai_atelier.base_commons[2]]
 		ailleurs.base_commons = avec_lumiere
 		ok(_un_defaut_dit(defauts_deck(ailleurs), "pas encore donnee"),
-			"sabotage : l exception de l atelier ne vaut pas pour %s" % lv.id)
+			"sabotage : la Lumiere purifiante en avance au deck de l atelier %s" % [defauts_deck(ailleurs)])
 	# 5 bis. « D un seul sort » avec des Ronces (objet permanent qui tue) en
 	#    recompense.
 	var vise: LevelDef = null
