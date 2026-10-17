@@ -604,6 +604,11 @@ func _test_les_trois_nouvelles_mecaniques_sont_livrees() -> void:
 	# pick_boss() ne le choisira jamais pour son palier.
 	var membership: Dictionary = WaveSpawner.build_membership()
 	for def in ressuscite + compteur + renvoi:
+		# Vague 10 (B3) : un BOSS DORE n a pas de monde (les mondes se deduisent
+		# des vagues de CAMPAGNE) ; il ferme sa quete annexe, et le Massacre, qui
+		# ne pese aucun monde, le tire parmi tous les boss (test_modes).
+		if def.is_gilded():
+			continue
 		ok(membership.has(def.id),
 			"%s n est rattache a aucun monde : le Massacre ne le proposera jamais"
 			% def.id)
@@ -666,6 +671,8 @@ func _test_les_trois_nouvelles_mecaniques_sont_livrees() -> void:
 	# sans exception. Un porteur ORDINAIRE (le Caillot, l Adepte des arcanes :
 	# chantier W2) ne mene jamais un palier — il doit sortir dans les TROUPES.
 	for def in ressuscite + compteur:
+		if def.is_gilded():
+			continue  # sans monde, voir la sonde 2
 		if def.is_boss():
 			ok(tetes.has(def.id),
 				"%s n est jamais tire en tete de palier en Massacre" % def.id)
@@ -834,7 +841,9 @@ func _test_les_monstres_neufs_sont_rattaches_a_un_monde() -> void:
 	for d: EnemyDef in ContentDB.enemies.values():
 		if d == null or d.projectile or not (d.anim_key in SILHOUETTES_2026_09_26):
 			continue
-		if _est_invoque(d.id):
+		# Un BOSS DORE (vague 10, B3) porte la silhouette de sa base mais n a
+		# pas de monde : il ferme sa quete annexe (test_side_quests).
+		if _est_invoque(d.id) or d.is_gilded():
 			continue
 		if not membership.has(d.id):
 			orphelins.append(String(d.id))
@@ -859,7 +868,8 @@ func _test_les_monstres_neufs_sortent_vraiment_en_massacre() -> void:
 			bosses.append(d)
 		else:
 			pool.append(d)
-		if (d.anim_key in SILHOUETTES_2026_09_26) and not _est_invoque(d.id):
+		if (d.anim_key in SILHOUETTES_2026_09_26) and not _est_invoque(d.id) \
+				and not d.is_gilded():
 			neufs.append(d)
 
 	# CHANTIER W3 — 64 graines de 30 vagues, et non plus UNE graine de 300. Sur

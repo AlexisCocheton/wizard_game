@@ -114,14 +114,17 @@ func _challenges() -> void:
 ## rougi : un nombre en dur qui devient faux ne se voit pas.
 ##
 ## Meme raison pour l acte 1, passe de 2 a 4 niveaux.
+## Vague 10 (B3) : les niveaux de CAMPAGNE seulement (ContentDB.campaign_levels) :
+## les huit quetes annexes ne font pas partie du voyage que ces succes
+## recompensent, et la victoire n en compte pas (victory_screen.gd).
 func _niveaux_total() -> int:
-	return maxi(1, ContentDB.levels.size())
+	return maxi(1, ContentDB.campaign_levels().size())
 
 
 func _niveaux_acte(acte: int) -> int:
 	var n: int = 0
-	for lv: LevelDef in ContentDB.levels.values():
-		if lv != null and lv.act == acte:
+	for lv: LevelDef in ContentDB.campaign_levels():
+		if lv.act == acte:
 			n += 1
 	return maxi(1, n)
 

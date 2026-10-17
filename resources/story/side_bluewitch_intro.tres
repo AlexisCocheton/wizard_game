@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_sby6d"]
+
+[resource]
+script = ExtResource("1_sby6d")
+id = &"side_bluewitch_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le temple de cristal tient encore. Au fond, sous un cristal bleu, une jeune femme en robe d azur dort debout."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Je la connais. Elle etait mon apprentie, la premiere fois. Elle est morte a Nox, la derniere nuit."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Ici, on ne garde que ce qui servira plus tard. Si elle est sous verre, quelqu un compte sur elle."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Devant le cristal, un chevalier en armure d or se redresse. Le premier sort qui le touche disparait dans son armure."
+}])

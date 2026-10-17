@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_cl5y2"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight_gold.tres" id="2_cl5y2"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_66cv4"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="4_lex23"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="5_cl5y2"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_f5tsd"]
+
+[sub_resource type="Resource" id="Resource_cl5y2"]
+script = ExtResource("1_cl5y2")
+enemy = ExtResource("2_cl5y2")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_vyj46"]
+script = ExtResource("1_cl5y2")
+enemy = ExtResource("3_66cv4")
+count = 3
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_66cv4"]
+script = ExtResource("1_cl5y2")
+enemy = ExtResource("4_lex23")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_lex23"]
+script = ExtResource("1_cl5y2")
+enemy = ExtResource("5_cl5y2")
+count = 1
+spawn_delay = 1.0
+start_offset = 26.0
+
+[resource]
+script = ExtResource("6_f5tsd")
+id = &"side_bluewitch_boss"
+duration = 46.0
+entries = Array[ExtResource("1_cl5y2")]([SubResource("Resource_cl5y2"), SubResource("Resource_vyj46"), SubResource("Resource_66cv4"), SubResource("Resource_lex23")])
+difficulty = 1.1
+is_miniboss = false
+is_boss = true

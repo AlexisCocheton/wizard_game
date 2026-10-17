@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_u704c"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker_gold.tres" id="2_u704c"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="3_vi2cq"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="4_3fc2u"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_u24r6"]
+
+[sub_resource type="Resource" id="Resource_u704c"]
+script = ExtResource("1_u704c")
+enemy = ExtResource("2_u704c")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_a4wt4"]
+script = ExtResource("1_u704c")
+enemy = ExtResource("3_vi2cq")
+count = 2
+spawn_delay = 3.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_vi2cq"]
+script = ExtResource("1_u704c")
+enemy = ExtResource("4_3fc2u")
+count = 4
+spawn_delay = 1.5
+start_offset = 20.0
+
+[resource]
+script = ExtResource("5_u24r6")
+id = &"side_a4_champion_boss"
+duration = 46.0
+entries = Array[ExtResource("1_u704c")]([SubResource("Resource_u704c"), SubResource("Resource_a4wt4"), SubResource("Resource_vi2cq")])
+difficulty = 1.65
+is_miniboss = false
+is_boss = true

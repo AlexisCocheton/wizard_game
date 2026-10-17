@@ -93,6 +93,9 @@ const SUITES: Array[String] = [
 	# reequilibres ; les six sorts demandes, les rares devenues communes.
 	"res://tests/unit/test_resist_tiers.gd",
 	"res://tests/unit/test_w10_cartes.gd",
+	# Vague 10 B3 : les huit quetes annexes, leurs boss dores, le surplus de
+	# recompenses de la campagne, les annexes d apprenti, leurs scenes.
+	"res://tests/unit/test_side_quests.gd",
 	# Vague 10, chantier B2 : les mecaniques des tetes et la structure de la campagne.
 	"res://tests/unit/test_tetes_w10.gd",
 	"res://tests/unit/test_campagne_w10.gd",

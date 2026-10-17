@@ -1174,13 +1174,13 @@ func _add_dot(id: StringName) -> void:
 	# etoiles. Sur la page d un acte, le chemin est evident (le niveau d avant) ;
 	# une annexe s ouvre par une etape ou un apprenti que rien d autre ne nomme.
 	if lv.side_quest and not enabled:
-		var cond: Label = UiTheme.label_hud(SaveData.side_quest_lock_reason(lv),
+		var cond: Label = UiTheme.label_hud(side_tile_reason(lv),
 			UiTheme.FONT_SMALL, Color(1.0, 0.86, 0.55), HORIZONTAL_ALIGNMENT_CENTER, true)
 		cond.name = "Condition"
 		cond.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cond.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		vb.add_child(cond)
-		b.tooltip_text = cond.text
+		b.tooltip_text = SaveData.side_quest_lock_reason(lv)
 		return
 
 	# LES ETOILES : une par objectif (jamais du texte ASCII, qui ne se lit pas
@@ -1379,3 +1379,17 @@ func is_enabled(level_id: StringName) -> bool:
 func focus_level(level_id: StringName) -> void:
 	if _nodes.has(level_id):
 		show_act(int(_nodes[level_id]["act"]))
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B3 — LA CONDITION SUR LA TUILE D UNE ANNEXE.
+# =====================================================================
+
+## Ce que la TUILE d une annexe fermee affiche : la PREMIERE condition qui
+## manque, pas toute la phrase de SaveData.side_quest_lock_reason. Vu en capture
+## au telephone avec les huit annexes livrees : la tuile fait un quart de la
+## largeur, et « Termine Port de Haute-Nacelle ; Debloque L ecuyer » y tenait sur
+## sept lignes, coupees en bas. La suivante apparait quand la premiere est
+## remplie ; la phrase entiere reste au survol et sur la fiche du niveau.
+static func side_tile_reason(lv: LevelDef) -> String:
+	return SaveData.side_quest_lock_reason(lv).get_slice(" ; ", 0)

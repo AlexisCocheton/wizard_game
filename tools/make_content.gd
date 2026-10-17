@@ -8,6 +8,7 @@ func _ready() -> void:
 	_cards()
 	_majeures()  # VAGUE 10 B1b : deux ameliorations majeures par sort (fin du fichier)
 	_waves_and_level()
+	load("res://tools/make_side_quests.gd").new().generer(self)  # B3 : annexes et boss dores
 	print("CONTENT_OK")
 	get_tree().quit(0)
 

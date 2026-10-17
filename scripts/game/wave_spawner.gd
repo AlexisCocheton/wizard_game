@@ -107,7 +107,10 @@ static func build_membership() -> Dictionary:
 	var volume: Dictionary = {}
 	for level_id in ContentDB.levels.keys():
 		var lvl: LevelDef = ContentDB.levels.get(level_id)
-		if lvl == null or not act_to_world.has(lvl.act):
+		# Vague 10 (B3) : une QUETE ANNEXE est hors du voyage. Ses vagues ne
+		# disent pas de quel monde vient un monstre, et son boss dore reste
+		# celui de sa quete (il ne devient pas un boss de monde).
+		if lvl == null or lvl.side_quest or not act_to_world.has(lvl.act):
 			continue
 		for w: WaveDef in lvl.waves:
 			for e: WaveEntry in w.entries:

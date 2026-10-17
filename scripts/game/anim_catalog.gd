@@ -357,4 +357,35 @@ static func modulate_for(enemy_id: StringName) -> Color:
 	var reglee: Variant = TesterOverrides.tint_override(enemy_id)
 	if reglee != null:
 		return reglee
-	return MODULATE.get(String(enemy_id), Color.WHITE)
+	if MODULATE.has(String(enemy_id)):
+		return MODULATE[String(enemy_id)]
+	if is_gilded_id(enemy_id):
+		return GOLD_TINT
+	return Color.WHITE
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B3 — LA TEINTE DES BOSS DORES (quetes annexes).
+# =====================================================================
+
+## LA TEINTE D OR d un boss dore (EnemyDef.gilded_from), le meme mecanisme que
+## les echos des anciens boss : un `modulate` sur la feuille de son monstre de
+## base. Pas de shader : la teinte suffit, et un shader demandait du code dans
+## Enemy, ou le chantier des monstres travaille.
+##
+## UNE TEINTE MULTIPLIE (gotchas.md) : sur un bleu sature elle donne du brun, et
+## le contour noir reste noir. Les composantes AU-DESSUS de 1 eclaircissent le
+## rouge et le vert pendant que le bleu s eteint : sur les feuilles claires,
+## rouges, grises ou violettes du bestiaire, le resultat se lit OR (essai sur les
+## 29 feuilles candidates, verifie en capture : chevalier rouge, tour, squelette,
+## champignon, gorgone, lancier violet, lutin archer, moine violet). Les feuilles
+## dont la licence interdit la MODIFICATION (golems, insecte volant, paon,
+## licences.md) ne portent aucun boss dore : test_side_quests le verifie.
+const GOLD_TINT: Color = Color(1.45, 1.18, 0.50)
+
+
+## Le monstre de cet id est-il un boss dore ? Lu dans le catalogue : la teinte
+## suit la FILIATION (EnemyDef.gilded_from), pas une convention d id.
+static func is_gilded_id(enemy_id: StringName) -> bool:
+	var d: EnemyDef = ContentDB.enemies.get(enemy_id)
+	return d != null and d.is_gilded()

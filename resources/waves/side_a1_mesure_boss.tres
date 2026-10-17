@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_lksg6"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower_gold.tres" id="2_1jb1f"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_75qwm"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="4_vly7k"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="5_1jb1f"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_ji1wk"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_1lcuv"]
+
+[sub_resource type="Resource" id="Resource_1jb1f"]
+script = ExtResource("1_lksg6")
+enemy = ExtResource("2_1jb1f")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_75qwm"]
+script = ExtResource("1_lksg6")
+enemy = ExtResource("3_75qwm")
+count = 3
+spawn_delay = 2.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_vly7k"]
+script = ExtResource("1_lksg6")
+enemy = ExtResource("4_vly7k")
+count = 3
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_ji1wk"]
+script = ExtResource("1_lksg6")
+enemy = ExtResource("5_1jb1f")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_1lcuv"]
+script = ExtResource("1_lksg6")
+enemy = ExtResource("5_ji1wk")
+count = 3
+spawn_delay = 1.5
+start_offset = 26.0
+
+[resource]
+script = ExtResource("6_1lcuv")
+id = &"side_a1_mesure_boss"
+duration = 45.0
+entries = Array[ExtResource("1_lksg6")]([SubResource("Resource_1jb1f"), SubResource("Resource_75qwm"), SubResource("Resource_vly7k"), SubResource("Resource_ji1wk"), SubResource("Resource_1lcuv")])
+difficulty = 0.9
+is_miniboss = false
+is_boss = true

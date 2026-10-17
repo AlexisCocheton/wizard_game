@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_wy42f"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="2_15i7b"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="3_mn8n0"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="4_lna5b"]
+
+[sub_resource type="Resource" id="Resource_wy42f"]
+script = ExtResource("1_wy42f")
+enemy = ExtResource("2_15i7b")
+count = 3
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_15i7b"]
+script = ExtResource("1_wy42f")
+enemy = ExtResource("3_mn8n0")
+count = 1
+spawn_delay = 1.0
+start_offset = 8.0
+
+[resource]
+script = ExtResource("4_lna5b")
+id = &"side_squire_1"
+duration = 25.0
+entries = Array[ExtResource("1_wy42f")]([SubResource("Resource_wy42f"), SubResource("Resource_15i7b")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false

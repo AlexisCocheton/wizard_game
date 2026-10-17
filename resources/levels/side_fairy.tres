@@ -1,0 +1,248 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=49 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_bq3hy"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="2_irc0y"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="3_bq3hy"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="4_irc0y"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_f6dxf"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="6_h7dmw"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="7_k5idq"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="8_5ux3c"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="9_eku1o"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="9_irc0y"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="10_bd7r7"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="11_50kjp"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="12_4ugdg"]
+[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="14_t3ncq"]
+[ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="15_f6dxf"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="15_twp52"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="16_3d2xi"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_hydls"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_7cq12"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_poison_corrode.tres" id="18_h7dmw"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_luq6e"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom_gold.tres" id="21_ycyp6"]
+
+[sub_resource type="Resource" id="Resource_t3ncq"]
+script = ExtResource("16_3d2xi")
+id = &"obj_element_casts_30_fire"
+description = "Lancer 30 sorts de feu"
+check_key = &"element_casts"
+params = {
+"count": 30,
+"element": "FIRE"
+}
+
+[sub_resource type="Resource" id="Resource_gwara"]
+script = ExtResource("16_3d2xi")
+id = &"obj_kill_type_one_cast_3_mushroom"
+description = "Champignon cuirasse : en tuer 3 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 3,
+"enemy": "mushroom"
+}
+
+[sub_resource type="Resource" id="Resource_f6dxf"]
+script = ExtResource("16_3d2xi")
+id = &"obj_win_above_speed_260"
+description = "Gagner avec plus de 260 % de vitesse"
+check_key = &"win_above_speed"
+params = {
+"pct": 260
+}
+
+[sub_resource type="Resource" id="Resource_n8ig5"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 4
+spawn_delay = 1.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_841bn"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("7_k5idq")
+count = 3
+spawn_delay = 2.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_i14pe"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_n5b6f"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("9_irc0y")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_h7dmw"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_1"
+duration = 26.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_n8ig5"), SubResource("Resource_841bn"), SubResource("Resource_i14pe"), SubResource("Resource_n5b6f")])
+difficulty = 2.15
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_5mcfp"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 3
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_u1vw6"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("9_eku1o")
+count = 2
+spawn_delay = 3.0
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_ghrdr"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("10_bd7r7")
+count = 3
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_noite"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 3
+spawn_delay = 1.5
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_k5idq"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_2"
+duration = 27.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_5mcfp"), SubResource("Resource_u1vw6"), SubResource("Resource_ghrdr"), SubResource("Resource_noite")])
+difficulty = 2.25
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_8yqck"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("11_50kjp")
+count = 2
+spawn_delay = 4.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ek7pb"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 3
+spawn_delay = 2.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_gd7hl"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 4
+spawn_delay = 1.5
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_25d3v"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("12_4ugdg")
+count = 3
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_6l12q"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("9_irc0y")
+count = 2
+spawn_delay = 2.0
+start_offset = 22.0
+
+[sub_resource type="Resource" id="Resource_5ux3c"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_3"
+duration = 28.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_8yqck"), SubResource("Resource_ek7pb"), SubResource("Resource_gd7hl"), SubResource("Resource_25d3v"), SubResource("Resource_6l12q")])
+difficulty = 2.35
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_e8bcq"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("21_ycyp6")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_u02bu"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("6_h7dmw")
+count = 4
+spawn_delay = 1.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_o1fj0"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("7_k5idq")
+count = 3
+spawn_delay = 2.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_7mxpv"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("9_eku1o")
+count = 2
+spawn_delay = 3.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_vnxbu"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("8_5ux3c")
+count = 2
+spawn_delay = 3.0
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_mu7hn"]
+script = ExtResource("19_luq6e")
+enemy = ExtResource("9_irc0y")
+count = 3
+spawn_delay = 2.0
+start_offset = 32.0
+
+[sub_resource type="Resource" id="Resource_eku1o"]
+script = ExtResource("18_7cq12")
+id = &"side_fairy_boss"
+duration = 46.0
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_e8bcq"), SubResource("Resource_u02bu"), SubResource("Resource_o1fj0"), SubResource("Resource_7mxpv"), SubResource("Resource_vnxbu"), SubResource("Resource_mu7hn")])
+difficulty = 2.2
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("17_hydls")
+id = &"side_fairy"
+display_name = "La fee des fosses"
+act = 3
+subtitle = "Elle ne se pose jamais"
+intro_text = "Au-dessus de l eau trouble des fosses basses, une fee voltige sans jamais se poser. Sous elle, un champignon d or pousse sur les tombes noyees, et il se fend en deux quand on l abat. Le feu le ronge mieux que tout."
+outro_text = ""
+intro_story = &"side_fairy_intro"
+outro_story = &"side_fairy_outro"
+terrain = "grass"
+backdrop = "act2_graveyard"
+waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_h7dmw"), SubResource("Resource_k5idq"), SubResource("Resource_5ux3c"), SubResource("Resource_eku1o")])
+enemy_pool = Array[ExtResource("5_f6dxf")]([ExtResource("6_h7dmw"), ExtResource("7_k5idq"), ExtResource("8_5ux3c"), ExtResource("9_irc0y"), ExtResource("9_eku1o"), ExtResource("10_bd7r7"), ExtResource("11_50kjp"), ExtResource("12_4ugdg")])
+exploration_deck = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y")])
+objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_t3ncq"), SubResource("Resource_gwara"), SubResource("Resource_f6dxf")])
+levelup_cards = Array[ExtResource("1_bq3hy")]([])
+objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("14_t3ncq"), ExtResource("15_f6dxf"), ExtResource("15_twp52")])
+next_levels = Array[StringName]([])
+requires_all_previous = false
+base_commons = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("4_irc0y")])
+passive_unlocks = Array[ExtResource("1_bq3hy")]([ExtResource("18_h7dmw")])
+side_quest = true
+side_quest_after = &"lvl_19"
+side_quest_character = "fairy"

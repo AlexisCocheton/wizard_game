@@ -130,6 +130,12 @@ func _preparer_sondes() -> void:
 func _verifier_joue(d: EnemyDef, quoi: String) -> void:
 	ok(_en_campagne.has(d.id),
 		"%s (%s) n apparait dans AUCUNE vague ecrite : invisible en campagne" % [d.id, quoi])
+	# Vague 10 (B3) : un BOSS DORE n a pas de monde (ils se deduisent des vagues
+	# de CAMPAGNE, WaveSpawner.build_membership) ; il ferme sa quete annexe
+	# (test_side_quests) et le Massacre, qui ne pese aucun monde, le tire
+	# parmi tous les boss (test_modes).
+	if d.is_gilded():
+		return
 	ok(_membership.has(d.id),
 		"%s (%s) n est rattache a aucun monde : le Massacre l ignore" % [d.id, quoi])
 	if d.is_boss():

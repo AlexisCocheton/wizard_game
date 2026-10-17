@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_3sa55"]
+
+[resource]
+script = ExtResource("1_3sa55")
+id = &"side_fairy_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le Champignon dore s affaisse dans l eau. Ses spores d or flottent un instant, puis s eteignent une a une."
+}, {
+"portrait": &"",
+"side": "right",
+"speaker": "La fee",
+"text": "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "On ne dore pas un champignon pour le plaisir. Quelqu un voulait qu on le remarque."
+}, {
+"portrait": &"",
+"side": "right",
+"speaker": "La fee",
+"text": "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule."
+}])

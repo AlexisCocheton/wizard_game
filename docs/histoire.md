@@ -711,3 +711,34 @@ est le Massacre.)
   disque -> citee par un niveau ; chaque niveau de campagne encadre ; le narrateur ne
   nomme que des monstres des vagues du niveau ; pas d accent dans les scenes ni dans
   les textes du niveau ; chaque personnage a un visage.
+
+---
+
+## 11. Les quêtes annexes (vague 10, chantier B3)
+
+Huit quêtes hors du fil : une par acte, ouverte après un niveau de campagne de cet
+acte, et une par apprenti, fermée tant qu il n est pas gagné au compte. Chacune se
+ferme sur un **boss doré** : un monstre de base renforcé, à la teinte d or. Contenu :
+`tools/make_side_quests.gd` ; scènes : `tools/make_story.gd`, section « QUÊTES
+ANNEXES » ; règles : `tests/unit/test_side_quests.gd`.
+
+**Une annexe est ancrée à son niveau d ouverture** : ses scènes savent ce que le mage
+sait à ce moment-là, sans supposer une autre annexe ni une branche de fourche.
+
+**L or est le fil.** Le boss final est « une bête de cadrans, toute en or » : chaque
+boss doré porte sa couleur. Les scènes posent, sans rien dévoiler, qu un « client »
+aime l or et que l enfant aime ce qui brille et ce qu on lui donne en spectacle.
+
+| Annexe | Ouverte après | Qui est là | Boss doré | Ce que disent les scènes |
+|---|---|---|---|---|
+| « La mesure » | `lvl_02` | mage, enfant | Corniste doré | le cor qui bat la cadence du village ; « personne ne paie un cor en or à un corniste de forêt » : quelqu un, plus loin, donne le tempo |
+| « L atelier du rat » | `lvl_17` | + rat | Gardien-totem doré | l atelier où le rat a travaillé ; un totem de port taillé de sa main, doré et retourné, « pour que le client le reconnaisse » |
+| « Le trésor de Tombol » | `lvl_20` | mage, enfant | Squelette pareur doré | la salle du trésor vide ; il ne reste qu une garde dorée : « une quittance, le créancier est passé avant nous » |
+| « Le champion de Kaltek » | `lvl_11` | + rat, roi | Berserker doré | le champion enchaîné de l arène vide ; « même le champion était en laisse » ; l enfant a trouvé ça « joli à regarder » |
+| « La vitrine de Nuri » | `lvl_14` | mage, rat, roi (l enfant se tait) | Gorgone dorée | l aile NURI de la galerie ; la plaque « STATUES DU VILLAGE : FAITES » confirme ce que le mage déduisait au village, sans dire qui |
+| « L écuyer du port » | `lvl_18` + l écuyer | + l écuyer | Lutin archer doré | le dernier garde de Haute-Nacelle a posé l épée pour l arc ; il tirera « à la place » du mage |
+| « La fée des fosses » | `lvl_19` + la fée | mage, enfant, la fée | Champignon doré | une fée qui ne se pose jamais, parce qu ici « le sol mange » |
+| « L apprentie d azur » | `lvl_12` + l apprentie | + roi, l apprentie | Chevalier du vide doré | sous un cristal du temple d Ymoa, l apprentie du mage de la PREMIÈRE boucle, morte à Nox : il se souvient, pas elle |
+
+**Les apprentis parlent sans visage** : le casting de `StoryScene` n a pas leur
+portrait (à fabriquer, asset-pipeline) ; leur nom s affiche, comme « Un mort ».

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_oog2x"]
+
+[resource]
+script = ExtResource("1_oog2x")
+id = &"side_a3_tresor_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Sous la cour des rois morts, une porte basse. Derriere, la salle du tresor de Tombol."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Elle est vide. Il n y a plus rien du tout."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Un roi qui fuit ses creanciers vide ses coffres d abord. Il ne reste que la garde."
+}, {
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au fond de la salle, un squelette en armure d or leve son bouclier. Il a l air d attendre un coup."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Il pare et il rend. Je frapperai entre deux gardes, pas avant."
+}])

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_j8wh7"]
+
+[resource]
+script = ExtResource("1_j8wh7")
+id = &"side_a3_tresor_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le Squelette pareur dore tombe en pieces sur les dalles. Son armure sonne creux : de l or sur du vieux fer."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Tout l or de Tombol est parti payer quelqu un. On en a laisse juste assez pour dorer un garde."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "C est triste, un garde qui garde rien."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Non, petit. C est une quittance. Le creancier est passe avant nous, et il veut qu on le sache."
+}])

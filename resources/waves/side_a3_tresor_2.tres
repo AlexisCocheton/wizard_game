@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_du46t"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="2_31ing"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="3_wgywk"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_kv4rp"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="5_khl0q"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_b2gx7"]
+
+[sub_resource type="Resource" id="Resource_du46t"]
+script = ExtResource("1_du46t")
+enemy = ExtResource("2_31ing")
+count = 2
+spawn_delay = 2.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_31ing"]
+script = ExtResource("1_du46t")
+enemy = ExtResource("3_wgywk")
+count = 2
+spawn_delay = 3.0
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_wgywk"]
+script = ExtResource("1_du46t")
+enemy = ExtResource("4_kv4rp")
+count = 2
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_kv4rp"]
+script = ExtResource("1_du46t")
+enemy = ExtResource("5_khl0q")
+count = 2
+spawn_delay = 3.0
+start_offset = 16.0
+
+[resource]
+script = ExtResource("6_b2gx7")
+id = &"side_a3_tresor_2"
+duration = 28.0
+entries = Array[ExtResource("1_du46t")]([SubResource("Resource_du46t"), SubResource("Resource_31ing"), SubResource("Resource_wgywk"), SubResource("Resource_kv4rp")])
+difficulty = 2.1
+is_miniboss = false
+is_boss = false

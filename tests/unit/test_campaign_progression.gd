@@ -544,8 +544,14 @@ func _condition_de(m: CampaignMap, id: StringName) -> Label:
 ## se chevauchent ni qu une sorte de l ecran ou passe sous une fleche.
 func _test_page_des_annexes_tient_huit_quetes() -> void:
 	SaveData.reset_profile()
+	# Les annexes LIVREES d abord (vague 10, B3 : il y en a huit), completees par
+	# des factices jusqu a huit : la page est jugee sur huit tuiles, pas sur
+	# huit factices ajoutees au contenu.
 	var ids: Array[StringName] = []
-	for i in 8:
+	for livree: LevelDef in ContentDB.side_quests():
+		ids.append(livree.id)
+	var livrees: int = ids.size()
+	for i in range(livrees, 8):
 		var sq: LevelDef = _annexe("test_annexe_%d" % i, 1 + i % 5, SaveData.FIRST_LEVEL)
 		sq.display_name = "Annexe numero %d" % i
 		ids.append(sq.id)

@@ -1,0 +1,209 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_lpjea"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_qw7b3"]
+[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="2_sxe2h"]
+[ext_resource type="Resource" path="res://resources/cards/common/electric_mark.tres" id="3_y0ulm"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_w1hhi"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="6_nfwl8"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="7_6e42g"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="8_1llrh"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="9_ef13c"]
+[ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="10_lpcdw"]
+[ext_resource type="Resource" path="res://resources/cards/rare/heartwood_totem.tres" id="11_w1hhi"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="12_nfwl8"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="13_r0fw4"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="14_5slq4"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="15_2e8rt"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_storm_surge.tres" id="15_6e42g"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="16_lj4dl"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="17_jh2ph"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight_gold.tres" id="18_qw7b3"]
+
+[sub_resource type="Resource" id="Resource_sxe2h"]
+script = ExtResource("14_5slq4")
+id = &"obj_element_casts_40_lightning"
+description = "Lancer 40 sorts de foudre"
+check_key = &"element_casts"
+params = {
+"count": 40,
+"element": "LIGHTNING"
+}
+
+[sub_resource type="Resource" id="Resource_y0ulm"]
+script = ExtResource("14_5slq4")
+id = &"obj_win_under_time_140"
+description = "Gagner en moins de 2 min 20"
+check_key = &"win_under_time"
+params = {
+"seconds": 140
+}
+
+[sub_resource type="Resource" id="Resource_w1hhi"]
+script = ExtResource("14_5slq4")
+id = &"obj_no_hit_from_void_knight_gold"
+description = "Chevalier du vide dore : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "void_knight_gold"
+}
+
+[sub_resource type="Resource" id="Resource_c7qt2"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("6_nfwl8")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8vwt5"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("7_6e42g")
+count = 3
+spawn_delay = 2.0
+start_offset = 4.0
+
+[sub_resource type="Resource" id="Resource_07bnc"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("8_1llrh")
+count = 3
+spawn_delay = 1.6
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_nfwl8"]
+script = ExtResource("16_lj4dl")
+id = &"side_bluewitch_1"
+duration = 26.0
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_c7qt2"), SubResource("Resource_8vwt5"), SubResource("Resource_07bnc")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_kklj2"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("9_ef13c")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ciics"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("6_nfwl8")
+count = 2
+spawn_delay = 3.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_rw5nu"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("7_6e42g")
+count = 2
+spawn_delay = 2.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_6e42g"]
+script = ExtResource("16_lj4dl")
+id = &"side_bluewitch_2"
+duration = 28.0
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_kklj2"), SubResource("Resource_ciics"), SubResource("Resource_rw5nu")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_467wk"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("10_lpcdw")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_3714c"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("6_nfwl8")
+count = 2
+spawn_delay = 3.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_1g3ba"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("9_ef13c")
+count = 2
+spawn_delay = 3.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_rr0cg"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("7_6e42g")
+count = 2
+spawn_delay = 2.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_1llrh"]
+script = ExtResource("16_lj4dl")
+id = &"side_bluewitch_3"
+duration = 30.0
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_467wk"), SubResource("Resource_3714c"), SubResource("Resource_1g3ba"), SubResource("Resource_rr0cg")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_cl5y2"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("18_qw7b3")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_vyj46"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("7_6e42g")
+count = 3
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_66cv4"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("6_nfwl8")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_lex23"]
+script = ExtResource("17_jh2ph")
+enemy = ExtResource("9_ef13c")
+count = 1
+spawn_delay = 1.0
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_ef13c"]
+script = ExtResource("16_lj4dl")
+id = &"side_bluewitch_boss"
+duration = 46.0
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_cl5y2"), SubResource("Resource_vyj46"), SubResource("Resource_66cv4"), SubResource("Resource_lex23")])
+difficulty = 1.1
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("15_2e8rt")
+id = &"side_bluewitch"
+display_name = "L apprentie d azur"
+act = 4
+subtitle = "Ce que le cercle protegeait sans savoir quoi"
+intro_text = "Au fond du temple d Ymoa, sous un cristal bleu, dort une jeune sorciere que tu as deja connue, dans une autre boucle. Devant elle, un chevalier d or dont l armure avale le premier coup et qui disparait dans le vide."
+outro_text = ""
+intro_story = &"side_bluewitch_intro"
+outro_story = &"side_bluewitch_outro"
+terrain = "grass"
+backdrop = "act3_demon"
+waves = Array[ExtResource("16_lj4dl")]([SubResource("Resource_nfwl8"), SubResource("Resource_6e42g"), SubResource("Resource_1llrh"), SubResource("Resource_ef13c")])
+enemy_pool = Array[ExtResource("5_w1hhi")]([ExtResource("6_nfwl8"), ExtResource("7_6e42g"), ExtResource("8_1llrh"), ExtResource("9_ef13c"), ExtResource("10_lpcdw")])
+exploration_deck = Array[ExtResource("1_lpjea")]([ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3")])
+objectives = Array[ExtResource("14_5slq4")]([SubResource("Resource_sxe2h"), SubResource("Resource_y0ulm"), SubResource("Resource_w1hhi")])
+levelup_cards = Array[ExtResource("1_lpjea")]([])
+objective_rewards = Array[ExtResource("1_lpjea")]([ExtResource("11_w1hhi"), ExtResource("12_nfwl8"), ExtResource("13_r0fw4")])
+next_levels = Array[StringName]([])
+requires_all_previous = false
+base_commons = Array[ExtResource("1_lpjea")]([ExtResource("2_sxe2h"), ExtResource("3_y0ulm"), ExtResource("2_qw7b3")])
+passive_unlocks = Array[ExtResource("1_lpjea")]([ExtResource("15_6e42g")])
+side_quest = true
+side_quest_after = &"lvl_12"
+side_quest_character = "bluewitch"

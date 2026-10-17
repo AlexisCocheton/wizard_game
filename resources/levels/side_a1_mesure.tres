@@ -1,0 +1,247 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=49 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_yg1hs"]
+[ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_gx6s8"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="3_cdabl"]
+[ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="4_gx6s8"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_mg0vl"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="6_aw656"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="7_1a71a"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="8_xdkut"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="9_j0r4m"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="10_a1b3j"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="11_1ht0d"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="12_14y5r"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="13_4nbob"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="14_8ivba"]
+[ext_resource type="Resource" path="res://resources/cards/rare/temporal_drag.tres" id="15_cdabl"]
+[ext_resource type="Resource" path="res://resources/cards/epic/arcane_insight.tres" id="16_5iwsr"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="17_mg0vl"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_vqqar"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="19_702m4"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="20_sc2n5"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="21_0rsac"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower_gold.tres" id="22_gx6s8"]
+
+[sub_resource type="Resource" id="Resource_gx6s8"]
+script = ExtResource("18_vqqar")
+id = &"obj_no_hit_from_hornblower_gold"
+description = "Corniste dore : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "hornblower_gold"
+}
+
+[sub_resource type="Resource" id="Resource_ru0jk"]
+script = ExtResource("18_vqqar")
+id = &"obj_kill_type_one_cast_3_hopper"
+description = "Sauterelle : en tuer 3 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 3,
+"enemy": "hopper"
+}
+
+[sub_resource type="Resource" id="Resource_cdabl"]
+script = ExtResource("18_vqqar")
+id = &"obj_win_above_speed_160"
+description = "Gagner avec plus de 160 % de vitesse"
+check_key = &"win_above_speed"
+params = {
+"pct": 160
+}
+
+[sub_resource type="Resource" id="Resource_owt57"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("6_aw656")
+count = 5
+spawn_delay = 1.8
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_whiqa"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("7_1a71a")
+count = 3
+spawn_delay = 1.6
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_s6box"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("8_xdkut")
+count = 1
+spawn_delay = 1.0
+start_offset = 12.0
+
+[sub_resource type="Resource" id="Resource_nxw7l"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("9_j0r4m")
+count = 3
+spawn_delay = 1.5
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_5iwsr"]
+script = ExtResource("20_sc2n5")
+id = &"side_a1_mesure_1"
+duration = 26.0
+entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_owt57"), SubResource("Resource_whiqa"), SubResource("Resource_s6box"), SubResource("Resource_nxw7l")])
+difficulty = 1.1
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_ccdum"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("6_aw656")
+count = 5
+spawn_delay = 1.2
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_24x51"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("10_a1b3j")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_i2xax"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("11_1ht0d")
+count = 2
+spawn_delay = 3.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_882x8"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("12_14y5r")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_0fdtl"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("8_xdkut")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_mg0vl"]
+script = ExtResource("20_sc2n5")
+id = &"side_a1_mesure_2"
+duration = 28.0
+entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_ccdum"), SubResource("Resource_24x51"), SubResource("Resource_i2xax"), SubResource("Resource_882x8"), SubResource("Resource_0fdtl")])
+difficulty = 1.2
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_cn0bi"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("13_4nbob")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_g33lq"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("8_xdkut")
+count = 1
+spawn_delay = 1.0
+start_offset = 4.0
+
+[sub_resource type="Resource" id="Resource_ua62r"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("6_aw656")
+count = 5
+spawn_delay = 1.2
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_mruyt"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("14_8ivba")
+count = 1
+spawn_delay = 1.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_x2px4"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("7_1a71a")
+count = 4
+spawn_delay = 1.4
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_aw656"]
+script = ExtResource("20_sc2n5")
+id = &"side_a1_mesure_3"
+duration = 28.0
+entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_cn0bi"), SubResource("Resource_g33lq"), SubResource("Resource_ua62r"), SubResource("Resource_mruyt"), SubResource("Resource_x2px4")])
+difficulty = 1.2
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_1jb1f"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("22_gx6s8")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_75qwm"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("6_aw656")
+count = 3
+spawn_delay = 2.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_vly7k"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("9_j0r4m")
+count = 3
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_ji1wk"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("11_1ht0d")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_1lcuv"]
+script = ExtResource("21_0rsac")
+enemy = ExtResource("7_1a71a")
+count = 3
+spawn_delay = 1.5
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_1a71a"]
+script = ExtResource("20_sc2n5")
+id = &"side_a1_mesure_boss"
+duration = 45.0
+entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_1jb1f"), SubResource("Resource_75qwm"), SubResource("Resource_vly7k"), SubResource("Resource_ji1wk"), SubResource("Resource_1lcuv")])
+difficulty = 0.9
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("19_702m4")
+id = &"side_a1_mesure"
+display_name = "La mesure"
+act = 1
+subtitle = "Celui qui bat la cadence"
+intro_text = "Au village petrifie, les monstres marchaient au pas. Quelque part dans la foret de Nuri, quelqu un leur bat la mesure avec un cor. Trouve-le et fais-le taire : tant qu il joue, tout ce qui descend va plus vite."
+outro_text = ""
+intro_story = &"side_a1_mesure_intro"
+outro_story = &"side_a1_mesure_outro"
+terrain = "grass"
+backdrop = "act1_sky"
+waves = Array[ExtResource("20_sc2n5")]([SubResource("Resource_5iwsr"), SubResource("Resource_mg0vl"), SubResource("Resource_aw656"), SubResource("Resource_1a71a")])
+enemy_pool = Array[ExtResource("5_mg0vl")]([ExtResource("6_aw656"), ExtResource("7_1a71a"), ExtResource("8_xdkut"), ExtResource("9_j0r4m"), ExtResource("10_a1b3j"), ExtResource("11_1ht0d"), ExtResource("12_14y5r"), ExtResource("13_4nbob"), ExtResource("14_8ivba")])
+exploration_deck = Array[ExtResource("1_yg1hs")]([ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("4_gx6s8"), ExtResource("4_gx6s8"), ExtResource("4_gx6s8"), ExtResource("4_gx6s8")])
+objectives = Array[ExtResource("18_vqqar")]([SubResource("Resource_gx6s8"), SubResource("Resource_ru0jk"), SubResource("Resource_cdabl")])
+levelup_cards = Array[ExtResource("1_yg1hs")]([])
+objective_rewards = Array[ExtResource("1_yg1hs")]([ExtResource("15_cdabl"), ExtResource("16_5iwsr"), ExtResource("17_mg0vl")])
+next_levels = Array[StringName]([])
+requires_all_previous = false
+base_commons = Array[ExtResource("1_yg1hs")]([ExtResource("2_gx6s8"), ExtResource("3_cdabl"), ExtResource("4_gx6s8")])
+passive_unlocks = Array[ExtResource("1_yg1hs")]([])
+side_quest = true
+side_quest_after = &"lvl_02"
+side_quest_character = ""

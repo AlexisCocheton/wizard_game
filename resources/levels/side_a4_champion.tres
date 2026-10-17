@@ -1,0 +1,206 @@
+[gd_resource type="Resource" script_class="LevelDef" load_steps=43 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_caqxo"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_field.tres" id="3_k18p5"]
+[ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="4_hven7"]
+[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="4_k18p5"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_jdacw"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="6_sl3oa"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="7_g7gcv"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="8_x0hnh"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="9_x2kee"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="10_fydpe"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="11_1vvd4"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="12_o01rx"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="13_t4igx"]
+[ext_resource type="Resource" path="res://resources/cards/rare/ice_wall.tres" id="14_gwtki"]
+[ext_resource type="Resource" path="res://resources/cards/epic/terrain_pit.tres" id="15_kgwbh"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/venom_mire.tres" id="16_jy0x0"]
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="17_1po5x"]
+[ext_resource type="Script" path="res://scripts/data/level_def.gd" id="18_3cu0w"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_ice_bite.tres" id="18_hven7"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="19_q062o"]
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="20_6a672"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker_gold.tres" id="21_eaiwi"]
+
+[sub_resource type="Resource" id="Resource_k18p5"]
+script = ExtResource("17_1po5x")
+id = &"obj_kill_type_one_cast_2_berserker"
+description = "Berserker : en tuer 2 d un seul sort"
+check_key = &"kill_type_one_cast"
+params = {
+"count": 2,
+"enemy": "berserker"
+}
+
+[sub_resource type="Resource" id="Resource_hven7"]
+script = ExtResource("17_1po5x")
+id = &"obj_multi_kill_4_1"
+description = "Tuer 4 monstres en moins de 1 s"
+check_key = &"multi_kill"
+params = {
+"count": 4,
+"window": 1
+}
+
+[sub_resource type="Resource" id="Resource_jdacw"]
+script = ExtResource("17_1po5x")
+id = &"obj_win_under_time_100"
+description = "Gagner en moins de 100 s"
+check_key = &"win_under_time"
+params = {
+"seconds": 100
+}
+
+[sub_resource type="Resource" id="Resource_jgv4k"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("6_sl3oa")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_qqtnp"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("7_g7gcv")
+count = 3
+spawn_delay = 1.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_de2p3"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("8_x0hnh")
+count = 3
+spawn_delay = 1.4
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_sl3oa"]
+script = ExtResource("19_q062o")
+id = &"side_a4_champion_1"
+duration = 26.0
+entries = Array[ExtResource("20_6a672")]([SubResource("Resource_jgv4k"), SubResource("Resource_qqtnp"), SubResource("Resource_de2p3")])
+difficulty = 1.6
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_kv1ih"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("9_x2kee")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_4cngg"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("6_sl3oa")
+count = 2
+spawn_delay = 3.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_ith2g"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("10_fydpe")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_g7gcv"]
+script = ExtResource("19_q062o")
+id = &"side_a4_champion_2"
+duration = 28.0
+entries = Array[ExtResource("20_6a672")]([SubResource("Resource_kv1ih"), SubResource("Resource_4cngg"), SubResource("Resource_ith2g")])
+difficulty = 1.65
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_lqjit"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("6_sl3oa")
+count = 3
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_jdxt6"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("11_1vvd4")
+count = 2
+spawn_delay = 2.5
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_hevrx"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("12_o01rx")
+count = 2
+spawn_delay = 1.5
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_peoxy"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("13_t4igx")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_x0hnh"]
+script = ExtResource("19_q062o")
+id = &"side_a4_champion_3"
+duration = 30.0
+entries = Array[ExtResource("20_6a672")]([SubResource("Resource_lqjit"), SubResource("Resource_jdxt6"), SubResource("Resource_hevrx"), SubResource("Resource_peoxy")])
+difficulty = 1.7
+is_miniboss = false
+is_boss = false
+
+[sub_resource type="Resource" id="Resource_u704c"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("21_eaiwi")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_a4wt4"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("6_sl3oa")
+count = 2
+spawn_delay = 3.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_vi2cq"]
+script = ExtResource("20_6a672")
+enemy = ExtResource("8_x0hnh")
+count = 4
+spawn_delay = 1.5
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_x2kee"]
+script = ExtResource("19_q062o")
+id = &"side_a4_champion_boss"
+duration = 46.0
+entries = Array[ExtResource("20_6a672")]([SubResource("Resource_u704c"), SubResource("Resource_a4wt4"), SubResource("Resource_vi2cq")])
+difficulty = 1.65
+is_miniboss = false
+is_boss = true
+
+[resource]
+script = ExtResource("18_3cu0w")
+id = &"side_a4_champion"
+display_name = "Le champion de Kaltek"
+act = 4
+subtitle = "L arene vide garde son meilleur combattant"
+intro_text = "Kaltek est tombe, son arene est restee. Au centre, son champion en armure d or casse sa chaine. Il accelere a chaque coup recu et se releve une fois : frappe-le peu, mais fort, et ralentis-le."
+outro_text = ""
+intro_story = &"side_a4_champion_intro"
+outro_story = &"side_a4_champion_outro"
+terrain = "grass"
+backdrop = "act3_demon"
+waves = Array[ExtResource("19_q062o")]([SubResource("Resource_sl3oa"), SubResource("Resource_g7gcv"), SubResource("Resource_x0hnh"), SubResource("Resource_x2kee")])
+enemy_pool = Array[ExtResource("5_jdacw")]([ExtResource("6_sl3oa"), ExtResource("7_g7gcv"), ExtResource("8_x0hnh"), ExtResource("9_x2kee"), ExtResource("10_fydpe"), ExtResource("11_1vvd4"), ExtResource("12_o01rx"), ExtResource("13_t4igx")])
+exploration_deck = Array[ExtResource("1_caqxo")]([ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_k18p5"), ExtResource("4_k18p5"), ExtResource("4_k18p5"), ExtResource("4_k18p5")])
+objectives = Array[ExtResource("17_1po5x")]([SubResource("Resource_k18p5"), SubResource("Resource_hven7"), SubResource("Resource_jdacw")])
+levelup_cards = Array[ExtResource("1_caqxo")]([])
+objective_rewards = Array[ExtResource("1_caqxo")]([ExtResource("14_gwtki"), ExtResource("15_kgwbh"), ExtResource("16_jy0x0")])
+next_levels = Array[StringName]([])
+requires_all_previous = false
+base_commons = Array[ExtResource("1_caqxo")]([ExtResource("3_k18p5"), ExtResource("4_hven7"), ExtResource("4_k18p5")])
+passive_unlocks = Array[ExtResource("1_caqxo")]([ExtResource("18_hven7")])
+side_quest = true
+side_quest_after = &"lvl_11"
+side_quest_character = ""

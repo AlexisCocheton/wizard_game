@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_nyv7f"]
+
+[resource]
+script = ExtResource("1_nyv7f")
+id = &"side_a4_champion_outro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Le Berserker dore tombe a genoux pour la seconde fois, et ne se releve plus. Sa chaine part toujours vers le haut."
+}, {
+"portrait": &"skeleton_king",
+"side": "right",
+"speaker": "Le Roi squelette",
+"text": "Meme le champion etait en laisse. Et la laisse ne finissait pas chez Kaltek."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Il s est bien battu. C etait joli a regarder."
+}, {
+"portrait": &"mage_grave",
+"side": "left",
+"speaker": "Le Mage",
+"text": "... Joli. Tu dis ca comme quelqu un qui avait une place au premier rang."
+}])

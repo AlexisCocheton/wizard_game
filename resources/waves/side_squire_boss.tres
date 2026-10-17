@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_slpd6"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer_gold.tres" id="2_slpd6"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="3_4keg7"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_aoydc"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_jsasl"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_3r80n"]
+
+[sub_resource type="Resource" id="Resource_slpd6"]
+script = ExtResource("1_slpd6")
+enemy = ExtResource("2_slpd6")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_44eef"]
+script = ExtResource("1_slpd6")
+enemy = ExtResource("3_4keg7")
+count = 2
+spawn_delay = 2.5
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_4keg7"]
+script = ExtResource("1_slpd6")
+enemy = ExtResource("4_aoydc")
+count = 1
+spawn_delay = 1.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_aoydc"]
+script = ExtResource("1_slpd6")
+enemy = ExtResource("5_jsasl")
+count = 2
+spawn_delay = 2.0
+start_offset = 26.0
+
+[resource]
+script = ExtResource("6_3r80n")
+id = &"side_squire_boss"
+duration = 46.0
+entries = Array[ExtResource("1_slpd6")]([SubResource("Resource_slpd6"), SubResource("Resource_44eef"), SubResource("Resource_4keg7"), SubResource("Resource_aoydc")])
+difficulty = 1.3
+is_miniboss = false
+is_boss = true

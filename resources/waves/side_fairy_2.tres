@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5mcfp"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="2_u1vw6"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="3_ghrdr"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="4_noite"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_c2v1j"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_43yxh"]
+
+[sub_resource type="Resource" id="Resource_5mcfp"]
+script = ExtResource("1_5mcfp")
+enemy = ExtResource("2_u1vw6")
+count = 3
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_u1vw6"]
+script = ExtResource("1_5mcfp")
+enemy = ExtResource("3_ghrdr")
+count = 2
+spawn_delay = 3.0
+start_offset = 5.0
+
+[sub_resource type="Resource" id="Resource_ghrdr"]
+script = ExtResource("1_5mcfp")
+enemy = ExtResource("4_noite")
+count = 3
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_noite"]
+script = ExtResource("1_5mcfp")
+enemy = ExtResource("5_c2v1j")
+count = 3
+spawn_delay = 1.5
+start_offset = 16.0
+
+[resource]
+script = ExtResource("6_43yxh")
+id = &"side_fairy_2"
+duration = 27.0
+entries = Array[ExtResource("1_5mcfp")]([SubResource("Resource_5mcfp"), SubResource("Resource_u1vw6"), SubResource("Resource_ghrdr"), SubResource("Resource_noite")])
+difficulty = 2.25
+is_miniboss = false
+is_boss = false

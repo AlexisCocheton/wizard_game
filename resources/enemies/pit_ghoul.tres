@@ -108,3 +108,4 @@ deadline_haste_pct = 0.0
 deadline_haste_time = 3.0
 shield_regen = 0.0
 guard_block_pct = 0.0
+gilded_from = &""

@@ -329,6 +329,7 @@ static func behaviours(def: EnemyDef, rich: bool = false) -> Array[String]:
 		else:
 			out.append("Ancien mini-boss (%s), revenu en simple monstre : moins de PV, moins de ruses"
 				% ancien)
+	out.append_array(gilded_lines(def))  # vague 10, B3 : boss dores (fin de fichier)
 	# Les RESISTANCES ne sont plus des phrases (vague 5) : la fiche les pose en
 	# logos + pourcentages sous les competences (resistance_groups), le meme logo
 	# que celui de la carte qui les subit.
@@ -543,3 +544,89 @@ static func speed_word(base_speed: float) -> String:
 	if base_speed >= 35.0:
 		return "lente"
 	return "tres lente"
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B3 — LES BOSS DORES DES QUETES ANNEXES.
+# Section a part pour se fusionner sans toucher au reste du fichier.
+# =====================================================================
+
+## La fiche d un BOSS DORE (EnemyDef.gilded_from) : de quel monstre de base il
+## est la version renforcee, ses PV compares, et ce que l or lui AJOUTE, chiffres
+## compris. Le joueur qui a deja croise un Corniste doit lire tout de suite que
+## celui-ci n est pas le meme : sans cette ligne, il l aborde avec les cartes et
+## la prudence d un monstre ordinaire. Vide pour un monstre qui n est pas dore.
+static func gilded_lines(def: EnemyDef) -> Array[String]:
+	var out: Array[String] = []
+	if def == null or not def.is_gilded():
+		return out
+	var base: EnemyDef = ContentDB.enemies.get(def.gilded_from)
+	var nom: String = base.display_name if base != null else String(def.gilded_from)
+	# « Monstre de base : X » plutot que « la version renforcee du X » : la
+	# Gorgone est feminine, et l article se trompait sur la moitie du bestiaire.
+	if base == null:
+		out.append("Boss dore, renforce a l or. Monstre de base : %s" % nom)
+		return out
+	out.append("Boss dore, renforce a l or. Monstre de base : %s, %d PV au lieu de %d (x%s)"
+		% [nom, int(round(def.max_hp)), int(round(base.max_hp)),
+			_num(def.max_hp / maxf(base.max_hp, 1.0))])
+	var gains: Array[String] = gilded_gains(def, base)
+	if not gains.is_empty():
+		out.append("Ce que l or lui ajoute : " + " ; ".join(gains))
+	return out
+
+
+## CE QU UN BOSS DORE A DE PLUS QUE SON MONSTRE DE BASE, mecanique par mecanique
+## et chiffres compris (« presse les autres de 40 % au lieu de 20 % »). Une
+## seule definition de « plus fort » : la fiche l affiche, test_side_quests exige
+## qu elle ne soit jamais vide (une mecanique en plus ou plus forte, regle du
+## chantier). Les PV ne sont pas une mecanique : ils sont sur la ligne d avant.
+static func gilded_gains(def: EnemyDef, base: EnemyDef) -> Array[String]:
+	var out: Array[String] = []
+	if def == null or base == null:
+		return out
+	if def.buff_speed_pct > base.buff_speed_pct:
+		out.append("presse les autres de %d %% au lieu de %d %%"
+			% [int(round(def.buff_speed_pct)), int(round(base.buff_speed_pct))])
+	if def.summon_interval > 0.0 and def.summon_def != null \
+			and (base.summon_interval <= 0.0 or base.summon_def == null):
+		out.append("appelle %d %s toutes les %s s"
+			% [def.summon_count, def.summon_def.display_name, _num(def.summon_interval)])
+	if def.aura_shield_radius > base.aura_shield_radius:
+		out.append("une aura plus large (x%s)"
+			% _num(def.aura_shield_radius / maxf(base.aura_shield_radius, 1.0)))
+	if def.heal_per_second > base.heal_per_second:
+		out.append("soigne les autres de %s PV par seconde" % _num(def.heal_per_second))
+	if def.reflect_pct > base.reflect_pct and def.reflect_window > 0.0:
+		out.append("une garde toutes les %s s qui renvoie %d %% des degats"
+			% [_num(def.reflect_interval), int(round(def.reflect_pct))])
+	if def.enrage_speed_pct > base.enrage_speed_pct:
+		out.append("+%d %% de vitesse par coup recu au lieu de +%d %%"
+			% [int(round(def.enrage_speed_pct)), int(round(base.enrage_speed_pct))])
+	if def.extra_lives > base.extra_lives:
+		out.append("se releve %s depuis le haut, avec %d %% de ses PV"
+			% ["une fois" if def.extra_lives - base.extra_lives == 1
+				else "%d fois" % (def.extra_lives - base.extra_lives),
+				int(round(def.extra_life_hp_pct))])
+	if def.blocks_cards > base.blocks_cards:
+		out.append("fige %d cartes au lieu de %d" % [def.blocks_cards, base.blocks_cards])
+	if def.hits_immune > base.hits_immune:
+		out.append("ignore ses %d premiers coups" % def.hits_immune)
+	if def.shoot_interval > 0.0 and (base.shoot_interval <= 0.0
+			or def.shoot_interval < base.shoot_interval):
+		out.append("tire toutes les %s s au lieu de %s s"
+			% [_num(def.shoot_interval), _num(base.shoot_interval)] if base.shoot_interval > 0.0
+			else "tire toutes les %s s" % _num(def.shoot_interval))
+	if def.shoot_interval > 0.0 and def.shot_damage > base.shot_damage:
+		out.append("%d degats par tir au lieu de %d" % [def.shot_damage, base.shot_damage])
+	if def.keeps_distance_at > base.keeps_distance_at:
+		out.append("garde ses distances : il faut aller le chercher avec des sorts")
+	if def.split_count > base.split_count and def.split_into != null:
+		out.append("se fend en %d %s a sa mort" % [def.split_count, def.split_into.display_name])
+	if def.phase_interval > 0.0 and base.phase_interval <= 0.0:
+		out.append("disparait dans le vide toutes les %s s" % _num(def.phase_interval))
+	if def.first_hit_shield and not base.first_hit_shield:
+		out.append("encaisse le premier coup sans degat")
+	if def.dodge_chance > base.dodge_chance:
+		out.append("esquive %d %% des sorts" % int(round(def.dodge_chance * 100.0)))
+	return out

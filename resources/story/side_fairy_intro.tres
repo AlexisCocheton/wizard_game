@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="DialogueDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/dialogue_def.gd" id="1_n7i0t"]
+
+[resource]
+script = ExtResource("1_n7i0t")
+id = &"side_fairy_intro"
+scene_background = "talk_shrine"
+lines = Array[Dictionary]([{
+"portrait": &"",
+"side": "left",
+"speaker": "",
+"text": "Au-dessus de l eau trouble des fosses, une lueur danse. Une fee, pas plus grande qu une main, qui ne se pose nulle part."
+}, {
+"portrait": &"",
+"side": "right",
+"speaker": "La fee",
+"text": "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine."
+}, {
+"portrait": &"child",
+"side": "right",
+"speaker": "L Enfant",
+"text": "Toi, tu ne touches jamais le sol ?"
+}, {
+"portrait": &"",
+"side": "right",
+"speaker": "La fee",
+"text": "Jamais. Ici, le sol mange."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Alors on va lui couper l appetit."
+}])

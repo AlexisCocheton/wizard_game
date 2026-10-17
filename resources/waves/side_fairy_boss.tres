@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_rs44m"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom_gold.tres" id="2_e8bcq"]
+[ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="3_e8bcq"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_u02bu"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_ghost.tres" id="5_o1fj0"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_7mxpv"]
+[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="6_38xc2"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="7_e8bcq"]
+
+[sub_resource type="Resource" id="Resource_e8bcq"]
+script = ExtResource("1_rs44m")
+enemy = ExtResource("2_e8bcq")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_u02bu"]
+script = ExtResource("1_rs44m")
+enemy = ExtResource("4_u02bu")
+count = 4
+spawn_delay = 1.5
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_o1fj0"]
+script = ExtResource("1_rs44m")
+enemy = ExtResource("5_o1fj0")
+count = 3
+spawn_delay = 2.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_7mxpv"]
+script = ExtResource("1_rs44m")
+enemy = ExtResource("6_38xc2")
+count = 2
+spawn_delay = 3.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_vnxbu"]
+script = ExtResource("1_rs44m")
+enemy = ExtResource("3_e8bcq")
+count = 2
+spawn_delay = 3.0
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_mu7hn"]
+script = ExtResource("1_rs44m")
+enemy = ExtResource("7_e8bcq")
+count = 3
+spawn_delay = 2.0
+start_offset = 32.0
+
+[resource]
+script = ExtResource("6_7mxpv")
+id = &"side_fairy_boss"
+duration = 46.0
+entries = Array[ExtResource("1_rs44m")]([SubResource("Resource_e8bcq"), SubResource("Resource_u02bu"), SubResource("Resource_o1fj0"), SubResource("Resource_7mxpv"), SubResource("Resource_vnxbu"), SubResource("Resource_mu7hn")])
+difficulty = 2.2
+is_miniboss = false
+is_boss = true

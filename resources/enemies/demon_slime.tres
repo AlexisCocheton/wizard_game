@@ -110,6 +110,7 @@ deadline_haste_pct = 0.0
 deadline_haste_time = 3.0
 shield_regen = 0.0
 guard_block_pct = 0.0
+gilded_from = &""
 
 [sub_resource type="Resource" id="Resource_h7kpq"]
 script = ExtResource("1_jfocw")
@@ -220,6 +221,7 @@ deadline_haste_pct = 0.0
 deadline_haste_time = 3.0
 shield_regen = 0.0
 guard_block_pct = 0.0
+gilded_from = &""
 
 [resource]
 script = ExtResource("1_jfocw")
@@ -332,3 +334,4 @@ deadline_haste_pct = 0.0
 deadline_haste_time = 3.0
 shield_regen = 0.0
 guard_block_pct = 0.0
+gilded_from = &""
