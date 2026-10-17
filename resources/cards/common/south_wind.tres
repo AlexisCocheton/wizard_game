@@ -34,8 +34,8 @@ prices = Array[Dictionary]([{
 [sub_resource type="Resource" id="Resource_cbdxt"]
 script = ExtResource("2_ucgfk")
 id = &"vent_glacial"
-title = "Vent glacial"
-description = "Le vent gele : tous les monstres -25 % de vitesse tant qu il souffle (glace)"
+title = "Vent contraire"
+description = "Le vent se retourne contre eux : tous les monstres -25 % tant qu il souffle"
 modifiers = Array[Dictionary]([{
 "duration": 6.0,
 "key": &"slow_enemy_gauge",

@@ -1,7 +1,8 @@
 extends TestCase
 ## AMELIORATIONS MAJEURES (vague 10, chantier A1) : le format (MajorUpgradeDef),
-## l offre (jamais a la 1re maturation, au plus une parmi trois, une par sort et
-## par partie), la STRUCTURE qu elles changent (seconde ligne, vague de plus,
+## l offre (jamais a la 1re maturation, puis les DEUX cote a cote avec une voie
+## — C7b —, une seule prise par sort et par partie, reproposees tant qu aucune
+## n est prise), la STRUCTURE qu elles changent (seconde ligne, vague de plus,
 ## zone qui respire et residu, mur que les volants ne passent plus, objet
 ## incassable, incantation quasi instantanee, carte de la main qui murit),
 ## leurs prix, l ecran, le grimoire et le bot du banc.
@@ -19,7 +20,8 @@ func run() -> void:
 	_test_les_defauts_sont_detectes()
 	_test_le_contenu_livre_est_valide()
 	_test_jamais_a_la_premiere_maturation()
-	_test_une_majeure_au_plus_des_la_deuxieme()
+	_test_les_deux_majeures_des_la_deuxieme()
+	_test_refusees_elles_reviennent()
 	_test_une_seule_majeure_par_partie()
 	_test_le_parcours_joue_des_maturations()
 	_test_la_seconde_volee_double_la_ligne()
@@ -313,27 +315,93 @@ func _test_jamais_a_la_premiere_maturation() -> void:
 	RunState.reset()
 
 
-func _test_une_majeure_au_plus_des_la_deuxieme() -> void:
+## VAGUE 10 C7b : a la deuxieme maturation, LES DEUX majeures du sort, cote a
+## cote, plus la voie LEGERE (le bonus sur face aux deux paris). Avant (A1), une
+## seule etait tiree au hasard : le joueur ne choisissait jamais entre elles.
+func _test_les_deux_majeures_des_la_deuxieme() -> void:
 	var c: SpellCard = _fleche()
-	var vues: Dictionary = {}
+	var places: Dictionary = {}
 	for graine in 40:
 		RunState.reset()
 		RunState.set_seed(7100 + graine)
 		_prendre(c, [&"damage_light"])
 		var offre: Array = RunState.draw_upgrade_offer(c)
 		eq(offre.size(), GameConfig.LEVEL_UP_CHOICES, "graine %d : toujours trois propositions" % graine)
-		eq(_a_une_majeure(offre), 1, "graine %d : exactement une majeure" % graine)
+		eq(_a_une_majeure(offre), 2, "graine %d : les deux majeures" % graine)
 		var ids: Dictionary = {}
-		var legere: bool = false
-		for v in offre:
+		var vues: Dictionary = {}
+		for i in offre.size():
+			var v: Dictionary = offre[i]
 			ids[v["id"]] = true
-			if StringName(v["form"]) == RunState.UP_LIGHT:
-				legere = true
 			if bool(v.get("major", false)):
 				vues[v["major_id"]] = true
+			else:
+				eq(StringName(v["form"]), RunState.UP_LIGHT,
+					"graine %d : la troisieme est la voie legere sure" % graine)
+				places[i] = true
 		eq(ids.size(), offre.size(), "graine %d : trois propositions distinctes" % graine)
-		ok(legere, "graine %d : la voie legere sure reste a l ecran" % graine)
-	eq(vues.size(), 2, "les deux majeures du sort sortent selon le tirage %s" % [vues.keys()])
+		eq(vues.size(), 2, "graine %d : les DEUX majeures du sort, pas deux fois la meme" % graine)
+	# L ordre est melange : la voie ordinaire n est pas toujours a la meme place,
+	# sinon le pouce presse tomberait toujours sur la meme proposition.
+	ok(places.size() >= 2, "la voie ordinaire change de place selon le tirage %s" % [places.keys()])
+	# Un sort qui n en declare qu UNE : une majeure et deux voies (chemin d A1).
+	var une: SpellCard = _fleche()
+	une.major_upgrades = [VAGUE_SUPPLEMENTAIRE()]
+	RunState.reset()
+	RunState.set_seed(7150)
+	_prendre(une, [&"damage_light"])
+	var o1: Array = RunState.draw_upgrade_offer(une)
+	eq(o1.size(), GameConfig.LEVEL_UP_CHOICES, "une seule majeure declaree : trois propositions")
+	eq(_a_une_majeure(o1), 1, "dont une majeure")
+	# Trois declarees : jamais plus de LEVEL_UP_CHOICES - 1, une voie reste.
+	var trois: SpellCard = _fleche()
+	trois.major_upgrades = [SECONDE_VOLEE(), VAGUE_SUPPLEMENTAIRE(), TIR_REFLEXE()]
+	RunState.reset()
+	RunState.set_seed(7160)
+	_prendre(trois, [&"damage_light"])
+	var o3: Array = RunState.draw_upgrade_offer(trois)
+	eq(o3.size(), GameConfig.LEVEL_UP_CHOICES, "trois majeures declarees : trois propositions")
+	eq(_a_une_majeure(o3), GameConfig.LEVEL_UP_CHOICES - 1, "toujours une voie ordinaire a l ecran")
+	RunState.reset()
+
+
+## REFUS DES DEUX : une voie ordinaire ou GARDER TEL QUEL a la 2e maturation, et
+## la 3e les repropose TOUTES LES DEUX (comportement d A1, garde : la regle ne lit
+## que « deja une prise ? ») ; une prise ferme la porte a l autre.
+func _test_refusees_elles_reviennent() -> void:
+	var c: SpellCard = _fleche()
+	RunState.reset()
+	ok(RunState.upgrade_tiers_for(c) >= 3, "(la fleche d exemple murit au moins trois fois)")
+	for refus: String in ["voie", "garder", "prise"]:
+		RunState.reset()
+		RunState.set_seed(7250)
+		for k in 2:
+			RunState.grant_card_xp(c, maxi(1, RunState.next_upgrade_at(c) - RunState.card_xp(c)))
+			var offre: Array = RunState.pending_upgrade_paths
+			if k == 0:
+				RunState.pick_upgrade(0)
+				continue
+			eq(_a_une_majeure(offre), 2, "(%s) 2e maturation : les deux majeures" % refus)
+			var voie: int = -1
+			var majeure: int = -1
+			for i in offre.size():
+				if bool(offre[i].get("major", false)):
+					majeure = i
+				else:
+					voie = i
+			match refus:
+				"voie":
+					RunState.pick_upgrade(voie)
+				"garder":
+					RunState.decline_upgrade()
+				"prise":
+					RunState.pick_upgrade(majeure)
+		RunState.grant_card_xp(c, maxi(1, RunState.next_upgrade_at(c) - RunState.card_xp(c)))
+		var troisieme: Array = RunState.pending_upgrade_paths
+		eq(troisieme.size(), GameConfig.LEVEL_UP_CHOICES, "(%s) 3e maturation : trois propositions" % refus)
+		eq(_a_une_majeure(troisieme), 0 if refus == "prise" else 2,
+			"(%s) 3e maturation : %s" % [refus, "plus aucune majeure" if refus == "prise"
+				else "les deux reviennent"])
 	RunState.reset()
 
 
@@ -679,6 +747,31 @@ func _test_l_ecran_montre_la_majeure_et_ses_prix() -> void:
 			annonce = true
 	ok(annonce, "l entete annonce la majeure")
 	ok(panneau.size.y >= hote.size.y * 0.99, "le panneau couvre l ecran")
+	# C7b : DEUX majeures a l ecran, deux boutons de majeure, et l entete dit
+	# qu une seule se prend.
+	var deux: SpellCard = _fleche()
+	RunState.reset()
+	RunState.set_seed(7410)
+	_prendre(deux, [&"damage_light"])
+	var voies2: Array = RunState.draw_upgrade_offer(deux)
+	# Un panneau NEUF : show_paths libere l ancienne boite par queue_free, ses
+	# boutons resteraient trouvables jusqu a la fin de l image.
+	var panneau2 := CardUpgradePanel.new()
+	hote.add_child(panneau2)
+	panneau2.show_paths(deux, voies2)
+	var boutons: int = 0
+	for i in voies2.size():
+		var b2: Button = panneau2.find_child("Voie%d" % i, true, false) as Button
+		if b2 != null and b2.find_child("Forme", true, false) != null \
+				and (b2.find_child("Forme", true, false) as Label).text == "MAJEURE":
+			boutons += 1
+	eq(boutons, 2, "deux boutons de majeure")
+	var choix: bool = false
+	for n in panneau2.find_children("*", "Label", true, false):
+		var t: String = (n as Label).text
+		if t.contains("Deux AMELIORATIONS MAJEURES") and t.contains("une seule"):
+			choix = true
+	ok(choix, "l entete dit : deux au choix, une seule par partie")
 	detach(hote)
 	RunState.reset()
 
@@ -703,6 +796,39 @@ func _test_le_bot_et_les_majeures() -> void:
 	var k: int = AutoPick.upgrade_index(c, refus)
 	not_ok(bool(refus[k].get("major", false)),
 		"une majeure refusee n est jamais prise, meme en dernier recours")
+	# C7b : DEUX majeures a l ecran. Une acceptable et une refusee : l acceptable,
+	# ou qu elle soit.
+	var duo: Array = [seconde, legere, vague]
+	eq(AutoPick.upgrade_index(c, duo), 2, "entre une refusee et une acceptable : l acceptable")
+	duo.reverse()
+	eq(AutoPick.upgrade_index(c, duo), 0, "quel que soit l ordre")
+	# Deux acceptables : celle qui perd le MOINS sur l identite (degats ici),
+	# puis sur la vitesse de lancement ; jamais la premiere affichee.
+	var douce: Dictionary = RunState.major_path(c, MajorUpgradeDef.make(&"douce", "Douce",
+		"Une ligne de plus", [{"op": "duplicate", "key": &"pierce_line", "params": {&"angle_deg": 15.0}}],
+		[{"op": "axis", "axis": &"damage", "pct": -0.1}]))
+	var rude: Dictionary = RunState.major_path(c, MajorUpgradeDef.make(&"rude", "Rude",
+		"Une ligne de plus", [{"op": "duplicate", "key": &"pierce_line", "params": {&"angle_deg": 15.0}}],
+		[{"op": "axis", "axis": &"damage", "pct": -0.25}]))
+	for ordre: Array in [[rude, legere, douce], [douce, legere, rude], [legere, rude, douce]]:
+		var i: int = AutoPick.upgrade_index(c, ordre)
+		eq(StringName(ordre[i].get("major_id", &"")), &"douce",
+			"deux acceptables : la moins chere sur l identite (%s)" % [ordre.map(
+				func(v: Dictionary) -> String: return String(v.get("id", "")))])
+	ok(AutoPick.major_preferred(c, vague, douce) and not AutoPick.major_preferred(c, douce, vague),
+		"la vague ne paie rien sur l identite : elle passe devant la douce")
+	# A egalite sur l identite : la vitesse de lancement departage (vague : -50 %
+	# vitesse, preste : -20 %), puis l id.
+	var preste: Dictionary = RunState.major_path(c, MajorUpgradeDef.make(&"preste", "Preste",
+		"La volee repart", [{"op": "repeat", "delay": 1.0}],
+		[{"op": "axis", "axis": &"cast", "pct": -0.2}]))
+	ok(AutoPick.major_preferred(c, preste, vague) and not AutoPick.major_preferred(c, vague, preste),
+		"meme identite : la moins chere en vitesse de lancement")
+	var jumelle: Dictionary = douce.duplicate(true)
+	jumelle["major_id"] = &"aaa_jumelle"
+	jumelle["id"] = &"major:aaa_jumelle"
+	ok(AutoPick.major_preferred(c, jumelle, douce) and not AutoPick.major_preferred(c, douce, jumelle),
+		"a egalite parfaite, l id le plus petit : un ordre total, pas l affichage")
 	RunState.reset()
 
 

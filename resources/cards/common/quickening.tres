@@ -16,7 +16,7 @@ params = {}
 script = ExtResource("2_j7h6n")
 id = &"coup_de_fouet"
 title = "Coup de fouet"
-description = "Hate enorme mais breve : +300 % d incantation pendant 1,5 s"
+description = "Frenesie de 1,5 s : incantation +300 % et deux sorts charges a la fois"
 modifiers = Array[Dictionary]([{
 "field": "magnitude",
 "key": &"self_haste",
@@ -27,6 +27,13 @@ modifiers = Array[Dictionary]([{
 "key": &"self_haste",
 "op": "set",
 "value": 1.5
+}, {
+"duration": 1.5,
+"key": &"double_cast",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {},
+"radius": 0.0
 }])
 prices = Array[Dictionary]([{
 "axis": &"discard",

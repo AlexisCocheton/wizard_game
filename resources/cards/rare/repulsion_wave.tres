@@ -18,7 +18,7 @@ params = {
 script = ExtResource("2_hi6my")
 id = &"souffle_continu"
 title = "Souffle continu"
-description = "Le souffle s attarde 4 s : un courant fait reculer qui y entre (effet d eau)"
+description = "Le souffle s attarde 4 s : un courant fait reculer qui y entre"
 modifiers = Array[Dictionary]([{
 "duration": 4.0,
 "key": &"water_flood",

@@ -565,13 +565,17 @@ const JET_DAMAGE_STEP_PX: float = 100.0
 ## AMELIORATIONS MAJEURES. La PREMIERE maturation d un sort n en propose jamais :
 ## le joueur decouvre d abord les voies ordinaires du sort, et une majeure des
 ## le huitieme lancer ecraserait tout le reste de l ecran. A partir de la
-## maturation MAJOR_UPGRADE_FROM_TIER, UNE majeure au plus prend une des
-## LEVEL_UP_CHOICES places, tant que le sort n en a pas deja pris
-## MAJOR_UPGRADES_PER_CARD dans la partie.
+## maturation MAJOR_UPGRADE_FROM_TIER, les DEUX majeures du sort prennent deux
+## des LEVEL_UP_CHOICES places (la troisieme reste une voie ordinaire), tant que
+## le sort n en a pas deja pris MAJOR_UPGRADES_PER_CARD dans la partie
+## (C7b, vague 10 : avant, une seule, tiree au hasard — le joueur ne choisissait
+## jamais entre les deux). Refusees toutes les deux, elles reviennent a la
+## maturation suivante (RunState.offerable_majors).
 const MAJOR_UPGRADE_FROM_TIER: int = 2
 ## Une seule par sort et par partie : deux majeures changent chacune la
 ## STRUCTURE du sort, et leurs prix lourds (-50 % degats) s additionneraient
-## jusqu a un sort qui ne fait plus rien.
+## jusqu a un sort qui ne fait plus rien. Les deux a l ecran, une seule prise :
+## c est le choix demande par le co-auteur.
 const MAJOR_UPGRADES_PER_CARD: int = 1
 ## Plancher d un axe CUMULE (voies + majeure), en facteur : un -50 % de majeure
 ## plus trois -15 % de voies fortes ne doivent jamais rendre des degats nuls ou

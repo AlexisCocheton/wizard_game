@@ -37,7 +37,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_2e1s0")
 id = &"bourbier"
 title = "Bourbier"
-description = "L eau glacee ralentit aussi de 40 % (effet de glace)"
+description = "L eau s epaissit : la nappe ralentit aussi de 40 %"
 modifiers = Array[Dictionary]([{
 "duration": 7.0,
 "key": &"ground_zone",
