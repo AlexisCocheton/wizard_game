@@ -84,12 +84,6 @@ func _test_chaque_carte_voit_sa_feuille_arriver_a_l_ecran() -> void:
 	g.running = false
 	var bf: Battlefield = g.battlefield
 	var gnome: EnemyDef = ContentDB.enemies.get(&"gnome")
-	# Des monstres VIVANTS et a portee : plusieurs effets (dissipation, degats
-	# cibles) ne dessinent rien quand ils ne touchent personne. Un champ vide
-	# ferait echouer des cartes parfaitement branchees.
-	for i in 6:
-		bf.spawn_enemy(gnome, 200.0 + i * 120.0, 1.0,
-			Vector2(200.0 + i * 120.0, 700.0))
 
 	var ids: Array = ContentDB.cards.keys()
 	ids.sort()
@@ -97,6 +91,12 @@ func _test_chaque_carte_voit_sa_feuille_arriver_a_l_ecran() -> void:
 		var card: SpellCard = ContentDB.cards[id]
 		if card.is_passive or card.fx_key == &"":
 			continue
+		# Des monstres VIVANTS et a portee : plusieurs effets (dissipation, degats
+		# cibles, marque qui se pose sur une cible) ne dessinent rien quand ils ne
+		# touchent personne. La meute est REMISE avant chaque carte : les sorts
+		# precedents (ordre alphabetique) la tuaient parfois en entier, et la
+		# Marque electrique echouait sans cible selon les tirages (vu au 17/10).
+		_remettre_la_meute(bf, gnome)
 		var attendue: String = String(card.fx_key)
 		Fx.begin_trace()
 		var ctx := CastContext.make(bf, card)
@@ -111,6 +111,17 @@ func _test_chaque_carte_voit_sa_feuille_arriver_a_l_ecran() -> void:
 				% [card.id, attendue, demandees])
 
 	detach(g)
+
+
+## Six gnomes vivants en ligne a y = 700 : les morts sont retires, les manquants
+## reapparaissent a leur place.
+func _remettre_la_meute(bf: Battlefield, gnome: EnemyDef) -> void:
+	for e in bf.enemies.duplicate():
+		if not is_instance_valid(e) or e.is_dead():
+			bf.enemies.erase(e)
+	while bf.enemies.size() < 6:
+		var x: float = 200.0 + bf.enemies.size() * 120.0
+		bf.spawn_enemy(gnome, x, 1.0, Vector2(x, 700.0))
 
 
 ## Les feuilles jouees a pleine largeur doivent avoir la resolution qui va avec.
