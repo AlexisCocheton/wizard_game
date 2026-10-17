@@ -25,7 +25,22 @@ var persistence_enabled: bool = true
 
 func _ready() -> void:
 	persistence_enabled = DisplayServer.get_name() != "headless"
+	# LES ETOILES D AVANT LA VAGUE 10 (C7a, _carry_legacy_objectives) ont besoin
+	# du contenu, et ContentDB se charge APRES ce fichier (ordre des autoloads) :
+	# au chargement du profil, la passe ne trouve encore aucun niveau. Elle
+	# repasse donc des que le contenu est la (idempotente).
+	if not ContentDB.content_loaded.is_connected(_on_content_loaded):
+		ContentDB.content_loaded.connect(_on_content_loaded)
 	load_profile()
+
+
+## Le contenu vient d etre (re)charge : les etoiles d un ancien profil peuvent
+## enfin etre rattachees aux objectifs actuels. Rien n est ecrit sur le disque :
+## la prochaine sauvegarde emporte le resultat, et d ici la une relecture refait
+## exactement la meme passe.
+func _on_content_loaded() -> void:
+	if _carry_legacy_objectives(profile()):
+		profile_changed.emit()
 
 
 func _defaults() -> Dictionary:
@@ -155,6 +170,9 @@ func _migrate(d: Dictionary) -> Dictionary:
 	# ancienne. Pas de hausse de schema_version : c est une union, idempotente.
 	_merge_legacy_legendaries(d["profile"])
 	_rename_objectives(d["profile"])
+	# Les etoiles gagnees sous des ids d objectif qui n existent plus (vague 10,
+	# C7a). APRES le renommage : une etoile renommee n est pas un id perdu.
+	_carry_legacy_objectives(d["profile"])
 	# Meme completion UN CRAN PLUS BAS, pour les cosmetiques : un profil d avant
 	# les apprentis a bien un dictionnaire "cosmetics", donc la boucle ci-dessus
 	# le garde tel quel, sans la cle "character". Sans cette passe, la cle
@@ -204,6 +222,97 @@ func _rename_objectives(prof: Dictionary) -> void:
 		for ancien: String in RENAMED_OBJECTIVES:
 			if bool((objs as Dictionary).get(ancien, false)):
 				objs[RENAMED_OBJECTIVES[ancien]] = true
+
+
+## LES ETOILES D AVANT LA VAGUE 10 (chantier C7a, audit du 17/10).
+##
+## Le constat : l id d un objectif est DEDUIT de son controle et de ses
+## parametres (system_objectives), et B2 a refait les objectifs. Entre a7cdcdc
+## (le 03/10 au soir) et la vague 10, 44 ids sur 63 ont change. Un profil a 3/3
+## sur lvl_04, lvl_12 ou lvl_17 retombait a 0/3, et son deck de campagne a
+## 4/4/4, sans la moindre erreur : rien ne lisait plus ses etoiles.
+##
+## LA REGLE, niveau par niveau. Un id acquis qui n est PAS un objectif actuel de
+## CE niveau est PERIME. Chaque perime rend acquis l objectif actuel NON acquis
+## du plus bas rang (du rang 1 vers le 3), au plus autant que le niveau a
+## d objectifs (3). C est une union : rien d acquis n est retire, et un
+## objectif actuel deja reussi (id garde, meme s il a change de rang) compte
+## pour lui-meme, pas une seconde fois. Tout ce qu un rang ouvre suit, parce que
+## tout se DEDUIT des ids actuels acquis : achieved_ranks, campaign_deck (la
+## table du co-auteur), objective_rewards_unlocked, le livre (deck d un niveau
+## ouvert), la fiche et les etoiles de la carte.
+##
+## LES IDS PERIMES SONT GARDES dans la fiche, comme ailleurs dans ce fichier
+## (on ne retire rien a un profil : _rename_objectives garde l ancien id,
+## best_wave_infinite et unlocked_legendaries restent). Rien ne les lit : toutes
+## les lectures passent par les objectifs ACTUELS du niveau. Pour qu un perime
+## ne compte qu UNE fois, ceux deja rendus sont notes dans la fiche, sous
+## LEGACY_OBJECTIVES_KEY : une seconde passe ne trouve plus rien a rendre
+## (idempotente). Sans cette note, un profil a 2/3 regagnerait une etoile a
+## chaque lecture. Une source de RENAMED_OBJECTIVES ne compte pas non plus : son
+## etoile est deja portee par le nouvel id.
+##
+## Limite connue, au benefice du joueur : un profil qui a traverse plusieurs
+## refontes peut garder des perimes de deux epoques pour un meme objectif ; ils
+## comptent chacun, dans la limite des 3 etoiles du niveau.
+##
+## Le contenu se charge APRES SaveData (ordre des autoloads) : sans lui, la passe
+## ne fait rien, et _on_content_loaded la relance. Rend vrai si le profil change.
+const LEGACY_OBJECTIVES_KEY: String = "objectives_carried"
+
+
+func _carry_legacy_objectives(prof: Dictionary) -> bool:
+	if ContentDB.levels.is_empty():
+		return false
+	var levels: Variant = prof.get("levels")
+	if typeof(levels) != TYPE_DICTIONARY:
+		return false
+	var change: bool = false
+	for lid in levels:
+		var lv: LevelDef = ContentDB.levels.get(StringName(String(lid)))
+		var rec: Variant = levels[lid]
+		if lv == null or typeof(rec) != TYPE_DICTIONARY:
+			continue
+		var objs: Variant = (rec as Dictionary).get("objectives")
+		if typeof(objs) != TYPE_DICTIONARY:
+			continue
+		var actuels: Dictionary = {}
+		for obj in lv.objectives:
+			if obj != null:
+				actuels[String(obj.id)] = true
+		var rendus: Array = []
+		var deja: Variant = (rec as Dictionary).get(LEGACY_OBJECTIVES_KEY)
+		if typeof(deja) == TYPE_ARRAY:
+			rendus = deja
+		var perimes: Array[String] = []
+		for id in objs:
+			var s: String = String(id)
+			if not bool(objs[id]) or actuels.has(s) or rendus.has(s):
+				continue
+			if RENAMED_OBJECTIVES.has(s) \
+					and bool((objs as Dictionary).get(RENAMED_OBJECTIVES[s], false)):
+				continue
+			perimes.append(s)
+		if perimes.is_empty():
+			continue
+		perimes.sort()
+		# Les objectifs sont ranges par rang (LevelDef.objective_rank) : le
+		# premier non acquis est le plus facile qui reste.
+		var a_rendre: int = mini(perimes.size(), lv.objectives.size())
+		for obj in lv.objectives:
+			if a_rendre <= 0:
+				break
+			if obj == null or bool((objs as Dictionary).get(String(obj.id), false)):
+				continue
+			objs[String(obj.id)] = true
+			a_rendre -= 1
+		# TOUS les perimes trouves sont notes, meme ceux qui n ont rien rendu
+		# (niveau deja complet) : chacun a ete compte, une fois.
+		for s: String in perimes:
+			rendus.append(s)
+		rec[LEGACY_OBJECTIVES_KEY] = rendus
+		change = true
+	return change
 
 
 func _migrate_0_to_1(d: Dictionary) -> Dictionary:
@@ -862,13 +971,48 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 ## OU lvl_06), qu une regle generale aurait verrouillee. Un profil qui a deja
 ## lvl_13 ouvert le garde : on n enleve jamais rien a un profil.
 func _all_previous_cleared(level_id: StringName) -> bool:
+	return previous_left(level_id).is_empty()
+
+
+## CE QUI MANQUE a un niveau qui attend TOUS ses precedents (C7a) : les niveaux
+## de campagne qui le citent dans `next_levels` et ne sont pas encore finis,
+## tries par id. Toujours vide pour un niveau ordinaire (une victoire d un seul
+## precedent l ouvre). La meme liste decide de l ouverture (_all_previous_cleared)
+## et de ce que disent l ecran de victoire et la carte : ils ne peuvent pas
+## annoncer une regle que record_victory n applique pas.
+func previous_left(level_id: StringName) -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
 	var cible: LevelDef = ContentDB.levels.get(level_id)
 	if cible == null or not cible.requires_all_previous:
-		return true
+		return out
 	for lv: LevelDef in ContentDB.campaign_levels():
 		if lv != null and lv.next_levels.has(level_id) and not is_level_cleared(lv.id):
-			return false
-	return true
+			out.append(lv)
+	return out
+
+
+## Pourquoi un niveau est FERME, en une phrase COURTE (elle tient sous le
+## medaillon de la carte, au telephone) ; "" s il est ouvert.
+##   - une annexe : side_quest_lock_reason ;
+##   - un niveau qui attend TOUS ses precedents (lvl_13, apres les quatre
+##     demons) : le nom du seul qui reste, sinon leur nombre. « Termine le
+##     niveau precedent » y etait faux : il en faut quatre ;
+##   - sinon : un seul precedent suffit (c est aussi la regle d une fourche).
+func level_lock_reason(lv: LevelDef) -> String:
+	if lv == null or is_level_unlocked(lv.id):
+		return ""
+	if lv.side_quest:
+		return side_quest_lock_reason(lv)
+	var reste: Array[LevelDef] = previous_left(lv.id)
+	if reste.size() == 1:
+		return "Termine %s" % reste[0].display_name
+	if reste.size() > 1:
+		return "Termine encore %d niveaux" % reste.size()
+	return LOCK_REASON_PREVIOUS
+
+
+## La raison d un niveau ordinaire ferme.
+const LOCK_REASON_PREVIOUS: String = "Termine le niveau precedent"
 
 
 # --- PROGRESSION DES CARTES (vague 5, chantier P) -----------------------------
@@ -1532,8 +1676,13 @@ func tester_account_level() -> int:
 # CHANTIER A3 (vague 10) — DECK DE CAMPAGNE, QUETES ANNEXES, PASSIFS.
 # Tout est DEDUIT du contenu et de ce que le profil ecrivait deja (niveaux
 # ouverts et finis, objectifs acquis, cartes prises, niveau de compte) : aucune
-# cle neuve, donc aucune migration a ecrire, et un ancien profil se lit juste
-# des la mise a jour. Verrouille par test_campaign_progression.
+# cle neuve pour ce chantier. Verrouille par test_campaign_progression.
+#
+# CORRECTION (C7a, audit du 17/10) : « aucune migration a ecrire » etait faux.
+# Les objectifs acquis sont ranges par ID, et B2 a change 44 ids sur 63 : sans
+# _carry_legacy_objectives (en tete de fichier), un ancien profil perdait ses
+# etoiles et son deck de campagne retombait a 4/4/4. Verrouille par
+# test_save_migration_w10, sur un vrai profil de a7cdcdc.
 # =====================================================================
 
 ## Les niveaux OUVERTS : la liste ecrite de la campagne, plus les QUETES ANNEXES

@@ -40,6 +40,13 @@ func run() -> void:
 	_test_page_des_annexes_tient_huit_quetes()
 	_test_fiche_d_annexe()
 	_test_migration_d_un_ancien_profil()
+	# C7a (audit du 17/10) : ce que l ecran de victoire, la carte et le bilan
+	# disent de la progression.
+	_test_le_pentacle_dit_ce_qui_manque()
+	_test_la_victoire_n_annonce_que_ce_qui_s_ouvre()
+	_test_l_ecran_de_victoire_apres_un_seul_demon()
+	_test_la_tuile_du_pentacle()
+	_test_le_conseil_suit_le_mode()
 	_retirer_tout()
 	SaveData.reset_profile()
 	RunState.reset()
@@ -651,4 +658,260 @@ func _test_migration_d_un_ancien_profil() -> void:
 	fiche["cleared_massacre"] = true
 	SaveData.load_from_dictionary(vieux)
 	ok(SaveData.is_level_cleared(lv1.id), "une victoire d avant notee cleared_massacre compte encore")
+	SaveData.reset_profile()
+
+
+# --- C7a : ce que l ecran de victoire, la carte et le bilan disent -------------
+
+const Victoire = preload("res://scripts/ui/victory_screen.gd")
+
+## Longueur maximale de la raison sur la tuile du pentacle : la tuile d eventail
+## de l acte IV fait ~280 px de large au telephone, en FONT_SMALL ; au-dela de
+## deux lignes, le texte deborde sur la tuile d en dessous. Ecrite EN DUR.
+const RAISON_TUILE_MAX: int = 28
+
+
+func _pentacle() -> LevelDef:
+	return ContentDB.levels.get(&"lvl_13")
+
+
+## Les quatre demons, dans l ordre des ids (celui de previous_left).
+func _demons() -> Array[LevelDef]:
+	var out: Array[LevelDef] = []
+	for lv: LevelDef in ContentDB.campaign_levels():
+		if lv.next_levels.has(&"lvl_13"):
+			out.append(lv)
+	return out
+
+
+## Tous les textes de Label et de RichTextLabel sous `racine`.
+func _textes(racine: Node) -> Array[String]:
+	var out: Array[String] = []
+	var pile: Array[Node] = [racine]
+	while not pile.is_empty():
+		var n: Node = pile.pop_back()
+		if n is Label:
+			out.append((n as Label).text)
+		elif n is RichTextLabel:
+			out.append((n as RichTextLabel).text)
+		for c in n.get_children():
+			pile.append(c)
+	return out
+
+
+## lvl_13 attend les QUATRE demons : sa raison de verrou dit le nombre, puis
+## nomme le dernier ; un niveau ordinaire garde « Termine le niveau precedent ».
+func _test_le_pentacle_dit_ce_qui_manque() -> void:
+	SaveData.reset_profile()
+	var pentacle: LevelDef = _pentacle()
+	var demons: Array[LevelDef] = _demons()
+	ok(pentacle != null and pentacle.requires_all_previous, "(lvl_13 attend tous ses precedents)")
+	eq(demons.size(), 4, "(quatre demons menent au pentacle)")
+	if pentacle == null or demons.size() != 4:
+		return
+	eq(SaveData.previous_left(&"lvl_13").size(), 4, "profil neuf : les quatre manquent")
+	eq(SaveData.level_lock_reason(pentacle), "Termine encore 4 niveaux",
+		"la raison dit COMBIEN il en manque, pas « le niveau precedent »")
+	for i in 3:
+		SaveData.unlock_level(demons[i].id)
+		SaveData.record_victory(demons[i], GameEnums.Mode.EXPLORATION, {}, 1)
+	eq(SaveData.level_lock_reason(pentacle), "Termine %s" % demons[3].display_name,
+		"un seul manque : la raison le NOMME")
+	SaveData.unlock_level(demons[3].id)
+	SaveData.record_victory(demons[3], GameEnums.Mode.EXPLORATION, {}, 1)
+	eq(SaveData.level_lock_reason(pentacle), "", "les quatre finis : plus de raison, il est ouvert")
+	# Un niveau ordinaire ferme, et un niveau ouvert.
+	SaveData.reset_profile()
+	eq(SaveData.level_lock_reason(ContentDB.levels.get(&"lvl_02")), SaveData.LOCK_REASON_PREVIOUS,
+		"lvl_02 ferme : un seul precedent suffit, la phrase ordinaire")
+	eq(SaveData.level_lock_reason(ContentDB.levels.get(SaveData.FIRST_LEVEL)), "",
+		"lvl_01 est ouvert : aucune raison")
+	# Une raison de tuile tient sur deux lignes.
+	for n in [4, 3, 2]:
+		ok(("Termine encore %d niveaux" % n).length() <= RAISON_TUILE_MAX, "raison courte (%d)" % n)
+	for d: LevelDef in demons:
+		ok(("Termine %s" % d.display_name).length() <= RAISON_TUILE_MAX,
+			"« Termine %s » tient sur la tuile" % d.display_name)
+	SaveData.reset_profile()
+
+
+## L ecran de victoire n annonce « Niveau suivant debloque » que si un niveau de
+## next_levels est REELLEMENT ouvert apres record_victory. Gagner lvl_07 en
+## premier n ouvre pas lvl_13 : l ecran le disait quand meme (audit du 17/10).
+func _test_la_victoire_n_annonce_que_ce_qui_s_ouvre() -> void:
+	SaveData.reset_profile()
+	var pentacle: LevelDef = _pentacle()
+	var demons: Array[LevelDef] = _demons()
+	if pentacle == null or demons.size() != 4:
+		ok(false, "(le pentacle et ses quatre demons sont au contenu)")
+		return
+	var forge: LevelDef = ContentDB.levels.get(&"lvl_07")
+	ok(demons.has(forge), "(lvl_07 est un des quatre demons)")
+	SaveData.unlock_level(forge.id)
+	SaveData.record_victory(forge, GameEnums.Mode.EXPLORATION, {}, 1)
+	not_ok(SaveData.is_level_unlocked(&"lvl_13"), "(lvl_07 seul n ouvre pas lvl_13)")
+	var lignes: Array[String] = Victoire.next_level_lines(forge, GameEnums.Mode.EXPLORATION)
+	not_ok(lignes.has(Victoire.NEXT_UNLOCKED_TEXT),
+		"lvl_07 gagne en premier : PAS de « Niveau suivant debloque » %s" % [lignes])
+	eq(str(lignes), str(["Termine encore 3 niveaux pour ouvrir %s" % pentacle.display_name]),
+		"l ecran dit ce qui manque")
+	# Deux de plus (tous sauf le dernier) : il en reste un, nomme.
+	var dernier: LevelDef = demons[demons.size() - 1] if demons[demons.size() - 1] != forge \
+		else demons[0]
+	for d: LevelDef in demons:
+		if d == forge or d == dernier:
+			continue
+		SaveData.unlock_level(d.id)
+		SaveData.record_victory(d, GameEnums.Mode.EXPLORATION, {}, 1)
+	eq(str(Victoire.next_level_lines(forge, GameEnums.Mode.EXPLORATION)),
+		str(["Termine %s pour ouvrir %s" % [dernier.display_name, pentacle.display_name]]),
+		"un seul manque : l ecran le nomme")
+	# Le quatrieme : cette fois le pentacle s ouvre, et l ecran le dit.
+	SaveData.unlock_level(dernier.id)
+	SaveData.record_victory(dernier, GameEnums.Mode.EXPLORATION, {}, 1)
+	ok(SaveData.is_level_unlocked(&"lvl_13"), "(le quatrieme demon ouvre lvl_13)")
+	eq(str(Victoire.next_level_lines(dernier, GameEnums.Mode.EXPLORATION)),
+		str([Victoire.NEXT_UNLOCKED_TEXT]), "le dernier demon : « Niveau suivant debloque »")
+	# Le cas ordinaire, le LIBRE, et le dernier niveau de la campagne.
+	SaveData.reset_profile()
+	var lv1: LevelDef = ContentDB.levels.get(SaveData.FIRST_LEVEL)
+	SaveData.record_victory(lv1, GameEnums.Mode.FREE, {}, 1)
+	eq(Victoire.next_level_lines(lv1, GameEnums.Mode.FREE).size(), 0,
+		"une victoire LIBRE n ouvre rien : aucune ligne")
+	SaveData.record_victory(lv1, GameEnums.Mode.EXPLORATION, {}, 1)
+	eq(str(Victoire.next_level_lines(lv1, GameEnums.Mode.EXPLORATION)),
+		str([Victoire.NEXT_UNLOCKED_TEXT]), "lvl_01 en campagne : lvl_02 s ouvre, l ecran le dit")
+	var fin: LevelDef = ContentDB.levels.get(&"lvl_16")
+	if fin != null and fin.next_levels.is_empty():
+		eq(Victoire.next_level_lines(fin, GameEnums.Mode.EXPLORATION).size(), 0,
+			"le dernier niveau n annonce aucun suivant")
+	SaveData.reset_profile()
+
+
+## Le meme cas sur le VRAI ecran (VictoryScreen.tscn), qui appelle lui-meme
+## record_victory.
+func _test_l_ecran_de_victoire_apres_un_seul_demon() -> void:
+	SaveData.reset_profile()
+	RunState.reset()
+	var pentacle: LevelDef = _pentacle()
+	var forge: LevelDef = ContentDB.levels.get(&"lvl_07")
+	if pentacle == null or forge == null:
+		ok(false, "(lvl_07 et lvl_13 sont au contenu)")
+		return
+	SaveData.unlock_level(forge.id)
+	RunState.mode = GameEnums.Mode.EXPLORATION
+	RunState.current_level_def = forge
+	SceneRouter.payload = {"level_id": forge.id}
+	var ecran: Control = (load("res://scenes/endgame/VictoryScreen.tscn") as PackedScene).instantiate()
+	attach(ecran)
+	var textes: Array[String] = _textes(ecran)
+	ok(SaveData.is_level_cleared(forge.id), "(l ecran a enregistre la victoire)")
+	not_ok(textes.has(Victoire.NEXT_UNLOCKED_TEXT),
+		"apres lvl_07 seul, l ecran n annonce PAS « Niveau suivant debloque »")
+	ok(textes.has("Termine encore 3 niveaux pour ouvrir %s" % pentacle.display_name),
+		"il dit ce qui manque pour ouvrir le pentacle")
+	detach(ecran)
+	SceneRouter.payload = {}
+	RunState.reset()
+	SaveData.reset_profile()
+
+
+## La TUILE du pentacle sur la carte : la raison remplace les etoiles tant qu il
+## est ferme, et disparait des qu il s ouvre.
+func _test_la_tuile_du_pentacle() -> void:
+	SaveData.reset_profile()
+	var pentacle: LevelDef = _pentacle()
+	var demons: Array[LevelDef] = _demons()
+	if pentacle == null or demons.size() != 4:
+		ok(false, "(le pentacle et ses quatre demons sont au contenu)")
+		return
+	for d: LevelDef in demons:
+		SaveData.unlock_level(d.id)
+	SaveData.record_victory(demons[0], GameEnums.Mode.EXPLORATION, {}, 1)
+	var m := CampaignMap.new()
+	attach(m)
+	m.size = Vector2(1080.0, 1500.0)
+	m.rebuild()
+	m.show_act(pentacle.act)
+	not_ok(m.is_enabled(pentacle.id), "(le pentacle est ferme)")
+	var cond: Label = _condition_de(m, pentacle.id)
+	ok(cond != null and cond.text == "Termine encore 3 niveaux",
+		"la tuile du pentacle dit combien de demons il reste (%s)"
+		% (cond.text if cond != null else "rien"))
+	eq(m.star_nodes_for(pentacle.id).size(), 0, "ferme : la raison remplace les etoiles vides")
+	# Un niveau ordinaire ferme garde ses etoiles et n a pas de raison.
+	var lv2: LevelDef = ContentDB.levels.get(&"lvl_02")
+	ok(lv2 != null and not SaveData.is_level_unlocked(lv2.id), "(lvl_02 est ferme sur ce profil)")
+	if lv2 != null:
+		m.show_act(lv2.act)
+		ok(m.medallion_for(lv2.id) != null, "(la tuile de lvl_02 est construite)")
+		eq(_condition_de(m, lv2.id), null, "un niveau ordinaire ferme n a pas de raison sur sa tuile")
+		eq(m.star_nodes_for(lv2.id).size(), lv2.objectives.size(), "il garde ses etoiles vides")
+	for i in range(1, demons.size()):
+		SaveData.record_victory(demons[i], GameEnums.Mode.EXPLORATION, {}, 1)
+	m.rebuild()
+	m.show_act(pentacle.act)
+	ok(m.is_enabled(pentacle.id), "(les quatre finis : le pentacle s ouvre)")
+	eq(_condition_de(m, pentacle.id), null, "ouvert : la raison disparait")
+	eq(m.star_nodes_for(pentacle.id).size(), pentacle.objectives.size(), "et les etoiles reviennent")
+	detach(m)
+	SaveData.reset_profile()
+
+
+## LE CONSEIL DU BILAN suit le MODE. En CAMPAGNE le deck est impose : la carte
+## conseillee vient du deck de la partie, ou des objectifs NON reussis du niveau
+## (« a debloquer par un objectif »), jamais « dans ton livre ». En LIBRE et au
+## Massacre, le livre.
+func _test_le_conseil_suit_le_mode() -> void:
+	SaveData.reset_profile()
+	RunState.reset()
+	var lv: LevelDef = ContentDB.levels.get(SaveData.FIRST_LEVEL)
+	var attendues: Array = []
+	for i in lv.objectives.size():
+		var c: SpellCard = lv.objective_reward(i)
+		if c != null and not c.is_passive:
+			attendues.append(c)
+	ok(not attendues.is_empty(), "(lvl_01 a des cartes d objectif)")
+	var camp: Array = BattleReport.second_source(GameEnums.Mode.EXPLORATION, lv)
+	eq(_ids(camp), _ids(attendues), "campagne : la seconde source est ce que ses objectifs ajoutent")
+	eq(BattleReport.second_source_text(GameEnums.Mode.EXPLORATION), ThreatLore.OBJECTIVE_SOURCE_TEXT,
+		"campagne : « a debloquer par un objectif »")
+	for mode in [GameEnums.Mode.FREE, GameEnums.Mode.MASSACRE]:
+		eq(_ids(BattleReport.second_source(mode, lv)), _ids(ThreatLore.book_cards()),
+			"%s : la seconde source est le livre" % GameEnums.mode_name(mode))
+		eq(BattleReport.second_source_text(mode), ThreatLore.BOOK_SOURCE_TEXT,
+			"%s : « dans ton livre »" % GameEnums.mode_name(mode))
+	# Un objectif reussi : sa carte est AU deck, elle quitte la seconde source.
+	SaveData.record_victory(lv, GameEnums.Mode.EXPLORATION, {lv.objectives[0].id: true}, 1)
+	var r0: SpellCard = lv.objective_reward(0)
+	if r0 != null and not r0.is_passive:
+		not_ok(BattleReport.second_source(GameEnums.Mode.EXPLORATION, lv).has(r0),
+			"une recompense gagnee n est plus « a debloquer »")
+	# LE BILAN AFFICHE, deck de partie vide : tout vient de la seconde source.
+	for mode in [GameEnums.Mode.EXPLORATION, GameEnums.Mode.FREE]:
+		SaveData.reset_profile()
+		RunState.reset()
+		RunState.mode = mode
+		RunState.current_level_def = lv
+		RunState.note_damage_taken(ContentDB.enemies.get(&"gnome"), 9)
+		var box := VBoxContainer.new()
+		BattleReport.build(box, true)
+		var conseils: Array[String] = []
+		for t in _textes(box):
+			if t.ends_with(")") and (t.contains(ThreatLore.DECK_SOURCE_TEXT)
+					or t.contains(ThreatLore.BOOK_SOURCE_TEXT)
+					or t.contains(ThreatLore.OBJECTIVE_SOURCE_TEXT)):
+				conseils.append(t)
+		ok(not conseils.is_empty(), "%s : le bilan conseille une carte (%s)"
+			% [GameEnums.mode_name(mode), _textes(box)])
+		for t in conseils:
+			if mode == GameEnums.Mode.EXPLORATION:
+				not_ok(t.contains(ThreatLore.BOOK_SOURCE_TEXT),
+					"campagne : jamais « dans ton livre » (%s)" % t)
+				ok(t.contains(ThreatLore.OBJECTIVE_SOURCE_TEXT),
+					"campagne, deck de partie vide : la carte vient d un objectif (%s)" % t)
+			else:
+				ok(t.contains(ThreatLore.BOOK_SOURCE_TEXT), "libre : la carte vient du livre (%s)" % t)
+		box.free()
+	RunState.reset()
 	SaveData.reset_profile()

@@ -25,9 +25,13 @@ extends RefCounted
 ##      protecteur -> dissipation. Un monstre sans trait : « garde un sort pret ».
 ##
 ##   LA CARTE vient du DECK de la partie d abord (le joueur l a sous la main),
-##   sinon du LIVRE (cartes obtenues), jamais d ailleurs : on ne conseille pas une
-##   carte que le joueur ne possede pas. Aucune ne repond : la phrase seule.
+##   sinon d une SECONDE SOURCE, jamais d ailleurs : on ne conseille pas une
+##   carte que le joueur ne peut pas avoir. Aucune ne repond : la phrase seule.
 ##   A egalite, la plus rare, puis le nom (un conseil ne depend pas du melange).
+##   La seconde source depend du MODE (C7a, BattleReport.second_source) : en
+##   LIBRE et au Massacre, le LIVRE (le joueur compose son deck) ; en CAMPAGNE,
+##   ou le deck est IMPOSE, les cartes que les objectifs du niveau y feraient
+##   entrer — « dans ton livre » y etait un conseil impossible a suivre.
 ##
 ## Tout est STATIQUE et sans etat : les tests lisent les regles sans ecran.
 
@@ -416,7 +420,12 @@ static func _avant(a: SpellCard, b: SpellCard) -> bool:
 ##     trait, answer, card (SpellCard ou null), from_deck}]
 ## `text` est la phrase entiere, carte comprise : l ecran la recompose en
 ## couleurs, les tests la lisent telle quelle.
-static func advice(def: EnemyDef, deck: Array, book: Array) -> Array[Dictionary]:
+##
+## `book` est la SECONDE SOURCE et `book_text` la facon de la dire : le livre
+## par defaut (« dans ton livre »), OBJECTIVE_SOURCE_TEXT en campagne. Chaque
+## ligne porte sa source ecrite sous "source".
+static func advice(def: EnemyDef, deck: Array, book: Array,
+		book_text: String = BOOK_SOURCE_TEXT) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	if def == null:
 		return out
@@ -427,7 +436,8 @@ static func advice(def: EnemyDef, deck: Array, book: Array) -> Array[Dictionary]
 		var pris: Dictionary = pick_card(deck, book, func(c: SpellCard) -> bool:
 			return c.main_element() == tag and deals_damage(c))
 		var phrase: String = "Craint %s (%s)" % [_le(tag), ElementIcons.percent_text(float(faible["mult"]))]
-		out.append(_ligne(&"element", phrase, tag, float(faible["mult"]), &"", &"", pris))
+		out.append(_ligne(&"element", phrase, tag, float(faible["mult"]), &"", &"", pris,
+			book_text))
 	else:
 		var fort: Dictionary = strongest_resistance(def)
 		if not fort.is_empty():
@@ -436,7 +446,7 @@ static func advice(def: EnemyDef, deck: Array, book: Array) -> Array[Dictionary]
 			var phrase_r: String = ("Immunise %s : prends un autre element" % _au(tag_r)) \
 				if mult_r <= 0.0 else ("Resiste %s (%s) : prends un autre element"
 					% [_au(tag_r), ElementIcons.percent_text(mult_r)])
-			out.append(_ligne(&"element", phrase_r, tag_r, mult_r, &"", &"", {}))
+			out.append(_ligne(&"element", phrase_r, tag_r, mult_r, &"", &"", {}, book_text))
 	# 2. LA MECANIQUE.
 	var ses_traits: Array[StringName] = traits(def)
 	var t: StringName = ses_traits[0] if not ses_traits.is_empty() else &""
@@ -446,24 +456,34 @@ static func advice(def: EnemyDef, deck: Array, book: Array) -> Array[Dictionary]
 	var suite: String = String(PHRASE_DE_REPONSE[reponse])
 	var phrase_m: String = "%s. %s" % [trait_advice(t, def),
 		suite.substr(0, 1).to_upper() + suite.substr(1)]
-	out.append(_ligne(&"mecanique", phrase_m, -1, 1.0, t, reponse, carte))
+	out.append(_ligne(&"mecanique", phrase_m, -1, 1.0, t, reponse, carte, book_text))
 	return out
 
 
 static func _ligne(kind: StringName, phrase: String, tag: int, mult: float,
-		t: StringName, reponse: StringName, pris: Dictionary) -> Dictionary:
+		t: StringName, reponse: StringName, pris: Dictionary,
+		book_text: String = BOOK_SOURCE_TEXT) -> Dictionary:
 	var carte: SpellCard = pris.get("card", null)
 	var depuis_deck: bool = bool(pris.get("from_deck", false))
+	var source: String = DECK_SOURCE_TEXT if depuis_deck else book_text
 	var texte: String = phrase
 	if carte != null:
-		texte += " : %s (%s)" % [carte.display_name, source_text(depuis_deck)]
+		texte += " : %s (%s)" % [carte.display_name, source]
 	return {"kind": kind, "text": texte, "phrase": phrase, "tag": tag, "mult": mult,
-		"trait": t, "answer": reponse, "card": carte, "from_deck": depuis_deck}
+		"trait": t, "answer": reponse, "card": carte, "from_deck": depuis_deck,
+		"source": source if carte != null else ""}
+
+
+## D ou vient la carte conseillee. Le DECK de la partie ; le LIVRE (Libre,
+## Massacre) ; en CAMPAGNE, un objectif du niveau qui la fait entrer au deck.
+const DECK_SOURCE_TEXT: String = "dans ton deck"
+const BOOK_SOURCE_TEXT: String = "dans ton livre"
+const OBJECTIVE_SOURCE_TEXT: String = "a debloquer par un objectif"
 
 
 ## « dans ton deck » / « dans ton livre » : d ou vient la carte conseillee.
 static func source_text(from_deck: bool) -> String:
-	return "dans ton deck" if from_deck else "dans ton livre"
+	return DECK_SOURCE_TEXT if from_deck else BOOK_SOURCE_TEXT
 
 
 ## « le feu », « l eau », « la nature »... pour « Craint le feu ».
