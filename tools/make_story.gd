@@ -99,7 +99,7 @@ func _ready() -> void:
 	_acte5()
 	_quetes_annexes()  # VAGUE 10, CHANTIER B3 : section en fin de fichier
 	print("STORY_OK")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 ## Une replique. `speaker` vide = narrateur : ni nom ni portrait, le texte occupe

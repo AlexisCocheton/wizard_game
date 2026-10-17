@@ -82,6 +82,10 @@ const Campagne = preload("res://tests/unit/test_campagne_w10.gd")
 ## re-mesure. A RE-MESURER a chaque changement des decks de la campagne
 ## (`tools/objective_bench.tscn -- --niveaux=side_... --parties=60`, coller les
 ## lignes « MESURES » ici).
+##
+## Re-mesure du chantier C2 (17/10, main d6668a0 qui porte B3 et C1 ; C3 et C6,
+## fusionnes ensuite, ne touchent pas au jeu) : les 24 objectifs re-joues, 60
+## parties chacun, rendent exactement ces 8 lignes.
 const MESURES: Dictionary = {
 	"side_a1_mesure": [["obj_no_hit_from_hornblower_gold", 59], ["obj_kill_type_one_cast_3_hopper", 15], ["obj_win_above_speed_160", 8]],
 	"side_a2_atelier": [["obj_kill_flying_8", 39], ["obj_win_under_time_130", 30], ["obj_win_above_speed_240", 10]],

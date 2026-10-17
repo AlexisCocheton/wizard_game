@@ -85,18 +85,38 @@ const PARTIES_DU_BANC: int = 60
 ## 21 niveaux re-joues d une traite sur le contenu livre. Le pourquoi de chaque
 ## choix (et ce qui a ete ecarte) est ecrit a cote du niveau dans
 ## _progression_de.
+##
+## VAGUE 10, chantier C2 (17/10) : les 21 lignes re-jouees (60 parties, memes
+## graines) sur le main d6668a0, qui porte C1 (majeures sur cible morte sans
+## SCRIPT ERROR) et B3 (huit quetes annexes) ; C3 et C6, fusionnes ensuite, ne
+## touchent pas au jeu. 14 lignes identiques, 7 recollees, les
+## 21 classements toujours conformes ; aucun objectif ni seuil retouche :
+##   - C1 : lvl_02 (rang 3 : 30 -> 31), lvl_09 (rang 1 : 56 -> 57), lvl_05
+##     (rang 2 : 24 -> 23). Une majeure dont la cible mourait avant l effet
+##     (zone decalee, residu) s arretait sur une SCRIPT ERROR et ne posait rien ;
+##     elle le pose. (lvl_02 se joue avant toute annexe : B3 ne le touche pas.)
+##   - B3 : lvl_18 (29 / 18 / 16 -> 34 / 17 / 11), lvl_03 (54 / 16 / 1 ->
+##     47 / 7 / 2), lvl_04 (rang 2 : 20 -> 17, rang 1 : 41 -> 42), lvl_19 (rang 2 :
+##     49 -> 47, rang 3 : 7 -> 10). L annexe de l acte 2 (side_a2_atelier),
+##     ouverte apres lvl_17, porte la Lumiere purifiante (dissipation garantie,
+##     DEC-057), qu aucun niveau de campagne ne donne avant lvl_20 : son deck la
+##     rend OBTENUE, elle entre au pool de montee de niveau de tous les niveaux
+##     joues ensuite, et les offres changent. Verifie : rejoues sur le main
+##     d avant B3 (9e571ac, B2 + C1), lvl_18, lvl_03, lvl_04 et lvl_19 rendent
+##     exactement les lignes de B2 ; lvl_09 et lvl_05 rendent deja la mesure
+##     de C2.
 const MESURES: Dictionary = {
 	"lvl_01": [["obj_card_casts_piercing_arrow_12", 52], ["obj_no_card_fireball", 26], ["obj_win_above_speed_240", 9]],
-	"lvl_02": [["obj_card_casts_cycle_of_thought_6", 58], ["obj_kill_type_with_card_arcane_bolt_3_gorgon_gazer", 45], ["obj_win_above_speed_300", 30]],
+	"lvl_02": [["obj_card_casts_cycle_of_thought_6", 58], ["obj_kill_type_with_card_arcane_bolt_3_gorgon_gazer", 45], ["obj_win_above_speed_300", 31]],
 	"lvl_08": [["obj_no_card_piercing_arrow", 55], ["obj_kill_type_one_cast_4_rat_swarm", 22], ["obj_win_below_speed_130", 6]],
-	"lvl_09": [["obj_no_card_arcane_bolt", 56], ["obj_kill_type_with_card_spark_10_gnome", 14], ["obj_win_below_speed_200", 11]],
+	"lvl_09": [["obj_no_card_arcane_bolt", 57], ["obj_kill_type_with_card_spark_10_gnome", 14], ["obj_win_below_speed_200", 11]],
 	"lvl_17": [["obj_card_casts_south_wind_5", 46], ["obj_kill_flying_12", 37], ["obj_win_below_speed_170", 10]],
-	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 29], ["obj_no_card_venom_dart", 18], ["obj_win_below_speed_190", 16]],
-	"lvl_03": [["obj_card_casts_frost_rain_20", 54], ["obj_multi_kill_8_1", 16], ["obj_no_hit_from_imp_archer", 1]],
-	"lvl_04": [["obj_kill_type_with_card_frost_rain_4_risen_ghoul", 41], ["obj_win_under_time_195", 20], ["obj_enemy_travel_3450_0_sand_serpent", 9]],
-	"lvl_19": [["obj_kill_type_with_card_ember_pool_14_pit_ghoul", 58], ["obj_element_casts_28_fire", 49], ["obj_untouched", 7]],
+	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 34], ["obj_no_card_venom_dart", 17], ["obj_win_below_speed_190", 11]],
+	"lvl_03": [["obj_card_casts_frost_rain_20", 47], ["obj_multi_kill_8_1", 7], ["obj_no_hit_from_imp_archer", 2]],
+	"lvl_04": [["obj_kill_type_with_card_frost_rain_4_risen_ghoul", 42], ["obj_win_under_time_195", 17], ["obj_enemy_travel_3450_0_sand_serpent", 9]],
+	"lvl_19": [["obj_kill_type_with_card_ember_pool_14_pit_ghoul", 58], ["obj_element_casts_28_fire", 47], ["obj_untouched", 10]],
 	"lvl_20": [["obj_kill_type_one_cast_2_parry_skeleton", 53], ["obj_card_casts_piercing_arrow_34", 37], ["obj_win_below_speed_250", 7]],
-	"lvl_05": [["obj_element_casts_80_arcane", 56], ["obj_kill_type_one_cast_2_golem", 24], ["obj_win_under_time_142", 11]],
+	"lvl_05": [["obj_element_casts_80_arcane", 56], ["obj_kill_type_one_cast_2_golem", 23], ["obj_win_under_time_142", 11]],
 	"lvl_06": [["obj_element_casts_8_nature", 59], ["obj_kill_type_one_cast_3_hopper", 20], ["obj_win_under_time_110", 2]],
 	"lvl_21": [["obj_no_card_tag_fire", 50], ["obj_kill_type_with_card_arcane_bolt_5_fire_worm", 41], ["obj_win_under_time_135", 7]],
 	"lvl_07": [["obj_no_card_spark", 59], ["obj_kill_type_one_cast_3_mushroom", 19], ["obj_win_above_speed_380", 9]],

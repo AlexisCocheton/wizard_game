@@ -904,3 +904,222 @@ projet, `decisions.md` DEC-053 a DEC-057.
   COPIE (pas de partage de fichier).
 - Pas d `export_presets.cfg` dans le depot : aucun export Android reproductible.
 - Un boss immobile face a un deck sans degats jouables ne peut plus etre blesse (§13).
+
+## 15. Vague 10 (14-17/10) : la refonte de la campagne (retour du co-auteur du 14/10)
+
+Retour du co-auteur du 14/10 : un deck de base de trois communes qui evolue avec les
+objectifs, deux modes par niveau, un vrai boss et un mini-boss partout, l arrivee des
+monstres par acte, six cartes, des ameliorations « enormes » qui changent la
+structure d un sort, un ecran de lancement plus clair, un bilan des degats en fin de
+niveau, des quetes annexes a boss dores, une revue globale (sprites, sons, histoire).
+Decisions d Alexis : le LIBRE remplace l Infini par niveau ; des rares passent
+communes ; environ huit quetes annexes, une par acte et une par apprenti.
+
+Treize fusions dans `main` du 14 au 17/10, une branche a la fois, harnais 7/7 vert a
+chaque fois : phase A `97066f6` (ecrans), `ca1308e` (progression), `2e16aa1` (revue
+globale), `965c964` (mecaniques de sorts) ; phase B `9373b5b` (histoire), `ff38d70`
+(cartes), `9e12fea` (majeures), `e6b195d` (campagne), `ca345ec` (quetes annexes) ;
+phase C `9e571ac` (SCRIPT ERROR invisibles), `5556dd6` (portraits des apprentis),
+`9aa4f31` (sortie propre, fin du plantage a la fermeture), `b8264d7` (banc de
+controle, MESURES recollees) ; puis `e3c905a` (`make_story` sort aussi par
+`CleanExit`). Chiffres : `git log <fusion>^2` ; raisons : memoire projet,
+`decisions.md` DEC-058 a DEC-066 ; constats de la revue : `docs/revue_vague10.md`.
+Le banc de controle de C2 a ete fusionne pendant la redaction de ce paragraphe : son
+detail est dans `docs/banc_vague10.md` : campagne 1180 / 1260 (minimum `lvl_18` 36),
+annexes 243 / 480 (40 a 65 %), Massacre 17,5 vagues, 29 classements d objectifs
+conformes, 0 SCRIPT ERROR. Chaque point
+ci-dessous a ete relu dans le code et le contenu livres (`main` `e3c905a`).
+
+### La demande, point par point
+
+FAIT = livre, avec le fichier et le test qui le tiennent ; PARTIEL = livre en
+partie ; PAS FAIT. **Bilan : 24 FAIT, 3 PARTIEL, 1 PAS FAIT** (28 points).
+
+**La campagne**
+
+| # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
+|---|---|---|---|---|
+| 1 | Deck de base d un niveau = 3 communes x4, jamais sans degats | FAIT | `LevelDef.base_commons` (la 1re = la nouvelle), `exploration_deck` = 4/4/4 ; `test_campagne_w10` §1 (trois communes distinctes, deux deja vues, un sort qui blesse) | |
+| 2 | Une commune NOUVELLE par niveau | PARTIEL | 21 communes (DEC-059) pour 21 niveaux ; `test_campagne_w10` §1 | `lvl_01` en porte trois (le deck de depart) : `lvl_15` (Fleche percante) et `lvl_16` (Trait arcanique) reprennent une commune deja vue. Il en faudrait deux de plus |
+| 3 | Le deck de campagne change avec les objectifs reussis (table du co-auteur) | FAIT | `LevelDef.CAMPAIGN_DECK_TABLE`, `campaign_deck()`, lu par `SaveData.campaign_deck` (la partie par `GameController.run_deck`, le briefing, la fiche, le livre) ; `test_campaign_deck` (8 cas : 12 cartes, 6 ids, plafonds) | La combinaison E+L manque a la table du co-auteur : deduite (3/3/3 + E x2 + L x1), a valider. Une recompense entree au deck d un niveau ouvert est dans le livre |
+| 4 | Deux modes des le debut du niveau : CAMPAGNE et LIBRE | FAIT | `GameEnums.Mode { EXPLORATION, FREE, MASSACRE }`, fiche `campaign_panel.gd`, `SaveData.free_unlocked` ; une victoire en LIBRE ne marque que les objectifs (`cleared_free`) ; `test_modes`, `test_campaign_progression` | L Infini par niveau est retire ; le Massacre est le seul mode sans fin. Les profils gardent leur ancien record Infini, plus lu ni ecrit |
+| 5 | Montee de niveau : toutes les cartes obtenues et toutes les communes de l acte, des le niveau 1 | FAIT | `RunState.levelup_pool`, `ContentDB.act_commons` ; `levelup_cards` vide sur les 21 niveaux ; `test_campaign_progression` | Consequence : la commune nouvelle d un niveau peut etre prise en combat plus tot dans l acte (question au co-auteur) |
+| 6 | Recompenses d objectif coherentes avec le niveau | FAIT | `_progression_de` (`tools/make_content.gd`) dit, niveau par niveau, a quel trait chaque carte repond ; rang 1 rare, 2 epique, 3 legendaire, jamais la meme a deux niveaux qui peuvent se suivre (`test_campagne_w10` §6) | Seule la regle « auras -> dissipation » est tenue par un test (`test_level_progression`, DEC-057) : le reste de la table se relit, il ne se verifie pas |
+| 7 | Un vrai boss (derniere vague) et un mini-boss (autre vague), chacun avec un effet, dans chaque niveau | FAIT | 21 / 21. Trois mecaniques neuves : ECHEANCE (Chronos), ARMURE QUI SE REFERME (le Gardien, devenu boss de `lvl_09`), GARDE LEVEE (Gardien d ossements), DEC-065 ; le Seigneur de braise riposte, le Totem ancien a une aura ; `test_campagne_w10` §2, `test_tetes_w10` | Sesh n a que `devours`, le verbe du Glouton (proposition « L outre » de la revue, non faite) |
+| 8 | Promotions : mini-boss -> ordinaire a l acte suivant, boss -> mini-boss a +2 ou ordinaire a +3 | FAIT | 20 promus (`_promus_w10`, DEC-063) ; les echos des quatre demons sont retires (aucune place legale) ; `test_campagne_w10` §4 (delais, PV), `test_bosses` | |
+| 9 | Arrivee des monstres : 5 ordinaires neufs a l ouverture d un acte, puis 1 ou 2 par niveau | FAIT | vagues des 21 niveaux (`make_content.gd`) ; `test_campagne_w10` §3 | Avant : `lvl_02` introduisait 13 especes d un coup |
+| 10 | Passifs : 6 de base a l acte 2, 1 ou 2 par niveau de campagne, le reste en annexes | FAIT | `GameConfig.BASE_PASSIVES` (6), `LevelDef.passive_unlocks` (un par niveau des l acte 2 : 17), 7 dans les annexes ; `test_campagne_w10` §5, `test_side_quests` | Un par niveau, jamais deux |
+| 11 | Gorgones : elles bloquent meme une main d une carte, jamais la 6e carte | FAIT | `RunState.max_held_cards()` (`UNHOLDABLE_IN_FULL_HAND`), `MIN_PLAYABLE_CARDS` retire ; `test_boss_mechanics_v3`, `test_hand_copies` | |
+| 12 | Resistances arrondies, alignees par monstre, moins d immunites au poison | FAIT | `EnemyDef.tiered_table` (paliers de 25, ecart < 15 neutre, voisins groupes), `IMMUNISES_AU_POISON` ; `test_resist_tiers` | 20 valeurs distinctes -> 8 ; 32 immunises au poison -> 6 (DEC-058) |
+| 13 | Incantation legerement reduite (x1,9 -> environ x1,75) | FAIT | `GameConfig.CAST_TIME_SCALE` = 1,75 (DEC-060) | Banc de B1a : 1157 -> 1170 / 1260 |
+
+**Les cartes**
+
+| # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
+|---|---|---|---|---|
+| 14 | Six cartes : Vent du sud, Marque electrique, Pluie abondante, Lumiere purifiante commune a 1,3 s, Sable mouvant, Jet d eau en I | FAIT | cles `global_wind`, `electric_mark`, `global_rain`, `quicksand`, `water_jet` (`scripts/effects/handlers.gd`, section VAGUE 10 de `battlefield.gd`) ; cartes dans `make_content.gd` ; `test_w10_sorts`, `test_w10_cartes`, smoke `w10_sorts_smoke.gd` | |
+| 15 | Rares converties en communes, le surplus aux annexes | FAIT | 7 rares -> communes sans changer leurs chiffres (DEC-059) : 21 communes, 11 rares, 15 epiques, 11 legendaires ; `test_w10_cartes` | Il ne reste aucune rare en surplus : la campagne donne les 11. Les annexes donnent la Concentration, 7 passifs et des reprises |
+| 16 | Deux ameliorations « enormes » par carte, qui changent la STRUCTURE du sort | FAIT | `MajorUpgradeDef` (ops `axis`, `add_effect`, `set`, `scale`, `duplicate`, `repeat`, `cast_time`), `SpellCard.major_upgrades` : 116 ; une seule offerte, a partir de la 2e maturation (`MAJOR_UPGRADE_FROM_TIER` = 2) ; `hand_card_level` (« un sort de ta main monte d un niveau »). Tous les exemples du co-auteur existent (Seconde ligne, Vague de fleches, Venin tenace, zones qui respirent, Orage en chaine, Muraille geante, Ronces de fer, Meteore eclair, Maitrise). `test_major_upgrades`, `test_majeures_contenu`, smoke `w10_majeures_smoke.gd` (les 116 sur des cibles qui meurent) | Le bot du banc n en prend que 0,42 par partie : la 2e maturation (24 XP) n est atteinte que par les sorts les plus joues. Propositions moteur de B1b non faites (voir Reste) |
+
+**Les ecrans**
+
+| # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
+|---|---|---|---|---|
+| 17 | Bilan de fin de niveau en DEGATS par monstre, avec un conseil concret, en victoire ET en defaite | FAIT | `BattleReport`, `ThreatLore` (conseil : la plus forte faiblesse et une carte possedee de cet element, le premier trait et la carte qui y repond), `RunState.damage_by_enemy_id` ; `test_screens_w10` | |
+| 18 | Ecran de lancement refait : monstres et leurs effets et resistances, cartes obtenables, objectifs, defilement au doigt | FAIT | `LoadingScreen` (tous les boss et mini-boss en tete, avec leur vague), `ThreatLore.mechanic_line`, `TouchScroll.wrap` ; `test_screens_w10`, smoke `ScreensW10Check` (au doigt, captures) | |
+| 19 | Contour noir du sceau d element | FAIT | `scripts/ui/seal_outline.gdshader` sur `CardView.with_type_badge` (main, detail, grimoire, deck, pause) ; `test_screens_w10` | |
+| 20 | Fiche CAMPAGNE / LIBRE ; page des quetes annexes sur la carte, hors progression | FAIT | `campaign_panel.gd` (deck de campagne et passifs debloques), `CampaignMap.SIDE_PAGE`, `LevelDef.is_campaign_level()` (hors `campaign_progress`) ; `test_campaign_progression`, `test_campaign_map` | |
+
+**Quetes annexes et histoire**
+
+| # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
+|---|---|---|---|---|
+| 21 | Environ huit quetes annexes (une par acte, une par apprenti), boss dores, sorts et passifs restants | FAIT | `tools/make_side_quests.gd` : 8 `side_*`, 8 boss dores (`EnemyDef.gilded_from`, `AnimCatalog.GOLD_TINT`), recompenses CALCULEES depuis la campagne (DEC-066) ; `test_side_quests` (MESURES des 24 objectifs) | « La mesure » (acte 1) ne se gagne que 24 fois sur 60 au banc, la plus dure (cible 40-70 %) |
+| 22 | Dialogues des annexes coherents avec les personnages | FAIT | `tools/make_story.gd`, section des annexes ; les apprentis parlent avec leur visage (`assets/portraits/apprentice_cast.png`, `tools/assets/make_apprentice_portraits.py`) ; `test_story`, vitrine `apprentice_story_showcase.gd` | `docs/histoire.md` §1 « Les visages » ne cite pas les apprentis (ils sont au §11) |
+| 23 | Histoire : gorgones et village petrifie, `lvl_02` (nom, intro), scenes de `lvl_05` et `lvl_06`, relecture de coherence | FAIT | `make_story.gd`, `docs/histoire.md` ; `lvl_02` = « Le village petrifie » ; les 26 constats de la revue corriges dans le texte ou renvoyes a B2 (revue §2.7 : mini-boss du tutoriel, ouverture du pentacle, sous-titres, `outro_text` vides, faits par B2) ; `test_story` (aucune scene orpheline, intro et outro par niveau, le narrateur ne nomme que des monstres du niveau) | |
+
+**La revue globale**
+
+| # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
+|---|---|---|---|---|
+| 24 | Animations de mort jouees, douleur | FAIT | `Fx.death_plan` (la pose `death` des 37 feuilles qui l ont, un cadavre sans effet de jeu), retour de coup generique pour les 45 monstres sans pose `hurt`, tours qui vivent ; vitrine `MonsterFeedbackShowcase` (etage visual) | |
+| 25 | Sons par monstre, musiques, voix | FAIT | `AudioBus` : 15 familles de monstres, sons par objet de terrain et par mecanique, un son par sort, musique par acte, theme du boss final, musique du Massacre, voix branchees ; `tools/assets/extract_w10_audio.py` ; `test_audio_w10` | Une vingtaine des sons neufs viennent de FreeSFX, dont l origine n est pas prouvee |
+| 26 | Monstres fades | PARTIEL | 11 ordinaires et 5 tetes sans comportement au 14/10 (revue §1) : les tetes en ont toutes un, et la plupart des ordinaires (Lutin en sauts, Champignon et Slime squelette a bouclier, Plante qui crache, Slime moyen par a-coups, Charognard qui vole, Echo de Chronos a echeance) | Restent sans mecanique : Gnome, Golem, Behemoth, Gelee (petite) ; le Golem et le Behemoth n ont que leur immunite au ralentissement |
+| 27 | Sprites et decors devenus mediocres face aux nouveaux | PAS FAIT | constats : `docs/revue_vague10.md` §1.3 et §3 | Feuilles qui contredisent le nom (Ymoa en tour comme le Gardien-totem, Seigneur de braise en paysan, Charognard en vautour...), halo d aura, decors de dialogue dedies (port, forge, fosses, arene, temple, registre ; les actes 3 a 5 jouent devant `talk_shrine`) : il faut des packs ou des feuilles neuves |
+
+**La verification demandee**
+
+| # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
+|---|---|---|---|---|
+| 28 | Banc des 21 niveaux >= 60 %, objectifs classes au banc des objectifs | PARTIEL | Campagne 1185 / 1260 a B2 (minimum `lvl_18` 41, `lvl_17` 44), 1180 au banc de controle de C2 (titre de `b8264d7`) ; objectifs : 21 + 8 classements conformes, re-joues par C2 (7 lignes de campagne recollees, les 8 d annexes identiques) | Detail dans `docs/banc_vague10.md` : minimum `lvl_18` 36 (fuite de la Lumiere par l annexe de l atelier, confiee a C7c), incantation 48-89 % (moyenne 74,7), Massacre 17,5 vagues pour un repere de 4-8, cause non analysee |
+
+### Corrige en route (hors demande)
+
+- **SCRIPT ERROR invisibles au harnais** (C1) : une majeure decalee sur une cible
+  morte (`EffectRegistry._w10_ctx_for`) et un residu qui tuait pendant le parcours
+  des residus (`Battlefield._w10_tick_dots`) ; environ 2200 erreurs par banc complet
+  apres B1b, 0 sur les bancs de controle de C1 (21 niveaux x 5 et Massacre). Le
+  smoke lance les 116 majeures sur des cibles qui meurent.
+- **Legendes des monstres gardees dans l ecran** (`Fx.caption_box_x`), entre la
+  jauge de vitesse et le bord ; `test_mech_label_clamp`.
+- **Monstre reste blanc pour tout le combat** apres deux coups rapproches (un tween
+  interrompu prenait son blanc pour la teinte de repos), corrige par A4.
+- **Le pentacle s ouvrait apres UN seul demon** : `LevelDef.requires_all_previous`
+  (vrai sur `lvl_13` seul), DEC-064.
+- **Regle du saut x2** : verifiee sur les 21 niveaux (`test_campagne_w10` §8, PV des
+  boss et des chaines compris) ; elle n etait tenue que sur trois.
+- **Plantage a la fermeture du moteur** (signal 11 apres le marqueur de fin, sur tous
+  les etages et les bancs, intermittent) (C3) : la boucle de fermeture de GDScript
+  repartait d un script deja libere. Etages, smoke et outils sortent par
+  `CleanExit.quit(code)`, qui fait tenir chaque script charge par GameConfig ;
+  `test_clean_exit`. Mesure de C3 : 0 plantage sur 800 fermetures, 24 sur 800 avant.
+
+### Ce qui etait faux dans ce document et a ete corrige
+
+- §12 « `Mode { EXPLORATION, INFINITE, MASSACRE }` », « Infini par niveau » : depuis
+  le 14/10, `Mode { EXPLORATION, FREE, MASSACRE }` ; le LIBRE joue les memes vagues
+  ecrites et a une fin.
+- §12 « passifs actifs seulement en Infini et en Massacre » : en LIBRE (des l acte 2)
+  et en Massacre ; en campagne, ils viennent des montees de niveau, parmi les
+  passifs debloques.
+- §12, §13 « niveaux sans boss (`lvl_08`, `17`, `18`, `20`) et sans mini-boss
+  (`lvl_16`) : voulu » : les 21 niveaux ont un boss et un mini-boss.
+- §12 a §14 « regle du saut x2 depassee sur 9 niveaux » : tenue sur les 21.
+- §13, §14 « x1,9 » : x1,75.
+- §13 « 86 monstres » : 112 `EnemyDef` (+20 promus, +2 tetes neuves de l acte 2,
+  +8 boss dores, -4 echos des demons).
+- §12 « pool de campagne = deck du niveau + 3 cartes nouvelles + cartes des
+  objectifs », §13 « 84 reprises », §14 « 82 reprises » : les niveaux refaits n ont
+  plus de cartes nouvelles (`levelup_cards` vide) ; le pool est « cartes obtenues +
+  communes de l acte » et le compte des reprises n a plus d objet.
+- §14 « `lvl_10` grande distance du Cacodemon » : l objectif n existe plus.
+- §14 « 20 sorts a 2 maturations » : 23 (sonde du 17/10 sur `RunState.upgrade_tiers_for`) ;
+  les 35 autres en ont 5.
+- `docs/histoire.md` (corrige dans le meme changement) : les tetes de ses tableaux
+  d actes dataient d avant B2 (Gardien en mini-boss du tutoriel, Grand Oeil et Mage
+  noir en mini-boss, Reine gorgone en mini-boss de `lvl_13`...), et il disait que le
+  pentacle s ouvrait apres un seul demon.
+
+### Equilibrage au 17/10 (chiffres des chantiers, banc de controle de C2 en derniere ligne)
+
+| Mesure | Valeur |
+|---|---|
+| Incantation (B1a, 21 x 60) | x1,9 : 1157 / 1260 ; **x1,75 : 1170**, le plus bas `lvl_11` 39 ; temps passe a incanter 70 a 92 % sur 19 niveaux |
+| Majeures (B1b) | 1159 -> 1169 / 1260 ; le bot en accepte 83 sur 116 et en prend 0,42 par partie (15 distinctes) |
+| Gorgones (A1, 60 parties) | `lvl_13` 44 -> 49, `lvl_02`, `lvl_15`, `lvl_16` inchanges ; Massacre 9,0 -> 9,5 vagues |
+| Campagne refaite (B2) | 1177 -> **1185 / 1260** ; minimum `lvl_18` 41, `lvl_17` 44 |
+| Annexes (B3, 60 parties, chacune juste apres son niveau d ouverture) | la mesure 24, l atelier 34, le tresor 29, le champion 34, la vitrine 26, l ecuyer 39, la fee 27, l apprentie 30 |
+| Objectifs (MESURES recollees par C2) | 21 classements de campagne et 8 d annexes conformes ; rangs 1 a 58-59 / 60 sur sept niveaux, rangs 3 a 2 / 60 sur `lvl_03`, `lvl_06` et `lvl_11` |
+| Banc de controle (C2, `b8264d7`) | campagne 1180 / 1260, annexes 243 / 480, Massacre 17,5 vagues ; detail dans `docs/banc_vague10.md` |
+
+### Reste — actions du testeur (l assistant ne peut pas les faire)
+
+1. **URGENT : licence Batareya** (icones de cartes ; les icones de la vague 10 sont
+   craftpix).
+2. **Licence de la fee** (`Fairy.zip`, ni licence ni auteur) : elle couvre aussi son
+   portrait d histoire depuis C6.
+3. `python tools/assets/fetch_craftpix.py login` : pack **Free Undead Tileset**.
+4. **Witches Pack complet** : les vraies apprenties (ecuyer et fee provisoires).
+5. Archives completes du **renard** et du **cacodemon** (elthen) ; **licence rvros**
+   du `Slime.zip`.
+6. Packs absents pour des boss : **frost-guardian, c3-3dobject, sci-fi-9** ; et de
+   quoi dessiner les tetes de l acte 4 et les decors de dialogue (point 27).
+7. **L image du necromancien** citee par le co-auteur.
+8. Avant toute vente : contribution a **BDragon1727**, courriel a **John Carroll**,
+   origine de **FreeSFX** (la dette a grossi d une vingtaine de sons avec A4).
+
+### Reste — decisions pour le co-auteur
+
+1. **Table du deck** : E+L deduit (3/3/3 + E x2 + L x1).
+2. **`lvl_15` et `lvl_16`** reprennent une commune : deux communes de plus ?
+3. **Communes de l acte au pool des le niveau 1** : la commune nouvelle d un niveau
+   peut avoir ete prise en combat avant lui.
+4. **Passifs** : les six de base (Ecorce vive, Celerite, Main leste, Erudition,
+   Compagnon fidele, Pulsation) et un passif par niveau, jamais deux.
+5. **Objectifs aux extremes** : rangs 1 quasi gratuits (58-59 / 60 : `lvl_02`, `06`,
+   `07`, `12`, `14`, `15`, `19`) ; rangs 3 quasi impossibles a 2 / 60 (`lvl_03` « ne
+   pas etre touche par le Lutin archer », 1 / 60 a B2 ; `lvl_06` moins de 110 s ;
+   `lvl_11` sous 120 %) ; `lvl_09` et `lvl_10` ont le meme rang 1 (« sans Trait
+   arcanique », 57 et 56 / 60) ; « sans perdre de vie » ne reste qu au `lvl_19`
+   (rang 3, 10 / 60).
+6. **Annexes plus dures que la campagne** (40 a 65 %) : « La mesure » a 40 %.
+7. **Monstres encore fades** (Gnome, Golem, Behemoth, Gelee petite) ; **Sesh**
+   partage le verbe du Glouton (« L outre » : garder 5 proies, les relacher a sa
+   mort).
+8. **Majeures** : une par sort et par partie, des la 2e maturation, donc rares en
+   campagne (0,42 par partie au bot).
+9. **Temps passe a incanter** 70 a 92 % (repere < 60 %).
+10. Toujours ouvertes : compte plafonne au niveau 12 (succes inchanges a la vague
+    10) ; garde-robe (robes, ecuyer, arbre-nid) ; **23 sorts a 2 maturations** (les
+    20 d avant, plus Vent du sud, Marque electrique et Pluie abondante) ; Rappel
+    d ossements et Epuration classes Poison ; plafond de rarete des decks de 12 (en
+    LIBRE et en Massacre : en campagne le deck est impose) ; Massacre au-dessus du
+    repere (17,5 vagues au banc de C2 pour 4-8).
+
+### Reste — limites connues et propositions non faites
+
+- **Propositions moteur de B1b** : `grow_end`, `add_effect` en tete des effets, un
+  axe de degats pour les cles de A1 (leurs majeures paient en vitesse ou en cartes),
+  la couleur du laser de marque par element, un delai de rejeu qui suit la duree.
+- **Banc des objectifs et banc d equilibrage ne jouent pas les annexes pareil** :
+  « La mesure » gagne 24 fois sur 60 au second et au moins 59 fois sur 60 au premier
+  (son rang 1, identique a la re-mesure de C2). Le banc d equilibrage la joue avec le
+  profil accumule de la campagne, le banc des objectifs avec un profil neuf ou seuls
+  les niveaux qui la precedent sont ouverts : a comprendre.
+- **La dissipation garantie (DEC-057) est plus faible qu au 03/10** : a `lvl_06`,
+  `lvl_13` et `lvl_21`, ou descendent des porteurs d aura, elle n est qu une commune
+  de l acte offerte a la montee de niveau, ou une recompense d objectif ; seuls
+  `lvl_05`, `12`, `16` et `20` ont la Lumiere purifiante au deck de base.
+- Le bot du banc ne **medite** ni ne **brule**, ne vise pas le porteur d aura avec la
+  dissipation, et prend peu de majeures : ces choix ne sont pas mesures.
+- La descente a travers les cinq mondes (`WaveSpawner.setup_procedural` avec les
+  mondes) n est plus appelee par aucun mode.
+- **Une annexe change la campagne qui la suit** (constate par C2, commentaire de
+  `test_level_progression.MESURES`) : le deck de « L atelier du rat » porte la
+  Lumiere purifiante, qu aucun niveau ne donne avant `lvl_20` ; des que l annexe est
+  ouverte, la regle du livre (deck d un niveau ouvert) la rend OBTENUE, donc presente
+  au pool de montee de tous les niveaux joues ensuite. Les MESURES
+  de `lvl_18`, `03`, `04` et `19` ont bouge pour cette seule raison. Un deck d annexe
+  se regle donc aussi en pensant aux niveaux d apres.
+- Toujours vrai : document du testeur copie (pas de fichier) sur Android, pas
+  d `export_presets.cfg`, boss immobile face a un deck sans degats (§13).
