@@ -136,7 +136,7 @@ const LABELS: Dictionary = {
 	"key": "verbe", "act": "acte", "subtitle": "sous-titre", "backdrop": "fond",
 	"exploration_deck": "deck du niveau", "levelup_cards": "cartes nouvelles",
 	"objectives": "objectifs", "objective_rewards": "cartes des objectifs",
-	"enemy_pool": "monstres du mode infini", "next_levels": "niveaux suivants",
+	"enemy_pool": "monstres pour le Massacre", "next_levels": "niveaux suivants",
 	"tint": "teinte du sprite",
 }
 

@@ -1184,6 +1184,24 @@ func _add_dot(id: StringName) -> void:
 		b.tooltip_text = SaveData.side_quest_lock_reason(lv)
 		return
 
+	# VERROU A PLUSIEURS CLES (C7a) : un niveau qui attend TOUS ses precedents
+	# (lvl_13, apres les quatre demons) dit ce qui manque a la place de ses
+	# etoiles, toutes vides tant qu il est ferme. Les quatre demons s ouvrent
+	# ensemble et se jouent dans l ordre qu on veut : sans cette ligne, le joueur
+	# qui en a fini un attend en vain que le pentacle s ouvre. Les autres niveaux
+	# fermes n en ont pas besoin : le chemin y est le niveau d avant.
+	if not lv.side_quest and not enabled and lv.requires_all_previous:
+		var verrou: String = SaveData.level_lock_reason(lv)
+		var cle: Label = UiTheme.label_hud(verrou, UiTheme.FONT_SMALL,
+			Color(1.0, 0.86, 0.55),
+			HORIZONTAL_ALIGNMENT_CENTER if eventail else HORIZONTAL_ALIGNMENT_LEFT, true)
+		cle.name = "Condition"
+		cle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cle.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		vb.add_child(cle)
+		b.tooltip_text = verrou
+		return
+
 	# LES ETOILES : une par objectif (jamais du texte ASCII, qui ne se lit pas
 	# comme une note). Pleines = pieces d or, vides = anneaux creux.
 	var stars: int = int(data["stars"])

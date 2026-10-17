@@ -323,13 +323,95 @@ static func defauts_surplus(campagne: Array, annexes: Array, catalogue: Array) -
 	return out
 
 
+## LES COMMUNES QU UNE ANNEXE PEUT PRENDRE SANS LES DONNER EN AVANCE, ecrites EN
+## DUR : la Lumiere purifiante de l atelier du rat, qui y affronte un porteur
+## d AURA (DEC-057 : la dissipation garantie, meme avant que la campagne ne
+## l ait donnee). Toute autre commune d un deck d annexe doit etre DEJA donnee
+## par la campagne quand l annexe s ouvre.
+const COMMUNES_HORS_CAMPAGNE: Dictionary = {
+	&"side_a2_atelier": [&"purifying_light"],
+}
+
+## Les niveaux de CAMPAGNE ouverts a coup sur au moment ou une annexe ouverte
+## apres `apres` s ouvre, AVANT la victoire qui l ouvre : la regle du jeu
+## (SaveData : une victoire ouvre ses next_levels ; un niveau marque
+## requires_all_previous attend tous ses precedents) jouee sur le profil le plus
+## court qui finit `apres`. Les niveaux qu on ne peut PAS contourner pour finir
+## `apres` sont finis ; ce qu ils ouvrent est ouvert ; `apres` lui-meme l est.
+## Ecrite ici sans relire le generateur (tools/make_side_quests.gd).
+static func ouverts_a_l_ouverture(apres: StringName) -> Array[StringName]:
+	var campagne: Array[LevelDef] = ContentDB.campaign_levels()
+	# Les precedents de chaque niveau (ceux qui le citent dans next_levels).
+	var precedents: Dictionary = {}
+	for lv: LevelDef in campagne:
+		precedents[lv.id] = []
+	for p: LevelDef in campagne:
+		for s in p.next_levels:
+			if precedents.has(StringName(s)):
+				(precedents[StringName(s)] as Array).append(p.id)
+	var finis: Dictionary = {}
+	for lv: LevelDef in campagne:
+		if lv.id != apres and not _atteignable_sans(apres, lv.id, campagne, precedents):
+			finis[lv.id] = true
+	var out: Array[StringName] = [apres]
+	for lv: LevelDef in campagne:
+		if lv.id != apres and _ouvert_si(lv, finis, precedents):
+			out.append(lv.id)
+	return out
+
+
+## `cible` peut-elle etre FINIE sans jamais finir `exclu` ? Point fixe : on finit
+## tout ce qui s ouvre, sauf `exclu`.
+static func _atteignable_sans(cible: StringName, exclu: StringName,
+		campagne: Array[LevelDef], precedents: Dictionary) -> bool:
+	var finis: Dictionary = {}
+	var change: bool = true
+	while change:
+		change = false
+		for lv: LevelDef in campagne:
+			if lv.id == exclu or finis.has(lv.id) or not _ouvert_si(lv, finis, precedents):
+				continue
+			finis[lv.id] = true
+			change = true
+	return finis.has(cible)
+
+
+## Un niveau de campagne est-il ouvert quand les niveaux `finis` le sont ? Le
+## premier niveau toujours ; sinon un precedent fini, ou TOUS s il le demande.
+static func _ouvert_si(lv: LevelDef, finis: Dictionary, precedents: Dictionary) -> bool:
+	if lv.id == SaveData.FIRST_LEVEL:
+		return true
+	var siens: Array = precedents.get(lv.id, [])
+	var finis_siens: int = 0
+	for p in siens:
+		if finis.has(p):
+			finis_siens += 1
+	if lv.requires_all_previous:
+		return not siens.is_empty() and finis_siens == siens.size()
+	return finis_siens > 0
+
+
 ## Le deck de base d une annexe : trois communes distinctes, dont une au moins
-## TUE son boss dore ; une dissipation s il descend un porteur d aura (DEC-057).
+## TUE son boss dore ; une dissipation s il descend un porteur d aura (DEC-057) ;
+## chaque commune DEJA DONNEE par la campagne a l ouverture de l annexe (sauf
+## COMMUNES_HORS_CAMPAGNE) : ouvrir l annexe ne doit pas faire posseder en avance
+## la commune nouvelle d un niveau a venir (regle du livre : le deck d un niveau
+## ouvert est obtenu, et une annexe ouverte en est un).
 static func defauts_deck(lv: LevelDef) -> Array[String]:
 	var out: Array[String] = []
 	if not lv.has_base_commons():
 		out.append("pas de deck de base complet (%d communes)" % lv.base_commons.size())
 		return out
+	if lv.side_quest_after != &"":
+		var donnees: Array[StringName] = SaveData.cards_owned_by_decks(
+			ouverts_a_l_ouverture(lv.side_quest_after))
+		var permises: Array = COMMUNES_HORS_CAMPAGNE.get(lv.id, [])
+		for c: SpellCard in lv.base_commons:
+			if not donnees.has(c.id) and not permises.has(c.id):
+				out.append("la commune %s n est pas encore donnee par la campagne a l ouverture (apres %s)"
+					% [c.id, lv.side_quest_after])
+	else:
+		out.append("aucun niveau d ouverture : les communes donnees ne se jugent pas")
 	var dore: EnemyDef = null
 	if not lv.waves.is_empty() and lv.waves[-1] != null and not lv.waves[-1].entries.is_empty():
 		dore = lv.waves[-1].entries[0].enemy
@@ -625,6 +707,14 @@ func _test_le_surplus_d_abord() -> void:
 	SaveData.reset_profile()
 
 
+## Un des defauts contient-il `morceau` ?
+static func _un_defaut_dit(defauts: Array[String], morceau: String) -> bool:
+	for d: String in defauts:
+		if d.contains(morceau):
+			return true
+	return false
+
+
 static func _ids_cartes(cartes: Array) -> Array:
 	var out: Array = []
 	for c in cartes:
@@ -642,6 +732,32 @@ static func _tries(ids: Array) -> Array:
 
 
 func _test_le_deck_d_une_annexe() -> void:
+	# La regle d ouverture, sur trois cas ecrits EN DUR.
+	var apres_02: Array[StringName] = ouverts_a_l_ouverture(&"lvl_02")
+	eq(_tries(apres_02), ["lvl_01", "lvl_02"],
+		"apres lvl_02 : lvl_01 et lvl_02 ouverts, PAS lvl_08 (qu ouvre la victoire)")
+	var apres_12: Array[StringName] = ouverts_a_l_ouverture(&"lvl_12")
+	for frere: StringName in [&"lvl_07", &"lvl_10", &"lvl_11", &"lvl_05", &"lvl_06"]:
+		ok(apres_12.has(frere), "apres lvl_12 : %s est ouvert (ouvert par lvl_21 / lvl_20)" % frere)
+	not_ok(apres_12.has(&"lvl_13"), "apres lvl_12 : lvl_13 ne l est pas (il attend les quatre)")
+	var apres_14: Array[StringName] = ouverts_a_l_ouverture(&"lvl_14")
+	ok(apres_14.has(&"lvl_13") and apres_14.has(&"lvl_07"), "apres lvl_14 : le pentacle et les demons")
+	not_ok(apres_14.has(&"lvl_15"), "apres lvl_14 : pas lvl_15")
+	# L exception est encore NECESSAIRE et justifiee : sinon, la retirer.
+	for id in COMMUNES_HORS_CAMPAGNE:
+		var a: LevelDef = ContentDB.levels.get(id)
+		ok(a != null, "(l annexe %s de l exception existe)" % id)
+		if a == null:
+			continue
+		var aura: bool = false
+		for d: EnemyDef in ObjectiveChecker.level_enemies(a):
+			aura = aura or d.aura_shield_radius > 0.0
+		ok(aura, "%s : un porteur d aura y descend (raison de l exception)" % id)
+		var donnees: Array[StringName] = SaveData.cards_owned_by_decks(
+			ouverts_a_l_ouverture(a.side_quest_after))
+		for c in COMMUNES_HORS_CAMPAGNE[id]:
+			ok(_ids_cartes(a.base_commons).has(String(c)), "%s porte bien %s" % [id, c])
+			not_ok(donnees.has(c), "%s : %s n est pas encore donnee (l exception sert)" % [id, c])
 	for lv: LevelDef in _annexes():
 		var d: Array[String] = defauts_deck(lv)
 		ok(d.is_empty(), "%s : deck de base jouable %s" % [lv.id, d])
@@ -890,7 +1006,11 @@ func _test_les_detecteurs_mordent() -> void:
 			if not &"dispel_zone" in c.effect_keys() and communes.size() < 3:
 				communes.append(c)
 		sans.base_commons = communes
-		not_ok(defauts_deck(sans).is_empty(), "sabotage : un porteur d aura sans dissipation")
+		# Le message PRECIS : depuis C7a, ces communes prises au hasard peuvent
+		# aussi ne pas etre donnees a l ouverture ; le sabotage doit mordre pour
+		# SA raison.
+		ok(_un_defaut_dit(defauts_deck(sans), "aucune dissipation"),
+			"sabotage : un porteur d aura sans dissipation %s" % [defauts_deck(sans)])
 	var muet: LevelDef = lv.duplicate()
 	var mur: SpellCard = null
 	for c: SpellCard in ContentDB.cards_of_rarity(GameEnums.Rarity.COMMON):
@@ -901,7 +1021,35 @@ func _test_les_detecteurs_mordent() -> void:
 	if mur != null:
 		var murs: Array[SpellCard] = [mur, mur, mur]
 		muet.base_commons = murs
-		not_ok(defauts_deck(muet).is_empty(), "sabotage : un deck qui ne tue pas le boss")
+		ok(_un_defaut_dit(defauts_deck(muet), "ne peut tuer"),
+			"sabotage : un deck qui ne tue pas le boss %s" % [defauts_deck(muet)])
+	# 5 ter. Une commune que la campagne n a PAS encore donnee a l ouverture
+	#    (C7a) : la premiere annexe prend une commune absente des decks ouverts.
+	var tot_lv: LevelDef = lv.duplicate()
+	var donnees: Array[StringName] = SaveData.cards_owned_by_decks(
+		ouverts_a_l_ouverture(lv.side_quest_after))
+	var pas_donnee: SpellCard = null
+	for c: SpellCard in ContentDB.cards_of_rarity(GameEnums.Rarity.COMMON):
+		if not c.is_passive and not donnees.has(c.id) and not lv.base_commons.has(c):
+			pas_donnee = c
+			break
+	ok(pas_donnee != null, "(une commune n est pas encore donnee a l ouverture de %s)" % lv.id)
+	if pas_donnee != null:
+		var en_avance: Array[SpellCard] = [lv.base_commons[0], pas_donnee, lv.base_commons[2]]
+		tot_lv.base_commons = en_avance
+		ok(_un_defaut_dit(defauts_deck(tot_lv), "pas encore donnee"),
+			"sabotage : une commune donnee EN AVANCE (%s) %s" % [pas_donnee.id, defauts_deck(tot_lv)])
+	# L exception ne vaut que pour SON annexe : la Lumiere purifiante ailleurs,
+	# avant que la campagne ne la donne, est refusee.
+	var lumiere: SpellCard = ContentDB.cards.get(&"purifying_light")
+	ok(lumiere != null and not donnees.has(&"purifying_light"),
+		"(la Lumiere purifiante n est pas donnee a l ouverture de %s)" % lv.id)
+	if lumiere != null and lv.id != &"side_a2_atelier":
+		var ailleurs: LevelDef = lv.duplicate()
+		var avec_lumiere: Array[SpellCard] = [lv.base_commons[0], lumiere, lv.base_commons[2]]
+		ailleurs.base_commons = avec_lumiere
+		ok(_un_defaut_dit(defauts_deck(ailleurs), "pas encore donnee"),
+			"sabotage : l exception de l atelier ne vaut pas pour %s" % lv.id)
 	# 5 bis. « D un seul sort » avec des Ronces (objet permanent qui tue) en
 	#    recompense.
 	var vise: LevelDef = null
