@@ -166,10 +166,17 @@ func show_paths(card: SpellCard, paths: Array) -> void:
 	if paliers > 1:
 		entete = "Maturation %d sur %d  -  %s" % [rang, paliers, entete.to_lower()]
 	# VAGUE 10 A1 : la majeure s annonce des l entete, avant meme les boutons.
+	# C7b : le plus souvent DEUX, au choix ; l entete dit qu une seule se prend,
+	# sinon le joueur croirait pouvoir revenir chercher l autre.
+	var majeures: int = 0
 	for p in paths:
 		if p is Dictionary and bool((p as Dictionary).get("major", false)):
-			entete += " Une AMELIORATION MAJEURE est proposee."
-			break
+			majeures += 1
+	if majeures == 1:
+		entete += " Une AMELIORATION MAJEURE est proposee."
+	elif majeures > 1:
+		entete += " %s AMELIORATIONS MAJEURES au choix : une seule par partie." % (
+			"Deux" if majeures == 2 else str(majeures))
 	_box.add_child(UiTheme.label(entete, UiTheme.FONT_SMALL, UiTheme.TEXT_DIM,
 		HORIZONTAL_ALIGNMENT_CENTER, true))
 	# LE CUMUL. A partir de la seconde maturation, la nouvelle voie s AJOUTE aux
@@ -371,7 +378,8 @@ func _fond(couleur: Color, bord: Color) -> StyleBoxFlat:
 # qu aucune voie n a, mot MAJEURE en toutes lettres pour qui ne distingue pas
 # les couleurs), et lire TOUS ses prix : joints sur une ligne, le second prix
 # passait sous le pouce. Plus haut qu une voie (MAJOR_PATH_HEIGHT) : trois voies
-# dont une majeure tiennent encore dans 1920 px.
+# dont DEUX majeures (C7b, le cas ordinaire de la 2e maturation) tiennent encore
+# dans 1920 px (capture w10_amelioration_majeure de l etage visual).
 # =====================================================================
 
 const MAJOR_PATH_HEIGHT: float = 260.0

@@ -163,20 +163,15 @@ static func _vitrine_sable_jet(driver: Node, g: GameController, bf: Battlefield,
 	_simuler(bf, 0.5)
 
 
-## L ECRAN D UNE MAJEURE : seconde maturation d une Fleche qui en declare deux.
+## L ECRAN DES MAJEURES : seconde maturation de la Fleche percante, avec SES
+## deux majeures du contenu (C7b : les deux a l ecran, plus une voie) — l etat
+## le plus haut de l ecran, celui ou un debordement se verrait en portrait.
 static func _vitrine_majeure(driver: Node, g: GameController, tree: SceneTree) -> void:
 	var fleche: SpellCard = ContentDB.cards.get(&"piercing_arrow")
 	if fleche == null:
 		driver.call("_fail", "vitrine W10 : piercing_arrow introuvable")
 		return
 	var garde: Array[MajorUpgradeDef] = fleche.major_upgrades.duplicate()
-	fleche.major_upgrades = [
-		MajorUpgradeDef.make(&"vitrine_seconde_volee", "Seconde volee",
-			"Une seconde ligne de fleches part en eventail, a 25 degres",
-			[{"op": "duplicate", "key": &"pierce_line", "params": {&"angle_deg": 25.0}}],
-			[{"op": "axis", "axis": &"damage", "pct": -0.5},
-			 {"op": "axis", "axis": &"cast", "pct": -0.15}]),
-	]
 	RunState.reset()
 	var pool: Array = RunState.upgrade_pool_for(fleche)
 	if not pool.is_empty():
@@ -186,13 +181,24 @@ static func _vitrine_majeure(driver: Node, g: GameController, tree: SceneTree) -
 	for v in voies:
 		if bool((v as Dictionary).get("major", false)):
 			majeures += 1
-	if voies.size() != GameConfig.LEVEL_UP_CHOICES or majeures != 1:
+	if voies.size() != GameConfig.LEVEL_UP_CHOICES or majeures != 2:
 		driver.call("_fail", "vitrine W10 : %d voies dont %d majeure(s)" % [voies.size(), majeures])
 	var panel: CardUpgradePanel = g.call(&"_ensure_upgrade_panel")
 	panel.show_paths(fleche, voies)
 	await tree.process_frame
 	if panel.size.y < 1600.0:
 		driver.call("_fail", "vitrine W10 : l ecran de majeure ne couvre pas l ecran")
+	# Deux majeures (260 px chacune) + une voie + le refus : tout doit TENIR dans
+	# le portrait, le bouton GARDER TEL QUEL compris (sinon hors d atteinte).
+	await tree.process_frame
+	var garder: Control = panel.find_child("Garder", true, false) as Control
+	var haut: Control = panel.find_child("Voie0", true, false) as Control
+	if garder == null or haut == null:
+		driver.call("_fail", "vitrine W10 : boutons de l ecran de majeure introuvables")
+	elif garder.get_global_rect().end.y > panel.get_global_rect().end.y + 0.5 \
+			or haut.get_global_rect().position.y < panel.get_global_rect().position.y - 0.5:
+		driver.call("_fail", "vitrine W10 : deux majeures debordent du portrait (%s / %s)"
+			% [haut.get_global_rect(), garder.get_global_rect()])
 	await driver._shot("w10_amelioration_majeure")
 	panel.visible = false
 	fleche.major_upgrades = garde

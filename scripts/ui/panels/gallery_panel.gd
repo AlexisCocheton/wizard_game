@@ -639,6 +639,7 @@ func _fill_card(box: VBoxContainer, card: SpellCard) -> void:
 		box.add_child(UiTheme.label(where_to_obtain(card), UiTheme.FONT_BODY,
 			Color(0.62, 0.12, 0.14), HORIZONTAL_ALIGNMENT_CENTER))
 	_fill_upgrades(box, card)
+	_fill_majors(box, card)
 
 
 ## TYPE DU SORT (vague 5) : son logo et son nom, le meme logo que sur la carte en
@@ -673,7 +674,11 @@ static func where_to_obtain(card: SpellCard) -> String:
 func _fill_upgrades(box: VBoxContainer, card: SpellCard) -> void:
 	box.add_child(UiTheme.label("AMELIORATIONS", UiTheme.FONT_SMALL,
 		Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER, false))
-	var lignes: Array = upgrades_of(card)
+	# VAGUE 10 C7b : les MAJEURES ont leur propre section (_fill_majors) ; ici les
+	# seules voies ordinaires. Melangees, elles se lisaient comme deux voies de
+	# plus, en petit et en gris, et faussaient le compte « N voies ».
+	var lignes: Array = upgrades_of(card).filter(func(u: Dictionary) -> bool:
+		return StringName(u.get("form", &"")) != RunState.UP_MAJOR)
 	if lignes.is_empty():
 		box.add_child(UiTheme.label("a decouvrir en combat", UiTheme.FONT_BODY,
 			UiTheme.TEXT_DIM, HORIZONTAL_ALIGNMENT_CENTER))
@@ -709,6 +714,105 @@ static func upgrades_of(card: SpellCard) -> Array:
 		if u is Dictionary:
 			out.append(u)
 	return out
+
+
+# =====================================================================
+# VAGUE 10 C7b — LES DEUX MAJEURES DU SORT, dans sa fiche
+#
+#            AMELIORATIONS MAJEURES
+#   Les deux a la 2e maturation : une seule par partie
+#   +------------------------------------------+
+#   |  SECONDE LIGNE                           |  <- titre, encre magenta
+#   |  + Une seconde ligne de fleches part...  |  <- gain, vert (logos d element)
+#   |  - -30 % degats                          |  <- un prix par ligne, rouge
+#   |  - -30 % vitesse de lancement            |
+#   |  a la 2e maturation                      |
+#   +------------------------------------------+
+#   |  VAGUE DE FLECHES ...                    |
+#
+# Avant C7b, une majeure n existait qu a l ecran de maturation : le joueur ne
+# savait pas ce que son sort pouvait devenir de plus grand, ni qu il aurait a
+# CHOISIR entre deux. La fiche les montre comme l ecran de maturation (meme
+# titre, meme gain signe « + », memes prix un par ligne, signes « - »), sur le
+# papier du grimoire : encres sombres. Le cadre est un PanelContainer en PASS
+# (STOP par defaut : il avalerait le glisser du doigt, voir TouchScroll).
+# =====================================================================
+
+## Encre des majeures sur le papier : le magenta de l ecran de maturation,
+## assombri pour se lire sur le creme (CardUpgradePanel.COULEUR_MAJEURE).
+const INK_MAJOR := Color(0.55, 0.10, 0.48)
+
+
+## La phrase qui dit QUAND : la maturation ou elles arrivent (« 2e »). Statique :
+## le test la relit sans construire la fiche.
+static func major_when_text() -> String:
+	return "a la %de maturation" % GameConfig.MAJOR_UPGRADE_FROM_TIER
+
+
+func _fill_majors(box: VBoxContainer, card: SpellCard) -> void:
+	if card == null or card.major_upgrades.is_empty():
+		return
+	var titre: Label = UiTheme.label("AMELIORATIONS MAJEURES", UiTheme.FONT_SMALL,
+		INK_MAJOR, HORIZONTAL_ALIGNMENT_CENTER, false)
+	titre.name = "MajorsHeader"
+	box.add_child(titre)
+	var n: int = card.major_upgrades.size()
+	var regle: String = "Proposees ensemble %s : une seule par partie" % major_when_text() \
+		if n > 1 else "Proposee %s" % major_when_text()
+	box.add_child(UiTheme.label(regle, UiTheme.FONT_SMALL, UiTheme.INK_SOFT,
+		HORIZONTAL_ALIGNMENT_CENTER, true))
+	var prises: Array[MajorUpgradeDef] = RunState.taken_majors(card)
+	for i in n:
+		var m: MajorUpgradeDef = card.major_upgrades[i]
+		if m != null:
+			box.add_child(_major_entry(card, m, i, prises.has(m)))
+
+
+func _major_entry(card: SpellCard, m: MajorUpgradeDef, index: int, prise: bool) -> Control:
+	var voie: Dictionary = RunState.major_path(card, m)
+	var cadre := PanelContainer.new()
+	cadre.name = "Major%d" % index
+	cadre.mouse_filter = Control.MOUSE_FILTER_PASS
+	cadre.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(1.0, 0.97, 0.92, 0.55)
+	sb.border_color = INK_MAJOR
+	sb.set_border_width_all(4)
+	sb.set_corner_radius_all(10)
+	sb.content_margin_left = 22.0
+	sb.content_margin_right = 22.0
+	sb.content_margin_top = 12.0
+	sb.content_margin_bottom = 12.0
+	cadre.add_theme_stylebox_override(&"panel", sb)
+	var inner := VBoxContainer.new()
+	inner.mouse_filter = Control.MOUSE_FILTER_PASS
+	inner.add_theme_constant_override(&"separation", 4)
+	cadre.add_child(inner)
+
+	var l_titre: Label = UiTheme.label(m.title.to_upper(), UiTheme.FONT_BODY, INK_MAJOR,
+		HORIZONTAL_ALIGNMENT_LEFT, true)
+	l_titre.name = "Titre"
+	inner.add_child(l_titre)
+	# Le gain : meme texte que l ecran de maturation (« + ... »), avec les logos
+	# des elements qu il nomme en majuscules (regle des textes de carte, W8).
+	var gain: RichTextLabel = ElementIcons.decorated_label(String(voie.get("gain_text", "")),
+		UiTheme.FONT_SMALL, UiTheme.INK_SUCCESS)
+	gain.name = "Gain"
+	inner.add_child(gain)
+	var lignes: Array = voie.get("cost_lines", []) as Array
+	for k in lignes.size():
+		var l_prix: Label = UiTheme.label(String(lignes[k]), UiTheme.FONT_SMALL,
+			UiTheme.INK_DANGER, HORIZONTAL_ALIGNMENT_LEFT, true)
+		l_prix.name = "Prix" if k == 0 else "Prix%d" % (k + 1)
+		inner.add_child(l_prix)
+	var quand: String = major_when_text()
+	if prise:
+		quand += "  -  PRISE dans cette partie"
+	var l_quand: Label = UiTheme.label(quand, UiTheme.FONT_SMALL, UiTheme.INK_HINT,
+		HORIZONTAL_ALIGNMENT_LEFT, true)
+	l_quand.name = "Quand"
+	inner.add_child(l_quand)
+	return cadre
 
 
 func _fill_enemy(box: VBoxContainer, def: EnemyDef) -> void:

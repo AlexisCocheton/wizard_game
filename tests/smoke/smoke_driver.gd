@@ -967,6 +967,7 @@ func _check_menu_screens() -> void:
 		grimoire.show_section(GalleryPanel.Section.SPELLS)
 		grimoire.open_detail(0)
 		await _shot("livre_fiche")
+		await _vitrine_grimoire_majeures(grimoire)
 		await _vitrine_grimoire_visibilite(grimoire)
 		# Une fiche de MONSTRE aussi : elle est bien plus longue (competences),
 		# c est elle qui deborde si la mise en page est trop serree.
@@ -2403,6 +2404,42 @@ func _vitrine_recompenses_campagne(campagne: CampaignPanel) -> void:
 	level.objective_rewards = avant
 	SaveData.load_from_dictionary(profil)
 	campagne.open_level(level.id)
+
+
+## VAGUE 10 C7b : la fiche d un sort montre SES DEUX MAJEURES (titre, gain,
+## prix, « a la 2e maturation »), en bas d une fiche qui defile. La Fleche
+## percante (deck de depart, toujours visible) defilee jusqu a la section.
+func _vitrine_grimoire_majeures(grimoire: GalleryPanel) -> void:
+	grimoire.close_detail()
+	grimoire.show_section(GalleryPanel.Section.SPELLS)
+	var fleche: SpellCard = ContentDB.cards.get(&"piercing_arrow")
+	var idx: int = grimoire.entries().find(fleche)
+	if idx < 0:
+		_fail("grimoire : la Fleche percante n est pas au livre")
+		return
+	grimoire.open_detail(idx)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var tete: Control = grimoire.find_child("MajorsHeader", true, false) as Control
+	var deux: Control = grimoire.find_child("Major1", true, false) as Control
+	if tete == null or deux == null:
+		_fail("grimoire : la fiche de la Fleche ne montre pas ses deux majeures")
+		return
+	var defile: ScrollContainer = null
+	for n in _tous_les_noeuds(grimoire):
+		if n is ScrollContainer and (n as ScrollContainer).is_visible_in_tree():
+			defile = n as ScrollContainer
+	if defile == null or TouchScroll.of(defile) == null:
+		_fail("grimoire : la fiche ne defile pas au doigt (TouchScroll)")
+		return
+	defile.scroll_vertical = int(tete.global_position.y - defile.global_position.y) \
+		+ defile.scroll_vertical - 20
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if deux.get_global_rect().end.y > defile.get_global_rect().end.y + 2.0 \
+			and defile.scroll_vertical < int(defile.get_v_scroll_bar().max_value - defile.get_v_scroll_bar().page) - 2:
+		_fail("grimoire : la seconde majeure reste hors de la page apres defilement")
+	await _shot("livre_fiche_majeures")
 
 
 ## Le grimoire ne montre aucune carte INVISIBLE, et une fiche OBTENABLE dit ou

@@ -58,7 +58,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_c0yu3")
 id = &"appel_d_air"
 title = "Appel d air"
-description = "Le brasier aspire l air et attire les monstres vers son coeur (effet de vent)"
+description = "Le brasier aspire l air : les monstres sont attires vers son coeur pendant 6 s"
 modifiers = Array[Dictionary]([{
 "duration": 6.0,
 "key": &"vortex_pull",

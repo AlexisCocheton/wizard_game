@@ -2556,24 +2556,32 @@ func upgrade_offerable_for(card: SpellCard) -> Array:
 ##
 ## Un pool pas plus grand que l ecran est rendu tel quel, sans consommer le RNG.
 ##
-## VAGUE 10 A1 : a partir de GameConfig.MAJOR_UPGRADE_FROM_TIER, une MAJEURE du
-## sort (s il en declare une qu il peut encore prendre) prend UNE des places ;
-## les autres sont tirees par la meme regle. Un sort sans majeure suit
-## exactement l ancien chemin, tirages du RNG compris : le banc ne bouge pas
-## tant que le contenu n en declare pas.
+## VAGUE 10 C7b : a partir de GameConfig.MAJOR_UPGRADE_FROM_TIER, TOUTES les
+## majeures que le sort peut encore prendre (ses deux, dans le contenu livre)
+## prennent leur place a l ecran, au plus LEVEL_UP_CHOICES - 1 : il reste
+## toujours une voie ordinaire, tiree par la meme regle (la LEGERE d abord, le
+## bonus sur qui se prend sans lire, face aux deux paris de structure). Le joueur
+## CHOISIT donc entre les deux majeures ; avant (A1), une seule etait tiree au
+## hasard et il ne voyait jamais l autre. Une seule se prend par partie
+## (MAJOR_UPGRADES_PER_CARD) ; s il refuse les deux, les maturations suivantes
+## les reproposent toutes les deux (voir offerable_majors). Un sort sans majeure
+## suit exactement l ancien chemin, tirages du RNG compris.
 func draw_upgrade_offer(card: SpellCard) -> Array:
 	var libres: Array = upgrade_offerable_for(card)
 	var n: int = GameConfig.LEVEL_UP_CHOICES
-	var majeure: Dictionary = _w10_major_for_offer(card)
-	if not majeure.is_empty():
-		var voies: Array = _draw_voies(libres, n - 1)
-		voies.insert(_rng.randi_range(0, voies.size()), majeure)
+	var majeures: Array = _w10_majors_for_offer(card, n - 1)
+	if not majeures.is_empty():
+		var voies: Array = _draw_voies(libres, n - majeures.size())
+		for m in majeures:
+			voies.insert(_rng.randi_range(0, voies.size()), m)
 		return voies
 	return _draw_voies(libres, n)
 
 
 ## Le tirage des voies ordinaires (au plus `n`), extrait de draw_upgrade_offer
-## pour laisser une place a la majeure. Meme regle, memes appels au RNG.
+## pour laisser une place aux majeures. Meme regle, memes appels au RNG.
+## n = 1 (deux majeures a l ecran) : la seule LEGERE, jamais une forte en plus —
+## la forte n etait ajoutee sans regarder `n`, l ecran aurait eu quatre voies.
 func _draw_voies(libres: Array, n: int) -> Array:
 	if libres.size() <= n:
 		return libres
@@ -2587,7 +2595,7 @@ func _draw_voies(libres: Array, n: int) -> Array:
 	if fortes.is_empty():
 		fortes = libres.filter(func(v: Dictionary) -> bool:
 			return StringName(v["form"]) == UP_STRONG)
-	if not fortes.is_empty():
+	if not fortes.is_empty() and tirees.size() < n:
 		tirees.append(_pick_one(fortes))
 	var garde: int = libres.size()
 	while tirees.size() < n and garde > 0:
@@ -3303,8 +3311,9 @@ func upgrade_cast_factor(card: SpellCard) -> float:
 # sort (format : MajorUpgradeDef). Elle vit dans le MEME registre que les voies
 # (upgrades_taken, sous l id « major:<id> ») : maturations, cumul, grimoire,
 # fiche de deck et bot la voient sans chemin a part. Ce qu elle a en propre :
-#   - l OFFRE : jamais a la premiere maturation, au plus UNE parmi les trois
-#     propositions, une seule prise par sort et par partie
+#   - l OFFRE : jamais a la premiere maturation ; ensuite les DEUX majeures du
+#     sort cote a cote, plus une voie ordinaire (C7b : le joueur choisit entre
+#     elles), une seule prise par sort et par partie
 #     (GameConfig.MAJOR_UPGRADE_FROM_TIER, MAJOR_UPGRADES_PER_CARD) ;
 #   - la STRUCTURE : ses ops add_effect / set / scale / duplicate s appliquent
 #     dans cast_specs, sur des COPIES, avant les axes des voies ;
@@ -3422,6 +3431,13 @@ func taken_majors(card: SpellCard) -> Array[MajorUpgradeDef]:
 
 
 ## Les majeures que la PROCHAINE maturation de cette carte peut proposer.
+##
+## REFUS (C7b, comportement d A1 garde tel quel) : un joueur qui ne prend aucune
+## des deux — une voie ordinaire ou GARDER TEL QUEL — les retrouve TOUTES LES
+## DEUX a la maturation suivante, et ainsi de suite tant qu il n en a pris
+## aucune : la regle ne lit que « deja une prise ? », jamais « deja vue ? ».
+## Un sort a deux maturations (pool de 4 voies, DEC-055) n en a pas d autre :
+## refuser a la 2e, c est y renoncer pour la partie.
 func offerable_majors(card: SpellCard) -> Array[MajorUpgradeDef]:
 	var out: Array[MajorUpgradeDef] = []
 	if card == null or card.major_upgrades.is_empty():
@@ -3437,17 +3453,20 @@ func offerable_majors(card: SpellCard) -> Array[MajorUpgradeDef]:
 	return out
 
 
-## La majeure de l offre en cours de tirage, {} si aucune. Le RNG de la partie
-## n est consomme que si le sort en a plusieurs a proposer : un sort sans
-## majeure rejoue exactement ses anciens tirages.
-func _w10_major_for_offer(card: SpellCard) -> Dictionary:
-	var libres: Array[MajorUpgradeDef] = offerable_majors(card)
-	if libres.is_empty():
-		return {}
-	var m: MajorUpgradeDef = libres[0]
-	if libres.size() > 1:
-		m = libres[_rng.randi_range(0, libres.size() - 1)]
-	return major_path(card, m)
+## Les majeures de l offre en cours de tirage (au plus `place`), sous forme de
+## voies, dans l ordre DECLARE par la carte ; vide si aucune. VAGUE 10 C7b :
+## TOUTES celles que le sort peut encore prendre, pour que le joueur choisisse
+## entre elles (A1 n en tirait qu une, au hasard : `_w10_major_for_offer`,
+## renommee parce que son sens change — un appelant oublie casse a la
+## compilation au lieu de recevoir un Dictionary la ou il attend un tableau).
+## Aucun tirage ici : l ecran les place, AutoPick departage.
+func _w10_majors_for_offer(card: SpellCard, place: int) -> Array:
+	var out: Array = []
+	for m in offerable_majors(card):
+		if out.size() >= place:
+			break
+		out.append(major_path(card, m))
+	return out
 
 
 ## Les effets du sort APRES la structure des majeures prises : ajout, double,

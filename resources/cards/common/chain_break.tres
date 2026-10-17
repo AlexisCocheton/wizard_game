@@ -40,7 +40,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_25ebk")
 id = &"chaines_pesantes"
 title = "Chaines pesantes"
-description = "Les chaines restent au sol : ralentit de 50 % pendant 3 s (effet de glace)"
+description = "Les chaines restent au sol : qui y passe est ralenti de 50 % pendant 3 s"
 modifiers = Array[Dictionary]([{
 "duration": 3.0,
 "key": &"ground_zone",
