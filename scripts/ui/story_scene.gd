@@ -48,6 +48,14 @@ const DIM: Color = Color(0.45, 0.42, 0.52)
 ## decoupent la meme planche (tete du mage), une seule arithmetique pour tous.
 const CAST_SHEET: String = UiTheme.CAST_SHEET
 const CAST_PX: int = UiTheme.CAST_PX
+## La planche des APPRENTIS (vague 10, chantier C6), memes cases de CAST_PX.
+## Une planche a part parce que ses bustes ne viennent pas d un pack de
+## portraits peints mais des feuilles animees que le joueur voit deja en combat :
+## `tools/assets/make_apprentice_portraits.py` les agrandit au plus proche
+## voisin, d un facteur entier commun aux trois, et les pose sur la ligne de base
+## des bustes peints. Regenerer `story_cast.png` (LANCZOS, packs bruts) n est
+## donc jamais necessaire pour toucher a un apprenti, ni l inverse.
+const APPRENTICE_SHEET: String = UiTheme.PORTRAITS_DIR + "apprentice_cast.png"
 
 ## Cle de portrait -> sa case dans la planche, et la source dont elle vient.
 ##
@@ -94,6 +102,21 @@ const CAST: Dictionary = {
 	&"guardian": {"cell": [2, 3], "sheet": CAST_SHEET, "from": "knight_raceless_man_01"},
 	# Le demon, lui, a le droit d avoir une tete de demon.
 	&"demon": {"cell": [2, 4], "sheet": CAST_SHEET, "from": "demon_elve_man_01"},
+	# LES TROIS APPRENTIS des quetes annexes. La cle EST le `texture_name` de
+	# leur fiche de compte (= `side_quest_character` de leur annexe) : le visage
+	# qui parle est celui du personnage que le joueur fait combattre, et
+	# test_story verifie que chaque apprenti parle avec CE visage. Ils parlaient
+	# sans portrait, comme « Un mort », jusqu a la vague 10.
+	# `from` = feuille d AnimCatalog et case d idle recadree.
+	# L ecuyer : casque, arc et tunique rouge, en entier sauf l ombre portee.
+	&"soldier": {"cell": [1, 1], "sheet": APPRENTICE_SHEET, "from": "soldier_idle#0"},
+	# La fee : ailes levees autour de la tete, coupee a la taille. Licence a
+	# confirmer avant toute vente (Fairy.zip, docs/assets_index.md) : c est la
+	# MEME feuille que son sprite de combat, relancer le script suffit le jour
+	# ou elle est remplacee.
+	&"fairy": {"cell": [1, 2], "sheet": APPRENTICE_SHEET, "from": "fairy_idle#7"},
+	# L apprentie d azur : le chapeau a pointe penchee, coupee sous le menton.
+	&"bluewitch": {"cell": [1, 3], "sheet": APPRENTICE_SHEET, "from": "bluewitch_idle#3"},
 }
 
 ## Portraits pris sur une FEUILLE animee du jeu plutot que sur un fichier.

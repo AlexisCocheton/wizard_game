@@ -12,7 +12,7 @@ lines = Array[Dictionary]([{
 "speaker": "",
 "text": "Une fleche se plante dans le quai, a un pas du mage. Elle vient d en haut, du toit d un entrepot."
 }, {
-"portrait": &"",
+"portrait": &"soldier",
 "side": "right",
 "speaker": "L ecuyer",
 "text": "Restez ou vous etes ! Ce qui descend du ciel, je le descends."
@@ -22,7 +22,7 @@ lines = Array[Dictionary]([{
 "speaker": "Le Mage",
 "text": "Je ne descends pas du ciel. Pas aujourd hui."
 }, {
-"portrait": &"",
+"portrait": &"soldier",
 "side": "right",
 "speaker": "L ecuyer",
 "text": "Alors baissez-vous. Celui d en face ne fait pas la difference. Et lui, il est en or."
