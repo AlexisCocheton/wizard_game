@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_837s5"]
+[ext_resource type="Resource" path="res://resources/enemies/planogo_mother.tres" id="2_is76t"]
+[ext_resource type="Resource" path="res://resources/enemies/ecumeur.tres" id="3_y38me"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_qs8p2"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="5_1625f"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_ttwrw"]
+
+[sub_resource type="Resource" id="Resource_837s5"]
+script = ExtResource("1_837s5")
+enemy = ExtResource("2_is76t")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_is76t"]
+script = ExtResource("1_837s5")
+enemy = ExtResource("3_y38me")
+count = 2
+spawn_delay = 3.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_y38me"]
+script = ExtResource("1_837s5")
+enemy = ExtResource("4_qs8p2")
+count = 2
+spawn_delay = 2.0
+start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_qs8p2"]
+script = ExtResource("1_837s5")
+enemy = ExtResource("5_1625f")
+count = 2
+spawn_delay = 2.0
+start_offset = 22.0
+
+[resource]
+script = ExtResource("6_ttwrw")
+id = &"w17_3_miniboss"
+duration = 32.0
+entries = Array[ExtResource("1_837s5")]([SubResource("Resource_837s5"), SubResource("Resource_is76t"), SubResource("Resource_y38me"), SubResource("Resource_qs8p2")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

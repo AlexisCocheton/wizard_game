@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_1x0vq"]
 [ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_v0og2"]
-[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="3_5mcbm"]
-[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_i6fll"]
+[ext_resource type="Resource" path="res://resources/enemies/raider_deserter.tres" id="3_v0og2"]
+[ext_resource type="Resource" path="res://resources/enemies/planogo_ash.tres" id="4_5mcbm"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_gmrxt"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_i6fll"]
 
-[sub_resource type="Resource" id="Resource_1x0vq"]
+[sub_resource type="Resource" id="Resource_v0og2"]
 script = ExtResource("1_1x0vq")
 enemy = ExtResource("2_v0og2")
 count = 1
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_v0og2"]
+[sub_resource type="Resource" id="Resource_5mcbm"]
 script = ExtResource("1_1x0vq")
-enemy = ExtResource("3_5mcbm")
-count = 4
+enemy = ExtResource("3_v0og2")
+count = 3
 spawn_delay = 1.8
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_5mcbm"]
+[sub_resource type="Resource" id="Resource_i6fll"]
 script = ExtResource("1_1x0vq")
-enemy = ExtResource("4_i6fll")
-count = 3
-spawn_delay = 2.0
+enemy = ExtResource("4_5mcbm")
+count = 1
+spawn_delay = 1.0
 start_offset = 16.0
+
+[sub_resource type="Resource" id="Resource_gmrxt"]
+script = ExtResource("1_1x0vq")
+enemy = ExtResource("5_i6fll")
+count = 1
+spawn_delay = 1.0
+start_offset = 21.0
 
 [resource]
 script = ExtResource("5_gmrxt")
 id = &"w6_1"
 duration = 27.0
-entries = Array[ExtResource("1_1x0vq")]([SubResource("Resource_1x0vq"), SubResource("Resource_v0og2"), SubResource("Resource_5mcbm")])
+entries = Array[ExtResource("1_1x0vq")]([SubResource("Resource_v0og2"), SubResource("Resource_5mcbm"), SubResource("Resource_i6fll"), SubResource("Resource_gmrxt")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = false

@@ -1,37 +1,45 @@
-[gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_3ivlt"]
 [ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_agenv"]
-[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="3_x3xkn"]
-[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="4_n13m8"]
+[ext_resource type="Resource" path="res://resources/enemies/mirror_shard.tres" id="2_x3xkn"]
+[ext_resource type="Resource" path="res://resources/enemies/executioner_aide.tres" id="3_n13m8"]
+[ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="5_2hp2y"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_8af3u"]
 
-[sub_resource type="Resource" id="Resource_3ivlt"]
+[sub_resource type="Resource" id="Resource_agenv"]
 script = ExtResource("1_3ivlt")
-enemy = ExtResource("2_agenv")
+enemy = ExtResource("2_x3xkn")
 count = 2
 spawn_delay = 2.5
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_agenv"]
-script = ExtResource("1_3ivlt")
-enemy = ExtResource("3_x3xkn")
-count = 2
-spawn_delay = 2.5
-start_offset = 9.0
-
 [sub_resource type="Resource" id="Resource_x3xkn"]
 script = ExtResource("1_3ivlt")
-enemy = ExtResource("4_n13m8")
-count = 4
+enemy = ExtResource("3_n13m8")
+count = 1
+spawn_delay = 1.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_n13m8"]
+script = ExtResource("1_3ivlt")
+enemy = ExtResource("2_agenv")
+count = 1
+spawn_delay = 1.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_8af3u"]
+script = ExtResource("1_3ivlt")
+enemy = ExtResource("5_2hp2y")
+count = 2
 spawn_delay = 1.8
-start_offset = 18.0
+start_offset = 20.0
 
 [resource]
 script = ExtResource("5_8af3u")
 id = &"w7_2"
 duration = 29.0
-entries = Array[ExtResource("1_3ivlt")]([SubResource("Resource_3ivlt"), SubResource("Resource_agenv"), SubResource("Resource_x3xkn")])
+entries = Array[ExtResource("1_3ivlt")]([SubResource("Resource_agenv"), SubResource("Resource_x3xkn"), SubResource("Resource_n13m8"), SubResource("Resource_8af3u")])
 difficulty = 1.45
 is_miniboss = false
 is_boss = false

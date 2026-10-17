@@ -980,6 +980,10 @@ func _test_les_paliers_de_la_gorgone_sont_des_paliers() -> void:
 ## ordinaire » n est plus qu un changement de nom — le defaut exact de l acte 5,
 ## qui envoyait le Gardien a 140 PV et Chronos a 320 dans des vagues de troupes.
 const PROMU_PV_MAX_RAPPORT: float = 0.5
+## VAGUE 10 (chantier B2, regle du co-auteur) : un BOSS peut revenir en MINI-BOSS
+## deux actes plus tard. Il reste une tete, ses PV peuvent donc garder un peu plus
+## que la moitie, jamais les deux tiers.
+const PROMU_MINI_PV_MAX_RAPPORT: float = 0.67
 
 
 ## LE GARDE-FOU DES PROMUS. Un monstre qui declare `demoted_from` est la version
@@ -997,20 +1001,27 @@ func _test_un_promu_ne_garde_pas_les_pv_de_boss() -> void:
 			continue
 		promus[source.id] = d
 		ok(source.is_boss(), "%s : %s n etait ni boss ni mini-boss" % [d.id, source.id])
-		not_ok(d.is_boss(), "%s est de la VERMINE : il ne peut pas garder un rang de tete" % d.id)
+		# Un promu reste une tete dans UN seul cas : un BOSS revenu en MINI-BOSS
+		# (vague 10). Tout autre promu est de la vermine.
+		var mini_de_boss: bool = (d.kind == GameEnums.EnemyKind.MINIBOSS
+			and source.kind == GameEnums.EnemyKind.BOSS)
+		ok(not d.is_boss() or mini_de_boss,
+			"%s : un promu ne garde un rang de tete que s il est un boss revenu en mini-boss" % d.id)
 		ok(d.resource_path != source.resource_path, "%s est un .tres a part" % d.id)
-		ok(d.max_hp <= source.max_hp * PROMU_PV_MAX_RAPPORT,
+		var plafond: float = PROMU_MINI_PV_MAX_RAPPORT if mini_de_boss else PROMU_PV_MAX_RAPPORT
+		ok(d.max_hp <= source.max_hp * plafond,
 			"%s garde %.0f PV sur les %.0f de %s : au plus %d %%"
-			% [d.id, d.max_hp, source.max_hp, source.id, int(PROMU_PV_MAX_RAPPORT * 100.0)])
+			% [d.id, d.max_hp, source.max_hp, source.id, int(plafond * 100.0)])
 		ok(d.contact_hit() < source.contact_hit(),
 			"%s frappe le mage comme un boss (%d contre %d pour %s)"
 			% [d.id, d.contact_hit(), source.contact_hit(), source.id])
 	# Les deux anciens boss que l acte 5 NOMME ont leur version allegee. Sans ces
 	# deux lignes, retirer toute filiation rendrait le test vide et vert.
-	# CHANTIER W4 : les quatre seigneurs de l acte 4, que `lvl_13` et `lvl_16`
-	# renvoient dans des vagues de troupes.
-	for ancien: StringName in [&"warden", &"chronos", &"demon_anvil", &"demon_maw",
-			&"demon_chain", &"demon_circle"]:
+	# VAGUE 10 (chantier B2) : les echos des quatre seigneurs de l acte 4 sont
+	# retires (la regle des promotions ne leur laisse aucun acte ou revenir) ; les
+	# tetes que la regle fait revenir ont la leur (voir test_campagne_w10).
+	for ancien: StringName in [&"warden", &"chronos", &"gorgon_queen", &"blood_coagulum",
+			&"bone_reliquary", &"great_eye", &"dark_mage", &"gravecaller", &"tombol_seal"]:
 		ok(promus.has(ancien), "%s a sa version allegee (demoted_from)" % ancien)
 	# Une vague ordinaire n envoie jamais le boss lui-meme quand sa vermine existe.
 	for lv: LevelDef in ContentDB.levels.values():
@@ -1036,24 +1047,13 @@ func _test_un_promu_ne_garde_pas_les_pv_de_boss() -> void:
 ## aucun de ces niveaux ne perd ses parties sur la vague qui porte l exception.
 ## Ce sont des mini-boss poses en fin de niveau comme une montee, qui leur
 ## donnent aussi leur monde de Massacre (build_membership lit les vagues ecrites).
-const TETES_EN_VAGUE_ORDINAIRE: Dictionary = {
-	# 32 % des PV de sa vague ; le premier volant qui tient tete, annonce avant le
-	# boss. lvl_02 : 29/30, aucune defaite en w2_6.
-	"w2_6/skyreaver": "l Ecumeur du ciel annonce le boss volant de l acte",
-	# SA SEULE vague ecrite : sans elle le Gardien d ossements n a ni rencontre en
-	# campagne ni monde en Massacre. lvl_03 : 30/30.
-	"w3_5/bonewarden": "seule rencontre ecrite du Gardien d ossements",
-	# 29 % des PV de sa vague. lvl_05 perd sur le Miroir (w5_3_miniboss), jamais en w5_5.
-	"w5_5/emberlord": "le Seigneur de braise monte la derniere vague de la forge",
-	# lvl_07 perd en w7_2 et sur son mini-boss, jamais en w7_4.
-	"w7_4/totem_elder": "le blindage et le nombre, avec leur porteur d aura",
-	# Deux auras et deux soigneurs : la question du temple posee par une vague.
-	# lvl_12 : 29/30.
-	"w12_3/totem_elder": "la lecon du temple, couper les soutiens dans l ordre",
-	# Le porteur d aura du melange des quatre ; les seigneurs, eux, y descendent
-	# en ECHOS depuis le chantier W4.
-	"w13_4/totem_elder": "l aura qui protege les echos du pentacle",
-}
+##
+## VAGUE 10 (chantier B2) : la table est VIDE. Chaque tete a desormais son palier
+## a elle (un mini-boss par niveau, test_campagne_w10) et revient a l acte
+## suivant en version ORDINAIRE (demoted_from) : l Ecumeur du ciel en Ecumeur, le
+## Gardien d ossements en Garde d ossements, le Seigneur de braise en Vassal, le
+## Totem ancien en Totem fele. Une exception future se nomme ici, justifiee.
+const TETES_EN_VAGUE_ORDINAIRE: Dictionary = {}
 
 
 ## LE GARDE-FOU GENERAL. `_test_un_promu_ne_garde_pas_les_pv_de_boss` ne mordait

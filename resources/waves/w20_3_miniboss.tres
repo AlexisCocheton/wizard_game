@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_xunp0"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_elder.tres" id="2_ehnpo"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_q5nfg"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="4_i6mty"]
+[ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="5_xunp0"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_7wuqt"]
+
+[sub_resource type="Resource" id="Resource_xunp0"]
+script = ExtResource("1_xunp0")
+enemy = ExtResource("2_ehnpo")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_ehnpo"]
+script = ExtResource("1_xunp0")
+enemy = ExtResource("3_q5nfg")
+count = 2
+spawn_delay = 2.0
+start_offset = 9.0
+
+[sub_resource type="Resource" id="Resource_q5nfg"]
+script = ExtResource("1_xunp0")
+enemy = ExtResource("4_i6mty")
+count = 2
+spawn_delay = 2.2
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_i6mty"]
+script = ExtResource("1_xunp0")
+enemy = ExtResource("5_xunp0")
+count = 1
+spawn_delay = 1.0
+start_offset = 26.0
+
+[resource]
+script = ExtResource("6_7wuqt")
+id = &"w20_3_miniboss"
+duration = 33.0
+entries = Array[ExtResource("1_xunp0")]([SubResource("Resource_xunp0"), SubResource("Resource_ehnpo"), SubResource("Resource_q5nfg"), SubResource("Resource_i6mty")])
+difficulty = 1.1
+is_miniboss = true
+is_boss = false

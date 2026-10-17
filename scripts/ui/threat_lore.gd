@@ -46,9 +46,13 @@ const DUREE_MIN_S: float = 4.0
 ## la protection des autres) d abord, puis ce qui change la CIBLE, puis le
 ## mouvement, puis la masse. Le conseil lit le premier ; le briefing les deux
 ## premiers. Verrouille par test_screens_w10 (un monstre, un trait attendu).
+##
+## VAGUE 10 (chantier B2) : l ECHEANCE (Chronos) change une regle (ne pas frapper
+## coute), elle vient avec le sommeil ; la GARDE LEVEE (Gardien d ossements) avec
+## le renvoi, dont elle reprend le cycle.
 const TRAITS: Array[StringName] = [
-	&"protege", &"petrifie", &"endort", &"vole_carte", &"invoque", &"soigne",
-	&"riposte", &"renvoi", &"compte_coups", &"remonte", &"onde", &"tire",
+	&"protege", &"petrifie", &"endort", &"echeance", &"vole_carte", &"invoque", &"soigne",
+	&"riposte", &"renvoi", &"garde", &"compte_coups", &"remonte", &"onde", &"tire",
 	&"nuee", &"divise", &"jumeaux", &"revient", &"reanime", &"devore", &"brise",
 	&"meneur", &"vole", &"enrage", &"miroir", &"rapide", &"imprevisible",
 	&"cameleon", &"colosse", &"immobile", &"lent",
@@ -71,7 +75,8 @@ const DEGATS: StringName = &"degats"
 
 ## Trait -> reponse. Une ligne par trait de TRAITS (verifie par le test).
 const REPONSE_DU_TRAIT: Dictionary = {
-	&"protege": DISSIPER, &"petrifie": PIOCHE, &"endort": RAPIDE,
+	&"protege": DISSIPER, &"petrifie": PIOCHE, &"endort": RAPIDE, &"echeance": RAPIDE,
+	&"garde": DUREE,
 	&"vole_carte": RAPIDE, &"invoque": DUREE, &"soigne": CIBLE,
 	&"riposte": GROS_SORT, &"renvoi": GROS_SORT, &"compte_coups": GROS_SORT,
 	&"remonte": GROS_SORT, &"onde": CIBLE, &"tire": MUR, &"nuee": ZONE,
@@ -136,6 +141,8 @@ static func has_trait(def: EnemyDef, t: StringName) -> bool:
 		&"protege": return def.aura_shield_radius > 0.0
 		&"petrifie": return def.blocks_cards > 0
 		&"endort": return def.sleep_interval > 0.0
+		&"echeance": return def.has_deadline()
+		&"garde": return def.guard_block_pct > 0.0 and def.reflect_pct <= 0.0 and def.reflect_window > 0.0
 		&"vole_carte": return def.steal_interval > 0.0
 		&"invoque":
 			return def.summon_interval > 0.0 and def.summon_def != null \
@@ -189,6 +196,10 @@ static func trait_text(t: StringName, def: EnemyDef) -> String:
 			return "petrifie %s de ta main" % ("une carte" if def.blocks_cards <= 1
 				else "%d cartes" % def.blocks_cards)
 		&"endort": return "son sommeil coupe ta magie"
+		&"echeance":
+			return ("se plante : frappe-le vite" if def.deadline_penalty > 0
+				else "se plante, puis s emballe")
+		&"garde": return "leve sa garde : les coups glissent"
 		&"vole_carte": return "vole ton sort le plus long"
 		&"invoque": return "appelle des renforts (%s)" % def.summon_def.display_name
 		&"soigne": return "soigne les autres"
@@ -209,12 +220,14 @@ static func trait_text(t: StringName, def: EnemyDef) -> String:
 		&"vole": return "vole au-dessus des murs"
 		&"enrage": return "accelere quand on le frappe"
 		&"miroir": return "suit ta vitesse"
-		&"rapide": return "rapide"
+		&"rapide": return "fonce par a-coups" if def.burst_move else "rapide"
 		&"imprevisible": return _mouvement(def)
 		&"cameleon": return "change d element"
 		&"colosse":
 			if def.parts_count > 0:
 				return "a %d parties a briser" % def.parts_count
+			if def.first_hit_shield and def.shield_regen > 0.0:
+				return "son armure se referme"
 			return "encaisse le premier coup" if def.first_hit_shield else "encaisse beaucoup"
 		&"immobile": return "n avance jamais"
 		&"lent": return "lent"
@@ -255,6 +268,11 @@ static func trait_advice(t: StringName, def: EnemyDef) -> String:
 		&"protege": return "Protege les monstres autour de lui : abats-le d abord"
 		&"petrifie": return "Son regard fige tes cartes : tue-le en premier pour les liberer"
 		&"endort": return "Son sommeil t empeche de lancer : tue-le pendant qu il veille"
+		&"echeance":
+			if def.deadline_penalty > 0:
+				return "Quand il se plante, frappe-le avant la fin du sablier : sinon tu perds de la vitesse"
+			return "Quand il se plante, frappe-le : sinon il repart plus vite"
+		&"garde": return "Sa garde amortit les coups, pas les zones ni le poison"
 		&"vole_carte": return "Il vole tes sorts les plus longs : tue-le avant qu il les lance"
 		&"invoque":
 			return "Appelle des renforts (%s) : tue-le en premier pour couper le flux" \

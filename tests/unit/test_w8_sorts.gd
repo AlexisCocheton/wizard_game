@@ -345,11 +345,16 @@ func _test_les_raretes_demandees() -> void:
 
 ## Chaque carte neuve s obtient : elle est proposee en campagne (carte nouvelle
 ## ou recompense), et c est une carte que le joueur ne possede pas encore la.
+##
+## VAGUE 10 (chantier B2) : une COMMUNE (le Dard) se decouvre par le deck de base
+## du niveau dont elle est la commune nouvelle (LevelDef.base_commons), jamais en
+## recompense ; une rare (l Elan) par un objectif.
 func _test_les_cartes_neuves_s_obtiennent_en_campagne() -> void:
 	for id in [&"venom_dart", &"time_surge"]:
 		var ou: Array[String] = []
 		for lv: LevelDef in ContentDB.levels.values():
-			for liste: Array in [lv.levelup_cards, lv.objective_rewards]:
+			var nouvelle: Array = [lv.new_common()] if lv.new_common() != null else []
+			for liste: Array in [lv.levelup_cards, lv.objective_rewards, nouvelle]:
 				for c in liste:
 					if c != null and (c as SpellCard).id == id:
 						ou.append(String(lv.id))

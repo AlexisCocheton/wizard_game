@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_crooq"]
+
+[resource]
+script = ExtResource("1_crooq")
+id = &"obj_no_card_venom_dart"
+description = "Gagner sans lancer Dard venimeux"
+check_key = &"no_card"
+params = {
+"card": "venom_dart"
+}

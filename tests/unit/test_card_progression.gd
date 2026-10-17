@@ -411,13 +411,15 @@ func _test_visibilite_trois_etats() -> void:
 	for c0: SpellCard in lvl1.exploration_deck:
 		eq(SaveData.card_visibility(c0.id), SaveData.CARD_OBTAINED,
 			"%s, du deck d un niveau ouvert, est OBTENUE" % c0.id)
-	# OBTENABLE : une carte NOUVELLE d un niveau ouvert, jamais prise.
+	# OBTENABLE : une carte du POOL d un niveau ouvert, jamais prise. Depuis la
+	# vague 10 (chantier B2), ce pool est « cartes obtenues + communes de l acte » :
+	# une commune de l acte 1 qui n est pas au deck du premier niveau.
 	var obtenable: SpellCard = null
-	for c: SpellCard in lvl1.levelup_cards:
+	for c: SpellCard in ContentDB.act_commons(lvl1.act):
 		if c != null and not SaveData.is_discovered(c.id):
 			obtenable = c
 			break
-	ok(obtenable != null, "le premier niveau a une carte nouvelle pas encore obtenue")
+	ok(obtenable != null, "le premier niveau propose une commune de l acte pas encore obtenue")
 	if obtenable != null:
 		eq(SaveData.card_visibility(obtenable.id), SaveData.CARD_OBTAINABLE,
 			"une carte du pool d un niveau ouvert, jamais prise, est OBTENABLE")
@@ -442,7 +444,9 @@ func _test_visibilite_trois_etats() -> void:
 		return
 	eq(SaveData.card_visibility(cachee.id), SaveData.CARD_HIDDEN,
 		"hors de tout pool ouvert, jamais prise : INVISIBLE")
-	# Un objectif reussi la rend OBTENABLE, la prendre la rend OBTENUE.
+	# VAGUE 10 (chantier B2) : un objectif reussi fait ENTRER sa carte au deck de
+	# campagne du niveau (table du co-auteur), et une carte du deck d un niveau
+	# ouvert est dans le livre : elle passe donc d invisible a OBTENUE.
 	var avant: Array[SpellCard] = lvl1.objective_rewards.duplicate()
 	var rec: Array[SpellCard] = [cachee]
 	lvl1.objective_rewards = rec
@@ -450,15 +454,18 @@ func _test_visibilite_trois_etats() -> void:
 		"tant que son objectif n est pas reussi, elle reste invisible")
 	SaveData.record_victory(lvl1, GameEnums.Mode.EXPLORATION,
 		{lvl1.objectives[0].id: true}, 1)
-	eq(SaveData.card_visibility(cachee.id), SaveData.CARD_OBTAINABLE,
-		"objectif reussi : sa carte devient OBTENABLE (lisible, grisee)")
-	var niveaux: Array[LevelDef] = SaveData.levels_offering(cachee.id)
-	ok(niveaux.has(lvl1), "et le jeu sait dire OU l obtenir")
-	RunState.reset()
-	RunState.pending_offer = [cachee]
-	RunState.pick_offer(0)
+	ok(SaveData.campaign_deck(lvl1).has(cachee), "objectif reussi : sa carte entre au deck de campagne")
 	eq(SaveData.card_visibility(cachee.id), SaveData.CARD_OBTAINED,
-		"prise en combat : OBTENUE")
+		"et, au deck d un niveau ouvert, elle est OBTENUE")
+	# Le chemin de la montee de niveau, lui, reste celui d une carte du pool : la
+	# commune de l acte trouvee plus haut. La prendre la rend OBTENUE.
+	if obtenable != null:
+		ok(SaveData.levels_offering(obtenable.id).has(lvl1), "le jeu sait dire OU obtenir la commune de l acte")
+		RunState.reset()
+		RunState.pending_offer = [obtenable]
+		RunState.pick_offer(0)
+		eq(SaveData.card_visibility(obtenable.id), SaveData.CARD_OBTAINED,
+			"prise en combat : OBTENUE")
 	lvl1.objective_rewards = avant
 	RunState.reset()
 
@@ -622,11 +629,21 @@ func _test_passifs_rien_avant_l_acte_2() -> void:
 		"campagne, acte 2 : les passifs existent")
 	for c in RunState.levelup_pool(acte1, GameEnums.Mode.EXPLORATION):
 		not_ok(c.is_passive, "aucun passif dans le pool d un niveau d acte 1 (%s)" % c.id)
+	# VAGUE 10 (chantier B2) : a l acte 2, les passifs OBTENUS sont proposables —
+	# les six de base des qu un niveau de l acte 2 est ouvert, puis ceux que les
+	# victoires debloquent (LevelDef.passive_unlocks). Un passif verrouille ne
+	# l est pas.
+	for lv0: LevelDef in ContentDB.campaign_levels():
+		if lv0.allows_passives():
+			SaveData.unlock_level(lv0.id)
+			break
 	var passifs_acte2: int = 0
 	for c2 in RunState.levelup_pool(acte2, GameEnums.Mode.EXPLORATION):
 		if c2.is_passive:
 			passifs_acte2 += 1
-	eq(passifs_acte2, _passifs().size(), "acte 2 : tous les passifs sont proposables")
+			ok(SaveData.is_discovered(c2.id), "acte 2 : %s, propose, est obtenu" % c2.id)
+	eq(passifs_acte2, ContentDB.base_passives().size(),
+		"acte 2, rien de debloque : les passifs de base sont proposables, et eux seuls")
 	# Ni propose...
 	RunState.reset()
 	RunState.current_level_def = acte1
@@ -1002,17 +1019,21 @@ func _test_contenu_de_niveau_reel() -> void:
 	var pool_ouvert: Dictionary = {}
 	for c0 in RunState.levelup_pool(ouvert, GameEnums.Mode.EXPLORATION):
 		pool_ouvert[c0.id] = true
+	# VAGUE 10 (chantier B2) : ce que le premier niveau fait decouvrir a la montee
+	# de niveau, ce sont les COMMUNES DE SON ACTE qu il ne porte pas ; ce que le
+	# second cache encore, ce sont ses recompenses d objectif (le pool d un niveau
+	# ouvert ne les montre pas).
 	var nouv_o: Array[SpellCard] = []
-	for c1: SpellCard in ouvert.levelup_cards:
+	for c1: SpellCard in ContentDB.act_commons(ouvert.act):
 		if c1 != null and not SaveData.is_discovered(c1.id):
 			nouv_o.append(c1)
 	var nouv_f: Array[SpellCard] = []
-	for c1b: SpellCard in ferme.levelup_cards:
+	for c1b: SpellCard in ferme.objective_rewards:
 		if c1b != null and not SaveData.is_discovered(c1b.id) and not pool_ouvert.has(c1b.id):
 			nouv_f.append(c1b)
 	var recompense: SpellCard = ouvert.objective_reward(0)
-	ok(not nouv_o.is_empty(), "le premier niveau fait decouvrir une carte pas encore obtenue")
-	ok(not nouv_f.is_empty(), "le second aussi, qu aucun pool ouvert ne montre")
+	ok(not nouv_o.is_empty(), "le premier niveau fait decouvrir une commune de l acte pas encore obtenue")
+	ok(not nouv_f.is_empty(), "le second cache ses recompenses, qu aucun pool ouvert ne montre")
 	ok(recompense != null and not pool_ouvert.has(recompense.id)
 		and not SaveData.is_discovered(recompense.id),
 		"la carte du premier objectif n est dans aucun pool ouvert")
@@ -1025,24 +1046,40 @@ func _test_contenu_de_niveau_reel() -> void:
 		ok(sorts.has(c), "et montree grisee au grimoire (%s)" % c.id)
 	for c2 in nouv_f:
 		eq(SaveData.card_visibility(c2.id), SaveData.CARD_HIDDEN,
-			"carte nouvelle d un niveau FERME : invisible (%s)" % c2.id)
+			"recompense d un niveau FERME : invisible (%s)" % c2.id)
 		not_ok(sorts.has(c2), "et absente du grimoire (%s)" % c2.id)
 	eq(SaveData.card_visibility(recompense.id), SaveData.CARD_HIDDEN,
 		"carte d un objectif pas encore reussi : invisible")
-	# Le niveau 1 gagne avec son premier objectif : la carte de l objectif
-	# devient obtenable, et le niveau suivant s ouvre avec ses cartes nouvelles.
+	# Le niveau 1 gagne avec son premier objectif : la carte de l objectif entre
+	# au deck de campagne (OBTENUE), et le niveau suivant s ouvre avec son deck de
+	# base (obtenu) ; ses recompenses restent cachees tant que ses objectifs ne
+	# sont pas reussis.
 	SaveData.record_victory(ouvert, GameEnums.Mode.EXPLORATION,
 		{ouvert.objectives[0].id: true}, 1)
-	eq(SaveData.card_visibility(recompense.id), SaveData.CARD_OBTAINABLE,
-		"objectif reussi : sa carte devient obtenable")
-	for c3 in nouv_f:
-		eq(SaveData.card_visibility(c3.id), SaveData.CARD_OBTAINABLE,
-			"niveau suivant ouvert : ses cartes nouvelles deviennent obtenables (%s)" % c3.id)
+	eq(SaveData.card_visibility(recompense.id), SaveData.CARD_OBTAINED,
+		"objectif reussi : sa carte entre au deck, OBTENUE")
+	for c3: SpellCard in ferme.base_commons:
+		eq(SaveData.card_visibility(c3.id), SaveData.CARD_OBTAINED,
+			"niveau suivant ouvert : son deck de base est obtenu (%s)" % c3.id)
+	for c4 in nouv_f:
+		eq(SaveData.card_visibility(c4.id), SaveData.CARD_HIDDEN,
+			"niveau suivant ouvert : ses recompenses restent cachees (%s)" % c4.id)
 	# La compteur suit : une carte PRISE passe d une vignette grisee a une
 	# obtenue, le total visible ne bouge pas.
+	# La carte prise doit etre ENCORE a obtenir : la victoire vient d ouvrir le
+	# niveau suivant, dont le deck de base (une commune de l acte) est obtenu.
+	var a_prendre: SpellCard = null
+	for c5: SpellCard in nouv_o:
+		if SaveData.card_visibility(c5.id) == SaveData.CARD_OBTAINABLE:
+			a_prendre = c5
+			break
+	ok(a_prendre != null, "une commune de l acte reste a prendre apres la victoire")
+	if a_prendre == null:
+		SaveData.reset_profile()
+		return
 	var avant: Array = SaveData.card_counts(0)
 	RunState.reset()
-	RunState.pending_offer = [nouv_o[0]]
+	RunState.pending_offer = [a_prendre]
 	RunState.pick_offer(0)
 	var apres: Array = SaveData.card_counts(0)
 	eq(int(apres[0]), int(avant[0]) + 1, "prendre une carte grisee : une obtenue de plus")
@@ -1061,22 +1098,20 @@ func _test_ou_obtenir_dit_la_montee() -> void:
 	for c: SpellCard in lvl1.exploration_deck:
 		eq(SaveData.card_visibility(c.id), SaveData.CARD_OBTAINED,
 			"%s, du deck du niveau 1, n a pas de 'ou l obtenir' : elle est obtenue" % c.id)
-	var sauve: Array[SpellCard] = lvl1.levelup_cards.duplicate()
+	# VAGUE 10 (chantier B2) : la carte « a prendre a la montee de niveau » d un
+	# niveau ouvert est une commune de son acte qu il ne porte pas.
 	var nouvelle: SpellCard = null
-	for c2: SpellCard in _sorts(GameEnums.Rarity.RARE):
-		if SaveData.card_visibility(c2.id) == SaveData.CARD_HIDDEN:
+	for c2: SpellCard in ContentDB.act_commons(lvl1.act):
+		if SaveData.card_visibility(c2.id) == SaveData.CARD_OBTAINABLE:
 			nouvelle = c2
 			break
-	ok(nouvelle != null, "une rare invisible sur un profil neuf")
+	ok(nouvelle != null, "une commune de l acte a obtenir sur un profil neuf")
 	if nouvelle == null:
 		return
-	var nouv: Array[SpellCard] = [nouvelle]
-	lvl1.levelup_cards = nouv
 	var phrase2: String = CollectionStyle.where_to_obtain(nouvelle)
 	ok(phrase2.contains("montee") and phrase2.contains(lvl1.display_name),
-		"carte nouvelle : a prendre a la montee de niveau (%s)" % phrase2)
+		"commune de l acte : a prendre a la montee de niveau (%s)" % phrase2)
 	not_ok(phrase2.contains("joue "), "et pas de 'joue tel niveau' (%s)" % phrase2)
-	lvl1.levelup_cards = sauve
 	SaveData.reset_profile()
 
 

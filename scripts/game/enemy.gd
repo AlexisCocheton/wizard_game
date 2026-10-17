@@ -183,6 +183,7 @@ func setup(def: EnemyDef, diff: float = 1.0) -> void:
 	_v3_setup(def)
 	_setup_v3(def)
 	_brk_setup(def)
+	_b2_setup(def)  # VAGUE 10 B2 : echeance, armure, garde
 
 
 func _ready() -> void:
@@ -395,6 +396,7 @@ func advance(world_delta: float) -> void:
 	# bonne carte. Le cycle tourne donc toujours, et etourdir la garde reste une
 	# reponse valable — on attend qu elle retombe sans encaisser de renvoi.
 	_tick_reflect(world_delta)
+	_b2_tick_always(world_delta)  # VAGUE 10 B2 : armure qui se referme, hate
 	# Mecaniques v3 qui tournent MEME etourdi (horloge, cameleon, jumeau a terre).
 	if _tick_v3_always(world_delta):
 		return
@@ -414,6 +416,9 @@ func advance(world_delta: float) -> void:
 		_stun_time = 0.0
 	# Mecaniques v3 qu un etourdissement suspend (vol de carte, rappel des sbires).
 	_tick_v3_active(world_delta)
+	# VAGUE 10 B2 : ECHEANCE. Plante pendant sa fenetre, il n avance pas.
+	if _b2_tick_deadline(world_delta):
+		return
 	# BRISEUR DE TERRAIN : plante pendant son geste, il n avance pas.
 	if _brk_tick(world_delta):
 		return
@@ -443,6 +448,7 @@ func advance(world_delta: float) -> void:
 		var perdues: int = definition.parts_count - _parts.size()
 		speed *= maxf(1.0 - perdues * definition.part_slow_pct * 0.01, 0.15)
 	speed *= _v3_speed_factor()
+	speed *= _b2_speed_factor()  # VAGUE 10 B2 : echeance manquee
 
 	# Invocation : elle suit `world_delta`, donc le flux s accelere avec le
 	# multiplicateur comme le reste du monde. Sinon a x4 le boss inviterait
@@ -684,6 +690,7 @@ func take_damage(amount: float, tags: Array, continu: bool = false) -> bool:
 		elif RunState.world_rng.randf() < definition.dodge_chance:
 			return false
 	amount *= _chameleon_factor(tags)
+	amount *= _b2_guard_factor(continu)  # VAGUE 10 B2 : garde levee
 
 	# IMMUNISE AUX N PREMIERS COUPS. On teste ICI, apres l esquive et avant tout
 	# calcul de PV : la PUISSANCE du coup n entre pas en ligne de compte, c est un
@@ -711,10 +718,15 @@ func take_damage(amount: float, tags: Array, continu: bool = false) -> bool:
 		_refresh_hp_bar()
 		return false
 
+	# VAGUE 10 B2 : un degat recu empeche l armure de se refermer ; un COUP pendant
+	# l echeance l honore.
+	_b2_on_damage()
+	_b2_on_hit(continu)
 	if _shield_up:
 		# Coup OU degat continu : le bouclier du premier coup ne sert qu une fois,
 		# il tombe a la premiere morsure (voir CONTINUOUS_FEEDBACK_INTERVAL).
 		_shield_up = false
+		_b2_play_shield_pose()  # VAGUE 10 B2 : la pose de parade, enfin jouee
 		if _body != null:
 			_body.set_shield(false)
 		if _shield_fx != null and is_instance_valid(_shield_fx):
@@ -779,10 +791,25 @@ func _back_to_walk() -> void:
 
 ## Animation d attaque (tir de l archer, coup du berserker).
 func play_attack() -> void:
-	if _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "attack"):
-		_anim.play("attack")
+	if _anim == null or not _anim.visible:
+		return
+	# VAGUE 10 B2 (revue A4, §1.3) : une feuille de moine n a pas d attaque mais
+	# un geste d incantation (Pretre goule, Corniste, Miroir) ; il n etait jamais
+	# joue. La pose `cast` est le repli de l attaque.
+	var pose: String = attack_pose(sheet_key())
+	if pose != "":
+		_anim.play(pose)
 		if not _anim.animation_finished.is_connected(_back_to_walk):
 			_anim.animation_finished.connect(_back_to_walk)
+
+
+## Pose d attaque d une feuille : `attack`, a defaut `cast` (VAGUE 10 B2), "" si
+## elle n a ni l une ni l autre. Statique : les tests la verifient sans scene.
+static func attack_pose(key: StringName) -> String:
+	for pose in ["attack", "cast"]:
+		if AnimCatalog.has_anim(key, pose):
+			return pose
+	return ""
 
 
 func heal(amount: float) -> void:
@@ -1028,8 +1055,8 @@ func force_reflect_window(duration: float) -> void:
 ## Cadence de la garde : elle se leve, elle retombe, et le joueur apprend le
 ## rythme. Un renvoi permanent serait une interdiction de jouer, pas un choix.
 func _tick_reflect(world_delta: float) -> void:
-	if definition == null or definition.reflect_pct <= 0.0 \
-			or definition.reflect_interval <= 0.0 or definition.reflect_window <= 0.0:
+	# VAGUE 10 B2 : le cycle sert aussi la GARDE LEVEE (reflect_pct = 0).
+	if definition == null or not definition.has_guard_cycle():
 		return
 	if _reflect_left > 0.0:
 		_reflect_left -= world_delta
@@ -1065,8 +1092,14 @@ func _open_reflect(duration: float) -> void:
 		#
 		# `hex_sigil` est un sigle tournant, de forme nettement differente, et il
 		# remplit toute sa case (occupancy 1,00) donc il se lit a pleine taille.
+		# VAGUE 10 B2 : la GARDE LEVEE (aucun renvoi, les coups glissent) prend un
+		# sigle ACIER, pas l ambre du renvoi : les deux demandent des reponses
+		# differentes (frapper fort plus tard / ne pas frapper du tout).
+		var teinte: Color = Color(1.0, 0.72, 0.25, 0.95)
+		if definition != null and definition.reflect_pct <= 0.0 and definition.guard_block_pct > 0.0:
+			teinte = Color(0.62, 0.80, 1.0, 0.95)
 		_reflect_fx = Fx.sprite(self, "hex_sigil", Vector2.ZERO,
-			visual_radius() * 2.2, true, Color(1.0, 0.72, 0.25, 0.95))
+			visual_radius() * 2.2, true, teinte)
 		if _reflect_fx is CanvasItem:
 			(_reflect_fx as CanvasItem).z_index = 5
 	if _anim != null and _anim.visible and definition != null \
@@ -1270,6 +1303,7 @@ func dispel() -> void:
 	_stun_time = 0.0
 	# CHANTIER W8 : la dissipation COUPE l aura d un protecteur (voir plus bas).
 	_w8_on_dispel()
+	_b2_calm = 0.0  # VAGUE 10 B2 : l armure repart de zero apres une dissipation
 	if _shield_up:
 		_shield_up = false
 		if _body != null:
@@ -2356,6 +2390,7 @@ func mech_caption() -> String:
 	var brise: String = break_caption()
 	if brise != "":
 		lignes.append(brise)
+	lignes.append_array(_b2_caption_lines())  # VAGUE 10 B2
 	# La legende est calee par le BAS : deux lignes vides laissent la place des
 	# logos du Cameleon, poses au pied de la boite, sous le texte.
 	if not lignes.is_empty() and _cham_chips_shown():
@@ -2705,3 +2740,185 @@ func _w10_wind_speed(speed: float, marche: float) -> float:
 	if speed > cap:
 		speed -= (speed - cap) * f
 	return speed
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B2 — les mecaniques des tetes qui n en avaient pas
+# (groupe « Tetes de la vague 10 » d EnemyDef). Chaque fonction est appelee par
+# UNE ligne depuis un point d accroche existant (setup, advance, take_damage,
+# mech_caption), commentee VAGUE 10 B2, pour que le bloc se lise d un tenant.
+# =====================================================================
+
+## Echeance : minuteur avant la prochaine fenetre, temps restant de la fenetre
+## ouverte (0 = fermee), et acceleration gagnee sur une echeance manquee.
+var _b2_deadline_timer: float = 0.0
+var _b2_deadline_left: float = 0.0
+var _b2_haste_left: float = 0.0
+## Compteurs lus par les tests : echeances honorees et manquees.
+var b2_deadlines_met: int = 0
+var b2_deadlines_missed: int = 0
+## Armure qui se referme : temps de monde depuis le dernier degat recu.
+var _b2_calm: float = 0.0
+## Boucliers revenus depuis l apparition (lu par les tests).
+var b2_shield_regens: int = 0
+## Coups amortis par la garde levee (lu par les tests).
+var b2_guarded_hits: int = 0
+
+
+func _b2_setup(def: EnemyDef) -> void:
+	# Premiere echeance a l intervalle PLEIN : le joueur voit d abord le boss
+	# descendre, puis le voit se planter une premiere fois.
+	_b2_deadline_timer = def.deadline_interval
+	_b2_deadline_left = 0.0
+	_b2_haste_left = 0.0
+	b2_deadlines_met = 0
+	b2_deadlines_missed = 0
+	_b2_calm = 0.0
+	b2_shield_regens = 0
+	b2_guarded_hits = 0
+
+
+## Temps de monde qui passe pour TOUT ce qui ne depend pas de l etourdissement :
+## le calme de l armure et l acceleration d une echeance manquee.
+func _b2_tick_always(world_delta: float) -> void:
+	if definition == null:
+		return
+	if _b2_haste_left > 0.0:
+		_b2_haste_left = maxf(0.0, _b2_haste_left - world_delta)
+	if definition.first_hit_shield and definition.shield_regen > 0.0 and not _shield_up:
+		_b2_calm += world_delta
+		if _b2_calm >= definition.shield_regen:
+			_b2_raise_shield()
+
+
+## L armure se referme : meme bouclier, meme halo, meme son qu a l apparition.
+func _b2_raise_shield() -> void:
+	_b2_calm = 0.0
+	_shield_up = true
+	b2_shield_regens += 1
+	if _body != null:
+		_body.set_shield(true)
+	if Fx.enabled() and (_shield_fx == null or not is_instance_valid(_shield_fx)):
+		_shield_fx = Fx.halo(self, visual_radius() * 1.05, Color(0.85, 0.9, 1.0, 0.9))
+	if _anim != null and _anim.visible and AnimCatalog.has_anim(sheet_key(), "guard"):
+		_anim.play("guard")
+		if not _anim.animation_finished.is_connected(_back_to_walk):
+			_anim.animation_finished.connect(_back_to_walk)
+	AudioBus.play_sfx(&"ward_deep")
+
+
+## L echeance, appelee APRES l etourdissement (un monstre etourdi ne rouvre pas
+## de fenetre et sa fenetre en cours attend). Vrai = il est PLANTE : advance()
+## s arrete, il ne bouge pas pendant la fenetre.
+func _b2_tick_deadline(world_delta: float) -> bool:
+	if definition == null or not definition.has_deadline():
+		return false
+	if _b2_deadline_left > 0.0:
+		_b2_deadline_left -= world_delta
+		if _b2_deadline_left <= 0.0:
+			_b2_deadline_missed()
+			return false
+		return true
+	_b2_deadline_timer -= world_delta
+	if _b2_deadline_timer <= 0.0:
+		_b2_deadline_timer = definition.deadline_interval
+		_b2_deadline_left = definition.deadline_window
+		play_attack()
+		AudioBus.play_sfx(&"seal_tick")
+		return true
+	return false
+
+
+## Fenetre ouverte en ce moment ?
+func deadline_open() -> bool:
+	return _b2_deadline_left > 0.0
+
+
+func deadline_time_left() -> float:
+	return maxf(_b2_deadline_left, 0.0)
+
+
+## Un COUP pendant la fenetre : l echeance est honoree. Le degat continu ne compte
+## pas (DEC-054) : il ne « paie » pas a l heure, il ronge.
+func _b2_on_hit(continu: bool) -> void:
+	if continu:
+		return
+	_b2_calm = 0.0
+	if _b2_deadline_left > 0.0:
+		_b2_deadline_left = 0.0
+		b2_deadlines_met += 1
+		# Etourdi par la reponse : on pose le minuteur directement, sans passer par
+		# la resistance au ralentissement (Chronos n en sent aucun) — c est la
+		# recompense de la mecanique, pas un effet de sort.
+		_stun_time = maxf(_stun_time, definition.deadline_stun)
+		AudioBus.play_sfx(&"shield_break")
+
+
+## Le degat continu, lui, empeche quand meme l armure de se refermer : on est en
+## train de le frapper.
+func _b2_on_damage() -> void:
+	_b2_calm = 0.0
+
+
+func _b2_deadline_missed() -> void:
+	_b2_deadline_left = 0.0
+	b2_deadlines_missed += 1
+	if definition.deadline_haste_pct > 0.0:
+		_b2_haste_left = definition.deadline_haste_time
+	if definition.deadline_penalty > 0 and battlefield != null:
+		battlefield.b2_deadline_missed(self, definition.deadline_penalty)
+
+
+## Multiplicateur de vitesse d une echeance manquee (1 sinon).
+func _b2_speed_factor() -> float:
+	if definition == null or _b2_haste_left <= 0.0:
+		return 1.0
+	return 1.0 + definition.deadline_haste_pct * 0.01
+
+
+## La garde levee : part des degats d un COUP qui passe pendant la garde.
+func _b2_guard_factor(continu: bool) -> float:
+	if definition == null or definition.guard_block_pct <= 0.0 or continu:
+		return 1.0
+	if _reflect_left <= 0.0:
+		return 1.0
+	b2_guarded_hits += 1
+	return 1.0 - clampf(definition.guard_block_pct, 0.0, 95.0) * 0.01
+
+
+## La garde est-elle levee en ce moment (garde de renvoi OU garde levee) ?
+func guard_up() -> bool:
+	return _reflect_left > 0.0
+
+
+## Legendes de la section, ajoutees par mech_caption().
+func _b2_caption_lines() -> Array[String]:
+	var lignes: Array[String] = []
+	if _b2_deadline_left > 0.0:
+		lignes.append("ECHEANCE %d s : frappe-le !" % ceili(_b2_deadline_left))
+	# Courte : la boite de legende (Fx.mech_label, 420 px centres sur le
+	# monstre) n est pas ramenee dans le cadre, et un Gardien pres du bord
+	# coupait « GARDE : les coups glissent » (capture du 17/10).
+	if definition != null and definition.guard_block_pct > 0.0 and _reflect_left > 0.0:
+		lignes.append("GARDE : coups amortis")
+	return lignes
+
+
+## Pose du bouclier qui absorbe un coup (Squelette pareur, Chevalier du vide) :
+## la feuille la porte souvent et ne la jouait jamais (revue A4, §1.3).
+func _b2_play_shield_pose() -> void:
+	if _anim == null or not _anim.visible:
+		return
+	var pose: String = shield_pose(sheet_key())
+	if pose != "":
+		_anim.play(pose)
+		if not _anim.animation_finished.is_connected(_back_to_walk):
+			_anim.animation_finished.connect(_back_to_walk)
+
+
+## Pose de parade d une feuille : `shield`, a defaut `guard`, "" sinon.
+static func shield_pose(key: StringName) -> String:
+	for pose in ["shield", "guard"]:
+		if AnimCatalog.has_anim(key, pose):
+			return pose
+	return ""

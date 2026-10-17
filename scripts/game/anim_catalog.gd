@@ -248,6 +248,10 @@ const MODULATE: Dictionary = {
 	## qui descend dans le MEME niveau (`lvl_04`, vague 5). Pierre de tombe
 	## moussue : les pointes orange virent au vert-de-gris.
 	"terrain_breaker": Color(0.62, 0.95, 0.62),
+	## VAGUE 10 (chantier B2) : les mini-boss revenus en ordinaires gardent la
+	## teinte de leur original quand celui-ci en a une (meme espece, plus petite).
+	"tomb_breaker": Color(0.62, 0.95, 0.62),
+	"pit_novice": Color(0.50, 0.72, 1.0),
 	## Les ECHOS des anciens boss (acte 5) : la feuille de leur boss, pale et
 	## translucide. C est ce qui les separe de l Enfant, qui porte la feuille de
 	## Chronos a pleine taille : le boss final ne doit pas sembler arriver en vague 1.
@@ -257,10 +261,15 @@ const MODULATE: Dictionary = {
 	## spectrale. Elle les separe aussi des monstres communs qui portent la meme
 	## feuille (Golem, Glouton, Berserker, Gardien-totem) : sans elle, un echo de
 	## Sesh et un Glouton seraient le meme dessin a la meme taille.
-	"demon_anvil_echo": Color(0.72, 0.85, 1.0, 0.82),
-	"demon_maw_echo": Color(0.72, 0.85, 1.0, 0.82),
-	"demon_chain_echo": Color(0.72, 0.85, 1.0, 0.82),
-	"demon_circle_echo": Color(0.72, 0.85, 1.0, 0.82),
+	## VAGUE 10 (chantier B2) : les echos des quatre seigneurs sont retires (un
+	## boss de l acte 4 ne revient nulle part sous la regle des promotions) ; les
+	## boss revenus en mini-boss ou en ordinaires portent la meme teinte, qui dit
+	## « ce n est plus lui, c est son echo ».
+	"reliquary_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"great_eye_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"dark_mage_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"tombol_echo": Color(0.72, 0.85, 1.0, 0.82),
+	"gravecaller_echo": Color(0.72, 0.85, 1.0, 0.82),
 }
 
 

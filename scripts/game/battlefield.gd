@@ -2763,3 +2763,27 @@ func _w10_recast(r: Dictionary) -> void:
 		EffectRegistry.dispatch(s, ctx)
 	RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
 	w10_recasts_done += 1
+
+
+# =====================================================================
+# VAGUE 10, CHANTIER B2 — ce que les mecaniques de tetes font au MAGE.
+# L Enemy decide QUAND (Enemy._b2_*), le terrain fait payer le mage, par le
+# meme chemin que tout autre coup (speed_before_hit, SpeedGauge, mage_hit) :
+# l ecran de defaite et les objectifs « ne pas etre touche par » le voient.
+# =====================================================================
+
+## Echeances manquees depuis la creation du terrain (lu par les tests).
+var b2_deadlines_missed: int = 0
+
+
+## L ECHEANCE MANQUEE : le mage perd `points` de vitesse, imputes au monstre.
+func b2_deadline_missed(source: Enemy, points: int) -> void:
+	if points <= 0:
+		return
+	b2_deadlines_missed += 1
+	speed_before_hit = SpeedGauge.speed_percent
+	SpeedGauge.take_hit(points)
+	mage_hit.emit(points, source.definition if source != null else null)
+	if Fx.enabled() and source != null and is_instance_valid(source):
+		Fx.impact(self, source.position, Color(0.95, 0.25, 0.30), source.radius() * 1.4)
+	AudioBus.play_sfx(&"hp_lost")

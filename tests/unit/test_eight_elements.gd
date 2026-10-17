@@ -491,21 +491,43 @@ func _test_perce_resistance_et_solidite() -> void:
 
 # --- 5. LA PROPOSITION -------------------------------------------------------
 
+## VAGUE 10 (chantier B2) : un passif n est plus propose d office des l acte 2. La
+## VICTOIRE d un niveau le debloque (LevelDef.passive_unlocks), et le pool de
+## montee de niveau propose les passifs DEBLOQUES. Un passif elementaire est donc
+## proposable s il est debloque par un niveau (campagne ou quete annexe) ; ceux
+## que la campagne laisse aux quetes annexes sont nommes dans
+## test_campagne_w10.RESERVE_PASSIFS_ANNEXES. Et la route est jouee : la campagne
+## finie, chaque passif qu elle debloque est au pool d un niveau de l acte 2.
 func _test_les_passifs_elementaires_sont_proposables() -> void:
 	RunState.reset()
-	var vus: Dictionary = {}
+	var reserve: Array = load("res://tests/unit/test_campagne_w10.gd").RESERVE_PASSIFS_ANNEXES
+	var debloques: Dictionary = {}
 	for l: LevelDef in ContentDB.levels.values():
-		if not l.allows_passives():
-			continue
-		for c in RunState.levelup_pool(l, GameEnums.Mode.EXPLORATION):
-			if c.is_passive:
-				vus[c.id] = true
+		for p: SpellCard in l.passive_unlocks:
+			if p != null:
+				debloques[p.id] = true
+	SaveData.reset_profile()
+	var acte_2: LevelDef = null
+	for l2: LevelDef in ContentDB.campaign_levels():
+		SaveData.unlock_level(l2.id)
+		SaveData.record_victory(l2, GameEnums.Mode.EXPLORATION, {}, 1)
+		if acte_2 == null and l2.allows_passives():
+			acte_2 = l2
+	var pool: Dictionary = {}
+	if acte_2 != null:
+		for c0 in RunState.levelup_pool(acte_2, GameEnums.Mode.EXPLORATION):
+			if c0.is_passive:
+				pool[c0.id] = true
 	var n: int = 0
 	for c: SpellCard in ContentDB.cards.values():
 		if c != null and c.is_passive and &"passive_element" in c.effect_keys():
 			n += 1
-			ok(vus.has(c.id), "%s est proposable en campagne des l acte 2" % c.id)
+			ok(debloques.has(c.id) or reserve.has(c.id),
+				"%s est debloque par un niveau ou reserve aux quetes annexes" % c.id)
+			if debloques.has(c.id):
+				ok(pool.has(c.id), "%s, debloque, est propose a la montee de niveau" % c.id)
 	ok(n >= 2 * GameEnums.ELEMENTS.size(), "au moins deux passifs par element au catalogue")
+	SaveData.reset_profile()
 
 
 ## L objectif « N sorts de givre » a change d id (le givre est la glace) : une

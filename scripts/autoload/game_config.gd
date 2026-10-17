@@ -496,6 +496,15 @@ func xp_required(level: int) -> int:
 ## LISIBLES, ceux qui apprennent ce qu est un passif (meme raison que la table
 ## de rarete des passifs, RunState.PASSIVE_RARITY_WEIGHTS). Un id inconnu ou qui
 ## n est pas un passif fait rougir test_campaign_progression.
+##
+## CONFIRME par le chantier de contenu (vague 10, B2) : ce sont bien les plus
+## simples. Chacun dit en une ligne une chose que le debutant voit tout de suite
+## (un mur pousse, je lance plus vite, je pioche plus vite, je monte plus vite, un
+## allie arrive, une mort me rend de la vitesse) et aucun ne depend d un element
+## ni d une regle a apprendre (perce-resistance, explosion de mort, double
+## incantation). Les 24 autres : un par niveau de campagne des l acte 2 (17,
+## LevelDef.passive_unlocks), sept pour les quetes annexes (liste dans
+## test_campagne_w10.RESERVE_PASSIFS_ANNEXES).
 const BASE_PASSIVES: Array[StringName] = [
 	&"pass_bark", &"pass_celerity", &"pass_quickhand", &"pass_scholar",
 	&"pass_companion", &"pass_pulse",

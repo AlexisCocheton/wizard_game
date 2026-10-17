@@ -843,7 +843,8 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 
 	if avance:
 		for nxt in level.next_levels:
-			unlock_level(nxt)
+			if _all_previous_cleared(nxt):
+				unlock_level(nxt)
 
 	var newly: bool = false
 	for c in objective_rewards_unlocked(level):
@@ -851,6 +852,23 @@ func record_victory(level: LevelDef, mode: GameEnums.Mode,
 			newly = true
 	profile_changed.emit()
 	return newly
+
+
+## VAGUE 10 (chantier B2, revue A4 §2.7 point 8) : un niveau marque
+## `requires_all_previous` (lvl_13, le pentacle brise) ne s ouvre qu une fois
+## FINIS tous les niveaux de campagne qui le citent dans `next_levels` (les
+## quatre demons). Tout autre niveau s ouvre a la premiere victoire d un de ses
+## precedents, comme avant : c est la regle d une fourche (lvl_21 apres lvl_05
+## OU lvl_06), qu une regle generale aurait verrouillee. Un profil qui a deja
+## lvl_13 ouvert le garde : on n enleve jamais rien a un profil.
+func _all_previous_cleared(level_id: StringName) -> bool:
+	var cible: LevelDef = ContentDB.levels.get(level_id)
+	if cible == null or not cible.requires_all_previous:
+		return true
+	for lv: LevelDef in ContentDB.campaign_levels():
+		if lv != null and lv.next_levels.has(level_id) and not is_level_cleared(lv.id):
+			return false
+	return true
 
 
 # --- PROGRESSION DES CARTES (vague 5, chantier P) -----------------------------

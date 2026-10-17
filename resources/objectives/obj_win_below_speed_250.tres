@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_gkrgu"]
+
+[resource]
+script = ExtResource("1_gkrgu")
+id = &"obj_win_below_speed_250"
+description = "Gagner avec moins de 250 % de vitesse"
+check_key = &"win_below_speed"
+params = {
+"pct": 250
+}

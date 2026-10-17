@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_wmrmn"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_queen.tres" id="2_hkfbs"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="3_c1y6y"]
+[ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer.tres" id="4_3wgbb"]
+[ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_tsjtn"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_yduwh"]
+
+[sub_resource type="Resource" id="Resource_wmrmn"]
+script = ExtResource("1_wmrmn")
+enemy = ExtResource("2_hkfbs")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_hkfbs"]
+script = ExtResource("1_wmrmn")
+enemy = ExtResource("3_c1y6y")
+count = 4
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_c1y6y"]
+script = ExtResource("1_wmrmn")
+enemy = ExtResource("4_3wgbb")
+count = 1
+spawn_delay = 1.0
+start_offset = 18.0
+
+[sub_resource type="Resource" id="Resource_3wgbb"]
+script = ExtResource("1_wmrmn")
+enemy = ExtResource("5_tsjtn")
+count = 3
+spawn_delay = 2.0
+start_offset = 26.0
+
+[resource]
+script = ExtResource("6_yduwh")
+id = &"w2_6_boss"
+duration = 45.0
+entries = Array[ExtResource("1_wmrmn")]([SubResource("Resource_wmrmn"), SubResource("Resource_hkfbs"), SubResource("Resource_c1y6y"), SubResource("Resource_3wgbb")])
+difficulty = 1.0
+is_miniboss = false
+is_boss = true

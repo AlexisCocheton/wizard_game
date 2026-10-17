@@ -345,7 +345,14 @@ func _test_la_partie_installe_chaque_mode() -> void:
 func _test_le_libre_joue_le_niveau_avec_ton_deck() -> void:
 	SaveData.reset_profile()
 	# Un deck du joueur DIFFERENT du deck de campagne, pour que le test morde.
+	# Vague 10 (chantier B2) : le premier deck n a que trois communes (4/4/4), et
+	# un profil neuf ne possede qu elles ; un joueur qui a pris une carte en combat
+	# en a une de plus, de quoi composer un autre deck.
 	var lv1: LevelDef = ContentDB.levels.get(&"lvl_01")
+	for c0: SpellCard in ContentDB.act_commons(lv1.act):
+		if not lv1.base_commons.has(c0):
+			SaveData.discover_card(c0.id)
+			break
 	var campagne: Array = []
 	for c: SpellCard in SaveData.campaign_deck(lv1):
 		campagne.append(String(c.id))

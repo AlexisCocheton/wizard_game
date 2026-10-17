@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_5ieor"]
 [ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="2_808tn"]
-[ext_resource type="Resource" path="res://resources/enemies/behemoth.tres" id="3_808tn"]
-[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="4_t42rk"]
+[ext_resource type="Resource" path="res://resources/enemies/mirror_shard.tres" id="3_808tn"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_arcane.tres" id="4_t42rk"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_3soi1"]
-[ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="5_808tn"]
-[ext_resource type="Resource" path="res://resources/enemies/adept_ember.tres" id="6_808tn"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_frost.tres" id="5_w5rc5"]
+[ext_resource type="Resource" path="res://resources/enemies/twins_pale.tres" id="6_umbwr"]
 
 [sub_resource type="Resource" id="Resource_808tn"]
 script = ExtResource("1_5ieor")
@@ -18,30 +18,30 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_t42rk"]
 script = ExtResource("1_5ieor")
 enemy = ExtResource("3_808tn")
-count = 1
-spawn_delay = 1.0
-start_offset = 12.0
+count = 2
+spawn_delay = 2.5
+start_offset = 8.0
 
 [sub_resource type="Resource" id="Resource_3soi1"]
 script = ExtResource("1_5ieor")
 enemy = ExtResource("4_t42rk")
 count = 1
 spawn_delay = 1.0
-start_offset = 20.0
+start_offset = 16.0
 
 [sub_resource type="Resource" id="Resource_w5rc5"]
 script = ExtResource("1_5ieor")
-enemy = ExtResource("5_808tn")
-count = 2
-spawn_delay = 2.5
-start_offset = 24.0
+enemy = ExtResource("5_w5rc5")
+count = 1
+spawn_delay = 1.0
+start_offset = 22.0
 
 [sub_resource type="Resource" id="Resource_umbwr"]
 script = ExtResource("1_5ieor")
-enemy = ExtResource("6_808tn")
-count = 2
-spawn_delay = 2.2
-start_offset = 28.0
+enemy = ExtResource("6_umbwr")
+count = 1
+spawn_delay = 1.0
+start_offset = 26.0
 
 [resource]
 script = ExtResource("5_3soi1")

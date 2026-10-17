@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_h0lby"]
+
+[resource]
+script = ExtResource("1_h0lby")
+id = &"obj_enemy_travel_3450_0_sand_serpent"
+description = "Serpent des sables : en faire marcher un sur 2,5 longueurs de terrain"
+check_key = &"enemy_travel"
+params = {
+"distance": 3450.0,
+"enemy": "sand_serpent"
+}

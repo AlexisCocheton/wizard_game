@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_ienrc"]
+[ext_resource type="Resource" path="res://resources/enemies/great_eye.tres" id="2_8t0pa"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="3_jakgw"]
+[ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="4_yunxd"]
+[ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="5_8dcrw"]
+[ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="6_82u58"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_mn0we"]
+
+[sub_resource type="Resource" id="Resource_ienrc"]
+script = ExtResource("1_ienrc")
+enemy = ExtResource("2_8t0pa")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_8t0pa"]
+script = ExtResource("1_ienrc")
+enemy = ExtResource("3_jakgw")
+count = 3
+spawn_delay = 2.0
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_jakgw"]
+script = ExtResource("1_ienrc")
+enemy = ExtResource("4_yunxd")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_yunxd"]
+script = ExtResource("1_ienrc")
+enemy = ExtResource("5_8dcrw")
+count = 2
+spawn_delay = 2.0
+start_offset = 26.0
+
+[sub_resource type="Resource" id="Resource_8dcrw"]
+script = ExtResource("1_ienrc")
+enemy = ExtResource("6_82u58")
+count = 2
+spawn_delay = 2.0
+start_offset = 34.0
+
+[resource]
+script = ExtResource("7_mn0we")
+id = &"w17_5_boss"
+duration = 44.0
+entries = Array[ExtResource("1_ienrc")]([SubResource("Resource_ienrc"), SubResource("Resource_8t0pa"), SubResource("Resource_jakgw"), SubResource("Resource_yunxd"), SubResource("Resource_8dcrw")])
+difficulty = 0.95
+is_miniboss = false
+is_boss = true
