@@ -12,7 +12,7 @@ lines = Array[Dictionary]([{
 "speaker": "",
 "text": "Le Champignon dore s affaisse dans l eau. Ses spores d or flottent un instant, puis s eteignent une a une."
 }, {
-"portrait": &"",
+"portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
 "text": "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite."
@@ -22,7 +22,7 @@ lines = Array[Dictionary]([{
 "speaker": "Le Mage",
 "text": "On ne dore pas un champignon pour le plaisir. Quelqu un voulait qu on le remarque."
 }, {
-"portrait": &"",
+"portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
 "text": "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule."
