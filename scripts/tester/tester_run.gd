@@ -1,3 +1,4 @@
+@static_unload
 class_name TesterRun
 extends RefCounted
 ## L ONGLET TEST : composer une vague et la JOUER tout de suite.

@@ -1,3 +1,4 @@
+@static_unload
 class_name Fx
 extends RefCounted
 ## Effets visuels des sorts et des monstres, tous issus des packs fournis :

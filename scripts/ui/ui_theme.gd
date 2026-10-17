@@ -1,3 +1,4 @@
+@static_unload
 class_name UiTheme
 extends RefCounted
 ## Theme partage par tous les ecrans. Les fonds, boutons et panneaux sont les

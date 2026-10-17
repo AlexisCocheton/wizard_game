@@ -18,7 +18,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	await _apercu_main()
 	await _apercu_pause()
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 ## La main a 8 cartes, le cas le plus dense : c est la que la lisibilite casse.

@@ -28,7 +28,7 @@ func _ready() -> void:
 	await _apercu(_carte_de_zone(), "up_01_zone")
 	await _apercu(_carte_simple(), "up_02_cible")
 	print("UPGRADES_OK")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 ## Monte l ecran sur une carte donnee, apres l avoir "lancee" jusqu au palier

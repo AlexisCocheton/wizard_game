@@ -136,7 +136,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	if ContentDB.cards.is_empty() and ContentDB.enemies.is_empty():
 		printerr("[INVENTAIRE] ContentDB est VIDE. Lance la SCENE, pas --script.")
-		get_tree().quit(1)
+		CleanExit.quit(1)
 		return
 
 	_index_cross_references()
@@ -163,7 +163,7 @@ func _ready() -> void:
 	_print_zones_ambigues()
 	print("")
 	print("=== FIN ===")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 # --------------------------------------------------------------------------

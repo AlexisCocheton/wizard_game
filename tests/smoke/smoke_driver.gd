@@ -36,10 +36,10 @@ func _ready() -> void:
 
 func _finish() -> void:
 	if _failed:
-		get_tree().quit(1)
+		CleanExit.quit(1)
 		return
 	print("SMOKE_OK")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 func _fail(message: String) -> void:

@@ -1,3 +1,4 @@
+@static_unload
 class_name CardView
 extends PanelContainer
 ## Une carte de sort a l ecran, en DEUX presentations tres differentes.

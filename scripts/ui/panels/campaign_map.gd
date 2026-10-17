@@ -1,3 +1,4 @@
+@static_unload
 class_name CampaignMap
 extends Control
 ## Carte de campagne : UN ECRAN PAR ACTE, pose sur le fond de combat de l acte.
