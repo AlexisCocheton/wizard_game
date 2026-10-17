@@ -1,44 +1,43 @@
-[gd_resource type="Resource" script_class="EnemyDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="EnemyDef" load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_qg275"]
+[ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="1_hhchb"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="2_6hekv"]
 
 [resource]
-script = ExtResource("1_qg275")
-id = &"totem_guardian_gold"
-display_name = "Gardien-totem dore"
+script = ExtResource("1_hhchb")
+id = &"current_eye_gold"
+display_name = "Oeil des courants dore"
 kind = 8
 power = 10
-max_hp = 180.0
-base_speed = 26.0
+max_hp = 154.0
+base_speed = 40.0
 base_xp = 30
 contact_damage = 0
-anim_key = &"totem_tower"
+anim_key = &"flyingeye"
 sprite_scale = 1.0
-shape = 6
+shape = 1
 color = Color(0.95, 0.78, 0.25, 1)
-base_radius = 72.0
+base_radius = 56.0
 resistances = {
-1: 1.5,
-2: 0.75,
-3: 2.0,
+2: 1.5,
+3: 0.75,
 6: 0.5,
-7: 0.75,
-8: 0.75,
-9: 0.75,
-10: 0.5
+7: 0.5,
+9: 0.5,
+10: 2.0
 }
 immune_tags = Array[int]([])
-dodge_chance = 0.0
+dodge_chance = 0.3
 swarm_count = 1
 entry_side = false
-flying = false
+flying = true
 projectile = false
 phase_interval = 0.0
 buff_speed_pct = 0.0
 devours = false
 enrage_speed_pct = 0.0
 enrage_cap = 1.5
-aura_shield_radius = 300.0
+aura_shield_radius = 0.0
 burst_move = false
 burst_dash_time = 0.6
 burst_pause_time = 0.7
@@ -46,7 +45,7 @@ wave_amplitude = 0.0
 wave_frequency = 0.5
 split_count = 0
 first_hit_shield = false
-heal_per_second = 2.0
+heal_per_second = 0.0
 shoot_interval = 0.0
 shot_damage = 2
 blocks_cards = 0
@@ -65,17 +64,18 @@ laser_damage = 0
 laser_cooldown = 1.5
 sleep_interval = 0.0
 sleep_duration = 2.0
-move_pattern = 0
-pattern_lateral_speed = 0.0
-pattern_width = 240.0
+move_pattern = 4
+pattern_lateral_speed = 100.0
+pattern_width = 280.0
 pattern_interval = 1.5
 parts_count = 0
 part_hp = 0.0
 part_slow_pct = 0.0
 keeps_distance_at = 0.0
-summon_interval = 0.0
-summon_count = 1
-summon_max_alive = 6
+summon_interval = 8.0
+summon_def = ExtResource("2_6hekv")
+summon_count = 2
+summon_max_alive = 4
 revive_hp_pct = 0.0
 hits_immune = 0
 reflect_interval = 0.0
@@ -112,4 +112,4 @@ deadline_haste_pct = 0.0
 deadline_haste_time = 3.0
 shield_regen = 0.0
 guard_block_pct = 0.0
-gilded_from = &"totem_guardian"
+gilded_from = &"current_eye"

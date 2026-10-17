@@ -10,12 +10,12 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Le Gardien-totem dore se fend. Sous la dorure, le bois brut d un totem de port, taille a la main, avec une marque d atelier."
+"text": "L Oeil des courants dore s abat sur un etabli. Sous la dorure, du cuir cousu main, et derriere la pupille, une plaque de metal noir."
 }, {
 "portrait": &"rat",
 "side": "right",
 "speaker": "Le Rat pilote",
-"text": "C est un des miens. Je l ai taille pour proteger les quais. Quelqu un l a repeint en or et l a retourne."
+"text": "C est un des miens. Je les faisais pour lire les courants aux pilotes. Quelqu un l a dore et lui a soude ca dans le dos."
 }, {
 "portrait": &"mage",
 "side": "left",

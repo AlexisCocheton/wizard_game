@@ -1,26 +1,26 @@
 [gd_resource type="Resource" script_class="WaveDef" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_xggfu"]
-[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_8bm0s"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="2_xggfu"]
 [ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="3_6y0kv"]
 [ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="4_lpg13"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_5aui8"]
 
-[sub_resource type="Resource" id="Resource_xggfu"]
+[sub_resource type="Resource" id="Resource_8bm0s"]
 script = ExtResource("1_xggfu")
-enemy = ExtResource("2_8bm0s")
+enemy = ExtResource("2_xggfu")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_8bm0s"]
+[sub_resource type="Resource" id="Resource_6y0kv"]
 script = ExtResource("1_xggfu")
 enemy = ExtResource("3_6y0kv")
 count = 3
 spawn_delay = 1.5
 start_offset = 4.0
 
-[sub_resource type="Resource" id="Resource_6y0kv"]
+[sub_resource type="Resource" id="Resource_lpg13"]
 script = ExtResource("1_xggfu")
 enemy = ExtResource("4_lpg13")
 count = 2
@@ -31,7 +31,7 @@ start_offset = 12.0
 script = ExtResource("5_5aui8")
 id = &"side_a2_atelier_2"
 duration = 27.0
-entries = Array[ExtResource("1_xggfu")]([SubResource("Resource_xggfu"), SubResource("Resource_8bm0s"), SubResource("Resource_6y0kv")])
+entries = Array[ExtResource("1_xggfu")]([SubResource("Resource_8bm0s"), SubResource("Resource_6y0kv"), SubResource("Resource_lpg13")])
 difficulty = 1.35
 is_miniboss = false
 is_boss = false

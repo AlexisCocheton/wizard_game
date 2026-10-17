@@ -52,6 +52,13 @@ Conventions :
 | **Le Maire** | Maire du village de l enfant, acte 1. Le seul du village qui ne soit pas en pierre : il se cachait dans la grange depuis trois jours | Il sait depuis des mois que l attaque vient d une autre ile, et il s est tu pour ne pas affoler |
 | **Le Gardien de la foret** | L esprit protecteur de Nuri, « celui de l arbre ». Un chevalier en armure noire ; dedans, du bois | Il n est pas devenu fou : il a ete **retourne** (une plaque de metal noir dans la poitrine). Premiere preuve que quelqu un commande aux monstres |
 
+Les trois **apprentis** — l écuyer, la fée, l apprentie d azur — ne sont pas des
+personnages de la campagne. Gagnés au compte (niveaux 4, 6 et 9), ils combattent à
+la place du mage ; dans les scènes de campagne ils se taisent (« il garde la parole
+dans les histoires », fiche de l apprentie). Chacun a SA quête annexe, qui ne
+s ouvre qu une fois l apprenti gagné : il y est donc déjà aux côtés du mage, et
+la quête raconte son passé, sa dette, son lieu (§11).
+
 Les adversaires qui ont un nom :
 
 | Nom | Ou | Ce qu il est dans l histoire |
@@ -82,6 +89,7 @@ quelle case revient a qui.
 | Le Maire | `noble_human_man_02` | Couronne, lorgnons, fraise de notable, un document a la main : un homme de papiers, celui qui "savait depuis des mois" |
 | Le Roi squelette | `demon_human_man_01` | Crane decharne, chair grise recousue, yeux jaunes : un mort qui parle encore |
 | Le Gardien | `knight_raceless_man_01` | Un heaume vert et or **sans visage dedans**. Le pack le nomme "raceless" — un colosse mu par autre chose que lui-meme, ce que l acte 1 revele de lui |
+| L écuyer, la fée, l apprentie d azur | leur feuille de COMBAT (`soldier_idle`, `fairy_idle`, `bluewitch_idle`), planche `assets/portraits/apprentice_cast.png` (chantier C6) | Le joueur reconnaît dans la scène le personnage qu il fait combattre. Sources, cases et licences : §11 |
 
 **Une expression par personnage.** Ce pack ne fournit qu un seul visage par
 personnage, la ou l ancien en donnait quatre. On a donc choisi des visages dont
@@ -725,6 +733,15 @@ ANNEXES » ; règles : `tests/unit/test_side_quests.gd`.
 **Une annexe est ancrée à son niveau d ouverture** : ses scènes savent ce que le mage
 sait à ce moment-là, sans supposer une autre annexe ni une branche de fourche.
 
+**L apprenti est déjà là** (chantier C7c). Une annexe d apprenti ne s ouvre que si
+l apprenti est déjà gagné au compte (`side_quest_character`,
+`SaveData.side_quest_open`) : il combat déjà à la place du mage. Les scènes de B3 le
+faisaient recruter (« je combats à votre place ») et montraient endormie sous son
+cristal l apprentie que le joueur faisait jouer. L annexe est donc SA quête : son
+passé, sa dette, son lieu. Elle ne dit jamais QUAND il a rejoint le mage (c est le
+compte qui en décide, pas la campagne). `test_story` refuse une réplique de
+recrutement dans une annexe d apprenti.
+
 **L or est le fil.** Le boss final est « une bête de cadrans, toute en or » : chaque
 boss doré porte sa couleur. Les scènes posent, sans rien dévoiler, qu un « client »
 aime l or et que l enfant aime ce qui brille et ce qu on lui donne en spectacle.
@@ -732,13 +749,21 @@ aime l or et que l enfant aime ce qui brille et ce qu on lui donne en spectacle.
 | Annexe | Ouverte après | Qui est là | Boss doré | Ce que disent les scènes |
 |---|---|---|---|---|
 | « La mesure » | `lvl_02` | mage, enfant | Corniste doré | le cor qui bat la cadence du village ; « personne ne paie un cor en or à un corniste de forêt » : quelqu un, plus loin, donne le tempo |
-| « L atelier du rat » | `lvl_17` | + rat | Gardien-totem doré | l atelier où le rat a travaillé ; un totem de port taillé de sa main, doré et retourné : « on la dore pour que le client la reconnaisse » |
+| « L atelier du rat » | `lvl_17` | + rat | Oeil des courants doré | l atelier où le rat a travaillé ; l oeil pris dans les cordages à `lvl_17`, il en avait reconnu le modèle (le sien). Un oeil de l atelier, doré et retourné, une plaque noire derrière la pupille : « on la dore pour que le client la reconnaisse » |
 | « Le trésor de Tombol » | `lvl_20` | mage, enfant | Squelette pareur doré | la salle du trésor vide ; il ne reste qu une garde dorée : « une quittance, le créancier est passé avant nous » |
 | « Le champion de Kaltek » | `lvl_11` | + rat, roi | Berserker doré | le champion enchaîné de l arène vide ; « même le champion était en laisse » ; l enfant a trouvé ça « joli à regarder » |
 | « La vitrine de Nuri » | `lvl_14` | mage, rat, roi (l enfant se tait) | Gorgone dorée | l aile NURI de la galerie ; la plaque « STATUES DU VILLAGE : FAITES » confirme ce que le mage déduisait au village, sans dire qui |
-| « L écuyer du port » | `lvl_18` + l écuyer | + l écuyer | Lutin archer doré | le dernier garde de Haute-Nacelle a posé l épée pour l arc ; il tirera « à la place » du mage |
-| « La fée des fosses » | `lvl_19` + la fée | mage, enfant, la fée | Champignon doré | une fée qui ne se pose jamais, parce qu ici « le sol mange » |
-| « L apprentie d azur » | `lvl_12` + l apprentie | + roi, l apprentie | Chevalier du vide doré | sous un cristal du temple d Ymoa, l apprentie du mage de la PREMIÈRE boucle, morte à Nox : il se souvient, pas elle |
+| « L écuyer du port » | `lvl_18` + l écuyer | + l écuyer | Lutin archer doré | l écuyer revient au port de Haute-Nacelle, où il gardait le bout du quai. Sa dette : la nuit où le port s est vidé par le haut, son épée n a touché personne ; il a appris l arc après, « trop tard pour les six cents » |
+| « La fée des fosses » | `lvl_19` + la fée | mage, enfant, la fée | Champignon doré | la fée retourne aux fosses où « le sol mange » : elle veillait sur ces tombes. Sa dette : le jour où le sol s est mis à manger, elle s est envolée et a laissé ses morts. Elle ne se pose toujours pas, « mais eux, maintenant, ils dorment » |
+| « L apprentie d azur » | `lvl_12` + l apprentie | + roi, l apprentie | Chevalier du vide doré | sous un cristal du temple d Ymoa, l apprentie trouve ce qu il reste de la PREMIÈRE boucle : elle-même, morte à Nox. Le mage le savait et ne lui avait rien dit : il se souvient, pas elle. « Ici, on ne garde que ce qui servira plus tard » |
+
+**Le boss doré de l atelier a changé** (chantier C7c). C était un Gardien-totem
+doré : son aura imposait au deck la Lumière purifiante (dissipation garantie,
+DEC-057), qu aucun niveau de campagne ne donne avant `lvl_20`. Ouvrir l annexe
+faisait OBTENIR la carte trop tôt, et elle entrait au pool de montée de niveau de
+toute la campagne jouée ensuite. L Oeil des courants doré esquive et appelle
+d autres yeux, sans aura (le Gardien-totem de la vague 2 est parti aussi) : le deck
+de l atelier n a plus d exception, il est fait de communes déjà données.
 
 **Les apprentis parlent avec leur visage** (vague 10, chantier C6). Ils parlaient
 d abord sans portrait, comme « Un mort ». Leur buste est découpé dans la feuille

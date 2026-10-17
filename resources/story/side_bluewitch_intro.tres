@@ -10,17 +10,22 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Le temple de cristal tient encore. Au fond, sous un cristal bleu, une jeune femme en robe d azur dort debout."
+"text": "Le temple de cristal tient encore. Au fond, sous un cristal bleu, une jeune femme en robe d azur, debout, les yeux ouverts. Elle ne respire pas."
+}, {
+"portrait": &"bluewitch",
+"side": "right",
+"speaker": "L apprentie d azur",
+"text": "Maitre... Elle porte ma robe. Elle a mon visage."
 }, {
 "portrait": &"mage_grave",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Je la connais. Elle etait mon apprentie, la premiere fois. Elle est morte a Nox, la derniere nuit."
+"text": "C est toi, la premiere fois. Tu es morte a Nox, la derniere nuit. Je ne te l ai jamais dit."
 }, {
 "portrait": &"skeleton_king",
 "side": "right",
 "speaker": "Le Roi squelette",
-"text": "Ici, on ne garde que ce qui servira plus tard. Si elle est sous verre, quelqu un compte sur elle."
+"text": "Ici, on ne garde que ce qui servira plus tard. Si ta premiere boucle est sous verre, mage, quelqu un compte s en resservir."
 }, {
 "portrait": &"",
 "side": "left",

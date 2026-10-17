@@ -10,22 +10,22 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Au-dessus de l eau trouble des fosses, une lueur danse. Une fee, pas plus grande qu une main, qui ne se pose nulle part."
+"text": "Au-dessus de l eau trouble des fosses, la fee vole plus bas qu elle ne l a jamais fait. Elle connait chaque tombe."
 }, {
 "portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
-"text": "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine."
+"text": "Avant, ces tombes etaient a moi. Je veillais sur les morts d en bas, et je me posais sur leurs pierres."
 }, {
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Toi, tu ne touches jamais le sol ?"
+"text": "C est pour ca que tu ne te poses plus jamais ?"
 }, {
 "portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
-"text": "Jamais. Ici, le sol mange."
+"text": "Plus jamais. Ici, le sol mange. Tout ce qui touche cette eau finit par y prendre racine."
 }, {
 "portrait": &"mage",
 "side": "left",

@@ -868,12 +868,21 @@ func _test_les_detecteurs_mordent() -> void:
 	not_ok(defauts_surplus(ContentDB.campaign_levels(), ann2, catalogue).is_empty(),
 		"sabotage : une annexe qui debloque un passif de base")
 	# 5. Deck : sans commune qui tue, ou sans dissipation face a une aura.
+	#    Depuis C7c aucune annexe livree n a de porteur d aura (l atelier n en a
+	#    plus) : le sabotage en fait descendre un, le Gardien-totem du catalogue.
+	var totem: EnemyDef = ContentDB.enemies.get(&"totem_guardian")
+	ok(totem != null and totem.aura_shield_radius > 0.0, "le Gardien-totem porte une aura")
 	var atelier: LevelDef = null
-	for a: LevelDef in annexes:
-		for d: EnemyDef in ObjectiveChecker.level_enemies(a):
-			if d.aura_shield_radius > 0.0:
-				atelier = a
-	ok(atelier != null, "une annexe a un porteur d aura")
+	if totem != null:
+		atelier = lv.duplicate()
+		var wa: WaveDef = lv.waves[0].duplicate()
+		var ea := WaveEntry.new()
+		ea.enemy = totem
+		var ents: Array[WaveEntry] = [ea]
+		wa.entries = ents
+		var va: Array[WaveDef] = [wa]
+		va.append_array(lv.waves)
+		atelier.waves = va
 	if atelier != null:
 		var sans: LevelDef = atelier.duplicate()
 		var communes: Array[SpellCard] = []
