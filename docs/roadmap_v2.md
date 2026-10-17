@@ -925,8 +925,9 @@ controle, MESURES recollees) ; puis `e3c905a` (`make_story` sort aussi par
 `CleanExit`). Chiffres : `git log <fusion>^2` ; raisons : memoire projet,
 `decisions.md` DEC-058 a DEC-066 ; constats de la revue : `docs/revue_vague10.md`.
 Le banc de controle de C2 a ete fusionne pendant la redaction de ce paragraphe : son
-titre donne campagne 1180 / 1260, annexes 40-65 %, Massacre 17,5 vagues ; son detail
-par niveau n est pas dans le depot (**A COMPLETER APRES C2**). Chaque point
+detail est dans `docs/banc_vague10.md` : campagne 1180 / 1260 (minimum `lvl_18` 36),
+annexes 243 / 480 (40 a 65 %), Massacre 17,5 vagues, 29 classements d objectifs
+conformes, 0 SCRIPT ERROR. Chaque point
 ci-dessous a ete relu dans le code et le contenu livres (`main` `e3c905a`).
 
 ### La demande, point par point
@@ -990,7 +991,7 @@ partie ; PAS FAIT. **Bilan : 24 FAIT, 3 PARTIEL, 1 PAS FAIT** (28 points).
 
 | # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
 |---|---|---|---|---|
-| 28 | Banc des 21 niveaux >= 60 %, objectifs classes au banc des objectifs | PARTIEL | Campagne 1185 / 1260 a B2 (minimum `lvl_18` 41, `lvl_17` 44), 1180 au banc de controle de C2 (titre de `b8264d7`) ; objectifs : 21 + 8 classements conformes, re-joues par C2 (7 lignes de campagne recollees, les 8 d annexes identiques) | Le minimum par niveau du banc de C2, le Massacre a 17,5 vagues (repere 4-8) et le temps passe a incanter ne sont pas dans le depot. **A COMPLETER APRES C2** |
+| 28 | Banc des 21 niveaux >= 60 %, objectifs classes au banc des objectifs | PARTIEL | Campagne 1185 / 1260 a B2 (minimum `lvl_18` 41, `lvl_17` 44), 1180 au banc de controle de C2 (titre de `b8264d7`) ; objectifs : 21 + 8 classements conformes, re-joues par C2 (7 lignes de campagne recollees, les 8 d annexes identiques) | Detail dans `docs/banc_vague10.md` : minimum `lvl_18` 36 (fuite de la Lumiere par l annexe de l atelier, confiee a C7c), incantation 48-89 % (moyenne 74,7), Massacre 17,5 vagues pour un repere de 4-8, cause non analysee |
 
 ### Corrige en route (hors demande)
 
@@ -1049,7 +1050,7 @@ partie ; PAS FAIT. **Bilan : 24 FAIT, 3 PARTIEL, 1 PAS FAIT** (28 points).
 | Campagne refaite (B2) | 1177 -> **1185 / 1260** ; minimum `lvl_18` 41, `lvl_17` 44 |
 | Annexes (B3, 60 parties, chacune juste apres son niveau d ouverture) | la mesure 24, l atelier 34, le tresor 29, le champion 34, la vitrine 26, l ecuyer 39, la fee 27, l apprentie 30 |
 | Objectifs (MESURES recollees par C2) | 21 classements de campagne et 8 d annexes conformes ; rangs 1 a 58-59 / 60 sur sept niveaux, rangs 3 a 2 / 60 sur `lvl_03`, `lvl_06` et `lvl_11` |
-| Banc de controle (C2, `b8264d7`) | titre : campagne 1180 / 1260, annexes 40-65 %, Massacre 17,5 vagues ; detail **A COMPLETER APRES C2** |
+| Banc de controle (C2, `b8264d7`) | campagne 1180 / 1260, annexes 243 / 480, Massacre 17,5 vagues ; detail dans `docs/banc_vague10.md` |
 
 ### Reste — actions du testeur (l assistant ne peut pas les faire)
 
