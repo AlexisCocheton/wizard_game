@@ -153,18 +153,17 @@ static func _partie_au_bot(driver: Node, rang: int) -> void:
 	var g: GameController = packed.instantiate()
 	g.headless_mode = true
 	driver.add_child(g)
+	# Comme le banc (sim_balance._make_game) : on avance la partie nous-memes, a
+	# delta fixe. `running` reste vrai (play_card le lit) ; couper le traitement
+	# du noeud empeche _process de la jouer EN PLUS en temps reel.
+	g.set_process(false)
+	g.set_physics_process(false)
 	RunState.set_seed(4100 + rang * 7)
 	g.start_level(level, GameEnums.Mode.EXPLORATION)
-	g.running = false          # apres start_level (piege : start_level le remet)
 	var marquees: int = 0
-	var vus: Dictionary = {}
 	for c: SpellCard in RunState.deck + RunState.hand:
-		if c == null or c.is_passive or vus.has(c.id) or c.major_upgrades.is_empty():
-			continue
-		vus[c.id] = true
-		var m: MajorUpgradeDef = c.major_upgrades[mini(rang, c.major_upgrades.size() - 1)]
-		RunState.upgrades_taken[c.id] = [RunState.major_id_of(m)]
-		marquees += 1
+		if _porter_majeure(c, rang):
+			marquees += 1
 	if marquees == 0:
 		driver.call("_fail", "W10 majeures : aucun sort du deck de %s ne porte de majeure"
 			% NIVEAU_DE_PARTIE)
@@ -176,7 +175,12 @@ static func _partie_au_bot(driver: Node, rang: int) -> void:
 		if not g.caster.is_busy() and AutoPick.try_play(g):
 			jouees += 1
 		if RunState.pending_offer.size() > 0:
-			RunState.pick_offer(AutoPick.offer_index(RunState.pending_offer, []))
+			var k: int = AutoPick.offer_index(RunState.pending_offer, [])
+			var prise: SpellCard = RunState.pending_offer[k]
+			RunState.pick_offer(k)
+			# Le sort gagne en route porte aussi sa majeure.
+			if _porter_majeure(prise, rang):
+				marquees += 1
 		g.flush_freed()
 		if (SpeedGauge.is_dying and SpeedGauge.death_gauge <= 0.0) or g.spawner.is_finished():
 			break
@@ -185,5 +189,21 @@ static func _partie_au_bot(driver: Node, rang: int) -> void:
 	if jouees == 0:
 		driver.call("_fail", "W10 majeures : le bot n a rien lance (rang %d)" % rang)
 	RunState.pending_offer.clear()
-	g.queue_free()
+	# Liberee TOUT DE SUITE, comme au banc (_drop_game) : une partie qui vit une
+	# image de plus pilote encore SpeedGauge et RunState.
+	g.running = false
+	driver.remove_child(g)
+	g.free()
 	await driver.get_tree().process_frame
+
+
+## Fait porter au sort sa majeure de rang `rang` (la seule de la partie pour ce
+## sort). Faux si le sort n en a pas ou la porte deja.
+static func _porter_majeure(c: SpellCard, rang: int) -> bool:
+	if c == null or c.is_passive or c.major_upgrades.is_empty():
+		return false
+	var m: MajorUpgradeDef = c.major_upgrades[mini(rang, c.major_upgrades.size() - 1)]
+	if m == null or not RunState.taken_majors(c).is_empty():
+		return false
+	RunState.upgrades_taken[c.id] = [RunState.major_id_of(m)]
+	return true
