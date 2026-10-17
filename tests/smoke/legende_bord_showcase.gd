@@ -9,7 +9,8 @@ extends RefCounted
 ## contre CHAQUE bord — Gardien d ossements garde levee, voleur de sorts (la
 ## legende la plus longue), cameleon (logos) — puis :
 ##   - CONTROLE : chaque legende et chaque rangee de logos tient dans le
-##     terrain (1080 px), a la marge (Fx.MECH_LABEL_MARGIN) ;
+##     terrain VISIBLE : a droite a la marge (Fx.MECH_LABEL_MARGIN), a gauche au
+##     bord de la jauge de vitesse (Fx.MECH_LABEL_MARGIN_LEFT) ;
 ##   - CAPTURE `legende_bords`, a lire.
 ## En headless rien n est construit (Fx inerte) : la vitrine ne tourne qu en
 ## fenetre reelle, ou son controle a un sens.
@@ -40,9 +41,13 @@ static func run(driver: Node) -> void:
 
 	var monstres: Array[Enemy] = []
 	for x in [GAUCHE, DROITE]:
-		var garde: Enemy = bf.spawn_enemy(_gardien(), x, 1.0, Vector2(x, 520.0))
-		var voleur: Enemy = bf.spawn_enemy(_voleur(), x, 1.0, Vector2(x, 840.0))
-		var cam: Enemy = bf.spawn_enemy(_cameleon(), x, 1.0, Vector2(x, 1160.0))
+		# La colonne de droite est DECALEE vers le bas : deux legendes longues sur
+		# la meme rangee se chevaucheraient au milieu, ce qui n arrive pas en jeu
+		# et brouillerait la capture.
+		var dy: float = 0.0 if x == GAUCHE else 160.0
+		var garde: Enemy = bf.spawn_enemy(_gardien(), x, 1.0, Vector2(x, 460.0 + dy))
+		var voleur: Enemy = bf.spawn_enemy(_voleur(), x, 1.0, Vector2(x, 780.0 + dy))
+		var cam: Enemy = bf.spawn_enemy(_cameleon(), x, 1.0, Vector2(x, 1100.0 + dy))
 		for e in [garde, voleur, cam]:
 			if e == null:
 				driver.call("_fail", "vitrine legendes : un monstre n a pas pu naitre")
@@ -64,8 +69,11 @@ static func run(driver: Node) -> void:
 				continue
 			vues += 1
 			var r: Rect2 = (c as Control).get_global_rect()
-			var m: float = Fx.MECH_LABEL_MARGIN - 1.0
-			if r.position.x < m or r.end.x > GameConfig.BATTLEFIELD_WIDTH - m:
+			# A gauche, la jauge de vitesse du HUD couvre le terrain : la legende
+			# s arrete a son bord (Fx.MECH_LABEL_MARGIN_LEFT).
+			var gauche_min: float = Fx.MECH_LABEL_MARGIN_LEFT - 1.0
+			var droite_max: float = GameConfig.BATTLEFIELD_WIDTH - Fx.MECH_LABEL_MARGIN + 1.0
+			if r.position.x < gauche_min or r.end.x > droite_max:
 				driver.call("_fail", "vitrine legendes : %s de %s hors du terrain [%.0f, %.0f]"
 					% [nom, e.definition.id, r.position.x, r.end.x])
 	# Six monstres : six legendes (garde, vol, et la place des logos du

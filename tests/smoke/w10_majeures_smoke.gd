@@ -35,12 +35,16 @@ static func run(driver: Node) -> void:
 	g.headless_mode = true
 	driver.add_child(g)
 	g.running = false
+	var debut: int = Time.get_ticks_msec()
 	var n: int = _chaque_majeure(driver, g)
 	g.queue_free()
 	await driver.get_tree().process_frame
-	print("[SMOKE] W10 majeures : %d majeures lancees sur des cibles liberees" % n)
+	print("[SMOKE] W10 majeures : %d majeures lancees sur des cibles liberees (%d ms)"
+		% [n, Time.get_ticks_msec() - debut])
 	for rang in 2:
+		debut = Time.get_ticks_msec()
 		await _partie_au_bot(driver, rang)
+		print("[SMOKE] W10 majeures : partie au bot %d en %d ms" % [rang, Time.get_ticks_msec() - debut])
 	RunState.reset()
 	SpeedGauge.reset()
 

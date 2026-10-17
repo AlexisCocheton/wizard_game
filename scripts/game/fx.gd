@@ -1491,22 +1491,30 @@ static func mech_label(parent: Node2D, radius: float) -> Label:
 
 ## Largeur de depart de la boite de legende (Fx.mech_label, logos du Cameleon).
 const MECH_LABEL_WIDTH: float = 420.0
-## Marge entre une legende et le bord du terrain : le contour du texte
+## Marge entre une legende et le bord DROIT du terrain : le contour du texte
 ## (outline_size 10) reste dans le cadre.
 const MECH_LABEL_MARGIN: float = 24.0
+## Marge a GAUCHE : la jauge de vitesse du HUD (EnemyBar, barre tournee de
+## -90 degres, x de 20 a 84 px) couvre le bord gauche du terrain sur presque
+## toute sa hauteur. Ramenee a 24 px, une legende passait SOUS la jauge
+## (capture du 17/10 : « RDE : coups amortis »). test_mech_label_clamp relit la
+## jauge dans HUD.tscn : si elle bouge, le test le dit.
+const MECH_LABEL_MARGIN_LEFT: float = 96.0
 
 
 ## VAGUE 10 C1 : abscisse LOCALE (repere du monstre) d une boite de legende de
-## largeur `box_w`, centree sur le monstre puis RAMENEE dans le terrain avec la
-## marge. Une boite plus large que le terrain se centre sur lui. Pure : c est ce
-## que verrouille test_mech_label_clamp.
+## largeur `box_w`, centree sur le monstre puis RAMENEE dans le terrain visible
+## avec ses marges. Une boite plus large que la place se centre sur elle. Pure :
+## c est ce que verrouille test_mech_label_clamp.
 static func caption_box_x(owner_x: float, box_w: float,
 		field_w: float = GameConfig.BATTLEFIELD_WIDTH,
-		margin: float = MECH_LABEL_MARGIN) -> float:
+		margin_left: float = MECH_LABEL_MARGIN_LEFT,
+		margin_right: float = MECH_LABEL_MARGIN) -> float:
 	var demi: float = box_w * 0.5
-	var bas: float = margin + demi
-	var haut: float = field_w - margin - demi
-	var centre: float = field_w * 0.5 if bas > haut else clampf(owner_x, bas, haut)
+	var bas: float = margin_left + demi
+	var haut: float = field_w - margin_right - demi
+	var centre: float = (margin_left + field_w - margin_right) * 0.5 if bas > haut \
+		else clampf(owner_x, bas, haut)
 	return centre - owner_x - demi
 
 
@@ -1514,7 +1522,8 @@ static func caption_box_x(owner_x: float, box_w: float,
 ## Cameleon) dans le terrain. La boite se RESSERRE sur son contenu (le texte, les
 ## logos) : une boite de 420 px ramenee entiere eloignerait de son monstre une
 ## legende courte. Sans cela, pres du bord gauche ou droit, la legende etait
-## coupee (« GARDE : les coups glissent », capture du 17/10). A rappeler quand le
+## coupee (« GARDE : les coups glissent », capture du 17/10). A gauche, elle
+## s arrete au bord de la jauge de vitesse (MECH_LABEL_MARGIN_LEFT). A rappeler quand le
 ## monstre bouge ou que le texte change : la boite suit le monstre (enfant).
 static func fit_caption(c: Control, owner: Node2D) -> void:
 	if c == null or owner == null or not is_instance_valid(c):
