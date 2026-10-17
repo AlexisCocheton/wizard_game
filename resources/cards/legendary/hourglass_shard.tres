@@ -24,8 +24,11 @@ params = {}
 script = ExtResource("2_q3kry")
 id = &"sablier_brise"
 title = "Sablier brise"
-description = "Le temps s arrete presque : monstres -90 %, incantation +200 %, 2 s"
+description = "Quasi instantane : le temps s arrete presque (monstres -90 %, incantation +200 %), 2 s"
 modifiers = Array[Dictionary]([{
+"factor": 0.2,
+"op": "cast_time"
+}, {
 "field": "magnitude",
 "key": &"slow_enemy_gauge",
 "op": "set",
@@ -51,7 +54,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_q3kry")
 id = &"sablier_retourne"
 title = "Sablier retourne"
-description = "Le sable remonte : tous les monstres font demi-tour 2 s (effet de vent)"
+description = "Le sable remonte : tous les monstres font demi-tour 2 s"
 modifiers = Array[Dictionary]([{
 "duration": 2.0,
 "key": &"reverse_enemies",

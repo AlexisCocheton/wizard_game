@@ -18,7 +18,7 @@ id = &"eclat_purifiant"
 title = "Eclat purifiant"
 description = "La lumiere tombe presque aussitot"
 modifiers = Array[Dictionary]([{
-"factor": 0.3,
+"factor": 0.25,
 "op": "cast_time"
 }])
 prices = Array[Dictionary]([{

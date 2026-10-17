@@ -53,10 +53,15 @@ static func upgrade_index(card: SpellCard, paths: Array) -> int:
 	if paths.is_empty() or first_upgrade:
 		return 0
 	# VAGUE 10 A1 : une MAJEURE acceptable passe AVANT tout (voir major_acceptable).
+	# C7b : l ecran en montre DEUX ; entre deux acceptables, major_preferred.
+	var majeure: int = -1
 	for i in paths.size():
 		if paths[i] is Dictionary and bool((paths[i] as Dictionary).get("major", false)) \
 				and major_acceptable(card, paths[i]):
-			return i
+			if majeure < 0 or major_preferred(card, paths[i], paths[majeure]):
+				majeure = i
+	if majeure >= 0:
+		return majeure
 	var identite: StringName = RunState.upgrade_identity_axis(card)
 	var naturel: StringName = StringName("%s_%s" % [identite, RunState.UP_STRONG])
 	var vitesse: StringName = StringName("%s_%s" % [RunState.UP_CAST, RunState.UP_STRONG])
@@ -675,6 +680,24 @@ static func major_acceptable(card: SpellCard, path: Dictionary) -> bool:
 	var mods: Dictionary = path.get("mods", {}) as Dictionary
 	var sur_identite: float = float(mods.get(identite, 0.0))
 	return sur_identite >= -MAJOR_MAX_IDENTITY_LOSS - 0.0001
+
+
+## ENTRE DEUX MAJEURES ACCEPTABLES (C7b : l ecran montre les deux) : vrai si `a`
+## passe avant `b`. Le critere HABITUEL du bot, celui de ses voies ordinaires
+## (upgrade_index) : d abord l IDENTITE du sort (celle qui y perd le moins, ou y
+## gagne le plus), puis la VITESSE de lancement. A egalite, l id le plus petit :
+## le choix ne depend jamais de l ordre d affichage, que l offre melange. Comme
+## major_acceptable, il ne lit que les chiffres que l ecran ecrit (mods).
+static func major_preferred(card: SpellCard, a: Dictionary, b: Dictionary) -> bool:
+	var identite: StringName = RunState.upgrade_identity_axis(card)
+	var ma: Dictionary = a.get("mods", {}) as Dictionary
+	var mb: Dictionary = b.get("mods", {}) as Dictionary
+	for axe: StringName in [identite, RunState.UP_CAST]:
+		var va: float = float(ma.get(axe, 0.0))
+		var vb: float = float(mb.get(axe, 0.0))
+		if absf(va - vb) > 0.0001:
+			return va > vb
+	return String(a.get("major_id", a.get("id", ""))) < String(b.get("major_id", b.get("id", "")))
 
 
 ## La carte de la main que le bot fait murir (cle hand_card_level) : celle a qui

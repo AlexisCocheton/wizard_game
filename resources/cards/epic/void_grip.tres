@@ -37,7 +37,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_imev1")
 id = &"gouffre_du_vide"
 title = "Gouffre du vide"
-description = "Aspire 1,5 s vers son centre (effet de vent), puis dissipe une seconde fois"
+description = "Aspire 1,5 s vers son centre, puis dissipe une seconde fois"
 modifiers = Array[Dictionary]([{
 "duration": 1.5,
 "key": &"vortex_pull",

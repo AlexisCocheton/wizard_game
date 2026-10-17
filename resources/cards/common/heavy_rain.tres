@@ -33,7 +33,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_okslb")
 id = &"pluie_battante"
 title = "Pluie battante"
-description = "Le deluge plaque les monstres : ils font demi-tour 1,5 s (effet de vent)"
+description = "Le deluge repousse les monstres : ils font demi-tour 1,5 s"
 modifiers = Array[Dictionary]([{
 "duration": 1.5,
 "key": &"reverse_enemies",

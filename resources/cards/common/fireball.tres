@@ -58,7 +58,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_2tal8")
 id = &"napalm"
 title = "Napalm"
-description = "L explosion devient une nappe de feu : 8 degats par seconde pendant 4 s"
+description = "L explosion devient une nappe de feu qui s etale puis reflue : 8 par seconde, 4 s"
 modifiers = Array[Dictionary]([{
 "field": "magnitude",
 "key": &"ground_zone",
@@ -69,6 +69,16 @@ modifiers = Array[Dictionary]([{
 "key": &"ground_zone",
 "op": "set",
 "value": 4.0
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_start",
+"value": 0.6
+}, {
+"key": &"ground_zone",
+"op": "set",
+"param": &"grow_peak",
+"value": 1.5
 }])
 prices = Array[Dictionary]([{
 "axis": &"cast",

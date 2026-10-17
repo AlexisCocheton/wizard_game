@@ -4669,14 +4669,22 @@ func _progression_de(level_id: StringName) -> Dictionary:
 # REGLES TENUES PAR LA TABLE (verrouillees par test_majeures_contenu) :
 #   - deux majeures par sort, d ids et de structures differentes ; un passif ne
 #     murit pas, il n en a pas ;
-#   - chaque majeure change la STRUCTURE (op add_effect, set, duplicate, repeat
-#     ou cast_time) : jamais un simple « +X % », que les voies font deja ;
+#   - chaque majeure change la STRUCTURE : add_effect, duplicate, repeat, un set
+#     d un param de COMPORTEMENT (angle, decalage, blocks_flyers, unbreakable,
+#     grow, residu...) ou une incantation SOUS x0,3 (« quasi instantane »).
+#     Jamais un simple chiffre : un set de magnitude ou de duree, une portee,
+#     des PV ne font que ce que font deja les voies (C7b, vague 10 : cinq
+#     majeures ne changeaient qu un chiffre et passaient le test) ;
 #   - chaque PRIX est une op « axis » negative qui MORD sur ce sort (un axe que
 #     le sort n a pas serait un prix affiche et jamais paye) : le texte rouge
 #     s ecrit seul et le bot du banc le lit (AutoPick.major_acceptable) ;
-#   - un effet ajoute porte l ELEMENT de la carte (combat_tags) ; quand il
-#     emprunte le verbe d un autre element (un ralentissement de glace sur une
-#     nappe d eau), la description le dit ;
+#   - un effet ajoute porte l ELEMENT de la carte (combat_tags), meme quand il
+#     emprunte le VERBE d un autre element (une aspiration sur un brasier, un
+#     ralentissement sur une nappe) : le texte ne nomme JAMAIS un autre element
+#     que celui de la carte. Les resistances en dependent ; C7b a retire neuf
+#     « (effet de vent) », « (effet de glace) »... qui mentaient. Le moteur ne
+#     sait pas donner a un effet un element a part (les handlers lisent les tags
+#     de la CARTE) ;
 #   - texte lisible en portrait sur l ecran de maturation : titre court, une
 #     description de deux lignes au plus, sans accents comme le reste des cartes.
 #
@@ -4699,6 +4707,16 @@ func _progression_de(level_id: StringName) -> Dictionary:
 # 15 majeures distinctes seulement : la deuxieme maturation (24 XP) n est
 # atteinte que par les sorts les plus joues (Boule de feu, Trait, Fleche,
 # Meteore...). Le reste se jouera en Libre et en Massacre.
+#
+# C7b (17/10) : la 2e maturation propose les DEUX majeures du sort (plus une
+# voie), le joueur choisit ; huit majeures ont recu une vraie structure
+# (coup_de_fouet, arret_du_temps, sablier_brise, autel_appat, foudre_tenace,
+# puis napalm, fosse_aux_pieux, eclat_purifiant que le test durci a trouves) ;
+# neuf textes ne nomment plus un element que l effet n a pas. Banc court
+# (lvl_01, 05, 11, 16, 18, 20 x 30) : 164 -> 169 / 180 victoires ; majeures
+# prises 1,87 -> 2,39 par partie, mais 15 -> 11 distinctes : face aux deux, le bot
+# prend celle qui paie le moins sur l identite du sort (AutoPick.major_preferred),
+# et Barrage, Seconde ligne, Eclat purifiant, Triple jet ne sont plus mesurees.
 # =====================================================================
 
 ## Les sorts qui recoivent leurs majeures, dans l ordre du catalogue.
@@ -4907,10 +4925,14 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_copie(c, "ground_zone", {&"aim_offset": Vector2(-230.0, 0.0)}),
 					 _mj_copie(c, "ground_zone", {&"aim_offset": Vector2(230.0, 0.0)})],
 					[_mj_prix("area", -0.45), _mj_prix("damage", -0.2)]),
+				# C7b : la nappe RESPIRE (grow), sinon la majeure ne changeait que
+				# deux chiffres de la zone (refuse par test_majeures_contenu durci).
 				_mj("napalm", "Napalm",
-					"L explosion devient une nappe de feu : 8 degats par seconde pendant 4 s",
+					"L explosion devient une nappe de feu qui s etale puis reflue : 8 par seconde, 4 s",
 					[_mj_champ("ground_zone", "magnitude", 8.0),
-					 _mj_champ("ground_zone", "duration", 4.0)],
+					 _mj_champ("ground_zone", "duration", 4.0),
+					 _mj_pose("ground_zone", "grow_start", 0.6),
+					 _mj_pose("ground_zone", "grow_peak", 1.5)],
 					[_mj_prix("cast", -0.4)]),
 			]
 		"frost_rain":
@@ -4955,12 +4977,14 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 			]
 		# ================= RARES =================
 		"quickening":
-			# Une hate longue -> une hate eclair ; une hate -> une hate et un soin.
+			# Une hate longue -> une FRENESIE breve : deux sorts charges a la fois
+			# (C7b : avant, deux chiffres seulement) ; une hate -> une hate et un soin.
 			return [
 				_mj("coup_de_fouet", "Coup de fouet",
-					"Hate enorme mais breve : +300 % d incantation pendant 1,5 s",
+					"Frenesie de 1,5 s : incantation +300 % et deux sorts charges a la fois",
 					[_mj_champ("self_haste", "magnitude", 300.0),
-					 _mj_champ("self_haste", "duration", 1.5)],
+					 _mj_champ("self_haste", "duration", 1.5),
+					 _mj_ajout("double_cast", 0.0, 1.5)],
 					[_mj_prix("discard", -1.0)]),
 				_mj("second_souffle", "Second souffle",
 					"Rend aussi 20 points de vitesse au mage",
@@ -4968,13 +4992,17 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_prix("duration", -0.5)]),
 			]
 		"temporal_drag":
-			# Un ralentissement -> un arret quasi total ; un -> deux de suite.
+			# Un ralentissement -> trois ARRETS a contretemps (C7b : avant, un seul,
+			# deux chiffres changes) ; un -> deux de suite. Un second ralentissement
+			# AJOUTE au meme lancer ne servirait a rien : apply_global_enemy_slow
+			# remplace le precedent, d ou le rythme par rejeux.
 			return [
 				_mj("arret_du_temps", "Arret du temps",
-					"Les monstres sont quasi figes (-90 %), pendant 1,5 s seulement",
+					"Trois arrets : les monstres sont quasi figes (-90 %) 1 s, toutes les 2,5 s",
 					[_mj_champ("slow_enemy_gauge", "magnitude", 90.0),
-					 _mj_champ("slow_enemy_gauge", "duration", 1.5)],
-					[_mj_prix("cast", -0.3)]),
+					 _mj_champ("slow_enemy_gauge", "duration", 1.0),
+					 _mj_rejeu(2.5), _mj_rejeu(5.0)],
+					[_mj_prix("cast", -0.4)]),
 				_mj("double_entrave", "Double entrave",
 					"L entrave revient 6 s plus tard : deux ralentissements de suite",
 					[_mj_rejeu(6.0)],
@@ -5032,7 +5060,8 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_prix("hp", -0.3), _mj_prix("discard", -1.0)]),
 			]
 		"brazier":
-			# Une zone -> une colonne de trois ; un feu qui aspire (verbe du vent).
+			# Une zone -> une colonne de trois ; un feu qui aspire (verbe du vent,
+			# element du FEU : le texte ne nomme pas le vent, C7b).
 			return [
 				_mj("colonne_de_feu", "Colonne de feu",
 					"Trois brasiers en colonne : un couloir de feu vers les monstres",
@@ -5040,7 +5069,7 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					 _mj_copie(c, "ground_zone", {&"aim_offset": Vector2(0.0, -420.0)})],
 					[_mj_prix("area", -0.4), _mj_prix("damage", -0.25)]),
 				_mj("appel_d_air", "Appel d air",
-					"Le brasier aspire l air et attire les monstres vers son coeur (effet de vent)",
+					"Le brasier aspire l air : les monstres sont attires vers son coeur pendant 6 s",
 					[_mj_ajout("vortex_pull", 90.0, 6.0, 280.0)],
 					[_mj_prix("damage", -0.4)]),
 			]
@@ -5114,16 +5143,18 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					 _mj_pose("knockback", "residue_duration", 4.0)],
 					[_mj_prix("force", -0.4)]),
 				_mj("chaines_pesantes", "Chaines pesantes",
-					"Les chaines restent au sol : ralentit de 50 % pendant 3 s (effet de glace)",
+					"Les chaines restent au sol : qui y passe est ralenti de 50 % pendant 3 s",
 					[_mj_ajout("ground_zone", 0.0, 3.0, 190.0, {&"slow_pct": 50.0})],
 					[_mj_prix("force", -0.5)]),
 			]
 		"purifying_light":
 			# Une dissipation lente -> eclair ; une dissipation qui eblouit.
 			return [
+				# C7b : x0,25 et non plus x0,3. Une incantation ne compte comme
+				# STRUCTURE que SOUS x0,3 (« quasi instantane », test durci).
 				_mj("eclat_purifiant", "Eclat purifiant",
 					"La lumiere tombe presque aussitot",
-					[_mj_incant(0.3)],
+					[_mj_incant(0.25)],
 					[_mj_prix("area", -0.3), _mj_prix("discard", -1.0)]),
 				_mj("aube_eblouissante", "Aube eblouissante",
 					"La lumiere eblouit : sa zone ralentit de 40 % pendant 4 s",
@@ -5131,10 +5162,11 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_prix("cast", -0.4)]),
 			]
 		"repulsion_wave":
-			# Un souffle -> un courant qui dure (verbe de l eau) ; deux ondes.
+			# Un souffle -> un courant qui dure (verbe de l eau, element du VENT :
+			# le texte ne nomme pas l eau, C7b) ; deux ondes.
 			return [
 				_mj("souffle_continu", "Souffle continu",
-					"Le souffle s attarde 4 s : un courant fait reculer qui y entre (effet d eau)",
+					"Le souffle s attarde 4 s : un courant fait reculer qui y entre",
 					[_mj_ajout("water_flood", 60.0, 4.0, 220.0)],
 					[_mj_prix("force", -0.4)]),
 				_mj("double_onde", "Double onde",
@@ -5157,14 +5189,15 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_prix("hp", -0.5)]),
 			]
 		"tidal_pool":
-			# Un courant -> une vague qui s abat d abord ; une eau qui gele.
+			# Un courant -> une vague qui s abat d abord ; une eau qui englue (le
+			# ralentissement est d EAU, l element de la carte : C7b retire le « glace »).
 			return [
 				_mj("raz_de_maree", "Raz-de-maree",
 					"La nappe s abat d abord : 8 degats et un violent recul, puis le courant",
 					[_mj_ajout("knockback", 8.0, 0.0, 300.0, {&"push": 220.0})],
 					[_mj_prix("duration", -0.4)]),
 				_mj("bourbier", "Bourbier",
-					"L eau glacee ralentit aussi de 40 % (effet de glace)",
+					"L eau s epaissit : la nappe ralentit aussi de 40 %",
 					[_mj_ajout("ground_zone", 0.0, 7.0, 300.0, {&"slow_pct": 40.0})],
 					[_mj_prix("force", -0.4)]),
 			]
@@ -5295,7 +5328,7 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_ajout("ground_zone", 0.0, 4.0, 150.0, {&"vuln_mult": 1.5})],
 					[_mj_prix("area", -0.3)]),
 				_mj("gouffre_du_vide", "Gouffre du vide",
-					"Aspire 1,5 s vers son centre (effet de vent), puis dissipe une seconde fois",
+					"Aspire 1,5 s vers son centre, puis dissipe une seconde fois",
 					[_mj_ajout("vortex_pull", 180.0, 1.5, 320.0), _mj_rejeu(1.5)],
 					[_mj_prix("area", -0.4), _mj_prix("cast", -0.2)]),
 			]
@@ -5370,7 +5403,9 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_prix("area", -0.5), _mj_prix("damage", -0.4)]),
 			]
 		"terrain_altar":
-			# Incassable mais bref et fervent ; un autel qui sert d appat.
+			# Incassable mais bref et fervent ; un autel qui sert d APPAT : il aspire
+			# les monstres a la pose puis les retient (C7b : avant, deux chiffres,
+			# portee de provocation et PV ; l aspiration est de NATURE, sa carte).
 			return [
 				_mj("autel_sacre", "Autel sacre",
 					"Incassable, un allie toutes les 2,5 s, mais il s eteint en 20 s",
@@ -5379,13 +5414,16 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					 _mj_pose("place_terrain", "summon_every", 2.5)],
 					[_mj_prix("damage", -0.3)]),
 				_mj("autel_appat", "Autel-appat",
-					"L autel attire les monstres de loin et tient plus longtemps (320 PV)",
-					[_mj_pose("place_terrain", "taunt_radius", 460.0),
+					"A la pose, l autel aspire les monstres vers lui 3 s, puis les retient de loin",
+					[_mj_ajout("vortex_pull", 120.0, 3.0, 320.0),
+					 _mj_pose("place_terrain", "taunt_radius", 460.0),
 					 _mj_pose("place_terrain", "prop_hp", 320.0)],
 					[_mj_prix("damage", -0.4)]),
 			]
 		"terrain_pit":
-			# Incassable mais comble en 12 s, et bien plus profonde ; des pieux.
+			# Incassable mais comble en 12 s, et bien plus profonde ; des pieux qui
+			# JAILLISSENT a la pose (C7b : avant, un seul chiffre, les degats de la
+			# zone ; un residu ne marcherait pas ici, plant() ne le lit pas).
 			return [
 				_mj("gouffre", "Gouffre",
 					"Incassable et plus profond (x2 degats, -40 % vitesse), mais comble en 12 s",
@@ -5395,8 +5433,9 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					 _mj_pose("place_terrain", "slow_pct", 40.0)],
 					[_mj_prix("area", -0.2)]),
 				_mj("fosse_aux_pieux", "Fosse aux pieux",
-					"Des pieux au fond : 6 degats de NATURE par seconde a qui y tombe",
-					[_mj_champ("place_terrain", "magnitude", 6.0)],
+					"Des pieux jaillissent : etourdi 1 s a la pose, puis 6 degats de NATURE par seconde",
+					[_mj_champ("place_terrain", "magnitude", 6.0),
+					 _mj_ajout("stun_zone", 0.0, 1.0, 150.0)],
 					[_mj_prix("amplify", -0.5)]),
 			]
 		# ================= LEGENDAIRES =================
@@ -5462,16 +5501,20 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_prix("slow", -0.45), _mj_prix("tempo", -0.45)]),
 			]
 		"hourglass_shard":
-			# Un ralentissement -> un arret ; le sable qui remonte (verbe du vent).
+			# Un ralentissement -> un arret QUASI INSTANTANE (C7b : avant, trois
+			# chiffres seulement ; la plus longue incantation des sorts de temps,
+			# 2,1 s de base, devient un bouton d urgence) ; le sable qui remonte
+			# (verbe du vent, element ARCANIQUE : le texte ne nomme pas le vent).
 			return [
 				_mj("sablier_brise", "Sablier brise",
-					"Le temps s arrete presque : monstres -90 %, incantation +200 %, 2 s",
-					[_mj_champ("slow_enemy_gauge", "magnitude", 90.0),
+					"Quasi instantane : le temps s arrete presque (monstres -90 %, incantation +200 %), 2 s",
+					[_mj_incant(0.2),
+					 _mj_champ("slow_enemy_gauge", "magnitude", 90.0),
 					 _mj_champ("self_haste", "magnitude", 200.0),
 					 _mj_champ("", "duration", 2.0)],
 					[_mj_prix("discard", -1.0)]),
 				_mj("sablier_retourne", "Sablier retourne",
-					"Le sable remonte : tous les monstres font demi-tour 2 s (effet de vent)",
+					"Le sable remonte : tous les monstres font demi-tour 2 s",
 					[_mj_ajout("reverse_enemies", 0.0, 2.0)],
 					[_mj_prix("tempo", -0.5)]),
 			]
@@ -5553,8 +5596,12 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					"Le vent te pousse : ton incantation +50 % tant qu il souffle",
 					[_mj_ajout("self_haste", 50.0, dv)],
 					[_mj_prix("discard", -1.0)]),
-				_mj("vent_glacial", "Vent glacial",
-					"Le vent gele : tous les monstres -25 % de vitesse tant qu il souffle (glace)",
+				# C7b : le ralentissement est de VENT, l element de la carte. Le titre
+				# et le texte disaient « glacial » / « (glace) » : un monstre qui
+				# craint le froid mais resiste au vent l aurait cru sans effet. L id
+				# reste (identifiant stable de la partie), le texte ne ment plus.
+				_mj("vent_glacial", "Vent contraire",
+					"Le vent se retourne contre eux : tous les monstres -25 % tant qu il souffle",
 					[_mj_ajout("slow_enemy_gauge", 25.0, dv)],
 					[_mj_prix("duration", -0.3), _mj_prix("cast", -0.2)]),
 			]
@@ -5566,11 +5613,15 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					"A chaque mort, la marque saute sur DEUX monstres au lieu d un",
 					[_mj_pose("electric_mark", "marks_per_death", 2)],
 					[_mj_prix("cast", -0.3), _mj_prix("discard", -1.0)]),
+				# C7b : la foudre RETOMBE (rejeu, la cible morte est remplacee par
+				# la plus proche) ; avant, deux chiffres seulement (decroissance,
+				# portee). Le rejeu double les chaines : le prix en vitesse monte.
 				_mj("foudre_tenace", "Foudre tenace",
-					"La marque ne faiblit plus de saut en saut, mais saute moins loin",
+					"La marque ne faiblit plus et la foudre retombe 1,5 s plus tard ; sauts plus courts",
 					[_mj_pose("electric_mark", "decay", 0.0),
-					 _mj_pose("electric_mark", "jump_range", 200.0)],
-					[_mj_prix("discard", -1.0), _mj_prix("cast", -0.2)]),
+					 _mj_pose("electric_mark", "jump_range", 200.0),
+					 _mj_rejeu(1.5)],
+					[_mj_prix("discard", -1.0), _mj_prix("cast", -0.35)]),
 			]
 		"heavy_rain":
 			return [
@@ -5579,7 +5630,7 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					[_mj_incant(0.25)],
 					[_mj_prix("discard", -1.0)]),
 				_mj("pluie_battante", "Pluie battante",
-					"Le deluge plaque les monstres : ils font demi-tour 1,5 s (effet de vent)",
+					"Le deluge repousse les monstres : ils font demi-tour 1,5 s",
 					[_mj_ajout("reverse_enemies", 0.0, 1.5)],
 					[_mj_prix("cast", -0.4)]),
 			]
@@ -5594,7 +5645,7 @@ func _majeures_de(id: String, c: SpellCard) -> Array:
 					 _mj_pose("quicksand", "grow_peak", 1.8)],
 					[_mj_prix("cast", -0.3), _mj_prix("duration", -0.25)]),
 				_mj("tourbillon_de_sable", "Tourbillon de sable",
-					"Le sable aspire vers son centre avant d engloutir (effet de vent)",
+					"Le sable aspire vers son centre avant d engloutir",
 					[_mj_ajout("vortex_pull", 120.0, d, r)],
 					[_mj_prix("discard", -1.0)]),
 			]

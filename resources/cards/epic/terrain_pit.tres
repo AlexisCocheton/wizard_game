@@ -51,12 +51,19 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_g8iuj")
 id = &"fosse_aux_pieux"
 title = "Fosse aux pieux"
-description = "Des pieux au fond : 6 degats de NATURE par seconde a qui y tombe"
+description = "Des pieux jaillissent : etourdi 1 s a la pose, puis 6 degats de NATURE par seconde"
 modifiers = Array[Dictionary]([{
 "field": "magnitude",
 "key": &"place_terrain",
 "op": "set",
 "value": 6.0
+}, {
+"duration": 1.0,
+"key": &"stun_zone",
+"magnitude": 0.0,
+"op": "add_effect",
+"params": {},
+"radius": 150.0
 }])
 prices = Array[Dictionary]([{
 "axis": &"amplify",

@@ -16,7 +16,7 @@ params = {}
 script = ExtResource("2_dgi5v")
 id = &"arret_du_temps"
 title = "Arret du temps"
-description = "Les monstres sont quasi figes (-90 %), pendant 1,5 s seulement"
+description = "Trois arrets : les monstres sont quasi figes (-90 %) 1 s, toutes les 2,5 s"
 modifiers = Array[Dictionary]([{
 "field": "magnitude",
 "key": &"slow_enemy_gauge",
@@ -26,12 +26,20 @@ modifiers = Array[Dictionary]([{
 "field": "duration",
 "key": &"slow_enemy_gauge",
 "op": "set",
-"value": 1.5
+"value": 1.0
+}, {
+"delay": 2.5,
+"factor": 1.0,
+"op": "repeat"
+}, {
+"delay": 5.0,
+"factor": 1.0,
+"op": "repeat"
 }])
 prices = Array[Dictionary]([{
 "axis": &"cast",
 "op": "axis",
-"pct": -0.3
+"pct": -0.4
 }])
 
 [sub_resource type="Resource" id="Resource_cbpsy"]

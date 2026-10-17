@@ -44,7 +44,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_kao8s")
 id = &"tourbillon_de_sable"
 title = "Tourbillon de sable"
-description = "Le sable aspire vers son centre avant d engloutir (effet de vent)"
+description = "Le sable aspire vers son centre avant d engloutir"
 modifiers = Array[Dictionary]([{
 "duration": 8.0,
 "key": &"vortex_pull",

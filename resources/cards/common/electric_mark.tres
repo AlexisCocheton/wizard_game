@@ -39,7 +39,7 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_v00fo")
 id = &"foudre_tenace"
 title = "Foudre tenace"
-description = "La marque ne faiblit plus de saut en saut, mais saute moins loin"
+description = "La marque ne faiblit plus et la foudre retombe 1,5 s plus tard ; sauts plus courts"
 modifiers = Array[Dictionary]([{
 "key": &"electric_mark",
 "op": "set",
@@ -50,6 +50,10 @@ modifiers = Array[Dictionary]([{
 "op": "set",
 "param": &"jump_range",
 "value": 200.0
+}, {
+"delay": 1.5,
+"factor": 1.0,
+"op": "repeat"
 }])
 prices = Array[Dictionary]([{
 "axis": &"discard",
@@ -58,7 +62,7 @@ prices = Array[Dictionary]([{
 }, {
 "axis": &"cast",
 "op": "axis",
-"pct": -0.2
+"pct": -0.35
 }])
 
 [resource]

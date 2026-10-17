@@ -50,8 +50,15 @@ prices = Array[Dictionary]([{
 script = ExtResource("2_wf7kb")
 id = &"autel_appat"
 title = "Autel-appat"
-description = "L autel attire les monstres de loin et tient plus longtemps (320 PV)"
+description = "A la pose, l autel aspire les monstres vers lui 3 s, puis les retient de loin"
 modifiers = Array[Dictionary]([{
+"duration": 3.0,
+"key": &"vortex_pull",
+"magnitude": 120.0,
+"op": "add_effect",
+"params": {},
+"radius": 320.0
+}, {
 "key": &"place_terrain",
 "op": "set",
 "param": &"taunt_radius",
