@@ -3,7 +3,7 @@ extends TestCase
 ##
 ## POURQUOI LE BALAYAGE DES SOURCES. Le signal 11 A LA FERMETURE (voir gotchas)
 ## tombe APRES le marqueur de reussite, pendant le nettoyage du moteur. La sortie
-## commune `CleanExit.quit()` est le seul endroit qui sait sortir sans lui. Un
+## commune `CleanExit.quit()` est le seul endroit qui sait l eviter. Un
 ## etage ou un outil ajoute demain avec un `get_tree().quit(0)` nu retrouverait le
 ## plantage, invisible au harnais tant que le tirage ne tombe pas dessus : le
 ## balayage le refuse des l ecriture, comme `test_touch_scroll` refuse un
@@ -33,17 +33,57 @@ func run() -> void:
 	_test_aucun_quit_direct()
 	_test_le_detecteur_mord()
 	_test_les_caches_se_vident()
+	_test_game_config_ouvre_la_liste()
+	_test_le_porteur_tient_tout()
 	_test_static_var_sans_static_unload()
 	_test_le_detecteur_static_mord()
 
 
-## LA CAUSE DU SIGNAL 11 (mesuree au chantier C3, voir gotchas) : en 4.4.0, un
-## script a `static var` SANS `@static_unload` est tenu par le cache statique de
-## GDScript (GDScriptCache::static_gdscript_cache), que la fermeture ne vide pas
-## (corrige en 4.4.1, GH-104281). Le plantage tombe dans la boucle qui vide les
-## scripts (GDScriptLanguage::finish). Tout script a static var porte donc
-## `@static_unload` : en jeu il ne change rien (le cache complet de GDScript tient
-## deja chaque script charge jusqu a la fermeture), il ne joue qu a la sortie.
+## LE CONTOURNEMENT DU PLANTAGE (voir CleanExit) repose sur un fait d ordre : le
+## porteur des scripts, GameConfig, est le PREMIER script cree, donc le DERNIER
+## que GDScript vide en quittant. Il l est parce qu il est le premier autoload.
+## Le deplacer dans la liste rendrait le porteur inutile, sans aucun symptome
+## avant le prochain signal 11 : ce test le refuse.
+func _test_game_config_ouvre_la_liste() -> void:
+	var premier: String = ""
+	var dans_autoload: bool = false
+	for brute in FileAccess.get_file_as_string("res://project.godot").split("\n"):
+		var l: String = brute.strip_edges()
+		if l.begins_with("["):
+			dans_autoload = l == "[autoload]"
+			continue
+		if dans_autoload and l.contains("="):
+			premier = l.get_slice("=", 0)
+			break
+	eq(premier, "GameConfig", "GameConfig est le premier autoload (porteur des scripts a la fermeture)")
+
+
+## Le porteur tient TOUT : les scripts en cache, les classes internes, la sortie
+## elle-meme et GameConfig (qui se tient lui-meme : sinon il pourrait mourir avant
+## la boucle et lacher les autres au mauvais moment).
+func _test_le_porteur_tient_tout() -> void:
+	var tenus: Array = CleanExit.hold_loaded_scripts()
+	ok(tenus.size() > 20, "des dizaines de scripts tenus (%d)" % tenus.size())
+	ok(tenus.has(load(SORTIE)), "la sortie commune est tenue")
+	ok(tenus.has(load("res://scripts/autoload/game_config.gd")), "GameConfig se tient lui-meme")
+	ok(tenus.has(get_script()), "le script de cette suite est tenu")
+	ok(tenus.has(EffectHandlers.DamageSingle), "une classe interne est tenue")
+	eq(GameConfig.held_scripts().size(), tenus.size(), "c est GameConfig qui les tient")
+	var doubles: Dictionary = {}
+	for s in tenus:
+		doubles[s] = true
+	eq(doubles.size(), tenus.size(), "aucun script tenu deux fois")
+	# Rien a garder pendant le reste de l etage : la vraie sortie refait la liste.
+	GameConfig.hold_scripts([])
+
+
+## AUSSI MESURE AU CHANTIER C3 (voir gotchas) : en 4.4.0, un script a `static
+## var` SANS `@static_unload` est tenu par le cache statique de GDScript
+## (GDScriptCache::static_gdscript_cache), que la fermeture ne vide pas (corrige
+## en 4.4.1, GH-104281) : il meurt APRES la boucle de fermeture, hors de portee
+## du porteur. Tout script a static var porte donc `@static_unload` : en jeu il
+## ne change rien (le cache complet de GDScript tient deja chaque script charge
+## jusqu a la fermeture), il ne joue qu a la sortie.
 func _test_static_var_sans_static_unload() -> void:
 	var fautifs: Array[String] = []
 	for dossier in DOSSIERS:

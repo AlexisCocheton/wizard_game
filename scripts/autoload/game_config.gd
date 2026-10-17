@@ -1,6 +1,26 @@
+@static_unload
 extends Node
 ## Constantes et reglages d'equilibrage. Aucun etat, aucune dependance.
 ## Premier autoload charge : tous les autres peuvent le lire dans leur _ready().
+##
+## UNE exception a « aucun etat », qui ne sert qu a la FERMETURE du moteur :
+## `_scripts_tenus` (voir CleanExit.hold_loaded_scripts). GameConfig est le PREMIER
+## script cree, donc le DERNIER que GDScript vide en quittant : c est ce qui fait
+## de lui le seul porteur possible. Ne pas deplacer cet autoload de la tete de la
+## liste (test_clean_exit le verifie).
+
+## Tous les scripts charges, tenus pendant que GDScript se vide (CleanExit).
+static var _scripts_tenus: Array = []
+
+
+## Appele par CleanExit juste avant de quitter, jamais en jeu.
+static func hold_scripts(scripts: Array) -> void:
+	_scripts_tenus = scripts
+
+
+## Ce que GameConfig tient (test_clean_exit). Une copie : jamais le tableau interne.
+static func held_scripts() -> Array:
+	return _scripts_tenus.duplicate()
 
 ## --- Vitesse : LA SEULE RESERVE DU MAGE ---
 ## Vitesse en POURCENTAGE : 100 % est le PLANCHER, et le plancher c est la mort.
