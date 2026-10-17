@@ -1479,13 +1479,50 @@ static func mech_label(parent: Node2D, radius: float) -> Label:
 	l.add_theme_constant_override(&"outline_size", 10)
 	l.z_index = 6
 	# Boite large centree sur le monstre, calee AU-DESSUS de sa barre de vie :
-	# le texte pousse vers le haut quand il gagne des lignes.
-	var large: float = 420.0
+	# le texte pousse vers le haut quand il gagne des lignes. Fx.fit_caption la
+	# ramene ensuite dans le terrain, a chaque rafraichissement de la legende.
+	var large: float = MECH_LABEL_WIDTH
 	var haut: float = 150.0
 	l.size = Vector2(large, haut)
 	l.position = Vector2(-large * 0.5, -radius * 0.95 - haut)
 	parent.add_child(l)
 	return l
+
+
+## Largeur de depart de la boite de legende (Fx.mech_label, logos du Cameleon).
+const MECH_LABEL_WIDTH: float = 420.0
+## Marge entre une legende et le bord du terrain : le contour du texte
+## (outline_size 10) reste dans le cadre.
+const MECH_LABEL_MARGIN: float = 24.0
+
+
+## VAGUE 10 C1 : abscisse LOCALE (repere du monstre) d une boite de legende de
+## largeur `box_w`, centree sur le monstre puis RAMENEE dans le terrain avec la
+## marge. Une boite plus large que le terrain se centre sur lui. Pure : c est ce
+## que verrouille test_mech_label_clamp.
+static func caption_box_x(owner_x: float, box_w: float,
+		field_w: float = GameConfig.BATTLEFIELD_WIDTH,
+		margin: float = MECH_LABEL_MARGIN) -> float:
+	var demi: float = box_w * 0.5
+	var bas: float = margin + demi
+	var haut: float = field_w - margin - demi
+	var centre: float = field_w * 0.5 if bas > haut else clampf(owner_x, bas, haut)
+	return centre - owner_x - demi
+
+
+## Ramene une legende posee au-dessus d un monstre (Fx.mech_label, logos du
+## Cameleon) dans le terrain. La boite se RESSERRE sur son contenu (le texte, les
+## logos) : une boite de 420 px ramenee entiere eloignerait de son monstre une
+## legende courte. Sans cela, pres du bord gauche ou droit, la legende etait
+## coupee (« GARDE : les coups glissent », capture du 17/10). A rappeler quand le
+## monstre bouge ou que le texte change : la boite suit le monstre (enfant).
+static func fit_caption(c: Control, owner: Node2D) -> void:
+	if c == null or owner == null or not is_instance_valid(c):
+		return
+	var w: float = maxf(c.get_combined_minimum_size().x, 1.0)
+	if not is_equal_approx(c.size.x, w):
+		c.size = Vector2(w, c.size.y)
+	c.position.x = caption_box_x(owner.position.x, w)
 
 
 # --- Briseur de terrain (chantier W3) ------------------------------------------

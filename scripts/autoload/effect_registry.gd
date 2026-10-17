@@ -186,7 +186,14 @@ func _w10_ctx_for(spec: EffectSpec, ctx: CastContext) -> CastContext:
 	var c := CastContext.make(ctx.battlefield, ctx.card)
 	c.caster = ctx.caster
 	c.direction = ctx.direction
-	c.target_enemy = ctx.target_enemy
+	# VAGUE 10 C1 : la cible du lancer a pu MOURIR, et etre liberee, pendant
+	# l incantation ou avant un rejeu. Recopier un objet libere dans un champ
+	# type `Object` est une SCRIPT ERROR qui interrompt la fonction : elle
+	# rendait null et le handler de l effet decale plantait sur un contexte nul
+	# (GroundZone, WaterJet ; ~2200 erreurs par banc). On ne recopie qu une
+	# cible VIVANTE ; sans elle, l effet decale tombe au POINT vise, comme tout
+	# effet de position dont la cible meurt pendant l incantation.
+	c.target_enemy = ctx.target_enemy if is_instance_valid(ctx.target_enemy) else null
 	c.damage_mult = ctx.damage_mult
 	c.cast_id = ctx.cast_id
 	var p: Vector2 = ctx.target_position + (dec as Vector2)

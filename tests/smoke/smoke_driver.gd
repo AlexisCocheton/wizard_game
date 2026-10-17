@@ -308,6 +308,8 @@ func _run_all() -> void:
 	await TesterSmoke.run(self)
 	# VAGUE 10 A1 : vent, pluie, marque, sable, jet, ecran de majeure, main qui murit.
 	await W10SortsSmoke.run(self)
+	# VAGUE 10 C1 : chaque majeure sur des cibles qui meurent, et une partie au bot.
+	await W10MajeuresSmoke.run(self)
 
 	# 4) La defaite doit aussi fonctionner.
 	_check_defeat_path()

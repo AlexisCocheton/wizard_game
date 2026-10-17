@@ -2403,6 +2403,8 @@ func _refresh_mech_caption() -> void:
 	if not Fx.enabled():
 		return
 	_cham_refresh_chips()
+	if _cham_chips_shown():
+		Fx.fit_caption(_cham_chips, self)  # VAGUE 10 C1 : ramenee dans le terrain
 	var txt: String = mech_caption()
 	if txt == "":
 		if _mech_label != null and is_instance_valid(_mech_label):
@@ -2415,6 +2417,8 @@ func _refresh_mech_caption() -> void:
 	_mech_label.visible = true
 	if _mech_label.text != txt:
 		_mech_label.text = txt
+	# VAGUE 10 C1 : la boite suit le monstre ; pres d un bord elle etait coupee.
+	Fx.fit_caption(_mech_label, self)
 	var faible: int = chameleon_weak()
 	var teinte: Color = Fx.color_for([faible]).lightened(0.35) if faible >= 0 else Color(0.96, 0.94, 0.86)
 	_mech_label.add_theme_color_override(&"font_color", teinte)
