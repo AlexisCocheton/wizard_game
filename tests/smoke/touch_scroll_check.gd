@@ -1,3 +1,4 @@
+@static_unload
 class_name TouchScrollCheck
 extends RefCounted
 ## LE DEFILEMENT AU DOIGT, sur chaque ecran qui deborde.

@@ -31,7 +31,7 @@ func _ready() -> void:
 	for s in range(10):
 		RunState.set_seed(1000 + s * 37)
 		await _run_level(StringName(lid))
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 func _unused() -> void:
@@ -43,7 +43,7 @@ func _unused() -> void:
 		await _run_level_many(StringName(level_id), 30)
 	await _run_massacre_many(20)
 	print("=== FIN ===")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 ## Ce que chaque vague envoie, avant meme de jouer.

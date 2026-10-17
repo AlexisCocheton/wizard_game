@@ -147,7 +147,7 @@ func _ready() -> void:
 	if massacre > 0:
 		await _run_massacre_many(massacre)
 	print("=== FIN ===")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 ## Decalage des graines (--graine) : deux bancs paralleles du meme niveau ne

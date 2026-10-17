@@ -1,3 +1,4 @@
+@static_unload
 class_name SheetLib
 extends RefCounted
 ## Decoupe des spritesheets en SpriteFrames, avec cache.

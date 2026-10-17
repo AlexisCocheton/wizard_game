@@ -48,4 +48,4 @@ func finish() -> void:
 
 
 func _quit(code: int) -> void:
-	get_tree().quit(code)
+	CleanExit.quit(code)

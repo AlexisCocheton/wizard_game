@@ -115,7 +115,7 @@ func _fail(msg: String) -> void:
 func _finish() -> void:
 	if _failed:
 		print("BACKDROPS_FAIL")
-		get_tree().quit(1)
+		CleanExit.quit(1)
 		return
 	print("BACKDROPS_OK")
-	get_tree().quit(0)
+	CleanExit.quit(0)

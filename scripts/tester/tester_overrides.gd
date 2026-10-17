@@ -1,3 +1,4 @@
+@static_unload
 class_name TesterOverrides
 extends RefCounted
 ## LES SURCHARGES DU TESTEUR - reglages du contenu faits depuis le telephone.

@@ -1,3 +1,4 @@
+@static_unload
 class_name TesterTools
 extends Control
 ## L ATELIER DU TESTEUR — page dediee, ouverte depuis les Reglages en mode testeur.

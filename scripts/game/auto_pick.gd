@@ -1,3 +1,4 @@
+@static_unload
 class_name AutoPick
 extends RefCounted
 ## Les choix que fait la partie quand PERSONNE ne peut toucher l ecran : le banc

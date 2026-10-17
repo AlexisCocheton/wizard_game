@@ -103,6 +103,10 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_majeures_contenu.gd",
 	"res://tests/unit/test_cibles_mortes_w10.gd",
 	"res://tests/unit/test_mech_label_clamp.gd",
+	# Vague 10 C3 : signal 11 a la fermeture. Sortie commune (CleanExit), aucun
+	# quit() nu, @static_unload sur tout script a static var. EN DERNIER : la
+	# suite vide les caches statiques a ressources.
+	"res://tests/unit/test_clean_exit.gd",
 ]
 
 var _total_checks: int = 0

@@ -30,7 +30,7 @@ func _ready() -> void:
 	_nettoyer()
 	_passives()
 	print("PASSIVES_OK")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 ## Les .tres d une generation precedente qui ne sont plus produits resteraient

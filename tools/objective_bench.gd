@@ -199,7 +199,7 @@ func _finish() -> void:
 	for l in _a_coller:
 		print(l)
 	print("=== FIN ===")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 func _run_all() -> void:

@@ -19,7 +19,7 @@ func _ready() -> void:
 	_challenges()
 	_rewards()
 	print("ACCOUNT_OK")
-	get_tree().quit(0)
+	CleanExit.quit(0)
 
 
 func _save(res: Resource, path: String) -> void:
