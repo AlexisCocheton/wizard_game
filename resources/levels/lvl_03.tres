@@ -29,12 +29,12 @@
 
 [sub_resource type="Resource" id="Resource_ravo1"]
 script = ExtResource("22_wfffn")
-id = &"obj_card_casts_frost_rain_20"
-description = "Lancer 20 fois Pluie de givre"
+id = &"obj_card_casts_frost_rain_32"
+description = "Lancer 32 fois Pluie de givre"
 check_key = &"card_casts"
 params = {
 "card": "frost_rain",
-"count": 20
+"count": 32
 }
 
 [sub_resource type="Resource" id="Resource_eor8d"]

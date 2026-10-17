@@ -23,7 +23,7 @@
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="25_1r1p4"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="26_pf002"]
 
-[sub_resource type="Resource" id="Resource_7s4ln"]
+[sub_resource type="Resource" id="Resource_76fjm"]
 script = ExtResource("23_aa37k")
 id = &"obj_no_card_arcane_bolt"
 description = "Gagner sans lancer Trait arcanique"
@@ -32,7 +32,7 @@ params = {
 "card": "arcane_bolt"
 }
 
-[sub_resource type="Resource" id="Resource_76fjm"]
+[sub_resource type="Resource" id="Resource_l5tjt"]
 script = ExtResource("23_aa37k")
 id = &"obj_kill_type_with_card_frost_rain_4_mushroom"
 description = "Champignon cuirasse : en tuer 4 avec Pluie de givre"
@@ -43,7 +43,7 @@ params = {
 "enemy": "mushroom"
 }
 
-[sub_resource type="Resource" id="Resource_l5tjt"]
+[sub_resource type="Resource" id="Resource_ntw4e"]
 script = ExtResource("23_aa37k")
 id = &"obj_win_above_speed_320"
 description = "Gagner avec plus de 320 % de vitesse"
@@ -80,7 +80,7 @@ count = 2
 spawn_delay = 1.8
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_ntw4e"]
+[sub_resource type="Resource" id="Resource_xfs5l"]
 script = ExtResource("25_1r1p4")
 id = &"w10_1"
 duration = 26.0
@@ -117,7 +117,7 @@ count = 2
 spawn_delay = 2.2
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_xfs5l"]
+[sub_resource type="Resource" id="Resource_c4pak"]
 script = ExtResource("25_1r1p4")
 id = &"w10_2"
 duration = 28.0
@@ -147,7 +147,7 @@ count = 2
 spawn_delay = 1.8
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_c4pak"]
+[sub_resource type="Resource" id="Resource_3t80o"]
 script = ExtResource("25_1r1p4")
 id = &"w10_3_miniboss"
 duration = 32.0
@@ -184,7 +184,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_3t80o"]
+[sub_resource type="Resource" id="Resource_1maxx"]
 script = ExtResource("25_1r1p4")
 id = &"w10_4"
 duration = 30.0
@@ -221,7 +221,7 @@ count = 3
 spawn_delay = 1.8
 start_offset = 32.0
 
-[sub_resource type="Resource" id="Resource_1maxx"]
+[sub_resource type="Resource" id="Resource_038uy"]
 script = ExtResource("25_1r1p4")
 id = &"w10_5_boss"
 duration = 44.0
@@ -242,10 +242,10 @@ intro_story = &"lvl_10_intro"
 outro_story = &"lvl_10_outro"
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("25_1r1p4")]([SubResource("Resource_ntw4e"), SubResource("Resource_xfs5l"), SubResource("Resource_c4pak"), SubResource("Resource_3t80o"), SubResource("Resource_1maxx")])
+waves = Array[ExtResource("25_1r1p4")]([SubResource("Resource_xfs5l"), SubResource("Resource_c4pak"), SubResource("Resource_3t80o"), SubResource("Resource_1maxx"), SubResource("Resource_038uy")])
 enemy_pool = Array[ExtResource("1_c4pak")]([ExtResource("10_w2mk4"), ExtResource("8_j06ms"), ExtResource("2_3t80o"), ExtResource("9_vac0b"), ExtResource("7_13lwu"), ExtResource("5_xnxle"), ExtResource("12_ntw4e")])
 exploration_deck = Array[ExtResource("12_6t36y")]([ExtResource("2_76fjm"), ExtResource("2_76fjm"), ExtResource("2_76fjm"), ExtResource("2_76fjm"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("14_5g66q"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("16_74qp1"), ExtResource("16_74qp1")])
-objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_7s4ln"), SubResource("Resource_76fjm"), SubResource("Resource_l5tjt")])
+objectives = Array[ExtResource("23_aa37k")]([SubResource("Resource_76fjm"), SubResource("Resource_l5tjt"), SubResource("Resource_ntw4e")])
 levelup_cards = Array[ExtResource("12_6t36y")]([])
 objective_rewards = Array[ExtResource("12_6t36y")]([ExtResource("13_l5tjt"), ExtResource("20_fnnop"), ExtResource("15_ntw4e")])
 next_levels = Array[StringName]([&"lvl_13"])

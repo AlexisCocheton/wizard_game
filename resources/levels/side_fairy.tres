@@ -43,13 +43,13 @@ params = {
 "enemy": "mushroom"
 }
 
-[sub_resource type="Resource" id="Resource_f6dxf"]
+[sub_resource type="Resource" id="Resource_c0gve"]
 script = ExtResource("16_3d2xi")
-id = &"obj_win_above_speed_260"
-description = "Gagner avec plus de 260 % de vitesse"
+id = &"obj_win_above_speed_300"
+description = "Gagner avec plus de 300 % de vitesse"
 check_key = &"win_above_speed"
 params = {
-"pct": 260
+"pct": 300
 }
 
 [sub_resource type="Resource" id="Resource_n8ig5"]
@@ -80,7 +80,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_h7dmw"]
+[sub_resource type="Resource" id="Resource_f6dxf"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_1"
 duration = 26.0
@@ -117,7 +117,7 @@ count = 3
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_k5idq"]
+[sub_resource type="Resource" id="Resource_h7dmw"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_2"
 duration = 27.0
@@ -161,7 +161,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_5ux3c"]
+[sub_resource type="Resource" id="Resource_k5idq"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_3"
 duration = 28.0
@@ -212,7 +212,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 32.0
 
-[sub_resource type="Resource" id="Resource_eku1o"]
+[sub_resource type="Resource" id="Resource_5ux3c"]
 script = ExtResource("18_7cq12")
 id = &"side_fairy_boss"
 duration = 46.0
@@ -233,10 +233,10 @@ intro_story = &"side_fairy_intro"
 outro_story = &"side_fairy_outro"
 terrain = "grass"
 backdrop = "act2_graveyard"
-waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_h7dmw"), SubResource("Resource_k5idq"), SubResource("Resource_5ux3c"), SubResource("Resource_eku1o")])
+waves = Array[ExtResource("18_7cq12")]([SubResource("Resource_f6dxf"), SubResource("Resource_h7dmw"), SubResource("Resource_k5idq"), SubResource("Resource_5ux3c")])
 enemy_pool = Array[ExtResource("5_f6dxf")]([ExtResource("6_h7dmw"), ExtResource("7_k5idq"), ExtResource("8_5ux3c"), ExtResource("9_irc0y"), ExtResource("9_eku1o"), ExtResource("10_bd7r7"), ExtResource("11_50kjp"), ExtResource("12_4ugdg")])
 exploration_deck = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y")])
-objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_t3ncq"), SubResource("Resource_gwara"), SubResource("Resource_f6dxf")])
+objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_t3ncq"), SubResource("Resource_gwara"), SubResource("Resource_c0gve")])
 levelup_cards = Array[ExtResource("1_bq3hy")]([])
 objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("14_t3ncq"), ExtResource("15_f6dxf"), ExtResource("15_twp52")])
 next_levels = Array[StringName]([])

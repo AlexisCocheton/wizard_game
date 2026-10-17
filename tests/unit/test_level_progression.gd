@@ -118,30 +118,57 @@ const PARTIES_DU_BANC: int = 60
 ##     dans tools/make_content.gd (_progression_de), hors du perimetre de C7c :
 ##     lvl_03, rang 1 (20 Pluies de givre) 60 / 60, jamais rate (rangs 2 et 3 :
 ##     15 et 1) ; lvl_04, rangs 2 et 3 inverses (moins de 195 s : 10 ; 3450 de
-##     chemin du Serpent : 12 ; rang 1 : 42). Ces trois objectifs sont marques
-##     A_MESURER et nommes dans OBJECTIFS_A_MESURER jusqu a ce correctif.
+##     chemin du Serpent : 12 ; rang 1 : 42). Ces trois objectifs ont ete
+##     marques A_MESURER jusqu au correctif de C8.
+##
+## VAGUE 10, chantier C8 (17/10), LA MESURE FINALE : les 21 lignes re-jouees (60
+## parties, memes graines, --detail) sur main a3c68b0, qui porte toute la vague
+## 10 et l audit (C7a, C7b : deux majeures au choix, 2,51 prises par partie au
+## banc de campagne ; C7c : l atelier sans Lumiere purifiante). 15 classements
+## conformes sans retouche : 4 lignes identiques (lvl_01, lvl_18, lvl_19,
+## lvl_14) et 11 recollees ; 6 classements tombes du fait de C7b, corriges dans
+## _progression_de (le pourquoi est ecrit a cote de chaque niveau), puis leurs
+## niveaux re-joues en entier sur le contenu regenere :
+##   - lvl_03 : 20 Pluies de givre jamais rate (60) -> 32 ;
+##   - lvl_04 : rangs 2 et 3 inverses (10 / 12) -> moins de 220 s au lieu de 195 ;
+##   - lvl_09 : sans Trait arcanique jamais rate (60), rangs 2 et 3 inverses
+##     (12 / 14) -> sans Boule de feu, moins de 185 % au lieu de 200 ;
+##   - lvl_11 : 32 sorts de glace (51) sous 1 volant (53) -> rangs 1 et 2
+##     echanges ; l ecart reste de 2 (chacun vaut « gagner en le visant ») et le
+##     seuil de 32 ne peut pas monter : l id est la cible du renommage du givre
+##     (SaveData.RENAMED_OBJECTIVES, tenue par test_eight_elements et
+##     test_save_migration_w10) ;
+##   - lvl_12 : le meme sort 30 fois jamais rate (60) -> 45 fois ;
+##   - lvl_15 : plus de 380 % (2) sous la garde de renvoi (34) -> rangs 2 et 3
+##     echanges, plus de 360 %.
+## Les seuils de chrono et de vitesse sont lus sur les victoires du bot neutre,
+## les comptes (Pluies, meme sort, Etincelle) sur une sonde qui ecrit le
+## compteur de chaque partie, puis sur des lots de candidats (un seuil change la
+## politique du bot, qui joue d abord la carte JUSQU AU compte : 32 Pluies
+## rendent 53 et non les 51 que la sonde a 20 promettait). lvl_10 (fichier
+## regenere, ids de sous-ressources seulement) re-joue aussi : meme ligne.
 const MESURES: Dictionary = {
 	"lvl_01": [["obj_card_casts_piercing_arrow_12", 52], ["obj_no_card_fireball", 26], ["obj_win_above_speed_240", 9]],
-	"lvl_02": [["obj_card_casts_cycle_of_thought_6", 58], ["obj_kill_type_with_card_arcane_bolt_3_gorgon_gazer", 45], ["obj_win_above_speed_300", 31]],
-	"lvl_08": [["obj_no_card_piercing_arrow", 55], ["obj_kill_type_one_cast_4_rat_swarm", 22], ["obj_win_below_speed_130", 6]],
-	"lvl_09": [["obj_no_card_arcane_bolt", 57], ["obj_kill_type_with_card_spark_10_gnome", 14], ["obj_win_below_speed_200", 11]],
-	"lvl_17": [["obj_card_casts_south_wind_5", 46], ["obj_kill_flying_12", 37], ["obj_win_below_speed_170", 10]],
+	"lvl_02": [["obj_card_casts_cycle_of_thought_6", 57], ["obj_kill_type_with_card_arcane_bolt_3_gorgon_gazer", 38], ["obj_win_above_speed_300", 30]],
+	"lvl_08": [["obj_no_card_piercing_arrow", 58], ["obj_kill_type_one_cast_4_rat_swarm", 22], ["obj_win_below_speed_130", 5]],
+	"lvl_09": [["obj_no_card_fireball", 58], ["obj_kill_type_with_card_spark_10_gnome", 12], ["obj_win_below_speed_185", 7]],
+	"lvl_17": [["obj_card_casts_south_wind_5", 49], ["obj_kill_flying_12", 42], ["obj_win_below_speed_170", 5]],
 	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 34], ["obj_no_card_venom_dart", 29], ["obj_win_below_speed_190", 13]],
-	"lvl_03": [["obj_card_casts_frost_rain_20", A_MESURER], ["obj_multi_kill_8_1", 15], ["obj_no_hit_from_imp_archer", 1]],
-	"lvl_04": [["obj_kill_type_with_card_frost_rain_4_risen_ghoul", 42], ["obj_win_under_time_195", A_MESURER], ["obj_enemy_travel_3450_0_sand_serpent", A_MESURER]],
+	"lvl_03": [["obj_card_casts_frost_rain_32", 53], ["obj_multi_kill_8_1", 15], ["obj_no_hit_from_imp_archer", 1]],
+	"lvl_04": [["obj_kill_type_with_card_frost_rain_4_risen_ghoul", 42], ["obj_win_under_time_220", 19], ["obj_enemy_travel_3450_0_sand_serpent", 12]],
 	"lvl_19": [["obj_kill_type_with_card_ember_pool_14_pit_ghoul", 58], ["obj_element_casts_28_fire", 49], ["obj_untouched", 9]],
-	"lvl_20": [["obj_kill_type_one_cast_2_parry_skeleton", 53], ["obj_card_casts_piercing_arrow_34", 37], ["obj_win_below_speed_250", 7]],
-	"lvl_05": [["obj_element_casts_80_arcane", 56], ["obj_kill_type_one_cast_2_golem", 23], ["obj_win_under_time_142", 11]],
-	"lvl_06": [["obj_element_casts_8_nature", 59], ["obj_kill_type_one_cast_3_hopper", 20], ["obj_win_under_time_110", 2]],
-	"lvl_21": [["obj_no_card_tag_fire", 50], ["obj_kill_type_with_card_arcane_bolt_5_fire_worm", 41], ["obj_win_under_time_135", 7]],
-	"lvl_07": [["obj_no_card_spark", 59], ["obj_kill_type_one_cast_3_mushroom", 19], ["obj_win_above_speed_380", 9]],
-	"lvl_10": [["obj_no_card_arcane_bolt", 56], ["obj_kill_type_with_card_frost_rain_4_mushroom", 34], ["obj_win_above_speed_320", 10]],
-	"lvl_11": [["obj_element_casts_32_ice", 53], ["obj_kill_flying_1", 51], ["obj_win_below_speed_120", 2]],
-	"lvl_12": [["obj_card_casts_purifying_light_6", 59], ["obj_same_card_casts_30", 45], ["obj_no_hit_from_demon_circle", 6]],
-	"lvl_13": [["obj_no_legendary", 57], ["obj_element_casts_22_fire", 51], ["obj_kill_type_one_cast_2_carnivore_plant", 12]],
+	"lvl_20": [["obj_kill_type_one_cast_2_parry_skeleton", 53], ["obj_card_casts_piercing_arrow_34", 41], ["obj_win_below_speed_250", 9]],
+	"lvl_05": [["obj_element_casts_80_arcane", 51], ["obj_kill_type_one_cast_2_golem", 32], ["obj_win_under_time_142", 12]],
+	"lvl_06": [["obj_element_casts_8_nature", 59], ["obj_kill_type_one_cast_3_hopper", 20], ["obj_win_under_time_110", 3]],
+	"lvl_21": [["obj_no_card_tag_fire", 51], ["obj_kill_type_with_card_arcane_bolt_5_fire_worm", 39], ["obj_win_under_time_135", 10]],
+	"lvl_07": [["obj_no_card_spark", 59], ["obj_kill_type_one_cast_3_mushroom", 19], ["obj_win_above_speed_380", 14]],
+	"lvl_10": [["obj_no_card_arcane_bolt", 56], ["obj_kill_type_with_card_frost_rain_4_mushroom", 36], ["obj_win_above_speed_320", 9]],
+	"lvl_11": [["obj_kill_flying_1", 53], ["obj_element_casts_32_ice", 51], ["obj_win_below_speed_120", 4]],
+	"lvl_12": [["obj_card_casts_purifying_light_6", 59], ["obj_same_card_casts_45", 37], ["obj_no_hit_from_demon_circle", 4]],
+	"lvl_13": [["obj_no_legendary", 57], ["obj_element_casts_22_fire", 51], ["obj_kill_type_one_cast_2_carnivore_plant", 11]],
 	"lvl_14": [["obj_hit_from_sleepy_fox", 59], ["obj_kill_type_one_cast_3_rat_swarm", 29], ["obj_win_under_time_125", 9]],
-	"lvl_15": [["obj_element_casts_40_fire", 58], ["obj_win_above_speed_380", 37], ["obj_never_hit_reflect", 21]],
-	"lvl_16": [["obj_element_casts_70_arcane", 56], ["obj_boss_quick_after_revive_9", 39], ["obj_win_under_time_145", 12]],
+	"lvl_15": [["obj_element_casts_40_fire", 55], ["obj_never_hit_reflect", 34], ["obj_win_above_speed_360", 8]],
+	"lvl_16": [["obj_element_casts_70_arcane", 55], ["obj_boss_quick_after_revive_9", 45], ["obj_win_under_time_145", 15]],
 }
 
 
@@ -150,14 +177,11 @@ const MESURES: Dictionary = {
 const A_MESURER: int = -1
 
 ## Les SEULS objectifs admis sans mesure, nommement : un objectif retouche ou
-## ajoute qui ne serait pas ici reste refuse. Vide du 03/10 au 17/10. Depuis
-## C7c, trois objectifs dont le CLASSEMENT est tombe sur main 854577c (C7b, voir
-## le commentaire de MESURES) : leur seuil ou leur rang est a reprendre dans
-## tools/make_content.gd, puis a re-mesurer, et la liste a revider.
-const OBJECTIFS_A_MESURER: Array[String] = [
-	"obj_card_casts_frost_rain_20", "obj_win_under_time_195",
-	"obj_enemy_travel_3450_0_sand_serpent",
-]
+## ajoute qui ne serait pas ici reste refuse. Vide depuis le 03/10, sauf le
+## 17/10 entre C7c et C8 (trois objectifs dont le classement etait tombe avec
+## C7b ; voir le commentaire de MESURES). Le mecanisme reste : le test de
+## defauts_classement s en sert.
+const OBJECTIFS_A_MESURER: Array[String] = []
 
 ## VAGUE 10 (chantier B2) : les sorts que la campagne ne donne PAS et laisse aux
 ## quetes annexes (chantier B3). La Concentration : aucun niveau n appelle la

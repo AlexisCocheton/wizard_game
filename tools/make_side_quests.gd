@@ -510,7 +510,11 @@ static func quetes() -> Array[Dictionary]:
 		"objectifs": [
 			[&"element_casts", {"element": "FIRE", "count": 30}],
 			[&"kill_type_one_cast", {"enemy": "mushroom", "count": 3}],
-			[&"win_above_speed", {"pct": 260}],
+			# C8 (17/10) : apres C7b, 260 % rendait 5 victoires sur 60, autant que
+			# les 3 Champignons d un sort (5 : le bot qui pose ses zones sur eux ne
+			# gagne que 9 fois) ; 300 % est lu sur les 30 victoires du bot neutre
+			# (rien entre 282 et 320 %).
+			[&"win_above_speed", {"pct": 300}],
 		],
 	})
 	# --- L APPRENTIE D AZUR : LE CRISTAL D YMOA --------------------------------

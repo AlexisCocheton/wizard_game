@@ -36,11 +36,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_1dvci"]
 script = ExtResource("20_8lpo7")
-id = &"obj_same_card_casts_30"
-description = "Lancer 30 fois le meme sort"
+id = &"obj_same_card_casts_45"
+description = "Lancer 45 fois le meme sort"
 check_key = &"same_card_casts"
 params = {
-"count": 30
+"count": 45
 }
 
 [sub_resource type="Resource" id="Resource_2ilfx"]

@@ -4398,7 +4398,9 @@ func _longueurs(n: float) -> float:
 ## sans Boule de feu, plus de 300 %, 4 Oiseaux mirage d un sort, 8 morts en
 ## moins d une seconde, ne pas etre touche par le Lutin archer, prendre le coup
 ## du Renard, sans perdre de vie, sans legendaire, le meme sort 30 fois, sous
-## 120 %). Les taux mesures sont dans test_level_progression.MESURES.
+## 120 %). Une exception depuis C8 (17/10) : le meme sort se demande 45 fois
+## (30 ne se ratait plus, voir lvl_12). Les taux mesures sont dans
+## test_level_progression.MESURES.
 ##
 ## LE REGLAGE AU BANC (17/10). Un seuil de chrono ou de vitesse se lit sur les
 ## temps et les vitesses des victoires du bot tel quel (le banc des objectifs
@@ -4457,10 +4459,17 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# en main pendant le sommeil du Renard).
 			# Banc (17/10) : le coup du Renard ne se ratait plus ici (60 / 60 ; il
 			# reste au lvl_14) ; sans le Trait arcanique (56) a sa place.
+			# C8 (17/10) : depuis C7b (deux majeures au choix), sans le Trait
+			# arcanique ne se ratait plus (60 / 60) et finir sous 200 % (14)
+			# passait devant les 10 gnomes a l Etincelle (12). Essayes au rang 1 :
+			# l Etincelle 30 fois (27), 50 et 70 fois (0) ; retenu : sans la Boule
+			# de feu (58), qui ne double plus le rang 1 du lvl_10. La vitesse est
+			# relue sur les 58 victoires du bot neutre : sous 185 % (7 ; aucune
+			# victoire entre 181 et 189 %).
 			return {"objectifs": [
-				[_objectif(&"no_card", {"card": "arcane_bolt"}), "focus"],
+				[_objectif(&"no_card", {"card": "fireball"}), "focus"],
 				[_objectif(&"kill_type_with_card", {"enemy": "gnome", "card": "spark", "count": 10}), "void_grip"],
-				[_objectif(&"win_below_speed", {"pct": 200}), "echo_of_the_hand"],
+				[_objectif(&"win_below_speed", {"pct": 185}), "echo_of_the_hand"],
 			]}
 		&"lvl_17":
 			# Tout vole et rien ne va droit -> le controle : Onde de repulsion (vent,
@@ -4494,8 +4503,12 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# seconde » (16 / 60) et « ne pas se faire toucher par un Lutin archer »
 			# (1 / 60 : ses deux archers tirent avant de tomber ; 0 / 60 aux
 			# lvl_17 et lvl_18, ou ils sont plus nombreux) sont ici.
+			# C8 (17/10) : depuis C7b (deux majeures au choix), le bot qui joue
+			# d abord la Pluie de givre gagne les 60 parties et la lance de 24 a
+			# 58 fois : 20 ne se ratait plus (60 / 60). 32 : 53 / 60 (il joue la
+			# Pluie d abord JUSQU AU compte : relever le seuil change les parties).
 			return {"objectifs": [
-				[_objectif(&"card_casts", {"card": "frost_rain", "count": 20}), "heartwood_totem"],
+				[_objectif(&"card_casts", {"card": "frost_rain", "count": 32}), "heartwood_totem"],
 				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "mirror_apprentice"],
 				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "venom_mire"],
 			], "passifs": ["pass_ice_winter"]}
@@ -4506,9 +4519,15 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# des victoires : 136 s) ; le chrono passe de 140 s (2 / 60) a 195 s.
 			# Le Serpent des sables sur 2,5 longueurs (9) : le defi du co-auteur,
 			# ici ou le Mur de pierre fait marcher.
+			# C8 (17/10) : depuis C7b (deux majeures au choix), moins de 195 s
+			# (10 / 60) passait sous le Serpent (12) : rangs 2 et 3 inverses. Le
+			# Serpent reste au rang 3 (ses 12 reussites marchent de 109 a 216 %
+			# de la distance, aucune entre 43 et 109 %) ; le chrono est relu sur
+			# les 58 victoires du bot neutre : moins de 220 s (19 ; aucune
+			# victoire entre 211 et 224 s).
 			return {"objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "risen_ghoul", "card": "frost_rain", "count": 4}), "terrain_brambles"],
-				[_objectif(&"win_under_time", {"seconds": 195}), "terrain_altar"],
+				[_objectif(&"win_under_time", {"seconds": 220}), "terrain_altar"],
 				[_objectif(&"enemy_travel", {"enemy": "sand_serpent", "distance": _longueurs(2.5)}), "summoners_key"],
 			], "passifs": ["pass_nature_roots"]}
 		&"lvl_19":
@@ -4594,9 +4613,18 @@ func _progression_de(level_id: StringName) -> Dictionary:
 		&"lvl_11":
 			# Kaltek et ses Berserkers accelerent -> le ralentissement aux trois
 			# rangs : Entrave temporelle, Gel profond, Metier du monde.
+			# C8 (17/10) : 32 sorts de glace (51 / 60) et abattre le seul volant,
+			# l Echo du Grand Oeil (53), ne se ratent que sur une DEFAITE : chacun
+			# vaut « gagner en le visant », et depuis C7b (deux majeures au choix)
+			# leur ordre s est inverse (53 / 51 a B2) : le volant passe au rang 1.
+			# Le bot qui joue d abord la glace en lance au moins 46 par partie ;
+			# 55 sorts de glace (41 ; 60 : 24) donneraient un vrai ecart, mais
+			# l id obj_element_casts_32_ice est la cible du renommage du givre
+			# (SaveData.RENAMED_OBJECTIVES), que test_eight_elements et
+			# test_save_migration_w10 tiennent : le seuil reste 32.
 			return {"objectifs": [
-				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "temporal_drag"],
-				[_objectif(&"kill_flying", {"count": 1}), "deep_freeze"],
+				[_objectif(&"kill_flying", {"count": 1}), "temporal_drag"],
+				[_objectif(&"element_casts", {"element": "ICE", "count": 32}), "deep_freeze"],
 				[_objectif(&"win_below_speed", {"pct": 120}), "world_loom"],
 			], "passifs": ["pass_frostbite"]}
 		&"lvl_12":
@@ -4604,9 +4632,13 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# appat qui les tire hors du cercle) ; Echo de la main (garder la Lumiere).
 			# Banc (17/10) : ne pas etre touche par Ymoa est le plus dur (6 / 60),
 			# il passe au rang 3 ; la Lumiere (59) et le meme sort (45) avant lui.
+			# C8 (17/10) : depuis C7b (deux majeures au choix), le bot qui joue
+			# d abord le Rappel d ossements le lance de 35 a 62 fois : le meme
+			# sort 30 fois (l exemple du co-auteur) ne se ratait plus (60 / 60).
+			# 45 fois (37 ; 50 : 20).
 			return {"objectifs": [
 				[_objectif(&"card_casts", {"card": "purifying_light", "count": 6}), "heartwood_totem"],
-				[_objectif(&"same_card_casts", {"count": 30}), "bastion"],
+				[_objectif(&"same_card_casts", {"count": 45}), "bastion"],
 				[_objectif(&"no_hit_from", {"enemy": "demon_circle"}), "echo_of_the_hand"],
 			], "passifs": ["pass_echo"]}
 		&"lvl_13":
@@ -4637,10 +4669,16 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# Banc (17/10) : 30 sorts de feu ne se rataient jamais, 40 (58 / 60 ; 50 :
 			# 30) ; ne jamais frapper une garde de renvoi (21) est plus dur que
 			# finir au-dessus de 380 % (37) : rangs 2 et 3 echanges.
+			# C8 (17/10) : depuis C7b (deux majeures au choix), le bot finit ce
+			# niveau bien plus bas (391 % de vitesse moyenne a C2, 291 %) : plus
+			# de 380 % ne se reussit que 2 fois sur 60, et ne jamais frapper une
+			# garde de renvoi 34 fois. Rangs 2 et 3 echanges a nouveau ; la
+			# vitesse est relue sur les 60 victoires du bot neutre : plus de
+			# 360 % (8 ; aucune victoire entre 360 et 367 %).
 			return {"objectifs": [
 				[_objectif(&"element_casts", {"element": "FIRE", "count": 40}), "about_face"],
-				[_objectif(&"win_above_speed", {"pct": 380}), "arcane_insight"],
-				[_objectif(&"never_hit_reflect"), "hourglass_shard"],
+				[_objectif(&"never_hit_reflect"), "arcane_insight"],
+				[_objectif(&"win_above_speed", {"pct": 360}), "hourglass_shard"],
 			], "passifs": ["pass_dual"]}
 		&"lvl_16":
 			# L Enfant renvoie les coups -> l Elan du temps rend la vitesse perdue ;
