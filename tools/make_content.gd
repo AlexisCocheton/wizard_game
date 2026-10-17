@@ -1031,10 +1031,10 @@ func _enemies() -> void:
 	# ignorer, c est la seule facon de forcer le joueur a couvrir le ciel au lieu
 	# d attendre que ca descende.
 	# VAGUE 10 B2 — LE GRAND OEIL DEVIENT LE BOSS DE `lvl_17` (le niveau n en avait
-	# aucun, et la scene de fin le fait tomber sur la nacelle). 170 PV au lieu de
+	# aucun, et la scene de fin le fait tomber sur la nacelle). 155 PV au lieu de
 	# 105, la meme spirale, le meme tir ; la Mere Planogo prend le palier.
 	var great_eye := _enemy("great_eye", "Grand Oeil des courants", K.BOSS, 10,
-		170.0, 54.0, 30, S.CIRCLE, Color(0.55, 0.75, 0.95), 52.0)
+		155.0, 54.0, 30, S.CIRCLE, Color(0.55, 0.75, 0.95), 52.0)
 	great_eye.anim_key = &"flyingeye"
 	# 1,5 fois la case du petit : le joueur doit lire « le meme, en grand » d un
 	# coup d oeil, sans avoir a comparer deux barres de vie.
@@ -1097,23 +1097,23 @@ func _enemies() -> void:
 	# son escorte descend — c est la meme question que le Bourreau pose a
 	# l envers : lui, il faut le rattraper.
 	# VAGUE 10 B2 — LE MAGE NOIR DEVIENT LE BOSS DE `lvl_18` (le port n en avait
-	# aucun ; la scene de fin le fait s effondrer). 160 PV au lieu de 110, ses
+	# aucun ; la scene de fin le fait s effondrer). 150 PV au lieu de 110, ses
 	# tirs, sa distance et ses pillards ; le Capitaine pillard prend le palier.
 	var dark_mage := _enemy("dark_mage", "Mage noir de Haute-Nacelle", K.BOSS, 10,
-		160.0, 42.0, 30, S.STAR, Color(0.45, 0.35, 0.75), 54.0)
+		150.0, 42.0, 30, S.STAR, Color(0.45, 0.35, 0.75), 54.0)
 	dark_mage.anim_key = &"evilwizard"
 	# 110 PV, sous la Matrone gorgone (120) : il est le plus fragile des
 	# mini-boss du jeu, et c est le prix de sa distance. Un campeur blinde
 	# serait une attente, pas un combat.
 	dark_mage.keeps_distance_at = 380.0
 	dark_mage.shoot_interval = 2.6
-	# 5 degats par trait : plus cher que la fleche du lutin (2), moins qu un
+	# 4 degats par trait (5 avant la vague 10 : devenu boss, il tirait trop fort pour le port) : plus cher que la fleche du lutin (2), moins qu un
 	# contact de P4. Il doit USER le joueur qui tarde a venir le chercher.
-	dark_mage.shot_damage = 5
+	dark_mage.shot_damage = 4
 	# Il invoque ses soudures : les pillards qu il a retournes. C est la preuve
 	# jouable de ce que l acte raconte — il FABRIQUE les monstres qu on combat.
 	dark_mage.summon_def = load(E + "nacelle_raider.tres")
-	dark_mage.summon_interval = 7.0
+	dark_mage.summon_interval = 8.0
 	dark_mage.summon_count = 1
 	dark_mage.summon_max_alive = 3
 	# Un mage : sa robe ne pare rien, sa magie pare la magie. L arcane et la
@@ -2398,7 +2398,7 @@ func _promus_w10(E: String) -> void:
 	# L ECHO DU MAGE NOIR — le boss de lvl_18 (acte 2), mini-boss du pentacle brise
 	# (acte 4) : il tire et garde ses distances, il n appelle plus de pillards.
 	var mage_echo := _enemy("dark_mage_echo", "Echo du Mage noir", K.MINIBOSS, 6,
-		105.0, 42.0, 12, S.STAR, Color(0.45, 0.35, 0.75), 50.0)
+		100.0, 42.0, 12, S.STAR, Color(0.45, 0.35, 0.75), 50.0)
 	mage_echo.anim_key = &"evilwizard"
 	mage_echo.keeps_distance_at = 380.0
 	mage_echo.shoot_interval = 3.0
@@ -2427,7 +2427,7 @@ func _promus_w10(E: String) -> void:
 	# --- DEUX TETES NEUVES DE L ACTE 2 (aucune feuille neuve) -----------------
 
 	# LA MERE PLANOGO — mini-boss de lvl_17 (« tout ce qui t y attend vole »). Un
-	# grand Planogo qui en appelle d autres : 3 au plus, un toutes les 6 s. La
+	# grand Planogo qui en appelle d autres : 2 au plus, un toutes les 8 s. La
 	# reponse : tuer la mere avant que le ciel se remplisse de boules de poison.
 	var mother := _enemy("planogo_mother", "Mere Planogo", K.MINIBOSS, 6, 100.0, 50.0, 12,
 		S.CIRCLE, Color(0.45, 0.90, 0.88), 48.0)
@@ -2435,9 +2435,9 @@ func _promus_w10(E: String) -> void:
 	mother.sprite_scale = 1.6
 	mother.flying = true
 	mother.summon_def = load(E + "wisp.tres")
-	mother.summon_interval = 6.0
+	mother.summon_interval = 8.0
 	mother.summon_count = 1
-	mother.summon_max_alive = 3
+	mother.summon_max_alive = 2
 	_resist(mother, {&"phys": 0.65, &"feu": 0.9, &"givre": 1.1, &"arcane": 1.3, &"foudre": 1.2})
 	_save(mother, E + "planogo_mother.tres")
 
@@ -3843,7 +3843,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 						["shade", 2, 2.0, 16.0], ["wisp", 2, 2.0, 22.0]]],
 					["w17_4", 27.0, 1.4, "", [["ecumeur", 2, 3.0, 0.0], ["shade", 3, 2.0, 8.0],
 						["current_eye", 3, 2.0, 15.0], ["sand_serpent", 2, 1.8, 21.0]]],
-					["w17_5_boss", 44.0, 1.05, "BOSS", [["great_eye", 1, 1.0, 0.0], ["current_eye", 3, 2.0, 10.0],
+					["w17_5_boss", 44.0, 0.95, "BOSS", [["great_eye", 1, 1.0, 0.0], ["current_eye", 3, 2.0, 10.0],
 						["imp_archer", 1, 1.0, 20.0], ["sand_serpent", 2, 2.0, 26.0], ["wisp", 2, 2.0, 34.0]]],
 				]}
 		&"lvl_18":
@@ -3868,7 +3868,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 						["ecumeur", 1, 1.0, 16.0], ["sand_serpent", 2, 2.0, 22.0]]],
 					["w18_4", 28.0, 1.45, "", [["berserker", 2, 2.5, 0.0], ["nacelle_raider", 3, 1.6, 8.0], ["shade", 2, 2.0, 15.0],
 						["void_knight", 1, 2.5, 21.0], ["ecumeur", 1, 1.0, 25.0]]],
-					["w18_5_boss", 44.0, 1.0, "BOSS", [["dark_mage", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.8, 8.0],
+					["w18_5_boss", 44.0, 0.95, "BOSS", [["dark_mage", 1, 1.0, 0.0], ["nacelle_raider", 2, 1.8, 8.0],
 						["void_knight", 1, 1.0, 18.0], ["imp_archer", 1, 1.0, 26.0], ["current_eye", 2, 2.0, 32.0]]],
 				]}
 		&"lvl_03":
