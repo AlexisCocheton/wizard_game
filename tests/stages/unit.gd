@@ -98,6 +98,8 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_campagne_w10.gd",
 	# Vague 10 B1b : deux MAJEURES par sort du contenu (structure, prix, textes, terrain).
 	"res://tests/unit/test_majeures_contenu.gd",
+	"res://tests/unit/test_cibles_mortes_w10.gd",
+	"res://tests/unit/test_mech_label_clamp.gd",
 ]
 
 var _total_checks: int = 0

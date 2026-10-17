@@ -290,6 +290,7 @@ func _run_all() -> void:
 	await _check_pause_menu()
 	await _check_cartes_petrifiees()
 	await _showcase_mecaniques_v3()
+	await LegendeBordShowcase.run(self)  # VAGUE 10 C1 : legendes aux bords (visual)
 	await _check_objectifs_en_combat()
 	await _showcase_miroir()
 	await _check_end_screens()
@@ -308,6 +309,8 @@ func _run_all() -> void:
 	await TesterSmoke.run(self)
 	# VAGUE 10 A1 : vent, pluie, marque, sable, jet, ecran de majeure, main qui murit.
 	await W10SortsSmoke.run(self)
+	# VAGUE 10 C1 : chaque majeure sur des cibles qui meurent, et une partie au bot.
+	await W10MajeuresSmoke.run(self)
 
 	# 4) La defaite doit aussi fonctionner.
 	_check_defeat_path()

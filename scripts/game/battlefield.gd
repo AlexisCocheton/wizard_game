@@ -2611,12 +2611,16 @@ func w10_dot_count(e: Enemy) -> int:
 	return n
 
 
+## VAGUE 10 C1 : sur une COPIE de la liste, comme `enemies.duplicate()` partout
+## dans ce fichier. Un residu qui TUE fait retirer par _w10_on_death TOUS les
+## residus du mort, a des indices quelconques, pendant la boucle : l ancien
+## parcours a rebours sortait alors du tableau (`remove_at(i)` hors bornes, vu
+## au banc). Les residus finis sont retires APRES la boucle, par identite.
 func _w10_tick_dots(wd: float) -> void:
-	for i in range(w10_dots.size() - 1, -1, -1):
-		var d: Dictionary = w10_dots[i]
+	for d: Dictionary in w10_dots.duplicate():
 		var e: Variant = d["enemy"]
+		# Mort pendant ce tic (residu precedent, eclat de mort) : on ne le frappe plus.
 		if e == null or not is_instance_valid(e) or (e as Enemy).is_dead():
-			w10_dots.remove_at(i)
 			continue
 		d["time"] = float(d["time"]) - wd
 		var z: Dictionary = d["zone"]
@@ -2626,7 +2630,11 @@ func _w10_tick_dots(wd: float) -> void:
 			var obj_src_avant: Dictionary = RunState.swap_damage_source(d["src"])
 			_hit(e as Enemy, float(d["dps"]) * wd, d["tags"] as Array, true)
 			RunState.swap_damage_source(obj_src_avant)  # OBJECTIFS
-		if float(d["time"]) <= 0.0:
+	for i in range(w10_dots.size() - 1, -1, -1):
+		var d: Dictionary = w10_dots[i]
+		var e: Variant = d["enemy"]
+		if float(d["time"]) <= 0.0 or e == null or not is_instance_valid(e) \
+				or (e as Enemy).is_dead():
 			w10_dots.remove_at(i)
 
 
