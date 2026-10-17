@@ -30,7 +30,7 @@ params = {
 "enemy": "nacelle_raider"
 }
 
-[sub_resource type="Resource" id="Resource_jdacw"]
+[sub_resource type="Resource" id="Resource_2jsra"]
 script = ExtResource("14_seoji")
 id = &"obj_win_above_speed_140"
 description = "Gagner avec plus de 140 % de vitesse"
@@ -39,7 +39,7 @@ params = {
 "pct": 140
 }
 
-[sub_resource type="Resource" id="Resource_2jsra"]
+[sub_resource type="Resource" id="Resource_bjmua"]
 script = ExtResource("14_seoji")
 id = &"obj_multi_kill_3_1"
 description = "Tuer 3 monstres en moins de 1 s"
@@ -63,7 +63,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_bjmua"]
+[sub_resource type="Resource" id="Resource_1lmvd"]
 script = ExtResource("16_uj0qo")
 id = &"side_squire_1"
 duration = 25.0
@@ -100,7 +100,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_1lmvd"]
+[sub_resource type="Resource" id="Resource_t7i6r"]
 script = ExtResource("16_uj0qo")
 id = &"side_squire_2"
 duration = 27.0
@@ -130,7 +130,7 @@ count = 3
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_t7i6r"]
+[sub_resource type="Resource" id="Resource_ufxre"]
 script = ExtResource("16_uj0qo")
 id = &"side_squire_3"
 duration = 28.0
@@ -167,7 +167,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_ufxre"]
+[sub_resource type="Resource" id="Resource_astaf"]
 script = ExtResource("16_uj0qo")
 id = &"side_squire_boss"
 duration = 46.0
@@ -188,10 +188,10 @@ intro_story = &"side_squire_intro"
 outro_story = &"side_squire_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("16_uj0qo")]([SubResource("Resource_bjmua"), SubResource("Resource_1lmvd"), SubResource("Resource_t7i6r"), SubResource("Resource_ufxre")])
+waves = Array[ExtResource("16_uj0qo")]([SubResource("Resource_1lmvd"), SubResource("Resource_t7i6r"), SubResource("Resource_ufxre"), SubResource("Resource_astaf")])
 enemy_pool = Array[ExtResource("5_bjmua")]([ExtResource("6_1lmvd"), ExtResource("7_t7i6r"), ExtResource("8_ufxre"), ExtResource("9_astaf"), ExtResource("10_xv2oe")])
 exploration_deck = Array[ExtResource("1_luiq1")]([ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_luiq1"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("3_2gdrc"), ExtResource("4_2jsra"), ExtResource("4_2jsra"), ExtResource("4_2jsra"), ExtResource("4_2jsra")])
-objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_2gdrc"), SubResource("Resource_jdacw"), SubResource("Resource_2jsra")])
+objectives = Array[ExtResource("14_seoji")]([SubResource("Resource_2gdrc"), SubResource("Resource_2jsra"), SubResource("Resource_bjmua")])
 levelup_cards = Array[ExtResource("1_luiq1")]([])
 objective_rewards = Array[ExtResource("1_luiq1")]([ExtResource("11_bjmua"), ExtResource("12_1lmvd"), ExtResource("13_t7i6r")])
 next_levels = Array[StringName]([])

@@ -502,7 +502,10 @@ func _test_les_passifs_elementaires_sont_proposables() -> void:
 	RunState.reset()
 	var reserve: Array = load("res://tests/unit/test_campagne_w10.gd").RESERVE_PASSIFS_ANNEXES
 	var debloques: Dictionary = {}
-	for l: LevelDef in ContentDB.levels.values():
+	# Les passifs que la CAMPAGNE debloque (la route jouee ci-dessous ne finit
+	# qu elle) ; ceux des quetes annexes sont la reserve, et leur route est jouee
+	# par test_side_quests (vague 10, B3).
+	for l: LevelDef in ContentDB.campaign_levels():
 		for p: SpellCard in l.passive_unlocks:
 			if p != null:
 				debloques[p.id] = true
