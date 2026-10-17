@@ -2403,6 +2403,8 @@ func _refresh_mech_caption() -> void:
 	if not Fx.enabled():
 		return
 	_cham_refresh_chips()
+	if _cham_chips_shown():
+		Fx.fit_caption(_cham_chips, self)  # VAGUE 10 C1 : ramenee dans le terrain
 	var txt: String = mech_caption()
 	if txt == "":
 		if _mech_label != null and is_instance_valid(_mech_label):
@@ -2415,6 +2417,8 @@ func _refresh_mech_caption() -> void:
 	_mech_label.visible = true
 	if _mech_label.text != txt:
 		_mech_label.text = txt
+	# VAGUE 10 C1 : la boite suit le monstre ; pres d un bord elle etait coupee.
+	Fx.fit_caption(_mech_label, self)
 	var faible: int = chameleon_weak()
 	var teinte: Color = Fx.color_for([faible]).lightened(0.35) if faible >= 0 else Color(0.96, 0.94, 0.86)
 	_mech_label.add_theme_color_override(&"font_color", teinte)
@@ -2896,9 +2900,10 @@ func _b2_caption_lines() -> Array[String]:
 	var lignes: Array[String] = []
 	if _b2_deadline_left > 0.0:
 		lignes.append("ECHEANCE %d s : frappe-le !" % ceili(_b2_deadline_left))
-	# Courte : la boite de legende (Fx.mech_label, 420 px centres sur le
-	# monstre) n est pas ramenee dans le cadre, et un Gardien pres du bord
-	# coupait « GARDE : les coups glissent » (capture du 17/10).
+	# Courte : un Gardien pres du bord coupait « GARDE : les coups glissent »
+	# (capture du 17/10). La boite est depuis ramenee dans le cadre
+	# (Fx.fit_caption, chantier C1) ; une legende courte reste plus pres de
+	# son monstre.
 	if definition != null and definition.guard_block_pct > 0.0 and _reflect_left > 0.0:
 		lignes.append("GARDE : coups amortis")
 	return lignes
