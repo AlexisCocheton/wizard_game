@@ -245,6 +245,20 @@ func _boss_dores() -> Dictionary:
 ## Une vague : [suffixe, duree, difficulte, "boss" | "", [[monstre, nombre,
 ## intervalle, decalage], ...]] ; le boss dore est la PREMIERE entree de la
 ## derniere vague (test_bosses lit la tete d une vague a cette place).
+##
+## LA DIFFICULTE EST MESUREE (cible du chantier : 40 a 70 % de victoires, plus
+## dur que la campagne de l acte, qui vise 60 % et plus). Banc d equilibrage du
+## 17/10, 60 parties, bot AutoPick, chaque annexe jouee juste apres son niveau
+## d ouverture (SimBalance._inserer_annexes) : mesure 38, atelier 40, tresor 35,
+## champion 36, vitrine 31, ecuyer 39, fee 39, apprentie 28 victoires sur 60.
+## Reglees en sept passes : les difficultes de vague (multiplicateur de PV) et
+## les effectifs, jamais les boss dores eux-memes. Ce qui a le plus bouge un
+## taux : les PRETRES GOULES (soin de groupe : 25 % avec deux dans la vague 3 de
+## l apprentie, 92 % avec un seul) et un deck de base tout en FEU contre des
+## champignons qui le craignent (la fee gagnait 60 fois sur 60). Apres la
+## fusion du chantier B2 (decks de base de la campagne, donc communes possedees
+## a l ouverture), REJOUER : `tools/sim_balance.tscn -- --niveaux=side_... --parties=60
+## --massacre=0`.
 static func quetes() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	# --- ACTE 1 : LA MESURE ---------------------------------------------------
