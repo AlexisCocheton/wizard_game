@@ -12,7 +12,7 @@ lines = Array[Dictionary]([{
 "speaker": "",
 "text": "Le Lutin archer dore tombe du toit d en face, son arc d or brise en deux."
 }, {
-"portrait": &"",
+"portrait": &"soldier",
 "side": "right",
 "speaker": "L ecuyer",
 "text": "J etais garde du port. Une epee ne sert a rien contre ce qui tire d en haut, alors j ai appris l arc."
@@ -22,7 +22,7 @@ lines = Array[Dictionary]([{
 "speaker": "Le Mage",
 "text": "Et maintenant que le port est vide ?"
 }, {
-"portrait": &"",
+"portrait": &"soldier",
 "side": "right",
 "speaker": "L ecuyer",
 "text": "Maintenant je n ai plus de port. Si tu veux, je tire a ta place, et toi tu gardes ta magie pour ce qui compte."

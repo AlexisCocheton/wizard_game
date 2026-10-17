@@ -12,7 +12,7 @@ lines = Array[Dictionary]([{
 "speaker": "",
 "text": "Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme ouvre les yeux."
 }, {
-"portrait": &"",
+"portrait": &"bluewitch",
 "side": "right",
 "speaker": "L apprentie d azur",
 "text": "Qui etes-vous ? Vous me regardez comme si on se connaissait."
@@ -22,7 +22,7 @@ lines = Array[Dictionary]([{
 "speaker": "Le Mage",
 "text": "Dans une autre vie, je t ai appris a tenir un sort. Dans celle-ci, tu ne me dois rien."
 }, {
-"portrait": &"",
+"portrait": &"bluewitch",
 "side": "right",
 "speaker": "L apprentie d azur",
 "text": "Alors je choisis. Je combats a votre place, maitre. Et vous me direz comment ca a fini, la premiere fois."

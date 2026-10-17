@@ -12,7 +12,7 @@ lines = Array[Dictionary]([{
 "speaker": "",
 "text": "Au-dessus de l eau trouble des fosses, une lueur danse. Une fee, pas plus grande qu une main, qui ne se pose nulle part."
 }, {
-"portrait": &"",
+"portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
 "text": "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine."
@@ -22,7 +22,7 @@ lines = Array[Dictionary]([{
 "speaker": "L Enfant",
 "text": "Toi, tu ne touches jamais le sol ?"
 }, {
-"portrait": &"",
+"portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
 "text": "Jamais. Ici, le sol mange."

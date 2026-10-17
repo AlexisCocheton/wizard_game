@@ -925,14 +925,24 @@ func _lvl_16() -> void:
 ## en spectacle. Rien n est devoile : comme « la gauche est fermee » a l acte 2,
 ## personne ne releve.
 ##
-## LES APPRENTIS PARLENT SANS VISAGE. Le casting de StoryScene (CAST) n a pas
-## leur portrait et le fabriquer releve de l asset-pipeline : leur nom s affiche,
-## la boite du portrait se cache, comme pour « Un mort » (lvl_04). Leurs
-## repliques disent ce que leur fiche de compte promet : ils combattent A LA
-## PLACE du mage.
+## LES APPRENTIS ONT LEUR VISAGE (chantier C6). Ils parlaient sans portrait,
+## comme « Un mort » (lvl_04), faute de case au casting. Leur buste est tire de
+## la feuille animee qu ils portent en combat (`assets/portraits/apprentice_cast.png`,
+## `tools/assets/make_apprentice_portraits.py`) : le joueur reconnait a l ecran
+## le personnage qu il fait jouer. Leurs repliques disent ce que leur fiche de
+## compte promet : ils combattent A LA PLACE du mage.
 ##
 ## LE NARRATEUR ne nomme que ce qui descend dans les vagues de la quete
 ## (test_story) : son boss dore, jamais Kaltek ou Ymoa, deja tombes.
+
+## Cles de casting des apprentis (`StoryScene.CAST`). Ce sont les `texture_name`
+## de leurs fiches de compte, c est-a-dire le `side_quest_character` de leur
+## annexe : test_story verifie que l apprenti d une annexe parle avec CE visage.
+## Declarees ici et pas en tete de fichier : seule cette section les cite.
+const SQUIRE := &"soldier"
+const FAIRY := &"fairy"
+const BLUEWITCH := &"bluewitch"
+
 
 func _quetes_annexes() -> void:
 	_side_mesure()
@@ -1046,16 +1056,16 @@ func _side_vitrine() -> void:
 func _side_ecuyer() -> void:
 	_scene("side_squire_intro", "talk_path", [
 		_narr("Une fleche se plante dans le quai, a un pas du mage. Elle vient d en haut, du toit d un entrepot."),
-		_say("L ecuyer", &"", "Restez ou vous etes ! Ce qui descend du ciel, je le descends.", R),
+		_say("L ecuyer", SQUIRE, "Restez ou vous etes ! Ce qui descend du ciel, je le descends.", R),
 		_say("Le Mage", MAGE, "Je ne descends pas du ciel. Pas aujourd hui."),
-		_say("L ecuyer", &"", "Alors baissez-vous. Celui d en face ne fait pas la difference. Et lui, il est en or.", R),
+		_say("L ecuyer", SQUIRE, "Alors baissez-vous. Celui d en face ne fait pas la difference. Et lui, il est en or.", R),
 		_say("Le Rat pilote", RAT, "Un garde du port. Je croyais qu ils etaient tous partis par le haut.", R),
 	])
 	_scene("side_squire_outro", "talk_path", [
 		_narr("Le Lutin archer dore tombe du toit d en face, son arc d or brise en deux."),
-		_say("L ecuyer", &"", "J etais garde du port. Une epee ne sert a rien contre ce qui tire d en haut, alors j ai appris l arc.", R),
+		_say("L ecuyer", SQUIRE, "J etais garde du port. Une epee ne sert a rien contre ce qui tire d en haut, alors j ai appris l arc.", R),
 		_say("Le Mage", MAGE, "Et maintenant que le port est vide ?"),
-		_say("L ecuyer", &"", "Maintenant je n ai plus de port. Si tu veux, je tire a ta place, et toi tu gardes ta magie pour ce qui compte.", R),
+		_say("L ecuyer", SQUIRE, "Maintenant je n ai plus de port. Si tu veux, je tire a ta place, et toi tu gardes ta magie pour ce qui compte.", R),
 		_say("Le Mage", MAGE, "Ce qui compte arrive vite. Tire juste."),
 	])
 
@@ -1066,16 +1076,16 @@ func _side_ecuyer() -> void:
 func _side_fee() -> void:
 	_scene("side_fairy_intro", "talk_shrine", [
 		_narr("Au-dessus de l eau trouble des fosses, une lueur danse. Une fee, pas plus grande qu une main, qui ne se pose nulle part."),
-		_say("La fee", &"", "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine.", R),
+		_say("La fee", FAIRY, "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine.", R),
 		_say("L Enfant", CHILD, "Toi, tu ne touches jamais le sol ?", R),
-		_say("La fee", &"", "Jamais. Ici, le sol mange.", R),
+		_say("La fee", FAIRY, "Jamais. Ici, le sol mange.", R),
 		_say("Le Mage", MAGE, "Alors on va lui couper l appetit."),
 	])
 	_scene("side_fairy_outro", "talk_shrine", [
 		_narr("Le Champignon dore s affaisse dans l eau. Ses spores d or flottent un instant, puis s eteignent une a une."),
-		_say("La fee", &"", "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite.", R),
+		_say("La fee", FAIRY, "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite.", R),
 		_say("Le Mage", MAGE_GRAVE, "On ne dore pas un champignon pour le plaisir. Quelqu un voulait qu on le remarque."),
-		_say("La fee", &"", "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule.", R),
+		_say("La fee", FAIRY, "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule.", R),
 	])
 
 
@@ -1091,8 +1101,8 @@ func _side_apprentie() -> void:
 	])
 	_scene("side_bluewitch_outro", "talk_shrine", [
 		_narr("Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme ouvre les yeux."),
-		_say("L apprentie d azur", &"", "Qui etes-vous ? Vous me regardez comme si on se connaissait.", R),
+		_say("L apprentie d azur", BLUEWITCH, "Qui etes-vous ? Vous me regardez comme si on se connaissait.", R),
 		_say("Le Mage", MAGE, "Dans une autre vie, je t ai appris a tenir un sort. Dans celle-ci, tu ne me dois rien."),
-		_say("L apprentie d azur", &"", "Alors je choisis. Je combats a votre place, maitre. Et vous me direz comment ca a fini, la premiere fois.", R),
+		_say("L apprentie d azur", BLUEWITCH, "Alors je choisis. Je combats a votre place, maitre. Et vous me direz comment ca a fini, la premiere fois.", R),
 		_say("Le Mage", MAGE_GRAVE, "... Mal. C est pour ca qu on recommence."),
 	])

@@ -23,6 +23,8 @@ func run() -> void:
 	_test_le_massacre_na_pas_dhistoire()
 	_test_chaque_personnage_a_un_visage()
 	_test_le_mage_nest_plus_un_demon()
+	_test_l_apprenti_parle_avec_son_visage()
+	_test_un_locuteur_nomme_a_un_visage()
 	_test_les_fonds_de_dialogue_sont_des_decors()
 	_test_aucune_scene_orpheline()
 	_test_chaque_niveau_de_campagne_est_encadre()
@@ -294,6 +296,157 @@ func _test_le_mage_nest_plus_un_demon() -> void:
 				"la planche du mage n est pas celle des demons (%s)"
 				% atlas.resource_path)
 	detach(vue)
+
+
+## LES APPRENTIS PARLENT AVEC LEUR VISAGE (vague 10, chantier C6).
+##
+## Le defaut : les trois quetes d apprenti (chantier B3) faisaient parler
+## l ecuyer, la fee et l apprentie d azur SANS PORTRAIT, comme « Un mort » —
+## le casting n avait pas leur case. Le joueur ne voyait jamais le visage du
+## personnage qu il allait faire combattre.
+##
+## La regle verifiee, pour chaque annexe d apprenti : chaque replique de
+## l apprenti (son nom de fiche de compte est dans le locuteur, meme lecture
+## que test_side_quests) porte la cle `side_quest_character` de l annexe ; cette
+## cle est au casting ; et son buste est decoupe dans une feuille que
+## l apprenti porte EN COMBAT (AnimCatalog), pas dans un portrait d un autre.
+func _test_l_apprenti_parle_avec_son_visage() -> void:
+	var scene: PackedScene = load("res://scenes/story/StoryScene.tscn")
+	if scene == null:
+		return
+	var vue: Node = scene.instantiate()
+	attach(vue)
+	var cartes: Dictionary = vue.get_script().get_script_constant_map()["CAST"]
+	var vus: int = 0
+	for lv: LevelDef in ContentDB.side_quests():
+		if lv.side_quest_character == "":
+			continue
+		vus += 1
+		var lignes: Array[Dictionary] = []
+		for sid: StringName in [lv.intro_story, lv.outro_story]:
+			var d: DialogueDef = DialogueDef.load_by_id(sid)
+			if d != null:
+				for i: int in d.line_count():
+					lignes.append(d.line(i))
+		var defauts: Array[String] = defauts_visage_apprenti(lignes,
+			_nom_d_apprenti(lv.side_quest_character),
+			StringName(lv.side_quest_character), cartes)
+		ok(defauts.is_empty(), "%s : l apprenti parle avec son visage %s"
+			% [lv.id, ", ".join(defauts)])
+		# Et ce visage se resout vraiment en image, recadree.
+		var tex: Texture2D = vue.call(&"_portrait_texture",
+			StringName(lv.side_quest_character))
+		ok(tex is AtlasTexture, "%s : le visage de %s se decoupe"
+			% [lv.id, lv.side_quest_character])
+	ok(vus > 0, "des annexes d apprenti existent (%d)" % vus)
+
+	# SABOTAGES : le detecteur doit mordre.
+	var muet: Array[Dictionary] = [
+		{"speaker": "L ecuyer", "portrait": &"", "text": "x", "side": "right"}]
+	not_ok(defauts_visage_apprenti(muet, "l ecuyer", &"soldier", cartes).is_empty(),
+		"sabotage : l ecuyer parle sans visage")
+	var bon: Array[Dictionary] = [
+		{"speaker": "L ecuyer", "portrait": &"soldier", "text": "x", "side": "right"}]
+	ok(defauts_visage_apprenti(bon, "l ecuyer", &"soldier", cartes).is_empty(),
+		"temoin : l ecuyer avec son visage passe")
+	var sans_case: Dictionary = cartes.duplicate()
+	sans_case.erase(&"soldier")
+	not_ok(defauts_visage_apprenti(bon, "l ecuyer", &"soldier", sans_case).is_empty(),
+		"sabotage : l ecuyer n est plus au casting")
+	var emprunt: Dictionary = cartes.duplicate()
+	emprunt[&"soldier"] = {"cell": [1, 2], "sheet": "x", "from": "fairy_idle#7"}
+	not_ok(defauts_visage_apprenti(bon, "l ecuyer", &"soldier", emprunt).is_empty(),
+		"sabotage : l ecuyer emprunte le visage de la fee")
+	detach(vue)
+
+
+## Les defauts du visage d UN apprenti dans les repliques de son annexe.
+## `nom` : son nom de fiche de compte en minuscules ; `cle` : sa cle de casting.
+static func defauts_visage_apprenti(lignes: Array[Dictionary], nom: String,
+		cle: StringName, cast: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	if nom == "":
+		out.append("%s n a pas de fiche de compte" % cle)
+		return out
+	if not cast.has(cle):
+		out.append("%s n est pas au casting" % cle)
+	else:
+		# `from` = "<feuille>#<case>" : la feuille doit etre une des siennes.
+		var feuille: String = String(cast[cle].get("from", "")).get_slice("#", 0)
+		if not AnimCatalog.sheet_paths(cle).has(AnimCatalog.U + feuille + ".png"):
+			out.append("le visage de %s vient de '%s', qui n est pas une de ses feuilles"
+				% [cle, feuille])
+	var parle: bool = false
+	for l: Dictionary in lignes:
+		var locuteur: String = String(l.get("speaker", ""))
+		if not locuteur.to_lower().contains(nom):
+			continue
+		parle = true
+		var p: StringName = StringName(l.get("portrait", ""))
+		if p != cle:
+			out.append("« %s » parle avec le visage '%s' et non '%s'" % [locuteur, p, cle])
+	if not parle:
+		out.append("%s ne parle pas" % nom)
+	return out
+
+
+## Le nom de la fiche de compte d un apprenti, en minuscules ("" si absente).
+func _nom_d_apprenti(texture_name: String) -> String:
+	for r: AccountRewardDef in ContentDB.rewards_list():
+		if r != null and r.kind == GameEnums.RewardKind.CHARACTER \
+				and r.texture_name == texture_name:
+			return r.display_name.to_lower()
+	return ""
+
+
+## Les seules voix SANS VISAGE du jeu, et pourquoi.
+## « Un mort » (lvl_04_outro) : un mort parmi la horde qui vient de s arreter,
+## un choeur anonyme. Lui donner une tete en ferait un personnage.
+const VOIX_SANS_VISAGE: Array[String] = ["Un mort"]
+
+
+## Un locuteur NOMME parle avec un visage, sauf les voix de VOIX_SANS_VISAGE.
+## Le narrateur (locuteur vide) n en a pas, c est voulu. Ce test aurait vu les
+## trois apprentis muets de visage des leur ecriture ; il verra le prochain
+## personnage qu une scene ferait parler avant que le casting ait sa case.
+func _test_un_locuteur_nomme_a_un_visage() -> void:
+	var lignes: Array[Dictionary] = []
+	var dir: DirAccess = DirAccess.open(DialogueDef.DIR)
+	if dir == null:
+		return
+	for file: String in dir.get_files():
+		if not file.ends_with(".tres"):
+			continue
+		var d: DialogueDef = load(DialogueDef.DIR + file) as DialogueDef
+		if d == null:
+			continue
+		for i: int in d.line_count():
+			var l: Dictionary = d.line(i).duplicate()
+			l["scene"] = String(d.id)
+			lignes.append(l)
+	var sans: Array[String] = locuteurs_sans_visage(lignes)
+	ok(sans.is_empty(), "chaque locuteur nomme a un visage %s" % ", ".join(sans))
+	# SABOTAGE et temoins.
+	var faux: Array[Dictionary] = [
+		{"speaker": "La fee", "portrait": &"", "scene": "x"},
+		{"speaker": "Un mort", "portrait": &"", "scene": "x"},
+		{"speaker": "", "portrait": &"", "scene": "x"},
+	]
+	eq(locuteurs_sans_visage(faux).size(), 1,
+		"sabotage : la fee sans visage est vue, le mort et le narrateur non")
+
+
+static func locuteurs_sans_visage(lignes: Array[Dictionary]) -> Array[String]:
+	var out: Array[String] = []
+	for l: Dictionary in lignes:
+		var locuteur: String = String(l.get("speaker", ""))
+		if locuteur == "" or VOIX_SANS_VISAGE.has(locuteur):
+			continue
+		if StringName(l.get("portrait", "")) == &"":
+			var trace: String = "%s (%s)" % [locuteur, l.get("scene", "?")]
+			if not out.has(trace):
+				out.append(trace)
+	return out
 
 
 ## Les scenes de dialogue ne doivent plus reutiliser les fonds de COMBAT

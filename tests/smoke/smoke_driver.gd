@@ -282,6 +282,7 @@ func _run_all() -> void:
 	await _check_menu_screens()
 	await _check_briefing()
 	await _check_story()
+	await ApprenticeStoryShowcase.run(self)  # VAGUE 10 C6 : les apprentis ont un visage
 	await _check_boss_reward()
 	await _check_precast()
 	await _check_upgrade_panel()
