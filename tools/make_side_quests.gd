@@ -154,9 +154,15 @@ const DORES: Dictionary = {
 	# soudure de plus : le Grand Oeil de lvl_17, lui, tire. Chantier C7c : il
 	# remplace le Gardien-totem dore, dont l aura imposait au deck une
 	# dissipation que la campagne ne donne pas encore (voir l en-tete).
+	# LENT EXPRES : un monstre qui atteint le mage frappe une fois et disparait,
+	# boss compris (Battlefield._on_enemy_reached_mage). Au banc, a la vitesse 40
+	# avec deux yeux appeles toutes les 8 s, il n etait JAMAIS abattu (0 / 58) :
+	# ses yeux passaient devant, le bot visait le plus avance, et le boss finissait
+	# par traverser. A 16, un oeil a la fois, il est abattu dans la plupart des
+	# victoires (23 sur 32 au reglage livre, voir quetes()).
 	"current_eye": ["current_eye_gold", "Oeil des courants dore", 8.0, {
 		"dodge_chance": 0.25, "summon_def": "current_eye.tres", "summon_interval": 9.0,
-		"summon_count": 1, "summon_max_alive": 2, "base_speed": 32.0}],
+		"summon_count": 1, "summon_max_alive": 2, "base_speed": 16.0}],
 	# Acte 3 — la garde du tresor vide : son bouclier de premier coup, et une
 	# GARDE qui renvoie (le cycle du Miroir de Forge).
 	"parry_skeleton": ["parry_skeleton_gold", "Squelette pareur dore", 4.5, {
@@ -274,6 +280,12 @@ func _boss_dores() -> Dictionary:
 ## deck de chaque annexe (la mesure est tombee de 38 a 0 victoire, l ecuyer est
 ## monte de 39 a 52). A REJOUER a chaque changement des decks de la campagne :
 ## `tools/sim_balance.tscn -- --niveaux=side_... --parties=60 --massacre=0`.
+## CHANTIER C7c (17/10, main 854577c) : l atelier change de boss dore et perd
+## ses quatre Lumieres purifiantes au deck (douze cartes qui blessent au lieu
+## de huit). Regle en cinq passes : 22 (Oeil rapide, jamais abattu), 53, 57,
+## 43, puis 32 victoires sur 60 (vagues 1,6 / 1,7 / 1,8 / 1,75 au lieu de
+## 1,3 / 1,35 / 1,45 / 1,55, un Lutin archer en vague de boss), le boss abattu
+## dans 23 des 32 victoires.
 static func quetes() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	# --- ACTE 1 : LA MESURE ---------------------------------------------------
@@ -324,20 +336,23 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["summoners_key", "world_loom", "twin_channeling"],
 		"passifs": ["pass_chain", "pass_arcane_mind", "pass_arcane_lore", "pass_pulse", "pass_companion"],
 		"vagues": [
-			["1", 26.0, 1.3, "", [["wisp", 3, 1.6, 0.0], ["current_eye", 2, 2.0, 6.0],
+			["1", 26.0, 1.6, "", [["wisp", 3, 1.6, 0.0], ["current_eye", 2, 2.0, 6.0],
 				["sand_serpent", 2, 2.0, 12.0]]],
-			["2", 27.0, 1.35, "", [["void_knight", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.5, 4.0],
+			["2", 27.0, 1.7, "", [["void_knight", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.5, 4.0],
 				["current_eye", 2, 2.0, 12.0]]],
-			["3", 28.0, 1.45, "", [["sand_serpent", 3, 1.8, 0.0], ["imp_archer", 2, 3.0, 6.0],
+			["3", 28.0, 1.8, "", [["sand_serpent", 3, 1.8, 0.0], ["imp_archer", 2, 3.0, 6.0],
 				["wisp", 3, 1.5, 12.0], ["shade", 2, 2.0, 18.0]]],
-			["boss", 46.0, 1.55, "boss", [["current_eye_gold", 1, 1.0, 0.0],
+			["boss", 46.0, 1.75, "boss", [["current_eye_gold", 1, 1.0, 0.0],
 				["nacelle_raider", 3, 2.0, 4.0], ["current_eye", 2, 2.0, 12.0],
-				["sand_serpent", 2, 2.5, 22.0]]],
+				["imp_archer", 1, 1.0, 16.0], ["sand_serpent", 2, 2.5, 22.0]]],
 		],
 		"objectifs": [
 			[&"kill_flying", {"count": 8}],
-			[&"win_under_time", {"seconds": 130}],
-			[&"win_above_speed", {"pct": 240}],
+			# C7c : 130 s et 240 % rendaient 9 et 2 victoires sur 60 avec le deck
+			# sans Lumiere (banc des objectifs, bot neutre) ; 145 s et 220 % sont lus
+			# sur les temps et les vitesses de ses 34 victoires.
+			[&"win_under_time", {"seconds": 145}],
+			[&"win_above_speed", {"pct": 220}],
 		],
 	})
 	# --- ACTE 3 : LE TRESOR DE TOMBOL ------------------------------------------

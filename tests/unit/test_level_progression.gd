@@ -105,16 +105,31 @@ const PARTIES_DU_BANC: int = 60
 ##     d avant B3 (9e571ac, B2 + C1), lvl_18, lvl_03, lvl_04 et lvl_19 rendent
 ##     exactement les lignes de B2 ; lvl_09 et lvl_05 rendent deja la mesure
 ##     de C2.
+##
+## VAGUE 10, chantier C7c (17/10) : LA FUITE DE L ATELIER EST CORRIGEE (son boss
+## dore n a plus d aura, son deck plus de Lumiere purifiante). lvl_18, lvl_03,
+## lvl_04 et lvl_19 re-joues, 60 parties, memes graines, deux fois :
+##   - sur la base C7a (main 2553df1 + C7c), ils rendent EXACTEMENT les lignes
+##     de B2 (29 / 18 / 16, 54 / 16 / 1, 41 / 20 / 9, 58 / 49 / 7) : la derive
+##     que C2 avait recollee venait bien de la fuite ;
+##   - sur main 854577c (C7b : deux majeures au choix, le bot en prend 2,39 par
+##     partie au lieu de 1,87), recolles ici : lvl_18 34 / 29 / 13, lvl_19
+##     58 / 49 / 9. Deux classements y tombent, du fait de C7b, et se corrigent
+##     dans tools/make_content.gd (_progression_de), hors du perimetre de C7c :
+##     lvl_03, rang 1 (20 Pluies de givre) 60 / 60, jamais rate (rangs 2 et 3 :
+##     15 et 1) ; lvl_04, rangs 2 et 3 inverses (moins de 195 s : 10 ; 3450 de
+##     chemin du Serpent : 12 ; rang 1 : 42). Ces trois objectifs sont marques
+##     A_MESURER et nommes dans OBJECTIFS_A_MESURER jusqu a ce correctif.
 const MESURES: Dictionary = {
 	"lvl_01": [["obj_card_casts_piercing_arrow_12", 52], ["obj_no_card_fireball", 26], ["obj_win_above_speed_240", 9]],
 	"lvl_02": [["obj_card_casts_cycle_of_thought_6", 58], ["obj_kill_type_with_card_arcane_bolt_3_gorgon_gazer", 45], ["obj_win_above_speed_300", 31]],
 	"lvl_08": [["obj_no_card_piercing_arrow", 55], ["obj_kill_type_one_cast_4_rat_swarm", 22], ["obj_win_below_speed_130", 6]],
 	"lvl_09": [["obj_no_card_arcane_bolt", 57], ["obj_kill_type_with_card_spark_10_gnome", 14], ["obj_win_below_speed_200", 11]],
 	"lvl_17": [["obj_card_casts_south_wind_5", 46], ["obj_kill_flying_12", 37], ["obj_win_below_speed_170", 10]],
-	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 34], ["obj_no_card_venom_dart", 17], ["obj_win_below_speed_190", 11]],
-	"lvl_03": [["obj_card_casts_frost_rain_20", 47], ["obj_multi_kill_8_1", 7], ["obj_no_hit_from_imp_archer", 2]],
-	"lvl_04": [["obj_kill_type_with_card_frost_rain_4_risen_ghoul", 42], ["obj_win_under_time_195", 17], ["obj_enemy_travel_3450_0_sand_serpent", 9]],
-	"lvl_19": [["obj_kill_type_with_card_ember_pool_14_pit_ghoul", 58], ["obj_element_casts_28_fire", 47], ["obj_untouched", 10]],
+	"lvl_18": [["obj_kill_type_with_card_fireball_5_nacelle_raider", 34], ["obj_no_card_venom_dart", 29], ["obj_win_below_speed_190", 13]],
+	"lvl_03": [["obj_card_casts_frost_rain_20", A_MESURER], ["obj_multi_kill_8_1", 15], ["obj_no_hit_from_imp_archer", 1]],
+	"lvl_04": [["obj_kill_type_with_card_frost_rain_4_risen_ghoul", 42], ["obj_win_under_time_195", A_MESURER], ["obj_enemy_travel_3450_0_sand_serpent", A_MESURER]],
+	"lvl_19": [["obj_kill_type_with_card_ember_pool_14_pit_ghoul", 58], ["obj_element_casts_28_fire", 49], ["obj_untouched", 9]],
 	"lvl_20": [["obj_kill_type_one_cast_2_parry_skeleton", 53], ["obj_card_casts_piercing_arrow_34", 37], ["obj_win_below_speed_250", 7]],
 	"lvl_05": [["obj_element_casts_80_arcane", 56], ["obj_kill_type_one_cast_2_golem", 23], ["obj_win_under_time_142", 11]],
 	"lvl_06": [["obj_element_casts_8_nature", 59], ["obj_kill_type_one_cast_3_hopper", 20], ["obj_win_under_time_110", 2]],
@@ -135,9 +150,14 @@ const MESURES: Dictionary = {
 const A_MESURER: int = -1
 
 ## Les SEULS objectifs admis sans mesure, nommement : un objectif retouche ou
-## ajoute qui ne serait pas ici reste refuse. Vide depuis la re-mesure du 03/10
-## (les deux defis de la vague 8 sont mesures) : tout objectif livre a son taux.
-const OBJECTIFS_A_MESURER: Array[String] = []
+## ajoute qui ne serait pas ici reste refuse. Vide du 03/10 au 17/10. Depuis
+## C7c, trois objectifs dont le CLASSEMENT est tombe sur main 854577c (C7b, voir
+## le commentaire de MESURES) : leur seuil ou leur rang est a reprendre dans
+## tools/make_content.gd, puis a re-mesurer, et la liste a revider.
+const OBJECTIFS_A_MESURER: Array[String] = [
+	"obj_card_casts_frost_rain_20", "obj_win_under_time_195",
+	"obj_enemy_travel_3450_0_sand_serpent",
+]
 
 ## VAGUE 10 (chantier B2) : les sorts que la campagne ne donne PAS et laisse aux
 ## quetes annexes (chantier B3). La Concentration : aucun niveau n appelle la

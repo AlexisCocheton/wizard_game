@@ -86,9 +86,16 @@ const Campagne = preload("res://tests/unit/test_campagne_w10.gd")
 ## Re-mesure du chantier C2 (17/10, main d6668a0 qui porte B3 et C1 ; C3 et C6,
 ## fusionnes ensuite, ne touchent pas au jeu) : les 24 objectifs re-joues, 60
 ## parties chacun, rendent exactement ces 8 lignes.
+##
+## Chantier C7c (17/10, main 854577c qui porte C7a et C7b) : l atelier change de
+## boss dore (Oeil des courants dore, sans aura) et perd sa Lumiere purifiante ;
+## ses vagues sont re-reglees. Ses deux objectifs de fin de combat sont relus
+## sur les victoires du bot neutre (130 s et 240 % rendaient 9 et 2 sur 60) :
+## moins de 145 s et plus de 220 %. Seule sa ligne est re-jouee ici ; les sept
+## autres attendent la re-mesure complete d apres C7b.
 const MESURES: Dictionary = {
 	"side_a1_mesure": [["obj_no_hit_from_hornblower_gold", 59], ["obj_kill_type_one_cast_3_hopper", 15], ["obj_win_above_speed_160", 8]],
-	"side_a2_atelier": [["obj_kill_flying_8", 39], ["obj_win_under_time_130", 30], ["obj_win_above_speed_240", 10]],
+	"side_a2_atelier": [["obj_kill_flying_8", 35], ["obj_win_under_time_145", 17], ["obj_win_above_speed_220", 6]],
 	"side_a3_tresor": [["obj_win_under_time_150", 28], ["obj_multi_kill_5_1", 22], ["obj_never_hit_reflect", 4]],
 	"side_a4_champion": [["obj_kill_type_one_cast_2_berserker", 25], ["obj_multi_kill_4_1", 23], ["obj_win_under_time_100", 12]],
 	"side_a5_vitrine": [["obj_hit_from_sleepy_fox", 38], ["obj_multi_kill_6_1", 15], ["obj_win_above_speed_240", 9]],
