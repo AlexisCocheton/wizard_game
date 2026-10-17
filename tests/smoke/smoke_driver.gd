@@ -290,6 +290,7 @@ func _run_all() -> void:
 	await _check_pause_menu()
 	await _check_cartes_petrifiees()
 	await _showcase_mecaniques_v3()
+	await LegendeBordShowcase.run(self)  # VAGUE 10 C1 : legendes aux bords (visual)
 	await _check_objectifs_en_combat()
 	await _showcase_miroir()
 	await _check_end_screens()
