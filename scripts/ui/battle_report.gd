@@ -130,8 +130,41 @@ static func build(box: VBoxContainer, victoire: bool) -> EnemyDef:
 			lignes.size() - MAX_ROWS, "s" if lignes.size() - MAX_ROWS > 1 else "", reste],
 			UiTheme.FONT_SMALL, UiTheme.INK_SOFT))
 	var cible: EnemyDef = lignes[0]["def"]
-	add_advice(box, cible, ThreatLore.run_deck(), ThreatLore.book_cards())
+	add_advice(box, cible, ThreatLore.run_deck(),
+		second_source(RunState.mode, RunState.current_level_def),
+		second_source_text(RunState.mode))
 	return cible
+
+
+## LA SECONDE SOURCE DU CONSEIL, apres le deck de la partie (C7a, audit du
+## 17/10). Le conseil proposait une carte « dans ton livre » meme en CAMPAGNE,
+## ou le deck est IMPOSE (SaveData.campaign_deck) : le joueur ne pouvait pas la
+## prendre. En campagne, la seconde source est donc ce que les objectifs NON
+## reussis du niveau feraient entrer au deck (une recompense deja gagnee y est
+## deja, elle vient avec le deck) ; en LIBRE et au Massacre, ou le joueur compose
+## son deck, c est le LIVRE.
+static func second_source(mode: int, level: LevelDef) -> Array:
+	if not GameEnums.advances_campaign(mode):
+		return ThreatLore.book_cards()
+	var out: Array = []
+	if level == null:
+		return out
+	for i in level.objectives.size():
+		var obj: ObjectiveDef = level.objectives[i]
+		var carte: SpellCard = level.objective_reward(i)
+		if obj == null or carte == null or carte.is_passive or out.has(carte):
+			continue
+		if SaveData.is_objective_done(level.id, obj.id):
+			continue
+		out.append(carte)
+	return out
+
+
+## Comment se dit la seconde source : « a debloquer par un objectif » en
+## campagne, « dans ton livre » ailleurs.
+static func second_source_text(mode: int) -> String:
+	return ThreatLore.OBJECTIVE_SOURCE_TEXT if GameEnums.advances_campaign(mode) \
+		else ThreatLore.BOOK_SOURCE_TEXT
 
 
 ## Titre de section, le meme sur le briefing et le bilan.
@@ -190,12 +223,15 @@ static func _row(ligne: Dictionary, haut: int, par_coups: bool) -> Control:
 ## Le CONSEIL contre `def` : titre, puis une ligne par regle de ThreatLore. La
 ## ligne d element porte le LOGO de l element ; la carte conseillee est ecrite a
 ## l encre de sa rarete. Statique : le briefing pourrait la reprendre.
-static func add_advice(box: VBoxContainer, def: EnemyDef, deck: Array, book: Array) -> void:
+## `book` / `book_text` : la seconde source et sa facon de la dire
+## (second_source, second_source_text).
+static func add_advice(box: VBoxContainer, def: EnemyDef, deck: Array, book: Array,
+		book_text: String = ThreatLore.BOOK_SOURCE_TEXT) -> void:
 	var titre: Label = heading("CONSEIL CONTRE %s" % def.display_name.to_upper())
 	titre.name = "AdviceHeading"
 	box.add_child(titre)
 	var px: int = ElementIcons.inline_px(UiTheme.FONT_SMALL)
-	for ligne in ThreatLore.advice(def, deck, book):
+	for ligne in ThreatLore.advice(def, deck, book, book_text):
 		var bb: String = ""
 		var tag: int = int(ligne["tag"])
 		if tag >= 0:
@@ -205,7 +241,7 @@ static func add_advice(box: VBoxContainer, def: EnemyDef, deck: Array, book: Arr
 		if carte != null:
 			bb += " : [color=#%s]%s[/color] (%s)" % [
 				UiTheme.rarity_ink(carte.rarity).to_html(false), carte.display_name,
-				ThreatLore.source_text(bool(ligne["from_deck"]))]
+				String(ligne["source"])]
 		var r: RichTextLabel = ElementIcons.rich_label(bb, UiTheme.FONT_SMALL, UiTheme.INK_HINT)
 		r.name = "Advice_%s" % String(ligne["kind"])
 		r.set_meta(&"advice", ligne)

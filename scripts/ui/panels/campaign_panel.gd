@@ -319,8 +319,10 @@ func _render_detail() -> void:
 	# niveau qu ils decrivent. Le vide va APRES le dernier bloc, pas entre deux
 	# blocs lies.
 	if not unlocked:
-		var pourquoi: String = SaveData.side_quest_lock_reason(level) if level.side_quest \
-			else "Termine le niveau precedent"
+		# C7a : la raison vient de SaveData, comme sur la tuile de la carte.
+		# « Termine le niveau precedent » etait faux pour lvl_13, qui en attend
+		# quatre.
+		var pourquoi: String = SaveData.level_lock_reason(level)
 		_card_body.add_child(UiTheme.label("VERROUILLE\n%s" % pourquoi,
 			UiTheme.FONT_BODY, Color(0.45, 0.35, 0.25), HORIZONTAL_ALIGNMENT_CENTER))
 	else:

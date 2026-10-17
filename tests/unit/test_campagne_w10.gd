@@ -51,6 +51,66 @@ const RESERVE_PASSIFS_ANNEXES: Array[StringName] = [
 	&"pass_storm_reflex", &"pass_storm_surge", &"pass_timelock",
 ]
 
+## Le nombre de niveaux de la campagne livree, EN DUR : la regle « un boss et un
+## mini-boss par niveau » ne vaut que si elle est verifiee sur les 21 (un niveau
+## qui sortirait de campaign_levels() ne serait plus juge, en silence).
+const NIVEAUX_DE_CAMPAGNE: int = 21
+
+## CE QUI COMPTE COMME MECANIQUE DE TETE (audit du 17/10) : liste EXPLICITE des
+## debuts de phrase de BestiaryLore.behaviours, en expressions ancrees. Une
+## mecanique change la FACON DE SE BATTRE contre la tete : une regle (coups
+## comptes, garde, echeance, retour dans le temps...), une menace (tir, onde,
+## invocation, soin, regard...), un deplacement qui change la visee ou les murs
+## (vol, spirale, a-coups...).
+const MECANIQUES_DE_TETE: Array[String] = [
+	"^Se divise en deux a sa mort", "^Engendre [0-9]+ .+ a sa mort",
+	"^Encaisse le premier coup sans aucun degat",
+	"^ECHEANCE : ",
+	"^Leve sa garde toutes les ", "^Leve une garde toutes les ",
+	"^Revient (une fois|[0-9]+ fois) apres sa mort",
+	"^A sa mort, laisse une marque au sol",
+	"^Releve un monstre mort",
+	"^Tire un laser sur le mage",
+	"^S endort ",
+	"^Avance en zigzag", "^Descend en diagonale et rebondit", "^Saute d une colonne",
+	"^Descend en spirale",
+	"^Se releve UNE fois apres sa mort",
+	"^Ignore ses [0-9]+ premiers coups",
+	"^Son regard petrifie",
+	"^Toutes les [0-9.]+ s, il revient [0-9.]+ s en arriere",
+	"^Lie a son jumeau",
+	"^Change d element",
+	"^Vole toutes les [0-9.]+ s votre carte",
+	"^Avale ",
+	"^Protege par [0-9]+ pieces d armure",
+	"^Miroir du mage",
+	"^Frappe le sol",
+	"^Brise vos objets de terrain",
+	"^N avance jamais",
+	"^Protege de tout degat les monstres",
+	"^Appelle ",
+	"^Soigne tous les autres monstres",
+	"^Tire a distance sur le mage",
+	"^Gobe les monstres plus faibles",
+	"^Accelere de [0-9]+ % a chaque coup recu",
+	"^Accelere les autres monstres",
+	"^Esquive [0-9]+ % des sorts",
+	"^Disparait puis reapparait",
+	"^Avance par a-coups",
+	"^Vole : passe au-dessus des murs",
+]
+
+## Ce qui N EST PAS une mecanique de tete : la facon d ENTRER sur le terrain, le
+## nombre, l ondulation d un simple monstre, la filiation d un ancien boss, l or
+## d un boss dore (ses gains sont DEJA des mecaniques ecrites plus haut), le
+## projectile, le repli « sans ruse ». Chaque ligne d une tete livree doit etre
+## dans l une des deux listes : une phrase neuve du bestiaire oblige a decider.
+const PAS_DES_MECANIQUES: Array[String] = [
+	"^Entre par le cote", "^Arrive en groupe de", "^Ondule lateralement",
+	"^Ancien boss ", "^Ancien mini-boss ", "^Boss dore", "^Ce que l or lui ajoute",
+	"^Projectile, pas une creature", "^Descend tout droit",
+]
+
 
 func run() -> void:
 	_test_les_communes_de_base()
@@ -163,15 +223,29 @@ func _blesse(c: SpellCard) -> bool:
 	return false
 
 
-## Une mecanique, au sens de la fiche : une ligne du bestiaire qui n est ni le
-## repli « sans ruse » ni la filiation d un ancien boss.
+## Une MECANIQUE DE TETE : une ligne du bestiaire (BestiaryLore.behaviours) dont
+## le debut est dans MECANIQUES_DE_TETE. L ancienne regle prenait toute ligne
+## sauf le repli et la filiation : une tete dont la seule ligne serait « Entre
+## par le cote » passait (audit du 17/10).
 func _mecaniques(d: EnemyDef) -> Array[String]:
 	var out: Array[String] = []
 	for l: String in BestiaryLore.behaviours(d):
-		if l.begins_with("Descend tout droit") or l.begins_with("Ancien "):
-			continue
-		out.append(l)
+		if _correspond(l, MECANIQUES_DE_TETE):
+			out.append(l)
 	return out
+
+
+## La ligne commence-t-elle par un des motifs (expressions ancrees en tete) ?
+func _correspond(ligne: String, motifs: Array[String]) -> bool:
+	for m: String in motifs:
+		if not _regex.has(m):
+			_regex[m] = RegEx.create_from_string(m)
+		if (_regex[m] as RegEx).search(ligne) != null:
+			return true
+	return false
+
+
+var _regex: Dictionary = {}
 
 
 ## L acte de la premiere apparition d un monstre en ENTREE de vague de campagne
@@ -276,6 +350,10 @@ func _test_les_communes_de_base() -> void:
 # --- 2. Boss et mini-boss ---
 
 func _test_boss_et_mini_boss() -> void:
+	eq(_campagne().size(), NIVEAUX_DE_CAMPAGNE,
+		"les %d niveaux de la campagne sont tous juges" % NIVEAUX_DE_CAMPAGNE)
+	var boss_juges: int = 0
+	var minis_juges: int = 0
 	for lv: LevelDef in _campagne():
 		ok(lv.waves.size() >= 2, "%s a au moins deux vagues" % lv.id)
 		if lv.waves.size() < 2:
@@ -286,7 +364,10 @@ func _test_boss_et_mini_boss() -> void:
 		ok(boss != null and boss.kind == GameEnums.EnemyKind.BOSS,
 			"%s : la tete de sa vague de boss est un VRAI boss (%s)" % [lv.id, boss.id if boss else "rien"])
 		if boss != null:
-			ok(not _mecaniques(boss).is_empty(), "%s : son boss %s a une mecanique" % [lv.id, boss.id])
+			ok(not _mecaniques(boss).is_empty(), "%s : son boss %s a une mecanique de tete %s"
+				% [lv.id, boss.id, BestiaryLore.behaviours(boss)])
+			_lignes_classees(boss)
+			boss_juges += 1
 		var minis: int = 0
 		for i in lv.waves.size() - 1:
 			var w: WaveDef = lv.waves[i]
@@ -298,8 +379,48 @@ func _test_boss_et_mini_boss() -> void:
 			ok(tete != null and tete.kind == GameEnums.EnemyKind.MINIBOSS,
 				"%s / %s : la tete est un mini-boss (%s)" % [lv.id, w.id, tete.id if tete else "rien"])
 			if tete != null:
-				ok(not _mecaniques(tete).is_empty(), "%s : son mini-boss %s a une mecanique" % [lv.id, tete.id])
+				ok(not _mecaniques(tete).is_empty(), "%s : son mini-boss %s a une mecanique de tete %s"
+					% [lv.id, tete.id, BestiaryLore.behaviours(tete)])
+				_lignes_classees(tete)
+				minis_juges += 1
 		eq(minis, 1, "%s : un mini-boss, dans une autre vague que le boss" % lv.id)
+	eq(boss_juges, NIVEAUX_DE_CAMPAGNE, "un boss juge par niveau")
+	eq(minis_juges, NIVEAUX_DE_CAMPAGNE, "un mini-boss juge par niveau")
+	_test_la_liste_des_mecaniques_mord()
+
+
+## Chaque ligne du bestiaire d une tete est dans UNE des deux listes : une
+## phrase neuve oblige a decider si elle est une mecanique.
+func _lignes_classees(d: EnemyDef) -> void:
+	for l: String in BestiaryLore.behaviours(d):
+		var meca: bool = _correspond(l, MECANIQUES_DE_TETE)
+		var pas: bool = _correspond(l, PAS_DES_MECANIQUES)
+		ok(meca != pas, "%s : la ligne « %s » est classee une fois (mecanique %s, non %s)"
+			% [d.id, l, meca, pas])
+
+
+## LA LISTE MORD, sur des tetes fabriquees : une tete qui n a que sa facon
+## d entrer, son nombre ou sa filiation n a PAS de mecanique ; un vrai trait en
+## donne une.
+func _test_la_liste_des_mecaniques_mord() -> void:
+	var tete := EnemyDef.new()
+	tete.id = &"tete_factice"
+	tete.display_name = "Tete factice"
+	tete.kind = GameEnums.EnemyKind.MINIBOSS
+	tete.entry_side = true
+	eq(BestiaryLore.behaviours(tete).size(), 1, "(sa fiche n a qu une ligne : « Entre par le cote »)")
+	eq(_mecaniques(tete).size(), 0, "une tete qui ne fait qu « entrer par le cote » n a pas de mecanique")
+	tete.swarm_count = 2
+	tete.wave_amplitude = 40.0
+	eq(_mecaniques(tete).size(), 0, "ni en groupe, ni en ondulant")
+	var ancien: EnemyDef = tete.duplicate()
+	ancien.demoted_from = &"bone_reliquary"
+	ok(ContentDB.enemies.has(&"bone_reliquary"), "(le Reliquaire est au bestiaire)")
+	eq(_mecaniques(ancien).size(), 0, "la filiation d un ancien boss n est pas une mecanique")
+	tete.flying = true
+	eq(_mecaniques(tete).size(), 1, "le vol en est une")
+	tete.shoot_interval = 3.0
+	eq(_mecaniques(tete).size(), 2, "le tir en est une autre")
 
 
 # --- 3. L arrivee des monstres ---
