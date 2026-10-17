@@ -88,7 +88,7 @@ script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_1"
 duration = 27.0
 entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_ab3ci"), SubResource("Resource_7k1pn"), SubResource("Resource_l3miw"), SubResource("Resource_47e16")])
-difficulty = 1.65
+difficulty = 1.5
 is_miniboss = false
 is_boss = false
 
@@ -132,7 +132,7 @@ script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_2"
 duration = 29.0
 entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_jccj4"), SubResource("Resource_shjwg"), SubResource("Resource_uxl4k"), SubResource("Resource_gcwic"), SubResource("Resource_s7why")])
-difficulty = 1.75
+difficulty = 1.6
 is_miniboss = false
 is_boss = false
 
@@ -183,7 +183,7 @@ script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_3"
 duration = 30.0
 entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_y0wg8"), SubResource("Resource_vq3kl"), SubResource("Resource_rmv53"), SubResource("Resource_pcu7x"), SubResource("Resource_tnpgh"), SubResource("Resource_6uhuh")])
-difficulty = 1.6
+difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
@@ -234,7 +234,7 @@ script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
 entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_yerrp"), SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn")])
-difficulty = 1.2
+difficulty = 1.0
 is_miniboss = false
 is_boss = true
 

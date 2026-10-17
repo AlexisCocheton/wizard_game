@@ -25,15 +25,6 @@
 
 [sub_resource type="Resource" id="Resource_k18p5"]
 script = ExtResource("17_1po5x")
-id = &"obj_win_under_time_130"
-description = "Gagner en moins de 2 min 10"
-check_key = &"win_under_time"
-params = {
-"seconds": 130
-}
-
-[sub_resource type="Resource" id="Resource_hven7"]
-script = ExtResource("17_1po5x")
 id = &"obj_kill_type_one_cast_2_berserker"
 description = "Berserker : en tuer 2 d un seul sort"
 check_key = &"kill_type_one_cast"
@@ -42,14 +33,23 @@ params = {
 "enemy": "berserker"
 }
 
-[sub_resource type="Resource" id="Resource_33vns"]
+[sub_resource type="Resource" id="Resource_hven7"]
 script = ExtResource("17_1po5x")
-id = &"obj_multi_kill_5_1"
-description = "Tuer 5 monstres en moins de 1 s"
+id = &"obj_multi_kill_4_1"
+description = "Tuer 4 monstres en moins de 1 s"
 check_key = &"multi_kill"
 params = {
-"count": 5,
+"count": 4,
 "window": 1
+}
+
+[sub_resource type="Resource" id="Resource_jdacw"]
+script = ExtResource("17_1po5x")
+id = &"obj_win_above_speed_140"
+description = "Gagner avec plus de 140 % de vitesse"
+check_key = &"win_above_speed"
+params = {
+"pct": 140
 }
 
 [sub_resource type="Resource" id="Resource_jgv4k"]
@@ -73,12 +73,12 @@ count = 3
 spawn_delay = 1.4
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_jdacw"]
+[sub_resource type="Resource" id="Resource_sl3oa"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_1"
 duration = 26.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_jgv4k"), SubResource("Resource_qqtnp"), SubResource("Resource_de2p3")])
-difficulty = 1.95
+difficulty = 1.6
 is_miniboss = false
 is_boss = false
 
@@ -103,12 +103,12 @@ count = 2
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_sl3oa"]
+[sub_resource type="Resource" id="Resource_g7gcv"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_2"
 duration = 28.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_kv1ih"), SubResource("Resource_4cngg"), SubResource("Resource_ith2g")])
-difficulty = 2.0
+difficulty = 1.65
 is_miniboss = false
 is_boss = false
 
@@ -140,12 +140,12 @@ count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_g7gcv"]
+[sub_resource type="Resource" id="Resource_x0hnh"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_3"
 duration = 30.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_lqjit"), SubResource("Resource_jdxt6"), SubResource("Resource_hevrx"), SubResource("Resource_peoxy")])
-difficulty = 2.05
+difficulty = 1.7
 is_miniboss = false
 is_boss = false
 
@@ -170,12 +170,12 @@ count = 4
 spawn_delay = 1.5
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_x0hnh"]
+[sub_resource type="Resource" id="Resource_x2kee"]
 script = ExtResource("19_q062o")
 id = &"side_a4_champion_boss"
 duration = 46.0
 entries = Array[ExtResource("20_6a672")]([SubResource("Resource_u704c"), SubResource("Resource_a4wt4"), SubResource("Resource_vi2cq")])
-difficulty = 2.25
+difficulty = 1.65
 is_miniboss = false
 is_boss = true
 
@@ -191,10 +191,10 @@ intro_story = &"side_a4_champion_intro"
 outro_story = &"side_a4_champion_outro"
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("19_q062o")]([SubResource("Resource_jdacw"), SubResource("Resource_sl3oa"), SubResource("Resource_g7gcv"), SubResource("Resource_x0hnh")])
+waves = Array[ExtResource("19_q062o")]([SubResource("Resource_sl3oa"), SubResource("Resource_g7gcv"), SubResource("Resource_x0hnh"), SubResource("Resource_x2kee")])
 enemy_pool = Array[ExtResource("5_jdacw")]([ExtResource("6_sl3oa"), ExtResource("7_g7gcv"), ExtResource("8_x0hnh"), ExtResource("9_x2kee"), ExtResource("10_fydpe"), ExtResource("11_1vvd4"), ExtResource("12_o01rx"), ExtResource("13_t4igx")])
 exploration_deck = Array[ExtResource("1_caqxo")]([ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("3_k18p5"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_hven7"), ExtResource("4_k18p5"), ExtResource("4_k18p5"), ExtResource("4_k18p5"), ExtResource("4_k18p5")])
-objectives = Array[ExtResource("17_1po5x")]([SubResource("Resource_k18p5"), SubResource("Resource_hven7"), SubResource("Resource_33vns")])
+objectives = Array[ExtResource("17_1po5x")]([SubResource("Resource_k18p5"), SubResource("Resource_hven7"), SubResource("Resource_jdacw")])
 levelup_cards = Array[ExtResource("1_caqxo")]([])
 objective_rewards = Array[ExtResource("1_caqxo")]([ExtResource("14_gwtki"), ExtResource("15_kgwbh"), ExtResource("16_jy0x0")])
 next_levels = Array[StringName]([])

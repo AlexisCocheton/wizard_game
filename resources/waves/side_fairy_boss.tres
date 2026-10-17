@@ -56,6 +56,6 @@ script = ExtResource("6_7mxpv")
 id = &"side_fairy_boss"
 duration = 46.0
 entries = Array[ExtResource("1_rs44m")]([SubResource("Resource_e8bcq"), SubResource("Resource_u02bu"), SubResource("Resource_o1fj0"), SubResource("Resource_7mxpv"), SubResource("Resource_vnxbu"), SubResource("Resource_mu7hn")])
-difficulty = 2.7
+difficulty = 2.2
 is_miniboss = false
 is_boss = true

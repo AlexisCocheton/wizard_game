@@ -33,11 +33,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_3xvfs"]
 script = ExtResource("16_uhqdn")
-id = &"obj_win_under_time_150"
-description = "Gagner en moins de 2 min 30"
+id = &"obj_win_under_time_130"
+description = "Gagner en moins de 2 min 10"
 check_key = &"win_under_time"
 params = {
-"seconds": 150
+"seconds": 130
 }
 
 [sub_resource type="Resource" id="Resource_4lqvx"]

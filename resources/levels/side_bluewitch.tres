@@ -22,25 +22,24 @@
 
 [sub_resource type="Resource" id="Resource_sxe2h"]
 script = ExtResource("14_5slq4")
-id = &"obj_kill_type_one_cast_2_shade"
-description = "Ombre : en tuer 2 d un seul sort"
-check_key = &"kill_type_one_cast"
+id = &"obj_element_casts_40_lightning"
+description = "Lancer 40 sorts de foudre"
+check_key = &"element_casts"
 params = {
-"count": 2,
-"enemy": "shade"
-}
-
-[sub_resource type="Resource" id="Resource_2jsra"]
-script = ExtResource("14_5slq4")
-id = &"obj_multi_kill_3_1"
-description = "Tuer 3 monstres en moins de 1 s"
-check_key = &"multi_kill"
-params = {
-"count": 3,
-"window": 1
+"count": 40,
+"element": "LIGHTNING"
 }
 
 [sub_resource type="Resource" id="Resource_y0ulm"]
+script = ExtResource("14_5slq4")
+id = &"obj_win_under_time_140"
+description = "Gagner en moins de 2 min 20"
+check_key = &"win_under_time"
+params = {
+"seconds": 140
+}
+
+[sub_resource type="Resource" id="Resource_w1hhi"]
 script = ExtResource("14_5slq4")
 id = &"obj_no_hit_from_void_knight_gold"
 description = "Chevalier du vide dore : gagner sans en etre touche"
@@ -70,7 +69,7 @@ count = 3
 spawn_delay = 1.6
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_w1hhi"]
+[sub_resource type="Resource" id="Resource_nfwl8"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_1"
 duration = 26.0
@@ -100,7 +99,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_nfwl8"]
+[sub_resource type="Resource" id="Resource_6e42g"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_2"
 duration = 28.0
@@ -137,7 +136,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_6e42g"]
+[sub_resource type="Resource" id="Resource_1llrh"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_3"
 duration = 30.0
@@ -174,7 +173,7 @@ count = 1
 spawn_delay = 1.0
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_1llrh"]
+[sub_resource type="Resource" id="Resource_ef13c"]
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_boss"
 duration = 46.0
@@ -195,10 +194,10 @@ intro_story = &"side_bluewitch_intro"
 outro_story = &"side_bluewitch_outro"
 terrain = "grass"
 backdrop = "act3_demon"
-waves = Array[ExtResource("16_lj4dl")]([SubResource("Resource_w1hhi"), SubResource("Resource_nfwl8"), SubResource("Resource_6e42g"), SubResource("Resource_1llrh")])
+waves = Array[ExtResource("16_lj4dl")]([SubResource("Resource_nfwl8"), SubResource("Resource_6e42g"), SubResource("Resource_1llrh"), SubResource("Resource_ef13c")])
 enemy_pool = Array[ExtResource("5_w1hhi")]([ExtResource("6_nfwl8"), ExtResource("7_6e42g"), ExtResource("8_1llrh"), ExtResource("9_ef13c"), ExtResource("10_lpcdw")])
 exploration_deck = Array[ExtResource("1_lpjea")]([ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3")])
-objectives = Array[ExtResource("14_5slq4")]([SubResource("Resource_sxe2h"), SubResource("Resource_2jsra"), SubResource("Resource_y0ulm")])
+objectives = Array[ExtResource("14_5slq4")]([SubResource("Resource_sxe2h"), SubResource("Resource_y0ulm"), SubResource("Resource_w1hhi")])
 levelup_cards = Array[ExtResource("1_lpjea")]([])
 objective_rewards = Array[ExtResource("1_lpjea")]([ExtResource("11_w1hhi"), ExtResource("12_nfwl8"), ExtResource("13_r0fw4")])
 next_levels = Array[StringName]([])

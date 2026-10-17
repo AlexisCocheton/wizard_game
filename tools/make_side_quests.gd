@@ -277,19 +277,19 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["hourglass_shard", "time_rift", "forge_dial"],
 		"passifs": [],
 		"vagues": [
-			["1", 26.0, 1.3, "", [["gnome", 5, 1.8, 0.0], ["sprite", 3, 1.6, 7.0],
+			["1", 26.0, 1.1, "", [["gnome", 5, 1.8, 0.0], ["sprite", 3, 1.6, 7.0],
 				["hornblower", 1, 1.0, 12.0], ["hopper", 3, 1.5, 16.0]]],
-			["2", 28.0, 1.45, "", [["gnome", 5, 1.2, 0.0], ["jelly", 1, 1.0, 6.0],
+			["2", 28.0, 1.2, "", [["gnome", 5, 1.2, 0.0], ["jelly", 1, 1.0, 6.0],
 				["imp_archer", 2, 3.0, 10.0], ["rat_swarm", 1, 1.0, 18.0], ["hornblower", 1, 1.0, 20.0]]],
-			["3", 28.0, 1.4, "", [["gorgon_gazer", 1, 1.0, 0.0], ["hornblower", 1, 1.0, 4.0],
+			["3", 28.0, 1.2, "", [["gorgon_gazer", 1, 1.0, 0.0], ["hornblower", 1, 1.0, 4.0],
 				["gnome", 5, 1.2, 8.0], ["hive", 1, 1.0, 14.0], ["sprite", 4, 1.4, 20.0]]],
-			["boss", 45.0, 1.15, "boss", [["hornblower_gold", 1, 1.0, 0.0], ["gnome", 5, 2.0, 6.0],
-				["hopper", 3, 2.0, 16.0], ["imp_archer", 2, 3.0, 20.0], ["sprite", 4, 1.5, 26.0]]],
+			["boss", 45.0, 0.9, "boss", [["hornblower_gold", 1, 1.0, 0.0], ["gnome", 3, 2.5, 6.0],
+				["hopper", 3, 2.0, 16.0], ["imp_archer", 1, 1.0, 20.0], ["sprite", 3, 1.5, 26.0]]],
 		],
 		"objectifs": [
 			[&"no_hit_from", {"enemy": "hornblower_gold"}],
-			[&"kill_type_one_cast", {"enemy": "gnome", "count": 3}],
-			[&"win_above_speed", {"pct": 180}],
+			[&"kill_type_one_cast", {"enemy": "hopper", "count": 3}],
+			[&"win_above_speed", {"pct": 160}],
 		],
 	})
 	# --- ACTE 2 : L ATELIER DU RAT ---------------------------------------------
@@ -319,7 +319,7 @@ static func quetes() -> Array[Dictionary]:
 		],
 		"objectifs": [
 			[&"kill_flying", {"count": 8}],
-			[&"win_under_time", {"seconds": 150}],
+			[&"win_under_time", {"seconds": 130}],
 			[&"win_above_speed", {"pct": 240}],
 		],
 	})
@@ -349,8 +349,8 @@ static func quetes() -> Array[Dictionary]:
 				["ghoul_priest", 1, 1.0, 20.0], ["shade", 3, 2.0, 24.0]]],
 		],
 		"objectifs": [
+			[&"win_under_time", {"seconds": 150}],
 			[&"multi_kill", {"count": 5, "window": 1}],
-			[&"win_under_time", {"seconds": 140}],
 			[&"never_hit_reflect", {}],
 		],
 	})
@@ -368,19 +368,19 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["venom_mire", "meteor_storm", "forge_dial"],
 		"passifs": ["pass_ice_bite", "pass_ice_winter", "pass_frostbite"],
 		"vagues": [
-			["1", 26.0, 1.95, "", [["berserker", 2, 3.0, 0.0], ["hopper", 3, 1.5, 6.0],
+			["1", 26.0, 1.6, "", [["berserker", 2, 3.0, 0.0], ["hopper", 3, 1.5, 6.0],
 				["sprite", 3, 1.4, 14.0]]],
-			["2", 28.0, 2.0, "", [["void_knight", 2, 3.0, 0.0], ["berserker", 2, 3.0, 8.0],
+			["2", 28.0, 1.65, "", [["void_knight", 2, 3.0, 0.0], ["berserker", 2, 3.0, 8.0],
 				["carnivore_plant", 2, 2.0, 16.0]]],
-			["3", 30.0, 2.05, "", [["berserker", 3, 3.0, 0.0], ["mushroom", 2, 2.5, 8.0],
+			["3", 30.0, 1.7, "", [["berserker", 3, 3.0, 0.0], ["mushroom", 2, 2.5, 8.0],
 				["rat_swarm", 2, 1.5, 14.0], ["imp_archer", 1, 1.0, 20.0]]],
-			["boss", 46.0, 2.25, "boss", [["berserker_gold", 1, 1.0, 0.0],
+			["boss", 46.0, 1.65, "boss", [["berserker_gold", 1, 1.0, 0.0],
 				["berserker", 2, 3.0, 10.0], ["sprite", 4, 1.5, 20.0]]],
 		],
 		"objectifs": [
-			[&"win_under_time", {"seconds": 130}],
 			[&"kill_type_one_cast", {"enemy": "berserker", "count": 2}],
-			[&"multi_kill", {"count": 5, "window": 1}],
+			[&"multi_kill", {"count": 4, "window": 1}],
+			[&"win_above_speed", {"pct": 140}],
 		],
 	})
 	# --- ACTE 5 : LA VITRINE DE NURI -------------------------------------------
@@ -397,14 +397,14 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["time_rift", "twin_channeling", "hourglass_shard"],
 		"passifs": ["pass_timelock", "pass_wind_tailwind", "pass_wind_gale", "pass_apotheosis"],
 		"vagues": [
-			["1", 27.0, 1.65, "", [["gnome", 6, 1.3, 0.0], ["sprite", 4, 1.4, 6.0],
+			["1", 27.0, 1.5, "", [["gnome", 6, 1.3, 0.0], ["sprite", 4, 1.4, 6.0],
 				["sleepy_fox", 2, 3.0, 12.0], ["hopper", 3, 1.5, 18.0]]],
-			["2", 29.0, 1.75, "", [["warden_echo", 2, 4.0, 0.0], ["gorgon_gazer", 1, 1.0, 6.0],
+			["2", 29.0, 1.6, "", [["warden_echo", 2, 4.0, 0.0], ["gorgon_gazer", 1, 1.0, 6.0],
 				["jelly", 2, 3.0, 12.0], ["hornblower", 1, 1.0, 18.0], ["imp_archer", 2, 3.0, 22.0]]],
-			["3", 30.0, 1.6, "", [["blood_clot", 2, 3.0, 0.0], ["hive", 1, 1.0, 6.0],
+			["3", 30.0, 1.45, "", [["blood_clot", 2, 3.0, 0.0], ["hive", 1, 1.0, 6.0],
 				["gorgon_gazer", 1, 1.0, 12.0], ["rat_swarm", 2, 1.5, 16.0],
 				["imp_archer", 2, 3.0, 20.0], ["warden_echo", 1, 1.0, 24.0]]],
-			["boss", 48.0, 1.2, "boss", [["gorgon_gazer_gold", 1, 1.0, 0.0],
+			["boss", 48.0, 1.0, "boss", [["gorgon_gazer_gold", 1, 1.0, 0.0],
 				["gnome", 5, 1.8, 6.0], ["hopper", 3, 2.0, 14.0], ["sleepy_fox", 1, 1.0, 24.0],
 				["warden_echo", 1, 1.0, 28.0], ["sprite", 4, 1.5, 32.0]]],
 		],
@@ -430,18 +430,18 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["tide_ledger", "terrain_river", "twin_channeling"],
 		"passifs": ["pass_storm_reflex", "pass_water_spring", "pass_water_flood", "pass_quickhand", "pass_dual"],
 		"vagues": [
-			["1", 25.0, 1.15, "", [["nacelle_raider", 3, 2.0, 0.0], ["imp_archer", 1, 1.0, 8.0]]],
-			["2", 27.0, 1.2, "", [["void_knight", 1, 1.0, 0.0], ["nacelle_raider", 2, 2.0, 4.0],
+			["1", 25.0, 1.4, "", [["nacelle_raider", 3, 2.0, 0.0], ["imp_archer", 1, 1.0, 8.0]]],
+			["2", 27.0, 1.45, "", [["void_knight", 1, 1.0, 0.0], ["nacelle_raider", 2, 2.0, 4.0],
 				["imp_archer", 2, 4.0, 10.0], ["shade", 1, 1.0, 18.0]]],
-			["3", 28.0, 1.25, "", [["berserker", 1, 1.0, 0.0], ["imp_archer", 2, 4.0, 6.0],
+			["3", 28.0, 1.5, "", [["berserker", 1, 1.0, 0.0], ["imp_archer", 2, 4.0, 6.0],
 				["nacelle_raider", 3, 2.0, 14.0]]],
-			["boss", 46.0, 1.05, "boss", [["imp_archer_gold", 1, 1.0, 0.0],
+			["boss", 46.0, 1.3, "boss", [["imp_archer_gold", 1, 1.0, 0.0],
 				["nacelle_raider", 2, 2.5, 8.0], ["imp_archer", 1, 1.0, 16.0],
 				["shade", 2, 2.0, 26.0]]],
 		],
 		"objectifs": [
-			[&"win_under_time", {"seconds": 130}],
 			[&"kill_type_one_cast", {"enemy": "nacelle_raider", "count": 2}],
+			[&"win_above_speed", {"pct": 140}],
 			[&"multi_kill", {"count": 3, "window": 1}],
 		],
 	})
@@ -461,21 +461,21 @@ static func quetes() -> Array[Dictionary]:
 		"legendaires": ["venom_mire", "summoners_key", "meteor_storm"],
 		"passifs": ["pass_poison_corrode", "pass_nature_sap", "pass_nature_roots", "pass_poison_linger"],
 		"vagues": [
-			["1", 26.0, 2.5, "", [["pit_ghoul", 4, 1.5, 0.0], ["slime_ghost", 3, 2.0, 6.0],
+			["1", 26.0, 2.15, "", [["pit_ghoul", 4, 1.5, 0.0], ["slime_ghost", 3, 2.0, 6.0],
 				["mushroom", 2, 3.0, 12.0], ["shade", 2, 2.0, 18.0]]],
-			["2", 27.0, 2.6, "", [["mushroom", 3, 2.5, 0.0], ["ghoul_priest", 2, 3.0, 5.0],
+			["2", 27.0, 2.25, "", [["mushroom", 3, 2.5, 0.0], ["ghoul_priest", 2, 3.0, 5.0],
 				["slime_skeleton", 3, 2.0, 10.0], ["pit_ghoul", 3, 1.5, 16.0]]],
-			["3", 28.0, 2.7, "", [["slime_ghost_big", 2, 4.0, 0.0], ["mushroom", 3, 2.5, 6.0],
+			["3", 28.0, 2.35, "", [["slime_ghost_big", 2, 4.0, 0.0], ["mushroom", 3, 2.5, 6.0],
 				["pit_ghoul", 4, 1.5, 12.0], ["carnivore_plant", 3, 2.0, 18.0],
 				["shade", 2, 2.0, 22.0]]],
-			["boss", 46.0, 2.7, "boss", [["mushroom_gold", 1, 1.0, 0.0],
+			["boss", 46.0, 2.2, "boss", [["mushroom_gold", 1, 1.0, 0.0],
 				["pit_ghoul", 4, 1.5, 6.0], ["slime_ghost", 3, 2.0, 14.0],
 				["ghoul_priest", 2, 3.0, 20.0], ["mushroom", 2, 3.0, 26.0], ["shade", 3, 2.0, 32.0]]],
 		],
 		"objectifs": [
 			[&"element_casts", {"element": "FIRE", "count": 30}],
-			[&"kill_type_one_cast", {"enemy": "mushroom", "count": 2}],
-			[&"win_above_speed", {"pct": 280}],
+			[&"kill_type_one_cast", {"enemy": "mushroom", "count": 3}],
+			[&"win_above_speed", {"pct": 260}],
 		],
 	})
 	# --- L APPRENTIE D AZUR : LE CRISTAL D YMOA --------------------------------
@@ -506,8 +506,8 @@ static func quetes() -> Array[Dictionary]:
 				["ghoul_priest", 1, 1.0, 26.0]]],
 		],
 		"objectifs": [
-			[&"kill_type_one_cast", {"enemy": "shade", "count": 2}],
-			[&"multi_kill", {"count": 3, "window": 1}],
+			[&"element_casts", {"element": "LIGHTNING", "count": 40}],
+			[&"win_under_time", {"seconds": 140}],
 			[&"no_hit_from", {"enemy": "void_knight_gold"}],
 		],
 	})

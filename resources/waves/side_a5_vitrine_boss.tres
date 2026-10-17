@@ -56,6 +56,6 @@ script = ExtResource("7_tkfdn")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
 entries = Array[ExtResource("1_ql5q7")]([SubResource("Resource_yerrp"), SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn")])
-difficulty = 1.2
+difficulty = 1.0
 is_miniboss = false
 is_boss = true

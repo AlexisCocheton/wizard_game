@@ -32,23 +32,23 @@ params = {
 "enemy": "hornblower_gold"
 }
 
-[sub_resource type="Resource" id="Resource_cdabl"]
+[sub_resource type="Resource" id="Resource_ru0jk"]
 script = ExtResource("18_vqqar")
-id = &"obj_kill_type_one_cast_3_gnome"
-description = "Gnome : en tuer 3 d un seul sort"
+id = &"obj_kill_type_one_cast_3_hopper"
+description = "Sauterelle : en tuer 3 d un seul sort"
 check_key = &"kill_type_one_cast"
 params = {
 "count": 3,
-"enemy": "gnome"
+"enemy": "hopper"
 }
 
-[sub_resource type="Resource" id="Resource_5iwsr"]
+[sub_resource type="Resource" id="Resource_cdabl"]
 script = ExtResource("18_vqqar")
-id = &"obj_win_above_speed_180"
-description = "Gagner avec plus de 180 % de vitesse"
+id = &"obj_win_above_speed_160"
+description = "Gagner avec plus de 160 % de vitesse"
 check_key = &"win_above_speed"
 params = {
-"pct": 180
+"pct": 160
 }
 
 [sub_resource type="Resource" id="Resource_owt57"]
@@ -79,12 +79,12 @@ count = 3
 spawn_delay = 1.5
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_mg0vl"]
+[sub_resource type="Resource" id="Resource_5iwsr"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_1"
 duration = 26.0
 entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_owt57"), SubResource("Resource_whiqa"), SubResource("Resource_s6box"), SubResource("Resource_nxw7l")])
-difficulty = 1.3
+difficulty = 1.1
 is_miniboss = false
 is_boss = false
 
@@ -123,12 +123,12 @@ count = 1
 spawn_delay = 1.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_aw656"]
+[sub_resource type="Resource" id="Resource_mg0vl"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_2"
 duration = 28.0
 entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_ccdum"), SubResource("Resource_24x51"), SubResource("Resource_i2xax"), SubResource("Resource_882x8"), SubResource("Resource_0fdtl")])
-difficulty = 1.45
+difficulty = 1.2
 is_miniboss = false
 is_boss = false
 
@@ -167,12 +167,12 @@ count = 4
 spawn_delay = 1.4
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_1a71a"]
+[sub_resource type="Resource" id="Resource_aw656"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_3"
 duration = 28.0
 entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_cn0bi"), SubResource("Resource_g33lq"), SubResource("Resource_ua62r"), SubResource("Resource_mruyt"), SubResource("Resource_x2px4")])
-difficulty = 1.4
+difficulty = 1.2
 is_miniboss = false
 is_boss = false
 
@@ -186,8 +186,8 @@ start_offset = 0.0
 [sub_resource type="Resource" id="Resource_75qwm"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("6_aw656")
-count = 5
-spawn_delay = 2.0
+count = 3
+spawn_delay = 2.5
 start_offset = 6.0
 
 [sub_resource type="Resource" id="Resource_vly7k"]
@@ -200,23 +200,23 @@ start_offset = 16.0
 [sub_resource type="Resource" id="Resource_ji1wk"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("11_1ht0d")
-count = 2
-spawn_delay = 3.0
+count = 1
+spawn_delay = 1.0
 start_offset = 20.0
 
 [sub_resource type="Resource" id="Resource_1lcuv"]
 script = ExtResource("21_0rsac")
 enemy = ExtResource("7_1a71a")
-count = 4
+count = 3
 spawn_delay = 1.5
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_xdkut"]
+[sub_resource type="Resource" id="Resource_1a71a"]
 script = ExtResource("20_sc2n5")
 id = &"side_a1_mesure_boss"
 duration = 45.0
 entries = Array[ExtResource("21_0rsac")]([SubResource("Resource_1jb1f"), SubResource("Resource_75qwm"), SubResource("Resource_vly7k"), SubResource("Resource_ji1wk"), SubResource("Resource_1lcuv")])
-difficulty = 1.15
+difficulty = 0.9
 is_miniboss = false
 is_boss = true
 
@@ -232,10 +232,10 @@ intro_story = &"side_a1_mesure_intro"
 outro_story = &"side_a1_mesure_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("20_sc2n5")]([SubResource("Resource_mg0vl"), SubResource("Resource_aw656"), SubResource("Resource_1a71a"), SubResource("Resource_xdkut")])
+waves = Array[ExtResource("20_sc2n5")]([SubResource("Resource_5iwsr"), SubResource("Resource_mg0vl"), SubResource("Resource_aw656"), SubResource("Resource_1a71a")])
 enemy_pool = Array[ExtResource("5_mg0vl")]([ExtResource("6_aw656"), ExtResource("7_1a71a"), ExtResource("8_xdkut"), ExtResource("9_j0r4m"), ExtResource("10_a1b3j"), ExtResource("11_1ht0d"), ExtResource("12_14y5r"), ExtResource("13_4nbob"), ExtResource("14_8ivba")])
 exploration_deck = Array[ExtResource("1_yg1hs")]([ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("2_gx6s8"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("3_cdabl"), ExtResource("4_gx6s8"), ExtResource("4_gx6s8"), ExtResource("4_gx6s8"), ExtResource("4_gx6s8")])
-objectives = Array[ExtResource("18_vqqar")]([SubResource("Resource_gx6s8"), SubResource("Resource_cdabl"), SubResource("Resource_5iwsr")])
+objectives = Array[ExtResource("18_vqqar")]([SubResource("Resource_gx6s8"), SubResource("Resource_ru0jk"), SubResource("Resource_cdabl")])
 levelup_cards = Array[ExtResource("1_yg1hs")]([])
 objective_rewards = Array[ExtResource("1_yg1hs")]([ExtResource("15_cdabl"), ExtResource("16_5iwsr"), ExtResource("17_mg0vl")])
 next_levels = Array[StringName]([])
