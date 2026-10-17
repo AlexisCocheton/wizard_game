@@ -53,11 +53,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_wosyd"]
 script = ExtResource("21_6gits")
-id = &"obj_win_under_time_90"
-description = "Gagner en moins de 90 s"
+id = &"obj_win_under_time_135"
+description = "Gagner en moins de 2 min 15"
 check_key = &"win_under_time"
 params = {
-"seconds": 90
+"seconds": 135
 }
 
 [sub_resource type="Resource" id="Resource_damo6"]

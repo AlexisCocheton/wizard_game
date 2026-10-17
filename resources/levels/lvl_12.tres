@@ -26,15 +26,6 @@
 
 [sub_resource type="Resource" id="Resource_3j5bi"]
 script = ExtResource("20_8lpo7")
-id = &"obj_no_hit_from_demon_circle"
-description = "Ymoa, le Cercle : gagner sans en etre touche"
-check_key = &"no_hit_from"
-params = {
-"enemy": "demon_circle"
-}
-
-[sub_resource type="Resource" id="Resource_1dvci"]
-script = ExtResource("20_8lpo7")
 id = &"obj_card_casts_purifying_light_6"
 description = "Lancer 6 fois Lumiere purifiante"
 check_key = &"card_casts"
@@ -43,13 +34,22 @@ params = {
 "count": 6
 }
 
-[sub_resource type="Resource" id="Resource_2ilfx"]
+[sub_resource type="Resource" id="Resource_1dvci"]
 script = ExtResource("20_8lpo7")
 id = &"obj_same_card_casts_30"
 description = "Lancer 30 fois le meme sort"
 check_key = &"same_card_casts"
 params = {
 "count": 30
+}
+
+[sub_resource type="Resource" id="Resource_2ilfx"]
+script = ExtResource("20_8lpo7")
+id = &"obj_no_hit_from_demon_circle"
+description = "Ymoa, le Cercle : gagner sans en etre touche"
+check_key = &"no_hit_from"
+params = {
+"enemy": "demon_circle"
 }
 
 [sub_resource type="Resource" id="Resource_ob24v"]

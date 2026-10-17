@@ -10,7 +10,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/executioner_aide.tres" id="11_ks6bh"]
 [ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="14_dxqrk"]
 [ext_resource type="Resource" path="res://resources/cards/epic/weakness_mark.tres" id="15_a3qxw"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="16_6oca0"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="16_n101o"]
 [ext_resource type="Resource" path="res://resources/enemies/mushroom.tres" id="17_2enmq"]
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="17_muspt"]
 [ext_resource type="Resource" path="res://resources/cards/passive/pass_wind_gale.tres" id="18_g38mq"]
@@ -26,31 +26,30 @@
 
 [sub_resource type="Resource" id="Resource_n101o"]
 script = ExtResource("30_0hr58")
-id = &"obj_card_casts_salt_spiral_6"
-description = "Lancer 6 fois Spirale de sel"
-check_key = &"card_casts"
+id = &"obj_no_card_spark"
+description = "Gagner sans lancer Etincelle"
+check_key = &"no_card"
 params = {
-"card": "salt_spiral",
-"count": 6
+"card": "spark"
 }
 
 [sub_resource type="Resource" id="Resource_gwara"]
 script = ExtResource("30_0hr58")
-id = &"obj_kill_type_one_cast_2_mushroom"
-description = "Champignon cuirasse : en tuer 2 d un seul sort"
+id = &"obj_kill_type_one_cast_3_mushroom"
+description = "Champignon cuirasse : en tuer 3 d un seul sort"
 check_key = &"kill_type_one_cast"
 params = {
-"count": 2,
+"count": 3,
 "enemy": "mushroom"
 }
 
 [sub_resource type="Resource" id="Resource_bx237"]
 script = ExtResource("30_0hr58")
-id = &"obj_win_above_speed_350"
-description = "Gagner avec plus de 350 % de vitesse"
+id = &"obj_win_above_speed_380"
+description = "Gagner avec plus de 380 % de vitesse"
 check_key = &"win_above_speed"
 params = {
-"pct": 350
+"pct": 380
 }
 
 [sub_resource type="Resource" id="Resource_hihiq"]
@@ -262,7 +261,7 @@ enemy_pool = Array[ExtResource("1_xuvbo")]([ExtResource("17_2enmq"), ExtResource
 exploration_deck = Array[ExtResource("17_muspt")]([ExtResource("24_u1eb3"), ExtResource("24_u1eb3"), ExtResource("24_u1eb3"), ExtResource("24_u1eb3"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("18_smtlg"), ExtResource("4_n101o"), ExtResource("4_n101o"), ExtResource("4_n101o"), ExtResource("4_n101o")])
 objectives = Array[ExtResource("30_0hr58")]([SubResource("Resource_n101o"), SubResource("Resource_gwara"), SubResource("Resource_bx237")])
 levelup_cards = Array[ExtResource("17_muspt")]([])
-objective_rewards = Array[ExtResource("17_muspt")]([ExtResource("14_dxqrk"), ExtResource("15_a3qxw"), ExtResource("16_6oca0")])
+objective_rewards = Array[ExtResource("17_muspt")]([ExtResource("14_dxqrk"), ExtResource("15_a3qxw"), ExtResource("16_n101o")])
 next_levels = Array[StringName]([&"lvl_13"])
 requires_all_previous = false
 base_commons = Array[ExtResource("17_muspt")]([ExtResource("24_u1eb3"), ExtResource("18_smtlg"), ExtResource("4_n101o")])

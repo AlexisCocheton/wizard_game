@@ -29,11 +29,11 @@
 
 [sub_resource type="Resource" id="Resource_7s4ln"]
 script = ExtResource("22_v1e3n")
-id = &"obj_hit_from_sleepy_fox"
-description = "Renard dormeur : gagner apres en avoir ete touche"
-check_key = &"hit_from"
+id = &"obj_no_card_arcane_bolt"
+description = "Gagner sans lancer Trait arcanique"
+check_key = &"no_card"
 params = {
-"enemy": "sleepy_fox"
+"card": "arcane_bolt"
 }
 
 [sub_resource type="Resource" id="Resource_xlrew"]

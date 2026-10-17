@@ -12,8 +12,8 @@
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="8_1r60b"]
 [ext_resource type="Resource" path="res://resources/enemies/ecumeur.tres" id="10_7tp28"]
 [ext_resource type="Resource" path="res://resources/cards/epic/maelstrom.tres" id="13_hf8a2"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="14_jg7in"]
 [ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="14_odxng"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="14_rl3tf"]
 [ext_resource type="Resource" path="res://resources/cards/common/south_wind.tres" id="16_hf8a2"]
 [ext_resource type="Resource" path="res://resources/cards/passive/pass_wind_tailwind.tres" id="16_rl3tf"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="18_0qchf"]
@@ -24,15 +24,6 @@
 
 [sub_resource type="Resource" id="Resource_rl3tf"]
 script = ExtResource("18_0qchf")
-id = &"obj_kill_flying_12"
-description = "Abattre 12 monstres volants"
-check_key = &"kill_flying"
-params = {
-"count": 12
-}
-
-[sub_resource type="Resource" id="Resource_01pvm"]
-script = ExtResource("18_0qchf")
 id = &"obj_card_casts_south_wind_5"
 description = "Lancer 5 fois Vent du sud"
 check_key = &"card_casts"
@@ -41,13 +32,22 @@ params = {
 "count": 5
 }
 
+[sub_resource type="Resource" id="Resource_01pvm"]
+script = ExtResource("18_0qchf")
+id = &"obj_kill_flying_12"
+description = "Abattre 12 monstres volants"
+check_key = &"kill_flying"
+params = {
+"count": 12
+}
+
 [sub_resource type="Resource" id="Resource_7tp28"]
 script = ExtResource("18_0qchf")
-id = &"obj_no_hit_from_imp_archer"
-description = "Lutin archer : gagner sans en etre touche"
-check_key = &"no_hit_from"
+id = &"obj_win_below_speed_170"
+description = "Gagner avec moins de 170 % de vitesse"
+check_key = &"win_below_speed"
 params = {
-"enemy": "imp_archer"
+"pct": 170
 }
 
 [sub_resource type="Resource" id="Resource_kpx41"]
@@ -245,7 +245,7 @@ enemy_pool = Array[ExtResource("1_rl3tf")]([ExtResource("3_7tp28"), ExtResource(
 exploration_deck = Array[ExtResource("8_1r60b")]([ExtResource("16_hf8a2"), ExtResource("16_hf8a2"), ExtResource("16_hf8a2"), ExtResource("16_hf8a2"), ExtResource("3_rl3tf"), ExtResource("3_rl3tf"), ExtResource("3_rl3tf"), ExtResource("3_rl3tf"), ExtResource("4_01pvm"), ExtResource("4_01pvm"), ExtResource("4_01pvm"), ExtResource("4_01pvm")])
 objectives = Array[ExtResource("18_0qchf")]([SubResource("Resource_rl3tf"), SubResource("Resource_01pvm"), SubResource("Resource_7tp28")])
 levelup_cards = Array[ExtResource("8_1r60b")]([])
-objective_rewards = Array[ExtResource("8_1r60b")]([ExtResource("14_odxng"), ExtResource("13_hf8a2"), ExtResource("14_jg7in")])
+objective_rewards = Array[ExtResource("8_1r60b")]([ExtResource("14_odxng"), ExtResource("13_hf8a2"), ExtResource("14_rl3tf")])
 next_levels = Array[StringName]([&"lvl_18"])
 requires_all_previous = false
 base_commons = Array[ExtResource("8_1r60b")]([ExtResource("16_hf8a2"), ExtResource("3_rl3tf"), ExtResource("4_01pvm")])

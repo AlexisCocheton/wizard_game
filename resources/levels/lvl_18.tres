@@ -37,11 +37,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_71fqq"]
 script = ExtResource("18_jfkqu")
-id = &"obj_no_hit_from_dark_mage"
-description = "Mage noir de Haute-Nacelle : gagner sans en etre touche"
-check_key = &"no_hit_from"
+id = &"obj_no_card_venom_dart"
+description = "Gagner sans lancer Dard venimeux"
+check_key = &"no_card"
 params = {
-"enemy": "dark_mage"
+"card": "venom_dart"
 }
 
 [sub_resource type="Resource" id="Resource_oi32p"]

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_sjcau"]
+
+[resource]
+script = ExtResource("1_sjcau")
+id = &"obj_no_card_piercing_arrow"
+description = "Gagner sans lancer Fleche percante"
+check_key = &"no_card"
+params = {
+"card": "piercing_arrow"
+}

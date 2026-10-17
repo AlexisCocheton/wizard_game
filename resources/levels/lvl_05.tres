@@ -15,7 +15,7 @@
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="14_nwfpf"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="15_gm0e7"]
 [ext_resource type="Resource" path="res://resources/cards/epic/terrain_pit.tres" id="17_cfeh0"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="18_u8rys"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="18_gm0e7"]
 [ext_resource type="Resource" path="res://resources/cards/common/water_jet.tres" id="19_ku35m"]
 [ext_resource type="Resource" path="res://resources/cards/passive/pass_water_spring.tres" id="20_41mbm"]
 [ext_resource type="Resource" path="res://resources/cards/rare/ice_wall.tres" id="21_6f240"]
@@ -28,11 +28,11 @@
 
 [sub_resource type="Resource" id="Resource_gm0e7"]
 script = ExtResource("21_cvhwm")
-id = &"obj_element_casts_30_arcane"
-description = "Lancer 30 sorts d arcanique"
+id = &"obj_element_casts_80_arcane"
+description = "Lancer 80 sorts d arcanique"
 check_key = &"element_casts"
 params = {
-"count": 30,
+"count": 80,
 "element": "ARCANE"
 }
 
@@ -48,11 +48,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_kwppq"]
 script = ExtResource("21_cvhwm")
-id = &"obj_win_above_speed_310"
-description = "Gagner avec plus de 310 % de vitesse"
-check_key = &"win_above_speed"
+id = &"obj_win_under_time_142"
+description = "Gagner en moins de 2 min 22"
+check_key = &"win_under_time"
 params = {
-"pct": 310
+"seconds": 142
 }
 
 [sub_resource type="Resource" id="Resource_xn4cb"]
@@ -294,7 +294,7 @@ enemy_pool = Array[ExtResource("1_n8ylh")]([ExtResource("4_ld88m"), ExtResource(
 exploration_deck = Array[ExtResource("11_jbul7")]([ExtResource("19_ku35m"), ExtResource("19_ku35m"), ExtResource("19_ku35m"), ExtResource("19_ku35m"), ExtResource("13_tefmi"), ExtResource("13_tefmi"), ExtResource("13_tefmi"), ExtResource("13_tefmi"), ExtResource("14_nwfpf"), ExtResource("14_nwfpf"), ExtResource("14_nwfpf"), ExtResource("14_nwfpf")])
 objectives = Array[ExtResource("21_cvhwm")]([SubResource("Resource_gm0e7"), SubResource("Resource_n8ylh"), SubResource("Resource_kwppq")])
 levelup_cards = Array[ExtResource("11_jbul7")]([])
-objective_rewards = Array[ExtResource("11_jbul7")]([ExtResource("21_6f240"), ExtResource("17_cfeh0"), ExtResource("18_u8rys")])
+objective_rewards = Array[ExtResource("11_jbul7")]([ExtResource("21_6f240"), ExtResource("17_cfeh0"), ExtResource("18_gm0e7")])
 next_levels = Array[StringName]([&"lvl_21"])
 requires_all_previous = false
 base_commons = Array[ExtResource("11_jbul7")]([ExtResource("19_ku35m"), ExtResource("13_tefmi"), ExtResource("14_nwfpf")])

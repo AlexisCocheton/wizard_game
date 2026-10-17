@@ -15,7 +15,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/trio_ember.tres" id="12_rffqt"]
 [ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="13_8ejf3"]
 [ext_resource type="Resource" path="res://resources/enemies/trio_arcane.tres" id="13_doijp"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/forge_dial.tres" id="14_e4vxr"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/forge_dial.tres" id="14_cvq5j"]
 [ext_resource type="Resource" path="res://resources/cards/common/arcane_bolt.tres" id="16_epw7l"]
 [ext_resource type="Resource" path="res://resources/cards/passive/pass_fire_embers.tres" id="16_rffqt"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="19_ckdo4"]
@@ -26,31 +26,31 @@
 
 [sub_resource type="Resource" id="Resource_cvq5j"]
 script = ExtResource("19_ckdo4")
-id = &"obj_element_casts_40_fire"
-description = "Lancer 40 sorts de feu"
-check_key = &"element_casts"
+id = &"obj_kill_type_with_card_ember_pool_14_pit_ghoul"
+description = "Goule des fosses : en tuer 14 avec Braises"
+check_key = &"kill_type_with_card"
 params = {
-"count": 40,
-"element": "FIRE"
+"card": "ember_pool",
+"count": 14,
+"enemy": "pit_ghoul"
 }
 
 [sub_resource type="Resource" id="Resource_2c7cs"]
 script = ExtResource("19_ckdo4")
-id = &"obj_no_hit_from_pit_ghoul"
-description = "Goule des fosses : gagner sans en etre touche"
-check_key = &"no_hit_from"
+id = &"obj_element_casts_28_fire"
+description = "Lancer 28 sorts de feu"
+check_key = &"element_casts"
 params = {
-"enemy": "pit_ghoul"
+"count": 28,
+"element": "FIRE"
 }
 
 [sub_resource type="Resource" id="Resource_3hnwq"]
 script = ExtResource("19_ckdo4")
-id = &"obj_win_under_time_130"
-description = "Gagner en moins de 2 min 10"
-check_key = &"win_under_time"
-params = {
-"seconds": 130
-}
+id = &"obj_untouched"
+description = "Gagner sans subir de degats"
+check_key = &"no_damage_taken"
+params = {}
 
 [sub_resource type="Resource" id="Resource_j66b4"]
 script = ExtResource("22_71u04")
@@ -261,7 +261,7 @@ enemy_pool = Array[ExtResource("1_21pon")]([ExtResource("2_cvq5j"), ExtResource(
 exploration_deck = Array[ExtResource("8_rffqt")]([ExtResource("2_2c7cs"), ExtResource("2_2c7cs"), ExtResource("2_2c7cs"), ExtResource("2_2c7cs"), ExtResource("3_3hnwq"), ExtResource("3_3hnwq"), ExtResource("3_3hnwq"), ExtResource("3_3hnwq"), ExtResource("16_epw7l"), ExtResource("16_epw7l"), ExtResource("16_epw7l"), ExtResource("16_epw7l")])
 objectives = Array[ExtResource("19_ckdo4")]([SubResource("Resource_cvq5j"), SubResource("Resource_2c7cs"), SubResource("Resource_3hnwq")])
 levelup_cards = Array[ExtResource("8_rffqt")]([])
-objective_rewards = Array[ExtResource("8_rffqt")]([ExtResource("22_cmlmk"), ExtResource("13_8ejf3"), ExtResource("14_e4vxr")])
+objective_rewards = Array[ExtResource("8_rffqt")]([ExtResource("22_cmlmk"), ExtResource("13_8ejf3"), ExtResource("14_cvq5j")])
 next_levels = Array[StringName]([&"lvl_20"])
 requires_all_previous = false
 base_commons = Array[ExtResource("8_rffqt")]([ExtResource("2_2c7cs"), ExtResource("3_3hnwq"), ExtResource("16_epw7l")])

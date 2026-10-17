@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_5fv6r"]
+
+[resource]
+script = ExtResource("1_5fv6r")
+id = &"obj_no_card_spark"
+description = "Gagner sans lancer Etincelle"
+check_key = &"no_card"
+params = {
+"card": "spark"
+}

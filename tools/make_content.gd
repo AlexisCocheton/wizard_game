@@ -4396,7 +4396,15 @@ func _longueurs(n: float) -> float:
 ## combat. Les exemples du co-auteur sont gardes a la lettre (Fleche percante,
 ## sans Boule de feu, plus de 300 %, 4 Oiseaux mirage d un sort, 8 morts en
 ## moins d une seconde, ne pas etre touche par le Lutin archer, prendre le coup
-## du Renard). Les taux mesures sont dans test_level_progression.MESURES.
+## du Renard, sans perdre de vie, sans legendaire, le meme sort 30 fois, sous
+## 120 %). Les taux mesures sont dans test_level_progression.MESURES.
+##
+## LE REGLAGE AU BANC (17/10). Un seuil de chrono ou de vitesse se lit sur les
+## temps et les vitesses des victoires du bot tel quel (le banc des objectifs
+## les ecrit avec --detail) ; le reste a ete joue en lots de candidats, plus de
+## trois objectifs par niveau le temps d une mesure : une partie ne depend pas
+## des AUTRES objectifs du niveau (memes empreintes, partie par partie, avec 3
+## ou 9 objectifs). Le commentaire de chaque niveau dit ce qui a ete ecarte.
 ##
 ## LES RECOMPENSES suivent la table du co-auteur (voir l en-tete de la
 ## campagne) ; le commentaire de chaque niveau dit quel trait du niveau chaque
@@ -4415,10 +4423,13 @@ func _progression_de(level_id: StringName) -> Dictionary:
 			# R : Entrave temporelle (les Lutins fileurs sautent vite -> un
 			# ralentissement). E : Resonance (les nuees -> une zone). L : Faille
 			# temporelle (l echeance de Chronos -> des sorts rapides).
+			# Banc (17/10) : la Fleche 9 fois ne se ratait plus (60 / 60), 12 fois
+			# (15 : 18 / 60) ; aucune victoire au-dessus de 250 % (le niveau dure
+			# une minute), 240 %.
 			return {"objectifs": [
-				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 9}), "temporal_drag"],
+				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 12}), "temporal_drag"],
 				[_objectif(&"no_card", {"card": "fireball"}), "resonance"],
-				[_objectif(&"win_above_speed", {"pct": 250}), "time_rift"],
+				[_objectif(&"win_above_speed", {"pct": 240}), "time_rift"],
 			]}
 		&"lvl_02":
 			# Les gorgones figent la main -> la pioche aux trois rangs : Flux de
@@ -4431,79 +4442,111 @@ func _progression_de(level_id: StringName) -> Dictionary:
 		&"lvl_08":
 			# Les gelees craignent le feu et les nuees veulent une zone : Brasier,
 			# Marque de faiblesse, Pluie de meteorites.
+			# Banc (17/10) : 8 petites gelees a la Boule de feu tombaient a 12 / 60,
+			# sous les 4 Oiseaux mirage d un sort (22) ; 15 morts en une seconde,
+			# jamais. Sans la Fleche (55), puis finir sous 130 %.
 			return {"objectifs": [
-				[_objectif(&"kill_type_with_card", {"enemy": "jelly_small", "card": "fireball", "count": 8}), "brazier"],
+				[_objectif(&"no_card", {"card": "piercing_arrow"}), "brazier"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 4}), "weakness_mark"],
-				[_objectif(&"multi_kill", {"count": 15, "window": 1}), "meteor_storm"],
+				[_objectif(&"win_below_speed", {"pct": 130}), "meteor_storm"],
 			]}
 		&"lvl_09":
 			# Le Renard -> un sort rapide (Focalisation, 0,7 s) ; l armure du Gardien
 			# -> la dissipation (Vide d emprise) ; Echo de la main (les sorts gardes
 			# en main pendant le sommeil du Renard).
+			# Banc (17/10) : le coup du Renard ne se ratait plus ici (60 / 60 ; il
+			# reste au lvl_14) ; sans le Trait arcanique (56) a sa place.
 			return {"objectifs": [
-				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "focus"],
+				[_objectif(&"no_card", {"card": "arcane_bolt"}), "focus"],
 				[_objectif(&"kill_type_with_card", {"enemy": "gnome", "card": "spark", "count": 10}), "void_grip"],
 				[_objectif(&"win_below_speed", {"pct": 200}), "echo_of_the_hand"],
 			]}
 		&"lvl_17":
 			# Tout vole et rien ne va droit -> le controle : Onde de repulsion (vent,
 			# que les volants craignent), Maelstrom, Metier du monde.
+			# Banc (17/10) : ne pas etre touche par le Lutin archer ne se reussissait
+			# jamais (0 / 60, il est au lvl_03) ; le Serpent des sables, que le vent
+			# repousse, parcourt seul 5 longueurs (45 / 60) mais jamais 12. Le Vent du
+			# sud 5 fois (46), 12 volants (37), finir sous 170 % (10).
 			return {"objectifs": [
-				[_objectif(&"kill_flying", {"count": 12}), "repulsion_wave"],
-				[_objectif(&"card_casts", {"card": "south_wind", "count": 5}), "maelstrom"],
-				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "world_loom"],
+				[_objectif(&"card_casts", {"card": "south_wind", "count": 5}), "repulsion_wave"],
+				[_objectif(&"kill_flying", {"count": 12}), "maelstrom"],
+				[_objectif(&"win_below_speed", {"pct": 170}), "world_loom"],
 			], "passifs": ["pass_wind_tailwind"]}
 		&"lvl_18":
 			# Le Mage noir et les archers tirent -> des murs (Mur de glace,
 			# Bastion) ; les pillards arrivent de partout -> la Riviere, qui les
 			# force a un pont.
+			# Banc (17/10) : ne pas etre touche par le Mage noir (ni par le Lutin
+			# archer) ne se reussissait jamais ; sans la Flechette (18 / 60) a sa
+			# place, entre les pillards (29) et la vitesse basse (16).
 			return {"objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "nacelle_raider", "card": "fireball", "count": 5}), "ice_wall"],
-				[_objectif(&"no_hit_from", {"enemy": "dark_mage"}), "bastion"],
+				[_objectif(&"no_card", {"card": "venom_dart"}), "bastion"],
 				[_objectif(&"win_below_speed", {"pct": 190}), "terrain_river"],
 			], "passifs": ["pass_poison_linger"]}
 		&"lvl_03":
 			# Le Reliquaire compte les COUPS -> l Apprenti miroir, qui en porte
 			# beaucoup ; les nuees de l ossuaire -> le Totem (un appat) et la Mare
 			# de venin (le poison passe la garde du Gardien d ossements).
+			# Banc (17/10) : les deux exemples du co-auteur « 8 morts en moins d une
+			# seconde » (16 / 60) et « ne pas se faire toucher par un Lutin archer »
+			# (1 / 60 : ses deux archers tirent avant de tomber ; 0 / 60 aux
+			# lvl_17 et lvl_18, ou ils sont plus nombreux) sont ici.
 			return {"objectifs": [
-				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "heartwood_totem"],
-				[_objectif(&"card_casts", {"card": "frost_rain", "count": 20}), "mirror_apprentice"],
-				[_objectif(&"kill_type_with_card", {"enemy": "rat_swarm", "card": "frost_rain", "count": 15}), "venom_mire"],
+				[_objectif(&"card_casts", {"card": "frost_rain", "count": 20}), "heartwood_totem"],
+				[_objectif(&"multi_kill", {"count": 8, "window": 1}), "mirror_apprentice"],
+				[_objectif(&"no_hit_from", {"enemy": "imp_archer"}), "venom_mire"],
 			], "passifs": ["pass_ice_winter"]}
 		&"lvl_04":
 			# L Ensevelisseur invoque sans fin -> de la duree : Ronces, Autel
 			# d appel, Clef de l Appel.
+			# Banc (17/10) : le niveau dure plus de trois minutes (la plus rapide
+			# des victoires : 136 s) ; le chrono passe de 140 s (2 / 60) a 195 s.
+			# Le Serpent des sables sur 2,5 longueurs (9) : le defi du co-auteur,
+			# ici ou le Mur de pierre fait marcher.
 			return {"objectifs": [
 				[_objectif(&"kill_type_with_card", {"enemy": "risen_ghoul", "card": "frost_rain", "count": 4}), "terrain_brambles"],
-				[_objectif(&"win_under_time", {"seconds": 140}), "terrain_altar"],
+				[_objectif(&"win_under_time", {"seconds": 195}), "terrain_altar"],
 				[_objectif(&"enemy_travel", {"enemy": "sand_serpent", "distance": _longueurs(2.5)}), "summoners_key"],
 			], "passifs": ["pass_nature_roots"]}
 		&"lvl_19":
 			# Les goules ressortent et les fantomes zigzaguent -> la Volte-face ; la
 			# Sorciere invoque -> le Semis (de la duree) ; les nuees de goules -> le
 			# Cadran des forges.
+			# Banc (17/10) : 40 sorts de feu (7 / 60) etaient plus durs que ne pas
+			# etre touche par une goule (60) et que le chrono de 130 s (58). Les
+			# goules a la Mare de braises (14 : 58), 28 sorts de feu (49), et
+			# l exemple du co-auteur « sans perdre de vie » (7) : mesure dans douze
+			# niveaux, le bot ne le reussit qu ici (1 / 60 au lvl_05, 0 ailleurs).
 			return {"objectifs": [
-				[_objectif(&"element_casts", {"element": "FIRE", "count": 40}), "about_face"],
-				[_objectif(&"no_hit_from", {"enemy": "pit_ghoul"}), "blight_sapling"],
-				[_objectif(&"win_under_time", {"seconds": 130}), "forge_dial"],
+				[_objectif(&"kill_type_with_card", {"enemy": "pit_ghoul", "card": "ember_pool", "count": 14}), "about_face"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 28}), "blight_sapling"],
+				[_objectif(&"no_damage_taken"), "forge_dial"],
 			], "passifs": ["pass_fire_embers"]}
 		&"lvl_20":
 			# L Epeiste fonce par a-coups -> le ralentissement aux trois rangs :
 			# Entrave temporelle, Gel profond, Sablier fendu.
+			# Banc (17/10) : sans la Lumiere et la Fleche 21 fois ne se rataient
+			# jamais (60 / 60) ; sans la Mare de braises, le bot ne gagne plus (0).
+			# 2 Squelettes a parade d un sort (53), la Fleche 34 fois (37 ; 26 :
+			# 56), finir sous 250 % (7 ; sous 170 % : 1).
 			return {"objectifs": [
-				[_objectif(&"no_card", {"card": "purifying_light"}), "temporal_drag"],
-				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 21}), "deep_freeze"],
-				[_objectif(&"win_below_speed", {"pct": 170}), "hourglass_shard"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "parry_skeleton", "count": 2}), "temporal_drag"],
+				[_objectif(&"card_casts", {"card": "piercing_arrow", "count": 34}), "deep_freeze"],
+				[_objectif(&"win_below_speed", {"pct": 250}), "hourglass_shard"],
 			], "passifs": ["pass_arcane_mind"]}
 		&"lvl_05":
 			# Le Colosse craint la glace -> le Mur de glace (l exemple du co-auteur :
 			# enferme, il le frappe moins fort) ; les tanks -> les doubleurs : Fosse,
 			# Canalisation jumelle.
+			# Banc (17/10) : le bot finit presque toujours a 500 % ici (plus de
+			# 310 % : 60 / 60) et 30 sorts arcaniques ne se rataient jamais ; 80
+			# sorts arcaniques (56 ; 95 : 36), puis un chrono de 142 s (11).
 			return {"objectifs": [
-				[_objectif(&"element_casts", {"element": "ARCANE", "count": 30}), "ice_wall"],
+				[_objectif(&"element_casts", {"element": "ARCANE", "count": 80}), "ice_wall"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "golem", "count": 2}), "terrain_pit"],
-				[_objectif(&"win_above_speed", {"pct": 310}), "twin_channeling"],
+				[_objectif(&"win_under_time", {"seconds": 142}), "twin_channeling"],
 			], "passifs": ["pass_water_spring"]}
 		&"lvl_06":
 			# Les Sauterelles et les Ombres bougent mal -> le controle : Nappe
@@ -4517,26 +4560,35 @@ func _progression_de(level_id: StringName) -> Dictionary:
 		&"lvl_21":
 			# Le Sceau invoque -> les Ronces (de la duree) ; il protege -> le Vide
 			# d emprise ; les vers craignent l eau -> la Riviere.
+			# Banc (17/10) : aucune victoire en moins de 90 s (la plus rapide :
+			# 104 s) ; 135 s.
 			return {"objectifs": [
 				[_objectif(&"no_card_tag", {"tag": "FIRE"}), "terrain_brambles"],
 				[_objectif(&"kill_type_with_card", {"enemy": "fire_worm", "card": "arcane_bolt", "count": 5}), "void_grip"],
-				[_objectif(&"win_under_time", {"seconds": 90}), "terrain_river"],
+				[_objectif(&"win_under_time", {"seconds": 135}), "terrain_river"],
 			], "passifs": ["pass_water_flood"]}
 		&"lvl_07":
 			# Vharn est un tank qui compte les coups -> les doubleurs : Focalisation,
 			# Marque de faiblesse, Canalisation jumelle.
+			# Banc (17/10) : la Spirale de sel ne se ratait jamais, meme 22 fois
+			# (60 / 60), ni 2 champignons d un sort (59). Sans l Etincelle (59),
+			# 3 champignons d un sort (19), plus de 380 % (9).
 			return {"objectifs": [
-				[_objectif(&"card_casts", {"card": "salt_spiral", "count": 6}), "focus"],
-				[_objectif(&"kill_type_one_cast", {"enemy": "mushroom", "count": 2}), "weakness_mark"],
-				[_objectif(&"win_above_speed", {"pct": 350}), "twin_channeling"],
+				[_objectif(&"no_card", {"card": "spark"}), "focus"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "mushroom", "count": 3}), "weakness_mark"],
+				[_objectif(&"win_above_speed", {"pct": 380}), "twin_channeling"],
 			], "passifs": ["pass_wind_gale"]}
 		&"lvl_10":
 			# Les nuees qui nourrissent Sesh -> le Brasier ; les Cacodemons
 			# rebondissent -> le Maelstrom ; Sesh est lent -> la Mare de venin.
+			# Banc (17/10) : les trois Cacodemons tombent toujours (60 / 60), aucune
+			# partie sans degats ni Cacodemon sur 1,5 longueur (0). Sans le Trait
+			# arcanique (56), 4 champignons a la Pluie de givre (34), plus de 320 %
+			# (10).
 			return {"objectifs": [
-				[_objectif(&"kill_flying", {"count": 1}), "brazier"],
-				[_objectif(&"no_damage_taken"), "maelstrom"],
-				[_objectif(&"enemy_travel", {"enemy": "cacodaemon", "distance": _longueurs(1.5)}), "venom_mire"],
+				[_objectif(&"no_card", {"card": "arcane_bolt"}), "brazier"],
+				[_objectif(&"kill_type_with_card", {"enemy": "mushroom", "card": "frost_rain", "count": 4}), "maelstrom"],
+				[_objectif(&"win_above_speed", {"pct": 320}), "venom_mire"],
 			], "passifs": ["pass_fireboom"]}
 		&"lvl_11":
 			# Kaltek et ses Berserkers accelerent -> le ralentissement aux trois
@@ -4549,43 +4601,57 @@ func _progression_de(level_id: StringName) -> Dictionary:
 		&"lvl_12":
 			# Ymoa campe et tire -> le Bastion ; tout est protege -> le Totem (un
 			# appat qui les tire hors du cercle) ; Echo de la main (garder la Lumiere).
+			# Banc (17/10) : ne pas etre touche par Ymoa est le plus dur (6 / 60),
+			# il passe au rang 3 ; la Lumiere (59) et le meme sort (45) avant lui.
 			return {"objectifs": [
-				[_objectif(&"no_hit_from", {"enemy": "demon_circle"}), "heartwood_totem"],
-				[_objectif(&"card_casts", {"card": "purifying_light", "count": 6}), "bastion"],
-				[_objectif(&"same_card_casts", {"count": 30}), "echo_of_the_hand"],
+				[_objectif(&"card_casts", {"card": "purifying_light", "count": 6}), "heartwood_totem"],
+				[_objectif(&"same_card_casts", {"count": 30}), "bastion"],
+				[_objectif(&"no_hit_from", {"enemy": "demon_circle"}), "echo_of_the_hand"],
 			], "passifs": ["pass_echo"]}
 		&"lvl_13":
 			# La Reine recollee fige une carte -> la pioche : Flux de mana, Pacte
 			# imprudent, Registre des marees.
+			# Banc (17/10) : 3 plantes carnivores d un sort, jamais ; ne pas etre
+			# touche par l Echo du Mage noir, 1 / 60. 22 sorts de feu (51), 2 plantes
+			# carnivores d un sort (12).
 			return {"objectifs": [
 				[_objectif(&"no_legendary_used"), "mana_flow"],
-				[_objectif(&"kill_type_one_cast", {"enemy": "carnivore_plant", "count": 3}), "reckless_bargain"],
-				[_objectif(&"no_hit_from", {"enemy": "dark_mage_echo"}), "tide_ledger"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 22}), "reckless_bargain"],
+				[_objectif(&"kill_type_one_cast", {"enemy": "carnivore_plant", "count": 2}), "tide_ledger"],
 			], "passifs": ["pass_fire_fury"]}
 		&"lvl_14":
 			# Les Renards dormeurs -> un sort rapide (Focalisation) ; le Slime
 			# colossal se divise -> des zones : Resonance, Cadran des forges.
+			# Banc (17/10) : ne pas etre touche par l Echo du Gardien (ni par l Echo
+			# de Chronos, ni par l Adepte du givre) ne se ratait jamais (60 / 60) ;
+			# un chrono de 125 s (9) a sa place.
 			return {"objectifs": [
 				[_objectif(&"hit_from", {"enemy": "sleepy_fox"}), "focus"],
 				[_objectif(&"kill_type_one_cast", {"enemy": "rat_swarm", "count": 3}), "resonance"],
-				[_objectif(&"no_hit_from", {"enemy": "warden_echo"}), "forge_dial"],
+				[_objectif(&"win_under_time", {"seconds": 125}), "forge_dial"],
 			], "passifs": ["pass_arcane_lore"]}
 		&"lvl_15":
 			# L Horloger revient en arriere -> le controle (Volte-face) ; le Greffier
 			# vole une carte -> la pioche (Intuition) ; Sablier fendu (le temps).
+			# Banc (17/10) : 30 sorts de feu ne se rataient jamais, 40 (58 / 60 ; 50 :
+			# 30) ; ne jamais frapper une garde de renvoi (21) est plus dur que
+			# finir au-dessus de 380 % (37) : rangs 2 et 3 echanges.
 			return {"objectifs": [
-				[_objectif(&"element_casts", {"element": "FIRE", "count": 30}), "about_face"],
-				[_objectif(&"never_hit_reflect"), "arcane_insight"],
-				[_objectif(&"win_above_speed", {"pct": 380}), "hourglass_shard"],
+				[_objectif(&"element_casts", {"element": "FIRE", "count": 40}), "about_face"],
+				[_objectif(&"win_above_speed", {"pct": 380}), "arcane_insight"],
+				[_objectif(&"never_hit_reflect"), "hourglass_shard"],
 			], "passifs": ["pass_dual"]}
 		&"lvl_16":
 			# L Enfant renvoie les coups -> l Elan du temps rend la vitesse perdue ;
 			# il fige trois cartes -> l Epuration (moins de cartes inutiles) et le
 			# Registre des marees (la pioche).
+			# Banc (17/10) : ne pas etre touche par l Echo de l Ensevelisseur et 50
+			# sorts arcaniques ne se rataient jamais (60 / 60) ; 70 sorts arcaniques
+			# (56 ; 85 : 31) au rang 1, un chrono de 145 s (12) au rang 3.
 			return {"objectifs": [
-				[_objectif(&"no_hit_from", {"enemy": "gravecaller_echo"}), "time_surge"],
+				[_objectif(&"element_casts", {"element": "ARCANE", "count": 70}), "time_surge"],
 				[_objectif(&"boss_quick_after_revive", {"seconds": 9}), "deck_purge"],
-				[_objectif(&"element_casts", {"element": "ARCANE", "count": 50}), "tide_ledger"],
+				[_objectif(&"win_under_time", {"seconds": 145}), "tide_ledger"],
 			], "passifs": ["pass_apotheosis"]}
 	printerr("Niveau %s absent de la table de progression" % level_id)
 	return {}

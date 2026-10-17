@@ -2896,8 +2896,11 @@ func _b2_caption_lines() -> Array[String]:
 	var lignes: Array[String] = []
 	if _b2_deadline_left > 0.0:
 		lignes.append("ECHEANCE %d s : frappe-le !" % ceili(_b2_deadline_left))
+	# Courte : la boite de legende (Fx.mech_label, 420 px centres sur le
+	# monstre) n est pas ramenee dans le cadre, et un Gardien pres du bord
+	# coupait « GARDE : les coups glissent » (capture du 17/10).
 	if definition != null and definition.guard_block_pct > 0.0 and _reflect_left > 0.0:
-		lignes.append("GARDE : les coups glissent")
+		lignes.append("GARDE : coups amortis")
 	return lignes
 
 

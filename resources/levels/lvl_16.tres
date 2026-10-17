@@ -26,11 +26,12 @@
 
 [sub_resource type="Resource" id="Resource_24wiv"]
 script = ExtResource("25_kvakk")
-id = &"obj_no_hit_from_gravecaller_echo"
-description = "Echo de l Ensevelisseur : gagner sans en etre touche"
-check_key = &"no_hit_from"
+id = &"obj_element_casts_70_arcane"
+description = "Lancer 70 sorts d arcanique"
+check_key = &"element_casts"
 params = {
-"enemy": "gravecaller_echo"
+"count": 70,
+"element": "ARCANE"
 }
 
 [sub_resource type="Resource" id="Resource_h6w1j"]
@@ -44,12 +45,11 @@ params = {
 
 [sub_resource type="Resource" id="Resource_i3bav"]
 script = ExtResource("25_kvakk")
-id = &"obj_element_casts_50_arcane"
-description = "Lancer 50 sorts d arcanique"
-check_key = &"element_casts"
+id = &"obj_win_under_time_145"
+description = "Gagner en moins de 2 min 25"
+check_key = &"win_under_time"
 params = {
-"count": 50,
-"element": "ARCANE"
+"seconds": 145
 }
 
 [sub_resource type="Resource" id="Resource_8472u"]

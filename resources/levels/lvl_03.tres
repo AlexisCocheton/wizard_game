@@ -29,16 +29,6 @@
 
 [sub_resource type="Resource" id="Resource_ravo1"]
 script = ExtResource("22_wfffn")
-id = &"obj_multi_kill_8_1"
-description = "Tuer 8 monstres en moins de 1 s"
-check_key = &"multi_kill"
-params = {
-"count": 8,
-"window": 1
-}
-
-[sub_resource type="Resource" id="Resource_eor8d"]
-script = ExtResource("22_wfffn")
 id = &"obj_card_casts_frost_rain_20"
 description = "Lancer 20 fois Pluie de givre"
 check_key = &"card_casts"
@@ -47,15 +37,23 @@ params = {
 "count": 20
 }
 
+[sub_resource type="Resource" id="Resource_eor8d"]
+script = ExtResource("22_wfffn")
+id = &"obj_multi_kill_8_1"
+description = "Tuer 8 monstres en moins de 1 s"
+check_key = &"multi_kill"
+params = {
+"count": 8,
+"window": 1
+}
+
 [sub_resource type="Resource" id="Resource_m52cv"]
 script = ExtResource("22_wfffn")
-id = &"obj_kill_type_with_card_frost_rain_15_rat_swarm"
-description = "Oiseau mirage : en tuer 15 avec Pluie de givre"
-check_key = &"kill_type_with_card"
+id = &"obj_no_hit_from_imp_archer"
+description = "Lutin archer : gagner sans en etre touche"
+check_key = &"no_hit_from"
 params = {
-"card": "frost_rain",
-"count": 15,
-"enemy": "rat_swarm"
+"enemy": "imp_archer"
 }
 
 [sub_resource type="Resource" id="Resource_fc8wg"]

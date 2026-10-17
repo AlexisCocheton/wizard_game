@@ -19,7 +19,7 @@
 [ext_resource type="Resource" path="res://resources/enemies/totem_cracked.tres" id="17_ggghy"]
 [ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="18_m3ew4"]
 [ext_resource type="Resource" path="res://resources/cards/epic/reckless_bargain.tres" id="19_opf7y"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/tide_ledger.tres" id="20_v38qs"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/tide_ledger.tres" id="20_hwyjr"]
 [ext_resource type="Resource" path="res://resources/cards/passive/pass_fire_fury.tres" id="22_w82a7"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="23_hkulf"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="24_d70vj"]
@@ -37,21 +37,22 @@ params = {}
 
 [sub_resource type="Resource" id="Resource_e0rlo"]
 script = ExtResource("28_gi347")
-id = &"obj_kill_type_one_cast_3_carnivore_plant"
-description = "Plante carnivore : en tuer 3 d un seul sort"
-check_key = &"kill_type_one_cast"
+id = &"obj_element_casts_22_fire"
+description = "Lancer 22 sorts de feu"
+check_key = &"element_casts"
 params = {
-"count": 3,
-"enemy": "carnivore_plant"
+"count": 22,
+"element": "FIRE"
 }
 
 [sub_resource type="Resource" id="Resource_rdx25"]
 script = ExtResource("28_gi347")
-id = &"obj_no_hit_from_dark_mage_echo"
-description = "Echo du Mage noir : gagner sans en etre touche"
-check_key = &"no_hit_from"
+id = &"obj_kill_type_one_cast_2_carnivore_plant"
+description = "Plante carnivore : en tuer 2 d un seul sort"
+check_key = &"kill_type_one_cast"
 params = {
-"enemy": "dark_mage_echo"
+"count": 2,
+"enemy": "carnivore_plant"
 }
 
 [sub_resource type="Resource" id="Resource_5v2y0"]
@@ -263,7 +264,7 @@ enemy_pool = Array[ExtResource("5_cshed")]([ExtResource("6_lhb6e"), ExtResource(
 exploration_deck = Array[ExtResource("1_hwyjr")]([ExtResource("2_e0rlo"), ExtResource("2_e0rlo"), ExtResource("2_e0rlo"), ExtResource("2_e0rlo"), ExtResource("3_rdx25"), ExtResource("3_rdx25"), ExtResource("3_rdx25"), ExtResource("3_rdx25"), ExtResource("4_cysi5"), ExtResource("4_cysi5"), ExtResource("4_cysi5"), ExtResource("4_cysi5")])
 objectives = Array[ExtResource("28_gi347")]([SubResource("Resource_hwyjr"), SubResource("Resource_e0rlo"), SubResource("Resource_rdx25")])
 levelup_cards = Array[ExtResource("1_hwyjr")]([])
-objective_rewards = Array[ExtResource("1_hwyjr")]([ExtResource("18_m3ew4"), ExtResource("19_opf7y"), ExtResource("20_v38qs")])
+objective_rewards = Array[ExtResource("1_hwyjr")]([ExtResource("18_m3ew4"), ExtResource("19_opf7y"), ExtResource("20_hwyjr")])
 next_levels = Array[StringName]([&"lvl_14"])
 requires_all_previous = true
 base_commons = Array[ExtResource("1_hwyjr")]([ExtResource("2_e0rlo"), ExtResource("3_rdx25"), ExtResource("4_cysi5")])
