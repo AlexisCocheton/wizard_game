@@ -96,6 +96,45 @@ static func enemies_met() -> int:
 	return int(SaveData.enemy_counts()[0])
 
 
+const NEXT_UNLOCKED_TEXT: String = "Niveau suivant debloque"
+
+
+## CE QUE LA VICTOIRE OUVRE, lu APRES SaveData.record_victory (C7a, audit du
+## 17/10). L ecran annoncait « Niveau suivant debloque » des que `next_levels`
+## n etait pas vide, en campagne. Or lvl_13 n ouvre qu apres les QUATRE demons
+## (LevelDef.requires_all_previous) : gagner lvl_07 en premier annoncait un
+## deblocage qui n avait pas eu lieu. Desormais :
+##   - une victoire LIBRE n ouvre rien (vague 10) : aucune ligne ;
+##   - « Niveau suivant debloque » seulement si un niveau de `next_levels` est
+##     REELLEMENT ouvert ;
+##   - un suivant encore ferme qui attend tous ses precedents dit ce qui manque
+##     (SaveData.previous_left, la liste meme qui decide de l ouverture).
+## Statique : testee sans l ecran (test_campaign_progression).
+static func next_level_lines(level: LevelDef, mode: int) -> Array[String]:
+	var out: Array[String] = []
+	if level == null or not GameEnums.advances_campaign(mode):
+		return out
+	var ouvert: bool = false
+	for nxt in level.next_levels:
+		if SaveData.is_level_unlocked(nxt):
+			ouvert = true
+	if ouvert:
+		out.append(NEXT_UNLOCKED_TEXT)
+	for nxt in level.next_levels:
+		if SaveData.is_level_unlocked(nxt):
+			continue
+		var cible: LevelDef = ContentDB.levels.get(nxt)
+		var reste: Array[LevelDef] = SaveData.previous_left(nxt)
+		if cible == null or reste.is_empty():
+			continue
+		if reste.size() == 1:
+			out.append("Termine %s pour ouvrir %s" % [reste[0].display_name, cible.display_name])
+		else:
+			out.append("Termine encore %d niveaux pour ouvrir %s"
+				% [reste.size(), cible.display_name])
+	return out
+
+
 ## L ecran de victoire est le moment de RECOMPENSE, et il ressemblait a un
 ## journal d erreurs : des prefixes "[OK]" / "[   ]" en tete de ligne, aucune
 ## etoile alors que la carte de campagne en compte trois par niveau, aucune
@@ -178,9 +217,8 @@ func _remplir(level: LevelDef, done: Dictionary, nouvelles: Array[SpellCard]) ->
 	for p in _passifs_gagnes:
 		_objectives.add_child(UiTheme.label("Passif debloque : %s" % p.display_name,
 			UiTheme.FONT_BODY, UiTheme.rarity_ink(p.rarity), HORIZONTAL_ALIGNMENT_CENTER))
-	# Une victoire LIBRE n ouvre rien (vague 10) : ne pas le promettre.
-	if not level.next_levels.is_empty() and GameEnums.advances_campaign(RunState.mode):
-		_objectives.add_child(UiTheme.label("Niveau suivant debloque",
+	for ligne in next_level_lines(level, RunState.mode):
+		_objectives.add_child(UiTheme.label(ligne,
 			UiTheme.FONT_BODY, UiTheme.INK_HINT, HORIZONTAL_ALIGNMENT_CENTER))
 
 	# --- VAGUE 10 : le bilan des degats et le conseil ---

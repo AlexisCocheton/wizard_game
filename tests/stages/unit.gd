@@ -103,6 +103,9 @@ const SUITES: Array[String] = [
 	"res://tests/unit/test_majeures_contenu.gd",
 	"res://tests/unit/test_cibles_mortes_w10.gd",
 	"res://tests/unit/test_mech_label_clamp.gd",
+	# Vague 10 C7a : les etoiles d un VRAI profil d avant la vague 10 (ids
+	# d objectif de a7cdcdc) reviennent sur les objectifs actuels.
+	"res://tests/unit/test_save_migration_w10.gd",
 	# Vague 10 C3 : signal 11 a la fermeture. Sortie commune (CleanExit), aucun
 	# quit() nu, @static_unload sur tout script a static var. EN DERNIER : la
 	# suite vide les caches statiques a ressources.
