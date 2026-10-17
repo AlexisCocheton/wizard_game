@@ -45,25 +45,28 @@ static func run(driver: Node) -> void:
 	SpeedGauge.reset()
 
 
-static func _monstre(pv: float) -> EnemyDef:
+static func _monstre(pv: float, vitesse: float = 0.0) -> EnemyDef:
 	var base: EnemyDef = ContentDB.enemies.get(&"gnome")
 	var d: EnemyDef = base.duplicate() if base != null else EnemyDef.new()
-	d.id = StringName("smoke_majeure_%d" % int(pv))
+	d.id = StringName("smoke_majeure_%d_%d" % [int(pv), int(vitesse)])
 	d.max_hp = pv
-	d.base_speed = 0.0
+	d.base_speed = vitesse
 	return d
 
 
 ## Une meute sur trois rangees autour du point vise : les copies decalees (a
 ## +-150..260 px, vers le haut jusqu a 440 px) ont toutes de quoi mordre. Des
-## freles (1 PV, ils meurent au premier coup) et des moyens (25 PV, ils portent
-## des residus et meurent en cours de route).
-static func _meute(bf: Battlefield, frele: EnemyDef, moyen: EnemyDef) -> void:
+## freles (1 PV : ils meurent au premier coup) et des moyens (25 PV : ils
+## encaissent, portent les residus des deux lancers). Tous IMMOBILES : des
+## monstres qui marchent coutent ici 20 s de pathfinding au smoke pour rien de
+## plus ; le residu qui tue un porteur de plusieurs residus est verrouille par
+## test_cibles_mortes_w10, qui le produit a coup sur.
+static func _meute(bf: Battlefield, sortes: Array[EnemyDef]) -> void:
 	var k: int = 0
 	for y in [900.0, 690.0, 480.0]:
 		for i in 9:
 			var x: float = 540.0 + (i - 4) * 115.0
-			bf.spawn_enemy(frele if k % 2 == 0 else moyen, x, 1.0, Vector2(x, y))
+			bf.spawn_enemy(sortes[k % sortes.size()], x, 1.0, Vector2(x, y))
 			k += 1
 
 
@@ -90,7 +93,7 @@ static func _zones_attendues(c: SpellCard) -> int:
 static func _chaque_majeure(driver: Node, g: GameController) -> int:
 	var bf: Battlefield = g.battlefield
 	var frele: EnemyDef = _monstre(1.0)
-	var moyen: EnemyDef = _monstre(25.0)
+	var sortes: Array[EnemyDef] = [frele, _monstre(25.0)]
 	var ou := Vector2(540.0, 900.0)
 	var ids: Array = ContentDB.cards.keys()
 	ids.sort_custom(func(a: Variant, b: Variant) -> bool: return String(a) < String(b))
@@ -109,7 +112,7 @@ static func _chaque_majeure(driver: Node, g: GameController) -> int:
 			SpeedGauge.set_speed_percent(150)
 			RunState.upgrades_taken[c.id] = [RunState.major_id_of(m)]
 			bf.clear_all()
-			_meute(bf, frele, moyen)
+			_meute(bf, sortes)
 			# 1) La cible du lacher meurt pendant l incantation et est liberee.
 			var victime: Enemy = bf.spawn_enemy(frele, ou.x, 1.0, ou)
 			var ctx: CastContext = _contexte(g, c, ou, victime)
