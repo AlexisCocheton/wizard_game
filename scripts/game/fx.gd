@@ -1523,8 +1523,9 @@ static func caption_box_x(owner_x: float, box_w: float,
 ## logos) : une boite de 420 px ramenee entiere eloignerait de son monstre une
 ## legende courte. Sans cela, pres du bord gauche ou droit, la legende etait
 ## coupee (« GARDE : les coups glissent », capture du 17/10). A gauche, elle
-## s arrete au bord de la jauge de vitesse (MECH_LABEL_MARGIN_LEFT). A rappeler quand le
-## monstre bouge ou que le texte change : la boite suit le monstre (enfant).
+## s arrete au bord de la jauge de vitesse (MECH_LABEL_MARGIN_LEFT). A rappeler
+## quand le monstre bouge ou que le texte change : la boite suit le monstre
+## (enfant), Enemy._refresh_mech_caption la rappelle a chaque pas.
 static func fit_caption(c: Control, owner: Node2D) -> void:
 	if c == null or owner == null or not is_instance_valid(c):
 		return
