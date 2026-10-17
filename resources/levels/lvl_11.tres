@@ -26,21 +26,21 @@
 
 [sub_resource type="Resource" id="Resource_uoh1u"]
 script = ExtResource("22_3efo2")
+id = &"obj_kill_flying_1"
+description = "Abattre un monstre volant"
+check_key = &"kill_flying"
+params = {
+"count": 1
+}
+
+[sub_resource type="Resource" id="Resource_i6ce3"]
+script = ExtResource("22_3efo2")
 id = &"obj_element_casts_32_ice"
 description = "Lancer 32 sorts de glace"
 check_key = &"element_casts"
 params = {
 "count": 32,
 "element": "ICE"
-}
-
-[sub_resource type="Resource" id="Resource_i6ce3"]
-script = ExtResource("22_3efo2")
-id = &"obj_kill_flying_1"
-description = "Abattre un monstre volant"
-check_key = &"kill_flying"
-params = {
-"count": 1
 }
 
 [sub_resource type="Resource" id="Resource_q8cbb"]

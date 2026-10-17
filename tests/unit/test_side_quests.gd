@@ -93,15 +93,24 @@ const Campagne = preload("res://tests/unit/test_campagne_w10.gd")
 ## sur les victoires du bot neutre (130 s et 240 % rendaient 9 et 2 sur 60) :
 ## moins de 145 s et plus de 220 %. Seule sa ligne est re-jouee ici ; les sept
 ## autres attendent la re-mesure complete d apres C7b.
+##
+## Chantier C8 (17/10, la mesure finale, main a3c68b0 : toute la vague 10 et
+## l audit) : les 24 objectifs re-joues, 60 parties chacun. Identiques : la
+## mesure, l atelier (celle de C7c), le champion, la vitrine. Recollees : le
+## tresor (28 / 22 / 4 -> 27 / 23 / 3), l apprentie (rang 3 : 3 -> 4), l ecuyer
+## (rang 2 : 25 -> 19). La fee tombait (30 / 5 / 5 : plus de 260 % a egalite
+## avec les 3 Champignons d un sort, dont le bot qui les vise ne gagne que 9
+## parties) : plus de 300 %, lu sur les 30 victoires du bot neutre (rien entre
+## 282 et 320 %), re-joue sur le contenu regenere.
 const MESURES: Dictionary = {
 	"side_a1_mesure": [["obj_no_hit_from_hornblower_gold", 59], ["obj_kill_type_one_cast_3_hopper", 15], ["obj_win_above_speed_160", 8]],
 	"side_a2_atelier": [["obj_kill_flying_8", 35], ["obj_win_under_time_145", 17], ["obj_win_above_speed_220", 6]],
-	"side_a3_tresor": [["obj_win_under_time_150", 28], ["obj_multi_kill_5_1", 22], ["obj_never_hit_reflect", 4]],
+	"side_a3_tresor": [["obj_win_under_time_150", 27], ["obj_multi_kill_5_1", 23], ["obj_never_hit_reflect", 3]],
 	"side_a4_champion": [["obj_kill_type_one_cast_2_berserker", 25], ["obj_multi_kill_4_1", 23], ["obj_win_under_time_100", 12]],
 	"side_a5_vitrine": [["obj_hit_from_sleepy_fox", 38], ["obj_multi_kill_6_1", 15], ["obj_win_above_speed_240", 9]],
-	"side_bluewitch": [["obj_element_casts_40_lightning", 25], ["obj_win_under_time_140", 15], ["obj_no_hit_from_void_knight_gold", 3]],
-	"side_fairy": [["obj_element_casts_30_fire", 29], ["obj_kill_type_one_cast_3_mushroom", 7], ["obj_win_above_speed_260", 3]],
-	"side_squire": [["obj_kill_type_one_cast_2_nacelle_raider", 41], ["obj_win_above_speed_140", 25], ["obj_multi_kill_3_1", 5]],
+	"side_bluewitch": [["obj_element_casts_40_lightning", 25], ["obj_win_under_time_140", 15], ["obj_no_hit_from_void_knight_gold", 4]],
+	"side_fairy": [["obj_element_casts_30_fire", 30], ["obj_kill_type_one_cast_3_mushroom", 5], ["obj_win_above_speed_300", 3]],
+	"side_squire": [["obj_kill_type_one_cast_2_nacelle_raider", 41], ["obj_win_above_speed_140", 19], ["obj_multi_kill_3_1", 5]],
 }
 
 

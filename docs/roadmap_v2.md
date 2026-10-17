@@ -927,13 +927,16 @@ controle, MESURES recollees) ; puis `e3c905a` (`make_story` sort aussi par
 Le banc de controle de C2 a ete fusionne pendant la redaction de ce paragraphe : son
 detail est dans `docs/banc_vague10.md` : campagne 1180 / 1260 (minimum `lvl_18` 36),
 annexes 243 / 480 (40 a 65 %), Massacre 17,5 vagues, 29 classements d objectifs
-conformes, 0 SCRIPT ERROR. Chaque point
+conformes, 0 SCRIPT ERROR. Apres l audit (C7a, C7b, C7c), la mesure finale de C8 sur
+`main` `a3c68b0` fait foi : campagne 1214 / 1260 (minimum `lvl_18` 46), annexes
+247 / 480, Massacre 15,9 vagues, 29 classements conformes (meme document). Chaque point
 ci-dessous a ete relu dans le code et le contenu livres (`main` `e3c905a`).
 
 ### La demande, point par point
 
 FAIT = livre, avec le fichier et le test qui le tiennent ; PARTIEL = livre en
-partie ; PAS FAIT. **Bilan : 24 FAIT, 3 PARTIEL, 1 PAS FAIT** (28 points).
+partie ; PAS FAIT. **Bilan : 25 FAIT, 2 PARTIEL, 1 PAS FAIT** (28 points ; le point 28
+est passe de PARTIEL a FAIT avec la mesure finale de C8).
 
 **La campagne**
 
@@ -991,7 +994,7 @@ partie ; PAS FAIT. **Bilan : 24 FAIT, 3 PARTIEL, 1 PAS FAIT** (28 points).
 
 | # | Demande | Etat | Livre (fichier, test) | Pourquoi, ce qui manque |
 |---|---|---|---|---|
-| 28 | Banc des 21 niveaux >= 60 %, objectifs classes au banc des objectifs | PARTIEL | Campagne 1185 / 1260 a B2 (minimum `lvl_18` 41, `lvl_17` 44), 1180 au banc de controle de C2 (titre de `b8264d7`) ; objectifs : 21 + 8 classements conformes, re-joues par C2 (7 lignes de campagne recollees, les 8 d annexes identiques) | Detail dans `docs/banc_vague10.md` : minimum `lvl_18` 36 (fuite de la Lumiere par l annexe de l atelier, confiee a C7c), incantation 48-89 % (moyenne 74,7), Massacre 17,5 vagues pour un repere de 4-8, cause non analysee |
+| 28 | Banc des 21 niveaux >= 60 %, objectifs classes au banc des objectifs | FAIT | Mesure finale de C8 (main `a3c68b0`, toute la vague 10 et l audit) : campagne **1214 / 1260**, les 21 niveaux au-dessus de 60 % (minimum `lvl_18` 46 / 60, `lvl_17` 50, `lvl_11` 54) ; annexes 247 / 480, toutes entre 40 et 70 % ; objectifs : **21 + 8 classements conformes**, aucun a 0 ni a 60 / 60, apres 7 corrections dues a C7b (`lvl_03`, `04`, `09`, `11`, `12`, `15`, `side_fairy`) ; `test_level_progression`, `test_side_quests` (MESURES) | Detail dans `docs/banc_vague10.md`, « Mesure finale (C8) ». Hors de ce point : incantation 49-88 % (moyenne 76,0, repere < 60 %), Massacre 15,9 vagues pour un repere de 4-8 (cause non analysee) ; `lvl_12` « le meme sort 30 fois » passe a 45 ; `lvl_11` garde un ecart de 2 entre ses rangs 1 et 2 |
 
 ### Corrige en route (hors demande)
 
@@ -1051,6 +1054,7 @@ partie ; PAS FAIT. **Bilan : 24 FAIT, 3 PARTIEL, 1 PAS FAIT** (28 points).
 | Annexes (B3, 60 parties, chacune juste apres son niveau d ouverture) | la mesure 24, l atelier 34, le tresor 29, le champion 34, la vitrine 26, l ecuyer 39, la fee 27, l apprentie 30 |
 | Objectifs (MESURES recollees par C2) | 21 classements de campagne et 8 d annexes conformes ; rangs 1 a 58-59 / 60 sur sept niveaux, rangs 3 a 2 / 60 sur `lvl_03`, `lvl_06` et `lvl_11` |
 | Banc de controle (C2, `b8264d7`) | campagne 1180 / 1260, annexes 243 / 480, Massacre 17,5 vagues ; detail dans `docs/banc_vague10.md` |
+| Mesure finale (C8, main `a3c68b0`) | campagne **1214 / 1260** (minimum `lvl_18` 46), annexes **247 / 480** (40 a 65 %), Massacre **15,9** vagues ; majeures prises 2,51 par partie ; 29 classements d objectifs conformes ; detail dans `docs/banc_vague10.md`, « Mesure finale (C8) » |
 
 ### Reste — actions du testeur (l assistant ne peut pas les faire)
 
