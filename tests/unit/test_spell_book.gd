@@ -116,16 +116,18 @@ func _test_profil_neuf_egal_deck_du_premier_niveau() -> void:
 		"le compteur des ecrans compte le deck du premier niveau")
 	eq(SaveData.discovered_count(), _ids(lv1.exploration_deck).size(),
 		"le compte brut aussi")
-	# Les cartes NOUVELLES du premier niveau sont a obtenir : c est la phrase du
+	# Les cartes a prendre en montant de niveau sont a obtenir : c est la phrase du
 	# co-auteur, "on peut obtenir quelques autres cartes en montant de niveau".
+	# Depuis la vague 10 (chantier B2), ce sont les COMMUNES DE L ACTE que le
+	# premier niveau ne porte pas (RunState.levelup_pool).
 	var nouvelles: int = 0
-	for c2: SpellCard in lv1.levelup_cards:
+	for c2: SpellCard in ContentDB.act_commons(lv1.act):
 		if c2 == null or _ids(lv1.exploration_deck).has(String(c2.id)):
 			continue
 		nouvelles += 1
 		eq(SaveData.card_visibility(c2.id), SaveData.CARD_OBTAINABLE,
-			"%s, carte NOUVELLE du premier niveau, est a obtenir, pas obtenue" % c2.id)
-	ok(nouvelles > 0, "le premier niveau a des cartes nouvelles a obtenir")
+			"%s, commune de l acte hors du premier deck, est a obtenir, pas obtenue" % c2.id)
+	ok(nouvelles > 0, "le premier niveau a des cartes a obtenir en montant de niveau")
 	# copies_in_starter ne donne plus rien : une "carte de depart" hors du deck
 	# du premier niveau n est pas dans le livre.
 	var depart_hors_deck: int = 0
@@ -355,6 +357,9 @@ func _test_deck_par_defaut_valide_et_obtenu() -> void:
 	# Un profil EDITE dont le premier niveau est ferme, et a qui il manque la
 	# carte la plus rare de ce deck : le premier deck n est plus obtenu, le repli
 	# compose avec les cartes obtenues seules, et reste valide.
+	# Vague 10 : le premier deck n a que trois communes ; deux ne font pas douze
+	# cartes. Le profil edite garde donc deux communes de l acte EN PLUS (prises en
+	# combat) : de quoi composer un deck valide avec ses seules cartes obtenues.
 	var obtenues: Array = []
 	if lv1 != null:
 		var plus_rare: SpellCard = null
@@ -364,6 +369,11 @@ func _test_deck_par_defaut_valide_et_obtenu() -> void:
 		for id3 in _ids(lv1.exploration_deck):
 			if id3 != String(plus_rare.id):
 				obtenues.append(id3)
+		for c5: SpellCard in ContentDB.act_commons(lv1.act):
+			if obtenues.size() >= 4:
+				break
+			if not lv1.exploration_deck.has(c5):
+				obtenues.append(String(c5.id))
 	SaveData.load_from_dictionary({
 		"schema_version": 1,
 		"profile": {"discovered_cards": obtenues,

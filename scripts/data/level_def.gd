@@ -7,14 +7,18 @@ extends Resource
 ## --- Narration (voir docs/histoire.md) ---
 ## Tout ce bloc est FACULTATIF : un niveau sans texte reste parfaitement jouable.
 ## C est volontaire, pour qu ajouter un niveau ne demande pas d ecrire un scenario.
-## Acte de la campagne : 1 Monde volant, 2 Grand Cimetiere, 3 Monde demoniaque,
-## 4 Monde d origine. 0 = hors campagne.
+## Acte de la campagne, de 1 a 5, dans l ordre du voyage (docs/histoire.md).
+## 0 = hors campagne.
 @export var act: int = 0
-## Sous-titre court affiche sous le nom du niveau sur la carte de campagne.
+## Sous-titre court affiche sous le nom du niveau sur la carte de campagne. Une
+## seule veine depuis la vague 10 (B2) : une ligne de RECIT, jamais un conseil de
+## jeu (le briefing dit deja les mecaniques).
 @export var subtitle: String = ""
 ## Texte lu au briefing, AVANT le combat : ou on est et pourquoi on y va.
 @export_multiline var intro_text: String = ""
-## Texte lu a la victoire : le rebondissement que le niveau vient de reveler.
+## Ancien texte de victoire. Il n est affiche NULLE PART : la scene de fin
+## (outro_story) le dit. Laisse vide par le contenu depuis la vague 10 (B2) : un
+## texte qu on ne lit pas finit faux (revue A4, §2.7 point 6).
 @export_multiline var outro_text: String = ""
 ## Scenes de visual novel (DialogueDef dans resources/story/), jouees par
 ## SceneRouter AVANT le briefing et APRES la victoire, une seule fois par
@@ -70,6 +74,14 @@ extends Resource
 
 ## Niveaux accessibles apres victoire.
 @export var next_levels: Array[StringName] = []
+
+## VAGUE 10 (chantier B2) : ce niveau ne s ouvre qu une fois TOUS les niveaux de
+## campagne qui le citent dans `next_levels` finis (lvl_13 apres les quatre
+## demons). Faux = il s ouvre a la premiere victoire d un de ses precedents :
+## c est la regle d une FOURCHE (lvl_21 s ouvre apres lvl_05 OU lvl_06), qu une
+## regle generale « tous les precedents » aurait verrouillee. Lu par
+## SaveData.record_victory.
+@export var requires_all_previous: bool = false
 
 ## --- STRUCTURE DE LA VAGUE 10 (chantier A3, regles du co-auteur du 14/10) ---
 ## Tous ces champs sont FACULTATIFS : vides, le niveau se joue comme avant la
@@ -167,7 +179,11 @@ func missing_progression() -> Array[String]:
 	for c in levelup_cards:
 		if c != null:
 			nouvelles += 1
-	if nouvelles < LEVELUP_NEW_CARDS:
+	# VAGUE 10 (chantier B2) : un niveau qui a son deck de base n a plus de cartes
+	# nouvelles a lui. Son pool de montee de niveau est « cartes obtenues +
+	# communes de l acte » (RunState.levelup_pool), qui ne lit plus levelup_cards :
+	# en exiger trois serait reclamer une donnee morte.
+	if nouvelles < LEVELUP_NEW_CARDS and not has_base_commons():
 		out.append("%d carte(s) nouvelle(s) de montee de niveau sur %d"
 			% [nouvelles, LEVELUP_NEW_CARDS])
 	for i in objectives.size():

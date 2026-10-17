@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_w08n2"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="2_tet23"]
+[ext_resource type="Resource" path="res://resources/enemies/tomb_breaker.tres" id="3_d0pmo"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="4_xgh5n"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="5_hmvr3"]
+[ext_resource type="Resource" path="res://resources/enemies/bone_guard.tres" id="6_v0mas"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_h8tdy"]
+
+[sub_resource type="Resource" id="Resource_w08n2"]
+script = ExtResource("1_w08n2")
+enemy = ExtResource("2_tet23")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_tet23"]
+script = ExtResource("1_w08n2")
+enemy = ExtResource("3_d0pmo")
+count = 1
+spawn_delay = 1.0
+start_offset = 6.0
+
+[sub_resource type="Resource" id="Resource_d0pmo"]
+script = ExtResource("1_w08n2")
+enemy = ExtResource("4_xgh5n")
+count = 2
+spawn_delay = 2.2
+start_offset = 11.0
+
+[sub_resource type="Resource" id="Resource_xgh5n"]
+script = ExtResource("1_w08n2")
+enemy = ExtResource("5_hmvr3")
+count = 2
+spawn_delay = 2.0
+start_offset = 17.0
+
+[sub_resource type="Resource" id="Resource_hmvr3"]
+script = ExtResource("1_w08n2")
+enemy = ExtResource("6_v0mas")
+count = 1
+spawn_delay = 1.0
+start_offset = 23.0
+
+[resource]
+script = ExtResource("7_h8tdy")
+id = &"w20_4"
+duration = 29.0
+entries = Array[ExtResource("1_w08n2")]([SubResource("Resource_w08n2"), SubResource("Resource_tet23"), SubResource("Resource_d0pmo"), SubResource("Resource_xgh5n"), SubResource("Resource_hmvr3")])
+difficulty = 1.55
+is_miniboss = false
+is_boss = false

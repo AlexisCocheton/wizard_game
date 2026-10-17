@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=42 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=43 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_oarva"]
 [ext_resource type="Resource" path="res://resources/cards/common/purifying_light.tres" id="2_tns6i"]
@@ -13,9 +13,10 @@
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="11_r2pir"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="12_ftj62"]
 [ext_resource type="Resource" path="res://resources/cards/rare/focus.tres" id="13_a5nnm"]
-[ext_resource type="Resource" path="res://resources/cards/epic/blight_sapling.tres" id="14_dsy28"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="15_4wxp2"]
+[ext_resource type="Resource" path="res://resources/cards/epic/resonance.tres" id="14_i8mfq"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/world_loom.tres" id="15_3xvfs"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="16_uhqdn"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_chain.tres" id="17_27kqk"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_b1aig"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_hodee"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_yrow5"]
@@ -39,7 +40,7 @@ params = {
 "seconds": 150
 }
 
-[sub_resource type="Resource" id="Resource_27kqk"]
+[sub_resource type="Resource" id="Resource_4lqvx"]
 script = ExtResource("16_uhqdn")
 id = &"obj_win_above_speed_240"
 description = "Gagner avec plus de 240 % de vitesse"
@@ -69,7 +70,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_motja"]
+[sub_resource type="Resource" id="Resource_27kqk"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_1"
 duration = 26.0
@@ -99,7 +100,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_rytoa"]
+[sub_resource type="Resource" id="Resource_motja"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_2"
 duration = 27.0
@@ -136,7 +137,7 @@ count = 2
 spawn_delay = 2.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_qcgtp"]
+[sub_resource type="Resource" id="Resource_rytoa"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_3"
 duration = 28.0
@@ -145,39 +146,39 @@ difficulty = 1.45
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_dgypt"]
+[sub_resource type="Resource" id="Resource_lbdw3"]
 script = ExtResource("19_yrow5")
 enemy = ExtResource("20_tns6i")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_4257s"]
+[sub_resource type="Resource" id="Resource_dgypt"]
 script = ExtResource("19_yrow5")
 enemy = ExtResource("10_kv1ix")
 count = 3
 spawn_delay = 2.0
 start_offset = 4.0
 
-[sub_resource type="Resource" id="Resource_1hime"]
+[sub_resource type="Resource" id="Resource_4257s"]
 script = ExtResource("19_yrow5")
 enemy = ExtResource("7_rytoa")
 count = 3
 spawn_delay = 2.0
 start_offset = 12.0
 
-[sub_resource type="Resource" id="Resource_efmve"]
+[sub_resource type="Resource" id="Resource_1hime"]
 script = ExtResource("19_yrow5")
 enemy = ExtResource("8_qcgtp")
 count = 2
 spawn_delay = 2.5
 start_offset = 22.0
 
-[sub_resource type="Resource" id="Resource_3pu2l"]
+[sub_resource type="Resource" id="Resource_qcgtp"]
 script = ExtResource("18_hodee")
 id = &"side_a2_atelier_boss"
 duration = 46.0
-entries = Array[ExtResource("19_yrow5")]([SubResource("Resource_dgypt"), SubResource("Resource_4257s"), SubResource("Resource_1hime"), SubResource("Resource_efmve")])
+entries = Array[ExtResource("19_yrow5")]([SubResource("Resource_lbdw3"), SubResource("Resource_dgypt"), SubResource("Resource_4257s"), SubResource("Resource_1hime")])
 difficulty = 1.55
 is_miniboss = false
 is_boss = true
@@ -194,15 +195,16 @@ intro_story = &"side_a2_atelier_intro"
 outro_story = &"side_a2_atelier_outro"
 terrain = "grass"
 backdrop = "act1_sky"
-waves = Array[ExtResource("18_hodee")]([SubResource("Resource_motja"), SubResource("Resource_rytoa"), SubResource("Resource_qcgtp"), SubResource("Resource_3pu2l")])
+waves = Array[ExtResource("18_hodee")]([SubResource("Resource_27kqk"), SubResource("Resource_motja"), SubResource("Resource_rytoa"), SubResource("Resource_qcgtp")])
 enemy_pool = Array[ExtResource("5_27kqk")]([ExtResource("6_motja"), ExtResource("7_rytoa"), ExtResource("8_qcgtp"), ExtResource("9_3pu2l"), ExtResource("10_kv1ix"), ExtResource("11_r2pir"), ExtResource("12_ftj62")])
 exploration_deck = Array[ExtResource("1_oarva")]([ExtResource("2_tns6i"), ExtResource("2_tns6i"), ExtResource("2_tns6i"), ExtResource("2_tns6i"), ExtResource("3_i8mfq"), ExtResource("3_i8mfq"), ExtResource("3_i8mfq"), ExtResource("3_i8mfq"), ExtResource("4_3xvfs"), ExtResource("4_3xvfs"), ExtResource("4_3xvfs"), ExtResource("4_3xvfs")])
-objectives = Array[ExtResource("16_uhqdn")]([SubResource("Resource_i8mfq"), SubResource("Resource_3xvfs"), SubResource("Resource_27kqk")])
+objectives = Array[ExtResource("16_uhqdn")]([SubResource("Resource_i8mfq"), SubResource("Resource_3xvfs"), SubResource("Resource_4lqvx")])
 levelup_cards = Array[ExtResource("1_oarva")]([])
-objective_rewards = Array[ExtResource("1_oarva")]([ExtResource("13_a5nnm"), ExtResource("14_dsy28"), ExtResource("15_4wxp2")])
+objective_rewards = Array[ExtResource("1_oarva")]([ExtResource("13_a5nnm"), ExtResource("14_i8mfq"), ExtResource("15_3xvfs")])
 next_levels = Array[StringName]([])
+requires_all_previous = false
 base_commons = Array[ExtResource("1_oarva")]([ExtResource("2_tns6i"), ExtResource("3_i8mfq"), ExtResource("4_3xvfs")])
-passive_unlocks = Array[ExtResource("1_oarva")]([])
+passive_unlocks = Array[ExtResource("1_oarva")]([ExtResource("17_27kqk")])
 side_quest = true
 side_quest_after = &"lvl_17"
 side_quest_character = ""

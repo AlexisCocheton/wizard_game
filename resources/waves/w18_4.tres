@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_c64ae"]
+[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="2_1lwye"]
+[ext_resource type="Resource" path="res://resources/enemies/nacelle_raider.tres" id="3_l6af5"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="4_8vluj"]
+[ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="5_exlmh"]
+[ext_resource type="Resource" path="res://resources/enemies/ecumeur.tres" id="6_4q7jj"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_jonu3"]
+
+[sub_resource type="Resource" id="Resource_c64ae"]
+script = ExtResource("1_c64ae")
+enemy = ExtResource("2_1lwye")
+count = 2
+spawn_delay = 2.5
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_1lwye"]
+script = ExtResource("1_c64ae")
+enemy = ExtResource("3_l6af5")
+count = 3
+spawn_delay = 1.6
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_l6af5"]
+script = ExtResource("1_c64ae")
+enemy = ExtResource("4_8vluj")
+count = 2
+spawn_delay = 2.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_8vluj"]
+script = ExtResource("1_c64ae")
+enemy = ExtResource("5_exlmh")
+count = 1
+spawn_delay = 2.5
+start_offset = 21.0
+
+[sub_resource type="Resource" id="Resource_exlmh"]
+script = ExtResource("1_c64ae")
+enemy = ExtResource("6_4q7jj")
+count = 1
+spawn_delay = 1.0
+start_offset = 25.0
+
+[resource]
+script = ExtResource("7_jonu3")
+id = &"w18_4"
+duration = 28.0
+entries = Array[ExtResource("1_c64ae")]([SubResource("Resource_c64ae"), SubResource("Resource_1lwye"), SubResource("Resource_l6af5"), SubResource("Resource_8vluj"), SubResource("Resource_exlmh")])
+difficulty = 1.45
+is_miniboss = false
+is_boss = false

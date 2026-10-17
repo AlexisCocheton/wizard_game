@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_8sgaw"]
+[ext_resource type="Resource" path="res://resources/enemies/shadow_bladesman.tres" id="2_pn014"]
+[ext_resource type="Resource" path="res://resources/enemies/parry_skeleton.tres" id="3_de0fs"]
+[ext_resource type="Resource" path="res://resources/enemies/totem_guardian.tres" id="4_n1q5p"]
+[ext_resource type="Resource" path="res://resources/enemies/pit_ghoul.tres" id="5_tfm2q"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_nhmk7"]
+
+[sub_resource type="Resource" id="Resource_8sgaw"]
+script = ExtResource("1_8sgaw")
+enemy = ExtResource("2_pn014")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_pn014"]
+script = ExtResource("1_8sgaw")
+enemy = ExtResource("3_de0fs")
+count = 2
+spawn_delay = 2.2
+start_offset = 10.0
+
+[sub_resource type="Resource" id="Resource_de0fs"]
+script = ExtResource("1_8sgaw")
+enemy = ExtResource("4_n1q5p")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_n1q5p"]
+script = ExtResource("1_8sgaw")
+enemy = ExtResource("5_tfm2q")
+count = 2
+spawn_delay = 2.0
+start_offset = 28.0
+
+[resource]
+script = ExtResource("6_nhmk7")
+id = &"w20_5_boss"
+duration = 44.0
+entries = Array[ExtResource("1_8sgaw")]([SubResource("Resource_8sgaw"), SubResource("Resource_pn014"), SubResource("Resource_de0fs"), SubResource("Resource_n1q5p")])
+difficulty = 1.05
+is_miniboss = false
+is_boss = true

@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_brbsm"]
+[ext_resource type="Resource" path="res://resources/enemies/jelly.tres" id="2_0ert4"]
+[ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="3_outn0"]
+[ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="4_1wgle"]
+[ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="5_lho65"]
+[ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="6_qtpmu"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_ngm2i"]
+
+[sub_resource type="Resource" id="Resource_brbsm"]
+script = ExtResource("1_brbsm")
+enemy = ExtResource("2_0ert4")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_0ert4"]
+script = ExtResource("1_brbsm")
+enemy = ExtResource("3_outn0")
+count = 2
+spawn_delay = 2.2
+start_offset = 7.0
+
+[sub_resource type="Resource" id="Resource_outn0"]
+script = ExtResource("1_brbsm")
+enemy = ExtResource("4_1wgle")
+count = 1
+spawn_delay = 1.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_1wgle"]
+script = ExtResource("1_brbsm")
+enemy = ExtResource("5_lho65")
+count = 1
+spawn_delay = 1.0
+start_offset = 19.0
+
+[sub_resource type="Resource" id="Resource_lho65"]
+script = ExtResource("1_brbsm")
+enemy = ExtResource("6_qtpmu")
+count = 3
+spawn_delay = 1.6
+start_offset = 22.0
+
+[resource]
+script = ExtResource("7_ngm2i")
+id = &"w8_4"
+duration = 27.0
+entries = Array[ExtResource("1_brbsm")]([SubResource("Resource_brbsm"), SubResource("Resource_0ert4"), SubResource("Resource_outn0"), SubResource("Resource_1wgle"), SubResource("Resource_lho65")])
+difficulty = 1.35
+is_miniboss = false
+is_boss = false

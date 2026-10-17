@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ObjectiveDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="1_rtm0t"]
+
+[resource]
+script = ExtResource("1_rtm0t")
+id = &"obj_element_casts_8_nature"
+description = "Lancer 8 sorts de nature"
+check_key = &"element_casts"
+params = {
+"count": 8,
+"element": "NATURE"
+}

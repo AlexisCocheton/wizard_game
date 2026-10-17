@@ -59,6 +59,11 @@ const MAX_ANNEXES_PAR_CLE: int = 5
 ## Le detecteur de la campagne : « N monstres d un seul sort » et un objet
 ## permanent qui tue ne vont pas ensemble.
 const Progression = preload("res://tests/unit/test_level_progression.gd")
+## LES RESERVES ECRITES PAR LE CHANTIER DE LA CAMPAGNE (B2) : ce qu elle laisse
+## aux annexes, sorts (Progression.RESERVE_SORTS_ANNEXES) et passifs
+## (Campagne.RESERVE_PASSIFS_ANNEXES). Le surplus que calcule
+## tools/make_side_quests.gd et ces listes doivent dire la MEME chose.
+const Campagne = preload("res://tests/unit/test_campagne_w10.gd")
 
 ## LES TAUX MESURES des objectifs des annexes (tools/objective_bench.tscn --
 ## --niveaux=<annexe> --parties=60, graines 1000 + 37 i, bot qui VISE
@@ -562,6 +567,46 @@ func _test_rares_et_passifs_obtenables() -> void:
 func _test_le_surplus_d_abord() -> void:
 	var d: Array[String] = defauts_surplus(ContentDB.campaign_levels(), _annexes(), _catalogue())
 	ok(d.is_empty(), "les annexes donnent d abord le surplus de la campagne %s" % [d])
+	# Le surplus calcule ici (ce que la campagne ne donne pas) est EXACTEMENT ce
+	# que la campagne declare laisser aux annexes, et chaque element de ces
+	# reserves est donne par une annexe.
+	var donnes: Dictionary = sorts_obtenables(ContentDB.campaign_levels())
+	var debloques: Dictionary = {}
+	for id: StringName in GameConfig.BASE_PASSIVES:
+		debloques[String(id)] = true
+	for lv: LevelDef in ContentDB.campaign_levels():
+		for p in lv.passive_unlocks:
+			if p != null:
+				debloques[String((p as SpellCard).id)] = true
+	var surplus_sorts: Array = []
+	var surplus_passifs: Array = []
+	for c: SpellCard in _catalogue():
+		if c.is_passive and not debloques.has(String(c.id)):
+			surplus_passifs.append(String(c.id))
+		elif not c.is_passive and not donnes.has(String(c.id)):
+			surplus_sorts.append(String(c.id))
+	surplus_sorts.sort()
+	surplus_passifs.sort()
+	eq(surplus_sorts, _tries(Progression.RESERVE_SORTS_ANNEXES),
+		"le surplus de sorts est la reserve declaree par la campagne")
+	eq(surplus_passifs, _tries(Campagne.RESERVE_PASSIFS_ANNEXES),
+		"le surplus de passifs est la reserve declaree par la campagne")
+	var par_annexes: Dictionary = {}
+	for lv: LevelDef in _annexes():
+		for liste: Array in [lv.objective_rewards, lv.passive_unlocks]:
+			for c in liste:
+				if c != null:
+					par_annexes[String((c as SpellCard).id)] = lv.id
+	for id in surplus_sorts + surplus_passifs:
+		ok(par_annexes.has(id), "%s, laisse par la campagne, est donne par une annexe" % id)
+
+
+static func _tries(ids: Array) -> Array:
+	var out: Array = []
+	for id in ids:
+		out.append(String(id))
+	out.sort()
+	return out
 
 
 func _test_le_deck_d_une_annexe() -> void:

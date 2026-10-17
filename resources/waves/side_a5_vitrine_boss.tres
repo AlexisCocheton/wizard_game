@@ -9,42 +9,42 @@
 [ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="6_yerrp"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_tkfdn"]
 
-[sub_resource type="Resource" id="Resource_cvcur"]
+[sub_resource type="Resource" id="Resource_yerrp"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("2_yerrp")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_sfyks"]
+[sub_resource type="Resource" id="Resource_cvcur"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("3_cvcur")
 count = 5
 spawn_delay = 1.8
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_7ckxt"]
+[sub_resource type="Resource" id="Resource_sfyks"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("4_sfyks")
 count = 3
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_70ic0"]
+[sub_resource type="Resource" id="Resource_7ckxt"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("5_7ckxt")
 count = 1
 spawn_delay = 1.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_tkfdn"]
+[sub_resource type="Resource" id="Resource_70ic0"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("6_yerrp")
 count = 1
 spawn_delay = 1.0
 start_offset = 28.0
 
-[sub_resource type="Resource" id="Resource_doenj"]
+[sub_resource type="Resource" id="Resource_tkfdn"]
 script = ExtResource("1_ql5q7")
 enemy = ExtResource("6_70ic0")
 count = 4
@@ -55,7 +55,7 @@ start_offset = 32.0
 script = ExtResource("7_tkfdn")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
-entries = Array[ExtResource("1_ql5q7")]([SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn"), SubResource("Resource_doenj")])
+entries = Array[ExtResource("1_ql5q7")]([SubResource("Resource_yerrp"), SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = true

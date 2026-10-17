@@ -7,28 +7,28 @@
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="5_jsasl"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_3r80n"]
 
-[sub_resource type="Resource" id="Resource_44eef"]
+[sub_resource type="Resource" id="Resource_slpd6"]
 script = ExtResource("1_slpd6")
 enemy = ExtResource("2_slpd6")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_4keg7"]
+[sub_resource type="Resource" id="Resource_44eef"]
 script = ExtResource("1_slpd6")
 enemy = ExtResource("3_4keg7")
 count = 2
 spawn_delay = 2.5
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_aoydc"]
+[sub_resource type="Resource" id="Resource_4keg7"]
 script = ExtResource("1_slpd6")
 enemy = ExtResource("4_aoydc")
 count = 1
 spawn_delay = 1.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_jsasl"]
+[sub_resource type="Resource" id="Resource_aoydc"]
 script = ExtResource("1_slpd6")
 enemy = ExtResource("5_jsasl")
 count = 2
@@ -39,7 +39,7 @@ start_offset = 26.0
 script = ExtResource("6_3r80n")
 id = &"side_squire_boss"
 duration = 46.0
-entries = Array[ExtResource("1_slpd6")]([SubResource("Resource_44eef"), SubResource("Resource_4keg7"), SubResource("Resource_aoydc"), SubResource("Resource_jsasl")])
+entries = Array[ExtResource("1_slpd6")]([SubResource("Resource_slpd6"), SubResource("Resource_44eef"), SubResource("Resource_4keg7"), SubResource("Resource_aoydc")])
 difficulty = 1.05
 is_miniboss = false
 is_boss = true

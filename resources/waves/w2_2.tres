@@ -4,8 +4,8 @@
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="2_n2ela"]
 [ext_resource type="Resource" path="res://resources/enemies/wisp.tres" id="3_vufdd"]
 [ext_resource type="Resource" path="res://resources/enemies/hornblower.tres" id="4_2iho2"]
-[ext_resource type="Resource" path="res://resources/enemies/berserker.tres" id="4_n2ela"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="5_54s2g"]
+[ext_resource type="Resource" path="res://resources/enemies/hopper.tres" id="5_n2ela"]
 
 [sub_resource type="Resource" id="Resource_n2ela"]
 script = ExtResource("1_t4wbb")
@@ -23,17 +23,17 @@ start_offset = 7.0
 
 [sub_resource type="Resource" id="Resource_2iho2"]
 script = ExtResource("1_t4wbb")
-enemy = ExtResource("4_n2ela")
+enemy = ExtResource("4_2iho2")
 count = 1
-spawn_delay = 2.5
+spawn_delay = 1.0
 start_offset = 14.0
 
 [sub_resource type="Resource" id="Resource_54s2g"]
 script = ExtResource("1_t4wbb")
-enemy = ExtResource("4_2iho2")
-count = 1
-spawn_delay = 1.0
-start_offset = 19.0
+enemy = ExtResource("5_n2ela")
+count = 3
+spawn_delay = 1.6
+start_offset = 18.0
 
 [resource]
 script = ExtResource("5_54s2g")

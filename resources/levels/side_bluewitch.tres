@@ -1,20 +1,21 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=40 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=41 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_lpjea"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_qw7b3"]
-[ext_resource type="Resource" path="res://resources/cards/common/chain_break.tres" id="3_sxe2h"]
-[ext_resource type="Resource" path="res://resources/cards/common/frost_rain.tres" id="4_y0ulm"]
+[ext_resource type="Resource" path="res://resources/cards/common/spark.tres" id="2_sxe2h"]
+[ext_resource type="Resource" path="res://resources/cards/common/electric_mark.tres" id="3_y0ulm"]
 [ext_resource type="Script" path="res://scripts/data/enemy_def.gd" id="5_w1hhi"]
 [ext_resource type="Resource" path="res://resources/enemies/void_knight.tres" id="6_nfwl8"]
 [ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="7_6e42g"]
 [ext_resource type="Resource" path="res://resources/enemies/gnome.tres" id="8_1llrh"]
 [ext_resource type="Resource" path="res://resources/enemies/ghoul_priest.tres" id="9_ef13c"]
 [ext_resource type="Resource" path="res://resources/enemies/golem.tres" id="10_lpcdw"]
-[ext_resource type="Resource" path="res://resources/cards/rare/time_surge.tres" id="11_otis2"]
-[ext_resource type="Resource" path="res://resources/cards/epic/deck_purge.tres" id="12_haxj5"]
+[ext_resource type="Resource" path="res://resources/cards/rare/heartwood_totem.tres" id="11_w1hhi"]
+[ext_resource type="Resource" path="res://resources/cards/epic/deep_focus.tres" id="12_nfwl8"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/echo_of_the_hand.tres" id="13_r0fw4"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="14_5slq4"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="15_2e8rt"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_storm_surge.tres" id="15_6e42g"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="16_lj4dl"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="17_jh2ph"]
 [ext_resource type="Resource" path="res://resources/enemies/void_knight_gold.tres" id="18_qw7b3"]
@@ -145,28 +146,28 @@ difficulty = 1.4
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_vyj46"]
+[sub_resource type="Resource" id="Resource_cl5y2"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("18_qw7b3")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_66cv4"]
+[sub_resource type="Resource" id="Resource_vyj46"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("7_6e42g")
 count = 3
 spawn_delay = 2.0
 start_offset = 8.0
 
-[sub_resource type="Resource" id="Resource_lex23"]
+[sub_resource type="Resource" id="Resource_66cv4"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("6_nfwl8")
 count = 1
 spawn_delay = 1.0
 start_offset = 18.0
 
-[sub_resource type="Resource" id="Resource_da48d"]
+[sub_resource type="Resource" id="Resource_lex23"]
 script = ExtResource("17_jh2ph")
 enemy = ExtResource("9_ef13c")
 count = 1
@@ -177,7 +178,7 @@ start_offset = 26.0
 script = ExtResource("16_lj4dl")
 id = &"side_bluewitch_boss"
 duration = 46.0
-entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_vyj46"), SubResource("Resource_66cv4"), SubResource("Resource_lex23"), SubResource("Resource_da48d")])
+entries = Array[ExtResource("17_jh2ph")]([SubResource("Resource_cl5y2"), SubResource("Resource_vyj46"), SubResource("Resource_66cv4"), SubResource("Resource_lex23")])
 difficulty = 1.1
 is_miniboss = false
 is_boss = true
@@ -196,13 +197,14 @@ terrain = "grass"
 backdrop = "act3_demon"
 waves = Array[ExtResource("16_lj4dl")]([SubResource("Resource_w1hhi"), SubResource("Resource_nfwl8"), SubResource("Resource_6e42g"), SubResource("Resource_1llrh")])
 enemy_pool = Array[ExtResource("5_w1hhi")]([ExtResource("6_nfwl8"), ExtResource("7_6e42g"), ExtResource("8_1llrh"), ExtResource("9_ef13c"), ExtResource("10_lpcdw")])
-exploration_deck = Array[ExtResource("1_lpjea")]([ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("3_sxe2h"), ExtResource("3_sxe2h"), ExtResource("3_sxe2h"), ExtResource("3_sxe2h"), ExtResource("4_y0ulm"), ExtResource("4_y0ulm"), ExtResource("4_y0ulm"), ExtResource("4_y0ulm")])
+exploration_deck = Array[ExtResource("1_lpjea")]([ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("2_sxe2h"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("3_y0ulm"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3"), ExtResource("2_qw7b3")])
 objectives = Array[ExtResource("14_5slq4")]([SubResource("Resource_sxe2h"), SubResource("Resource_2jsra"), SubResource("Resource_y0ulm")])
 levelup_cards = Array[ExtResource("1_lpjea")]([])
-objective_rewards = Array[ExtResource("1_lpjea")]([ExtResource("11_otis2"), ExtResource("12_haxj5"), ExtResource("13_r0fw4")])
+objective_rewards = Array[ExtResource("1_lpjea")]([ExtResource("11_w1hhi"), ExtResource("12_nfwl8"), ExtResource("13_r0fw4")])
 next_levels = Array[StringName]([])
-base_commons = Array[ExtResource("1_lpjea")]([ExtResource("2_qw7b3"), ExtResource("3_sxe2h"), ExtResource("4_y0ulm")])
-passive_unlocks = Array[ExtResource("1_lpjea")]([])
+requires_all_previous = false
+base_commons = Array[ExtResource("1_lpjea")]([ExtResource("2_sxe2h"), ExtResource("3_y0ulm"), ExtResource("2_qw7b3")])
+passive_unlocks = Array[ExtResource("1_lpjea")]([ExtResource("15_6e42g")])
 side_quest = true
 side_quest_after = &"lvl_12"
 side_quest_character = "bluewitch"

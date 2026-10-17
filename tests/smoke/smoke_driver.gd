@@ -1253,6 +1253,21 @@ func _check_deck_scroll(panel: DeckPanel) -> void:
 	# Un deck a DEUX FOIS plus de cartes differentes que la regle n en permet :
 	# c est un deck hors regle (profil anterieur a la regle des six), le seul
 	# qui depasse de sa zone. Il est cree a part et supprime a la fin.
+	# Vague 10 (chantier B2) : les decks de campagne n ont que trois communes, la
+	# collection d un profil de test n a plus douze sorts d office. Le geste teste
+	# ne depend pas de la progression : on lui donne les sorts qu il lui faut.
+	var catalogue: Array = ContentDB.cards.keys()
+	catalogue.sort_custom(func(a: Variant, b: Variant) -> bool: return String(a) < String(b))
+	var sorts_obtenus: int = 0
+	for id0 in catalogue:
+		var c0: SpellCard = ContentDB.cards[id0]
+		if c0 == null or c0.is_passive:
+			continue
+		if not SaveData.is_discovered(c0.id) and sorts_obtenus < DeckRules.MAX_DISTINCT * 2:
+			SaveData.discover_card(c0.id)
+		if SaveData.is_discovered(c0.id):
+			sorts_obtenus += 1
+	panel.refresh()
 	panel.create_deck()
 	var ids: Array = []
 	for c: SpellCard in panel.collection():

@@ -305,7 +305,7 @@ static func quetes() -> Array[Dictionary]:
 		"rares": ["focus", "mana_flow", "time_surge"],
 		"epiques": ["bastion", "arcane_insight", "resonance"],
 		"legendaires": ["summoners_key", "world_loom", "twin_channeling"],
-		"passifs": ["pass_arcane_mind", "pass_arcane_lore", "pass_pulse", "pass_companion"],
+		"passifs": ["pass_chain", "pass_arcane_mind", "pass_arcane_lore", "pass_pulse", "pass_companion"],
 		"vagues": [
 			["1", 26.0, 1.3, "", [["wisp", 3, 1.6, 0.0], ["current_eye", 2, 2.0, 6.0],
 				["sand_serpent", 2, 2.0, 12.0]]],
@@ -336,7 +336,7 @@ static func quetes() -> Array[Dictionary]:
 		"rares": ["brazier", "repulsion_wave", "terrain_brambles"],
 		"epiques": ["deep_freeze", "void_grip", "terrain_pit"],
 		"legendaires": ["forge_dial", "meteor_storm", "echo_of_the_hand"],
-		"passifs": ["pass_fire_embers", "pass_fire_fury", "pass_fireboom", "pass_chain"],
+		"passifs": ["pass_overflow", "pass_fire_embers", "pass_fire_fury", "pass_fireboom"],
 		"vagues": [
 			["1", 26.0, 2.0, "", [["parry_skeleton", 3, 2.5, 0.0], ["pit_ghoul", 3, 2.0, 6.0],
 				["shade", 2, 2.0, 12.0]]],
@@ -366,7 +366,7 @@ static func quetes() -> Array[Dictionary]:
 		"rares": ["ice_wall", "temporal_drag", "terrain_brambles"],
 		"epiques": ["deep_freeze", "terrain_pit", "weakness_mark"],
 		"legendaires": ["venom_mire", "meteor_storm", "forge_dial"],
-		"passifs": ["pass_ice_winter", "pass_frostbite", "pass_ice_bite", "pass_timelock"],
+		"passifs": ["pass_ice_bite", "pass_ice_winter", "pass_frostbite"],
 		"vagues": [
 			["1", 26.0, 1.95, "", [["berserker", 2, 3.0, 0.0], ["hopper", 3, 1.5, 6.0],
 				["sprite", 3, 1.4, 14.0]]],
@@ -395,7 +395,7 @@ static func quetes() -> Array[Dictionary]:
 		"rares": ["repulsion_wave", "about_face", "focus"],
 		"epiques": ["maelstrom", "weakness_mark", "deep_freeze"],
 		"legendaires": ["time_rift", "twin_channeling", "hourglass_shard"],
-		"passifs": ["pass_wind_tailwind", "pass_wind_gale", "pass_overflow", "pass_apotheosis"],
+		"passifs": ["pass_timelock", "pass_wind_tailwind", "pass_wind_gale", "pass_apotheosis"],
 		"vagues": [
 			["1", 27.0, 1.65, "", [["gnome", 6, 1.3, 0.0], ["sprite", 4, 1.4, 6.0],
 				["sleepy_fox", 2, 3.0, 12.0], ["hopper", 3, 1.5, 18.0]]],
@@ -416,19 +416,19 @@ static func quetes() -> Array[Dictionary]:
 	})
 	# --- L ECUYER : HAUTE-NACELLE ----------------------------------------------
 	# Apres le port vide (lvl_18) : le dernier garde du port tire depuis les toits.
-	# En face, un archer d or qui tire plus vite et garde ses distances : le Mur
-	# de pierre arrete ses fleches (« tireur -> bloque-projectiles »).
+	# En face, un archer d or qui tire plus vite et garde ses distances : un mur
+	# arrete ses fleches (« tireur -> bloque-projectiles ») s il est au deck ou tire.
 	out.append({
 		"id": "side_squire", "nom": "L ecuyer du port", "acte": 2, "apres": "lvl_18",
 		"perso": "soldier",
 		"sous_titre": "Le dernier garde du port vide",
-		"texte": "Dans le port vide de Haute-Nacelle, quelqu un tire encore depuis les toits : le dernier garde du port, qui a pose l epee pour l arc. En face de lui, un archer d or tire plus vite et ne s approche jamais. Un mur arrete ses fleches.",
+		"texte": "Dans le port vide de Haute-Nacelle, quelqu un tire encore depuis les toits : le dernier garde du port, qui a pose l epee pour l arc. En face de lui, un archer d or tire plus vite et ne s approche jamais : va le chercher avec tes sorts, ou abrite-toi derriere un mur si tu en tires un.",
 		"fond": "act1_sky", "dore": "imp_archer_gold",
 		"communes": ["frost_rain", "fireball", "stone_wall", "water_jet", "piercing_arrow", "frost_field", "arcane_bolt"],
 		"rares": ["ice_wall", "heartwood_totem", "repulsion_wave"],
 		"epiques": ["bastion", "mirror_apprentice", "weakness_mark"],
 		"legendaires": ["tide_ledger", "terrain_river", "twin_channeling"],
-		"passifs": ["pass_water_spring", "pass_water_flood", "pass_quickhand", "pass_dual"],
+		"passifs": ["pass_storm_reflex", "pass_water_spring", "pass_water_flood", "pass_quickhand", "pass_dual"],
 		"vagues": [
 			["1", 25.0, 1.15, "", [["nacelle_raider", 3, 2.0, 0.0], ["imp_archer", 1, 1.0, 8.0]]],
 			["2", 27.0, 1.2, "", [["void_knight", 1, 1.0, 0.0], ["nacelle_raider", 2, 2.0, 4.0],
@@ -459,7 +459,7 @@ static func quetes() -> Array[Dictionary]:
 		"rares": ["brazier", "tidal_pool", "terrain_brambles"],
 		"epiques": ["blight_sapling", "terrain_altar", "terrain_pit"],
 		"legendaires": ["venom_mire", "summoners_key", "meteor_storm"],
-		"passifs": ["pass_nature_sap", "pass_nature_roots", "pass_poison_linger", "pass_poison_corrode"],
+		"passifs": ["pass_poison_corrode", "pass_nature_sap", "pass_nature_roots", "pass_poison_linger"],
 		"vagues": [
 			["1", 26.0, 2.5, "", [["pit_ghoul", 4, 1.5, 0.0], ["slime_ghost", 3, 2.0, 6.0],
 				["mushroom", 2, 3.0, 12.0], ["shade", 2, 2.0, 18.0]]],
@@ -491,9 +491,9 @@ static func quetes() -> Array[Dictionary]:
 		"fond": "act3_demon", "dore": "void_knight_gold",
 		"communes": ["spark", "electric_mark", "piercing_arrow", "chain_break", "frost_rain", "fireball", "arcane_bolt"],
 		"rares": ["time_surge", "focus", "mana_flow"],
-		"epiques": ["thunder_root", "resonance", "arcane_insight"],
+		"epiques": ["deep_focus", "thunder_root", "resonance", "arcane_insight"],
 		"legendaires": ["echo_of_the_hand", "twin_channeling", "world_loom"],
-		"passifs": ["pass_storm_reflex", "pass_storm_surge", "pass_echo", "pass_scholar"],
+		"passifs": ["pass_storm_surge", "pass_echo", "pass_scholar"],
 		"vagues": [
 			["1", 26.0, 1.3, "", [["void_knight", 1, 1.0, 0.0], ["shade", 3, 2.0, 4.0],
 				["gnome", 3, 1.6, 12.0]]],

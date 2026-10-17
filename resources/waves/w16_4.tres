@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_hefhn"]
+[ext_resource type="Resource" path="res://resources/enemies/chronos_echo.tres" id="2_xtvwq"]
+[ext_resource type="Resource" path="res://resources/enemies/warden_echo.tres" id="3_uaq7v"]
+[ext_resource type="Resource" path="res://resources/enemies/gravecaller_echo.tres" id="4_d8rlg"]
+[ext_resource type="Resource" path="res://resources/enemies/core_drifter.tres" id="5_72ep8"]
+[ext_resource type="Resource" path="res://resources/enemies/adept_arcane.tres" id="6_oc7fs"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="7_75h3k"]
+
+[sub_resource type="Resource" id="Resource_hefhn"]
+script = ExtResource("1_hefhn")
+enemy = ExtResource("2_xtvwq")
+count = 1
+spawn_delay = 1.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_xtvwq"]
+script = ExtResource("1_hefhn")
+enemy = ExtResource("3_uaq7v")
+count = 1
+spawn_delay = 1.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_uaq7v"]
+script = ExtResource("1_hefhn")
+enemy = ExtResource("4_d8rlg")
+count = 1
+spawn_delay = 1.0
+start_offset = 14.0
+
+[sub_resource type="Resource" id="Resource_d8rlg"]
+script = ExtResource("1_hefhn")
+enemy = ExtResource("5_72ep8")
+count = 1
+spawn_delay = 1.0
+start_offset = 20.0
+
+[sub_resource type="Resource" id="Resource_72ep8"]
+script = ExtResource("1_hefhn")
+enemy = ExtResource("6_oc7fs")
+count = 1
+spawn_delay = 1.0
+start_offset = 26.0
+
+[resource]
+script = ExtResource("7_75h3k")
+id = &"w16_4"
+duration = 31.0
+entries = Array[ExtResource("1_hefhn")]([SubResource("Resource_hefhn"), SubResource("Resource_xtvwq"), SubResource("Resource_uaq7v"), SubResource("Resource_d8rlg"), SubResource("Resource_72ep8")])
+difficulty = 1.5
+is_miniboss = false
+is_boss = false

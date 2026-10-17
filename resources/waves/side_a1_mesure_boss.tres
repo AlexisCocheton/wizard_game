@@ -8,35 +8,35 @@
 [ext_resource type="Resource" path="res://resources/enemies/sprite.tres" id="5_ji1wk"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_1lcuv"]
 
-[sub_resource type="Resource" id="Resource_75qwm"]
+[sub_resource type="Resource" id="Resource_1jb1f"]
 script = ExtResource("1_lksg6")
 enemy = ExtResource("2_1jb1f")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_vly7k"]
+[sub_resource type="Resource" id="Resource_75qwm"]
 script = ExtResource("1_lksg6")
 enemy = ExtResource("3_75qwm")
 count = 5
 spawn_delay = 2.0
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_ji1wk"]
+[sub_resource type="Resource" id="Resource_vly7k"]
 script = ExtResource("1_lksg6")
 enemy = ExtResource("4_vly7k")
 count = 3
 spawn_delay = 2.0
 start_offset = 16.0
 
-[sub_resource type="Resource" id="Resource_1lcuv"]
+[sub_resource type="Resource" id="Resource_ji1wk"]
 script = ExtResource("1_lksg6")
 enemy = ExtResource("5_1jb1f")
 count = 2
 spawn_delay = 3.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_ax87j"]
+[sub_resource type="Resource" id="Resource_1lcuv"]
 script = ExtResource("1_lksg6")
 enemy = ExtResource("5_ji1wk")
 count = 4
@@ -47,7 +47,7 @@ start_offset = 26.0
 script = ExtResource("6_1lcuv")
 id = &"side_a1_mesure_boss"
 duration = 45.0
-entries = Array[ExtResource("1_lksg6")]([SubResource("Resource_75qwm"), SubResource("Resource_vly7k"), SubResource("Resource_ji1wk"), SubResource("Resource_1lcuv"), SubResource("Resource_ax87j")])
+entries = Array[ExtResource("1_lksg6")]([SubResource("Resource_1jb1f"), SubResource("Resource_75qwm"), SubResource("Resource_vly7k"), SubResource("Resource_ji1wk"), SubResource("Resource_1lcuv")])
 difficulty = 1.15
 is_miniboss = false
 is_boss = true

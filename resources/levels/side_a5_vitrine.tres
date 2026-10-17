@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=54 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=55 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_58j05"]
 [ext_resource type="Resource" path="res://resources/cards/common/piercing_arrow.tres" id="2_iusff"]
@@ -17,16 +17,17 @@
 [ext_resource type="Resource" path="res://resources/enemies/hive.tres" id="15_pimcn"]
 [ext_resource type="Resource" path="res://resources/enemies/rat_swarm.tres" id="16_mmlv5"]
 [ext_resource type="Resource" path="res://resources/enemies/imp_archer.tres" id="17_0lldv"]
-[ext_resource type="Resource" path="res://resources/cards/rare/terrain_brambles.tres" id="18_lo02g"]
-[ext_resource type="Resource" path="res://resources/cards/epic/bastion.tres" id="19_atgng"]
-[ext_resource type="Resource" path="res://resources/cards/legendary/time_rift.tres" id="20_gfgtj"]
+[ext_resource type="Resource" path="res://resources/cards/rare/repulsion_wave.tres" id="18_4vbkp"]
+[ext_resource type="Resource" path="res://resources/cards/epic/maelstrom.tres" id="19_5mnaa"]
+[ext_resource type="Resource" path="res://resources/cards/legendary/twin_channeling.tres" id="20_bdjac"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="21_di15f"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="22_5oo3t"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_timelock.tres" id="22_biy17"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="23_fuixh"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="24_c4ksi"]
 [ext_resource type="Resource" path="res://resources/enemies/gorgon_gazer_gold.tres" id="25_iusff"]
 
-[sub_resource type="Resource" id="Resource_pj7ba"]
+[sub_resource type="Resource" id="Resource_ndruv"]
 script = ExtResource("21_di15f")
 id = &"obj_hit_from_sleepy_fox"
 description = "Renard dormeur : gagner apres en avoir ete touche"
@@ -45,7 +46,7 @@ params = {
 "window": 1
 }
 
-[sub_resource type="Resource" id="Resource_27kqk"]
+[sub_resource type="Resource" id="Resource_4lqvx"]
 script = ExtResource("21_di15f")
 id = &"obj_win_above_speed_240"
 description = "Gagner avec plus de 240 % de vitesse"
@@ -186,42 +187,42 @@ difficulty = 1.6
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_cvcur"]
+[sub_resource type="Resource" id="Resource_yerrp"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("25_iusff")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_sfyks"]
+[sub_resource type="Resource" id="Resource_cvcur"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("6_biy17")
 count = 5
 spawn_delay = 1.8
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_7ckxt"]
+[sub_resource type="Resource" id="Resource_sfyks"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("9_l4cnk")
 count = 3
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_70ic0"]
+[sub_resource type="Resource" id="Resource_7ckxt"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("8_lgul1")
 count = 1
 spawn_delay = 1.0
 start_offset = 24.0
 
-[sub_resource type="Resource" id="Resource_tkfdn"]
+[sub_resource type="Resource" id="Resource_70ic0"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("10_l7apq")
 count = 1
 spawn_delay = 1.0
 start_offset = 28.0
 
-[sub_resource type="Resource" id="Resource_doenj"]
+[sub_resource type="Resource" id="Resource_tkfdn"]
 script = ExtResource("24_c4ksi")
 enemy = ExtResource("7_hwtkc")
 count = 4
@@ -232,7 +233,7 @@ start_offset = 32.0
 script = ExtResource("23_fuixh")
 id = &"side_a5_vitrine_boss"
 duration = 48.0
-entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn"), SubResource("Resource_doenj")])
+entries = Array[ExtResource("24_c4ksi")]([SubResource("Resource_yerrp"), SubResource("Resource_cvcur"), SubResource("Resource_sfyks"), SubResource("Resource_7ckxt"), SubResource("Resource_70ic0"), SubResource("Resource_tkfdn")])
 difficulty = 1.2
 is_miniboss = false
 is_boss = true
@@ -252,12 +253,13 @@ backdrop = "act5_divine"
 waves = Array[ExtResource("23_fuixh")]([SubResource("Resource_5mnaa"), SubResource("Resource_bdjac"), SubResource("Resource_biy17"), SubResource("Resource_hwtkc")])
 enemy_pool = Array[ExtResource("5_bdjac")]([ExtResource("6_biy17"), ExtResource("7_hwtkc"), ExtResource("8_lgul1"), ExtResource("9_l4cnk"), ExtResource("10_l7apq"), ExtResource("11_4ap2n"), ExtResource("12_71dax"), ExtResource("13_37nfl"), ExtResource("17_0lldv"), ExtResource("14_gn2ux"), ExtResource("15_pimcn"), ExtResource("16_mmlv5")])
 exploration_deck = Array[ExtResource("1_58j05")]([ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("2_iusff"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("3_4vbkp"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa"), ExtResource("4_5mnaa")])
-objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_pj7ba"), SubResource("Resource_4vbkp"), SubResource("Resource_27kqk")])
+objectives = Array[ExtResource("21_di15f")]([SubResource("Resource_ndruv"), SubResource("Resource_4vbkp"), SubResource("Resource_4lqvx")])
 levelup_cards = Array[ExtResource("1_58j05")]([])
-objective_rewards = Array[ExtResource("1_58j05")]([ExtResource("18_lo02g"), ExtResource("19_atgng"), ExtResource("20_gfgtj")])
+objective_rewards = Array[ExtResource("1_58j05")]([ExtResource("18_4vbkp"), ExtResource("19_5mnaa"), ExtResource("20_bdjac")])
 next_levels = Array[StringName]([])
+requires_all_previous = false
 base_commons = Array[ExtResource("1_58j05")]([ExtResource("2_iusff"), ExtResource("3_4vbkp"), ExtResource("4_5mnaa")])
-passive_unlocks = Array[ExtResource("1_58j05")]([])
+passive_unlocks = Array[ExtResource("1_58j05")]([ExtResource("22_biy17")])
 side_quest = true
 side_quest_after = &"lvl_14"
 side_quest_character = ""

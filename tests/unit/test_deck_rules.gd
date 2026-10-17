@@ -557,10 +557,16 @@ func _ordre_de_jeu() -> Array[StringName]:
 ## moins une carte qu aucun deck de campagne precedent n avait montree, tant
 ## que le catalogue de sorts n est pas epuise. La variete passe de l interieur
 ## d un deck (ou elle diluait la pioche) a la succession des decks.
+##
+## VAGUE 10 (chantier B2) : les decks de campagne sont faits de COMMUNES (le deck
+## de base, LevelDef.base_commons) ; les rares, epiques et legendaires y entrent
+## par les objectifs. Le catalogue a epuiser est donc celui des communes : 21,
+## dont trois au premier niveau. Les deux derniers niveaux, venus quand toutes
+## ont ete vues, en REPRENNENT une (detail dans test_campagne_w10).
 func _test_chaque_niveau_fait_decouvrir_une_carte() -> void:
 	var catalogue: Dictionary = {}
 	for c: SpellCard in ContentDB.cards.values():
-		if c != null and not c.is_passive:
+		if c != null and not c.is_passive and c.rarity == GameEnums.Rarity.COMMON:
 			catalogue[c.id] = true
 	var ordre: Array[StringName] = _ordre_de_jeu()
 	eq(ordre.size(), ContentDB.campaign_levels().size(), "l ordre de jeu couvre tous les niveaux")

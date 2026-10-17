@@ -417,11 +417,18 @@ func _test_le_briefing_annonce_tous_les_boss() -> void:
 			for e: WaveEntry in w.entries:
 				if e != null and e.enemy != null and e.enemy.is_boss():
 					attendus[e.enemy] = true
+		# Le test DISCRIMINE s il existe un niveau ou deux tetes du MEME rang se
+		# disputeraient la variable de l ancien ecran. Vague 10 (chantier B2) : plus
+		# aucun niveau n a deux BOSS (un boss et un mini-boss chacun), mais le trio
+		# des fosses (lvl_19) descend avec deux mini-boss en plus du sien.
 		var boss_vagues: int = 0
+		var minis_vagues: int = 0
 		for d in attendus:
 			if (d as EnemyDef).kind == GameEnums.EnemyKind.BOSS:
 				boss_vagues += 1
-		vu_deux = vu_deux or boss_vagues >= 2
+			elif (d as EnemyDef).kind == GameEnums.EnemyKind.MINIBOSS:
+				minis_vagues += 1
+		vu_deux = vu_deux or boss_vagues >= 2 or minis_vagues >= 2
 		var liste: Array[Dictionary] = LoadingScreen.threat_list(lv, GameEnums.Mode.EXPLORATION)
 		var annonces: int = 0
 		var fini_les_boss: bool = false
@@ -437,7 +444,7 @@ func _test_le_briefing_annonce_tous_les_boss() -> void:
 				fini_les_boss = true
 		eq(annonces, attendus.size(), "%s : tous les boss et mini-boss annonces" % lv.id)
 		ok(en_tete, "%s : boss et mini-boss en tete" % lv.id)
-	ok(vu_deux, "(un niveau au moins a deux boss : le test discrimine)")
+	ok(vu_deux, "(un niveau au moins a deux tetes du meme rang : le test discrimine)")
 
 
 ## Chaque niveau de la campagne : une ligne par monstre avec sa mecanique, un
@@ -511,7 +518,8 @@ func _test_les_cartes_a_gagner() -> void:
 			passif_vu = true
 		else:
 			not_ok(passif_vu, "les sorts avant les passifs (%s)" % c.id)
-	# Objectif reussi : sa carte entre au pool, elle devient « a gagner ».
+	# Objectif reussi : VAGUE 10 (chantier B2, table du co-auteur), sa carte entre
+	# au DECK de campagne du niveau, donc au livre : elle est obtenue d emblee.
 	var obj: ObjectiveDef = lv.objectives[0]
 	var r0: SpellCard = lv.objective_reward(0)
 	if r0 != null:
@@ -519,11 +527,9 @@ func _test_les_cartes_a_gagner() -> void:
 		for o in lv.objectives:
 			done[o.id] = (o == obj)
 		SaveData.record_victory(lv, mode, done, lv.waves.size())
+		ok(SaveData.campaign_deck(lv).has(r0), "objectif reussi : sa carte entre au deck de campagne")
 		var st2: Dictionary = LoadingScreen.card_state(r0, lv, RunState.levelup_pool(lv, mode))
-		eq(int(st2["etat"]), LoadingScreen.Etat.A_GAGNER, "objectif reussi : sa carte est a gagner")
-		SaveData.discover_card(r0.id)
-		var st3: Dictionary = LoadingScreen.card_state(r0, lv, RunState.levelup_pool(lv, mode))
-		eq(int(st3["etat"]), LoadingScreen.Etat.OBTENUE, "prise en combat : obtenue")
+		eq(int(st2["etat"]), LoadingScreen.Etat.OBTENUE, "objectif reussi : sa carte est obtenue")
 	SaveData.reset_profile()
 
 

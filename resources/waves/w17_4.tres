@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="WaveDef" load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="1_7vahj"]
+[ext_resource type="Resource" path="res://resources/enemies/ecumeur.tres" id="2_o0cwc"]
+[ext_resource type="Resource" path="res://resources/enemies/shade.tres" id="3_s2m5l"]
+[ext_resource type="Resource" path="res://resources/enemies/current_eye.tres" id="4_ius4d"]
+[ext_resource type="Resource" path="res://resources/enemies/sand_serpent.tres" id="5_v5jsv"]
+[ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="6_7liak"]
+
+[sub_resource type="Resource" id="Resource_7vahj"]
+script = ExtResource("1_7vahj")
+enemy = ExtResource("2_o0cwc")
+count = 2
+spawn_delay = 3.0
+start_offset = 0.0
+
+[sub_resource type="Resource" id="Resource_o0cwc"]
+script = ExtResource("1_7vahj")
+enemy = ExtResource("3_s2m5l")
+count = 3
+spawn_delay = 2.0
+start_offset = 8.0
+
+[sub_resource type="Resource" id="Resource_s2m5l"]
+script = ExtResource("1_7vahj")
+enemy = ExtResource("4_ius4d")
+count = 3
+spawn_delay = 2.0
+start_offset = 15.0
+
+[sub_resource type="Resource" id="Resource_ius4d"]
+script = ExtResource("1_7vahj")
+enemy = ExtResource("5_v5jsv")
+count = 2
+spawn_delay = 1.8
+start_offset = 21.0
+
+[resource]
+script = ExtResource("6_7liak")
+id = &"w17_4"
+duration = 27.0
+entries = Array[ExtResource("1_7vahj")]([SubResource("Resource_7vahj"), SubResource("Resource_o0cwc"), SubResource("Resource_s2m5l"), SubResource("Resource_ius4d")])
+difficulty = 1.4
+is_miniboss = false
+is_boss = false

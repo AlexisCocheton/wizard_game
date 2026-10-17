@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelDef" load_steps=48 format=3]
+[gd_resource type="Resource" script_class="LevelDef" load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/spell_card.gd" id="1_bq3hy"]
 [ext_resource type="Resource" path="res://resources/cards/common/fireball.tres" id="2_irc0y"]
@@ -13,12 +13,13 @@
 [ext_resource type="Resource" path="res://resources/enemies/slime_skeleton.tres" id="10_bd7r7"]
 [ext_resource type="Resource" path="res://resources/enemies/slime_ghost_big.tres" id="11_50kjp"]
 [ext_resource type="Resource" path="res://resources/enemies/carnivore_plant.tres" id="12_4ugdg"]
-[ext_resource type="Resource" path="res://resources/cards/rare/mana_flow.tres" id="13_vy50h"]
-[ext_resource type="Resource" path="res://resources/cards/epic/arcane_insight.tres" id="14_jsci0"]
+[ext_resource type="Resource" path="res://resources/cards/rare/about_face.tres" id="14_t3ncq"]
+[ext_resource type="Resource" path="res://resources/cards/epic/mirror_apprentice.tres" id="15_f6dxf"]
 [ext_resource type="Resource" path="res://resources/cards/legendary/summoners_key.tres" id="15_twp52"]
 [ext_resource type="Script" path="res://scripts/data/objective_def.gd" id="16_3d2xi"]
 [ext_resource type="Script" path="res://scripts/data/level_def.gd" id="17_hydls"]
 [ext_resource type="Script" path="res://scripts/data/wave_def.gd" id="18_7cq12"]
+[ext_resource type="Resource" path="res://resources/cards/passive/pass_poison_corrode.tres" id="18_h7dmw"]
 [ext_resource type="Script" path="res://scripts/data/wave_entry.gd" id="19_luq6e"]
 [ext_resource type="Resource" path="res://resources/enemies/mushroom_gold.tres" id="21_ycyp6"]
 
@@ -169,42 +170,42 @@ difficulty = 2.7
 is_miniboss = false
 is_boss = false
 
-[sub_resource type="Resource" id="Resource_u02bu"]
+[sub_resource type="Resource" id="Resource_e8bcq"]
 script = ExtResource("19_luq6e")
 enemy = ExtResource("21_ycyp6")
 count = 1
 spawn_delay = 1.0
 start_offset = 0.0
 
-[sub_resource type="Resource" id="Resource_o1fj0"]
+[sub_resource type="Resource" id="Resource_u02bu"]
 script = ExtResource("19_luq6e")
 enemy = ExtResource("6_h7dmw")
 count = 4
 spawn_delay = 1.5
 start_offset = 6.0
 
-[sub_resource type="Resource" id="Resource_7mxpv"]
+[sub_resource type="Resource" id="Resource_o1fj0"]
 script = ExtResource("19_luq6e")
 enemy = ExtResource("7_k5idq")
 count = 3
 spawn_delay = 2.0
 start_offset = 14.0
 
-[sub_resource type="Resource" id="Resource_vnxbu"]
+[sub_resource type="Resource" id="Resource_7mxpv"]
 script = ExtResource("19_luq6e")
 enemy = ExtResource("9_eku1o")
 count = 2
 spawn_delay = 3.0
 start_offset = 20.0
 
-[sub_resource type="Resource" id="Resource_mu7hn"]
+[sub_resource type="Resource" id="Resource_vnxbu"]
 script = ExtResource("19_luq6e")
 enemy = ExtResource("8_5ux3c")
 count = 2
 spawn_delay = 3.0
 start_offset = 26.0
 
-[sub_resource type="Resource" id="Resource_ivmxr"]
+[sub_resource type="Resource" id="Resource_mu7hn"]
 script = ExtResource("19_luq6e")
 enemy = ExtResource("9_irc0y")
 count = 3
@@ -215,7 +216,7 @@ start_offset = 32.0
 script = ExtResource("18_7cq12")
 id = &"side_fairy_boss"
 duration = 46.0
-entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_u02bu"), SubResource("Resource_o1fj0"), SubResource("Resource_7mxpv"), SubResource("Resource_vnxbu"), SubResource("Resource_mu7hn"), SubResource("Resource_ivmxr")])
+entries = Array[ExtResource("19_luq6e")]([SubResource("Resource_e8bcq"), SubResource("Resource_u02bu"), SubResource("Resource_o1fj0"), SubResource("Resource_7mxpv"), SubResource("Resource_vnxbu"), SubResource("Resource_mu7hn")])
 difficulty = 2.7
 is_miniboss = false
 is_boss = true
@@ -237,10 +238,11 @@ enemy_pool = Array[ExtResource("5_f6dxf")]([ExtResource("6_h7dmw"), ExtResource(
 exploration_deck = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("3_bq3hy"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y"), ExtResource("4_irc0y")])
 objectives = Array[ExtResource("16_3d2xi")]([SubResource("Resource_t3ncq"), SubResource("Resource_f6dxf"), SubResource("Resource_h7dmw")])
 levelup_cards = Array[ExtResource("1_bq3hy")]([])
-objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("13_vy50h"), ExtResource("14_jsci0"), ExtResource("15_twp52")])
+objective_rewards = Array[ExtResource("1_bq3hy")]([ExtResource("14_t3ncq"), ExtResource("15_f6dxf"), ExtResource("15_twp52")])
 next_levels = Array[StringName]([])
+requires_all_previous = false
 base_commons = Array[ExtResource("1_bq3hy")]([ExtResource("2_irc0y"), ExtResource("3_bq3hy"), ExtResource("4_irc0y")])
-passive_unlocks = Array[ExtResource("1_bq3hy")]([])
+passive_unlocks = Array[ExtResource("1_bq3hy")]([ExtResource("18_h7dmw")])
 side_quest = true
 side_quest_after = &"lvl_19"
 side_quest_character = "fairy"
