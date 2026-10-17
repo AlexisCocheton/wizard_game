@@ -4712,7 +4712,11 @@ func _progression_de(level_id: StringName) -> Dictionary:
 # voie), le joueur choisit ; huit majeures ont recu une vraie structure
 # (coup_de_fouet, arret_du_temps, sablier_brise, autel_appat, foudre_tenace,
 # puis napalm, fosse_aux_pieux, eclat_purifiant que le test durci a trouves) ;
-# neuf textes ne nomment plus un element que l effet n a pas. Banc : rapport C7b.
+# neuf textes ne nomment plus un element que l effet n a pas. Banc court
+# (lvl_01, 05, 11, 16, 18, 20 x 30) : 164 -> 169 / 180 victoires ; majeures
+# prises 1,87 -> 2,39 par partie, mais 15 -> 11 distinctes : face aux deux, le bot
+# prend celle qui paie le moins sur l identite du sort (AutoPick.major_preferred),
+# et Barrage, Seconde ligne, Eclat purifiant, Triple jet ne sont plus mesurees.
 # =====================================================================
 
 ## Les sorts qui recoivent leurs majeures, dans l ordre du catalogue.
