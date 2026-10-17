@@ -745,7 +745,8 @@ d abord sans portrait, comme « Un mort ». Leur buste est découpé dans la feu
 animée qu ils portent EN COMBAT : le joueur reconnaît dans la scène le personnage
 qu il va faire jouer. Planche `assets/portraits/apprentice_cast.png`, fabriquée par
 `tools/assets/make_apprentice_portraits.py` (pixel art agrandi au plus proche
-voisin, même facteur entier pour les trois, posé sur la ligne de base des bustes
+voisin, d un facteur entier propre à chacun — ×26, ×19, ×21 — pour remplir le même
+cadre que les bustes peints, posé sur la ligne de base des bustes
 peints, bas dissous en tramage) ; la clé de casting est le `texture_name` de leur
 fiche de compte.
 

@@ -52,7 +52,8 @@ const CAST_PX: int = UiTheme.CAST_PX
 ## Une planche a part parce que ses bustes ne viennent pas d un pack de
 ## portraits peints mais des feuilles animees que le joueur voit deja en combat :
 ## `tools/assets/make_apprentice_portraits.py` les agrandit au plus proche
-## voisin, d un facteur entier commun aux trois, et les pose sur la ligne de base
+## voisin, d un facteur entier propre a chacun (choisi pour remplir le meme
+## cadre que les bustes peints : x26, x19, x21), et les pose sur la ligne de base
 ## des bustes peints. Regenerer `story_cast.png` (LANCZOS, packs bruts) n est
 ## donc jamais necessaire pour toucher a un apprenti, ni l inverse.
 const APPRENTICE_SHEET: String = UiTheme.PORTRAITS_DIR + "apprentice_cast.png"

@@ -515,7 +515,7 @@ sur ce poste (`fetch_craftpix.py` répond « PAS CONNECTÉ »).
 | Teintes de l'Apprentie d'azur | `bluewitch_{ember,frost,moss}_{idle,walk,attack}` | remappe 7 couleurs de `bluewitch_*` | 9e0, commercial |
 | L'écuyer + 2 teintes | `soldier_*` (cases 56×44), `soldier_{azure,royal}_*` | Tiny RPG Character Pack 01, `Soldier` (arc = incantation) | Zerie, commercial |
 | La fée + 2 couleurs | `fairy_idle`, `fairy_{sun,moss}_idle` | `Fairy.zip` (les 3 couleurs de l'auteur) | itch, commercial |
-| Portraits d'histoire des 3 apprentis (vague 10, C6) | `assets/portraits/apprentice_cast.png` (3 cases de 512) | **recadrés dans les feuilles ci-dessus** (`soldier_idle` case 0, `fairy_idle` case 7, `bluewitch_idle` case 3) par `tools/assets/make_apprentice_portraits.py`, plus proche voisin ×19 | ceux de leur sprite : Zerie, auteur Fairy (à confirmer), 9e0 |
+| Portraits d'histoire des 3 apprentis (vague 10, C6) | `assets/portraits/apprentice_cast.png` (3 cases de 512) | **recadrés dans les feuilles ci-dessus** (`soldier_idle` case 0, `fairy_idle` case 7, `bluewitch_idle` case 3) par `tools/assets/make_apprentice_portraits.py`, plus proche voisin ×26 / ×19 / ×21 (un facteur par buste, même cadre que les bustes peints) | ceux de leur sprite : Zerie, auteur Fairy (à confirmer), 9e0 |
 | Tours Red/Black/Yellow/Purple | `assets/terrain/tower_{red,black,yellow,purple}.png` | Tiny Swords `Buildings/*/Tower.png` | Pixel Frog |
 | L'arbre-nid | `tower_tree.png` (8 cases de 192) | Tiny Swords `Trees/Tree3` | Pixel Frog |
 | Le monastère | `tower_monastery.png` | Tiny Swords `Blue Buildings/Monastery` | Pixel Frog |

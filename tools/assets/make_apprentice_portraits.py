@@ -33,13 +33,16 @@ TROIS REGLES DE PIXEL ART
    sprite devient un carre plein. Le LANCZOS de `tools/story/build_cast.py`
    convient a une peinture, il transforme un sprite en bouillie. Verifie en fin
    de script (assertion `_blocs_nets`) : une seule valeur par bloc.
-2. UN facteur pour les trois apprentis : un pixel de sprite fait le meme carre a
-   l ecran quel que soit l apprenti. Le facteur est le plus grand qui fait tenir
-   le plus large des trois bustes dans la marge des bustes peints (88 % de la
-   case). L ecuyer, plus petit en jeu, reste plus petit ici : c est le sien.
+2. UN FACTEUR PAR BUSTE : le plus grand entier qui fait tenir CE buste dans la
+   marge des bustes peints (88 % de la case). Une premiere version prenait un
+   facteur commun aux trois (19, borne par les ailes de la fee) : l ecuyer, le
+   plus petit sprite (15 x 17), tenait alors dans 56 % de sa case et paraissait
+   minuscule a cote du buste du mage. Au telephone c est le CADRAGE qui se voit ;
+   la difference de taille des pixels entre deux apprentis, jamais a l ecran
+   ensemble, se voit a peine (choix de l orchestrateur sur maquette, C6).
 3. Le bas du buste se dissout en TRAMAGE ordonne (un pixel sur deux, puis un sur
    quatre), pas en fondu d alpha. Le fondu des bustes peints, applique a des
-   blocs de 19 px, donnait des bandes translucides qui se lisaient comme une
+   blocs de 19 a 26 px, donnait des bandes translucides qui se lisaient comme une
    image mal effacee ; le tramage est la facon pixel art de faire la meme chose
    et garde chaque bloc net.
 
@@ -47,9 +50,10 @@ CADRAGE
 -------
 Les bustes peints sont cales en haut a 4 % et mis a l echelle dans 88 % de la
 case : leur bas tombe vers 92 % de la case, juste au-dessus de la boite de
-texte. Les apprentis, plus petits que leur case, sont POSES sur cette ligne de
-base plutot que cales en haut : cales en haut, l ecuyer flottait au milieu de
-la boite, le defaut meme que la planche du casting devait empecher.
+texte. Les apprentis sont POSES sur cette ligne de base plutot que cales en
+haut : un buste plus large que haut (la fee) est moins haut que sa case, et cale
+en haut il flotterait au milieu de la boite, le defaut meme que la planche du
+casting devait empecher.
 """
 import os
 import re
@@ -171,14 +175,16 @@ def main() -> None:
         b, feuille = _buste(anim_key, case, bas)
         bustes.append((cle, b, case, feuille))
     util = cell * UTIL
-    k = int(min(util / max(b.width, b.height) for _c, b, _i, _f in bustes))
-    if k < 2:
-        raise SystemExit("facteur %d : un buste est trop grand pour la case" % k)
     base = int(cell * (HAUT + UTIL))
 
     planche = Image.new("RGBA", (cell * len(bustes), cell), (0, 0, 0, 0))
-    print("cle,ligne,colonne,source,case,buste_px,facteur")
+    print("cle,ligne,colonne,source,case,buste_px,facteur,portrait_px")
     for col, (cle, b, case, feuille) in enumerate(bustes):
+        # Facteur PROPRE a ce buste (regle 2) : le plus grand entier qui le fait
+        # tenir dans la marge des bustes peints, sur son plus grand cote.
+        k = int(util / max(b.width, b.height))
+        if k < 2:
+            raise SystemExit("%s : facteur %d, buste trop grand pour la case" % (cle, k))
         grand = _tramer(b).resize((b.width * k, b.height * k), Image.NEAREST)
         x = col * cell + (cell - grand.width) // 2
         y = base - grand.height
@@ -187,7 +193,8 @@ def main() -> None:
         planche.alpha_composite(grand, (x, y))
         if not _blocs_nets(planche, x, y, grand.width, grand.height, k):
             raise SystemExit("%s : blocs non uniformes, le portrait serait flou" % cle)
-        print("%s,1,%d,%s,%d,%dx%d,%d" % (cle, col + 1, feuille, case, b.width, b.height, k))
+        print("%s,1,%d,%s,%d,%dx%d,%d,%dx%d" % (cle, col + 1, feuille, case, b.width,
+                                                b.height, k, grand.width, grand.height))
 
     planche.save(OUT)
     print("-> %s %s" % (os.path.relpath(OUT, ROOT), planche.size))
