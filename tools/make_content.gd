@@ -3803,7 +3803,7 @@ func _niveau_w10(id: StringName) -> Dictionary:
 			# (renard -> sort rapide), et les petits coups qui ouvrent une armure.
 			# MINI-BOSS : le Seigneur de braise, qui RIPOSTE a chaque coup. BOSS :
 			# le Gardien de la foret (la scene le nomme), devenu un vrai boss : son
-			# armure se REFERME apres cinq secondes de calme.
+			# armure se REFERME apres six secondes de calme.
 			return {"nom": "Proteger le dirigeable", "acte": 1, "sous_titre": "On ne devient pas fou en six jours",
 				"intro": _intro_existante(&"lvl_09"),
 				"scene_avant": "lvl_09_intro", "scene_apres": "lvl_09_outro", "fond": "act1_sky",
