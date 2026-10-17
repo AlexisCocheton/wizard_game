@@ -13,13 +13,9 @@ extends TestCase
 const SORTIE: String = "res://scripts/game/clean_exit.gd"
 
 ## Fichiers dont la ligne de sortie appartient a un autre chantier. A RETIRER de
-## cette liste des que le fichier passe par CleanExit.
-##   make_story.gd : generateur de l histoire, hors perimetre du chantier C3
-##                   (chantier histoire en parallele) ; outil lance a la main,
-##                   jamais par le harnais.
-const EN_ATTENTE: Array[String] = [
-	"res://tools/make_story.gd",
-]
+## cette liste des que le fichier passe par CleanExit. Vide depuis la migration de
+## make_story.gd (vague 10, apres C3).
+const EN_ATTENTE: Array[String] = []
 
 const DOSSIERS: Array[String] = ["res://scripts", "res://tests", "res://tools"]
 

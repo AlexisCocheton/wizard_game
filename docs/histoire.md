@@ -56,8 +56,8 @@ Les adversaires qui ont un nom :
 
 | Nom | Ou | Ce qu il est dans l histoire |
 |---|---|---|
-| **Chronos** | boss de `lvl_01`, Echos aux `lvl_15` et `lvl_16` | « l huissier des delais » ; le mage le reconnait (il etait la, la premiere fois). Le boss final porte SA silhouette, en or : l huissier avait la forme de son maitre |
-| **Les gorgones** (Gorgone, Matrone, Reine) | `lvl_02` ; la Reine revient en mini-boss de `lvl_13` | Leur regard fige des sorts dans la main du mage tant qu elles vivent. Elles sont passees au village, mais ce ne sont pas elles qui l ont petrifie |
+| **Chronos** | boss de `lvl_01`, Echos de `lvl_14` a `lvl_16` | « l huissier des delais » ; le mage le reconnait (il etait la, la premiere fois). Le boss final porte SA silhouette, en or : l huissier avait la forme de son maitre |
+| **Les gorgones** (Gorgone, Matrone, Reine) | `lvl_02` ; la Matrone revient en Gorgone ainee au `lvl_04`, la Reine « recollee » (monstre ordinaire) au `lvl_13` | Leur regard fige des sorts dans la main du mage tant qu elles vivent. Elles sont passees au village, mais ce ne sont pas elles qui l ont petrifie |
 | **Vharn, Sesh, Kaltek, Ymoa** | `lvl_07`, `lvl_10`, `lvl_11`, `lvl_12` | Les quatre grands demons. Chacun se croit le patron ; chacun a signe sans lire |
 | **Malyk** | boss de `lvl_13` | Celui qui porte les ordres aux seigneurs, et mange ce qu il appelle. Un coursier de plus |
 | **L Enfant** | boss de `lvl_16` | Le compagnon du mage depuis la premiere clairiere, et l auteur de la date |
@@ -158,7 +158,8 @@ les betes de la foret ne se comportent pas comme des betes.
 
 ### `lvl_01` — « La lisiere de Nuri » (tutoriel)
 
-Mini-boss : le Gardien (a remplacer, voir plus bas). Boss : **Chronos**.
+Mini-boss : l Ecumeur du ciel. Boss : **Chronos** (l echeance : le frapper quand il
+se plante).
 
 Le mage revient au premier matin, vide, et entend un cri : un **enfant**. Il le
 sauve. C est le geste qui condamne tout — mais il faudra cinq actes pour le savoir.
@@ -181,15 +182,15 @@ premiere fois, quand Nox est tombee » — puis l enfant l emmene a son village.
 >
 > **Le Mage** — ... Des gnomes qui attaquent un village. Les gnomes ne font pas ca.
 
-Le mini-boss du tutoriel est le Gardien, que l enfant presente en allie au
-`lvl_09` puis qui y meurt : aucune scene du `lvl_01` ne le cite, et le
-remplacer est demande a B2 (`docs/revue_vague10.md` §2.7).
+Le mini-boss du tutoriel etait le Gardien, que l enfant presente en allie au
+`lvl_09` puis qui y meurt ; aucune scene du `lvl_01` ne le citait, et le chantier
+B2 de la vague 10 l a remplace par l Ecumeur du ciel (`docs/revue_vague10.md` §2.7).
 
 ### `lvl_02` — « Le village petrifie »
 
-Mini-boss : la **Matrone gorgone** (fige 2 cartes). Dans les vagues : deux
-Gorgones (1 carte chacune), un Corniste qui presse les autres. Boss : le Coagule,
-puis la **Reine gorgone** (3 cartes) a la fin de la vague de boss.
+Mini-boss : la **Matrone gorgone** (fige 2 cartes). Dans les vagues : des
+Gorgones (1 carte chacune), des Cornistes qui pressent les autres. Boss : la
+**Reine gorgone** (3 cartes), dans la derniere vague.
 
 Demande du co-auteur (vague 10) : quand on retrouve les gorgones, le dialogue dit
 qu on retrouve **le village petrifie**. La scene fait trois choses :
@@ -235,8 +236,9 @@ moi. Les gorgones n ont fait que signer en dessous » (`lvl_16_intro`).
 
 ### `lvl_08` — « La route du maire »
 
-Mini-boss : le Totem ancien. Gelees qui se divisent, ruches qui eclatent : la
-pression est le **nombre**, premiere vraie lecon de zone.
+Mini-boss : le Slime enorme. Boss : le Coagule (il se releve une fois). Gelees qui
+se divisent, ruches qui eclatent : la pression est le **nombre**, premiere vraie
+lecon de zone.
 
 **Scene `lvl_08_intro`** (`talk_path`) : le maire, seul du village a ne pas etre en
 pierre, avoue : ce n est pas Nuri qui est attaquee, c est **toute l ile**, et ca vient
@@ -290,9 +292,9 @@ se levent et **parlent** — ce sont eux qui lachent le premier vrai nom.
 
 | Niveau | Nom affiche | Tetes | Ce que disent les scenes |
 |---|---|---|---|
-| `lvl_17` | Les courants | mini-boss **Grand Oeil des courants** | le rat et ses regles (« la regle deux c est qu il n y a pas de regle deux ») ; le Grand Oeil tombe dans les cordages : « derriere l oeil, la meme soudure noire que dans la poitrine de votre Gardien ». Les Sky Lands sont un atelier, le rat y a travaille |
-| `lvl_18` | Port de Haute-Nacelle | mini-boss **Mage noir de Haute-Nacelle** | un port vide « par le haut » ; le Mage noir porte la meme soudure ; **premier grain du retournement** : l enfant sait que « la gauche est fermee » |
-| `lvl_03` | L ossuaire de bordure | mini-boss Slime enorme ; boss **le Reliquaire** | des tombes rangees en quantites ; le Reliquaire livre les registres : « Les trois dernieres annees, on n a plus compte des morts. On les a COMMANDES. » |
+| `lvl_17` | Les courants | mini-boss Mere Planogo ; boss **Grand Oeil des courants** | le rat et ses regles (« la regle deux c est qu il n y a pas de regle deux ») ; le Grand Oeil tombe dans les cordages : « derriere l oeil, la meme soudure noire que dans la poitrine de votre Gardien ». Les Sky Lands sont un atelier, le rat y a travaille |
+| `lvl_18` | Port de Haute-Nacelle | mini-boss Capitaine pillard ; boss **Mage noir de Haute-Nacelle** | un port vide « par le haut » ; le Mage noir porte la meme soudure ; **premier grain du retournement** : l enfant sait que « la gauche est fermee » |
+| `lvl_03` | L ossuaire de bordure | mini-boss Gardien d ossements ; boss **le Reliquaire** | des tombes rangees en quantites ; le Reliquaire livre les registres : « Les trois dernieres annees, on n a plus compte des morts. On les a COMMANDES. » |
 | `lvl_04` | Le Grand Appel | mini-boss Briseur de tertres ; boss **l Ensevelisseur** | le rituel des Pretres goules reussit ; ce qui sort du cercle s appelle l Ensevelisseur ; quand il tombe, les morts s arretent et **parlent** |
 
 **`lvl_18_outro` — l enfant montre quelque chose qu il ne devrait pas savoir**
@@ -342,7 +344,7 @@ l enfant avancent seuls jusqu au pentacle.
 | Niveau | Nom affiche | Tetes | Ce que disent les scenes |
 |---|---|---|---|
 | `lvl_19` | Les fosses basses | mini-boss Sorciere des fosses ; boss : **le trio des mages** (braise, givre, arcanes) | on entre dans Tombol par le bas, l eau est encore trouble : le roi vient de passer. Les trois mages ne cherchaient pas a tuer le mage, mais a le RETARDER |
-| `lvl_20` | La cour des rois morts | mini-boss Epeiste d ombre | des statues de rois, des gardes laisses a mourir pour gagner une heure : « on fait ca quand on fuit un creancier ». Au fond, **deux escaliers** : l un descend vers une lueur rouge, l autre remonte vers la salle du trone |
+| `lvl_20` | La cour des rois morts | mini-boss Totem ancien ; boss Epeiste d ombre | des statues de rois, des gardes laisses a mourir pour gagner une heure : « on fait ca quand on fuit un creancier ». Au fond, **deux escaliers** : l un descend vers une lueur rouge, l autre remonte vers la salle du trone |
 | `lvl_05` | Les forges sous Tombol | mini-boss Miroir de Forge ; boss Colosse des Forges | l escalier qui descend mene a une forge : Tombol ne coule pas d armures, quelqu un l a installee sous ses pieds. Poincon sur chaque piece : **un cercle a cinq branches**. « Tombol paie l atelier. Avec ses morts. » |
 | `lvl_06` | La cour brisee | mini-boss le Bourreau ; boss Seigneur Spectre | l escalier qui remonte mene a la salle du trone vide : la cour du roi s entretue pour le trone. Le dernier seigneur tombe sur le **sceau royal, casse** : « ce qu il a signe est deja parti. En bas. » |
 | `lvl_21` | Le pentacle | mini-boss le Fossoyeur ; boss **Sceau de Tombol** | le roi accule ; le retournement (ci-dessous) ; le rat revient avec la nacelle, et tout le monde descend |
@@ -420,10 +422,10 @@ s ouvrir apres les quatre.
 | Niveau | Le demon | Tetes | Ce que disent les scenes |
 |---|---|---|---|
 | `lvl_07` | **Vharn, l Enclume** (« La forge de Vharn ») | mini-boss Golem a noyau | une forge sans forgeron, la cadence du corniste ; Vharn ne parle pas. Dans l Enclume, un contrat : la signature du roi, et au-dessus une ecriture « petite et soignee ». L enfant a compte : « Le pentacle a cinq branches. Quatre portent un nom. » |
-| `lvl_10` | **Sesh, la Faim** (« Les fosses de Sesh ») | — | Sesh a suivi l odeur d un monde qui finit ; il a signe sans lire, « il etait deja a table ». Quelqu un a prevenu les charognards avant le mort |
-| `lvl_11` | **Kaltek, la Chaine** (« L arene de Kaltek ») | mini-boss Ecumeur du ciel | « Personne ne me tient ! » ; ses chaines partaient de lui, vers le haut : un contremaitre |
+| `lvl_10` | **Sesh, la Faim** (« Les fosses de Sesh ») | mini-boss Echo du Reliquaire | Sesh a suivi l odeur d un monde qui finit ; il a signe sans lire, « il etait deja a table ». Quelqu un a prevenu les charognards avant le mort |
+| `lvl_11` | **Kaltek, la Chaine** (« L arene de Kaltek ») | mini-boss Echo du Grand Oeil | « Personne ne me tient ! » ; ses chaines partaient de lui, vers le haut : un contremaitre |
 | `lvl_12` | **Ymoa, le Cercle** (« Le temple d Ymoa ») | mini-boss Jumeaux du Cercle | « Je ne me bats jamais. Je PROTEGE. » Il protegeait l ordre sans savoir ce qu il contenait. « Bienvenue en enfer, mage. C est une administration. » |
-| `lvl_13` | le pentacle brise | mini-boss **Reine gorgone** ; boss **Malyk** | la Reine, brisee au village, « recollee », garde la porte ; Malyk porte les ordres aux seigneurs et mange ce qu il appelle : un coursier de plus. Le pentacle se fend en cinq ; « ta main est froide comme le puits » ; la chute ne va pas vers le bas |
+| `lvl_13` | le pentacle brise | mini-boss Echo du Mage noir ; la **Reine gorgone** recollee dans les vagues ; boss **Malyk** | la Reine, brisee au village, « recollee », garde la porte ; Malyk porte les ordres aux seigneurs et mange ce qu il appelle : un coursier de plus. Le pentacle se fend en cinq ; « ta main est froide comme le puits » ; la chute ne va pas vers le bas |
 
 **L ecriture est commutative.** Aucune scene des quatre demons ne suppose ce que
 le joueur a deja vu, ni ne compte ce qui reste (« il y en a trois autres »,
@@ -435,11 +437,11 @@ contrat signe par le Roi squelette, et AU-DESSUS de sa signature une ecriture
 petite et soignee que personne n a jamais vue. Malyk porte les ordres ; l ecriture
 est celle du registre (« meme encre, meme main », `lvl_15`), donc de l enfant.
 
-**Le deblocage, limite connue.** Chaque demon porte `next_levels = [lvl_13]` ;
-`SaveData.record_victory` ouvre tout `next_levels` des la PREMIERE victoire, donc le
-pentacle s ouvre apres UN seul demon. Le corriger est du code (renvoye,
-`docs/revue_vague10.md` §2.7) ; en attendant, les scenes de `lvl_13` parlent « des
-seigneurs », jamais « des quatre », et tiennent dans les deux cas.
+**Le deblocage.** Chaque demon porte `next_levels = [lvl_13]`, et le pentacle ne
+s ouvre qu apres les QUATRE (`LevelDef.requires_all_previous`, vrai sur `lvl_13`
+seul, vague 10). Jusque-la il s ouvrait des la premiere victoire sur un demon : les
+scenes de `lvl_13` parlent « des seigneurs », jamais « des quatre », et tenaient
+dans les deux cas.
 
 **Les quatre grands demons** partagent la SILHOUETTE de la famille qu ils commandent
 (golem, glouton, berserker, totem) : le seigneur porte l apparence de ses sujets.
@@ -507,22 +509,26 @@ leur a offert.
 |---|---|---|---|
 | `lvl_14` | La galerie des saisons | mini-boss Cameleon des saisons ; boss Slime colossal | un musee de tout ce qui a deja ete efface, range par saison : « C est un Gardien. Il y en a deux autres derriere. » Les gardiens de la galerie tombent « sans bruit, comme des pieces qu on range ». L enfant ne parle plus depuis le pentacle |
 | `lvl_15` | Le registre | mini-boss le Greffier ; boss **l Horloger** | des colonnes de DATES : Nuri, Nox, Tombol, « meme encre, meme main ». Le rat savait. L Horloger tombe et le registre s ouvre sur la ligne du mage : la date raturee, et dans la marge, d une ecriture petite et soignee, « inattendu », souligne deux fois |
-| `lvl_16` | Le siege vide | boss **L Enfant** | le plot twist (ci-dessous), puis la fin du jeu |
+| `lvl_16` | Le siege vide | mini-boss Echo du Sceau ; boss **L Enfant** | le plot twist (ci-dessous), puis la fin du jeu |
 
 **Le propos de l acte est une regle mecanique**, pas une ambiance. Les Echos du
 Gardien descendent par deux puis par trois dans des vagues SANS nom, ceux de
 Chronos aussi, et la premiere vague du siege vide les envoie sans fanfare. Les
 anciens boss promus en vermine sont des `.tres` DERIVES (plus legers, mecanique
 simplifiee) : `warden_echo`, `chronos_echo`, `blood_clot` (le Coagule),
-`mirror_shard` (le Miroir de Forge), les adeptes du trio des fosses.
+`mirror_shard` (le Miroir de Forge), les adeptes du trio des fosses. Depuis la
+vague 10, la regle des promotions vaut pour toute la campagne (un mini-boss revient
+en ordinaire a l acte suivant, un boss en mini-boss deux actes plus tard ou en
+ordinaire trois actes plus tard) : 27 promus en tout (`EnemyDef.demoted_from`).
 
 **Les tetes de l acte 5** (chantier W2). La galerie et le registre n avaient ni
 mini-boss ni (pour le registre) boss, faute de catalogue. Ils en ont, et ce sont
 des tetes qui ne sont PAS d anciens boss : le Cameleon des saisons (la galerie qui
 tourne avec les saisons), le Slime colossal (toutes les gelees du voyage refondues
 en une), le Greffier (le commis qui rature une carte de la main) et l Horloger
-(celui qui remonte le temps, comme le mage l a fait). Le siege vide garde son
-tete-a-tete : aucune tete intermediaire.
+(celui qui remonte le temps, comme le mage l a fait). Le siege vide a, depuis la
+vague 10, un mini-boss : l Echo du Sceau de Tombol (un boss de l acte 3 revenu deux
+actes plus tard) ; la vague du boss reste un tete-a-tete.
 
 `lvl_16` ferme la campagne (`next_levels` vide). Le Massacre s ouvre quand CHAQUE
 niveau de la campagne est fini (`SaveData.massacre_unlocked()` =
@@ -622,8 +628,8 @@ est le Massacre.)
 
 ## 10. Notes d implementation
 
-- **Les monstres** : le catalogue compte 86 `EnemyDef` (voir la memoire
-  `catalog_enemies.md`). La narration re-contextualise les anciens (le Gardien devient
+- **Les monstres** : le catalogue compte 112 `EnemyDef` depuis la vague 10 (voir la
+  memoire `catalog_enemies.md`). La narration re-contextualise les anciens (le Gardien devient
   un conscrit retourne, Chronos devient de la vermine a l acte 5).
 - **Etat actuel du code** : **les 21 niveaux existent**, les cinq actes sont livres
   et chacun de leurs niveaux est encadre de scenes. La campagne va du prologue au
@@ -648,17 +654,19 @@ est le Massacre.)
   `tests/unit/test_campaign_acts.gd` verrouille ce tableau : sa table `ACTES_LIVRES`
   dit quels actes sont declares finis, et le compte doit alors tomber juste.
 
-- **Un boss de campagne n est pas obligatoire a chaque niveau.** `test_bosses` refuse
-  qu un adversaire mene deux niveaux. Jusqu au 27/09 le catalogue etait EPUISE et
-  `lvl_12` a `lvl_15` se passaient de mini-boss, `lvl_15` de boss. Le chantier W2 a
-  livre les tetes qui manquaient (tableau ci-dessous) ; restent sans mini-boss
-  `lvl_16` (le siege vide, voulu) et sans boss les niveaux intermediaires de la
-  poursuite (`lvl_08`, `lvl_17`, `lvl_18`, `lvl_20`), qui culminent sur un mini-boss.
+- **Un boss ET un mini-boss dans chaque niveau** depuis la vague 10 (regle du
+  co-auteur du 14/10, `test_campagne_w10`). Jusqu au 27/09 le catalogue etait EPUISE
+  et `lvl_12` a `lvl_15` se passaient de mini-boss, `lvl_15` de boss ; le chantier W2
+  a livre les tetes qui manquaient (tableau ci-dessous) ; jusqu au 17/10, `lvl_16`
+  n avait pas de mini-boss ni `lvl_08`, `lvl_17`, `lvl_18`, `lvl_20` de boss.
 
 - **Le bestiaire du 27 septembre (chantier W2).** La note « aucun nouveau type de
   monstre » ci-dessus visait la vermine qu on aurait ajoutee pour remplir ; la vague 1
   a livre douze MECANIQUES et onze SILHOUETTES qui attendaient des porteurs. Chaque
-  monstre neuf porte une mecanique, et chaque mecanique a son porteur :
+  monstre neuf porte une mecanique, et chaque mecanique a son porteur. *Placements
+  du 27/09 : la vague 10 en a deplace plusieurs (le Slime enorme mene `lvl_08`, le
+  Caillot descend aux `lvl_12` et `lvl_13`...) ; la source a jour est le contenu
+  (`tools/make_content.gd`).*
 
   | Id | Nom | Role | Mecanique | Ou il apparait |
   |---|---|---|---|---|
@@ -705,8 +713,8 @@ est le Massacre.)
   le Massacre est, diegetiquement, ce qui vient apres la derniere scene.
 - Ce que le joueur lit d un niveau en dehors des scenes : le nom (`display_name`) et le
   sous-titre (`subtitle`) sur la carte, et `intro_text` au briefing. `outro_text`
-  n est affiche NULLE PART (et raconte souvent l ancienne histoire : renvoye a B2,
-  `docs/revue_vague10.md` §2.7).
+  n est affiche NULLE PART ; il racontait souvent l ancienne histoire et B2 l a vide
+  sur tous les niveaux (`docs/revue_vague10.md` §2.7).
 - `tests/unit/test_story.gd` garde : scene citee -> scene sur le disque ; scene sur le
   disque -> citee par un niveau ; chaque niveau de campagne encadre ; le narrateur ne
   nomme que des monstres des vagues du niveau ; pas d accent dans les scenes ni dans
