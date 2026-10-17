@@ -929,8 +929,17 @@ func _lvl_16() -> void:
 ## comme « Un mort » (lvl_04), faute de case au casting. Leur buste est tire de
 ## la feuille animee qu ils portent en combat (`assets/portraits/apprentice_cast.png`,
 ## `tools/assets/make_apprentice_portraits.py`) : le joueur reconnait a l ecran
-## le personnage qu il fait jouer. Leurs repliques disent ce que leur fiche de
-## compte promet : ils combattent A LA PLACE du mage.
+## le personnage qu il fait jouer.
+##
+## L APPRENTI EST DEJA LA (vague 10, chantier C7c). Une annexe d apprenti ne
+## s OUVRE que si l apprenti est deja gagne au compte (`side_quest_character`,
+## SaveData.side_quest_open) : il combat deja a la place du mage. Les scenes de
+## B3 le faisaient RECRUTER (« je combats a votre place ») et montraient
+## endormie sous son cristal l apprentie que le joueur faisait jouer. L annexe
+## est donc SA quete : son passe, sa dette, son lieu. Elle ne dit jamais QUAND
+## il a rejoint le mage (le compte, pas la campagne, en decide) ; dans les
+## scenes de campagne il se tait (« il garde la parole dans les histoires »,
+## fiche de l apprentie). test_story refuse une replique de recrutement.
 ##
 ## LE NARRATEUR ne nomme que ce qui descend dans les vagues de la quete
 ## (test_story) : son boss dore, jamais Kaltek ou Ymoa, deja tombes.
@@ -976,19 +985,29 @@ func _side_mesure() -> void:
 
 
 ## ACTE 2, apres les courants (lvl_17), ou le rat avoue avoir travaille dans
-## l atelier des Sky Lands. Le totem retourne fait echo au Gardien de la foret.
+## l atelier des Sky Lands. La piece doree et retournee fait echo au Gardien de
+## la foret.
+##
+## CHANTIER C7c : le boss dore n est plus un Gardien-totem. Son aura imposait la
+## Lumiere purifiante au deck (DEC-057), qu aucun niveau de campagne ne donne
+## avant lvl_20 : ouvrir l annexe la faisait OBTENIR, et elle diluait le pool de
+## montee de niveau de toute la suite de la campagne (banc C2). C est un OEIL DES
+## COURANTS dore, ce qui paie le silence du rat a lvl_17 (« le rat le retourne du
+## pied [...] et ne dit rien pendant un long moment ») : il avait reconnu son
+## propre modele. Le narrateur ne decrit que ce que montre la feuille (un oeil
+## aile) : du cuir cousu, pas du metal.
 func _side_atelier() -> void:
 	_scene("side_a2_atelier_intro", "talk_greattree", [
 		_say("Le Rat pilote", RAT, "Mon ancien atelier est sur l ile d a cote. Vingt ans d etabli. Je veux voir ce qu ils en ont fait.", R),
 		_say("Le Mage", MAGE, "On n a pas le temps des souvenirs."),
-		_say("Le Rat pilote", RAT, "Ce n est pas un souvenir, mage. Si on fabriquait des soudures noires quelque part la-haut, c etait chez nous.", R),
-		_narr("Devant la porte de l atelier, une tour de bois peinte en or. Tout ce qui s en approche brille d un halo."),
-		_say("L Enfant", CHILD, "Elle protege les autres. Comme une maman.", R),
-		_say("Le Mage", MAGE, "Alors on eteint d abord la lumiere, et ensuite la tour."),
+		_say("Le Rat pilote", RAT, "Ce n est pas un souvenir, mage. L oeil pris dans nos cordages, je l ai reconnu. C est moi qui en ai dessine le modele.", R),
+		_narr("Devant la porte de l atelier, un oeil aile peint en or tourne en spirale. D autres yeux sortent de l atelier et se rangent autour de lui."),
+		_say("L Enfant", CHILD, "Il brille comme une piece neuve.", R),
+		_say("Le Mage", MAGE, "Il voit venir mes sorts. Alors on le fatigue : un oeil qui esquive finit toujours par cligner."),
 	])
 	_scene("side_a2_atelier_outro", "talk_greattree", [
-		_narr("Le Gardien-totem dore se fend. Sous la dorure, le bois brut d un totem de port, taille a la main, avec une marque d atelier."),
-		_say("Le Rat pilote", RAT, "C est un des miens. Je l ai taille pour proteger les quais. Quelqu un l a repeint en or et l a retourne.", R),
+		_narr("L Oeil des courants dore s abat sur un etabli. Sous la dorure, du cuir cousu main, et derriere la pupille, une plaque de metal noir."),
+		_say("Le Rat pilote", RAT, "C est un des miens. Je les faisais pour lire les courants aux pilotes. Quelqu un l a dore et lui a soude ca dans le dos.", R),
 		_say("Le Mage", MAGE, "Retourne. Comme le Gardien de la foret."),
 		_say("Le Rat pilote", RAT, "On ne dore pas une piece pour qu elle tienne mieux. On la dore pour que le client la reconnaisse.", R),
 		_say("Le Mage", MAGE_GRAVE, "Alors il y a un client. Et il aime l or."),
@@ -1051,58 +1070,69 @@ func _side_vitrine() -> void:
 	])
 
 
-## L ECUYER, apres le port vide (lvl_18) : le dernier garde de Haute-Nacelle,
-## qui a pose l epee pour l arc (sa fiche de compte).
+## L ECUYER, apres le port vide (lvl_18) : il gardait le bout du quai de
+## Haute-Nacelle, et il a pose l epee pour l arc (sa fiche de compte). Il revient
+## avec le mage. SA DETTE : la nuit ou le port s est vide par le haut, son epee
+## n a touche personne. Le chiffre des « six cents » est celui du rat (lvl_18).
 func _side_ecuyer() -> void:
 	_scene("side_squire_intro", "talk_path", [
+		_narr("Haute-Nacelle, a nouveau. L ecuyer s arrete au bout du quai, devant une guerite dont la porte pend."),
+		_say("L ecuyer", SQUIRE, "C etait mon poste. Huit gardes pour tout le port, et moi au bout du quai, avec une epee.", R),
 		_narr("Une fleche se plante dans le quai, a un pas du mage. Elle vient d en haut, du toit d un entrepot."),
-		_say("L ecuyer", SQUIRE, "Restez ou vous etes ! Ce qui descend du ciel, je le descends.", R),
-		_say("Le Mage", MAGE, "Je ne descends pas du ciel. Pas aujourd hui."),
-		_say("L ecuyer", SQUIRE, "Alors baissez-vous. Celui d en face ne fait pas la difference. Et lui, il est en or.", R),
-		_say("Le Rat pilote", RAT, "Un garde du port. Je croyais qu ils etaient tous partis par le haut.", R),
+		_say("L ecuyer", SQUIRE, "A terre ! Celui d en face tire sur tout ce qui bouge sur les quais. Et lui, il est en or.", R),
+		_say("Le Rat pilote", RAT, "Un archer dore sur les toits d un port vide. Quelqu un tient a ce que personne n y revienne.", R),
+		_say("L ecuyer", SQUIRE, "Moi, j y reviens. Ce qui tire d en haut, je le descends.", R),
 	])
 	_scene("side_squire_outro", "talk_path", [
 		_narr("Le Lutin archer dore tombe du toit d en face, son arc d or brise en deux."),
-		_say("L ecuyer", SQUIRE, "J etais garde du port. Une epee ne sert a rien contre ce qui tire d en haut, alors j ai appris l arc.", R),
-		_say("Le Mage", MAGE, "Et maintenant que le port est vide ?"),
-		_say("L ecuyer", SQUIRE, "Maintenant je n ai plus de port. Si tu veux, je tire a ta place, et toi tu gardes ta magie pour ce qui compte.", R),
-		_say("Le Mage", MAGE, "Ce qui compte arrive vite. Tire juste."),
+		_say("L ecuyer", SQUIRE, "La nuit ou le port s est vide par le haut, j etais la, avec mon epee. Elle n a touche personne.", R),
+		_say("L ecuyer", SQUIRE, "J ai appris l arc apres. Trop tard pour les six cents. Assez tot pour celui-la.", R),
+		_say("Le Mage", MAGE, "Tu n as pas fui. Tu es parti chercher ce qui te manquait cette nuit-la."),
+		_say("L ecuyer", SQUIRE, "Le port est toujours vide, mage. Mais plus personne ne le garde pour eux.", R),
+		_say("Le Mage", MAGE, "Alors on peut le laisser derriere nous. Ce qui compte arrive vite. Tire juste."),
 	])
 
 
-## LA FEE, apres les fosses basses (lvl_19), ou l eau monte aux mollets : elle
-## « ne pose jamais pied a terre » (sa fiche de compte), parce qu ici le sol
-## mange.
+## LA FEE, apres les fosses basses (lvl_19), ou l eau monte aux mollets et ou
+## les tombes se sont ouvertes vers le bas : elle « ne pose jamais pied a terre »
+## (sa fiche de compte), parce qu ici le sol mange. Elle y revient avec le mage :
+## elle veillait sur ces tombes. SA DETTE : le jour ou le sol s est mis a manger,
+## elle s est envolee et a laisse ses morts. Le rat est reste avec la nacelle.
 func _side_fee() -> void:
 	_scene("side_fairy_intro", "talk_shrine", [
-		_narr("Au-dessus de l eau trouble des fosses, une lueur danse. Une fee, pas plus grande qu une main, qui ne se pose nulle part."),
-		_say("La fee", FAIRY, "Ne marchez pas la ou il pousse. Tout ce qui touche cette eau finit par y prendre racine.", R),
-		_say("L Enfant", CHILD, "Toi, tu ne touches jamais le sol ?", R),
-		_say("La fee", FAIRY, "Jamais. Ici, le sol mange.", R),
+		_narr("Au-dessus de l eau trouble des fosses, la fee vole plus bas qu elle ne l a jamais fait. Elle connait chaque tombe."),
+		_say("La fee", FAIRY, "Avant, ces tombes etaient a moi. Je veillais sur les morts d en bas, et je me posais sur leurs pierres.", R),
+		_say("L Enfant", CHILD, "C est pour ca que tu ne te poses plus jamais ?", R),
+		_say("La fee", FAIRY, "Plus jamais. Ici, le sol mange. Tout ce qui touche cette eau finit par y prendre racine.", R),
 		_say("Le Mage", MAGE, "Alors on va lui couper l appetit."),
 	])
 	_scene("side_fairy_outro", "talk_shrine", [
 		_narr("Le Champignon dore s affaisse dans l eau. Ses spores d or flottent un instant, puis s eteignent une a une."),
-		_say("La fee", FAIRY, "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite.", R),
+		_say("La fee", FAIRY, "Il avait pousse sur mes tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite.", R),
 		_say("Le Mage", MAGE_GRAVE, "On ne dore pas un champignon pour le plaisir. Quelqu un voulait qu on le remarque."),
-		_say("La fee", FAIRY, "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule.", R),
+		_say("La fee", FAIRY, "Le jour ou le sol s est mis a manger, je me suis envolee. J ai laisse mes morts seuls avec lui.", R),
+		_say("La fee", FAIRY, "Je ne me pose toujours pas, mage. Mais eux, maintenant, ils dorment.", R),
 	])
 
 
 ## L APPRENTIE D AZUR, apres le temple d Ymoa (lvl_12) : « la premiere
 ## apprentie du mage » (sa fiche de compte), morte a Nox dans la PREMIERE
-## boucle. Dans celle-ci elle ne le connait pas : il se souvient, pas elle.
+## boucle. Dans celle-ci, elle est de nouveau son apprentie et ne le sait pas :
+## il se souvient, pas elle. Sous le cristal, ce qu il reste de la premiere
+## boucle : elle-meme, morte. SA DETTE est celle du mage, qui ne lui a rien dit.
+## Le roi sait que « tout le monde en bas » connait la boucle (lvl_21).
 func _side_apprentie() -> void:
 	_scene("side_bluewitch_intro", "talk_shrine", [
-		_narr("Le temple de cristal tient encore. Au fond, sous un cristal bleu, une jeune femme en robe d azur dort debout."),
-		_say("Le Mage", MAGE_GRAVE, "Je la connais. Elle etait mon apprentie, la premiere fois. Elle est morte a Nox, la derniere nuit."),
-		_say("Le Roi squelette", SKELETON_KING, "Ici, on ne garde que ce qui servira plus tard. Si elle est sous verre, quelqu un compte sur elle.", R),
+		_narr("Le temple de cristal tient encore. Au fond, sous un cristal bleu, une jeune femme en robe d azur, debout, les yeux ouverts. Elle ne respire pas."),
+		_say("L apprentie d azur", BLUEWITCH, "Maitre... Elle porte ma robe. Elle a mon visage.", R),
+		_say("Le Mage", MAGE_GRAVE, "C est toi, la premiere fois. Tu es morte a Nox, la derniere nuit. Je ne te l ai jamais dit."),
+		_say("Le Roi squelette", SKELETON_KING, "Ici, on ne garde que ce qui servira plus tard. Si ta premiere boucle est sous verre, mage, quelqu un compte s en resservir.", R),
 		_narr("Devant le cristal, un chevalier en armure d or se redresse. Le premier sort qui le touche disparait dans son armure."),
 	])
 	_scene("side_bluewitch_outro", "talk_shrine", [
-		_narr("Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme ouvre les yeux."),
-		_say("L apprentie d azur", BLUEWITCH, "Qui etes-vous ? Vous me regardez comme si on se connaissait.", R),
-		_say("Le Mage", MAGE, "Dans une autre vie, je t ai appris a tenir un sort. Dans celle-ci, tu ne me dois rien."),
-		_say("L apprentie d azur", BLUEWITCH, "Alors je choisis. Je combats a votre place, maitre. Et vous me direz comment ca a fini, la premiere fois.", R),
+		_narr("Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme qu il gardait s efface comme une buee."),
+		_say("L apprentie d azur", BLUEWITCH, "Vous m avez reprise comme apprentie en sachant comment ca avait fini pour moi.", R),
+		_say("Le Mage", MAGE, "Je t ai reprise pour que ca ne finisse pas pareil. Dans celle-ci, tu ne me dois rien."),
+		_say("L apprentie d azur", BLUEWITCH, "Alors c est vous qui me devez quelque chose. Comment ca a fini, la premiere fois ? Tout, pas seulement moi.", R),
 		_say("Le Mage", MAGE_GRAVE, "... Mal. C est pour ca qu on recommence."),
 	])

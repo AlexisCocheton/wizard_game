@@ -15,20 +15,25 @@ lines = Array[Dictionary]([{
 "portrait": &"soldier",
 "side": "right",
 "speaker": "L ecuyer",
-"text": "J etais garde du port. Une epee ne sert a rien contre ce qui tire d en haut, alors j ai appris l arc."
-}, {
-"portrait": &"mage",
-"side": "left",
-"speaker": "Le Mage",
-"text": "Et maintenant que le port est vide ?"
+"text": "La nuit ou le port s est vide par le haut, j etais la, avec mon epee. Elle n a touche personne."
 }, {
 "portrait": &"soldier",
 "side": "right",
 "speaker": "L ecuyer",
-"text": "Maintenant je n ai plus de port. Si tu veux, je tire a ta place, et toi tu gardes ta magie pour ce qui compte."
+"text": "J ai appris l arc apres. Trop tard pour les six cents. Assez tot pour celui-la."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Ce qui compte arrive vite. Tire juste."
+"text": "Tu n as pas fui. Tu es parti chercher ce qui te manquait cette nuit-la."
+}, {
+"portrait": &"soldier",
+"side": "right",
+"speaker": "L ecuyer",
+"text": "Le port est toujours vide, mage. Mais plus personne ne le garde pour eux."
+}, {
+"portrait": &"mage",
+"side": "left",
+"speaker": "Le Mage",
+"text": "Alors on peut le laisser derriere nous. Ce qui compte arrive vite. Tire juste."
 }])

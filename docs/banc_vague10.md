@@ -130,6 +130,7 @@ Les 7 lignes de campagne qui ont dérivé ont été recollées dans `tests/unit/
 Deux causes :
 - **C1**, qui a rendu leurs zones décalées aux majeures : lvl_02, lvl_09, lvl_05.
 - **La fuite de l'annexe de l'atelier** : lvl_18, lvl_03, lvl_04, lvl_19. Ouverte après lvl_17, `side_a2_atelier` porte la Lumière purifiante (dissipation, DEC-057), qu'aucun niveau ne donne avant lvl_20. La carte devient obtenue et entre au pool de montée des niveaux joués ensuite. Elle est prise 41 fois à lvl_18, d'où le passage de 41 à 36. Correction confiée au chantier C7c.
+  - **Corrigé par C7c** : le boss doré de l'atelier est un Oeil des courants doré, sans aura, et le Gardien-totem de sa vague 2 est parti ; son deck n'a plus de Lumière purifiante. Rejoués sur la base C7a, lvl_18, lvl_03, lvl_04 et lvl_19 rendent exactement les lignes de B2. Sur main 854577c (C7b), deux classements tombent du fait du bot de C7b (lvl_03 rang 1, lvl_04 rangs 2 et 3) : voir la note C7c de `MESURES`.
 
 ## Erreurs
 

@@ -15,7 +15,7 @@ lines = Array[Dictionary]([{
 "portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
-"text": "Il avait pousse sur les tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite."
+"text": "Il avait pousse sur mes tombes ouvertes. Quelqu un les avait arrosees d or pour qu il grandisse vite."
 }, {
 "portrait": &"mage_grave",
 "side": "left",
@@ -25,5 +25,10 @@ lines = Array[Dictionary]([{
 "portrait": &"fairy",
 "side": "right",
 "speaker": "La fee",
-"text": "Je vous suis, mage. Je combattrai a votre place. Mais je ne me pose pas, meme sur votre epaule."
+"text": "Le jour ou le sol s est mis a manger, je me suis envolee. J ai laisse mes morts seuls avec lui."
+}, {
+"portrait": &"fairy",
+"side": "right",
+"speaker": "La fee",
+"text": "Je ne me pose toujours pas, mage. Mais eux, maintenant, ils dorment."
 }])

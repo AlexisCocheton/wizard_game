@@ -10,22 +10,22 @@ lines = Array[Dictionary]([{
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme ouvre les yeux."
+"text": "Le Chevalier du vide dore se disperse en poussiere d or. Le cristal se fend, et la jeune femme qu il gardait s efface comme une buee."
 }, {
 "portrait": &"bluewitch",
 "side": "right",
 "speaker": "L apprentie d azur",
-"text": "Qui etes-vous ? Vous me regardez comme si on se connaissait."
+"text": "Vous m avez reprise comme apprentie en sachant comment ca avait fini pour moi."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Dans une autre vie, je t ai appris a tenir un sort. Dans celle-ci, tu ne me dois rien."
+"text": "Je t ai reprise pour que ca ne finisse pas pareil. Dans celle-ci, tu ne me dois rien."
 }, {
 "portrait": &"bluewitch",
 "side": "right",
 "speaker": "L apprentie d azur",
-"text": "Alors je choisis. Je combats a votre place, maitre. Et vous me direz comment ca a fini, la premiere fois."
+"text": "Alors c est vous qui me devez quelque chose. Comment ca a fini, la premiere fois ? Tout, pas seulement moi."
 }, {
 "portrait": &"mage_grave",
 "side": "left",

@@ -24,6 +24,7 @@ func run() -> void:
 	_test_chaque_personnage_a_un_visage()
 	_test_le_mage_nest_plus_un_demon()
 	_test_l_apprenti_parle_avec_son_visage()
+	_test_l_apprenti_n_est_pas_recrute()
 	_test_un_locuteur_nomme_a_un_visage()
 	_test_les_fonds_de_dialogue_sont_des_decors()
 	_test_aucune_scene_orpheline()
@@ -387,6 +388,58 @@ static func defauts_visage_apprenti(lignes: Array[Dictionary], nom: String,
 			out.append("« %s » parle avec le visage '%s' et non '%s'" % [locuteur, p, cle])
 	if not parle:
 		out.append("%s ne parle pas" % nom)
+	return out
+
+
+## L APPRENTI EST DEJA LA (vague 10, chantier C7c).
+##
+## Le defaut : une annexe d apprenti ne s OUVRE que si l apprenti est deja gagne
+## au compte (SaveData.side_quest_open), et les trois outros de B3 le faisaient
+## RECRUTER (« Je combats a votre place, maitre », « Je vous suis, mage ») — le
+## joueur qui jouait l Apprentie d azur la voyait endormie sous son cristal, a
+## recruter. La regle verifiee : aucune replique (narrateur compris) d une
+## annexe d apprenti ne porte une tournure de recrutement. La liste est ECRITE
+## (les formules de B3 et leurs variantes) ; elle ne lit pas le texte du jeu.
+const TOURNURES_DE_RECRUTEMENT: Array[String] = [
+	"a ta place", "a votre place", "je vous suis", "je te suis", "suivrai",
+	"rejoin", "recrut", "je viens avec", "je pars avec", "emmenez-moi", "emmene-moi",
+]
+
+
+func _test_l_apprenti_n_est_pas_recrute() -> void:
+	var vus: int = 0
+	for lv: LevelDef in ContentDB.side_quests():
+		if lv.side_quest_character == "":
+			continue
+		vus += 1
+		var lignes: Array[Dictionary] = []
+		for sid: StringName in [lv.intro_story, lv.outro_story]:
+			var d: DialogueDef = DialogueDef.load_by_id(sid)
+			if d != null:
+				for i: int in d.line_count():
+					lignes.append(d.line(i))
+		var d2: Array[String] = repliques_de_recrutement(lignes)
+		ok(d2.is_empty(), "%s : l apprenti est deja la, personne ne le recrute %s"
+			% [lv.id, ", ".join(d2)])
+	ok(vus > 0, "des annexes d apprenti existent (%d)" % vus)
+	# SABOTAGE et temoin : la replique de B3, puis une replique de C7c.
+	var b3: Array[Dictionary] = [{"speaker": "L apprentie d azur", "text":
+		"Alors je choisis. Je combats a votre place, maitre."}]
+	not_ok(repliques_de_recrutement(b3).is_empty(), "sabotage : la replique de recrutement de B3 est vue")
+	var c7c: Array[Dictionary] = [{"speaker": "L ecuyer", "text":
+		"Moi, j y reviens. Ce qui tire d en haut, je le descends."}]
+	ok(repliques_de_recrutement(c7c).is_empty(), "temoin : une replique sans recrutement passe")
+
+
+## Les repliques qui portent une tournure de recrutement (texte en minuscules).
+static func repliques_de_recrutement(lignes: Array[Dictionary]) -> Array[String]:
+	var out: Array[String] = []
+	for l: Dictionary in lignes:
+		var texte: String = String(l.get("text", "")).to_lower()
+		for t: String in TOURNURES_DE_RECRUTEMENT:
+			if texte.contains(t):
+				out.append("« %s » (%s)" % [String(l.get("text", "")), t])
+				break
 	return out
 
 

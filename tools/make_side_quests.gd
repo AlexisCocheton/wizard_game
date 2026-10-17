@@ -49,9 +49,16 @@ extends RefCounted
 ## sont prises parmi celles que les decks de base des niveaux de campagne ont
 ## DEJA donnees au moment ou la quete s ouvre (regle du livre : ouvrir l annexe
 ## ne doit pas faire posseder en avance la commune NOUVELLE d un niveau a
-## venir), dans l ordre de preference de la quete. Exception nommee : une quete
-## ou descend un porteur d AURA prend la Lumiere purifiante (DEC-057), meme si
-## la campagne ne l a pas encore donnee.
+## venir), dans l ordre de preference de la quete. AUCUNE EXCEPTION depuis le
+## chantier C7c : une quete ou descend un porteur d AURA doit offrir une
+## dissipation (DEC-057), et cette dissipation est prise parmi les communes
+## DEJA donnees, comme les autres ; s il n y en a pas, le generateur le dit
+## (printerr) et test_side_quests rougit. L ancienne exception (la Lumiere
+## purifiante au deck de l atelier, ouvert apres lvl_17 quand la campagne ne la
+## donne qu a lvl_20) la faisait OBTENIR en avance : elle entrait au pool de
+## montee de niveau de tous les niveaux joues ensuite (prise 41 fois a lvl_18,
+## 53 a lvl_03 au banc C2, lvl_18 tombe de 41 a 36 victoires sur 60). Le boss
+## dore de l atelier a change plutot que la regle.
 
 const ENNEMIS: String = "res://resources/enemies/"
 const NIVEAUX: String = "res://resources/levels/"
@@ -87,7 +94,8 @@ const DORE_RAYON_FACTEUR: float = 2.1
 const DORE_RAYON_MIN: float = 56.0
 const DORE_RAYON_MAX: float = 72.0
 
-## La commune de DISSIPATION garantie dans une quete a porteur d aura (DEC-057).
+## La commune de DISSIPATION d une quete a porteur d aura (DEC-057), prise
+## seulement si la campagne l a deja donnee a l ouverture (voir l en-tete).
 const DISSIPATION: String = "purifying_light"
 
 ## Rarete -> dossier de cartes.
@@ -140,10 +148,21 @@ const DORES: Dictionary = {
 	"hornblower": ["hornblower_gold", "Corniste dore", 8.0, {
 		"buff_speed_pct": 40.0, "summon_def": "gnome.tres", "summon_interval": 7.0,
 		"summon_count": 2, "summon_max_alive": 6, "base_speed": 40.0}],
-	# Acte 2 — un totem de port de l atelier du rat : aura plus large, et il
-	# REPARE ce qu il protege (le soin du Pretre goule).
-	"totem_guardian": ["totem_guardian_gold", "Gardien-totem dore", 3.0, {
-		"aura_shield_radius": 300.0, "heal_per_second": 2.0, "base_speed": 26.0}],
+	# Acte 2 — un Oeil des courants sorti de l atelier du rat, dore : il VOIT
+	# VENIR les sorts (l esquive du Planogo) et APPELLE les yeux de l atelier
+	# autour de lui (l appel du Corniste dore, avec des volants). Ni tir ni
+	# soudure de plus : le Grand Oeil de lvl_17, lui, tire. Chantier C7c : il
+	# remplace le Gardien-totem dore, dont l aura imposait au deck une
+	# dissipation que la campagne ne donne pas encore (voir l en-tete).
+	# LENT EXPRES : un monstre qui atteint le mage frappe une fois et disparait,
+	# boss compris (Battlefield._on_enemy_reached_mage). Au banc, a la vitesse 40
+	# avec deux yeux appeles toutes les 8 s, il n etait JAMAIS abattu (0 / 58) :
+	# ses yeux passaient devant, le bot visait le plus avance, et le boss finissait
+	# par traverser. A 16, un oeil a la fois, il est abattu dans la plupart des
+	# victoires (23 sur 32 au reglage livre, voir quetes()).
+	"current_eye": ["current_eye_gold", "Oeil des courants dore", 8.0, {
+		"dodge_chance": 0.25, "summon_def": "current_eye.tres", "summon_interval": 9.0,
+		"summon_count": 1, "summon_max_alive": 2, "base_speed": 16.0}],
 	# Acte 3 — la garde du tresor vide : son bouclier de premier coup, et une
 	# GARDE qui renvoie (le cycle du Miroir de Forge).
 	"parry_skeleton": ["parry_skeleton_gold", "Squelette pareur dore", 4.5, {
@@ -261,6 +280,12 @@ func _boss_dores() -> Dictionary:
 ## deck de chaque annexe (la mesure est tombee de 38 a 0 victoire, l ecuyer est
 ## monte de 39 a 52). A REJOUER a chaque changement des decks de la campagne :
 ## `tools/sim_balance.tscn -- --niveaux=side_... --parties=60 --massacre=0`.
+## CHANTIER C7c (17/10, main 854577c) : l atelier change de boss dore et perd
+## ses quatre Lumieres purifiantes au deck (douze cartes qui blessent au lieu
+## de huit). Regle en cinq passes : 22 (Oeil rapide, jamais abattu), 53, 57,
+## 43, puis 32 victoires sur 60 (vagues 1,6 / 1,7 / 1,8 / 1,75 au lieu de
+## 1,3 / 1,35 / 1,45 / 1,55, un Lutin archer en vague de boss), le boss abattu
+## dans 23 des 32 victoires.
 static func quetes() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	# --- ACTE 1 : LA MESURE ---------------------------------------------------
@@ -296,33 +321,38 @@ static func quetes() -> Array[Dictionary]:
 	})
 	# --- ACTE 2 : L ATELIER DU RAT ---------------------------------------------
 	# Apres les courants (lvl_17), ou le rat avoue avoir travaille dans l atelier
-	# des Sky Lands. Un totem de PORT, dore et retourne, protege tout ce qui
-	# l approche : la Lumiere purifiante est au deck (DEC-057).
+	# des Sky Lands. Un Oeil des courants de SON modele, dore et retourne, garde
+	# la porte : il esquive et appelle d autres yeux. Chantier C7c : plus aucun
+	# porteur d aura (le Gardien-totem dore et le Gardien-totem de la vague 2),
+	# donc plus de Lumiere purifiante au deck (voir l en-tete).
 	out.append({
 		"id": "side_a2_atelier", "nom": "L atelier du rat", "acte": 2, "apres": "lvl_17", "perso": "",
-		"sous_titre": "Vingt ans d etabli, et une tour d or",
-		"texte": "Le rat a travaille vingt ans dans un atelier des Sky Lands, sur l ile voisine. Ce qui garde la porte aujourd hui rend invulnerable tout ce qui l approche : eteins son aura a la Lumiere purifiante, abats le gardien, puis le reste.",
-		"fond": "act1_sky", "dore": "totem_guardian_gold",
-		"communes": [DISSIPATION, "arcane_bolt", "fireball", "meteor", "frost_rain", "piercing_arrow"],
+		"sous_titre": "Vingt ans d etabli, et un oeil d or",
+		"texte": "Le rat a travaille vingt ans dans un atelier des Sky Lands, sur l ile voisine. Ce qui garde la porte aujourd hui est un oeil d or de son modele : il voit venir tes sorts, en esquive une partie et appelle d autres yeux autour de lui. Couvre le ciel.",
+		"fond": "act1_sky", "dore": "current_eye_gold",
+		"communes": ["arcane_bolt", "fireball", "meteor", "frost_rain", "piercing_arrow"],
 		"rares": ["focus", "mana_flow", "time_surge"],
 		"epiques": ["bastion", "arcane_insight", "resonance"],
 		"legendaires": ["summoners_key", "world_loom", "twin_channeling"],
 		"passifs": ["pass_chain", "pass_arcane_mind", "pass_arcane_lore", "pass_pulse", "pass_companion"],
 		"vagues": [
-			["1", 26.0, 1.3, "", [["wisp", 3, 1.6, 0.0], ["current_eye", 2, 2.0, 6.0],
+			["1", 26.0, 1.6, "", [["wisp", 3, 1.6, 0.0], ["current_eye", 2, 2.0, 6.0],
 				["sand_serpent", 2, 2.0, 12.0]]],
-			["2", 27.0, 1.35, "", [["totem_guardian", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.5, 4.0],
+			["2", 27.0, 1.7, "", [["void_knight", 1, 1.0, 0.0], ["nacelle_raider", 3, 1.5, 4.0],
 				["current_eye", 2, 2.0, 12.0]]],
-			["3", 28.0, 1.45, "", [["sand_serpent", 3, 1.8, 0.0], ["imp_archer", 2, 3.0, 6.0],
+			["3", 28.0, 1.8, "", [["sand_serpent", 3, 1.8, 0.0], ["imp_archer", 2, 3.0, 6.0],
 				["wisp", 3, 1.5, 12.0], ["shade", 2, 2.0, 18.0]]],
-			["boss", 46.0, 1.55, "boss", [["totem_guardian_gold", 1, 1.0, 0.0],
-				["nacelle_raider", 3, 2.0, 4.0], ["current_eye", 3, 2.0, 12.0],
-				["sand_serpent", 2, 2.5, 22.0]]],
+			["boss", 46.0, 1.75, "boss", [["current_eye_gold", 1, 1.0, 0.0],
+				["nacelle_raider", 3, 2.0, 4.0], ["current_eye", 2, 2.0, 12.0],
+				["imp_archer", 1, 1.0, 16.0], ["sand_serpent", 2, 2.5, 22.0]]],
 		],
 		"objectifs": [
 			[&"kill_flying", {"count": 8}],
-			[&"win_under_time", {"seconds": 130}],
-			[&"win_above_speed", {"pct": 240}],
+			# C7c : 130 s et 240 % rendaient 9 et 2 victoires sur 60 avec le deck
+			# sans Lumiere (banc des objectifs, bot neutre) ; 145 s et 220 % sont lus
+			# sur les temps et les vitesses de ses 34 victoires.
+			[&"win_under_time", {"seconds": 145}],
+			[&"win_above_speed", {"pct": 220}],
 		],
 	})
 	# --- ACTE 3 : LE TRESOR DE TOMBOL ------------------------------------------
@@ -417,14 +447,16 @@ static func quetes() -> Array[Dictionary]:
 		],
 	})
 	# --- L ECUYER : HAUTE-NACELLE ----------------------------------------------
-	# Apres le port vide (lvl_18) : le dernier garde du port tire depuis les toits.
-	# En face, un archer d or qui tire plus vite et garde ses distances : un mur
-	# arrete ses fleches (« tireur -> bloque-projectiles ») s il est au deck ou tire.
+	# Apres le port vide (lvl_18) : l ecuyer, DEJA aux cotes du mage (l annexe ne
+	# s ouvre qu une fois l apprenti gagne au compte), revient au port qu il
+	# gardait. Sur les toits, un archer d or qui tire plus vite et garde ses
+	# distances : un mur arrete ses fleches (« tireur -> bloque-projectiles ») s il
+	# est au deck ou tire.
 	out.append({
 		"id": "side_squire", "nom": "L ecuyer du port", "acte": 2, "apres": "lvl_18",
 		"perso": "soldier",
 		"sous_titre": "Le dernier garde du port vide",
-		"texte": "Dans le port vide de Haute-Nacelle, quelqu un tire encore depuis les toits : le dernier garde du port, qui a pose l epee pour l arc. En face de lui, un archer d or tire plus vite et ne s approche jamais : va le chercher avec tes sorts, ou abrite-toi derriere un mur si tu en tires un.",
+		"texte": "L ecuyer revient avec toi au port vide de Haute-Nacelle, ou il gardait le bout du quai avant de poser l epee pour l arc. Sur les toits, un archer d or tire plus vite que lui et ne s approche jamais : va le chercher avec tes sorts, ou abrite-toi derriere un mur si tu en tires un.",
 		"fond": "act1_sky", "dore": "imp_archer_gold",
 		"communes": ["frost_rain", "fireball", "stone_wall", "water_jet", "piercing_arrow", "frost_field", "arcane_bolt"],
 		"rares": ["ice_wall", "heartwood_totem", "repulsion_wave"],
@@ -448,14 +480,15 @@ static func quetes() -> Array[Dictionary]:
 		],
 	})
 	# --- LA FEE : LES FOSSES NOYEES --------------------------------------------
-	# Apres les fosses basses (lvl_19) : une fee qui ne se pose jamais au-dessus
-	# d une eau qui « mange ». Le Champignon dore pousse sur les tombes noyees et
-	# se fend en deux : une zone de feu sur sa chute les prend ensemble.
+	# Apres les fosses basses (lvl_19) : la fee, DEJA aux cotes du mage, revient
+	# aux tombes sur lesquelles elle veillait, au-dessus d une eau qui « mange ».
+	# Le Champignon dore pousse sur ces tombes noyees et se fend en deux : une
+	# zone de feu sur sa chute les prend ensemble.
 	out.append({
 		"id": "side_fairy", "nom": "La fee des fosses", "acte": 3, "apres": "lvl_19",
 		"perso": "fairy",
 		"sous_titre": "Elle ne se pose jamais",
-		"texte": "Au-dessus de l eau trouble des fosses basses, une fee voltige sans jamais se poser. Sous elle, un champignon d or pousse sur les tombes noyees, et il se fend en deux quand on l abat. Le feu le ronge mieux que tout.",
+		"texte": "La fee te ramene aux fosses basses, ou elle veillait sur les tombes avant que le sol se mette a manger. Sur ses tombes noyees, un champignon d or a pousse, et il se fend en deux quand on l abat. Le feu le ronge mieux que tout.",
 		"fond": "act2_graveyard", "dore": "mushroom_gold",
 		"communes": ["fireball", "arcane_bolt", "frost_rain", "piercing_arrow", "ember_pool", "meteor"],
 		"rares": ["brazier", "tidal_pool", "terrain_brambles"],
@@ -482,14 +515,15 @@ static func quetes() -> Array[Dictionary]:
 	})
 	# --- L APPRENTIE D AZUR : LE CRISTAL D YMOA --------------------------------
 	# Apres le temple d Ymoa (lvl_12) : ce que le cercle « protegeait » sans savoir
-	# quoi. Sous un cristal bleu, l apprentie du mage de la PREMIERE boucle, morte
-	# a Nox ; dans celle-ci elle ne le connait pas. Son gardien d or avale le
-	# premier coup et disparait dans le vide : la foudre et le vent le percent.
+	# quoi. L apprentie, DEJA aux cotes du mage, trouve sous un cristal bleu ce
+	# qu il reste de la PREMIERE boucle : elle-meme, morte a Nox. Le gardien d or
+	# du cristal avale le premier coup et disparait dans le vide : la foudre et le
+	# vent le percent.
 	out.append({
 		"id": "side_bluewitch", "nom": "L apprentie d azur", "acte": 4, "apres": "lvl_12",
 		"perso": "bluewitch",
 		"sous_titre": "Ce que le cercle protegeait sans savoir quoi",
-		"texte": "Au fond du temple d Ymoa, sous un cristal bleu, dort une jeune sorciere que tu as deja connue, dans une autre boucle. Devant elle, un chevalier d or dont l armure avale le premier coup et qui disparait dans le vide.",
+		"texte": "Au fond du temple d Ymoa, sous un cristal bleu, ton apprentie retrouve ce qu il reste de la premiere boucle. Devant le cristal, un chevalier d or dont l armure avale le premier coup et qui disparait dans le vide.",
 		"fond": "act3_demon", "dore": "void_knight_gold",
 		"communes": ["spark", "electric_mark", "piercing_arrow", "chain_break", "frost_rain", "fireball", "arcane_bolt"],
 		"rares": ["time_surge", "focus", "mana_flow"],
@@ -737,14 +771,19 @@ static func catalogue(dossier: String) -> Array[SpellCard]:
 ## celles que les decks de base de la campagne ont deja donnees a l ouverture,
 ## puis (repli) parmi toutes les communes possedees a ce moment, celles qui
 ## blessent le boss d abord. La premiere doit pouvoir TUER le boss dore (« jamais
-## un deck sans degats ») ; une quete a porteur d aura prend la dissipation.
+## un deck sans degats ») ; une quete a porteur d aura prend la dissipation, si
+## la campagne l a deja donnee (sinon : erreur, voir l en-tete).
 func _communes_de(q: Dictionary, dore: EnemyDef, aura: bool) -> Array[SpellCard]:
 	var possedees: Dictionary = _possedees_a(StringName(q["apres"]))
 	var choix: Array[SpellCard] = []
 	if aura:
 		var d: SpellCard = _carte_commune(DISSIPATION)
-		if d != null:
+		if d != null and possedees.has(DISSIPATION):
 			choix.append(d)
+		else:
+			printerr(("QUETE %s : un porteur d aura descend, et la campagne ne donne pas encore"
+				+ " %s a l ouverture (apres %s). Changer le monstre ou l ouverture, pas la regle.")
+				% [q["id"], DISSIPATION, q["apres"]])
 	var candidates: Array[SpellCard] = []
 	for id: String in q["communes"]:
 		var c: SpellCard = _carte_commune(id)

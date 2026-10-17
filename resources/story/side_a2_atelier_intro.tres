@@ -20,20 +20,20 @@ lines = Array[Dictionary]([{
 "portrait": &"rat",
 "side": "right",
 "speaker": "Le Rat pilote",
-"text": "Ce n est pas un souvenir, mage. Si on fabriquait des soudures noires quelque part la-haut, c etait chez nous."
+"text": "Ce n est pas un souvenir, mage. L oeil pris dans nos cordages, je l ai reconnu. C est moi qui en ai dessine le modele."
 }, {
 "portrait": &"",
 "side": "left",
 "speaker": "",
-"text": "Devant la porte de l atelier, une tour de bois peinte en or. Tout ce qui s en approche brille d un halo."
+"text": "Devant la porte de l atelier, un oeil aile peint en or tourne en spirale. D autres yeux sortent de l atelier et se rangent autour de lui."
 }, {
 "portrait": &"child",
 "side": "right",
 "speaker": "L Enfant",
-"text": "Elle protege les autres. Comme une maman."
+"text": "Il brille comme une piece neuve."
 }, {
 "portrait": &"mage",
 "side": "left",
 "speaker": "Le Mage",
-"text": "Alors on eteint d abord la lumiere, et ensuite la tour."
+"text": "Il voit venir mes sorts. Alors on le fatigue : un oeil qui esquive finit toujours par cligner."
 }])
